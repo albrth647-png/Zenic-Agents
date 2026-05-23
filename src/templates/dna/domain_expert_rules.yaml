@@ -1,0 +1,8 @@
+# =============================================================================
+# DOMAIN EXPERT RULES — El Cerebro del Negocio
+# =============================================================================
+# This file has been modularized for maintainability.
+# The industry rules are now split across sub-files in: domain_expert_rules/
+# Use the Python loader: from src.templates.dna.domain_expert_rules import load_all_industries
+# =============================================================================
+industries: []  # Empty — load from domain_expert_rules/ subdirectory via loader

@@ -1,1 +1,1 @@
-"""Entrypoints — Puntos de entrada del sistema."""
+"""Zenic-Agents entrypoints package."""

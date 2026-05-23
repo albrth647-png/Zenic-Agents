@@ -1,36 +1,75 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+*.egg
+.eggs/
+dist/
+build/
 .venv/
+venv/
+env/
+*.whl
 .pytest_cache/
 
-# Node
-node_modules/
+# Rust build artifacts
+target/
+**/target/
 
-# Environment — NUNCA subir .env al repo
-.env
-
-# Skills & MCP — Son dependencias externas, no parte del proyecto
-skills/
-mcp-servers/
-
-# Workspace — Archivos de sesión, no del proyecto
-download/
-upload/
-worklog.md
-
-# Database
-*.db
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
+# Environment & secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Database
+*.db
+*.sqlite3
+
 # Logs
 *.log
+logs/
 
-# Build
-*.pyc
-dist/
-build/
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Agent context (session artifacts)
+agent-ctx/
+
+# PDFs (code-only repo)
+*.pdf
+
+# Next.js
+.next/
+node_modules/
+*.sqlite
+rollback.sqlite
+escalation.sqlite
+expiry.sqlite
+evidence.sqlite
+justification.sqlite
+audit_merkle.sqlite
+approval_chain.sqlite
+notification.sqlite
+
+# Upload dir
+upload/
+download/
