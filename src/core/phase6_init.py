@@ -173,15 +173,15 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
         from src.core.license.manager import get_license_manager
         lm = get_license_manager()
         if not lm.get_current_license():
-            # Create a free-tier license by default
+            # Create a starter-tier license by default
             lm.create_license(
-                tier=LicenseTier.FREE,
+                tier=LicenseTier.STARTER,
                 issued_to="Zenic-Agents Default",
                 features=["basic_pipeline", "chat_completions"],
                 max_users=1,
-                expires_days=0,  # Perpetual free license
+                expires_days=0,  # Perpetual starter license
             )
-            logger.info("Phase6: Default free license created")
+            logger.info("Phase6: Default starter license created")
     except Exception as exc:
         logger.warning("Phase6: Default license creation failed: %s", exc)
 

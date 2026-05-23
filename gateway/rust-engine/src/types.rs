@@ -261,10 +261,10 @@ pub struct TierLimits {
 
 impl TierLimits {
     pub fn starter() -> Self {
-        TierLimits { max_workflows: 5, max_actions_per_day: 200, max_policies: 10, max_team_members: 3, max_mcp_tools: 10, max_approval_requests_per_day: 20, max_playbooks: 2, max_namespaces: 1, max_simulations_per_month: 5, audit_retention_days: 30, trace_retention_days: 7, overage_rate_usdt: 0.15, sso_available: false, on_premise_available: false, custom_rbac: false, z3_solver: false }
+        TierLimits { max_workflows: 5, max_actions_per_day: 100, max_policies: 10, max_team_members: 3, max_mcp_tools: 10, max_approval_requests_per_day: 20, max_playbooks: 3, max_namespaces: 1, max_simulations_per_month: 5, audit_retention_days: 30, trace_retention_days: 7, overage_rate_usdt: 0.15, sso_available: false, on_premise_available: false, custom_rbac: false, z3_solver: false }
     }
     pub fn business() -> Self {
-        TierLimits { max_workflows: 25, max_actions_per_day: 2000, max_policies: 50, max_team_members: 15, max_mcp_tools: 50, max_approval_requests_per_day: 200, max_playbooks: 8, max_namespaces: 5, max_simulations_per_month: 25, audit_retention_days: 90, trace_retention_days: 30, overage_rate_usdt: 0.10, sso_available: false, on_premise_available: false, custom_rbac: true, z3_solver: false }
+        TierLimits { max_workflows: 25, max_actions_per_day: 1000, max_policies: 50, max_team_members: 15, max_mcp_tools: 50, max_approval_requests_per_day: 200, max_playbooks: 25, max_namespaces: 5, max_simulations_per_month: 25, audit_retention_days: 90, trace_retention_days: 30, overage_rate_usdt: 0.10, sso_available: false, on_premise_available: false, custom_rbac: true, z3_solver: false }
     }
     pub fn enterprise() -> Self {
         TierLimits { max_workflows: 0, max_actions_per_day: 0, max_policies: 0, max_team_members: 0, max_mcp_tools: 0, max_approval_requests_per_day: 0, max_playbooks: 0, max_namespaces: 25, max_simulations_per_month: 0, audit_retention_days: 365, trace_retention_days: 90, overage_rate_usdt: 0.0, sso_available: true, on_premise_available: false, custom_rbac: true, z3_solver: true }
@@ -292,8 +292,10 @@ impl TierLimits {
 pub enum AddOn {
     ExtraWorkflowPack,
     ExtraTeamPack,
-    CompliancePack,
     AdvancedAnalytics,
+    PolicyEngine,
+    HitlApprovals,
+    CompliancePack,
     PrioritySupport,
     Z3SolverAccess,
     ExtraSimulationsPack,
@@ -303,26 +305,33 @@ pub enum AddOn {
 impl AddOn {
     pub fn monthly_price_usdt(&self) -> f64 {
         match self {
-            AddOn::ExtraWorkflowPack => 9.0, AddOn::ExtraTeamPack => 9.0,
-            AddOn::CompliancePack => 29.0, AddOn::AdvancedAnalytics => 19.0,
+            AddOn::ExtraWorkflowPack => 10.0, AddOn::ExtraTeamPack => 15.0,
+            AddOn::AdvancedAnalytics => 25.0, AddOn::PolicyEngine => 30.0,
+            AddOn::HitlApprovals => 35.0,
+            AddOn::CompliancePack => 29.0,
             AddOn::PrioritySupport => 49.0, AddOn::Z3SolverAccess => 29.0,
             AddOn::ExtraSimulationsPack => 19.0, AddOn::AuditExtendedRetention => 19.0,
         }
     }
     pub fn display_name(&self) -> &str {
         match self {
-            AddOn::ExtraWorkflowPack => "Pack +5 Workflows", AddOn::ExtraTeamPack => "Pack +5 Miembros",
-            AddOn::CompliancePack => "Pack +10 Estándares Compliance", AddOn::AdvancedAnalytics => "Analytics Avanzados",
-            AddOn::PrioritySupport => "Soporte Prioritario (SLA 4h)", AddOn::Z3SolverAccess => "Z3 Constraint Solver",
-            AddOn::ExtraSimulationsPack => "Pack +50 Simulaciones", AddOn::AuditExtendedRetention => "Retención Extendida +365 días",
+            AddOn::ExtraWorkflowPack => "Extra Workflows (+10)", AddOn::ExtraTeamPack => "Extra Team Members (+5)",
+            AddOn::AdvancedAnalytics => "Advanced Analytics",
+            AddOn::PolicyEngine => "Policy Engine",
+            AddOn::HitlApprovals => "HITL Approvals",
+            AddOn::CompliancePack => "Compliance Pack (+10 Standards)",
+            AddOn::PrioritySupport => "Priority Support (SLA 4h)", AddOn::Z3SolverAccess => "Z3 Constraint Solver",
+            AddOn::ExtraSimulationsPack => "Extra Simulations (+50)", AddOn::AuditExtendedRetention => "Audit Extended Retention (+365 days)",
         }
     }
     pub fn available_for_tiers(&self) -> Vec<SubscriptionTier> {
         match self {
             AddOn::ExtraWorkflowPack => vec![SubscriptionTier::Starter, SubscriptionTier::Business],
             AddOn::ExtraTeamPack => vec![SubscriptionTier::Starter, SubscriptionTier::Business],
+            AddOn::AdvancedAnalytics => vec![SubscriptionTier::Starter, SubscriptionTier::Business],
+            AddOn::PolicyEngine => vec![SubscriptionTier::Business],
+            AddOn::HitlApprovals => vec![SubscriptionTier::Business],
             AddOn::CompliancePack => vec![SubscriptionTier::Business, SubscriptionTier::Enterprise],
-            AddOn::AdvancedAnalytics => vec![SubscriptionTier::Business, SubscriptionTier::Enterprise],
             AddOn::PrioritySupport => vec![SubscriptionTier::Business, SubscriptionTier::Enterprise],
             AddOn::Z3SolverAccess => vec![SubscriptionTier::Business],
             AddOn::ExtraSimulationsPack => vec![SubscriptionTier::Business],
@@ -330,7 +339,7 @@ impl AddOn {
         }
     }
     pub fn all() -> Vec<AddOn> {
-        vec![AddOn::ExtraWorkflowPack, AddOn::ExtraTeamPack, AddOn::CompliancePack, AddOn::AdvancedAnalytics, AddOn::PrioritySupport, AddOn::Z3SolverAccess, AddOn::ExtraSimulationsPack, AddOn::AuditExtendedRetention]
+        vec![AddOn::ExtraWorkflowPack, AddOn::ExtraTeamPack, AddOn::AdvancedAnalytics, AddOn::PolicyEngine, AddOn::HitlApprovals, AddOn::CompliancePack, AddOn::PrioritySupport, AddOn::Z3SolverAccess, AddOn::ExtraSimulationsPack, AddOn::AuditExtendedRetention]
     }
 }
 

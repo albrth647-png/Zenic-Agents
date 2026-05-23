@@ -1,7 +1,63 @@
 // ─── Feature & Usage Check WASM Exports ────────────────────────────────────
+//
+// Feature name mapping: The WASM engine uses PascalCase Feature enum variants
+// (e.g. "McpToolExecution"), while the TypeScript/Python layers use snake_case
+// (e.g. "mcp_gateway"). The `resolve_feature_name` function maps between them
+// so that BOTH naming conventions are accepted in `check_feature`.
 
 use wasm_bindgen::prelude::*;
 use types::*;
+
+/// Maps snake_case feature names (TypeScript/Python convention) to PascalCase
+/// Feature enum variants (WASM engine convention).
+/// Returns the PascalCase name if a mapping exists, otherwise returns the
+/// original name (allows direct PascalCase usage too).
+fn resolve_feature_name(name: &str) -> String {
+    match name {
+        // MCP Gateway
+        "mcp_gateway" => "McpToolExecution",
+        "mcp_tools_register" => "McpToolRegistration",
+        "mcp_rate_limit_custom" => "McpRateLimiting",
+        "mcp_audit_full" => "McpMerkleAudit",
+        // RBAC
+        "rbac_basic" => "RbacBasicRoles",
+        "rbac_full" => "RbacCustomRoles",
+        "rbac_dangerous_actions" => "RbacDangerousPermApproval",
+        // Observability
+        "observability_basic" => "ObservabilityTracing",
+        "observability_full" => "ObservabilityCustomDashboards",
+        "observability_export" => "ObservabilityOtelExport",
+        // Policy Engine
+        "policy_engine_basic" => "PolicyDeclarativeYaml",
+        "policy_engine_full" => "PolicyZ3Solver",
+        "policy_compliance_mapping" => "PolicyComplianceMapping",
+        "policy_conflict_detection" => "PolicyConflictDetection",
+        "policy_versioning" => "PolicyVersioning",
+        "policy_simulation" => "PolicySimulation",
+        // Playbooks
+        "playbook_library" => "PlaybookActivation",
+        "playbook_custom" => "PlaybookCustomYaml",
+        "playbook_roi" => "PlaybookRoiCalculator",
+        // HITL
+        "hitl_approvals" => "HitlApprovalWorkflow",
+        "hitl_reversible_actions" => "HitlUndoReversible",
+        "hitl_delegation" => "HitlDelegation",
+        "hitl_escalation" => "HitlEscalation",
+        "hitl_evidence" => "HitlEvidence",
+        "hitl_sla_tracking" => "HitlSlaTracking",
+        // Audit
+        "merkle_audit" => "AuditMerkleChain",
+        // Executors
+        "executor_basic" => "ExecutorBasic",
+        // Self-hosted
+        "self_hosted" => "OnPremiseDeployment",
+        "air_gap" => "OnPremiseAirGap",
+        "white_label" => "OnPremiseCustomBranding",
+        "source_code_access" => "OnPremiseDataResidency",
+        // If already PascalCase or unknown, return as-is
+        _ => name,
+    }.to_string()
+}
 
 #[wasm_bindgen]
 pub fn check_feature(tier_name: &str, feature_name: &str) -> String {
@@ -10,9 +66,11 @@ pub fn check_feature(tier_name: &str, feature_name: &str) -> String {
         None => return serde_json::json!({"error": format!("Unknown tier: {}", tier_name), "available": false}).to_string(),
     };
 
-    let feature: Feature = match serde_json::from_str::<Feature>(&format!("\"{}\"", feature_name)) {
+    // Accept both PascalCase and snake_case feature names
+    let resolved_name = resolve_feature_name(feature_name);
+    let feature: Feature = match serde_json::from_str::<Feature>(&format!("\"{}\"", resolved_name)) {
         Ok(f) => f,
-        Err(_) => return serde_json::json!({"error": format!("Unknown feature: {}", feature_name), "available": false}).to_string(),
+        Err(_) => return serde_json::json!({"error": format!("Unknown feature: {} (resolved: {})", feature_name, resolved_name), "available": false}).to_string(),
     };
 
     let available = feature_available(tier, feature);

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // SubscriptionTierName
 // ---------------------------------------------------------------------------
 
-/// The 5 subscription tier names for Zenic-Agents.
+/// The 4 subscription tier names for Zenic-Agents.
 ///
 /// Prices are in **USDT TRC20** only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

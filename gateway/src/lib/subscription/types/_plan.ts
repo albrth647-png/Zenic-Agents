@@ -174,6 +174,11 @@ export const ADD_ONS: AddOnDefinition[] = [
   { id: 'advanced_analytics', name: 'Advanced Analytics', monthlyPriceUsdt: 25, description: 'Full observability dashboard and analytics', compatibleTiers: ['starter', 'business'] },
   { id: 'policy_engine', name: 'Policy Engine', monthlyPriceUsdt: 30, description: 'Compliance mapping and policy enforcement', compatibleTiers: ['business'] },
   { id: 'hitl_approvals', name: 'HITL Approvals', monthlyPriceUsdt: 35, description: 'Human-in-the-loop approval chains', compatibleTiers: ['business'] },
+  { id: 'compliance_pack', name: 'Compliance Pack (+10 Standards)', monthlyPriceUsdt: 29, description: 'Add 10 additional compliance standards', compatibleTiers: ['business', 'enterprise'] },
+  { id: 'priority_support', name: 'Priority Support (SLA 4h)', monthlyPriceUsdt: 49, description: 'Priority support with 4-hour SLA', compatibleTiers: ['business', 'enterprise'] },
+  { id: 'z3_solver_access', name: 'Z3 Constraint Solver', monthlyPriceUsdt: 29, description: 'Access to Z3 constraint solver for policy analysis', compatibleTiers: ['business'] },
+  { id: 'extra_simulations_pack', name: 'Extra Simulations (+50)', monthlyPriceUsdt: 19, description: 'Add 50 additional policy simulations per month', compatibleTiers: ['business'] },
+  { id: 'audit_extended_retention', name: 'Audit Extended Retention (+365 days)', monthlyPriceUsdt: 19, description: 'Extend audit log retention by 365 days', compatibleTiers: ['starter', 'business'] },
 ];
 
 // ─── Payment ───

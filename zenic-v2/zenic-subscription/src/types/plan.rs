@@ -231,6 +231,61 @@ impl AddOn {
         }
     }
 
+    /// Compliance pack add-on.
+    pub fn compliance_pack() -> Self {
+        Self {
+            id: "compliance_pack".to_string(),
+            name: "Compliance Pack (+10 Standards)".to_string(),
+            monthly_price_usdt: 29,
+            description: "Add 10 additional compliance standards".to_string(),
+            compatible_tiers: vec![SubscriptionTierName::Business, SubscriptionTierName::Enterprise],
+        }
+    }
+
+    /// Priority support add-on.
+    pub fn priority_support() -> Self {
+        Self {
+            id: "priority_support".to_string(),
+            name: "Priority Support (SLA 4h)".to_string(),
+            monthly_price_usdt: 49,
+            description: "Priority support with 4-hour SLA".to_string(),
+            compatible_tiers: vec![SubscriptionTierName::Business, SubscriptionTierName::Enterprise],
+        }
+    }
+
+    /// Z3 solver access add-on.
+    pub fn z3_solver_access() -> Self {
+        Self {
+            id: "z3_solver_access".to_string(),
+            name: "Z3 Constraint Solver".to_string(),
+            monthly_price_usdt: 29,
+            description: "Access to Z3 constraint solver for policy analysis".to_string(),
+            compatible_tiers: vec![SubscriptionTierName::Business],
+        }
+    }
+
+    /// Extra simulations pack add-on.
+    pub fn extra_simulations_pack() -> Self {
+        Self {
+            id: "extra_simulations_pack".to_string(),
+            name: "Extra Simulations (+50)".to_string(),
+            monthly_price_usdt: 19,
+            description: "Add 50 additional policy simulations per month".to_string(),
+            compatible_tiers: vec![SubscriptionTierName::Business],
+        }
+    }
+
+    /// Audit extended retention add-on.
+    pub fn audit_extended_retention() -> Self {
+        Self {
+            id: "audit_extended_retention".to_string(),
+            name: "Audit Extended Retention (+365 days)".to_string(),
+            monthly_price_usdt: 19,
+            description: "Extend audit log retention by 365 days".to_string(),
+            compatible_tiers: vec![SubscriptionTierName::Starter, SubscriptionTierName::Business],
+        }
+    }
+
     /// Returns all available add-ons.
     pub fn all() -> Vec<AddOn> {
         vec![
@@ -239,6 +294,11 @@ impl AddOn {
             Self::advanced_analytics(),
             Self::policy_engine(),
             Self::hitl_approvals(),
+            Self::compliance_pack(),
+            Self::priority_support(),
+            Self::z3_solver_access(),
+            Self::extra_simulations_pack(),
+            Self::audit_extended_retention(),
         ]
     }
 

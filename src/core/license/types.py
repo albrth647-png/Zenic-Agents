@@ -15,8 +15,7 @@ from typing import Any, Dict, List, Optional
 class LicenseTier(str, Enum):
     """License tier levels — aligned with zenic-subscription Rust crate.
 
-    6-tier model:
-    - FREE: $0/mo — development/testing tier (basic_pipeline only)
+    5-tier model (aligned with Rust/TypeScript gateway):
     - STARTER: $29/mo USDT TRC20 — basic pipeline
     - BUSINESS: $99/mo USDT TRC20 — full pipeline (14-day trial tier)
     - ENTERPRISE: $299/mo USDT TRC20 — unlimited features
@@ -27,7 +26,6 @@ class LicenseTier(str, Enum):
     ``SubscriptionTierName`` used in the Rust gateway and zenic-subscription
     crate.  ``from_subscription_tier()`` provides the reverse mapping.
     """
-    FREE = "free"
     STARTER = "starter"
     BUSINESS = "business"
     ENTERPRISE = "enterprise"
@@ -42,7 +40,6 @@ class LicenseTier(str, Enum):
 
         Returns:
             The canonical tier name string:
-            - FREE → "starter" (free tier maps to Starter capabilities)
             - STARTER → "starter"
             - BUSINESS → "business"
             - ENTERPRISE → "enterprise"
@@ -50,7 +47,6 @@ class LicenseTier(str, Enum):
             - TRIAL → "business" (trial uses Business tier capabilities)
         """
         mapping: Dict[LicenseTier, str] = {
-            LicenseTier.FREE: "starter",
             LicenseTier.STARTER: "starter",
             LicenseTier.BUSINESS: "business",
             LicenseTier.ENTERPRISE: "enterprise",
@@ -76,7 +72,6 @@ class LicenseTier(str, Enum):
         """
         normalized = tier_name.lower().strip()
         mapping: Dict[str, LicenseTier] = {
-            "free": cls.FREE,
             "starter": cls.STARTER,
             "community": cls.STARTER,
             "business": cls.BUSINESS,
@@ -132,7 +127,7 @@ class LicenseInfo:
         metadata: Additional license metadata.
     """
     license_id: str = ""
-    tier: LicenseTier = LicenseTier.FREE
+    tier: LicenseTier = LicenseTier.STARTER
     status: LicenseStatus = LicenseStatus.INVALID
     issued_to: str = ""
     issued_at: float = 0.0

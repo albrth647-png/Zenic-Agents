@@ -87,7 +87,6 @@ class LicenseManager:
 
         if features is None:
             tier_features = {
-                LicenseTier.FREE: ["basic_pipeline", "chat_completions"],
                 LicenseTier.STARTER: [
                     "basic_pipeline", "chat_completions",
                     "memory_schema_drift", "executor_basic",
