@@ -1,0 +1,149 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-servers.json",
+  "_comment": "Configuración MCP unificada - Zenic-Agents Project",
+  "_generated": "2026-05-22",
+
+  "mcpServers": {
+
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/z/my-project"
+      ],
+      "description": "Leer/escribir archivos, buscar patrones en el filesystem del proyecto",
+      "priority": "CRITICAL",
+      "tools": ["read_file", "write_file", "search_files", "list_directory", "create_directory", "move_file", "get_file_info"]
+    },
+
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Grafo de conocimiento y memoria persistente entre sesiones",
+      "priority": "CRITICAL",
+      "tools": ["create_entities", "create_relations", "add_observations", "delete_entities", "delete_observations", "delete_relations", "read_graph", "search_nodes", "open_nodes"]
+    },
+
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Razonamiento paso a paso para debugging y análisis complejo",
+      "priority": "HIGH",
+      "tools": ["sequentialthinking"]
+    },
+
+    "everything": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything"],
+      "description": "Testing del protocolo MCP - verifica que la conexión funciona correctamente",
+      "priority": "LOW",
+      "tools": ["echo", "sampleLLM", "longRunningOperation"]
+    },
+
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "Gestionar issues, PRs, revisar código del repo. Automatizar fix de bugs",
+      "priority": "CRITICAL",
+      "tools": ["create_or_update_file", "search_repositories", "create_issue", "list_issues", "update_issue", "create_pull_request", "get_pull_request", "list_pull_requests", "create_branch", "fork_repository"]
+    },
+
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-sqlite-npx"],
+      "description": "Inspeccionar DBs SQLite directamente. Verificar schemas, migraciones, seed data",
+      "priority": "CRITICAL",
+      "tools": ["read_query", "write_query", "create_table"]
+    },
+
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_URL}"
+      },
+      "description": "Para la capa distribuida PostgreSQL. Verificar schemas, probar queries",
+      "priority": "HIGH",
+      "tools": ["query"]
+    },
+
+    "eslint": {
+      "command": "npx",
+      "args": ["-y", "@eslint/mcp"],
+      "description": "Calidad profesional TypeScript/JavaScript - linting en tiempo real",
+      "priority": "HIGH",
+      "tools": ["lint-files"]
+    },
+
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@mokei/mcp-fetch"],
+      "description": "Leer cualquier URL/web como markdown - fetch de documentación",
+      "priority": "MEDIUM",
+      "tools": ["get_markdown"]
+    },
+
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "description": "Buscar documentación actualizada de librerías sin salir del IDE",
+      "priority": "MEDIUM",
+      "tools": ["resolve-library-id", "get-library-docs"]
+    },
+
+    "sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "${SENTRY_TOKEN}"
+      },
+      "description": "Integrar con Sentry para error tracking en producción",
+      "priority": "MEDIUM",
+      "tools": ["search_events", "get_event_details", "list_projects"]
+    },
+
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp"],
+      "description": "Debuggear el gateway Next.js en tiempo real. Inspeccionar UI, network calls, errores de consola",
+      "priority": "HIGH",
+      "tools": ["navigate", "screenshot", "click", "evaluate", "getConsoleLogs"]
+    },
+
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"],
+      "description": "Testear el gateway Next.js: navegar, clicks, screenshots, formularios, console errors, network requests",
+      "priority": "HIGH",
+      "tools": ["browser_navigate", "browser_click", "browser_screenshot", "browser_type", "browser_console_messages"]
+    },
+
+    "tree-sitter": {
+      "command": "npx",
+      "args": ["-y", "@nendo/tree-sitter-mcp"],
+      "description": "Análisis AST real: buscar código semánticamente, find_usage, detectar dead code, check_errors con fixes sugeridos",
+      "priority": "MEDIUM",
+      "tools": ["search_code", "find_usage", "check_errors", "get_definition"]
+    },
+
+    "dependency-graph": {
+      "command": "npx",
+      "args": ["-y", "@syke1/mcp-server"],
+      "description": "Grafo de dependencias: impacto antes de modificar, archivos hub (PageRank), build gate, safety check",
+      "priority": "MEDIUM",
+      "tools": ["analyze_dependencies", "find_hub_files", "safety_check", "impact_analysis"]
+    },
+
+    "semantic-analyzer": {
+      "command": "node",
+      "args": ["/home/z/my-project/mcp-servers/custom-semantic/index.mjs"],
+      "description": "Servidor MCP personalizado: análisis semántico avanzado, anti-patrones, imports/exports, dependencias circulares, complejidad, tipos, código muerto",
+      "priority": "CRITICAL",
+      "tools": ["full_scan", "scan_patterns", "scan_imports_exports", "scan_circular_deps", "scan_complexity", "scan_types", "scan_dead_code", "health_check"]
+    }
+  }
+}

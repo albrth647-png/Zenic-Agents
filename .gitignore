@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Environment — NUNCA subir .env al repo
+.env
+
+# Skills & MCP — Son dependencias externas, no parte del proyecto
+skills/
+mcp-servers/
+
+# Workspace — Archivos de sesión, no del proyecto
+download/
+upload/
+worklog.md
+
+# Database
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+*.pyc
+dist/
+build/

@@ -1,0 +1,10 @@
+# Zenic-Agents v3.0.0 — Dependencias
+
+# Core — Sin dependencias externas. Todo es Python estándar.
+# El sistema es determinístico: no usa IA para generar contenido.
+
+# Testing
+pytest>=7.0.0
+
+# Type hints (desarrollo)
+# typing_extensions  — solo si Python < 3.11
