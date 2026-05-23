@@ -80,8 +80,8 @@ class BuiltContext:
     def has_tools(self) -> bool:
         return len(self.tools) > 0
 
-    def to_openai_messages(self) -> list[dict[str, Any]]:
-        """Convierte a formato OpenAI chat completion messages."""
+    def to_chat_messages(self) -> list[dict[str, Any]]:
+        """Convierte a formato de mensajes de chat."""
         msgs: list[dict[str, Any]] = []
 
         # System prompt
@@ -239,7 +239,7 @@ class ContextBuilder:
         """Construye el historial de mensajes."""
         recent = session.get_recent_messages(self._config.max_history_messages)
         return [
-            m.to_openai_format() for m in recent
+            m.to_chat_format() for m in recent
             if m.role in (MessageRole.USER, MessageRole.ASSISTANT, MessageRole.SYSTEM)
         ]
 
@@ -282,9 +282,9 @@ class ContextBuilder:
         return [e.to_context_dict() for e in result.entries]
 
     def _build_tools(self, intent: AssistantIntent) -> list[dict[str, Any]]:
-        """Obtiene tools relevantes en formato OpenAI."""
+        """Obtiene tools relevantes en formato de chat."""
         tools = self._tools.get_tools_for_intent(intent)
-        return [t.to_openai_format() for t in tools]
+        return [t.to_chat_format() for t in tools]
 
     def _build_conversation_state(self, session_id: str) -> dict[str, Any]:
         """Obtiene estado de conversacion."""

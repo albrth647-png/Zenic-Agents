@@ -7,31 +7,12 @@ Supports hot-swapping providers at runtime.
 Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 """
 
-import ipaddress
 import logging
 import threading
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
-
-
-def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
-    """Validate URL to prevent SSRF attacks."""
-    parsed = urlparse(url)
-    if parsed.scheme not in allowed_schemes:
-        raise ValueError(f"URL scheme '{parsed.scheme}' not allowed. Use: {allowed_schemes}")
-    if not parsed.hostname:
-        raise ValueError("URL must have a hostname")
-    try:
-        ip = ipaddress.ip_address(parsed.hostname)
-    except ValueError:
-        pass  # hostname is not an IP, that's OK
-    else:
-        if ip.is_private or ip.is_loopback or ip.is_reserved:
-            raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
-    return url
 
 
 # ======================================================================
@@ -124,95 +105,18 @@ class LocalProvider(LLMProvider):
         return vec[:dim]
 
 
-class RemoteProvider(LLMProvider):
-    """
-    Provider backed by an HTTP API (OpenAI-compatible).
-
-    Uses only stdlib :mod:`urllib` — no external dependencies.
-    """
-
-    def __init__(
-        self,
-        base_url: str = "http://localhost:11434/v1",
-        api_key: str = "",
-        model: str = "qwen3",
-        embed_model: str = "",
-        timeout: float = 120.0,
-    ) -> None:
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key
-        self._model = model
-        self._embed_model = embed_model or model
-        self._timeout = timeout
-        self._ready: bool = True  # optimistic; checked on first call
-
-    def complete(self, prompt: str, **kwargs: Any) -> str:
-        import json
-        import urllib.request
-        import urllib.error
-
-        url = _validate_url(f"{self._base_url}/chat/completions")
-        headers: Dict[str, str] = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-
-        body = {
-            "model": kwargs.pop("model", self._model),
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": kwargs.get("temperature", 0.7),
-            "max_tokens": kwargs.get("max_tokens", 2048),
-        }
-        data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-            return result["choices"][0]["message"]["content"]
-        except Exception as exc:
-            self._ready = False
-            raise RuntimeError(f"RemoteProvider: request failed – {exc}") from exc
-
-    def embed(self, text: str) -> List[float]:
-        import json
-        import urllib.request
-        import urllib.error
-
-        url = _validate_url(f"{self._base_url}/embeddings")
-        headers: Dict[str, str] = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-
-        body = {"model": self._embed_model, "input": text}
-        data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-            return result["data"][0]["embedding"]
-        except Exception as exc:
-            logger.warning("RemoteProvider: embed failed – %s, using fallback", exc)
-            return LocalProvider._pseudo_embed(text)
-
-    def is_ready(self) -> bool:
-        return self._ready
-
-
-# ======================================================================
-# Bridge
-# ======================================================================
-
 class AgentLLMBridge:
     """
     Bridge that decouples an agent from its LLM provider.
 
     Supports hot-swapping the provider at runtime so agents can switch
-    between local and remote inference without restart.
+    between providers without restart.
 
     Usage::
 
         bridge = AgentLLMBridge(LocalProvider(engine))
         result = bridge.complete("Hello")
-        bridge.switch_provider(RemoteProvider(url=...))
+        bridge.switch_provider(LocalProvider(another_engine))
         result2 = bridge.complete("Hello again")
     """
 

@@ -567,7 +567,7 @@ El Gateway es una aplicación Next.js 16 con TypeScript que expone 80+ API route
 | **hitl** | Human-in-the-loop TS | approval-engine, pipeline-integration, reversible-action, sla-service, expiry-service, notifications, approval-audit, delegation, justification-service, evidence-service, hitl-coordinator, types |
 | **observability** | Observabilidad TS | metrics/(collector, business, security, resilience), tracing/(collector, span-builder), export/(json, otel), types |
 | **playbooks** | Playbooks TS | engine, metrics-collector, yaml-loader, roi-calculator, pricing-engine, onboarding-wizard, compliance-map, certification, types |
-| **mcp-gateway** | Gateway MCP | protocol/(parser, types), auth/, audit/, engine/, adapters/(native, openai), services/, rate-limiter/, sdk/ |
+| **mcp-gateway** | Gateway MCP | protocol/(parser, types), auth/, audit/, engine/, adapters/(native), services/, rate-limiter/, sdk/ |
 | **subscription** | Suscripción TS | types.ts (524 líneas), feature-gate-middleware.ts, route-guards.ts, guard-handler.ts, index.ts |
 
 ---
@@ -1033,7 +1033,7 @@ Zenic-Agents/
 │   └── phase_d/                 # Phase D
 └── scripts/                     # Scripts de utilidad
     ├── install_termux.sh        # Instalación Android/Termux
-    └── fix_cline_connection.sh  # Fix conexión Cline
+    └── check_regressions.py  # Verificación de regresiones
 ```
 
 ---
@@ -1396,7 +1396,6 @@ python main.py
 | Compliance integrado | **8 estándares** | No | No | No |
 | 500MB RAM | **Diseñado para eso** | Pesado | Muy pesado | Pesado |
 | Auditoría Merkle | **Sí** | No | No | No |
-| API OpenAI-compatible | **Drop-in** | Framework | No | No |
 | Chip de Memoria Adaptativa | **3 mecanismos** | No | No | No |
 | DAG Adapter (inmutable) | **Sí** | No | No | No |
 | HITL con justificación obligatoria | **Sí** | No | No | No |
@@ -1428,7 +1427,6 @@ python main.py
 - [x] Pipeline Determinístico 9 pasos (GRIETA 2)
 - [x] Gateway TypeScript (Next.js 16, 80+ API routes)
 - [x] Sistema distribuido (PostgreSQL, SAGA, circuit breaker)
-- [x] API OpenAI-compatible (drop-in para Cline/Aide/OpenCode)
 - [x] 3 Grietas reparadas (DAG interception, 9-step pipeline, HITL mandatory fields)
 - [x] Plan Definitivo V3 — 47/47 requisitos aprobados
 

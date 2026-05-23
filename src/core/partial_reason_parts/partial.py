@@ -107,7 +107,7 @@ class PartialMixin:
             "ast_analysis": ast_analysis,
             "explanations": [content],
             "partial_reasoning": True,
-            # OpenAI-compatible partial reasoning payload
+            # Partial reasoning payload
             "partial_reasoning_payload": {
                 "content": content,
                 "tool_calls": [

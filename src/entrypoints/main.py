@@ -10,7 +10,7 @@ y Razonamiento Parcial con tool_calls.
 Interfaz TUI (Terminal UI) con Textual — funciona en Termux,
 proot-distro, VPS y cualquier terminal sin dependencias graficas.
 
-NOTA: El servidor OpenAI-compatible (src/server/) ha sido eliminado.
+NOTA: El servidor HTTP compatible (src/server/) ha sido eliminado.
 Este entry point ahora solo ejecuta el motor localmente via TUI,
 sin servidor HTTP. Para pruebas locales, usa el campo de texto.
 """
@@ -61,7 +61,7 @@ IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ
 class ZenicTUIApp(App):
     """ZENIC-AGENTS Motor de IA Quirurgico Local — Interfaz TUI.
 
-    NOTE: The OpenAI-compatible HTTP server has been removed.
+    NOTE: The HTTP server has been removed.
     This TUI now runs the engine locally only — no server startup.
     """
 

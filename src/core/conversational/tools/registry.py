@@ -42,7 +42,7 @@ class ToolRegistry:
     Permite:
       - Registrar tools con specs y handlers
       - Buscar por nombre o categoria
-      - Listar tools disponibles para OpenAI format
+      - Listar tools disponibles en formato de chat
       - Track de uso y errores
     """
 
@@ -137,9 +137,9 @@ class ToolRegistry:
                 if e.spec.enabled
             ]
 
-    def list_openai_format(self) -> list[dict[str, Any]]:
-        """Lista tools en formato OpenAI function calling."""
-        return [t.to_openai_format() for t in self.list_tools()]
+    def list_chat_format(self) -> list[dict[str, Any]]:
+        """Lista tools en formato de chat."""
+        return [t.to_chat_format() for t in self.list_tools()]
 
     # ─── Stats ────────────────────────────────────────────────
 

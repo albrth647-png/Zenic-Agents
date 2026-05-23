@@ -45,8 +45,8 @@ class ToolSpec:
     def is_dangerous(self) -> bool:
         return self.category == "system" or self.permission == ToolPermission.DENIED
 
-    def to_openai_format(self) -> dict[str, Any]:
-        """Convierte a formato OpenAI function calling."""
+    def to_chat_format(self) -> dict[str, Any]:
+        """Convierte a formato de herramienta para chat."""
         return {
             "type": "function",
             "function": {
@@ -74,8 +74,8 @@ class ToolCall:
     error: str = ""
     duration_ms: float = 0.0
 
-    def to_openai_format(self) -> dict[str, Any]:
-        """Convierte a formato OpenAI tool call."""
+    def to_chat_format(self) -> dict[str, Any]:
+        """Convierte a formato de llamada a herramienta."""
         return {
             "id": self.call_id,
             "type": "function",
@@ -107,8 +107,8 @@ class ToolResult:
     def is_error(self) -> bool:
         return not self.success or bool(self.error)
 
-    def to_openai_format(self) -> dict[str, Any]:
-        """Convierte a formato OpenAI tool result."""
+    def to_chat_format(self) -> dict[str, Any]:
+        """Convierte a formato de resultado de herramienta."""
         content = str(self.output) if self.success else f"Error: {self.error}"
         return {
             "tool_call_id": self.call_id,

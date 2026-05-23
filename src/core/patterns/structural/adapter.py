@@ -2,39 +2,17 @@
 ZENIC-AGENTS - Structural Pattern: Adapter
 
 Unified adapter layer for different LLM backends.
-Supports local (llama-cpp), OpenAI-compatible HTTP, and fallback chains.
+Supports local (llama-cpp) and fallback chains.
 
 Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 """
 
-import ipaddress
-import json
 import logging
 import threading
-import urllib.request
-import urllib.error
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
-
-
-def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
-    """Validate URL to prevent SSRF attacks."""
-    parsed = urlparse(url)
-    if parsed.scheme not in allowed_schemes:
-        raise ValueError(f"URL scheme '{parsed.scheme}' not allowed. Use: {allowed_schemes}")
-    if not parsed.hostname:
-        raise ValueError("URL must have a hostname")
-    try:
-        ip = ipaddress.ip_address(parsed.hostname)
-    except ValueError:
-        pass  # hostname is not an IP, that's OK
-    else:
-        if ip.is_private or ip.is_loopback or ip.is_reserved:
-            raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
-    return url
 
 
 # ======================================================================
@@ -110,80 +88,6 @@ class LocalLLMAdapter(LLMAdapter):
 
     def is_available(self) -> bool:
         return self._engine is not None and hasattr(self._engine, "_call_llm")
-
-
-class OpenAICompatibleAdapter(LLMAdapter):
-    """
-    Adapter for OpenAI-compatible HTTP API endpoints.
-
-    Sends a JSON POST to ``{base_url}/chat/completions`` and returns the
-    first choice's content.
-
-    No external HTTP library required — uses :mod:`urllib`.
-    """
-
-    def __init__(
-        self,
-        base_url: str = "http://localhost:11434/v1",
-        api_key: str = "",
-        model: str = "qwen3",
-        timeout: float = 120.0,
-    ) -> None:
-        """
-        Args:
-            base_url: Base URL of the OpenAI-compatible API (no trailing slash).
-            api_key: API key (optional for local servers).
-            model: Model identifier.
-            timeout: Request timeout in seconds.
-        """
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key
-        self._model = model
-        self._timeout = timeout
-
-    def generate(self, prompt: str, **kwargs: Any) -> str:
-        url = _validate_url(f"{self._base_url}/chat/completions")
-        headers: Dict[str, str] = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-
-        body: Dict[str, Any] = {
-            "model": kwargs.pop("model", self._model),
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": kwargs.get("temperature", 0.7),
-            "max_tokens": kwargs.get("max_tokens", 2048),
-        }
-
-        data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-            return result["choices"][0]["message"]["content"]
-        except urllib.error.URLError as exc:
-            logger.error("OpenAICompatibleAdapter: request failed – %s", exc)
-            raise RuntimeError(
-                f"OpenAICompatibleAdapter: request failed – {exc}"
-            ) from exc
-        except (KeyError, IndexError, json.JSONDecodeError) as exc:
-            logger.error("OpenAICompatibleAdapter: unexpected response – %s", exc)
-            raise RuntimeError(
-                f"OpenAICompatibleAdapter: unexpected response – {exc}"
-            ) from exc
-
-    def is_available(self) -> bool:
-        """Probe the ``/models`` endpoint to check availability."""
-        url = _validate_url(f"{self._base_url}/models")
-        headers: Dict[str, str] = {}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-        req = urllib.request.Request(url, headers=headers, method="GET")
-        try:
-            with urllib.request.urlopen(req, timeout=5.0) as resp:
-                return resp.status == 200
-        except Exception:
-            return False
 
 
 class FallbackLLMAdapter(LLMAdapter):

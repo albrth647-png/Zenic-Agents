@@ -21,12 +21,10 @@ Organization:
   -------------------
     LLMAdapter          — ABC for LLM backend adapters
     LocalLLMAdapter     — Wraps MiniAIEngine._call_llm
-    OpenAICompatibleAdapter — HTTP-based OpenAI API adapter
     FallbackLLMAdapter  — Primary → fallback chain
     AdapterRegistry     — Named LLMAdapter registry
     LLMProvider         — ABC for LLM providers (complete + embed)
     LocalProvider       — Local llama-cpp-python provider
-    RemoteProvider      — HTTP API provider
     AgentLLMBridge      — Bridge with hot-swappable provider
     LazyProxy           — Deferred object creation proxy
     CacheProxy          — TTL-based method result cache proxy
@@ -113,12 +111,10 @@ from src.core.patterns.creational import (
 from src.core.patterns.structural import (
     LLMAdapter,
     LocalLLMAdapter,
-    OpenAICompatibleAdapter,
     FallbackLLMAdapter,
     AdapterRegistry,
     LLMProvider,
     LocalProvider,
-    RemoteProvider,
     AgentLLMBridge,
     LazyProxy,
     CacheProxy,
@@ -213,12 +209,10 @@ __all__ = [
     # Structural
     "LLMAdapter",
     "LocalLLMAdapter",
-    "OpenAICompatibleAdapter",
     "FallbackLLMAdapter",
     "AdapterRegistry",
     "LLMProvider",
     "LocalProvider",
-    "RemoteProvider",
     "AgentLLMBridge",
     "LazyProxy",
     "CacheProxy",

@@ -331,7 +331,6 @@ python main.py
 - [x] Sistema de Suscripción SaaS — USDT TRC20, Saga pattern, feature gates
 - [x] Gateway TypeScript — Next.js 16, 80+ API routes
 - [x] Sistema distribuido (PostgreSQL, SAGA, circuit breaker)
-- [x] API OpenAI-compatible (drop-in para Cline/Aide/OpenCode)
 - [x] Plan Definitivo V3 — 47/47 requisitos aprobados
 - [x] 3 Grietas reparadas (DAG interception, 9-step pipeline, HITL mandatory fields)
 
@@ -369,7 +368,6 @@ python main.py
 | Compliance integrado | **8 estándares** | No | No | No |
 | 500MB RAM | **Diseñado para eso** | Pesado | Muy pesado | Pesado |
 | Auditoría Merkle | **Sí** | No | No | No |
-| API OpenAI-compatible | **Drop-in** | Framework | No | No |
 | Chip de Memoria | **3 mecanismos** | No | No | No |
 | Suscripción USDT TRC20 | **4 niveles** | No | No | No |
 

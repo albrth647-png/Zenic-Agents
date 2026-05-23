@@ -7,7 +7,7 @@ import type { SdkToolConfig, SdkExecutionContext, SdkToolResult } from "./types"
 /** Registered tool entry */
 export interface RegisteredTool {
   config: SdkToolConfig;
-  source: "sdk" | "adapter_openai" | "adapter_native" | "adapter_langchain";
+  source: "sdk" | "adapter_native" | "adapter_langchain";
   registeredAt: number;
 }
 

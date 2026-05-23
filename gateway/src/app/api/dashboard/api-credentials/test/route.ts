@@ -9,7 +9,6 @@ import { decrypt } from "@/lib/crypto";
 
 /** Prefijos esperados por plataforma */
 const PLATFORM_PREFIXES: Record<string, string[]> = {
-  openai: ["sk-"],
   anthropic: ["sk-ant-"],
   google: [], // No hay prefijo estándar, solo validación de longitud
 };

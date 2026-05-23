@@ -24,7 +24,7 @@ pub const AUTO_ACCEPT_CONFIDENCE: f64 = 0.70;
 pub const SUGGESTIONS_BY_TYPE: &[(&str, &[&str])] = &[
     ("auth_method", &["oauth2", "api_key", "saml", "ldap", "basic_auth", "mfa"]),
     ("business_type", &["llc", "corporation", "sole_proprietorship", "partnership", "cooperative", "nonprofit"]),
-    ("model_provider", &["openai", "anthropic", "google", "azure", "aws", "huggingface", "local"]),
+    ("model_provider", &["anthropic", "google", "azure", "aws", "huggingface", "local"]),
     ("payment_gateway", &["stripe", "paypal", "mercadopago", "square", "razorpay", "adyen"]),
     ("base_currency", &["USD", "EUR", "GBP", "MXN", "COP", "ARS", "BRL", "CLP", "PEN"]),
     ("trigger_type", &["webhook", "schedule", "event", "manual", "threshold", "data_change"]),

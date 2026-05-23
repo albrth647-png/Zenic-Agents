@@ -89,8 +89,8 @@ class Message:
     def is_tool(self) -> bool:
         return self.role == MessageRole.TOOL
 
-    def to_openai_format(self) -> dict[str, Any]:
-        """Convierte a formato OpenAI chat completion message."""
+    def to_chat_format(self) -> dict[str, Any]:
+        """Convierte a formato de mensaje de chat."""
         msg: dict[str, Any] = {"role": self.role.value, "content": self.content}
         if self.tool_calls:
             msg["tool_calls"] = self.tool_calls
@@ -175,10 +175,10 @@ class Session:
         """Filtra solo los mensajes del asistente."""
         return [m for m in self.messages if m.is_assistant]
 
-    def to_openai_messages(self, max_messages: int = 50) -> list[dict[str, Any]]:
-        """Convierte historial a formato OpenAI para context window."""
+    def to_chat_messages(self, max_messages: int = 50) -> list[dict[str, Any]]:
+        """Convierte historial a formato de mensajes para context window."""
         recent = self.get_recent_messages(max_messages)
-        return [m.to_openai_format() for m in recent]
+        return [m.to_chat_format() for m in recent]
 
     # ── Control de estado ──
 

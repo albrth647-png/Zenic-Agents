@@ -76,8 +76,8 @@ class AssistantResponse:
     def is_error(self) -> bool:
         return self.format == ResponseFormat.ERROR
 
-    def to_openai_format(self) -> dict[str, Any]:
-        """Convierte a formato OpenAI chat completion response."""
+    def to_chat_format(self) -> dict[str, Any]:
+        """Convierte a formato de respuesta de chat."""
         msg: dict[str, Any] = {
             "role": "assistant",
             "content": self.content,

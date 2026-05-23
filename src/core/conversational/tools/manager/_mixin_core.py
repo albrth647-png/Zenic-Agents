@@ -168,9 +168,9 @@ class ToolManager:
         """Lista las tools disponibles."""
         return self._registry.list_tools(category)
 
-    def list_tools_openai(self) -> list[dict[str, Any]]:
-        """Lista tools en formato OpenAI function calling."""
-        return self._registry.list_openai_format()
+    def list_tools_chat(self) -> list[dict[str, Any]]:
+        """Lista tools en formato de chat."""
+        return self._registry.list_chat_format()
 
     def is_tool_available(self, name: str) -> bool:
         """Verifica si una tool esta registrada y habilitada."""

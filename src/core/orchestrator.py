@@ -11,7 +11,7 @@ Incluye:
 - DeterministicPipeline: Todas las tareas sin IA
 - EvidenceCollector + ConsensusResolver: Consenso multi-señal
 - Protocolo Abortivo: auto-subdivision cuando el solver hace timeout
-- Razonamiento Parcial: response contract OpenAI-compatible
+- Razonamiento Parcial: response contract para respuestas parciales
 - Generacion contextual: usa datos del AST, solver y MCTS
 - Configuracion desde YAML
 

@@ -17,9 +17,8 @@ Design invariants:
 
 Fallback chain (by default):
   1. faster_whisper — best local STT (CTranslate2, CPU-friendly)
-  2. whisper — OpenAI Whisper (PyTorch, heavier)
-  3. cloud — Remote API (OpenAI Whisper API, Google STT)
-  4. dummy — Always available, returns empty transcription
+  2. whisper — Whisper local (PyTorch, heavier)
+  3. dummy — Always available, returns empty transcription
 
 Usage:
     ear = Ear()                              # Auto-detect best backend
@@ -173,7 +172,7 @@ class DummyBackend(STTBackend):
 class FasterWhisperBackend(STTBackend):
     """STT backend using faster-whisper (CTranslate2-based).
 
-    Faster-whisper is 4x faster than OpenAI Whisper with the same
+    Faster-whisper is 4x faster than Whisper local with the same
     accuracy. It uses CTranslate2 for efficient CPU/GPU inference.
 
     Requirements:
@@ -359,17 +358,17 @@ class FasterWhisperBackend(STTBackend):
 
 
 # ──────────────────────────────────────────────────────────────
-#  WHISPER BACKEND — OpenAI Whisper (PyTorch)
+#  WHISPER BACKEND — Whisper local (PyTorch)
 # ──────────────────────────────────────────────────────────────
 
 class WhisperBackend(STTBackend):
-    """STT backend using OpenAI Whisper (PyTorch-based).
+    """STT backend using Whisper local (PyTorch-based).
 
-    The original Whisper model. Slower than faster-whisper but
+    The Whisper model running locally. Slower than faster-whisper but
     more widely available and tested.
 
     Requirements:
-      pip install openai-whisper
+      pip install whisper
 
     Configuration:
       - model_size: tiny|base|small|medium|large
@@ -428,7 +427,7 @@ class WhisperBackend(STTBackend):
         audio_format: str = "",
         language: str = "",
     ) -> TranscriptionResult:
-        """Transcribe using OpenAI Whisper."""
+        """Transcribe using Whisper local."""
         start = time.monotonic()
 
         if not audio_bytes:
@@ -529,174 +528,6 @@ class WhisperBackend(STTBackend):
 
 
 # ──────────────────────────────────────────────────────────────
-#  CLOUD BACKEND — Remote STT API
-# ──────────────────────────────────────────────────────────────
-
-class CloudBackend(STTBackend):
-    """STT backend using a cloud API (OpenAI Whisper API, Google STT, etc.).
-
-    Requirements:
-      pip install openai  (for OpenAI Whisper API)
-
-    Configuration:
-      - api_key: API key for the cloud service
-      - api_base_url: API base URL (defaults to OpenAI)
-      - language: Language hint
-    """
-
-    def __init__(
-        self,
-        api_key: str = "",
-        api_base_url: str = "",
-        language: str = "",
-        timeout_seconds: float = 30.0,
-    ) -> None:
-        self._api_key = api_key
-        self._api_base_url = api_base_url
-        self._language = language
-        self._timeout = timeout_seconds
-
-    @property
-    def name(self) -> str:
-        return "cloud"
-
-    @property
-    def is_available(self) -> bool:
-        """Available if openai library is installed AND api_key is configured."""
-        if not self._api_key:
-            return False
-        try:
-            import openai  # noqa: F401
-            return True
-        except ImportError:
-            return False
-
-    def transcribe(
-        self,
-        audio_bytes: bytes,
-        audio_format: str = "",
-        language: str = "",
-    ) -> TranscriptionResult:
-        """Transcribe using cloud API (OpenAI Whisper API)."""
-        start = time.monotonic()
-
-        if not audio_bytes:
-            return TranscriptionResult(
-                success=False,
-                audio_format=audio_format,
-                backend="cloud",
-                error="Empty audio bytes",
-                source="cloud",
-            )
-
-        if not self._api_key:
-            return TranscriptionResult(
-                success=False,
-                audio_format=audio_format,
-                backend="cloud",
-                error="Cloud API key not configured",
-                source="cloud",
-            )
-
-        try:
-            import openai
-        except ImportError:
-            return TranscriptionResult(
-                success=False,
-                audio_format=audio_format,
-                backend="cloud",
-                error="openai library not installed — pip install openai",
-                source="cloud",
-            )
-
-        try:
-            import tempfile
-            import os
-
-            # OpenAI API requires a file with proper extension
-            ext = audio_format if audio_format else "wav"
-            # OpenAI supports: flac, m4a, mp3, mp4, mpeg, mpga, oga, ogg, wav, webm
-            suffix = f".{ext}" if not ext.startswith(".") else ext
-
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                tmp.write(audio_bytes)
-                tmp_path = tmp.name
-
-            try:
-                client_kwargs: Dict[str, Any] = {
-                    "api_key": self._api_key,
-                    "timeout": self._timeout,
-                }
-                if self._api_base_url:
-                    client_kwargs["base_url"] = self._api_base_url
-
-                client = openai.OpenAI(**client_kwargs)
-
-                with open(tmp_path, "rb") as audio_file:
-                    create_kwargs: Dict[str, Any] = {
-                        "model": "whisper-1",
-                        "file": audio_file,
-                        "response_format": "verbose_json",
-                    }
-                    lang = language or self._language or None
-                    if lang:
-                        create_kwargs["language"] = lang
-
-                    response = client.audio.transcriptions.create(**create_kwargs)
-
-                transcribed = response.text.strip() if response.text else ""
-
-                # Extract metadata from verbose response
-                detected_lang = getattr(response, "language", lang or "")
-                duration = getattr(response, "duration", 0.0)
-
-                result_duration = time.monotonic() - start
-                _logger.info(
-                    "CloudBackend: transcribed in %.1fs (text_len=%d, lang=%s)",
-                    result_duration, len(transcribed), detected_lang,
-                )
-
-                return TranscriptionResult(
-                    success=True,
-                    transcribed_text=transcribed,
-                    confidence=0.9,  # Cloud APIs are generally high-confidence
-                    language=detected_lang,
-                    duration_seconds=duration,
-                    audio_format=audio_format,
-                    backend="cloud",
-                    source="cloud",
-                )
-
-            finally:
-                try:
-                    os.unlink(tmp_path)
-                except OSError:
-                    pass
-
-        except Exception as e:
-            duration = time.monotonic() - start
-            _logger.error(
-                "CloudBackend: transcription failed in %.1fs: %s",
-                duration, e,
-            )
-            return TranscriptionResult(
-                success=False,
-                audio_format=audio_format,
-                backend="cloud",
-                error=f"Cloud API error: {e}",
-                source="cloud",
-            )
-
-    def health_check(self) -> Dict[str, Any]:
-        return {
-            "backend": "cloud",
-            "available": self.is_available,
-            "has_api_key": bool(self._api_key),
-            "api_base_url": self._api_base_url or "(default OpenAI)",
-        }
-
-
-# ──────────────────────────────────────────────────────────────
 #  BACKEND REGISTRY — Known backend classes
 # ──────────────────────────────────────────────────────────────
 
@@ -704,14 +535,12 @@ _BACKEND_CLASSES: Dict[str, Type[STTBackend]] = {
     "dummy": DummyBackend,
     "faster_whisper": FasterWhisperBackend,
     "whisper": WhisperBackend,
-    "cloud": CloudBackend,
 }
 
 # Default fallback chain — tried in order, first available wins
 _DEFAULT_FALLBACK_CHAIN: Sequence[str] = (
     "faster_whisper",
     "whisper",
-    "cloud",
     "dummy",
 )
 
@@ -820,13 +649,6 @@ class Ear:
                         model_size=config.model_size,
                         device=config.device,
                         language=config.language,
-                    )
-                elif name == "cloud":
-                    backend = cls(
-                        api_key=config.api_key,
-                        api_base_url=config.api_base_url,
-                        language=config.language,
-                        timeout_seconds=config.timeout_seconds,
                     )
                 else:
                     backend = cls()
@@ -1050,7 +872,6 @@ __all__ = [
     "DummyBackend",
     "FasterWhisperBackend",
     "WhisperBackend",
-    "CloudBackend",
     "Ear",
     "_BACKEND_CLASSES",
     "_DEFAULT_FALLBACK_CHAIN",

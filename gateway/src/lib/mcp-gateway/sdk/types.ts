@@ -91,5 +91,5 @@ export interface SdkToolResult<
 export interface SdkToolRegistryEntry {
   config: SdkToolConfig;
   registeredAt: number;
-  source: "sdk" | "adapter_openai" | "adapter_native" | "adapter_langchain";
+  source: "sdk" | "adapter_native" | "adapter_langchain";
 }

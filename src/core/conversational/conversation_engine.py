@@ -219,7 +219,7 @@ class ConversationEngine:
             return {}
         ctx = self._context_builder.build(session=session, intent=intent, personality=personality, user_message=intent.raw_text)
         return {
-            "system_prompt": ctx.system_prompt, "messages": ctx.to_openai_messages(),
+            "system_prompt": ctx.system_prompt, "messages": ctx.to_chat_messages(),
             "tools": ctx.tools, "conversation_state": ctx.conversation_state,
             "sources_used": ctx.sources_used, "build_time_ms": ctx.build_time_ms,
         }

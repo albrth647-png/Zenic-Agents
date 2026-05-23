@@ -140,7 +140,7 @@ class VoiceChannelAgent:
     def _transcribe(self, wav_path: Path) -> tuple[str, str, float]:
         """Transcribe audio a texto usando whisper local o servicio determinista."""
         # En producción, usar:
-        # 1. whisper local (openai-whisper)
+        # 1. whisper local
         # 2. O servicio de transcripción determinista
         # Por ahora, placeholder que indica que necesita implementación real
 
