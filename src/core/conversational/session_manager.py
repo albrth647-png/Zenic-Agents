@@ -18,12 +18,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
-import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .types.session import (
     Session, SessionId, SessionState, SessionConfig,
-    Message, MessageRole, new_session_id,
+    Message, MessageRole,
 )
 from .config.constants import (
     SESSION_TIMEOUT_SECONDS,

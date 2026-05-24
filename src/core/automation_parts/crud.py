@@ -8,7 +8,6 @@ Contains:
   - Workflow persistence (save / log execution)
 """
 
-import os
 import re
 import json
 import time
@@ -141,7 +140,7 @@ class CoreCRUDMixin:
         # Webhook patterns (check before event to avoid substring false matches)
         webhook_keywords = ["webhook", "callback", "http post", "endpoint"]
         if any(kw in desc_lower for kw in webhook_keywords):
-            return Trigger(type=TriggerType.WEBHOOK, config={"path": f"/webhook/custom"})
+            return Trigger(type=TriggerType.WEBHOOK, config={"path": "/webhook/custom"})
 
         # Event patterns (use word-boundary matching for short keywords)
         event_keywords = ["cuando", "when", "al detectar", "on event"]

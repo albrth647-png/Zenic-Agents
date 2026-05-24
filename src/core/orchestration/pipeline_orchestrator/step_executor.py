@@ -13,7 +13,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -146,7 +145,6 @@ class StepExecutor:
         Returns:
             StepResult with execution outcome.
         """
-        effective_timeout = timeout if timeout is not None else self._default_timeout
         effective_retries = retries if retries is not None else self._max_retries
         result = StepResult(
             step_id=step_id,

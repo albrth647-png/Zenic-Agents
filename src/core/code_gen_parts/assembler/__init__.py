@@ -11,7 +11,7 @@ from ._helpers_mixin import AssemblerHelpersMixin
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.assembler")
 
-__all__ = ["CodeAssembler"]
+__all__ = ["CodeAssembler", "Any"]
 
 
 class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, AssemblerHelpersMixin):

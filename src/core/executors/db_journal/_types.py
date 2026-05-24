@@ -71,3 +71,4 @@ class RollbackResult:
     operation: str = ""
     rows_restored: int = 0
     errors: List[str] = field(default_factory=list)
+__all__ = ["JournalEntry", "RollbackResult"]

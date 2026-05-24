@@ -8,7 +8,6 @@ KnowledgeBase durante la inicializacion.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from .knowledge import KnowledgeBase
 

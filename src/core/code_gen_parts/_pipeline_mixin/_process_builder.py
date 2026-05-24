@@ -48,7 +48,7 @@ class ProcessBuilderMixin:
                 logger.warning(f"M1: CodeAssembler fallback for {safe_target}: {e}")
 
         # Fallback: inline real CRUD logic (NOT a stub)
-        table_name = safe_target.lower() + "s"
+        safe_target.lower() + "s"
         return f'''
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Real CRUD operations for {safe_target} — NOT a stub."""

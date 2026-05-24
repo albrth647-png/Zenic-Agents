@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ._helpers import _parse_color
 from ._limits import LIMITS
 from ._text import truncate, sanitize_plain_text, sanitize_html
 from .._types import ChannelMessage, ConfirmationRequest

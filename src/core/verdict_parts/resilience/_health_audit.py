@@ -7,7 +7,6 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from ._types import VerdictCircuitState
 from ._circuit_breaker import VerdictHealthSnapshot
 
 logger = logging.getLogger("zenic_agents.verdict_parts.resilience")
@@ -205,7 +204,6 @@ class VerdictAuditor:
             source_counts: Dict[str, int] = {}
             timeout_count = 0
             ambiguous_count = 0
-            llm_failure_streak = 0
             max_llm_failure_streak = 0
             current_streak = 0
 

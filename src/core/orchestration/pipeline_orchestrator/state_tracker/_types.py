@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # noqa: F821  # TODO: Phase3 - verify import
 
 class PipelineStatus(str, Enum):
     """Overall pipeline status."""
@@ -130,3 +130,4 @@ class PipelineState:
             sid for sid, s in self.steps.items()
             if s.status == StepExecutionStatus.COMPLETED
         ]
+__all__ = ["PipelineState", "PipelineStatus", "StepExecutionStatus", "StepState", "logger"]

@@ -25,11 +25,7 @@ from ._types import BackendConfig, BackendType
 
 logger = logging.getLogger("zenic_agents.distributed.backend")
 
-__all__ = [
-    "CoordinationBackend",
-    "BackendConfig",
-    "BackendType",
-]
+__all__ = ["CoordinationBackend", "BackendConfig", "BackendType", "ABC", "abstractmethod"]
 
 
 # ============================================================
@@ -37,8 +33,8 @@ __all__ = [
 # ============================================================
 
 
-from ._core_mixin import CoordinationBackendCoreMixin
-from ._extra_mixin import CoordinationBackendExtraMixin
+from ._core_mixin import CoordinationBackendCoreMixin  # noqa: E402
+from ._extra_mixin import CoordinationBackendExtraMixin  # noqa: E402
 
 
 class CoordinationBackend(CoordinationBackendCoreMixin, CoordinationBackendExtraMixin):

@@ -84,3 +84,4 @@ class DiffResult:
             "estimated_risk": self.estimated_risk,
             "summary": self.summary,
         }
+__all__ = ["DiffEntry", "DiffResult"]

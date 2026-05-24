@@ -23,7 +23,7 @@ import json
 import time
 from typing import Any, Dict, Optional
 
-from .circuit_breaker import AgentCircuitBreaker, CircuitBreakerManager, CircuitState
+from .circuit_breaker import CircuitBreakerManager, CircuitState
 
 __all__ = [
     "RedisCircuitBreakerManager",

@@ -35,10 +35,4 @@ def reset_expiry_manager() -> None:
     _expiry_instance = None
 
 
-__all__ = [
-    "ExpiryConfig",
-    "ExpiryRecord",
-    "ExpiryManager",
-    "get_expiry_manager",
-    "reset_expiry_manager",
-]
+__all__ = ["ExpiryConfig", "ExpiryRecord", "ExpiryManager", "get_expiry_manager", "reset_expiry_manager", "_MAX_RETRIES", "_RETRY_DELAY"]

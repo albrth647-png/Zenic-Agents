@@ -10,7 +10,6 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 from src.core.shared.retry import with_retry
-from src.core.shared.db_initializer import get_data_dir
 from src.core.executors.db_journal._types import JournalEntry, RollbackResult
 from src.core.executors.db_journal._helpers import (
     extract_table_and_where_from_delete,

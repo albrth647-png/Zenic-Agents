@@ -3,8 +3,7 @@
 import logging
 import threading
 import time
-import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ._types import SagaStatus, SagaStep, SagaContext
 

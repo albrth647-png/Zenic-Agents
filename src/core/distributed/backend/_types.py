@@ -3,7 +3,6 @@
 import enum
 import uuid
 from dataclasses import dataclass, field
-from typing import Optional
 
 from src.core.patterns.resilience.retry import RetryConfig
 
@@ -60,3 +59,4 @@ class BackendConfig:
     def __post_init__(self) -> None:
         if not self.node_id:
             self.node_id = f"node-{uuid.uuid4().hex[:8]}"
+__all__ = ["BackendConfig", "BackendType"]

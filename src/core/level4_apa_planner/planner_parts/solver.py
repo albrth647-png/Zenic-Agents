@@ -38,7 +38,7 @@ class SolverMixin:
         """
         solver_type = "Z3" if HAS_Z3 else "AC-3"
         effective_timeout = timeout_ms or self.solver_timeout_ms
-        governor = get_governor()
+        get_governor()
 
         logger.info("Running %s solver for surgical node: %s (timeout: %dms)",
                      solver_type, intent.target, effective_timeout)

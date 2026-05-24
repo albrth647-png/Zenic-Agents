@@ -304,3 +304,72 @@ impl DomainSafetyCheckResult {
         )
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Interop with zenic-safety — From conversions
+//
+//  These impls allow seamless conversion between the PyO3-exposed
+//  types in this module and the canonical zenic-safety types.
+//  zenic-safety now contains the superset of ComplianceStandard
+//  variants (including FedRamp and PciDss12), making it the
+//  single source of truth.
+// ═══════════════════════════════════════════════════════════════
+
+impl From<zenic_safety::ComplianceStandard> for ComplianceStandard {
+    fn from(s: zenic_safety::ComplianceStandard) -> Self {
+        match s {
+            zenic_safety::ComplianceStandard::Hipaa => ComplianceStandard::Hipaa,
+            zenic_safety::ComplianceStandard::PciDss => ComplianceStandard::PciDss,
+            zenic_safety::ComplianceStandard::Gdpr => ComplianceStandard::Gdpr,
+            zenic_safety::ComplianceStandard::Sox => ComplianceStandard::Sox,
+            zenic_safety::ComplianceStandard::AmlKyc => ComplianceStandard::AmlKyc,
+            zenic_safety::ComplianceStandard::FedRamp => ComplianceStandard::FedRamp,
+            zenic_safety::ComplianceStandard::Iso27001 => ComplianceStandard::Iso27001,
+            zenic_safety::ComplianceStandard::Soc2 => ComplianceStandard::Soc2,
+            zenic_safety::ComplianceStandard::Coppa => ComplianceStandard::Coppa,
+            zenic_safety::ComplianceStandard::PciDss12 => ComplianceStandard::PciDss12,
+        }
+    }
+}
+
+impl From<ComplianceStandard> for zenic_safety::ComplianceStandard {
+    fn from(s: ComplianceStandard) -> Self {
+        match s {
+            ComplianceStandard::Hipaa => zenic_safety::ComplianceStandard::Hipaa,
+            ComplianceStandard::PciDss => zenic_safety::ComplianceStandard::PciDss,
+            ComplianceStandard::Gdpr => zenic_safety::ComplianceStandard::Gdpr,
+            ComplianceStandard::Sox => zenic_safety::ComplianceStandard::Sox,
+            ComplianceStandard::AmlKyc => zenic_safety::ComplianceStandard::AmlKyc,
+            ComplianceStandard::FedRamp => zenic_safety::ComplianceStandard::FedRamp,
+            ComplianceStandard::Iso27001 => zenic_safety::ComplianceStandard::Iso27001,
+            ComplianceStandard::Soc2 => zenic_safety::ComplianceStandard::Soc2,
+            ComplianceStandard::Coppa => zenic_safety::ComplianceStandard::Coppa,
+            ComplianceStandard::PciDss12 => zenic_safety::ComplianceStandard::PciDss12,
+        }
+    }
+}
+
+impl From<zenic_safety::DomainSafetyCheckResult> for DomainSafetyCheckResult {
+    /// Convert the strongly-typed zenic-safety result to the PyO3 String-based version.
+    /// This serializes enum fields to their string representations for Python consumption.
+    fn from(r: zenic_safety::DomainSafetyCheckResult) -> Self {
+        DomainSafetyCheckResult {
+            base_verdict: r.base_verdict.as_str().to_string(),
+            domain_verdict: r.domain_verdict.as_str().to_string(),
+            final_verdict: r.final_verdict.as_str().to_string(),
+            niche_category: r.niche_category.as_str().to_string(),
+            data_sensitivity: r.data_sensitivity.as_str().to_string(),
+            domain_rules_matched: r.domain_rules_matched,
+            compliance_results: r.compliance_results.into_iter().map(|cr| ComplianceCheckResult {
+                standard: cr.standard.as_str().to_string(),
+                compliant: cr.compliant,
+                violations: cr.violations,
+                recommendations: cr.recommendations,
+                risk_level: cr.risk_level,
+            }).collect(),
+            escalation_applied: r.escalation_applied,
+            reason: r.reason,
+            can_proceed: r.can_proceed,
+        }
+    }
+}

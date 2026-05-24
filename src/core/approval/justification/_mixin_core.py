@@ -4,11 +4,10 @@ Mandatory Justification — Core Mixin.
 
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from ..chain import ApprovalPriority
 from ._types import JustificationRequirement, ApprovalJustification, _MAX_RETRIES, _RETRY_DELAY

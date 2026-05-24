@@ -26,7 +26,7 @@ from ._api_mixin import PublicAPIMixin
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ProjectRunner", "RunResult"]
+__all__ = ["ProjectRunner", "RunResult", "os"]
 
 
 class ProjectRunner(PublicAPIMixin, HelpersMixin):

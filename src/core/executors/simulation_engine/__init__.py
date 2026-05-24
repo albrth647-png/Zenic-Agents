@@ -25,14 +25,14 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from src.core.native import (
-    topological_sort as _native_topological_sort,
-    detect_cycles as _native_detect_cycles,
-    aggregate_impact as _native_aggregate_impact,
-    simulate_dag as _native_simulate_dag,
-    calculate_blast_radius as _native_calculate_blast_radius,
-    propagate_risks as _native_propagate_risks,
-    find_critical_path as _native_find_critical_path,
-    HAS_NATIVE as _HAS_NATIVE,
+    topological_sort as _native_topological_sort,  # noqa: F401
+    detect_cycles as _native_detect_cycles,  # noqa: F401
+    aggregate_impact as _native_aggregate_impact,  # noqa: F401
+    simulate_dag as _native_simulate_dag,  # noqa: F401
+    calculate_blast_radius as _native_calculate_blast_radius,  # noqa: F401
+    propagate_risks as _native_propagate_risks,  # noqa: F401
+    find_critical_path as _native_find_critical_path,  # noqa: F401
+    HAS_NATIVE as _HAS_NATIVE,  # noqa: F401
 )
 
 from ._helpers import ensure_db, persist_result, retry
@@ -40,13 +40,7 @@ from ._types import ScenarioComparison, SimulationResult, extract_risk_score
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "SimulationResult",
-    "ScenarioComparison",
-    "SimulationEngine",
-    "get_simulation_engine",
-    "reset_simulation_engine",
-]
+__all__ = ["SimulationResult", "ScenarioComparison", "SimulationEngine", "get_simulation_engine", "reset_simulation_engine", "topological_sort", "detect_cycles", "aggregate_impact", "simulate_dag", "calculate_blast_radius", "propagate_risks", "find_critical_path", "HAS_NATIVE", "DryRunExecutor", "ImpactPreviewEngine"]
 
 
 class SimulationEngine:
@@ -75,7 +69,7 @@ class SimulationEngine:
     def dry_run_executor(self) -> Any:
         """Lazy-load the DryRunExecutor singleton."""
         if self._dry_run_executor is None:
-            from .dry_run_executor import DryRunExecutor, get_dry_run_executor
+            from .dry_run_executor import DryRunExecutor, get_dry_run_executor  # noqa: F401
             self._dry_run_executor = get_dry_run_executor()
         return self._dry_run_executor
 
@@ -83,7 +77,7 @@ class SimulationEngine:
     def impact_preview_engine(self) -> Any:
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
-            from .impact_preview import ImpactPreviewEngine, get_impact_preview_engine
+            from .impact_preview import ImpactPreviewEngine, get_impact_preview_engine  # noqa: F401
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 

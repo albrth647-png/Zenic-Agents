@@ -3,17 +3,16 @@
 import logging
 from typing import Any, Dict, List
 
-from ..types import VerdictOutput
 from ._config import VERDICT_CONSENSUS_ATTEMPTS, VERDICT_MAX_RETRIES
 
 try:
     from ..resilience import (
-        VerdictCircuitBreaker,
-        VerdictRetryConfig,
-        VerdictHealthMonitor,
-        VerdictAuditor,
-        VerdictAuditEntry,
-        VerdictResilienceOrchestrator,
+        VerdictCircuitBreaker,  # noqa: F401
+        VerdictRetryConfig,  # noqa: F401
+        VerdictHealthMonitor,  # noqa: F401
+        VerdictAuditor,  # noqa: F401
+        VerdictAuditEntry,  # noqa: F401
+        VerdictResilienceOrchestrator,  # noqa: F401
     )
     _RESILIENCE_AVAILABLE = True
 except ImportError:

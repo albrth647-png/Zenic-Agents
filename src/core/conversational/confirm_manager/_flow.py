@@ -10,11 +10,10 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ._types import (
     STATUS_APPROVED,
-    STATUS_CANCELLED,
     STATUS_CONFIRMED,
     STATUS_DENIED,
     STATUS_EXPIRED,

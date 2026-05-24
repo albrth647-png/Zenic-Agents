@@ -8,7 +8,6 @@ Eliminates duplicated SQL utility code across engine modules:
 
 import logging
 import re
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

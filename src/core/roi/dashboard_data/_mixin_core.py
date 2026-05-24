@@ -10,7 +10,7 @@ import logging
 import threading
 from typing import Any, Dict, List
 
-from ._types import TrendPoint, DashboardWidget
+from ._types import DashboardWidget
 from ._mixin_trends import DashboardTrendsMixin
 
 logger = logging.getLogger(__name__)

@@ -10,7 +10,6 @@ Uso:
   python3 main_conversational.py --debug            # Modo debug
 """
 
-import os
 import sys
 import logging
 import argparse
@@ -18,7 +17,7 @@ import argparse
 from src.core.env_loader import load_env
 load_env()
 
-from src.core.shared._version import ZENIC_VERSION_STR, ZENIC_FULL_NAME
+from src.core.shared._version import ZENIC_VERSION_STR  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,9 +60,9 @@ def main() -> None:
     print(f"\n{'=' * 60}")
     print(f"  ZENIC-AGENTS {ZENIC_VERSION_STR} — Asistente Conversacional")
     print(f"  Motor: {type(engine).__name__}")
-    print(f"  Modo: Local (sin servidor HTTP)")
+    print("  Modo: Local (sin servidor HTTP)")
     print(f"{'=' * 60}")
-    print(f"  Escribe tu consulta. 'quit' para salir.")
+    print("  Escribe tu consulta. 'quit' para salir.")
     print(f"{'=' * 60}\n")
 
     # Interactive loop

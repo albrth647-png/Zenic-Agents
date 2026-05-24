@@ -1,7 +1,7 @@
 """SmartPromptChain - Step Planners Mixin."""
 
 import logging
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from ._types import GenerationStep
 
@@ -184,12 +184,12 @@ class SmartChainPlannersMixin:
             GenerationStep(
                 step_id=2, step_type="class_def",
                 description=f"AnalyticsService for {entity_name}",
-                prompt=f"Generate AnalyticsService class with __init__(db_path). Connect to SQLite. Output ONLY class + __init__. Max 15 lines.",
+                prompt="Generate AnalyticsService class with __init__(db_path). Connect to SQLite. Output ONLY class + __init__. Max 15 lines.",
             ),
             GenerationStep(
                 step_id=3, step_type="method",
                 description="Aggregation methods",
-                prompt=f"Generate get_summary() and get_trends(metric, period) methods using SQL aggregation. Output ONLY methods. Max 25 lines.",
+                prompt="Generate get_summary() and get_trends(metric, period) methods using SQL aggregation. Output ONLY methods. Max 25 lines.",
             ),
         ]
         return steps

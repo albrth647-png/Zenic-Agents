@@ -6,7 +6,7 @@ Validation and sanitization blocks: required, types, ranges, unique, sanitize.
 
 import re
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 from copy import deepcopy
 
 from .chain import LogicBlock, _validate_identifier
@@ -85,7 +85,7 @@ class ValidateTypesBlock(LogicBlock):
                 python_type = type_map.get(expected_type, None)
                 if python_type and not isinstance(value, python_type):
                     # Allow int for float fields
-                    if python_type == float and isinstance(value, int):
+                    if python_type is float and isinstance(value, int):
                         continue
                     mismatches.append({
                         "field": field_name,

@@ -16,7 +16,7 @@ from ._utils_mixin import SmartChainUtilsMixin
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
-__all__ = ["SmartPromptChain", "GenerationStep", "ChainResult"]
+__all__ = ["SmartPromptChain", "GenerationStep", "ChainResult", "Any", "MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS"]
 
 
 class SmartPromptChain(

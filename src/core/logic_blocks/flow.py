@@ -5,7 +5,7 @@ Control flow blocks: conditional, loop, parallel, switch, try_catch.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 

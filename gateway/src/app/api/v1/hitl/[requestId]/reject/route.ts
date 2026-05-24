@@ -1,8 +1,10 @@
 // ─── Zenic-Agents v3 — HITL API: Reject Request ──────────────────────
 // POST /api/v1/hitl/[requestId]/reject
+// ⚠️ SECURITY FIX (Phase 0): Added authentication — decisionBy comes from verified session
 
 import { NextRequest, NextResponse } from "next/server";
 import { getApprovalEngine } from "@/lib/hitl";
+import { requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;
@@ -14,25 +16,29 @@ export async function POST(
   { params }: RouteParams,
 ) {
   try {
+    // SECURITY: Require operator+ role to reject requests
+    const { user } = await requireAuthAndPermission(request, "operator");
+
     const { requestId } = await params;
     const body = await request.json();
 
-    if (!body.decisionBy || !body.decisionByName || !body.role || !body.comment) {
+    if (!body.comment) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: decisionBy, decisionByName, role, comment (rejection reason is required)",
+          error: "Missing required field: comment (rejection reason is required)",
           code: "VALIDATION_ERROR",
         },
         { status: 400 },
       );
     }
 
+    // SECURITY: decisionBy and role from verified session
     const engine = getApprovalEngine();
     const result = await engine.rejectRequest(requestId, {
-      decisionBy: body.decisionBy,
-      decisionByName: body.decisionByName,
-      role: body.role,
+      decisionBy: user.id,
+      decisionByName: user.name || user.email,
+      role: user.role,
       comment: body.comment,
     });
 
@@ -41,6 +47,9 @@ export async function POST(
       data: result,
     });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     if (error instanceof Error) {
       if (error.message.includes("not found")) {
         return NextResponse.json(

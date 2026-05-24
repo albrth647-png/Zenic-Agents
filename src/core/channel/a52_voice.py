@@ -8,7 +8,6 @@ La IA solo se usa en el SafetyGate para aprobar/rechazar el resultado.
 
 from __future__ import annotations
 
-import os
 import logging
 from dataclasses import dataclass, field
 from typing import Any

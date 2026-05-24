@@ -133,3 +133,92 @@ export function generateRequestSignature(url: string): { signature: string; time
 
   return { signature, timestamp };
 }
+
+// ─── Unified Auth Guards (Phase 0 — F0.6) ────────────────────────────────
+// These wrappers enforce authentication consistently across all API routes.
+// CRITICAL: Every POST/PUT/DELETE/PATCH endpoint MUST use one of these.
+
+export interface AuthResult {
+  user: AuthUser;
+}
+
+/**
+ * Require authentication — any authenticated user is allowed.
+ * Returns the authenticated user or throws a 401 response.
+ *
+ * Usage:
+ *   const { user } = await requireAuth(request);
+ */
+export async function requireAuth(req: NextRequest): Promise<AuthResult> {
+  const user = await getAuthUser(req);
+  if (!user) {
+    throw new AuthError('Authentication required', 401, 'UNAUTHORIZED');
+  }
+  return { user };
+}
+
+/**
+ * Require authentication AND a minimum role.
+ * Role hierarchy: user < operator < admin
+ *
+ * Usage:
+ *   const { user } = await requireAuthAndPermission(request, 'operator');
+ */
+export async function requireAuthAndPermission(
+  req: NextRequest,
+  minRole: 'user' | 'operator' | 'admin' = 'operator',
+): Promise<AuthResult> {
+  const { user } = await requireAuth(req);
+  if (!hasMinRole(user.role, minRole)) {
+    throw new AuthError(
+      `Insufficient permissions: requires '${minRole}' role, got '${user.role}'`,
+      403,
+      'FORBIDDEN',
+    );
+  }
+  return { user };
+}
+
+/**
+ * Custom error class for auth failures that can be caught in route handlers
+ * and converted to proper NextResponse objects.
+ */
+export class AuthError extends Error {
+  public readonly statusCode: number;
+  public readonly code: string;
+
+  constructor(message: string, statusCode: number, code: string) {
+    super(message);
+    this.name = 'AuthError';
+    this.statusCode = statusCode;
+    this.code = code;
+  }
+
+  /** Convert to a standard JSON NextResponse */
+  toResponse(): Response {
+    return Response.json(
+      { success: false, error: this.message, code: this.code },
+      { status: this.statusCode },
+    );
+  }
+}
+
+/**
+ * Helper to handle AuthError in route catch blocks.
+ * If the error is an AuthError, return its response; otherwise rethrow.
+ *
+ * Usage:
+ *   try {
+ *     const { user } = await requireAuth(request);
+ *     // ... route logic
+ *   } catch (error) {
+ *     if (handleAuthError(error)) return handleAuthError(error);
+ *     throw error;
+ *   }
+ */
+export function handleAuthError(error: unknown): Response | null {
+  if (error instanceof AuthError) {
+    return error.toResponse();
+  }
+  return null;
+}

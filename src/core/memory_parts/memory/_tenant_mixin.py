@@ -7,7 +7,7 @@ Tenant isolation, multi-client management, and usage tracking.
 import logging
 import os
 import sqlite3
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from ..types import DB_PATH
 # Tenant module removed — use fallback from parent module

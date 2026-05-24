@@ -180,7 +180,7 @@ def correlate(
 
     # Walk ledger rows
     for lrow in ledger_rows:
-        ledger_trace = str(lrow.get("id", ""))  # ledger has no trace_id natively
+        str(lrow.get("id", ""))  # ledger has no trace_id natively
         # Try to find an audit event with matching timestamp proximity
         matched_audit: Optional[Dict[str, Any]] = None
         ledger_ts: float = lrow.get("timestamp", 0.0) or 0.0

@@ -11,7 +11,6 @@ Persistence: SQLite with retry logic (delegated to _db_helpers).
 from __future__ import annotations
 
 import logging
-import sqlite3
 import threading
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional

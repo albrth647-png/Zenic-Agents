@@ -146,12 +146,12 @@ impl PolicyEngine {
     }
 
     /// Returns all audit log entries.
-    pub fn audit_entries(&self) -> &[crate::audit::AuditEntry] {
+    pub fn audit_entries(&self) -> &[crate::audit::PolicyAuditEntry] {
         self.audit_log.entries()
     }
 
     /// Returns denial entries from the audit log.
-    pub fn audit_denials(&self) -> Vec<&crate::audit::AuditEntry> {
+    pub fn audit_denials(&self) -> Vec<&crate::audit::PolicyAuditEntry> {
         self.audit_log.denials()
     }
 

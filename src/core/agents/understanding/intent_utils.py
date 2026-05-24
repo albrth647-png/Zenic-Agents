@@ -17,7 +17,7 @@ Single source of truth for:
 
 import re
 import logging
-from typing import Any, Optional
+from typing import Any
 
 # Import canonical constants (single source of truth)
 from src.core.shared.constants import (

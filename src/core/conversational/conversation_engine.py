@@ -18,7 +18,7 @@ from .types.base import Result
 from .types.session import Session
 from .types.intent import AssistantIntent, IntentCategory
 from .types.response import (
-    AssistantResponse, ResponseFormat, ResponseMetadata, StreamingChunk,
+    AssistantResponse, StreamingChunk,
 )
 from .types.personality import PersonalityProfile
 from .types.memory import MemoryCategory
@@ -273,7 +273,6 @@ class ConversationEngine:
 
     def _classifier_fallback(self, message: str, session: Session) -> AssistantIntent:
         """Fallback al clasificador simple si IntentEngine falla."""
-        from .engine_parts import IntentClassifier
         return IntentClassifier().classify(message, session)
 
     def _increment_stat(self, name: str) -> None:

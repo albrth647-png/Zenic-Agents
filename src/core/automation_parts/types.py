@@ -29,7 +29,7 @@ Optimizado para:
 """
 
 import os
-from typing import Optional, Dict, Any, List, Callable
+from typing import Dict, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
 

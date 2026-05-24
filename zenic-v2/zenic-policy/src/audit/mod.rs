@@ -9,4 +9,4 @@ mod types;
 mod tests;
 
 // Re-export all public types.
-pub use types::{PolicyDecision, DenialReason, AuditEntry, AuditLog};
+pub use types::{PolicyDecision, DenialReason, PolicyAuditEntry, AuditLog};

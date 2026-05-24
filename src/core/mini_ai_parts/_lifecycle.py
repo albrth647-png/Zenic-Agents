@@ -222,7 +222,7 @@ class ModelLifecycleMixin:
             answer = match.group(1).strip()
         else:
             # No think block - try to get last meaningful line
-            lines = [l.strip() for l in text.strip().split('\n') if l.strip()]
+            lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
             answer = lines[-1] if lines else text.strip()
 
         # Clean markdown fences

@@ -59,3 +59,43 @@ manifest-path = "zenic-v2/zenic-pybridge/Cargo.toml"
 module-name = "_zenic_native"
 python-source = "src"
 strip = true
+
+# ── Phase 6.2: Ruff Configuration ──────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes (unused imports, undefined names)
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "S",    # flake8-bandit (security)
+    "C4",   # flake8-comprehensions
+    "TCH",  # flake8-type-checking
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "S101",   # assert usage (OK in tests)
+    "S307",   # eval usage (justified in conversational tools)
+    "B008",   # function call in default argument (common pattern)
+    "SIM108", # ternary operator (readability preference)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]  # Re-exports are intentional in __init__.py
+"tests/**" = ["S101", "S105", "S106"]  # Assert and test fixtures OK in tests
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "zenic"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

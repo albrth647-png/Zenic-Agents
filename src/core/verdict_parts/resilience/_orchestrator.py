@@ -1,10 +1,8 @@
 """Verdict Resilience - Orchestrator."""
 
 import logging
-import time
 from typing import Any, Dict, Optional
 
-from ._types import VerdictCircuitState
 from ._circuit_breaker import VerdictCircuitBreaker, VerdictRetryConfig, VerdictHealthSnapshot
 from ._health_audit import VerdictHealthMonitor, VerdictAuditor, VerdictAuditEntry
 

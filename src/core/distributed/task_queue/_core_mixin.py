@@ -5,7 +5,6 @@ Enqueue, dequeue, and lifecycle methods for DistributedTaskQueue.
 """
 
 import logging
-import threading
 from typing import Any, Dict, List, Optional
 
 from ._types import TaskMessage

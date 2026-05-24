@@ -18,7 +18,7 @@ Works with Qwen3-0.6B on Termux/Android. No external APIs needed.
 import time
 import json
 import logging
-from typing import Any, Dict, Generator, Optional, Callable
+from typing import Dict, Generator, Optional, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +66,10 @@ class StreamingReal:
             return
 
         # Prepare the prompt
-        system_prompt = ""
         user_prompt = ""
         for msg in messages:
             if msg.get("role") == "system":
-                system_prompt = msg.get("content", "")
+                msg.get("content", "")
             elif msg.get("role") == "user":
                 user_prompt = msg.get("content", "")
 

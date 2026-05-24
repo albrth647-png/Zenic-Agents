@@ -23,14 +23,10 @@ from typing import Any, Dict, Optional
 # ── Re-exports from extracted modules ──────────────────────
 from ._status import AutopilotStatus
 from ._singleton import get_autopilot_engine, reset_autopilot_engine
-from ._retry import _retry_operation
 from ._fallbacks import (
     _NoOpImpactPreview,
-    _MockImpactPreview,
     _PermissiveSafetyFallback,
-    _MockSafetyResult,
     _NoOpDispatcher,
-    _MockDispatchResult,
 )
 from ._persistence import _PersistenceMixin
 from ._lifecycle import _LifecycleMixin
@@ -39,7 +35,6 @@ from ._queries import _QueriesMixin
 
 # ── Subsystem imports for lazy-load helpers ────────────────
 from src.core.autopilot.objective import (
-    Objective,
     get_objective_store,
 )
 from src.core.autopilot.kpi_tracker import KPITracker, get_kpi_tracker

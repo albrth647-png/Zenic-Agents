@@ -1,7 +1,7 @@
 //! Compliance validation engine — regulatory standards checker.
 //!
-//! Supports 8 compliance standards:
-//!   HIPAA, PCI-DSS, GDPR, SOX, AML/KYC, COPPA, ISO 27001, SOC 2
+//! Supports 10 compliance standards:
+//!   HIPAA, PCI-DSS, GDPR, SOX, AML/KYC, FedRAMP, COPPA, ISO 27001, SOC 2, PCI-DSS 1.2
 //!
 //! Each standard has a set of deterministic validation rules that check
 //! the action config against regulatory requirements.
@@ -55,9 +55,11 @@ impl ComplianceEngine {
             ComplianceStandard::Gdpr => self.check_gdpr(action_type, config),
             ComplianceStandard::Sox => self.check_sox(action_type, config),
             ComplianceStandard::AmlKyc => self.check_aml_kyc(action_type, config),
+            ComplianceStandard::FedRamp => self.check_fedramp(action_type, config),
             ComplianceStandard::Coppa => self.check_coppa(action_type, config),
             ComplianceStandard::Iso27001 => self.check_iso_27001(action_type, config),
             ComplianceStandard::Soc2 => self.check_soc2(action_type, config),
+            ComplianceStandard::PciDss12 => self.check_pci_dss_12(action_type, config),
         }
     }
 
@@ -336,6 +338,76 @@ impl ComplianceEngine {
             ComplianceResult::compliant(ComplianceStandard::Soc2)
         } else {
             ComplianceResult::non_compliant(ComplianceStandard::Soc2, violations, recommendations, &risk_level)
+        }
+    }
+
+    // ── FedRAMP ─────────────────────────────────────────────────
+
+    fn check_fedramp(&self, _action_type: &str, config: &serde_json::Value) -> ComplianceResult {
+        let mut violations = Vec::new();
+        let mut recommendations = Vec::new();
+        let mut risk_level = "low".to_string();
+
+        let config_str = config.to_string().to_lowercase();
+
+        // Rule: Cloud service without FIPS 140-2 encryption
+        if config_str.contains("cloud") || config_str.contains("fedramp") || config_str.contains("government") {
+            if !config_str.contains("fips") && !config_str.contains("fips_140") {
+                violations.push("Cloud service processing without FIPS 140-2 validated encryption — FedRAMP SC-13".to_string());
+                recommendations.push("Use FIPS 140-2 validated cryptographic modules for all cloud data processing".to_string());
+                risk_level = "critical".to_string();
+            }
+        }
+
+        // Rule: Access control without MFA
+        if config_str.contains("admin") || config_str.contains("privileged") {
+            if !config_str.contains("mfa") && !config_str.contains("multi_factor") {
+                violations.push("Privileged access without multi-factor authentication — FedRAMP IA-2".to_string());
+                recommendations.push("Enforce MFA for all privileged and administrative access".to_string());
+                if risk_level != "critical" {
+                    risk_level = "high".to_string();
+                }
+            }
+        }
+
+        if violations.is_empty() {
+            ComplianceResult::compliant(ComplianceStandard::FedRamp)
+        } else {
+            ComplianceResult::non_compliant(ComplianceStandard::FedRamp, violations, recommendations, &risk_level)
+        }
+    }
+
+    // ── PCI-DSS 1.2 (Legacy) ──────────────────────────────────────
+
+    fn check_pci_dss_12(&self, _action_type: &str, config: &serde_json::Value) -> ComplianceResult {
+        let mut violations = Vec::new();
+        let mut recommendations = Vec::new();
+        let mut risk_level = "low".to_string();
+
+        let config_str = config.to_string().to_lowercase();
+
+        // Rule: Legacy card storage with CVV
+        if config_str.contains("cvv") || config_str.contains("cvc") || config_str.contains("csv") {
+            violations.push("CVV/CVC storage is prohibited under PCI-DSS 1.2 Requirement 3.2".to_string());
+            recommendations.push("Never store CVV/CVC values — process and discard immediately".to_string());
+            risk_level = "critical".to_string();
+        }
+
+        // Rule: Unencrypted transmission
+        if config_str.contains("transmit") || config_str.contains("send") || config_str.contains("api_call") {
+            if !config_str.contains("tls") && !config_str.contains("ssl") && !config_str.contains("encrypted") {
+                violations.push("Card data transmission without encryption — PCI-DSS 1.2 Requirement 4".to_string());
+                recommendations.push("Use TLS 1.2+ for all card data transmissions".to_string());
+                if risk_level != "critical" {
+                    risk_level = "high".to_string();
+                }
+            }
+        }
+
+        if violations.is_empty() {
+            ComplianceResult::compliant(ComplianceStandard::PciDss12)
+        } else {
+            ComplianceResult::non_compliant(ComplianceStandard::PciDss12, violations, recommendations, &risk_level)
         }
     }
 }

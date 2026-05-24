@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-from ._types import *  # noqa: F403
-from ._helpers import _init_db, _load_sla_policies, _persist_sla_policy, _persist_escalation_sla, _record_escalation_history, _send_escalation_notification, _record_audit_event, _row_to_escalation_sla, _with_retry
+from ._types import EscalationLevel, EscalationSLA, SLAPolicy, _DEFAULT_SLA_POLICIES
 
+import threading
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+import sqlite3
+import logging
+logger = logging.getLogger(__name__)
 class EscalationManager:
     """Manages SLA-based escalation for approval requests.
 
@@ -309,5 +314,3 @@ class EscalationManager:
 
         return self._with_retry(_do_query, fallback=[])
 
-    @staticmethod
-    @staticmethod

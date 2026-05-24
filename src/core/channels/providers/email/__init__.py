@@ -374,4 +374,4 @@ class EmailChannelProvider(_SendMixin):
         )
 
 
-__all__ = ["EmailChannelProvider"]
+__all__ = ["EmailChannelProvider", "MessageFormatter", "truncate", "sanitize_html", "ChannelProvider", "build_confirmation_html", "build_confirmation_text", "aiohttp"]

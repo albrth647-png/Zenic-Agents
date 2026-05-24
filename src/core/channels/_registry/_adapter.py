@@ -11,7 +11,6 @@ from ._protocol import ChannelProvider, InboundChannelProvider
 from ._types import (
     ChannelCapability,
     ChannelMessage,
-    ChannelPriority,
     ChannelResponse,
     ConfirmationHandler,
     ConfirmationRequest,

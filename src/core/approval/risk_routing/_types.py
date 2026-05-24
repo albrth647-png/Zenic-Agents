@@ -87,3 +87,4 @@ class RiskAssessment:
             "auto_approvable": self.auto_approvable,
             "explanation": self.explanation,
         }
+__all__ = ["RiskAssessment", "RiskLevel", "_ACTION_CATEGORY_SCORES", "_MAX_RETRIES", "_RETRY_DELAY", "_ROLE_LEVELS", "_score_to_risk_level", "_score_to_role"]

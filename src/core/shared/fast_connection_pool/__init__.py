@@ -12,13 +12,7 @@ from typing import Optional
 from ._pragmas import _ARM_PRAGMAS, _apply_pragmas, PoolStats
 from ._pool import FastPool
 
-__all__ = [
-    "FastPool",
-    "fast_pool",
-    "get_pooled_connection",
-    "batch_commit",
-    "close_all_pools",
-]
+__all__ = ["FastPool", "fast_pool", "get_pooled_connection", "batch_commit", "close_all_pools", "_ARM_PRAGMAS", "_apply_pragmas", "PoolStats"]
 
 
 # ============================================================

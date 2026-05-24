@@ -18,19 +18,17 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
-from .types.base import PipelineContext
-from .types.session import Session, Message, MessageRole
+from .types.session import Session, MessageRole
 from .types.intent import AssistantIntent, IntentCategory
 from .types.personality import PersonalityProfile
-from .types.response import AssistantResponse
 from ..config.constants import (  # type: ignore[import-unresolved]
     MAX_CONTEXT_TOKENS,
     CONTEXT_RESERVE_SYSTEM,
     CONTEXT_RESERVE_RESPONSE,
 )
-from .conversation import ConversationManager, ConversationState
+from .conversation import ConversationManager
 from .memory import MemoryManager
 from .knowledge import KnowledgeBase
 from .tools import ToolManager

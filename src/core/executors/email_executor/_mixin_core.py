@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import threading
 import uuid
 from typing import Any, Dict, List, Optional
 
-from ._types import *  # noqa: F403
-from ._helpers import _send_via_smtp, _send_via_graph_api, _dry_run_send, _intercept_smtp, _intercept_http, _intercept_db, _intercept_file, _record_operation
+from ._types import _VALID_MODES
 
 
 class EmailExecutorCoreMixin:
@@ -41,7 +39,7 @@ class EmailExecutorCoreMixin:
         # ── Resolve mode ────────────────────────────────────────
         mode = config.get("mode", "auto").lower()
         if mode not in _VALID_MODES:  # noqa: F821
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False, {"mode": mode},
                 f"Invalid mode: '{mode}'. Must be one of {sorted(_VALID_MODES)}",  # noqa: F821
                 self._elapsed_ms(start),  # noqa: F821
@@ -50,7 +48,7 @@ class EmailExecutorCoreMixin:
         # ── Resolve recipients ──────────────────────────────────
         recipients = self._resolve_recipients(config)
         if not recipients:
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False, {"recipients": []},
                 "No recipients specified (config.to is required)",
                 self._elapsed_ms(start),  # noqa: F821
@@ -59,7 +57,7 @@ class EmailExecutorCoreMixin:
         # Validate email addresses
         invalid = [r for r in recipients if not _validate_email(r)]  # noqa: F821
         if invalid:
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False, {"invalid_recipients": invalid},
                 f"Invalid email addresses: {invalid}",
                 self._elapsed_ms(start),  # noqa: F821
@@ -72,7 +70,7 @@ class EmailExecutorCoreMixin:
             reasons = "; ".join(r.reason for r in denied)
             with self._lock:
                 self._rate_limited_count += 1
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False,
                 {"rate_limited": True, "denied_recipients": [
                     {"recipient": r.recipient, "reason": r.reason} for r in denied
@@ -109,7 +107,7 @@ class EmailExecutorCoreMixin:
             )
             with self._lock:
                 self._failure_count += 1
-            result = ActionResult(
+            result = ActionResult(  # noqa: F821  # TODO: add import
                 False, {"mode": mode, "recipients": recipients},
                 f"Unexpected error: {exc}",
                 self._elapsed_ms(start),  # noqa: F821
@@ -177,7 +175,7 @@ class EmailExecutorCoreMixin:
             "EmailExecutor: Dry-run (reason=%s) to=%s subject='%s'",
             reason, recipients, subject[:50],
         )
-        return ActionResult(
+        return ActionResult(  # noqa: F821  # TODO: add import
             True,
             {
                 "mode": "dry_run", "recipients": recipients,

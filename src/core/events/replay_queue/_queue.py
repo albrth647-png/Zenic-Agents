@@ -27,7 +27,6 @@ from typing import Any
 from ..trigger_map import TriggerMap, get_trigger_map
 from ._replay import ReplayMixin
 from ._types import (
-    BACKOFF_BASE,
     DB_PATH,
     DEFAULT_MAX_RETRIES,
     DeadLetterEvent,

@@ -67,7 +67,7 @@ def _validate_ai_verdict(raw_output: str) -> str:
     return "NO"
 
 
-from .verdict_parts import (
+from .verdict_parts import (  # noqa: E402
     Verdict, Evidence, EvidenceType, VerdictInput, VerdictOutput,
     ConsensusResult, DeterministicResult, VerdictConfidence,
     EvidenceCollector, ConsensusResolver, DeterministicPipeline,

@@ -19,7 +19,6 @@ Usage::
     sidecar.add_middleware(lambda ctx: ctx)  # pass-through
 """
 
-import asyncio
 import functools
 import logging
 import threading

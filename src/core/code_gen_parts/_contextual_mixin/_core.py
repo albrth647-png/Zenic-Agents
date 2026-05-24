@@ -80,7 +80,7 @@ class ContextualMixin(OtherLangMixin):
                 )
                 if result and len(result) > 2:
                     # Return the main service module
-                    for key in [f"blocks/crud_service.py", f"blocks/jwt_auth.py"]:
+                    for key in ["blocks/crud_service.py", "blocks/jwt_auth.py"]:
                         if key in result and len(result[key]) > 100:
                             logger.info(f"M1: CodeAssembler generated real code for {safe_target}")
                             return result[key]
@@ -265,7 +265,7 @@ if __name__ == "__main__":
                 logger.warning(f"M1: CodeAssembler fallback for {safe_target}: {e}")
 
         # Fallback: real CRUD without executor dependency
-        table_name = safe_target.lower() + "s"
+        safe_target.lower() + "s"
         return f'''
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Real CRUD operations for {safe_target} — NOT a stub."""

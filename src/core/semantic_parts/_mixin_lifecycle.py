@@ -9,7 +9,6 @@ pthread_setaffinity_np errors and potential crashes.
 
 import os
 import time
-import logging
 
 # Disable ONNX Runtime thread affinity BEFORE any onnxruntime import.
 # On ARM/Termux/proot-distro, thread affinity causes:
@@ -17,7 +16,7 @@ import logging
 # Setting this env var must happen before onnxruntime is first loaded.
 os.environ.setdefault("ORT_DISABLE_THREAD_AFFINITY", "1")
 
-from ._imports import EMBEDDING_MODEL, EMBEDDING_DIM, INTENT_PROTOTYPES, GOAL_PROTOTYPES, _get_numpy, HAS_NUMPY, logger
+from ._imports import EMBEDDING_MODEL, EMBEDDING_DIM, _get_numpy, HAS_NUMPY, logger
 
 # Retry configuration for model loading
 _MAX_LOAD_ATTEMPTS = 3
@@ -72,7 +71,6 @@ class LifecycleMixin:
             )
             return False
 
-        last_error = None
         for attempt in range(1, _MAX_LOAD_ATTEMPTS + 1):
             try:
                 from fastembed import TextEmbedding  # type: ignore[import-unresolved]
@@ -98,7 +96,6 @@ class LifecycleMixin:
                 logger.warning("SemanticEngine: fastembed not installed. Using fallbacks.")
                 return False
             except Exception as e:
-                last_error = e
                 if attempt < _MAX_LOAD_ATTEMPTS:
                     delay = _LOAD_RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(

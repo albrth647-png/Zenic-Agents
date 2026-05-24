@@ -28,11 +28,7 @@ from ..task_queue import DistributedTaskQueue, TaskMessage, TaskPriority
 
 logger = logging.getLogger("zenic_agents.distributed.saga_coordinator")
 
-__all__ = [
-    "DistributedSagaCoordinator",
-    "DistributedSagaStep",
-    "DistributedSagaState",
-]
+__all__ = ["DistributedSagaCoordinator", "DistributedSagaStep", "DistributedSagaState", "TaskMessage", "TaskPriority"]
 
 
 # ============================================================
@@ -40,8 +36,8 @@ __all__ = [
 # ============================================================
 
 
-from ._core_mixin import DistributedSagaCoordinatorCoreMixin
-from ._extra_mixin import DistributedSagaCoordinatorExtraMixin
+from ._core_mixin import DistributedSagaCoordinatorCoreMixin  # noqa: E402
+from ._extra_mixin import DistributedSagaCoordinatorExtraMixin  # noqa: E402
 
 
 class DistributedSagaCoordinator(DistributedSagaCoordinatorCoreMixin, DistributedSagaCoordinatorExtraMixin):

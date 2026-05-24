@@ -12,18 +12,13 @@ from __future__ import annotations
 import logging
 import os
 import threading
-import time
 from typing import Any, Dict, FrozenSet, List, Optional
-from typing import Set
 
-from ...._formatter import MessageFormatter, truncate, sanitize_plain_text
-from ...._protocol import ChannelProvider
 from ...._types import (
     ChannelCapability,
     ChannelMessage,
     ChannelResponse,
     ConfirmationRequest,
-    DeliveryStatus,
     RateLimitInfo,
 )
 from .._vapid import _VapidMixin
@@ -33,7 +28,6 @@ from .._webpush_http import _WebPushHttpMixin
 from .._utils import (
     _HAS_AIOHTTP,
     _HAS_CRYPTOGRAPHY,
-    _PUSH_PAYLOAD_MAX,
 )
 from ._routing import (
     send_via_fcm,

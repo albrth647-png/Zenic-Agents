@@ -3,15 +3,12 @@ Shared imports, types, and constants for dna_loader_parts.
 """
 
 import os
-import re
-import ast
 import logging
-import threading
-from typing import Optional, Dict, Any, List
+from typing import List
 from dataclasses import dataclass, field
 
 try:
-    import yaml
+    import yaml  # noqa: F401
     YAML_AVAILABLE = True
 except ImportError:
     YAML_AVAILABLE = False

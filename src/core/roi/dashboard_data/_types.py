@@ -48,3 +48,4 @@ class DashboardWidget:
             "position": self.position,
             "refresh_seconds": self.refresh_seconds,
         }
+__all__ = ["DashboardWidget", "TrendPoint"]

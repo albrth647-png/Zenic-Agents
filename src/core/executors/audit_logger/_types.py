@@ -53,3 +53,4 @@ class AuditQuery:
     to_timestamp: Optional[float] = None
     limit: int = 100
     offset: int = 0
+__all__ = ["AuditEntry", "AuditQuery"]

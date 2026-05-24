@@ -1,9 +1,9 @@
 """SmartPromptChain - Execution, Validation & Repair Mixin."""
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Optional, Tuple
 
-from ._types import GenerationStep, ChainResult, MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS
+from ._types import GenerationStep, MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 

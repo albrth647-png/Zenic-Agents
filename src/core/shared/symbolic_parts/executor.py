@@ -17,13 +17,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .types import SymbolicValue, SymbolicPath
-from .z3_bridge import Z3BridgeMixin
-from .statement_processors import StatementProcessorMixin
-from .statement_loops import StatementLoopsMixin
-from .executor_helpers import ExecutorHelpersMixin
-from .violations import ViolationCheckerMixin
-from .concrete_gen import ConcreteGenMixin
+from .types import SymbolicValue, SymbolicPath  # noqa: E402
+from .z3_bridge import Z3BridgeMixin  # noqa: E402
+from .statement_processors import StatementProcessorMixin  # noqa: E402
+from .statement_loops import StatementLoopsMixin  # noqa: E402
+from .executor_helpers import ExecutorHelpersMixin  # noqa: E402
+from .violations import ViolationCheckerMixin  # noqa: E402
+from .concrete_gen import ConcreteGenMixin  # noqa: E402
 
 
 class SymbolicExecutor(

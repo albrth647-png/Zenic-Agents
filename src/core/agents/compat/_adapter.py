@@ -27,9 +27,6 @@ from ..schemas._v1_compat_schemas import (
 )
 
 # Shared utilities
-from src.core.shared.agent_schemas import (
-    ValidationIssue as SharedValidationIssue,
-)
 from src.core.shared.contracts import IntentPayload, OperationType, GoalType
 from ..understanding.intent_utils import (
     extract_code_block,
@@ -40,7 +37,7 @@ from ..understanding.intent_utils import (
 )
 
 # Local compat types
-from ._types import VALID_OPERATIONS, VALID_GOALS, logger
+from ._types import VALID_OPERATIONS, VALID_GOALS
 
 
 # ══════════════════════════════════════════════════════════════

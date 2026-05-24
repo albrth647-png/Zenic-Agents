@@ -15,7 +15,7 @@ from typing import Any, Dict
 # ──────────────────────────────────────────────────────────────
 
 try:
-    import aiohttp
+    import aiohttp  # noqa: F401
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
@@ -80,3 +80,4 @@ class _RateLimitState:
             "reset_at": self.reset_at,
             "last_updated": self.last_updated,
         }
+__all__ = ["_BACKOFF_MULTIPLIER", "_DEFAULT_SCOPES", "_GRAPH_BASE_URL", "_INITIAL_BACKOFF_SECONDS", "_MAX_ATTACHMENT_SIZE_INLINE", "_MAX_ATTACHMENT_SIZE_UPLOAD", "_MAX_RETRIES", "_RateLimitState"]

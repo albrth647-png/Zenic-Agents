@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 import uuid
-from typing import Optional
 
 from .types.personality import PERSONALITY_PRESETS  # type: ignore[import-unresolved]
 from ..config.constants import MAX_MESSAGES_PER_SESSION

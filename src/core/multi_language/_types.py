@@ -35,3 +35,4 @@ TYPE_MAP: Dict[str, Dict[str, str]] = {
         "email": "String", "url": "String", "phone": "String",
     },
 }
+__all__ = ["TYPE_MAP"]

@@ -9,7 +9,7 @@ import logging
 import threading
 from typing import Any, Dict, Optional
 
-from ._types import NodeInfo, NodeState
+from ._types import NodeState
 
 logger = logging.getLogger(__name__)
 

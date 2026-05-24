@@ -25,7 +25,7 @@ import time
 from typing import Any, Optional
 
 from ..resilience import BaseAgent
-from ..schemas import Verdict, VerdictInput, VerdictOutput, ConsensusResult, Evidence
+from ..schemas import Verdict, VerdictInput, VerdictOutput, ConsensusResult
 
 # ──────────────────────────────────────────────────────────────
 # VERDICT CONFIGURATION
@@ -161,7 +161,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
                 if attempt < VERDICT_CONSENSUS_ATTEMPTS - 1:
                     time.sleep(0.3)
 
-            except Exception as e:
+            except Exception:
                 no_count += 1  # Any failure counts as NO
                 self._cb_manager.record_failure(self.name)
                 retry_count += 1

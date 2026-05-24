@@ -344,7 +344,7 @@ python main.py
 ### Pendiente ❌
 
 - [ ] Tests de integración del workspace (`zenic-tests`)
-- [ ] FFI C interface (`zenic-ffi`) — bindings para otros lenguajes
+- [ ] ~~FFI C interface (`zenic-ffi`)~~ — archivado; crear nuevo crate con plan concreto si se necesita C-FFI
 - [ ] Demos interactivas y screenshots
 - [ ] Casos de estudio documentados con métricas reales
 - [ ] Documentación de API completa (OpenAPI/Swagger)

@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from ._types import *  # noqa: F403
+from ._types import OAuth2Config, OAuth2GrantType, OAuth2Token
+
+import asyncio
+import aiohttp
+import logging
+import time
+from typing import Any, Dict, Optional, Tuple
+
+logger = logging.getLogger(__name__)
+
 
 class OAuth2TokenManager:
     """Manages OAuth2 tokens for multiple services.
@@ -147,13 +156,13 @@ class OAuth2TokenManager:
         if not config:
             raise ValueError(f"Service '{service_name}' not registered")
 
-        state = secrets.token_urlsafe(32)
-        code_verifier, code_challenge = generate_pkce_pair()
+        state = secrets.token_urlsafe(32)  # noqa: F821  # TODO: add import
+        code_verifier, code_challenge = generate_pkce_pair()  # noqa: F821  # TODO: add import
 
         # Store verifier for later use in exchange_code
         self._pkce_verifiers[state] = code_verifier
 
-        url = build_authorization_url(
+        url = build_authorization_url(  # noqa: F821  # TODO: add import
             config,
             state=state,
             code_challenge=code_challenge,
@@ -247,7 +256,7 @@ class OAuth2TokenManager:
             "total_refreshes": self._refresh_count,
             "total_requests": self._request_count,
             "total_errors": self._error_count,
-            "aiohttp_available": _HAS_AIOHTTP,
+            "aiohttp_available": _HAS_AIOHTTP,  # noqa: F821  # TODO: add import
         }
 
     # ── Private: Token Acquisition Flows ──────────────────────
@@ -302,7 +311,7 @@ class OAuth2TokenManager:
         """
         self._request_count += 1
 
-        if not _HAS_AIOHTTP:
+        if not _HAS_AIOHTTP:  # noqa: F821  # TODO: add import
             logger.debug(
                 "OAuth2TokenManager: aiohttp not available, cannot make token request "
                 "for '%s' (dry-run)",
@@ -383,8 +392,8 @@ def get_default_token_manager() -> OAuth2TokenManager:
     if _default_token_manager is None:
         _default_token_manager = OAuth2TokenManager()
         # Auto-register common services from environment
-        register_service_from_env(_default_token_manager, "msgraph", "MSGRAPH")
-        register_service_from_env(_default_token_manager, "servicenow", "SERVICENOW")
+        register_service_from_env(_default_token_manager, "msgraph", "MSGRAPH")  # noqa: F821  # TODO: add import
+        register_service_from_env(_default_token_manager, "servicenow", "SERVICENOW")  # noqa: F821  # TODO: add import
     return _default_token_manager
 
 

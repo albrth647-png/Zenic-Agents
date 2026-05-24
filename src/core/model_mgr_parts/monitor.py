@@ -4,7 +4,6 @@ import time
 import threading
 
 from ._imports import logger, ENABLE_AUTO_UNLOAD
-import logging
 
 
 class AutoUnloadMixin:

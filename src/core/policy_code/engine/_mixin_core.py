@@ -7,8 +7,7 @@ import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from ._types import DB_DIR, DB_PATH, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator, PolicyEvaluationResult
-from ._helpers import _retry
+from ._types import DB_PATH, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator, PolicyEvaluationResult
 from ._mixin_persistence import PolicyPersistenceMixin
 
 logger = logging.getLogger("zenic_agents.core.policy_code.engine")

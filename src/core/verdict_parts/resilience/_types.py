@@ -31,14 +31,8 @@ Optimizado para:
   - Memoria máxima: < 1MB para auditoría (buffer circular)
 """
 
-import time
-import random
 import logging
-import threading
 from enum import Enum
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List, Callable
-from collections import deque
 
 logger = logging.getLogger("zenic_agents.verdict_parts.resilience")
 
@@ -52,5 +46,4 @@ class VerdictCircuitState(str, Enum):
     CLOSED = "closed"         # Normal: LLM se usa cuando se necesita
     OPEN = "open"             # LLM no se llama: fallos consecutivos
     HALF_OPEN = "half_open"   # Probando si el LLM se recuperó
-
-
+__all__ = ["VerdictCircuitState", "logger"]

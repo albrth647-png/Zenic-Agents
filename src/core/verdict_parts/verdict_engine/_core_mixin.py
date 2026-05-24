@@ -1,7 +1,5 @@
 """Core mixin extracted from verdict_engine __init__."""
 
-import os
-import re
 import time
 import logging
 import threading
@@ -10,7 +8,7 @@ from typing import Optional, Dict, Any, List
 from ..types import (
     EvidenceType,
     Verdict, Evidence, VerdictInput, VerdictOutput,
-    ConsensusResult, VerdictConfidence,
+    VerdictConfidence,
 )
 from ..evidence_collector import EvidenceCollector
 from ..consensus_resolver import ConsensusResolver
@@ -26,7 +24,7 @@ try:
     _RESILIENCE_AVAILABLE = True
 except ImportError:
     _RESILIENCE_AVAILABLE = False
-from ._config import VERDICT_TIMEOUT_S, VERDICT_MAX_TOKENS, VERDICT_TEMPERATURE, VERDICT_MAX_RETRIES, VERDICT_CONSENSUS_ATTEMPTS, VERDICT_CONSENSUS_THRESHOLD
+from ._config import VERDICT_TIMEOUT_S, VERDICT_MAX_RETRIES
 from ._llm_mixin import VerdictLLMMixin
 from ._helpers_mixin import VerdictHelpersMixin
 from ._stats_mixin import VerdictStatsMixin

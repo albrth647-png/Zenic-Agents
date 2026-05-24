@@ -47,7 +47,6 @@ class KPathAnalyzer:
         Returns:
             dict con depth, nodes_affected, exceeds_limit
         """
-        import sqlite3
         from .db_initializer import get_connection
 
         conn = None

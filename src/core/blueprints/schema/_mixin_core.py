@@ -4,10 +4,9 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from ..types import BlueprintMetadataV2, BlueprintStatus, BlueprintTier, DBSchema, DBEntitySchema, BusinessRuleDef, ActionTemplateDef, MonitorHook
-from ._types import *
 from ._helpers import _metadata_to_dict, _dbschema_to_dict, _rule_to_dict, _action_to_key, _action_to_dict, _monitor_hook_to_dict, _check_version_range
 
 logger = logging.getLogger(__name__)

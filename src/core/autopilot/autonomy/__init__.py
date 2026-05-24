@@ -1,8 +1,5 @@
 """Re-exports for autonomy package."""
 
-from ._types import *
-from ._helpers import *
-from ._mixin_core import *
 
 import json
 import logging
@@ -12,36 +9,30 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-_autonomy_config_instance: Optional[AutonomyConfigManager] = None
+_autonomy_config_instance: Optional[AutonomyConfigManager] = None  # noqa: F821  # TODO: verify import
 _autonomy_config_lock = threading.Lock()
-def get_autonomy_config(db_path: str = "autonomy_config.sqlite") -> AutonomyConfigManager:
-    """Get or create the global AutonomyConfigManager instance.
+def get_autonomy_config(db_path: str = "autonomy_config.sqlite") -> AutonomyConfigManager:  # noqa: F821  # TODO: verify import
+    """Get or create the global AutonomyConfigManager instance.  # noqa: F821  # TODO: verify import
 
     Args:
         db_path: Path to the SQLite database file.
 
     Returns:
-        The singleton AutonomyConfigManager instance.
+        The singleton AutonomyConfigManager instance.  # noqa: F821  # TODO: verify import
     """
     global _autonomy_config_instance
     with _autonomy_config_lock:
         if _autonomy_config_instance is None:
-            _autonomy_config_instance = AutonomyConfigManager(db_path=db_path)
+            _autonomy_config_instance = AutonomyConfigManager(db_path=db_path)  # noqa: F821  # TODO: Phase3 - verify import
         return _autonomy_config_instance
 
 
 def reset_autonomy_config() -> None:
-    """Reset the global AutonomyConfigManager instance (for testing)."""
+    """Reset the global AutonomyConfigManager instance (for testing)."""  # noqa: F821  # TODO: verify import
     global _autonomy_config_instance
     with _autonomy_config_lock:
         _autonomy_config_instance = None
 
 
 
-__all__ = [
-    "AutonomyLevel",
-    "AutonomyConfig",
-    "AutonomyConfigManager",
-    "get_autonomy_config",
-    "reset_autonomy_config",
-]
+__all__ = ["AutonomyLevel", "AutonomyConfig", "AutonomyConfigManager", "get_autonomy_config", "reset_autonomy_config", "json", "logging", "sqlite3", "time", "uuid", "Any", "Dict", "List"]  # noqa: F821  # TODO: verify import

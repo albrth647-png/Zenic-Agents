@@ -16,7 +16,6 @@ import hmac
 import logging
 from typing import Any, Dict, List, Optional
 
-from ..._protocol import InboundChannelProvider
 from ..._types import (
     ChannelMessage,
     ConfirmationHandler,

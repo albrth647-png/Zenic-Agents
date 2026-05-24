@@ -4,7 +4,6 @@ ZENIC-AGENTS - Retry Pattern v16: Configuration and Delay Calculation
 RetryConfig dataclass and _compute_delay function.
 """
 
-import random
 from dataclasses import dataclass
 from typing import Callable, Optional, Tuple, Type
 

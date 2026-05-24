@@ -23,14 +23,10 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 No external dependencies beyond Python stdlib.
 """
 
-import asyncio
 import enum
 import logging
-import threading
-import time
-import uuid
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Union
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 

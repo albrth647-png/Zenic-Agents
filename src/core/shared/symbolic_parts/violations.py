@@ -13,18 +13,17 @@ Violation detection methods for the SymbolicExecutor:
 This module provides a mixin class that is composed into SymbolicExecutor.
 """
 
-import ast
 import logging
 
 logger = logging.getLogger(__name__)
 
-from ..z3_solver import HAS_Z3
+from ..z3_solver import HAS_Z3  # noqa: E402
 
 # Z3 module reference for convenience (only available when HAS_Z3 is True)
 if HAS_Z3:
     import z3 as z3_module  # type: ignore[import-unresolved]
 
-from .types import SymbolicValue
+from .types import SymbolicValue  # noqa: E402
 
 
 class ViolationCheckerMixin:
@@ -249,7 +248,6 @@ class ViolationCheckerMixin:
 
     def _check_uninitialized_variables(self, path, func_name, violations):
         """Check for use of uninitialized variables on a path."""
-        import re as _re
 
         # Build set of variables that are assigned on this path
         assigned_vars = set()

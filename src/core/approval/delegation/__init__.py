@@ -39,10 +39,4 @@ def reset_delegation_manager() -> None:
     _delegation_instance = None
 
 
-__all__ = [
-    "DelegationRule",
-    "DelegationRecord",
-    "DelegationManager",
-    "get_delegation_manager",
-    "reset_delegation_manager",
-]
+__all__ = ["DelegationRule", "DelegationRecord", "DelegationManager", "get_delegation_manager", "reset_delegation_manager", "_MAX_RETRIES", "_RETRY_DELAY"]

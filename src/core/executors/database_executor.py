@@ -39,7 +39,8 @@ class DatabaseExecutor(ActionExecutor):
         params = config.get("params", [])
         script = config.get("script", "")
 
-        if not isinstance(params, (list, tuple)): params = [params]
+        if not isinstance(params, (list, tuple)):
+            params = [params]
 
         valid_ops = {"query", "insert", "update", "delete", "backup", "script"}
         if operation not in valid_ops:
@@ -97,7 +98,8 @@ class DatabaseExecutor(ActionExecutor):
                     pass
             
             return result
-        finally: conn.close()
+        finally:
+            conn.close()
 
     async def _backup(self, db_path, destination, start):
         """Realiza backup de la base de datos SQLite."""
@@ -106,10 +108,14 @@ class DatabaseExecutor(ActionExecutor):
         if not os.path.exists(db_path):
             return ActionResult(False, {"db_path": db_path}, f"Database file not found: {db_path}", self._elapsed_ms(start))
         try:
-            if not destination: destination = db_path + f".backup_{int(time.time())}"
+            if not destination:
+                destination = db_path + f".backup_{int(time.time())}"
             def _do_backup():
-                src = sqlite3.connect(db_path); dst = sqlite3.connect(destination)
-                src.backup(dst); dst.close(); src.close()
+                src = sqlite3.connect(db_path)
+                dst = sqlite3.connect(destination)
+                src.backup(dst)
+                dst.close()
+                src.close()
             await asyncio.to_thread(_do_backup)
             size = os.path.getsize(destination)
             logger.info(f"DatabaseExecutor: Backup created at {destination} ({size} bytes)")
@@ -140,7 +146,7 @@ class DatabaseExecutor(ActionExecutor):
                 return ActionResult(
                     False,
                     {"script_line": stmt[:100]},
-                    f"SQL validation failed in script: dangerous pattern detected",
+                    "SQL validation failed in script: dangerous pattern detected",
                     self._elapsed_ms(start)
                 )
 

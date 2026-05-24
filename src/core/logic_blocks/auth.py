@@ -40,7 +40,10 @@ class AuthLoginBlock(LogicBlock):
         try:
             username = data.get("username", data.get("email", ""))
             password = data.get("password", "")
-            secret = context.get("secret_key", "change-this-in-production")
+            secret = context.get("secret_key")
+
+            if not secret:
+                raise RuntimeError("FATAL: 'secret_key' not provided in context. JWT authentication cannot proceed without a secure secret key.")
 
             if not username or not password:
                 return {"success": False, "error": "Username and password required"}
@@ -211,7 +214,10 @@ class AuthVerifyBlock(LogicBlock):
     def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
         try:
             token = data.get("token", "")
-            secret = context.get("secret_key", "change-this-in-production")
+            secret = context.get("secret_key")
+
+            if not secret:
+                raise RuntimeError("FATAL: 'secret_key' not provided in context. JWT verification cannot proceed without a secure secret key.")
 
             if not token:
                 return {"success": False, "error": "No token provided", "valid": False}

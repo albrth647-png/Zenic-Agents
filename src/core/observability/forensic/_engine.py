@@ -18,13 +18,11 @@ from src.core.shared.db_initializer import get_connection, get_data_dir
 
 from ._analyzer import (
     build_merkle_proofs,
-    compute_merkle_root,
     verify_chain_entries,
     verify_local_chain,
 )
 from ._collector import (
     correlate,
-    get_audit_db_path,
     load_audit_events,
     load_ledger_entries,
     retry,
@@ -32,7 +30,6 @@ from ._collector import (
 from ._types import (
     ChainVerificationResult,
     EvidenceBundle,
-    ForensicEntry,
     ForensicReport,
 )
 

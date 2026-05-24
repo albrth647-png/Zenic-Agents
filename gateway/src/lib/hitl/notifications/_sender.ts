@@ -24,6 +24,9 @@ import {
   resolveTargetUsers,
   priorityLevel,
 } from "./_templates";
+import { createRedactedLogger } from "@/lib/security/log-redact";
+
+const logger = createRedactedLogger(console);
 
 /** Maximum notifications per user in digest queue (INVARIANT 3) */
 const MAX_DIGEST_QUEUE_SIZE = 100;
@@ -127,9 +130,11 @@ class NotificationService {
 
           // Dispatch stubs for non-in-app channels
           if (channel === "email") {
-            console.log(`[HITL Email Stub] To: ${userId}, Subject: ${eventTitle}`);
+            // TODO: Integrate real email service (SendGrid, SES, etc.)
+            logger.info(`[HITL Email] Notification queued for user, subject: ${eventTitle}`);
           } else if (channel === "webhook") {
-            console.log(`[HITL Webhook Stub] Event: ${event}, Request: ${payload.requestId}`);
+            // TODO: Integrate real webhook dispatch
+            logger.info(`[HITL Webhook] Event: ${event}, Request: ${payload.requestId}`);
           }
         }
       }

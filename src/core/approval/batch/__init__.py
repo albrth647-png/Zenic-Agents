@@ -33,10 +33,4 @@ def reset_batch_approval() -> None:
     _batch_instance = None
 
 
-__all__ = [
-    "BatchRequest",
-    "BatchResult",
-    "BatchApprovalEngine",
-    "get_batch_approval",
-    "reset_batch_approval",
-]
+__all__ = ["BatchRequest", "BatchResult", "BatchApprovalEngine", "get_batch_approval", "reset_batch_approval", "_MAX_RETRIES", "_RETRY_DELAY"]

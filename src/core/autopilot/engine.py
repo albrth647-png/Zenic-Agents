@@ -17,7 +17,6 @@ from datetime import datetime
 
 from src.data.local_scanner import LocalDataScanner
 from src.core.safety.safety_gate import SafetyGate
-from src.core.sna.alert_manager import AlertSeverity
 
 logger = logging.getLogger(__name__)
 

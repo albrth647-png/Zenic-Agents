@@ -8,7 +8,7 @@
 //! On-Premise Enterprise:  All + Export/Import + Custom, unlimited
 
 use crate::errors::MemoryError;
-use crate::types::{FeatureGate, LearningMechanism, SubscriptionTier};
+use crate::types::{MemoryTierLimits, LearningMechanism, SubscriptionTier};
 
 // ---------------------------------------------------------------------------
 // SubscriptionGate
@@ -20,14 +20,14 @@ use crate::types::{FeatureGate, LearningMechanism, SubscriptionTier};
 /// the appropriate subscription level.
 pub struct SubscriptionGate {
     /// The feature gate configuration for the current tier.
-    gate: FeatureGate,
+    gate: MemoryTierLimits,
 }
 
 impl SubscriptionGate {
     /// Creates a new subscription gate for the given tier.
     pub fn new(tier: SubscriptionTier) -> Self {
         Self {
-            gate: FeatureGate::for_tier(tier),
+            gate: MemoryTierLimits::for_tier(tier),
         }
     }
 
@@ -103,7 +103,7 @@ impl SubscriptionGate {
     }
 
     /// Returns the feature gate configuration.
-    pub fn gate(&self) -> &FeatureGate {
+    pub fn gate(&self) -> &MemoryTierLimits {
         &self.gate
     }
 

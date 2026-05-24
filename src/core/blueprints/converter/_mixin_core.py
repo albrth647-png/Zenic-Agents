@@ -111,7 +111,6 @@ class NicheConverter(NicheConverterLegacyMixin):
         """
         try:
             niche_id = niche.niche_id
-            name = niche.name
             domain = niche.domain
             subdomain = niche.subdomain
             description = niche.description

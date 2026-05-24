@@ -32,12 +32,10 @@ Decomposed into focused modules:
 
 import time
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 from src.config.loader import load_settings
 from src.core.shared.db_initializer import get_projects_dir
-from src.core.shared.contracts import OperationType, GoalType, RoutePath
 
 # Base class with shared initialization, public API, backward-compat
 from src.core.orchestrator_base import BaseOrchestrator

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._limits import PlatformLimits, LIMITS
+from ._limits import LIMITS
 from ._text import truncate, split_message, sanitize_plain_text, sanitize_html
 from ._telegram import escape_telegram_markdown_v2, format_telegram_message, build_telegram_inline_keyboard
 from ._discord import build_discord_embed, build_discord_confirmation_components, format_discord_message

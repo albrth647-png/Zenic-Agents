@@ -1,10 +1,8 @@
 """Mixin: Public API methods for ResourceGovernor."""
 
-import gc
 import time
 
 from ._imports import logger
-import logging
 
 
 class APIMixin:

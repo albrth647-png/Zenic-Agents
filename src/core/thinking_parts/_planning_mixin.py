@@ -8,9 +8,28 @@ import json
 import os
 
 from ._imports import (
-    logger, APP_TEMPLATES, AUTOMATION_TEMPLATES,
+    APP_TEMPLATES, AUTOMATION_TEMPLATES,
     MAX_PLAN_TOKENS, GenerationPlan,
 )
+
+
+def _generate_secure_secret() -> str:
+    """Generate a cryptographically secure random secret key.
+
+    Used as fallback when ZENIC_SECRET_KEY is not configured.
+    WARNING: Each process will generate a different key, so all instances
+    in a cluster MUST set ZENIC_SECRET_KEY explicitly for consistency.
+    """
+    import secrets as _secrets
+    import warnings
+    generated = _secrets.token_urlsafe(32)
+    warnings.warn(
+        "ZENIC_SECRET_KEY not set — generated a random secret key. "
+        "This WILL change on restart. Set ZENIC_SECRET_KEY env var for production.",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+    return generated
 
 
 class PlanningMixin:
@@ -209,7 +228,7 @@ class PlanningMixin:
             "port": 8000,
             "host": "0.0.0.0",
             "debug": True,
-            "secret_key": os.environ.get("ZENIC_SECRET_KEY", "change-this-in-production"),
+            "secret_key": os.environ.get("ZENIC_SECRET_KEY") or _generate_secure_secret(),
             "entity_count": len(entities),
         }
 
@@ -253,13 +272,13 @@ class PlanningMixin:
 
     def _gap_default(self, gap: str, variables: dict) -> str:
         """Valor por defecto para un gap no rellenado."""
-        gap_lower = gap.lower()
+        gap.lower()
         defaults = {
             "APP_NAME": variables.get("app_name", "MyApp"),
             "DB_NAME": variables.get("db_name", "app.db"),
             "PORT": str(variables.get("port", 8000)),
             "HOST": variables.get("host", "0.0.0.0"),
-            "SECRET_KEY": variables.get("secret_key", "change-this-in-production"),
+            "SECRET_KEY": variables.get("secret_key") or os.environ.get("ZENIC_SECRET_KEY") or _generate_secure_secret(),
             "ENTITY_NAME": variables.get("entity_name", "Item"),
             "ENTITY_NAME_LOWER": variables.get("entity_name", "Item").lower(),
             "FIELDS_INIT": "",

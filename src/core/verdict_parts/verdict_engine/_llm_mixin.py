@@ -3,9 +3,8 @@
 import logging
 import time
 import concurrent.futures
-from typing import Any, Dict, List, Optional
 
-from ..types import Verdict, Evidence, VerdictInput, VerdictOutput, VerdictConfidence
+from ..types import Verdict, VerdictInput, VerdictOutput
 from ._config import VERDICT_TIMEOUT_S, VERDICT_MAX_TOKENS, VERDICT_MAX_RETRIES, VERDICT_CONSENSUS_ATTEMPTS, VERDICT_CONSENSUS_THRESHOLD, VERDICT_PROMPT_TEMPLATE
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")

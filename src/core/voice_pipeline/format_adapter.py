@@ -374,7 +374,7 @@ class FormatAdapter:
                     tmp_path = tmp.name
                 try:
                     # Let pydub detect the format
-                    audio = AudioSegment.from_file(tmp_path)
+                    AudioSegment.from_file(tmp_path)
                     # If we got here, it loaded successfully
                     # but we don't know the exact format from pydub alone
                     return AudioFormat.UNKNOWN
@@ -413,7 +413,7 @@ class FormatAdapter:
             Dict with keys: valid, size_valid, duration_valid,
             size_bytes, duration_seconds, errors.
         """
-        errors: List[str] = []
+        errors: List[str] = []  # noqa: F821  # TODO: Phase3 - verify import
         size_limit = max_size or self._max_size
         duration_limit = max_duration or self._max_duration
 

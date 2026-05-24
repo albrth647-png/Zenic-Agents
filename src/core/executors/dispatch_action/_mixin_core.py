@@ -9,9 +9,9 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from ..base import ActionResult, ActionExecutor, ExecutorRegistry, get_default_registry
+from ..base import ActionResult, ExecutorRegistry, get_default_registry
 from ..safety_gate import SafetyGate, SafetyVerdict, SafetyCheckResult, get_default_safety_gate
-from ..audit_logger import ExecutorAuditLogger, AuditEntry, get_default_audit_logger
+from ..audit_logger import ExecutorAuditLogger, get_default_audit_logger
 from ..blueprint_schema import Blueprint, BlueprintValidator, get_default_blueprint
 from ..dispatch_parts import BlueprintBridgeMixin
 from ..impact_preview import ImpactPreviewEngine, get_impact_preview_engine

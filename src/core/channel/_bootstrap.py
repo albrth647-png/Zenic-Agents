@@ -26,8 +26,6 @@ from src.core.channel._proactive import (
     create_sna_callback,
 )
 from src.core.sna.sna_engine import SNAEngine
-from src.core.sna.alert_manager import AlertManager
-from src.core.sna.thresholds import ThresholdEngine
 from src.core.safety.safety_gate import SafetyGate
 
 logger = logging.getLogger(__name__)

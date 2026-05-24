@@ -20,7 +20,7 @@ try:
     from rich.panel import Panel
     from rich.text import Text
     from rich.align import Align
-    from rich.box import HEAVY, ROUNDED
+    from rich.box import HEAVY, ROUNDED  # noqa: F401
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False

@@ -56,7 +56,7 @@ pub mod yaml_renderer;
 pub use cache::MemoryCache;
 pub use dag_adapter::DagAdapter;
 pub use errors::MemoryError;
-pub use graph::{AuditEntry, SemanticGraph};
+pub use graph::{LearningAuditEntry, SemanticGraph};
 pub use hitl_bridge::{ApprovalState, HitlBridge, HitlCallback, HitlOutcome};
 pub use hypothesis::HypothesisManager;
 pub use intent_routing::IntentRouter;
@@ -72,7 +72,7 @@ pub use policy_refinement::PolicyRefinementEngine;
 pub use schema_drift::SchemaDriftDetector;
 pub use subscription_gate::SubscriptionGate;
 pub use types::{
-    FeatureGate, Hypothesis, LearningMechanism, LearningVerdict, MemoryApprovalRequest, NodeValue,
+    MemoryTierLimits, Hypothesis, LearningMechanism, LearningVerdict, MemoryApprovalRequest, NodeValue,
     SemanticMapping, SubscriptionTier,
 };
 pub use verdict_adapter::VerdictAdapter;

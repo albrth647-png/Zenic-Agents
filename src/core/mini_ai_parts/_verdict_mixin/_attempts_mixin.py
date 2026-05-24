@@ -10,7 +10,6 @@ from ._constants import (
     VERDICT_TIMEOUT_S,
     VERDICT_CONSENSUS_ATTEMPTS,
     VERDICT_CONSENSUS_THRESHOLD,
-    VERDICT_SYSTEM_PROMPT,
 )
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,6 @@ Prevents one slow agent from consuming all system resources.
 from __future__ import annotations
 
 import threading
-import time
 from typing import Optional
 
 # Self not needed — using string annotation for __enter__

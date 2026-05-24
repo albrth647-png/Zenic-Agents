@@ -359,7 +359,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         # Check for missing TLS in server config
         host = config.get("host", "")
-        port = config.get("port", 0)
+        config.get("port", 0)
         if isinstance(host, str) and host == "0.0.0.0":
             issues.append(
                 ValidationIssue(

@@ -106,3 +106,4 @@ class CoordinatedRollbackResult:
     compensations_attempted: int = 0
     compensations_succeeded: int = 0
     errors: List[str] = field(default_factory=list)
+__all__ = ["ActionStatus", "CoordinatedAction", "CoordinatedRollbackResult", "ResourceRecord", "ResourceType"]

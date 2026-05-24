@@ -6,7 +6,7 @@ Extracts class and function information from Python AST trees.
 
 import ast
 import logging
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from ._helpers import annotation_to_str, detect_class_type
 

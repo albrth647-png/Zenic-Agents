@@ -7,7 +7,7 @@ All operations are strictly READ-ONLY — this module never modifies data.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ._types import (
     ImpactRiskLevel,

@@ -19,7 +19,6 @@ from ._types import (
     ChainExecutionResult,
     ChainStatus,
     ChainStep,
-    ChainStepResult,
     ComposedChain,
 )
 

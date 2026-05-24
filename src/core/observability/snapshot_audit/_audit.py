@@ -7,12 +7,11 @@ Retry helper, diff computation, and singleton accessors.
 from __future__ import annotations
 
 import logging
-import sqlite3
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
-from ._types import RETRY_BASE_DELAY, RETRY_MAX_ATTEMPTS, SnapshotDiff
+from ._types import RETRY_BASE_DELAY, RETRY_MAX_ATTEMPTS
 
 logger = logging.getLogger(__name__)
 

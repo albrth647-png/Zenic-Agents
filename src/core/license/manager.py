@@ -11,7 +11,6 @@ import ipaddress
 import json
 import logging
 import os
-import sqlite3
 import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
@@ -21,7 +20,7 @@ from .types import (
     LicenseInfo, LicenseStatus, LicenseTier,
     LicenseVerificationResult, HardwareBindingStrength, KillSwitchStatus,
 )
-from .signer import ECDSASigner, get_signer
+from .signer import get_signer
 from .license_parts.hw_binding import get_hardware_fingerprint, check_hardware_match
 from .license_parts.persistence import LicenseDB
 
@@ -239,7 +238,8 @@ class LicenseManager:
         if not self._ntp_check:
             return 0.0
         try:
-            import socket, struct
+            import socket
+            import struct
             client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             client.settimeout(5)
             ntp_server = os.environ.get("ZENIC_NTP_SERVER", "pool.ntp.org")

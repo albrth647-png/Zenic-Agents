@@ -26,7 +26,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-import threading
+import threading  # noqa: E402
 _load_lock = threading.Lock()
 
 # Estado interno (carga unica)

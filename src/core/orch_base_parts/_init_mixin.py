@@ -6,23 +6,11 @@ for testability, replaceability, and clear boundaries.
 The phase classes live in _phases.py and can be tested in isolation.
 """
 
-import logging
 
 from ._imports import (
-    logger, Path, initialize_databases, SemanticParser, MacroRouter,
-    GraphASTEngine, APAPlanner, GitHubScrapAgent, ASTSurgeon,
-    ReflexionSandbox, MerkleLedger, TheoremCache, get_isolation_manager,
-    AbortiveProtocol, PartialReasoningManager,
-    AnalysisUtils, ThinkingEngine,
-    AutomationEngine, get_default_registry, LogicBuilder,
-    AuthService, ReasoningEngine,
-    AgentRunner, SurgicalAgent, ReasoningAgent,
-    BusinessLogicAgent, AutomationAgent, ValidationAgent,
+    Path,
 )
 
-from src.core.patterns.orchestration import EventBus, Mediator
-from src.core.patterns.resilience import CircuitBreaker, RetryConfig
-from src.core.patterns.concurrency import ReadWriteLock
 from src.core.orch_base_parts._phases import (
     CommonStatePhase,
     PipelinePhase,
@@ -33,7 +21,6 @@ from src.core.orch_base_parts._phases import (
     DecomposedModulesPhase,
     AgentFrameworkPhase,
     GodLevelImprovementsPhase,
-    PHASE_ORDER,
 )
 
 

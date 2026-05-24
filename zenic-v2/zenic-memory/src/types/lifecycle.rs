@@ -257,14 +257,14 @@ impl Hypothesis {
 pub use zenic_subscription::types::SubscriptionTierName as SubscriptionTier;
 
 // ---------------------------------------------------------------------------
-// FeatureGate — Subscription-based Access Control [T1]
+// MemoryTierLimits — Subscription-based Access Control [T1]
 // ---------------------------------------------------------------------------
 
-/// Feature gate configuration for a subscription tier.
+/// Memory tier limits configuration for a subscription tier.
 ///
 /// Enforces per-tier quotas on mappings, cache, mechanisms, and ontology.
 #[derive(Debug, Clone, PartialEq)]
-pub struct FeatureGate {
+pub struct MemoryTierLimits {
     /// The subscription tier this gate applies to.
     pub tier: SubscriptionTier,
     /// Maximum semantic mappings per month.
@@ -281,8 +281,8 @@ pub struct FeatureGate {
     pub custom_ontology: bool,
 }
 
-impl FeatureGate {
-    /// Creates a FeatureGate for the given subscription tier.
+impl MemoryTierLimits {
+    /// Creates a MemoryTierLimits for the given subscription tier.
     ///
     /// Memory-specific tier limits (mappings, cache, mechanisms, etc.) are
     /// defined here since they belong to the memory layer, not the

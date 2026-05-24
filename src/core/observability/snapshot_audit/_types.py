@@ -89,3 +89,4 @@ class SnapshotDiff:
             "changed": self.changed,
             "is_empty": self.is_empty,
         }
+__all__ = ["RETRY_BASE_DELAY", "RETRY_MAX_ATTEMPTS", "SnapshotDiff", "SnapshotEntry", "SnapshotPair"]

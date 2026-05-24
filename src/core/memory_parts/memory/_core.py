@@ -6,11 +6,8 @@ Now fully tenant-aware via TenantContext (Phase 2: Real Multitenancy).
 """
 
 import os
-import time
-import hashlib
-import logging
-from typing import Optional, Dict, Any, List
-from ..types import DB_DIR, DB_PATH, MemoryEntry, logger, IMPORTANCE_THRESHOLD
+from typing import List
+from ..types import DB_DIR, MemoryEntry, logger
 
 # Phase 5 — Deterministic UUID for session IDs
 from src.core.shared.deterministic import DeterministicUUID
@@ -22,19 +19,17 @@ def _sanitize_client(value: str, visible: int = 4) -> str:
         return "***"
     return f"***{value[-visible:]}"
 
-from ..database import DatabaseMixin
-from ..cache import CacheMixin
-from ..longterm import LongTermMixin
-from ..episodes import EpisodesMixin
-from ._tenant_mixin import TenantMixin
-from ._session_mixin import SessionMixin
+from ..database import DatabaseMixin  # noqa: E402
+from ..cache import CacheMixin  # noqa: E402
+from ..longterm import LongTermMixin  # noqa: E402
+from ..episodes import EpisodesMixin  # noqa: E402
+from ._tenant_mixin import TenantMixin  # noqa: E402
+from ._session_mixin import SessionMixin  # noqa: E402
 # Tenant module removed — use tenant_utils for multi-tenant context
 # from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext
-from src.core.shared.tenant_utils import (
-    ANONYMOUS_TENANT,
+from src.core.shared.tenant_utils import (  # noqa: E402
     resolve_tenant_id,
     set_tenant_context,
-    clear_tenant_context,
 )
 
 
@@ -184,4 +179,4 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
             logger.warning("SmartMemory: Database reset failed: %s", e)
 
 # Re-export threading for the class
-import threading
+import threading  # noqa: E402

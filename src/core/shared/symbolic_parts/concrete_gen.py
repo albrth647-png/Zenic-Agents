@@ -16,13 +16,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..z3_solver import HAS_Z3
+from ..z3_solver import HAS_Z3  # noqa: E402
 
 # Z3 module reference for convenience (only available when HAS_Z3 is True)
 if HAS_Z3:
     import z3 as z3_module  # type: ignore[import-unresolved]
 
-from .types import SymbolicValue
+from .types import SymbolicValue  # noqa: E402
 
 
 class ConcreteGenMixin:

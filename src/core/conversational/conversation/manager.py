@@ -16,12 +16,11 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Optional
+from typing import Any
 
 from ..types.base import Result, Ok
-from ..types.session import Session, Message, MessageRole
+from ..types.session import Session
 from ..types.intent import IntentCategory, ConversationMode
-from ..types.memory import MemoryEntry, MemoryQuery, MemoryCategory
 from .state import ConversationState, ConversationPhase, ConversationTopic
 from .turn_tracker import TurnTracker
 from .summarizer import ContextSummarizer, SummarizerConfig

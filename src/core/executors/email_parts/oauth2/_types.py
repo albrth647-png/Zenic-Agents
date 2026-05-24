@@ -79,3 +79,4 @@ class OAuth2Token:
             "scope": self.scope,
             "has_id_token": bool(self.id_token),
         }
+__all__ = ["OAuth2Config", "OAuth2GrantType", "OAuth2Token"]

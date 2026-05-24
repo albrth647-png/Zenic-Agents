@@ -14,11 +14,10 @@ import shutil
 import sqlite3
 import time
 from pathlib import Path
-from typing import Any, Dict
 from urllib.parse import urlparse
 
 from src.core.shared.retry import with_retry
-from src.core.executors.db_journal import DBTransactionJournal, get_db_journal
+from src.core.executors.db_journal import get_db_journal
 from src.core.executors.coordinated_rollback._types import (
     ResourceType,
     ResourceRecord,

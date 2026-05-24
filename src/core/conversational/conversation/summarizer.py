@@ -17,7 +17,6 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any
 
 from ..types.session import Session, Message, MessageRole
 from ..types.intent import IntentCategory
@@ -161,7 +160,7 @@ class ContextSummarizer:
         parts: list[str] = []
         for topic, topic_turns in topic_groups.items():
             user_msgs = [t for t in topic_turns if t.is_user]
-            asst_msgs = [t for t in topic_turns if t.is_assistant]
+            [t for t in topic_turns if t.is_assistant]
 
             # Extraer intenciones dominantes
             intents = [t.intent.value for t in user_msgs if t.intent != IntentCategory.UNKNOWN]
@@ -202,7 +201,7 @@ class ContextSummarizer:
 
         # Ordenar por score y tomar las mejores
         scored_sentences.sort(key=lambda x: x[1], reverse=True)
-        top_sentences = [s for s, _ in scored_sentences[:10]]
+        [s for s, _ in scored_sentences[:10]]
 
         # Reconstruir en orden temporal
         selected: list[tuple[str, float]] = []

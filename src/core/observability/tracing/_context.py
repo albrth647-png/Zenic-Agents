@@ -92,7 +92,6 @@ def trace_span(
 
     if _tracing_enabled and _tracer is not None:
         try:
-            from opentelemetry import trace
             from opentelemetry.trace import SpanKind
 
             span_kind = kind

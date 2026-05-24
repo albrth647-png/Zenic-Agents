@@ -17,16 +17,16 @@ target language types, and generates complete CRUD services.
 No external APIs needed — pure code generation.
 """
 
-import logging
-from typing import Any, Dict, List, Optional
+import logging  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
 
 logger = logging.getLogger("zenic_agents.multi_language")
 
-from ._types import TYPE_MAP
-from ._core_mixin import MultiLanguageCoreMixin
-from ._extra_mixin import MultiLanguageExtraMixin
+from ._types import TYPE_MAP  # noqa: E402
+from ._core_mixin import MultiLanguageCoreMixin  # noqa: E402
+from ._extra_mixin import MultiLanguageExtraMixin  # noqa: E402
 
-__all__ = ["MultiLanguage", "TYPE_MAP"]
+__all__ = ["MultiLanguage", "TYPE_MAP", "Any", "Dict", "List", "Optional"]
 
 
 class MultiLanguage(MultiLanguageCoreMixin, MultiLanguageExtraMixin):

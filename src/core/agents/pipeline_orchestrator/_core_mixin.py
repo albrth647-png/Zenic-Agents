@@ -6,7 +6,7 @@ from typing import Any
 
 from ..schemas import (
     SecurityResult, SyntaxResult, ConsensusResult,
-    Verdict, VerdictOutput, IntentResult,
+    Verdict, VerdictOutput,
 )
 
 logger = logging.getLogger("zenic_agents.agents.pipeline_orchestrator")
@@ -67,7 +67,7 @@ class PipelineOrchestratorCoreMixin:
         # ══════════════════════════════════════════════════════
         phase_start = time.monotonic()
 
-        lang_result = self._run_agent(self._bilingual_router, message)
+        self._run_agent(self._bilingual_router, message)
         intent_result = self._run_agent(self._intent_classifier, message)
         entity_result = self._run_agent(self._entity_extractor, message)
         target_result = self._run_agent(self._target_resolver, {
@@ -100,7 +100,7 @@ class PipelineOrchestratorCoreMixin:
             "operation": intent_result.operation if intent_result else "SEARCH",
             "goal": intent_result.goal if intent_result else "FEATURE_ADD",
         })
-        prefetch_result = self._run_agent(self._context_prefetcher, {
+        self._run_agent(self._context_prefetcher, {
             "intent_result": intent_result,
             "memory_entries": memory_entries,
         })

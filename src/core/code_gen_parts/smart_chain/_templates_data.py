@@ -6,8 +6,6 @@ template-based fallback code generation.
 
 import re
 import logging
-from typing import Any, Dict, List, Optional
-from ._types import GenerationStep
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
@@ -34,28 +32,28 @@ class SmartChainTemplatesDataMixin:
 
         if "auth" in desc_lower:
             return (
-                f"\n\nclass AuthService:\n"
-                f'    """Authentication service with JWT and password hashing."""\n\n'
-                f"    def __init__(self, secret_key: str = None, token_expire_minutes: int = 30):\n"
-                f"        self._secret_key = secret_key or secrets.token_hex(32)\n"
-                f"        self._token_expire = token_expire_minutes\n"
-                f"        self._db_path = 'auth.sqlite'\n"
-                f"        self._init_db()\n\n"
-                f"    def _init_db(self):\n"
-                f'        """Initialize users table."""\n'
-                f"        conn = get_connection(self._db_path)\n"
-                f"        conn.execute('''\n"
-                f"            CREATE TABLE IF NOT EXISTS users (\n"
-                f"                id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                f"                username TEXT UNIQUE NOT NULL,\n"
-                f"                email TEXT UNIQUE NOT NULL,\n"
-                f"                password_hash TEXT NOT NULL,\n"
-                f"                role TEXT DEFAULT 'user',\n"
-                f"                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-                f"            )\n"
-                f"        ''')\n"
-                f"        conn.commit()\n"
-                f"        conn.close()\n"
+                "\n\nclass AuthService:\n"
+                '    """Authentication service with JWT and password hashing."""\n\n'
+                "    def __init__(self, secret_key: str = None, token_expire_minutes: int = 30):\n"
+                "        self._secret_key = secret_key or secrets.token_hex(32)\n"
+                "        self._token_expire = token_expire_minutes\n"
+                "        self._db_path = 'auth.sqlite'\n"
+                "        self._init_db()\n\n"
+                "    def _init_db(self):\n"
+                '        """Initialize users table."""\n'
+                "        conn = get_connection(self._db_path)\n"
+                "        conn.execute('''\n"
+                "            CREATE TABLE IF NOT EXISTS users (\n"
+                "                id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                "                username TEXT UNIQUE NOT NULL,\n"
+                "                email TEXT UNIQUE NOT NULL,\n"
+                "                password_hash TEXT NOT NULL,\n"
+                "                role TEXT DEFAULT 'user',\n"
+                "                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
+                "            )\n"
+                "        ''')\n"
+                "        conn.commit()\n"
+                "        conn.close()\n"
             )
 
         if "integration" in desc_lower or "stripe" in desc_lower:

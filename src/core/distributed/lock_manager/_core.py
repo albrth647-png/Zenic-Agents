@@ -2,7 +2,6 @@
 
 import logging
 import threading
-import time
 import uuid
 from typing import Any, Dict, Optional
 from ..backend import CoordinationBackend

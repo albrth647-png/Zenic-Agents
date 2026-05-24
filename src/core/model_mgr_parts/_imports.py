@@ -1,12 +1,7 @@
 """Shared imports and constants for model_mgr_parts."""
 
 import os
-import time
-import threading
 import logging
-import platform
-from typing import Optional, Dict, Any
-from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 

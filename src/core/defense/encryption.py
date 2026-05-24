@@ -20,14 +20,13 @@ import logging
 import os
 import secrets
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
 
 from src.core.shared.sqlcipher_helper import (
     get_sqlcipher_connection as _helper_get_conn,
     is_sqlcipher_available,
-    HAS_SQLCIPHER as _HAS_SQLCIPHER_HELPER,
 )
 
 logger = logging.getLogger(__name__)
@@ -102,7 +101,7 @@ class EncryptionManager:
     def _check_fernet(self) -> bool:
         """Check if cryptography.fernet is available."""
         try:
-            from cryptography.fernet import Fernet
+            from cryptography.fernet import Fernet  # noqa: F401
             return True
         except ImportError:
             logger.debug("EncryptionManager: cryptography not available, Fernet disabled")
@@ -379,7 +378,7 @@ class EncryptionManager:
                     except Exception:
                         pass
                 logger.error("EncryptionManager: Decryption failed with both current and previous keys")
-                raise ValueError(f"Decryption failed with both current and previous keys")
+                raise ValueError("Decryption failed with both current and previous keys")
 
     def encrypt_dict(self, data: Dict[str, Any], sensitive_keys: Optional[list] = None) -> Dict[str, Any]:
         """Encrypt sensitive fields in a dictionary."""
@@ -612,7 +611,7 @@ class EncryptionManager:
 
     # ── Per-Tenant Key Diversification ──────────────────────
 
-    def _derive_tenant_key(self, tenant_id: str) -> "Fernet":
+    def _derive_tenant_key(self, tenant_id: str) -> "Fernet":  # noqa: F821  # TODO: Phase3 - verify import
         """Derive a tenant-specific Fernet key from the master key.
 
         Uses HKDF-SHA256 with tenant_id as info parameter.

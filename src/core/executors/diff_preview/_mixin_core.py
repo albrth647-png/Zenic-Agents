@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import sqlite3
-import threading
 from typing import Any, Dict, List, Optional
 
 from src.core.executors.diff_preview._types import DiffEntry, DiffResult
@@ -113,7 +112,7 @@ class CoreMixin:
 
         elif operation == "UPDATE":
             set_fields = parse_set_fields(query)
-            set_placeholders = count_placeholders_in_set(query)
+            count_placeholders_in_set(query)
             if current_rows and set_fields:
                 for row_idx, row in enumerate(current_rows[:1]):
                     for field_name, proposed_value in set_fields:

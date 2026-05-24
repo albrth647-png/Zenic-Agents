@@ -7,9 +7,9 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 # Action categories that are NEVER auto-approved
 _FINANCIAL_KEYWORDS = ("payment", "financial", "refund", "invoice_pay")
@@ -60,3 +60,4 @@ def _hash_config(action_config: Dict[str, Any]) -> str:
     """Produce a stable hash of an action config dict."""
     canonical = json.dumps(action_config, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+__all__ = ["AdaptiveApprovalRecord", "_FINANCIAL_KEYWORDS", "_MAX_RETRIES", "_RETRY_DELAY", "_hash_config"]

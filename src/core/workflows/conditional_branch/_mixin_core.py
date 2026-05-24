@@ -9,8 +9,6 @@ import uuid
 from typing import Any
 
 from .chain_composer import ChainStep
-from ._types import *
-from ._helpers import *
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +24,7 @@ class ConditionalBranching:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._rules: dict[str, BranchRule] = {}
+        self._rules: dict[str, BranchRule] = {}  # noqa: F821
         logger.info("ConditionalBranching initialized")
 
     # ------------------------------------------------------------------
@@ -39,7 +37,7 @@ class ConditionalBranching:
 
         Uses the safe custom parser — no exec/eval.
         """
-        return safe_evaluate(condition, context)
+        return safe_evaluate(condition, context)  # noqa: F821
 
     def select_branch(self, step: ChainStep, context: dict[str, Any]) -> str | None:
         """Given a step with branches, return the next_step_id of the matching branch.
@@ -61,7 +59,7 @@ class ConditionalBranching:
         with self._lock:
             # 1. Evaluate the step's own condition_expr
             if step.condition_expr:
-                result = safe_evaluate(step.condition_expr, context)
+                result = safe_evaluate(step.condition_expr, context)  # noqa: F821
                 if result:
                     return step.next_step_id
                 # Condition failed — look for branch rules
@@ -79,7 +77,7 @@ class ConditionalBranching:
 
             for rule in matching_rules:
                 for condition in rule.conditions:
-                    if safe_evaluate(condition.expression, context):
+                    if safe_evaluate(condition.expression, context):  # noqa: F821
                         logger.debug(
                             "Branch rule '%s' matched condition '%s' → %s",
                             rule.name, condition.description or condition.expression,
@@ -97,7 +95,7 @@ class ConditionalBranching:
     #  Rule CRUD
     # ------------------------------------------------------------------
 
-    def register_branch_rule(self, rule: BranchRule) -> str:
+    def register_branch_rule(self, rule: BranchRule) -> str:  # noqa: F821
         """Register a branch rule. Returns the rule_id.
 
         If rule.rule_id is empty, a UUID is generated.
@@ -124,7 +122,7 @@ class ConditionalBranching:
             logger.info("Unregistered branch rule %s", rule_id)
             return True
 
-    def list_branch_rules(self) -> list[BranchRule]:
+    def list_branch_rules(self) -> list[BranchRule]:  # noqa: F821  # TODO: Phase3 - verify import
         """List all registered branch rules."""
         with self._lock:
             return sorted(

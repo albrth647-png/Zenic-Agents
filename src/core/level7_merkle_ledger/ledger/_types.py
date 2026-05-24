@@ -24,22 +24,11 @@ under concurrent write access.
 Sin dependencias externas. Compatible con Android.
 """
 
-import hashlib
-import shutil
-import sqlite3
-import time
 import logging
-from pathlib import Path
-from src.core.shared.contracts import MerkleNode
-from src.core.shared.db_initializer import get_data_dir, get_connection
-from src.core.shared.retry import with_retry
-from src.core.shared.db_utils import purge_tenant_rows
-from src.core.shared.tenant_utils import resolve_tenant_id
 
 
 logger = logging.getLogger(__name__)
 
 # Number of hex characters to use for hashed backup filenames
 _BACKUP_HASH_LENGTH = 16
-
-
+__all__ = ["_BACKUP_HASH_LENGTH", "logger"]

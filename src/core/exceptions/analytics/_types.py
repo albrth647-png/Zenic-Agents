@@ -7,7 +7,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from ..taxonomy import ExceptionCategory, ExceptionSeverity
+from ..taxonomy import ExceptionCategory
 
 logger = logging.getLogger(__name__)
 
@@ -102,3 +102,4 @@ ON _zenic_analytics_signals(timestamp);
 CREATE INDEX IF NOT EXISTS idx_zenic_analytics_tenant
 ON _zenic_analytics_signals(tenant_id);
 """
+__all__ = ["AnalyticsSnapshot", "ExceptionPattern", "_BASE_DELAY", "_CREATE_INDEX_SQL", "_CREATE_TABLE_SQL", "_MAX_RETRIES", "logger"]

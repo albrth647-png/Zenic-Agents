@@ -83,7 +83,6 @@ class StepDispatcherCoreMixin:
             Tuple of (result_code, code, explanations)
         """
         action = step.action
-        orch = self._orch
 
         # Publish step-started event
         if self._event_bus:
@@ -299,7 +298,7 @@ class StepDispatcherCoreMixin:
                 )
                 explanations.append(f"Code generated for {intent.op} (template fallback)")
             else:
-                explanations.append(f"Code generation skipped — CodeGenerator not available in v3.0.0")
+                explanations.append("Code generation skipped — CodeGenerator not available in v3.0.0")
         else:
             result_code = generated_code
 

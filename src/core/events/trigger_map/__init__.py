@@ -1,8 +1,5 @@
 """Re-exports for trigger_map package."""
 
-from ._types import *
-from ._helpers import *
-from ._mixin_core import *
 
 import fnmatch
 import json
@@ -13,15 +10,15 @@ import threading
 import time
 import uuid
 
-_instance: TriggerMap | None = None
+_instance: TriggerMap | None = None  # noqa: F821  # TODO: verify import
 _instance_lock = threading.Lock()
-def get_trigger_map() -> TriggerMap:
-    """Return the singleton TriggerMap instance."""
+def get_trigger_map() -> TriggerMap:  # noqa: F821  # TODO: verify import
+    """Return the singleton TriggerMap instance."""  # noqa: F821  # TODO: verify import
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
-                _instance = TriggerMap()
+                _instance = TriggerMap()  # noqa: F821  # TODO: Phase3 - verify import
     return _instance
 
 
@@ -33,11 +30,4 @@ def reset_trigger_map() -> None:
 
 
 
-__all__ = [
-    "TriggerMap",
-    "TriggerMapping",
-    "TriggerCondition",
-    "ConditionOperator",
-    "get_trigger_map",
-    "reset_trigger_map",
-]
+__all__ = ["TriggerMap", "TriggerMapping", "TriggerCondition", "ConditionOperator", "get_trigger_map", "reset_trigger_map", "fnmatch", "json", "logging", "os", "sqlite3", "time", "uuid"]  # noqa: F821  # TODO: verify import

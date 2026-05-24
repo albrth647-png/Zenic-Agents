@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ._status import AutopilotStatus
 
@@ -271,7 +271,7 @@ class _ExecutionMixin:
             )
             # Sync dispatch for non-async context
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
                 # We're inside an existing event loop, schedule accordingly
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     future = pool.submit(

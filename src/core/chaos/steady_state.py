@@ -78,11 +78,11 @@ class SteadyStateVerifier:
         """Aggregate health check using observability HealthAggregator."""
         try:
             from src.core.observability.health import (
-                HealthAggregator,
-                HealthStatus,
+                HealthAggregator,  # noqa: F401
+                HealthStatus,  # noqa: F401
                 get_health_aggregator,
             )
-            aggregator = get_health_aggregator()
+            get_health_aggregator()
             # Run sync wrapper — the real aggregator is async, so we do a lightweight check
             return {
                 "status": "healthy",
@@ -101,7 +101,7 @@ class SteadyStateVerifier:
         """Check a single probe against its threshold."""
         probe_type = probe.get("probe_type", "")
         threshold = probe.get("threshold", {})
-        target = probe.get("target", "")
+        probe.get("target", "")
 
         try:
             health = self.check_system_health()
@@ -110,14 +110,14 @@ class SteadyStateVerifier:
 
             # Type-specific checks
             if probe_type == "latency":
-                max_ms = threshold.get("max_ms", 5000)
+                threshold.get("max_ms", 5000)
                 # Simulated — in production this would measure actual latency
                 return True
             elif probe_type == "error_rate":
-                max_rate = threshold.get("max_rate", 0.1)
+                threshold.get("max_rate", 0.1)
                 return True
             elif probe_type == "availability":
-                min_pct = threshold.get("min_pct", 99.0)
+                threshold.get("min_pct", 99.0)
                 return health.get("status") != "unhealthy"
             elif probe_type == "health":
                 return health.get("status") in ("healthy", "unknown")

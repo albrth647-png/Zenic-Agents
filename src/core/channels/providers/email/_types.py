@@ -3,29 +3,15 @@
 from __future__ import annotations
 
 import logging
-import os
-import threading
-import time
-import uuid
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Dict
 
-from .._formatter import MessageFormatter, truncate, sanitize_html
-from .._protocol import ChannelProvider
-from .._types import (
-    ChannelCapability,
-    ChannelMessage,
-    ChannelResponse,
-    ConfirmationRequest,
-    DeliveryStatus,
-    RateLimitInfo,
-)
 
 logger = logging.getLogger("zenic_agents.channels.email")
 
 # ── Optional Dependencies ─────────────────────────────────────────
 
 try:
-    import aiohttp
+    import aiohttp  # noqa: F401
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
@@ -42,4 +28,4 @@ _PRIORITY_TO_IMPORTANCE: Dict[str, str] = {
     "urgent": "high",
     "emergency": "high",
 }
-
+__all__ = ["_PRIORITY_TO_IMPORTANCE", "_VALID_MODES", "logger"]

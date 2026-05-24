@@ -382,7 +382,7 @@ async def check_postgresql(
             timeout=5.0,
         )
         try:
-            result = await conn.fetchval("SELECT 1")
+            await conn.fetchval("SELECT 1")
             version = await conn.fetchval("SELECT version()")
             return HealthCheckResult(
                 name="postgresql",
@@ -433,7 +433,7 @@ async def check_circuit_breakers(
     if breaker_registry is None:
         # Try to discover from the module-level registry
         try:
-            from ..patterns.resilience.circuit_breaker import CircuitBreaker
+            from ..patterns.resilience.circuit_breaker import CircuitBreaker  # noqa: F401
             # No global registry — check if there's one in observability
             breaker_registry = getattr(
                 check_circuit_breakers, "_registry", {}

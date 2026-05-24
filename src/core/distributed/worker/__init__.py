@@ -28,11 +28,7 @@ from ..task_queue import DistributedTaskQueue, TaskStatus
 
 logger = logging.getLogger("zenic_agents.distributed.worker")
 
-__all__ = [
-    "DistributedWorker",
-    "WorkerState",
-    "WorkerConfig",
-]
+__all__ = ["DistributedWorker", "WorkerState", "WorkerConfig", "TaskHandler", "_local", "_run_async", "_METRICS_AVAILABLE", "CoordinationBackend", "DistributedTaskQueue", "TaskStatus"]
 
 
 # ============================================================
@@ -40,8 +36,8 @@ __all__ = [
 # ============================================================
 
 
-from ._core_mixin import DistributedWorkerCoreMixin
-from ._extra_mixin import DistributedWorkerExtraMixin
+from ._core_mixin import DistributedWorkerCoreMixin  # noqa: E402
+from ._extra_mixin import DistributedWorkerExtraMixin  # noqa: E402
 
 
 class DistributedWorker(DistributedWorkerCoreMixin, DistributedWorkerExtraMixin):

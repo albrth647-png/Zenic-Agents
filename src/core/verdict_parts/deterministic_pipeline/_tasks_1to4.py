@@ -23,12 +23,10 @@ Ventajas sobre la versión con IA:
 
 import re
 import os
-import json
-import logging
-from typing import Dict, Any, List, Optional
-from ..types import DeterministicResult, Evidence, EvidenceType, Verdict
-from ..evidence_collector import EvidenceCollector, OP_KEYWORDS, GOAL_KEYWORDS
-from ._types import EXT_LANG_MAP, PATTERN_LIBRARY, VIOLATION_CATALOG, PATTERN_HEURISTICS
+from typing import Dict, Any
+from ..types import DeterministicResult
+from ..evidence_collector import EvidenceCollector
+from ._types import EXT_LANG_MAP, PATTERN_HEURISTICS
 
 class DeterministicTasks1To4Mixin:
     """

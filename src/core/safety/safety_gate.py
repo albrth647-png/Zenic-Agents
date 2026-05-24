@@ -75,7 +75,7 @@ class SafetyGate:
     La IA NUNCA puede sobrepasar un DENY de las capas 1 o 2.
     """
 
-    def __init__(self, policy_engine: 'PolicyEngine | None' = None):
+    def __init__(self, policy_engine: 'PolicyEngine | None' = None):  # noqa: F821  # TODO: Phase3 - verify import
         self._policy_engine = policy_engine
         self._denied_count = 0
         self._approved_count = 0

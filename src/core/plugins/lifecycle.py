@@ -3,11 +3,10 @@ from __future__ import annotations
 import importlib
 import logging
 import threading
-import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from .registry import PluginRegistry, get_plugin_registry
-from .types import PluginInstance, PluginManifest, PluginState
+from .types import PluginManifest, PluginState
 
 logger = logging.getLogger("zenic_agents.core.plugins.lifecycle")
 

@@ -5,7 +5,6 @@ chain_templates._builtins — Built-in template definitions.
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from src.core.workflows.chain_templates._types import (
     ChainTemplate,

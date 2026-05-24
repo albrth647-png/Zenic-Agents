@@ -13,14 +13,4 @@ from ._audit import (
 from ._snapshot import SnapshotAuditEngine
 from ._types import SnapshotDiff, SnapshotEntry, SnapshotPair
 
-__all__ = [
-    # Dataclasses
-    "SnapshotEntry",
-    "SnapshotPair",
-    "SnapshotDiff",
-    # Engine
-    "SnapshotAuditEngine",
-    # Singleton
-    "get_snapshot_audit_engine",
-    "reset_snapshot_audit_engine",
-]
+__all__ = ["SnapshotAuditEngine", "SnapshotDiff", "SnapshotEntry", "SnapshotPair", "compute_diff", "get_snapshot_audit_engine", "reset_snapshot_audit_engine", "retry"]

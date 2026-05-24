@@ -99,3 +99,4 @@ class KPITrend:
             "avg_rate_of_change": self.avg_rate_of_change,
             "projected_achievement_date": self.projected_achievement_date,
         }
+__all__ = ["KPIMeasurement", "KPITrend"]

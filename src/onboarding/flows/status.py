@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from .base import BaseFlow, FlowContext, FlowResult
+from .base import BaseFlow, FlowContext
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class StatusFlow(BaseFlow):
         """Load license and run verification."""
         try:
             from src.core.license import (
-                get_license_manager, LicenseStatus,
+                get_license_manager, LicenseStatus,  # noqa: F401
             )
             manager = get_license_manager()
 
@@ -247,7 +247,7 @@ class StatusFlow(BaseFlow):
         features = status.get("features", [])
         if features:
             if "all" in features:
-                lines.append(f"  Features:      [green]All features unlocked[/]")
+                lines.append("  Features:      [green]All features unlocked[/]")
             else:
                 lines.append(f"  Features:      {len(features)} enabled")
                 # Show key features

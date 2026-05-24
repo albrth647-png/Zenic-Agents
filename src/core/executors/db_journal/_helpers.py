@@ -68,3 +68,4 @@ def extract_table_and_where_from_delete(query: str) -> tuple[str, str]:
         query, re.IGNORECASE,
     )
     return (m2.group(1), "") if m2 else ("", "")
+__all__ = ["_OP_PATTERN", "classify_operation", "count_placeholders", "extract_set_clause_from_update", "extract_table_and_where_from_delete", "extract_table_and_where_from_update", "extract_table_from_insert"]

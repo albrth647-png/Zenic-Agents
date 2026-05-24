@@ -69,7 +69,7 @@ def verify_chain_entries(
     valid_count = 0
 
     # Build a lookup: id -> row for parent resolution
-    id_to_row: Dict[int, Dict[str, Any]] = {
+    {
         r["id"]: r for r in ledger_rows
     }
     # Build a lookup: hash -> row id for parent resolution

@@ -5,7 +5,7 @@ import re
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 _SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
@@ -36,3 +36,4 @@ class IntegrityCheckResult:
 # ── Singleton ─────────────────────────────────────────────
 
 _integrity_verifier: Optional[Any] = None
+__all__ = ["IntegrityCheckResult", "IntegrityStatus", "_SAFE_IDENTIFIER_RE", "_integrity_verifier"]

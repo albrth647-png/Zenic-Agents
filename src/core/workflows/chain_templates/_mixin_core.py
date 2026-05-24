@@ -15,7 +15,6 @@ from src.core.workflows.chain_templates._types import (
     ChainTemplate,
     TemplateStep,
     TemplateVariable,
-    TemplateCategory,
 )
 from src.core.workflows.chain_templates._helpers import substitute_value
 from src.core.workflows.chain_templates._builtins import builtin_definitions

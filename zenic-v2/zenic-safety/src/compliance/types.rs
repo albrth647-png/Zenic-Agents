@@ -20,25 +20,31 @@ pub enum ComplianceStandard {
     Sox,
     /// Anti-Money Laundering / Know Your Customer
     AmlKyc,
-    /// Children's Online Privacy Protection Act (US)
-    Coppa,
+    /// Federal Risk and Authorization Management Program (US Government)
+    FedRamp,
     /// ISO/IEC 27001 Information Security Management
     Iso27001,
     /// SOC 2 Type II Service Organization Control
     Soc2,
+    /// Children's Online Privacy Protection Act (US)
+    Coppa,
+    /// Payment Card Industry Data Security Standard v1.2 (legacy)
+    PciDss12,
 }
 
 impl ComplianceStandard {
     /// All standards.
-    pub const ALL: [ComplianceStandard; 8] = [
+    pub const ALL: [ComplianceStandard; 10] = [
         ComplianceStandard::Hipaa,
         ComplianceStandard::PciDss,
         ComplianceStandard::Gdpr,
         ComplianceStandard::Sox,
         ComplianceStandard::AmlKyc,
-        ComplianceStandard::Coppa,
+        ComplianceStandard::FedRamp,
         ComplianceStandard::Iso27001,
         ComplianceStandard::Soc2,
+        ComplianceStandard::Coppa,
+        ComplianceStandard::PciDss12,
     ];
 
     /// String identifier.
@@ -49,9 +55,11 @@ impl ComplianceStandard {
             Self::Gdpr => "gdpr",
             Self::Sox => "sox",
             Self::AmlKyc => "aml_kyc",
+            Self::FedRamp => "fedramp",
             Self::Coppa => "coppa",
             Self::Iso27001 => "iso_27001",
             Self::Soc2 => "soc2",
+            Self::PciDss12 => "pci_dss_12",
         }
     }
 
@@ -63,9 +71,11 @@ impl ComplianceStandard {
             Self::Gdpr => "GDPR",
             Self::Sox => "SOX",
             Self::AmlKyc => "AML/KYC",
+            Self::FedRamp => "FedRAMP",
             Self::Coppa => "COPPA",
             Self::Iso27001 => "ISO 27001",
             Self::Soc2 => "SOC 2",
+            Self::PciDss12 => "PCI-DSS 1.2",
         }
     }
 
@@ -77,9 +87,11 @@ impl ComplianceStandard {
             "gdpr" => Some(Self::Gdpr),
             "sox" => Some(Self::Sox),
             "aml_kyc" | "amlkyc" | "aml" | "kyc" => Some(Self::AmlKyc),
+            "fedramp" | "fed_ramp" => Some(Self::FedRamp),
             "coppa" => Some(Self::Coppa),
             "iso_27001" | "iso27001" | "iso2701" => Some(Self::Iso27001),
             "soc2" | "soc_2" | "soc" => Some(Self::Soc2),
+            "pci_dss_12" | "pcidss12" | "pci_dss_v12" => Some(Self::PciDss12),
             _ => None,
         }
     }

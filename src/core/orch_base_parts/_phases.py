@@ -17,19 +17,10 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List
 
 if TYPE_CHECKING:
-    from src.core.orch_base_parts._imports import (
-        Path, initialize_databases, SemanticParser, MacroRouter,
-        GraphASTEngine, APAPlanner, GitHubScrapAgent, ASTSurgeon,
-        ReflexionSandbox, MerkleLedger, TheoremCache,
-        get_isolation_manager, AbortiveProtocol, PartialReasoningManager,
-        AnalysisUtils, ThinkingEngine, AutomationEngine,
-        get_default_registry, LogicBuilder, AuthService, ReasoningEngine,
-        AgentRunner, SurgicalAgent, ReasoningAgent,
-        BusinessLogicAgent, AutomationAgent, ValidationAgent,
-    )
+    pass
 
 logger = logging.getLogger(__name__)
 

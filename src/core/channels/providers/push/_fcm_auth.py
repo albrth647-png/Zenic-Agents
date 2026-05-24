@@ -13,17 +13,11 @@ import time
 from typing import Any, Dict, Optional
 
 from ._utils import (
-    _HAS_AIOHTTP,
     _HAS_CRYPTOGRAPHY,
     _HAS_PYJWT,
-    _HAS_URLLIB,
     _FCM_SCOPE,
     _FCM_TOKEN_URL,
-    _MAX_RETRIES,
-    _RETRY_BASE_DELAY,
-    _HTTP_TIMEOUT,
     _base64url_encode,
-    _validate_url,
 )
 
 # Conditional imports for type hints

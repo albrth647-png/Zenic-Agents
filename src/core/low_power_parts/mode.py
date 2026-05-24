@@ -7,7 +7,6 @@ from typing import Optional, Dict, Any
 from ._imports import logger, PowerMode, HardwareState
 from .evaluate import EvaluateMixin
 from .decision import DecisionMixin
-import logging
 
 
 class LowPowerSequentialMode(

@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import base64
 import os
 import time
-import uuid
 from typing import Any, Dict, List, Optional
 
-from ._types import *  # noqa: F403
-from ._helpers import _send_with_retry, _send_once, _dry_run_response, _upload_attachment_session
+from ._types import _DEFAULT_SCOPES, _MAX_ATTACHMENT_SIZE_INLINE, _RateLimitState
 from ._transport import GraphAPITransportMixin
 
 

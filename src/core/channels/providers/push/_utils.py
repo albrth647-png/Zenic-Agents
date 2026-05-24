@@ -15,26 +15,26 @@ from urllib.parse import urlparse
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
-    import aiohttp
+    import aiohttp  # noqa: F401
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
     import urllib.request
-    import urllib.error
+    import urllib.error  # noqa: F401
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
 
 try:
-    from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import ec, padding, utils
+    from cryptography.hazmat.primitives import hashes, serialization  # noqa: F401
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, utils  # noqa: F401
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        ECDSA,
-        EllipticCurvePrivateKey,
-        EllipticCurvePublicNumbers,
-        SECP256R1,
+        ECDSA,  # noqa: F401
+        EllipticCurvePrivateKey,  # noqa: F401
+        EllipticCurvePublicNumbers,  # noqa: F401
+        SECP256R1,  # noqa: F401
     )
     from cryptography.hazmat.backends import default_backend
     _HAS_CRYPTOGRAPHY = True
@@ -42,7 +42,7 @@ except ImportError:
     _HAS_CRYPTOGRAPHY = False
 
 try:
-    import jwt as pyjwt
+    import jwt as pyjwt  # noqa: F401
     _HAS_PYJWT = True
 except ImportError:
     _HAS_PYJWT = False

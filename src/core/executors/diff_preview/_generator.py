@@ -21,7 +21,7 @@ from ._comparator import (
     parse_set_fields,
     retry,
 )
-from ._formatter import format_diff, truncate
+from ._formatter import format_diff
 from ._types import DiffEntry, DiffResult
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class DiffPreviewEngine:
     def db_journal(self) -> Any:
         """Lazy-load the DBTransactionJournal singleton."""
         if self._db_journal is None:
-            from ..db_journal import DBTransactionJournal, get_db_journal
+            from ..db_journal import get_db_journal
             self._db_journal = get_db_journal()
         return self._db_journal
 
@@ -130,7 +130,7 @@ class DiffPreviewEngine:
             # Parse SET clause to find proposed values
             set_fields = parse_set_fields(query)
             set_placeholders = count_placeholders_in_set(query)
-            where_params = list(params[set_placeholders:]) if set_placeholders < len(params) else []
+            list(params[set_placeholders:]) if set_placeholders < len(params) else []
 
             if current_rows and set_fields:
                 for row_idx, row in enumerate(current_rows[:1]):  # sample first row

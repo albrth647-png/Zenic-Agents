@@ -1,6 +1,5 @@
 """ModelManager main class combining all mixins."""
 
-import time
 import threading
 
 from ._imports import (
@@ -13,8 +12,6 @@ from .unload import UnloadMixin
 from .monitor import AutoUnloadMixin
 from .ram_mgmt import RAMMixin
 from .status import StatusMixin
-import logging
-logger = logging.getLogger("core.model_mgr_parts.manager")
 
 
 class ModelManager(

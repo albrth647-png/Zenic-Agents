@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 
-import logging
-from typing import Any, Optional
+import logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

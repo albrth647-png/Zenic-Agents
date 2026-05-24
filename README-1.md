@@ -440,7 +440,6 @@ El workspace Rust `zenic-v2/` contiene 12 crates organizados por dominio:
 | 10 | **zenic-pybridge** | Puente PyO3 → `_zenic_native` | 22+ módulos Rust expuestos a Python | ✅ Producción |
 | 11 | **zenic-bench** | Benchmarks de rendimiento | lib.rs (stub) | ⏳ Stub |
 | 12 | **zenic-tests** | Tests de integración | lib.rs (stub) | ⏳ Stub |
-| 13 | **zenic-ffi** | Interfaz FFI C | lib.rs (stub) | ⏳ Stub |
 
 ### Dependencias Compartidas (Workspace)
 
@@ -983,8 +982,7 @@ Zenic-Agents/
 ├── README-1.md                  # ★ Documentación técnica completa (este archivo)
 ├── pyproject.toml               # Configuración Python (maturin)
 ├── requirements.txt             # Dependencias pip
-├── native/                      # Legacy native/src/lib.rs (obsoleto → zenic-v2/)
-├── zenic-v2/                    # ★ Workspace Rust (12 crates)
+├── zenic-v2/                    # ★ Workspace Rust (11 crates)
 │   ├── Cargo.toml               # Workspace config
 │   ├── zenic-proto/             # Tipos protocolo
 │   ├── zenic-graph/             # DAG Fractal
@@ -997,8 +995,7 @@ Zenic-Agents/
 │   ├── zenic-subscription/      # ★ Suscripción SaaS
 │   ├── zenic-pybridge/          # ★ Puente PyO3
 │   ├── zenic-bench/             # Benchmarks (stub)
-│   ├── zenic-tests/             # Tests integración (stub)
-│   └── zenic-ffi/               # FFI C (stub)
+│   └── zenic-tests/             # Tests integración (stub)
 ├── src/                         # ★ Codebase Python
 │   ├── __init__.py
 │   ├── entrypoints/             # 3 entry points
@@ -1442,7 +1439,7 @@ python main.py
 ### Pendiente ❌
 
 - [ ] Tests de integración del workspace (`zenic-tests`)
-- [ ] FFI C interface (`zenic-ffi`) — bindings para otros lenguajes
+- [ ] ~~FFI C interface (`zenic-ffi`)~~ — archivado; crear nuevo crate con plan concreto si se necesita C-FFI
 - [ ] Demos interactivas y screenshots
 - [ ] Casos de estudio documentados con métricas reales
 - [ ] Documentación de API completa (OpenAPI/Swagger)

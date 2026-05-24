@@ -13,8 +13,8 @@ import queue
 import threading
 import time
 from concurrent.futures import Future
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List
 
 logger = logging.getLogger(__name__)
 

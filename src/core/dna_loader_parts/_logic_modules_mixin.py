@@ -2,10 +2,9 @@
 Logic modules API mixin for DNALoader.
 """
 
-import logging
 from typing import List, Optional
 
-from ._imports import logger, LogicModule
+from ._imports import LogicModule
 
 
 class LogicModulesMixin:

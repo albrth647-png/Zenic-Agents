@@ -55,15 +55,9 @@ Optimizado para:
   - llama-cpp-python con n_ctx=2048, n_threads=4
 """
 
-from .mini_ai_parts import *  # noqa: F401,F403
 from .mini_ai_parts import MiniAIEngine, IntentResult  # noqa: F401
 from .verdict_parts import VerdictEngine, Verdict, VerdictOutput  # noqa: F401
 
 __all__ = [
-    "MiniAIEngine", "IntentResult",
-    "VerdictEngine", "Verdict", "VerdictOutput",
-    "MODEL_DIR", "MODEL_FILENAME", "MODEL_PATH",
-    "MAX_TOKENS_CLASSIFY", "MAX_TOKENS_EXTRACT", "MAX_TOKENS_PATTERN",
-    "MAX_TOKENS_TEMPLATE", "MAX_TOKENS_GENERATE", "MAX_TOKENS_EXPLAIN",
-    "MAX_TOKENS_SUBTASK", "LLM_TIMEOUT_S", "N_CTX", "N_THREADS", "TEMPERATURE",
+    "MiniAIEngine", "IntentResult", "VerdictEngine", "Verdict", "VerdictOutput",
 ]

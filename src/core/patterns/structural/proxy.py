@@ -12,7 +12,7 @@ Designed for Android/Termux (500MB RAM).
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

@@ -11,6 +11,9 @@ import { GatewayEngine, ObservableGatewayEngine } from "./engine";
 import { getRegistry } from "./sdk/sdk";
 import { registerNativeExecutors, type ZenicExecutorType } from "./adapters/native-adapter";
 import type { SdkExecutionContext, SdkToolResult } from "./sdk/types";
+import { createRedactedLogger } from "@/lib/security/log-redact";
+
+const logger = createRedactedLogger(console);
 
 // ─── Singleton Engine ──────────────────────────────────────────
 
@@ -194,7 +197,7 @@ export function initializeGateway(): GatewayEngine { // NOTE: Uses sync crypto f
       try {
         const result = rateLimiter.cleanup();
         if (result.bucketsRemoved > 0 || result.windowsRemoved > 0) {
-          console.log(`[Gateway] Rate limiter cleanup: removed ${result.bucketsRemoved} buckets, ${result.windowsRemoved} windows`);
+          logger.info(`[Gateway] Rate limiter cleanup: removed ${result.bucketsRemoved} buckets, ${result.windowsRemoved} windows`);
         }
       } catch (err) {
         console.error("[Gateway] Rate limiter cleanup failed:", err);
@@ -225,7 +228,7 @@ export async function initializeObservability(): Promise<void> {
   try {
     const { seedMetricSeries } = await import("@/lib/observability/metrics/metrics-collector");
     const count = await seedMetricSeries();
-    console.log(`[Observability] Seeded ${count} metric series`);
+    logger.info(`[Observability] Seeded ${count} metric series`);
     observabilityInitialized = true;
   } catch (error) {
     console.error("[Observability] Failed to seed metric series:", error);

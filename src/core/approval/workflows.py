@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from .chain import ApprovalChain, ApprovalPriority, get_approval_chain
+from .chain import get_approval_chain
 
 logger = logging.getLogger(__name__)
 

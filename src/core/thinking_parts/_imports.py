@@ -2,12 +2,8 @@
 Shared imports, constants, and dataclasses for thinking_parts sub-modules.
 """
 
-import re
-import json
-import time
 import logging
-import os
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Dict, Any, List
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)

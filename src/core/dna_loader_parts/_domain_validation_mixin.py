@@ -4,10 +4,9 @@ Domain expert rules and validation gates API mixin for DNALoader.
 
 import re
 import ast
-import logging
 from typing import Dict, Any, List, Optional
 
-from ._imports import logger, DomainRule, ValidationGate
+from ._imports import DomainRule, ValidationGate
 
 
 class DomainValidationMixin:
@@ -124,7 +123,7 @@ class DomainValidationMixin:
 
         # Action-based checks
         action = gate.action.lower()
-        code_lower = code.lower()
+        code.lower()
 
         if action == "regex_search_keys":
             secret_patterns = [

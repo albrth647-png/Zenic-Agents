@@ -16,6 +16,9 @@
  */
 
 import Redis from 'ioredis'
+import { createRedactedLogger } from '@/lib/security/log-redact'
+
+const logger = createRedactedLogger(console)
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -87,7 +90,7 @@ export class RedisSessionStore {
       await this.redis.ping()
 
       this.redisAvailable = true
-      console.log(`[RedisSessionStore] Connected to ${this.redisUrl}`)
+      logger.info('[RedisSessionStore] Connected successfully')
 
       // Handle disconnection gracefully
       this.redis.on('error', (err) => {
@@ -99,7 +102,7 @@ export class RedisSessionStore {
 
       this.redis.on('ready', () => {
         if (!this.redisAvailable) {
-          console.log('[RedisSessionStore] Redis reconnected')
+          logger.info('[RedisSessionStore] Redis reconnected')
           this.redisAvailable = true
         }
       })

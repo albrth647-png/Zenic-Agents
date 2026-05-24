@@ -160,7 +160,7 @@ class MultiSourceAnalysisMonitor(MonitorBase):
     async def check(self, params: Dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
-        db_name = params.get("db_name", "sna_data.sqlite")
+        params.get("db_name", "sna_data.sqlite")
         anomaly_threshold = params.get("anomaly_threshold", 2.0)
 
         try:
@@ -293,7 +293,7 @@ class CapacityPlanningMonitor(MonitorBase):
                 (cutoff,), db_name="request_log.sqlite",
             )
             weekly_requests = rows[0][0] if rows else 0
-            avg_proc_ms = float(rows[0][1] or 0) if rows else 0
+            float(rows[0][1] or 0) if rows else 0
 
             # Simple capacity projection
             daily_requests = weekly_requests / 7 if weekly_requests > 0 else 0

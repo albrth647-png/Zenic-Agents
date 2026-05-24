@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, List, Optional, Set
+from typing import List, Optional, Set
 
 
 class GraphDomain(str, Enum):

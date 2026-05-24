@@ -286,30 +286,30 @@ class HNSWIndex:
             self._entry_point = id
             self._max_level = level
             # Initialize neighbors for all layers
-            for l in range(level + 1):
-                new_node.neighbors[l] = set()
+            for layer in range(level + 1):
+                new_node.neighbors[layer] = set()
             return
 
         # Start from the entry point
         current_id = self._entry_point
 
         # Phase 1: Greedily traverse from top to the node's level + 1
-        for l in range(self._max_level, level, -1):
-            results = self._search_layer(vector, [current_id], ef=1, layer=l)
+        for layer in range(self._max_level, level, -1):
+            results = self._search_layer(vector, [current_id], ef=1, layer=layer)
             if results:
                 current_id = results[0][1]
 
         # Phase 2: Insert at each layer from level down to 0
-        for l in range(min(level, self._max_level), -1, -1):
+        for layer in range(min(level, self._max_level), -1, -1):
             results = self._search_layer(
-                vector, [current_id], ef=self._ef_construction, layer=l
+                vector, [current_id], ef=self._ef_construction, layer=layer
             )
 
-            M_max = self._M_max0 if l == 0 else self._M_max
+            M_max = self._M_max0 if layer == 0 else self._M_max
             neighbors = self._select_neighbors(vector, results, M_max)
 
             # Set neighbors for the new node
-            new_node.neighbors[l] = set(neighbors)
+            new_node.neighbors[layer] = set(neighbors)
 
             # Add bidirectional connections
             for neighbor_id in neighbors:
@@ -317,21 +317,21 @@ class HNSWIndex:
                 if neighbor is None:
                     continue
 
-                if l not in neighbor.neighbors:
-                    neighbor.neighbors[l] = set()
+                if layer not in neighbor.neighbors:
+                    neighbor.neighbors[layer] = set()
 
-                neighbor.neighbors[l].add(id)
+                neighbor.neighbors[layer].add(id)
 
                 # Prune if neighbor has too many connections
-                if len(neighbor.neighbors[l]) > M_max:
+                if len(neighbor.neighbors[layer]) > M_max:
                     # Keep only M_max closest neighbors
                     neighbor_vecs = [
                         (_cosine_similarity(neighbor.vector, self._nodes[nid].vector), nid)
-                        for nid in neighbor.neighbors[l]
+                        for nid in neighbor.neighbors[layer]
                         if nid in self._nodes
                     ]
                     neighbor_vecs.sort(key=lambda x: x[0], reverse=True)
-                    neighbor.neighbors[l] = set(nid for _, nid in neighbor_vecs[:M_max])
+                    neighbor.neighbors[layer] = set(nid for _, nid in neighbor_vecs[:M_max])
 
             if results:
                 current_id = results[0][1]
@@ -388,8 +388,8 @@ class HNSWIndex:
         current_id = self._entry_point
 
         # Phase 1: Traverse from top to layer 1
-        for l in range(self._max_level, 0, -1):
-            results = self._search_layer(query, [current_id], ef=1, layer=l)
+        for layer in range(self._max_level, 0, -1):
+            results = self._search_layer(query, [current_id], ef=1, layer=layer)
             if results:
                 current_id = results[0][1]
 

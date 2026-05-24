@@ -24,7 +24,6 @@ Con resiliencia:
   - Auditoría de todas las decisiones
 """
 
-from ._imports import IntentResult
 from ._lifecycle import ModelLifecycleMixin
 from ._tasks import BoundedTasksMixin
 from ._fallbacks import FallbackMethodsMixin

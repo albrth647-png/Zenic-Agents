@@ -17,13 +17,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..z3_solver import HAS_Z3
+from ..z3_solver import HAS_Z3  # noqa: E402
 
 # Z3 module reference for convenience (only available when HAS_Z3 is True)
 if HAS_Z3:
     import z3 as z3_module  # type: ignore[import-unresolved]
 
-from .types import SymbolicValue, SymbolicPath
+from .types import SymbolicValue, SymbolicPath  # noqa: E402
 
 
 class StatementProcessorMixin:
@@ -161,7 +161,7 @@ class StatementProcessorMixin:
         if stmt.value is not None:
             ret_desc = self._symbolize_expr(stmt.value, path)
             ret_type = "any"
-            ret_concrete = self._try_eval_concrete(stmt.value, path)
+            self._try_eval_concrete(stmt.value, path)
 
             # Infer return type from expression
             if isinstance(stmt.value, ast.Constant):

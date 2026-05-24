@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def _wire_dispatcher(registry: Any) -> None:
     """Wire Blueprint Registry into ActionDispatcher."""
     try:
         from src.core.executors.dispatch_action import get_default_dispatcher
-        dispatcher = get_default_dispatcher()
+        get_default_dispatcher()
         # ActionDispatcher already uses Blueprint for validation
         # set_blueprint_from_registry is called per-request
     except Exception:

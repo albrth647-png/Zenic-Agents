@@ -121,3 +121,4 @@ class EvidenceBundle:
     def to_json(self) -> str:
         """Serialize to a JSON string."""
         return json.dumps(self.to_dict(), ensure_ascii=False, default=str, indent=2)
+__all__ = ["ChainVerificationResult", "EvidenceBundle", "ForensicEntry", "ForensicReport"]

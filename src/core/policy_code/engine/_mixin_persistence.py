@@ -5,9 +5,9 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-from ._types import DB_DIR, DB_PATH, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator
+from ._types import DB_DIR, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator
 from ._helpers import _retry
 
 logger = logging.getLogger("zenic_agents.core.policy_code.engine")

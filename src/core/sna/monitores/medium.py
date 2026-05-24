@@ -9,7 +9,7 @@ Examples: sales trends, CRM conversion ratio, response time trends.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .base import MonitorBase, register_monitor
 from ..types import MonitorResult, MonitorWeight

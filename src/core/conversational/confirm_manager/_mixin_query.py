@@ -13,7 +13,6 @@ from ._types import (
     STATUS_CANCELLED,
     STATUS_EXPIRED,
 )
-from ._helpers import _get_conn, _update_status, _expire_entries
 
 
 class ConfirmManagerQueryMixin:

@@ -16,7 +16,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from .types import Alert, AlertSeverity, AlertStatus, MonitorResult, MonitorConfig
+from .types import Alert, MonitorResult
 from .alert_manager import AlertManager
 
 logger = logging.getLogger(__name__)

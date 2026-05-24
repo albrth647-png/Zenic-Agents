@@ -17,10 +17,8 @@ When the LLM is unavailable or produces garbage, the template fallbacks
 produce complete, working Python modules.
 """
 
-import re
 import logging
-import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
@@ -53,4 +51,4 @@ class ChainResult:
     steps_failed: int = 0
     repair_count: int = 0
     fragments: List[str] = field(default_factory=list)
-
+__all__ = ["ChainResult", "GenerationStep", "MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS", "logger"]

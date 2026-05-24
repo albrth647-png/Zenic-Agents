@@ -8,5 +8,5 @@ mod types;
 mod struct_and_schema;
 mod queries;
 
-pub use types::AuditEntry;
+pub use types::LearningAuditEntry;
 pub use struct_and_schema::SemanticGraph;

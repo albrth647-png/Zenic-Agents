@@ -17,7 +17,7 @@ from typing import Any
 from datetime import datetime
 from enum import Enum
 
-from src.core.sna.monitors.base import MonitorResult, MonitorWeight
+from src.core.sna.monitors.base import MonitorResult
 
 logger = logging.getLogger(__name__)
 

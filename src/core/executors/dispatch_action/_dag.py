@@ -10,7 +10,7 @@ import logging
 import threading
 from typing import Any, Dict, Optional
 
-from ._types import DispatchRequest, DispatchResult
+from ._types import DispatchRequest
 from ._mixin_core import ActionDispatcher
 
 logger = logging.getLogger(__name__)

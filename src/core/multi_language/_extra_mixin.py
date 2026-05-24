@@ -1,7 +1,7 @@
 """MultiLanguage - Additional methods."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger("zenic_agents.multi_language")
 
@@ -172,7 +172,7 @@ func main() {{
 '''
 
     def _go_dockerfile(self, mod_name: str) -> str:
-        return f'''FROM golang:1.21-alpine AS builder
+        return '''FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download

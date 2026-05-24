@@ -16,7 +16,7 @@ Es preferible rechazar algo seguro que aprobar algo peligroso.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, List
 
 from .types import (
     Evidence, EvidenceType, Verdict, VerdictConfidence,

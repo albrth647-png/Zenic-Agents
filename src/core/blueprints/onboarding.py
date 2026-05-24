@@ -18,7 +18,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 from .types import (
-    BlueprintTier, MonitorHook,
+    MonitorHook,
     OnboardingSession, OnboardingStep, OnboardingStepType,
 )
 from .schema import CertifiedBlueprint

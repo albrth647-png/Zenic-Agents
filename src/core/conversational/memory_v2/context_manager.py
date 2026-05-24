@@ -6,7 +6,7 @@ import threading
 from typing import Any, Dict, List, Optional
 
 from .engine import get_memory_engine_v2
-from .types import MemoryQuery, MemoryRecord, MemoryTier, MemoryType
+from .types import MemoryQuery, MemoryTier, MemoryType
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class ContextManager:
         return messages
 
     def inject_memory_context(self, query: str, session_id: str) -> str:
-        engine = self._engine()
+        self._engine()
         facts = self.get_relevant_facts(query, session_id, max_facts=5)
         if not facts:
             return query

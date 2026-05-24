@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from ._types import *  # noqa: F403
+from ._types import PipelineState, PipelineStep
 
 logger = logging.getLogger("zenic_agents.agents.niche_onboarding_pipeline")
 

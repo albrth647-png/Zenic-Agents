@@ -14,7 +14,6 @@ it fell back to sync stubs that only logged, bypassing real executors.
 import asyncio
 import time
 import logging
-from typing import List
 
 from .types import (
     ActionType,

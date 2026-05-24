@@ -218,7 +218,7 @@ class ResumeMixin:
                 "subtasks": new_results,
                 "explanations": [
                     f"Resumed partial reasoning: {len(indices_to_run)} subtasks re-executed.",
-                    f"Combined result passes sandbox validation.",
+                    "Combined result passes sandbox validation.",
                 ],
                 "warnings": trial.warnings,
                 "metrics": trial.metrics,
@@ -250,7 +250,7 @@ class ResumeMixin:
                 },
                 "explanations": [
                     f"Resumed partial reasoning: {len(indices_to_run)} subtasks re-executed.",
-                    f"Combined result still fails sandbox validation.",
+                    "Combined result still fails sandbox validation.",
                 ],
                 "warnings": trial.warnings if hasattr(trial, 'warnings') else [],
             }

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 import logging
-from typing import Any, Dict, Optional
-from ._types import *
+from typing import Dict
 
 logger = logging.getLogger("zenic_agents.conversational.llm_translator")
 
@@ -47,7 +46,7 @@ class FallbackMixin:
             elif any(w in lower for w in ("configura", "ajusta", "configure", "adjust")):
                 intent_str = "config"
 
-            action_type = INTENT_TO_ACTION.get(intent_str, intent_result.operation)
+            action_type = INTENT_TO_ACTION.get(intent_str, intent_result.operation)  # noqa: F821  # TODO: Phase3 - verify import
             confidence = min(intent_result.confidence + 0.1, 1.0)  # Slight boost
 
             return {

@@ -62,3 +62,4 @@ _KEYWORDS = frozenset({
     "True", "False", "None",
     "contains", "startswith", "endswith", "exists", "not_empty",
 })
+__all__ = ["FieldMapping", "HandoffResult", "HandoffRule", "_ALLOWED_NAMES", "_COMPARISON_OPS", "_DB_DIR", "_DB_PATH", "_KEYWORDS", "logger"]

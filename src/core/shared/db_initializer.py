@@ -26,7 +26,6 @@ Compatible con Termux + proot-distro (Debian ARM).
 import sqlite3
 import threading
 from pathlib import Path
-from typing import Optional
 import os
 import logging
 import atexit
@@ -44,7 +43,6 @@ except ImportError:
 from src.core.shared.sqlcipher_helper import (
     HAS_SQLCIPHER as _HAS_SQLCIPHER,
     get_sqlcipher_connection as _get_sqlcipher_connection,
-    is_sqlcipher_available,
 )
 
 logger = logging.getLogger(__name__)

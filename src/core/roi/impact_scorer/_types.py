@@ -11,7 +11,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -121,3 +121,4 @@ def _row_to_score(row: tuple) -> ImpactScore:
         timestamp=row[9],
         metadata=meta,
     )
+__all__ = ["ImpactScore", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_row_to_score", "_with_retry", "logger"]

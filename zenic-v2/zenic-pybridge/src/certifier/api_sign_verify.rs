@@ -62,13 +62,13 @@ pub fn certifier_sign(
 
     // Build initial audit chain
     let audit_chain = vec![
-        AuditEntry {
+        CertificationAuditEntry {
             step: "config_created".to_string(),
             timestamp: certified_at.clone(),
             hash: content_hash.clone(),
             details: format!("BlueprintConfig created from niche '{}'", config.niche_id),
         },
-        AuditEntry {
+        CertificationAuditEntry {
             step: "signed".to_string(),
             timestamp: certified_at.clone(),
             hash: content_hash.clone(),

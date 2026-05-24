@@ -49,10 +49,5 @@ try:
 except ImportError:
     _RESILIENCE_EXPORTS = []
 
-__all__ = [
-    "Verdict", "Evidence", "EvidenceType", "VerdictInput", "VerdictOutput",
-    "ConsensusResult", "DeterministicResult", "VerdictConfidence",
-    "EvidenceCollector", "ConsensusResolver", "DeterministicPipeline",
-    "VerdictEngine",
-]
+__all__ = ["Verdict", "Evidence", "EvidenceType", "VerdictInput", "VerdictOutput", "ConsensusResult", "DeterministicResult", "VerdictConfidence", "EvidenceCollector", "ConsensusResolver", "DeterministicPipeline", "VerdictEngine", "VerdictCircuitBreaker", "VerdictCircuitState", "VerdictRetryConfig", "VerdictHealthMonitor", "VerdictHealthSnapshot", "VerdictAuditor", "VerdictAuditEntry", "VerdictResilienceOrchestrator"]
 __all__.extend(_RESILIENCE_EXPORTS)  # type: ignore[misc]

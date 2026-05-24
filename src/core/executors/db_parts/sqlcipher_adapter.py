@@ -19,13 +19,11 @@ import logging
 import os
 import sqlite3
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Tuple
 
 from src.core.shared.sqlcipher_helper import (
     HAS_SQLCIPHER,
     get_sqlcipher_connection,
-    is_sqlcipher_available,
-    sqlcipher_module,
 )
 
 logger = logging.getLogger(__name__)

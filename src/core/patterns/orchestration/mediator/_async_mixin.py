@@ -4,7 +4,7 @@ ZENIC-AGENTS - Mediator Pattern: Async Dispatch Mixin
 
 import asyncio
 import logging
-from typing import Any, Awaitable, Callable, List
+from typing import Any, Awaitable, Callable
 
 from ._types import AsyncPipelineBehavior, PipelineBehavior, Request, Response
 

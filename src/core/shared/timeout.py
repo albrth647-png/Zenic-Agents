@@ -7,7 +7,7 @@ Compatible con Android/Termux (no usa signal.alarm).
 
 import threading
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 

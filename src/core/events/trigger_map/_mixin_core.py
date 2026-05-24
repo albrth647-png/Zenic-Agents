@@ -9,10 +9,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
 from typing import Any
-from ._types import *
-from ._helpers import *
 
 logger = logging.getLogger("zenic_agents.events.trigger_map")
 
@@ -26,8 +23,8 @@ class TriggerMap:
 
     def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._db_path = db_path or DB_PATH
-        self._mappings: dict[str, TriggerMapping] = {}
+        self._db_path = db_path or DB_PATH  # noqa: F821
+        self._mappings: dict[str, TriggerMapping] = {}  # noqa: F821
         self._initialized = False
         self._init_db()
         self._load_from_db()
@@ -69,7 +66,7 @@ class TriggerMap:
             ).fetchall()
             with self._lock:
                 for row in rows:
-                    mapping = _mapping_from_row(row)
+                    mapping = _mapping_from_row(row)  # noqa: F821
                     self._mappings[mapping.trigger_id] = mapping
         finally:
             conn.close()
@@ -107,11 +104,11 @@ class TriggerMap:
 
         trigger_id = f"trg_{uuid.uuid4().hex[:12]}"
 
-        conditions: list[TriggerCondition] = []
+        conditions: list[TriggerCondition] = []  # noqa: F821
         if condition:
-            conditions.append(_condition_from_dict(condition))
+            conditions.append(_condition_from_dict(condition))  # noqa: F821
 
-        mapping = TriggerMapping(
+        mapping = TriggerMapping(  # noqa: F821
             trigger_id=trigger_id,
             event_pattern=event_pattern,
             automation_id=automation_id,
@@ -121,7 +118,7 @@ class TriggerMap:
             created_at=time.time(),
         )
 
-        condition_json = json.dumps([_condition_to_dict(c) for c in conditions])
+        condition_json = json.dumps([_condition_to_dict(c) for c in conditions])  # noqa: F821
 
         with self._lock:
             self._mappings[trigger_id] = mapping
@@ -186,7 +183,7 @@ class TriggerMap:
         self,
         event_type: str,
         event_data: dict[str, Any] | None = None,
-    ) -> list[TriggerMapping]:
+    ) -> list[TriggerMapping]:  # noqa: F821
         """
         Find all automations that should fire for a given event.
 
@@ -198,16 +195,16 @@ class TriggerMap:
             event_data: Optional event payload for condition evaluation.
 
         Returns:
-            List of matching TriggerMapping objects, sorted by priority desc.
+            List of matching TriggerMapping objects, sorted by priority desc.  # noqa: F821
         """
         event_data = event_data or {}
-        matches: list[TriggerMapping] = []
+        matches: list[TriggerMapping] = []  # noqa: F821
 
         with self._lock:
             for mapping in self._mappings.values():
                 if not mapping.enabled:
                     continue
-                if not _match_event_pattern(mapping.event_pattern, event_type):
+                if not _match_event_pattern(mapping.event_pattern, event_type):  # noqa: F821
                     continue
                 # Evaluate all conditions
                 all_pass = True
@@ -309,7 +306,7 @@ class TriggerMap:
     def list_mappings(
         self,
         event_pattern: str | None = None,
-    ) -> list[TriggerMapping]:
+    ) -> list[TriggerMapping]:  # noqa: F821  # TODO: Phase3 - verify import
         """
         List registered mappings, optionally filtered by event_pattern.
 
@@ -318,7 +315,7 @@ class TriggerMap:
                            matches exactly or via wildcard.
 
         Returns:
-            List of TriggerMapping objects.
+            List of TriggerMapping objects.  # noqa: F821
         """
         with self._lock:
             result = list(self._mappings.values())

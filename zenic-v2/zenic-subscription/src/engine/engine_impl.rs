@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use zenic_proto::{PaymentId, SubscriptionId, TenantId};
 
 use crate::errors::SubscriptionError;
-use crate::feature_gates::FeatureGate;
+use crate::feature_gates::SubscriptionFeatureGate;
 use crate::payment::{UsdtPayment, UsdtPaymentMethod};
 use crate::pricing::PricingEngine;
 use crate::saga::context::SagaContext;
@@ -339,7 +339,7 @@ impl SubscriptionEngine {
     /// Checks if a feature is available for a tenant.
     pub fn check_feature(&self, tenant_id: TenantId, feature: &str) -> bool {
         if let Some(subscription) = self.subscriptions.get(&tenant_id) {
-            FeatureGate::check_feature(feature, subscription.tier, &subscription.add_ons)
+            SubscriptionFeatureGate::check_feature(feature, subscription.tier, &subscription.add_ons)
         } else {
             false
         }

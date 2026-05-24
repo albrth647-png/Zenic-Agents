@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from ._helpers import _store_and_replace, _parse_color
+from ._helpers import _store_and_replace
 from ._limits import LIMITS
 from ._text import truncate, sanitize_plain_text, sanitize_html
 from .._types import ChannelMessage, ConfirmationRequest

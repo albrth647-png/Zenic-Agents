@@ -9,8 +9,6 @@ NO espera a que el usuario reporte "la API no funciona".
 from __future__ import annotations
 
 import logging
-import asyncio
-from typing import Any
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 from src.data.local_scanner import LocalDataScanner
 
@@ -41,7 +39,6 @@ class APIHealthMonitor(BaseMonitor):
         Nota: En modo síncrono, solo verifica configuración.
         El check real de red se hace en el scheduler async.
         """
-        findings = []
 
         # Verificar si hay endpoints configurados en la BD
         try:

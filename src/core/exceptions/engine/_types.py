@@ -6,7 +6,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ..taxonomy import ExceptionCategory, ExceptionSeverity
 
@@ -109,3 +109,4 @@ ON _zenic_exceptions(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_zenic_exc_resolved
 ON _zenic_exceptions(resolved);
 """
+__all__ = ["ExceptionRecord", "ExceptionSignal", "_BASE_DELAY", "_CREATE_INDEX_SQL", "_CREATE_TABLE_SQL", "_MAX_RETRIES", "logger"]

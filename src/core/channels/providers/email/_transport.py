@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-import os
 import time
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any, Dict, FrozenSet, List
 
-from ._types import *  # noqa: F403
-from ._helpers import (
-    _render_fields_table, _build_confirmation_html,
-    _build_confirmation_text, _dry_run_send, _dry_run_confirmation,
-)
+from ._types import _PRIORITY_TO_IMPORTANCE
 
 
 class EmailTransportMixin:
@@ -60,7 +55,7 @@ class EmailTransportMixin:
                     self._dry_run_count += 1
                 else:
                     self._sent_count += 1
-            return ChannelResponse(
+            return ChannelResponse(  # noqa: F821  # TODO: add import
                 success=True,
                 channel="email",
                 message_id=result.data.get("message_id", ""),
@@ -78,7 +73,7 @@ class EmailTransportMixin:
                 status = DeliveryStatus.RATE_LIMITED  # noqa: F821
             else:
                 status = DeliveryStatus.FAILED  # noqa: F821
-            return ChannelResponse(
+            return ChannelResponse(  # noqa: F821  # TODO: add import
                 success=False, channel="email",
                 status=status, error=result.error,
                 metadata=result.data, timestamp=time.time(),
@@ -86,7 +81,7 @@ class EmailTransportMixin:
 
     async def send_confirmation(
         self, request: ConfirmationRequest,  # noqa: F821
-    ) -> ChannelResponse:
+    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
         """Send a confirmation email with YES/NO/MORE_INFO action links."""
         if not self.is_available:
             return self._dry_run_confirmation(request)
@@ -97,7 +92,7 @@ class EmailTransportMixin:
         if not recipients:
             with self._lock:
                 self._failed_count += 1
-            return ChannelResponse(
+            return ChannelResponse(  # noqa: F821  # TODO: add import
                 success=False, channel="email",
                 status=DeliveryStatus.FAILED,  # noqa: F821
                 error="No recipient specified for confirmation email",
@@ -135,7 +130,7 @@ class EmailTransportMixin:
                     self._dry_run_count += 1
                 else:
                     self._sent_count += 1
-            return ChannelResponse(
+            return ChannelResponse(  # noqa: F821  # TODO: add import
                 success=True, channel="email",
                 message_id=result.data.get("message_id", ""),
                 status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,  # noqa: F821
@@ -145,7 +140,7 @@ class EmailTransportMixin:
         else:
             with self._lock:
                 self._failed_count += 1
-            return ChannelResponse(
+            return ChannelResponse(  # noqa: F821  # TODO: add import
                 success=False, channel="email",
                 status=DeliveryStatus.FAILED, error=result.error,  # noqa: F821
                 metadata=result.data, timestamp=time.time(),

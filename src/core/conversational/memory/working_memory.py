@@ -15,13 +15,12 @@ from __future__ import annotations
 
 import threading
 import time
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
-from ..types.base import Result, Ok, Err
+from ..types.base import Result, Ok
 from ..types.memory import (
     MemoryEntry, MemoryQuery, MemoryResult,
-    MemoryType, MemoryCategory, MemoryStats,
+    MemoryType, MemoryStats,
 )
 from ..config.constants import MEMORY_MAX_WORKING
 

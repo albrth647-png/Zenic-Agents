@@ -32,10 +32,4 @@ from ._generator import (
 )
 from ._types import DiffEntry, DiffResult
 
-__all__ = [
-    "DiffEntry",
-    "DiffResult",
-    "DiffPreviewEngine",
-    "get_diff_preview_engine",
-    "reset_diff_preview_engine",
-]
+__all__ = ["DiffEntry", "DiffResult", "DiffPreviewEngine", "get_diff_preview_engine", "reset_diff_preview_engine", "build_db_summary", "count_placeholders_in_set", "estimate_risk_from_diffs", "extract_where_clause", "parse_insert_columns", "parse_set_fields", "retry", "format_diff", "truncate"]

@@ -1,16 +1,13 @@
 """Query mixin for KnowledgeGraphEngine."""
 
 from __future__ import annotations
-import json
 import logging
 import sqlite3
 import time
 from collections import deque
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .types import GraphDomain, KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
-from ._types import DB_PATH
+from .types import KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
 from ._helpers import _retry, _new_id, _now_iso
 
 logger = logging.getLogger(__name__)

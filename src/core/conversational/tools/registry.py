@@ -12,7 +12,7 @@ import logging
 import threading
 from typing import Any, Callable, Awaitable
 
-from ..types.tool_use import ToolSpec, ToolPermission, BUILTIN_TOOLS
+from ..types.tool_use import ToolSpec, BUILTIN_TOOLS
 
 logger = logging.getLogger("zenic_agents.conversational.tools.registry")
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ._helpers import retry_db_operation, row_to_measurement
 from ._types import KPIMeasurement, KPITrend

@@ -10,7 +10,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import copy
 import logging
 import threading
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict
 
 from src.core.agents.resilience import BaseAgent
 

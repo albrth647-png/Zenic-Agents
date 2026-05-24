@@ -45,3 +45,4 @@ def _wrap_middleware(
     def _wrapped(command: Command) -> CommandResult:
         return middleware(command, next_fn)
     return _wrapped
+__all__ = ["_build_middleware_chain", "_wrap_middleware"]

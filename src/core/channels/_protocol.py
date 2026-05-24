@@ -18,7 +18,7 @@ Design invariants:
 
 from __future__ import annotations
 
-from typing import Any, Dict, FrozenSet, Optional, Protocol, runtime_checkable
+from typing import Any, Dict, FrozenSet, Protocol, runtime_checkable
 
 from ._types import (
     ChannelCapability,

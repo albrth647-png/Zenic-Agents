@@ -2,7 +2,6 @@
 Phase 8 Intelligence API mixin for BaseOrchestrator.
 """
 
-from ._imports import logger
 # AppGenerator removed — module deleted
 # RecoveryAction removed — module deleted
 # ChainExecutor removed — module deleted
@@ -50,7 +49,6 @@ class Phase8Mixin:
     async def validate_logic_chain(self, description: str) -> dict:
         """Valida una cadena de logica antes de ejecutarla."""
         if self._validation_agent:
-            from src.core.agents.schemas import ValidationInput  # v18 schema type
             output = self._validation_agent.validate_with_runner(
                 self._agent_runner, target="chain", content=description,
                 rules=["compatibility", "completeness"], language="python",

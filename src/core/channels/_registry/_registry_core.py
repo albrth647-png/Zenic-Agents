@@ -25,12 +25,10 @@ from .._types import (
     ChannelCapability,
     ChannelMessage,
     ChannelResponse,
-    ChannelPriority,
     ConfirmationHandler,
     ConfirmationRequest,
     DeliveryStatus,
     MessageHandler,
-    RateLimitInfo,
 )
 
 logger = logging.getLogger("zenic_agents.channels.registry")

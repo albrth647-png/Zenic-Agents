@@ -7,7 +7,6 @@ NO solo un copiloto. ThinkingEngine coordina:
   Qwen (PIENSA)  →  SemanticEngine (ENTIENDE)  →  SmartMemory (RECUERDA)
 """
 
-from .thinking_parts import *  # noqa: F401,F403
 from .thinking_parts import ThinkingEngine, GenerationPlan, ThinkingResult  # explicit
 
 __all__ = ["ThinkingEngine", "GenerationPlan", "ThinkingResult"]

@@ -42,12 +42,4 @@ def reset_approval_audit_merkle() -> None:
     _audit_merkle_instance = None
 
 
-__all__ = [
-    "AuditEventType",
-    "AuditRecord",
-    "MerkleProof",
-    "GENESIS_HASH",
-    "ApprovalAuditMerkle",
-    "get_approval_audit_merkle",
-    "reset_approval_audit_merkle",
-]
+__all__ = ["AuditEventType", "AuditRecord", "MerkleProof", "GENESIS_HASH", "ApprovalAuditMerkle", "get_approval_audit_merkle", "reset_approval_audit_merkle", "_MAX_RETRIES", "_RETRY_DELAY"]

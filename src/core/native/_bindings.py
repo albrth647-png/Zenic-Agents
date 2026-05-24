@@ -19,40 +19,40 @@ _native_module: Optional[Any] = None
 try:
     from _zenic_native import (  # type: ignore[import-not-found]
         # Crypto
-        argon2id_hash as _rust_argon2id_hash,
-        blake3_hash as _rust_blake3_hash,
-        constant_time_compare as _rust_constant_time_compare,
-        merkle_root as _rust_merkle_root,
-        pbkdf2_derive_key as _rust_pbkdf2_derive_key,
-        xxhash64 as _rust_xxhash64,
+        argon2id_hash as _rust_argon2id_hash,  # noqa: F401
+        blake3_hash as _rust_blake3_hash,  # noqa: F401
+        constant_time_compare as _rust_constant_time_compare,  # noqa: F401
+        merkle_root as _rust_merkle_root,  # noqa: F401
+        pbkdf2_derive_key as _rust_pbkdf2_derive_key,  # noqa: F401
+        xxhash64 as _rust_xxhash64,  # noqa: F401
         # Forensic (A1)
-        forensic_hash as _rust_forensic_hash,
-        chain_hash as _rust_chain_hash,
-        verify_merkle_chain as _rust_verify_merkle_chain,
-        merkle_proof as _rust_merkle_proof,
-        batch_verify_chains as _rust_batch_verify_chains,
+        forensic_hash as _rust_forensic_hash,  # noqa: F401
+        chain_hash as _rust_chain_hash,  # noqa: F401
+        verify_merkle_chain as _rust_verify_merkle_chain,  # noqa: F401
+        merkle_proof as _rust_merkle_proof,  # noqa: F401
+        batch_verify_chains as _rust_batch_verify_chains,  # noqa: F401
         # Rollback (A3)
-        snapshot_file as _rust_snapshot_file,
-        restore_file as _rust_restore_file,
-        verify_rollback_readiness as _rust_verify_rollback_readiness,
-        file_hash as _rust_file_hash,
+        snapshot_file as _rust_snapshot_file,  # noqa: F401
+        restore_file as _rust_restore_file,  # noqa: F401
+        verify_rollback_readiness as _rust_verify_rollback_readiness,  # noqa: F401
+        file_hash as _rust_file_hash,  # noqa: F401
         # EventBus (B1)
-        wildcard_match as _rust_wildcard_match,
-        resolve_routes as _rust_resolve_routes,
-        batch_resolve_routes as _rust_batch_resolve_routes,
-        deduplicate_events as _rust_deduplicate_events,
-        sort_by_priority as _rust_sort_by_priority,
+        wildcard_match as _rust_wildcard_match,  # noqa: F401
+        resolve_routes as _rust_resolve_routes,  # noqa: F401
+        batch_resolve_routes as _rust_batch_resolve_routes,  # noqa: F401
+        deduplicate_events as _rust_deduplicate_events,  # noqa: F401
+        sort_by_priority as _rust_sort_by_priority,  # noqa: F401
         # Simulation (C1)
-        topological_sort as _rust_topological_sort,
-        detect_cycles as _rust_detect_cycles,
-        aggregate_impact as _rust_aggregate_impact,
-        simulate_dag as _rust_simulate_dag,
+        topological_sort as _rust_topological_sort,  # noqa: F401
+        detect_cycles as _rust_detect_cycles,  # noqa: F401
+        aggregate_impact as _rust_aggregate_impact,  # noqa: F401
+        simulate_dag as _rust_simulate_dag,  # noqa: F401
         # Risk (F3)
-        calculate_blast_radius as _rust_calculate_blast_radius,
-        propagate_risks as _rust_propagate_risks,
-        find_critical_path as _rust_find_critical_path,
-        compute_reachability as _rust_compute_reachability,
-        multi_node_blast_radius as _rust_multi_node_blast_radius,
+        calculate_blast_radius as _rust_calculate_blast_radius,  # noqa: F401
+        propagate_risks as _rust_propagate_risks,  # noqa: F401
+        find_critical_path as _rust_find_critical_path,  # noqa: F401
+        compute_reachability as _rust_compute_reachability,  # noqa: F401
+        multi_node_blast_radius as _rust_multi_node_blast_radius,  # noqa: F401
     )
 
     HAS_NATIVE = True

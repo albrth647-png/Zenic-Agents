@@ -14,7 +14,7 @@ try:
 except ImportError:
     _AUDIT_AVAILABLE = False
 
-from ..types import Verdict, Evidence, VerdictInput, VerdictOutput, ConsensusResult
+from ..types import Verdict, Evidence, VerdictInput, ConsensusResult
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 

@@ -18,14 +18,13 @@ Features:
 from __future__ import annotations
 
 import logging
-import sqlite3
 import threading
 import uuid
 from typing import Any, Dict, List, Optional
 
 from src.core.shared.db_initializer import get_data_dir
 
-from ._audit import compute_diff, retry
+from ._audit import compute_diff
 from ._db_helpers import (
     init_db,
     load_snapshot,

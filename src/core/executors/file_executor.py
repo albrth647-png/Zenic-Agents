@@ -36,8 +36,10 @@ class FileExecutor(ActionExecutor):
             return ActionResult(False, {"operation": operation},
                                 f"Invalid file operation: {operation}. Must be one of {valid_ops}", self._elapsed_ms(start))
         try:
-            if source: source = _safe_path(source, base_dir)
-            if destination: destination = _safe_path(destination, base_dir)
+            if source:
+                source = _safe_path(source, base_dir)
+            if destination:
+                destination = _safe_path(destination, base_dir)
 
             ops = {"read": lambda: self._read(source), "write": lambda: self._write(destination or source, content),
                    "append": lambda: self._append(destination or source, content), "copy": lambda: self._copy(source, destination),
@@ -56,7 +58,8 @@ class FileExecutor(ActionExecutor):
             return ActionResult(False, {"operation": operation, "source": source}, str(e), elapsed)
 
     async def _read(self, path):
-        if not os.path.exists(path): raise FileNotFoundError(f"File not found: {path}")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File not found: {path}")
         def _do_read():
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 return f.read()
@@ -65,7 +68,8 @@ class FileExecutor(ActionExecutor):
 
     async def _write(self, path, content):
         d = os.path.dirname(path)
-        if d: os.makedirs(d, exist_ok=True)
+        if d:
+            os.makedirs(d, exist_ok=True)
         def _do_write():
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -80,28 +84,34 @@ class FileExecutor(ActionExecutor):
         return {"path": path, "appended_size": len(content), "operation": "append"}
 
     async def _copy(self, source, destination):
-        if not os.path.exists(source): raise FileNotFoundError(f"Source not found: {source}")
+        if not os.path.exists(source):
+            raise FileNotFoundError(f"Source not found: {source}")
         d = os.path.dirname(destination)
-        if d: os.makedirs(d, exist_ok=True)
+        if d:
+            os.makedirs(d, exist_ok=True)
         def _do(): shutil.copytree(source, destination, dirs_exist_ok=True) if os.path.isdir(source) else shutil.copy2(source, destination)
         await asyncio.to_thread(_do)
         return {"source": source, "destination": destination, "operation": "copy"}
 
     async def _move(self, source, destination):
-        if not os.path.exists(source): raise FileNotFoundError(f"Source not found: {source}")
+        if not os.path.exists(source):
+            raise FileNotFoundError(f"Source not found: {source}")
         d = os.path.dirname(destination)
-        if d: os.makedirs(d, exist_ok=True)
+        if d:
+            os.makedirs(d, exist_ok=True)
         await asyncio.to_thread(lambda: shutil.move(source, destination))
         return {"source": source, "destination": destination, "operation": "move"}
 
     async def _delete(self, path):
-        if not os.path.exists(path): raise FileNotFoundError(f"Path not found: {path}")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Path not found: {path}")
         def _do(): shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
         await asyncio.to_thread(_do)
         return {"path": path, "operation": "delete"}
 
     async def _list(self, path, pattern):
-        if not os.path.isdir(path): raise NotADirectoryError(f"Not a directory: {path}")
+        if not os.path.isdir(path):
+            raise NotADirectoryError(f"Not a directory: {path}")
         import glob as glob_module
         files = await asyncio.to_thread(lambda: glob_module.glob(os.path.join(path, pattern)))
         return {"files": files, "count": len(files), "path": path, "pattern": pattern}

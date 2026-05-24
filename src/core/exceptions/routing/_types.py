@@ -2,28 +2,21 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
-import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
-from .engine import ExceptionEngine, ExceptionSignal
+from .engine import ExceptionSignal
 from .taxonomy import ExceptionCategory, ExceptionSeverity
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "RoutingAction",
-    "RoutingRule",
-    "ExceptionRouter",
-    "get_exception_router",
-    "reset_exception_router",
+    "RoutingAction", "RoutingRule",
 ]
 
 # ── Retry helper ──────────────────────────────────────────────

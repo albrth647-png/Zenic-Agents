@@ -5,17 +5,14 @@ Base classes, validation helpers, and registry for the ActionExecutor system.
 Enhanced with Safety Gate integration, Audit logging, and Blueprint validation.
 """
 
-import hashlib
-import hmac
 import logging
 import os
 import re
-import sqlite3
 import threading
 import time
 import urllib.parse
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from .safety_gate import get_default_safety_gate  # SECURITY: C4 fix
@@ -24,19 +21,23 @@ logger = logging.getLogger(__name__)
 
 # Dependencias opcionales
 try:
-    import aiosmtplib  # type: ignore[import-unresolved]; _HAS_AIOSMTPLIB = True
-except ImportError: _HAS_AIOSMTPLIB = False
+    import aiosmtplib  # type: ignore[import-unresolved]; _HAS_AIOSMTPLIB = True  # noqa: F401
+except ImportError:
+    _HAS_AIOSMTPLIB = False
 
 try:
-    import aiohttp; _HAS_AIOHTTP = True
-except ImportError: _HAS_AIOHTTP = False
+    import aiohttp  # noqa: F401
+    _HAS_AIOHTTP = True
+except ImportError:
+    _HAS_AIOHTTP = False
 
 try:
-    from apscheduler.schedulers.asyncio import AsyncIOScheduler
-    from apscheduler.triggers.interval import IntervalTrigger
-    from apscheduler.triggers.cron import CronTrigger
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler  # noqa: F401
+    from apscheduler.triggers.interval import IntervalTrigger  # noqa: F401
+    from apscheduler.triggers.cron import CronTrigger  # noqa: F401
     _HAS_APSCHEDULER = True
-except ImportError: _HAS_APSCHEDULER = False
+except ImportError:
+    _HAS_APSCHEDULER = False
 
 
 # ============================================================
@@ -112,7 +113,8 @@ def _validate_url(url: str) -> bool:
     try:
         r = urllib.parse.urlparse(url)
         return all([r.scheme in ("http", "https"), r.netloc])
-    except Exception: return False
+    except Exception:
+        return False
 
 def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks.
@@ -146,7 +148,8 @@ def _safe_path(path: str, base_dir: str = "") -> str:
     if they resolve within the base_dir. Relative paths are resolved
     against base_dir and must not escape it via ../ traversal.
     """
-    if not base_dir: base_dir = os.getcwd()
+    if not base_dir:
+        base_dir = os.getcwd()
     base_dir = os.path.realpath(base_dir)
 
     # Si el path es absoluto, verificar que está dentro del base_dir
@@ -268,7 +271,8 @@ class ExecutorRegistry:
         Enhanced (Phase 3): Runs Safety Gate check before execution
         and logs audit entry after execution.
         """
-        if context is None: context = {}
+        if context is None:
+            context = {}
 
         # ── Pre-execution: Safety Gate ──
         safety_verdict = ""

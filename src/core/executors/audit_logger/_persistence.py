@@ -7,7 +7,7 @@ SQLite-based storage for audit entries with query and prune support.
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from ._types import AuditEntry, AuditQuery
 

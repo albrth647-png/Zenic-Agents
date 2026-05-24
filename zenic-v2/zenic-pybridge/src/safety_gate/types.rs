@@ -250,3 +250,60 @@ pub(crate) fn risk_score(category: &ActionCategory) -> f64 {
         ActionCategory::System => 0.6,
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Interop with zenic-safety — From conversions
+//
+//  These impls allow seamless conversion between the PyO3-exposed
+//  types in this module and the canonical zenic-safety types. This
+//  eliminates the duplication while keeping the PyO3 #[pyclass]
+//  attributes required for Python interop.
+// ═══════════════════════════════════════════════════════════════
+
+impl From<zenic_safety::SafetyVerdict> for SafetyVerdict {
+    fn from(v: zenic_safety::SafetyVerdict) -> Self {
+        match v {
+            zenic_safety::SafetyVerdict::Allow => SafetyVerdict::Allow,
+            zenic_safety::SafetyVerdict::Confirm => SafetyVerdict::Confirm,
+            zenic_safety::SafetyVerdict::Approve => SafetyVerdict::Approve,
+            zenic_safety::SafetyVerdict::Deny => SafetyVerdict::Deny,
+            zenic_safety::SafetyVerdict::RateLimited => SafetyVerdict::RateLimited,
+        }
+    }
+}
+
+impl From<SafetyVerdict> for zenic_safety::SafetyVerdict {
+    fn from(v: SafetyVerdict) -> Self {
+        match v {
+            SafetyVerdict::Allow => zenic_safety::SafetyVerdict::Allow,
+            SafetyVerdict::Confirm => zenic_safety::SafetyVerdict::Confirm,
+            SafetyVerdict::Approve => zenic_safety::SafetyVerdict::Approve,
+            SafetyVerdict::Deny => zenic_safety::SafetyVerdict::Deny,
+            SafetyVerdict::RateLimited => zenic_safety::SafetyVerdict::RateLimited,
+        }
+    }
+}
+
+impl From<zenic_safety::ActionCategory> for ActionCategory {
+    fn from(c: zenic_safety::ActionCategory) -> Self {
+        match c {
+            zenic_safety::ActionCategory::Safe => ActionCategory::Safe,
+            zenic_safety::ActionCategory::Moderate => ActionCategory::Moderate,
+            zenic_safety::ActionCategory::Destructive => ActionCategory::Destructive,
+            zenic_safety::ActionCategory::Financial => ActionCategory::Financial,
+            zenic_safety::ActionCategory::System => ActionCategory::System,
+        }
+    }
+}
+
+impl From<ActionCategory> for zenic_safety::ActionCategory {
+    fn from(c: ActionCategory) -> Self {
+        match c {
+            ActionCategory::Safe => zenic_safety::ActionCategory::Safe,
+            ActionCategory::Moderate => zenic_safety::ActionCategory::Moderate,
+            ActionCategory::Destructive => zenic_safety::ActionCategory::Destructive,
+            ActionCategory::Financial => zenic_safety::ActionCategory::Financial,
+            ActionCategory::System => zenic_safety::ActionCategory::System,
+        }
+    }
+}

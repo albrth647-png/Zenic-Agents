@@ -26,10 +26,10 @@ from src.core.patterns.resilience import RetryConfig, with_retry
 logger = logging.getLogger("zenic_agents.step_dispatcher")
 
 
-from ._core_mixin import StepDispatcherCoreMixin
-from ._extra_mixin import StepDispatcherExtraMixin
+from ._core_mixin import StepDispatcherCoreMixin  # noqa: E402
+from ._extra_mixin import StepDispatcherExtraMixin  # noqa: E402
 
-__all__ = ["StepDispatcher"]
+__all__ = ["StepDispatcher", "Dict", "Any", "List", "Optional", "Tuple", "EventBus", "with_retry"]
 
 
 class StepDispatcher(StepDispatcherCoreMixin, StepDispatcherExtraMixin):

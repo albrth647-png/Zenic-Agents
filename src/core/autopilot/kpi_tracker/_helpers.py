@@ -70,3 +70,4 @@ def row_to_measurement(row: sqlite3.Row) -> KPIMeasurement:
         source=row["source"],
         delta_from_last=row["delta_from_last"],
     )
+__all__ = ["logger", "retry_db_operation", "row_to_measurement"]

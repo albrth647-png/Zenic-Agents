@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .types import SymbolicValue, SymbolicPath
+from .types import SymbolicValue  # noqa: E402
 
 
 class ExecutorHelpersMixin:

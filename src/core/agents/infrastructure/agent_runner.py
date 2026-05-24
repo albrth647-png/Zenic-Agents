@@ -14,11 +14,10 @@ Ported from:
 
 from __future__ import annotations
 
-import time
 import threading
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
-from ..resilience import BaseAgent, AgentRetryConfig, CircuitBreakerManager, BulkheadManager, GlobalHealthMonitor, AuditLogger, AuditEntry
+from ..resilience import BaseAgent, AgentRetryConfig, CircuitBreakerManager, BulkheadManager, GlobalHealthMonitor, AuditLogger
 from ..schemas import AgentResult
 
 

@@ -11,15 +11,15 @@ Design Patterns:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
-    from rich.text import Text
+    from rich.text import Text  # noqa: F401
     from rich.box import ROUNDED, SIMPLE
-    from rich.columns import Columns
+    from rich.columns import Columns  # noqa: F401
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False

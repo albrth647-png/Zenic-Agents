@@ -7,7 +7,7 @@ import threading
 import time
 from typing import Any
 
-from ._types import *  # noqa: F403
+from ._types import DeadLetterStatus
 
 
 class ReplayQueuePersistenceMixin:

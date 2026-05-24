@@ -8,7 +8,6 @@ client initialization logic.
 import logging
 import os
 import threading
-import time
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple, TYPE_CHECKING
 

@@ -155,7 +155,7 @@ class ContextCompressor(BaseAgent[CompressedContext]):
             )
 
         # Allocate budget
-        allocated_budget = self._allocate_budget(operation, goal, budget)
+        self._allocate_budget(operation, goal, budget)
 
         # Compress entries to fit within budget
         compressed_text, tokens_used = self._compress_entries(entries, budget)

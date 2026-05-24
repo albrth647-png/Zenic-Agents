@@ -144,11 +144,16 @@ class KnowledgeBase:
                     continue
 
                 # Filtros
-                if query.knowledge_types and entry.knowledge_type not in query.knowledge_types: continue
-                if query.categories and entry.category not in query.categories: continue
-                if query.tags and not any(t in entry.tags for t in query.tags): continue
-                if query.language and entry.language and entry.language != query.language: continue
-                if query.min_importance > 0 and entry.importance < query.min_importance: continue
+                if query.knowledge_types and entry.knowledge_type not in query.knowledge_types:
+                    continue
+                if query.categories and entry.category not in query.categories:
+                    continue
+                if query.tags and not any(t in entry.tags for t in query.tags):
+                    continue
+                if query.language and entry.language and entry.language != query.language:
+                    continue
+                if query.min_importance > 0 and entry.importance < query.min_importance:
+                    continue
 
                 # Boost por importancia
                 score += entry.importance * 0.3
@@ -254,7 +259,8 @@ class KnowledgeBase:
     def _remove_entry(self, entry_id: str) -> None:
         """Remueve una entrada y limpia indices."""
         entry = self._entries.pop(entry_id, None)
-        if entry is None: return
+        if entry is None:
+            return
         for kw in entry.keywords:
             if kw.lower() in self._keyword_index:
                 self._keyword_index[kw.lower()] = [i for i in self._keyword_index[kw.lower()] if i != entry_id]

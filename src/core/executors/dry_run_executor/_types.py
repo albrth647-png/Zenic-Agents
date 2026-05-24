@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 logger = None  # Avoid circular import; set by _mixin_core
 
-import logging as _logging
+import logging as _logging  # noqa: E402
 logger = _logging.getLogger(__name__)
 
 
@@ -114,3 +114,4 @@ class DryRunResult:
             "would_succeed": self.would_succeed,
             "safety_verdict_would_be": self.safety_verdict_would_be,
         }
+__all__ = ["DryRunOperation", "DryRunResult", "_now_ts", "_retry", "logger"]

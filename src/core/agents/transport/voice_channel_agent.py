@@ -38,7 +38,6 @@ import asyncio
 import concurrent.futures
 import logging
 import os
-import tempfile
 import time
 from typing import Any, Dict, Optional
 
@@ -167,7 +166,6 @@ async def _download_url(url: str) -> Optional[bytes]:
     # Fallback to urllib
     try:
         import urllib.request
-        import json as _json
 
         def _sync_download() -> Optional[bytes]:
             req = urllib.request.Request(url)
@@ -439,7 +437,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
         # ── Step 2: Validate against platform limits ──
         channel = data.channel or "whatsapp"  # Default to WhatsApp limits
         size_limit = _get_voice_size_limit(channel)
-        duration_limit = _get_voice_duration_limit(channel)
+        _get_voice_duration_limit(channel)
 
         if len(audio_bytes) > size_limit:
             return self._make_result(

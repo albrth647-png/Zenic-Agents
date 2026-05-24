@@ -6,7 +6,7 @@ class tests, method tests, and function tests.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from ._helpers import generate_test_args, generate_edge_case_args
 
@@ -63,33 +63,33 @@ class CodeGenMixin:
 
             if cls["type"] == "crud":
                 lines.extend([
-                    f"@pytest.fixture",
+                    "@pytest.fixture",
                     f"def {fixture_name}(db_connection):",
                     f'    """Create {cls_name} instance with test database."""',
                     f"    with patch.object({cls_name}, '__init__', lambda self, **kw: None):",
                     f"        instance = {cls_name}.__new__({cls_name})",
-                    f"        instance._db_path = ':memory:'",
-                    f"        instance._conn = db_connection",
-                    f"    return instance",
+                    "        instance._db_path = ':memory:'",
+                    "        instance._conn = db_connection",
+                    "    return instance",
                     "",
                 ])
             elif cls["type"] == "auth":
                 lines.extend([
-                    f"@pytest.fixture",
+                    "@pytest.fixture",
                     f"def {fixture_name}():",
                     f'    """Create {cls_name} instance for testing."""',
                     f"    instance = {cls_name}(secret_key='test-secret-key-for-testing', token_expire_minutes=5)",
-                    f"    return instance",
+                    "    return instance",
                     "",
                 ])
             else:
                 lines.extend([
-                    f"@pytest.fixture",
+                    "@pytest.fixture",
                     f"def {fixture_name}():",
                     f'    """Create {cls_name} instance for testing."""',
-                    f"    try:",
+                    "    try:",
                     f"        return {cls_name}()",
-                    f"    except TypeError:",
+                    "    except TypeError:",
                     f"        return {cls_name}.__new__({cls_name})",
                     "",
                 ])
@@ -101,9 +101,9 @@ class CodeGenMixin:
         cls_name = cls_info["name"]
         fixture_name = cls_name.lower()
         lines = [
-            f"",
+            "",
             f"# ── Tests for {cls_name} ──",
-            f"",
+            "",
             f"class Test{cls_name}:",
             f'    """Tests for {cls_name} ({cls_info["type"]})."""',
             "",
@@ -156,7 +156,7 @@ class CodeGenMixin:
             f"    {async_prefix}def test_{method_name}_call(self, {fixture_name}):",
             f'        """Test calling {method_name} with valid arguments."""',
             f"        result = {await_prefix}{fixture_name}.{method_name}({test_args})",
-            f"        assert result is not None",
+            "        assert result is not None",
             "",
         ])
 
@@ -166,12 +166,12 @@ class CodeGenMixin:
             lines.extend([
                 f"    def test_{method_name}_edge_cases(self, {fixture_name}):",
                 f'        """Test {method_name} with edge case inputs."""',
-                f"        try:",
+                "        try:",
                 f"            result = {fixture_name}.{method_name}({edge_args})",
-                f"            # Method should handle edge cases gracefully",
-                f"            assert result is not None or result is None",
-                f"        except (ValueError, TypeError):",
-                f"            pass  # Expected for invalid inputs",
+                "            # Method should handle edge cases gracefully",
+                "            assert result is not None or result is None",
+                "        except (ValueError, TypeError):",
+                "            pass  # Expected for invalid inputs",
                 "",
             ])
 
@@ -188,9 +188,9 @@ class CodeGenMixin:
         await_prefix = "await " if is_async else ""
 
         lines = [
-            f"",
+            "",
             f"# ── Tests for {fn_name} ──",
-            f"",
+            "",
             f"def test_{fn_name}_exists():",
             f'    """Test that {fn_name} exists."""',
             f"    assert hasattr({module_name}, '{fn_name}')",
@@ -199,7 +199,7 @@ class CodeGenMixin:
             f"{async_prefix}def test_{fn_name}_call():",
             f'    """Test calling {fn_name} with valid arguments."""',
             f"    result = {await_prefix}{module_name}.{fn_name}({test_args})",
-            f"    assert result is not None",
+            "    assert result is not None",
             "",
         ]
 

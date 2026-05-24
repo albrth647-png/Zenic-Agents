@@ -25,13 +25,10 @@ from typing import Any, Dict, FrozenSet, List, Optional
 from urllib.parse import urlparse
 
 from ..._formatter import (
-    MessageFormatter,
     format_sms_text,
     split_message,
-    truncate,
     sanitize_plain_text,
 )
-from ..._protocol import ChannelProvider
 from ..._types import (
     ChannelCapability,
     ChannelMessage,

@@ -1,4 +1,7 @@
 import { PrismaClient } from '@prisma/client'
+import { createRedactedLogger } from '@/lib/security/log-redact'
+
+const logger = createRedactedLogger(console)
 
 /**
  * #56 Fix: Optimized Prisma Client Configuration
@@ -62,7 +65,7 @@ async function configureSQLitePerformance() {
     await db.$queryRaw`PRAGMA temp_store=MEMORY`
 
     globalForPrisma.walConfigured = true
-    console.log('[DB] SQLite performance configured: WAL + busy_timeout=5000ms + sync=NORMAL + cache=64MB')
+    logger.info('[DB] SQLite performance configured: WAL + busy_timeout=5000ms + sync=NORMAL + cache=64MB')
   } catch (err) {
     console.warn('[DB] SQLite performance configuration failed (non-fatal):', err)
   }

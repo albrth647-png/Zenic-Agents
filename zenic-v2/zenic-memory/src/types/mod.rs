@@ -2,7 +2,7 @@
 //!
 //! Split into two modules:
 //! - [`core`] — Fundamental value types: LearningMechanism, SemanticMapping, NodeValue
-//! - [`lifecycle`] — Lifecycle types: LearningVerdict, MemoryApprovalRequest, Hypothesis, FeatureGate
+//! - [`lifecycle`] — Lifecycle types: LearningVerdict, MemoryApprovalRequest, Hypothesis, MemoryTierLimits
 
 pub mod core;
 pub mod lifecycle;
@@ -11,5 +11,5 @@ pub mod lifecycle;
 // so that `use crate::types::X` continues to work unchanged.
 pub use core::{LearningMechanism, NodeValue, SemanticMapping};
 pub use lifecycle::{
-    FeatureGate, Hypothesis, LearningVerdict, MemoryApprovalRequest, SubscriptionTier,
+    MemoryTierLimits, Hypothesis, LearningVerdict, MemoryApprovalRequest, SubscriptionTier,
 };

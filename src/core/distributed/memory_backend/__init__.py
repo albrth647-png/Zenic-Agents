@@ -19,7 +19,7 @@ from ._coord_mixin import CoordinationMixin
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["MemoryBackend"]
+__all__ = ["MemoryBackend", "Optional"]
 
 
 class MemoryBackend(TaskLockMixin, CoordinationMixin, CoordinationBackend):

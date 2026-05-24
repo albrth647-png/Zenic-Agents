@@ -24,13 +24,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from src.core.native import (
-    wildcard_match as _native_wildcard_match,
-    resolve_routes as _native_resolve_routes,
-    deduplicate_events as _native_deduplicate_events,
-    sort_by_priority as _native_sort_by_priority,
-    HAS_NATIVE as _HAS_NATIVE,
-)
 
 logger = logging.getLogger(__name__)
 

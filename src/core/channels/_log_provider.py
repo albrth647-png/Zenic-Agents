@@ -18,7 +18,6 @@ import threading
 import time
 from typing import Any, Dict, FrozenSet
 
-from ._protocol import ChannelProvider
 from ._types import (
     ChannelCapability,
     ChannelMessage,

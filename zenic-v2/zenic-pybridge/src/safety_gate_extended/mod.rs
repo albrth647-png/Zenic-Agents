@@ -2,22 +2,23 @@
 //!
 //! Extends the base SafetyGate (10 generic rules) with:
 //! - 35 domain-specific safety rules scoped by NicheCategory
-//! - Compliance validation engines (HIPAA, PCI-DSS, GDPR, SOX, AML/KYC)
+//! - Compliance validation engines (HIPAA, PCI-DSS, GDPR, SOX, AML/KYC, FedRAMP, PCI-DSS 1.2)
 //! - Data sensitivity escalation logic
 //! - Domain-aware rate limiting
 //!
-//! # TODO: Deduplicate with zenic-safety crate
+//! # Deduplication Status (Fase 2 — Completed)
 //!
-//! This module duplicates logic already implemented in the `zenic-safety` crate
-//! (zenic-v2/zenic-safety/). The `zenic-safety` crate has:
-//! - `DomainSafetyGate` with the same 4-layer pipeline
-//! - `DomainRuleSet` with the same 35 domain rules
-//! - `ComplianceEngine` with the same compliance standards
-//! - `DataSensitivity` with the same escalation logic
+//! This module previously duplicated logic from the `zenic-safety` crate.
+//! As part of the Fase 2 deduplication effort:
+//! - `From` impls have been added for bidirectional conversion between
+//!   PyO3 types in this module and canonical `zenic-safety` types.
+//! - `ComplianceStandard` in `zenic-safety` now includes all 10 variants
+//!   (FedRamp and PciDss12 added), making it the single source of truth.
+//! - `DomainSafetyCheckResult` can now be converted from the strongly-typed
+//!   `zenic-safety::DomainSafetyCheckResult` via `From` impl.
 //!
-//! `zenic-pybridge` now depends on `zenic-safety` (added to Cargo.toml).
-//! Next step: refactor this module to delegate to `zenic-safety::DomainSafetyGate`
-//! and only add the PyO3 `#[pyclass]`/`#[pyfunction]` wrappers here,
+//! Remaining work (future phases): Refactor this module to delegate to
+//! `zenic-safety::DomainSafetyGate` and only add PyO3 wrappers here,
 //! eliminating the ~700 lines of duplicated domain rules and compliance logic.
 //!
 //! # Architecture

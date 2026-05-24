@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 import logging
-import time
-from typing import Any, Callable, Dict, List, Optional
-from ._types import *
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +29,9 @@ class _PipelineProgress:
         self.failed_steps = 0
         self.skipped_steps = 0
         self.current_step = ""
-        self.step_states: Dict[str, _StepProgress] = {}
+        self.step_states: Dict[str, _StepProgress] = {}  # noqa: F821
         self.step_weights = step_weights or {}
         self.started_at = started_at
         self.finished_at: Optional[float] = None
-        self.status = ProgressStatus.RUNNING
+        self.status = ProgressStatus.RUNNING  # noqa: F821  # TODO: Phase3 - verify import
 

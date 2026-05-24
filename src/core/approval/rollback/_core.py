@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from ._types import *  # noqa: F403
-from ._helpers import _init_db, _get_compensations, _execute_compensation_action, _record_in_merkle_ledger, _record_audit_event, _persist_compensation, _persist_rollback_record, _row_to_compensation, _row_to_rollback_record, _with_retry
+from ._types import CompensationAction, RollbackRecord, RollbackStatus, RollbackTrigger, logger
 
+import threading
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+import sqlite3
 class RollbackManager:
     """Manages compensation actions and rollback execution.
 
@@ -195,8 +198,3 @@ class RollbackManager:
         recomputed = record._compute_hash()
         return recomputed == record.merkle_hash
 
-    # ── Private Helpers ────────────────────────────────────
-
-    @staticmethod
-    @staticmethod
-    @staticmethod

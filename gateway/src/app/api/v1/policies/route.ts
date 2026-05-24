@@ -1,20 +1,24 @@
 // ─── Zenic-Agents v3 — Policy Engine API: List + Create Policies ──────
 // GET  /api/v1/policies          — List all declarative policies
 // POST /api/v1/policies          — Create a new policy (JSON or YAML)
+// ⚠️ SECURITY FIX (Phase 0): Added authentication to all endpoints
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { loadPolicyFromYaml, computeContentHash } from "@/lib/policy-engine";
 import type { PolicyDocument } from "@/lib/policy-engine";
+import { requireAuth, requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 // GET /api/v1/policies
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Require authentication to view policies
+    await requireAuth(request);
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize")) || 20));
     const isActive = searchParams.get("isActive");
-    const category = searchParams.get("category");
 
     const where = {
       ...(isActive !== null ? { isActive: isActive === "true" } : {}),
@@ -55,6 +59,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / pageSize),
     });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     console.error("[Policies v1 GET]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch policies", code: "INTERNAL_ERROR" },
@@ -66,6 +73,9 @@ export async function GET(request: NextRequest) {
 // POST /api/v1/policies
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require admin role to create policies
+    const { user } = await requireAuthAndPermission(request, "admin");
+
     const contentType = request.headers.get("content-type") ?? "";
     let document: PolicyDocument;
     let sourceYaml: string | undefined;
@@ -106,6 +116,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Use authenticated user as author if not specified
+    const author = document.metadata.author || user.email;
+
     // Create the policy
     const policy = await db.declPolicy.create({
       data: {
@@ -119,7 +132,7 @@ export async function POST(request: NextRequest) {
         tests: JSON.stringify(document.tests ?? []),
         sourceYaml: sourceYaml ?? null,
         contentHash,
-        author: document.metadata.author ?? null,
+        author,
       },
     });
 
@@ -131,7 +144,7 @@ export async function POST(request: NextRequest) {
         contentHash,
         document: JSON.stringify(document),
         status: "active",
-        createdBy: document.metadata.author ?? "system",
+        createdBy: author,
         changeDescription: "Initial version",
         parentVersionId: null,
       },
@@ -150,6 +163,9 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     if (error instanceof Error && error.name === "PolicyValidationError") {
       return NextResponse.json(
         { success: false, error: error.message, code: "VALIDATION_ERROR" },

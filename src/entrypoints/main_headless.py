@@ -14,13 +14,10 @@ Uso:
   python3 main_headless.py --ram-limit 4096   # Limite RAM en MB
 """
 
-import sys
 import os
 import time
 import logging
 import argparse
-import signal
-import threading
 
 # ============================================================
 #  INICIALIZACION - Antes de importar modulos pesados
@@ -29,7 +26,7 @@ import threading
 from src.core.env_loader import load_env
 load_env()
 
-from src.core.shared.resource_governor import (
+from src.core.shared.resource_governor import (  # noqa: E402
     tune_gc_for_arm, set_process_priority_low,
     limit_open_files, init_governor,
 )
@@ -57,16 +54,16 @@ tune_gc_for_arm()
 set_process_priority_low()
 limit_open_files()
 
-from src.core.shared.contracts import HAS_Z3
-from src.core.shared.db_initializer import initialize_databases
-from src.core.shared._version import ZENIC_VERSION_STR, ZENIC_FULL_NAME
+from src.core.shared.contracts import HAS_Z3  # noqa: E402
+from src.core.shared.db_initializer import initialize_databases  # noqa: E402
+from src.core.shared._version import ZENIC_VERSION_STR, ZENIC_FULL_NAME  # noqa: E402
 
 # Feature flags
 _ZENIC_USE_SNA = os.environ.get("ZENIC_USE_SNA", "1") == "1"
 _ZENIC_USE_BLUEPRINTS = os.environ.get("ZENIC_USE_BLUEPRINTS", "1") == "1"
 
 # dag_orchestrator migrated to Rust — use ZenicOrchestrator directly
-from src.core.orchestrator import ZenicOrchestrator
+from src.core.orchestrator import ZenicOrchestrator  # noqa: E402
 _ORCHESTRATOR_CLASS = ZenicOrchestrator
 _ORCHESTRATOR_NAME = f"ZenicOrchestrator ({ZENIC_VERSION_STR})"
 
@@ -145,9 +142,9 @@ def main():
     print(f"\n{'=' * 60}")
     print(f"  ZENIC-AGENTS {ZENIC_VERSION_STR} — Local Engine CLI")
     print(f"  Solver: {solver_name} | Orchestrator: {_ORCHESTRATOR_NAME}")
-    print(f"  NOTE: HTTP server removed — local engine only")
+    print("  NOTE: HTTP server removed — local engine only")
     print(f"{'=' * 60}")
-    print(f"  Type queries to test the engine. Type 'quit' to exit.")
+    print("  Type queries to test the engine. Type 'quit' to exit.")
     print(f"{'=' * 60}\n")
 
     _run_interactive_loop(orchestrator, governor, sna_engine, blueprint_registry)
@@ -206,7 +203,7 @@ def _print_status(orchestrator, governor, sna_engine=None):
         print(f"  Semantic Loaded: {mgr.semantic_loaded}")
     print(f"  Governor RAM limit: {governor._ram_limit_mb}MB")
     if sna_engine:
-        print(f"  SNA: active")
+        print("  SNA: active")
 
 
 def _reset_circuit_breakers(orchestrator: object) -> None:

@@ -21,17 +21,13 @@ import os
 import secrets
 import sqlite3
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Protocol
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, Protocol
 
-from .base import BaseFlow, FlowContext, FlowResult
+from .base import BaseFlow, FlowContext
 from ..validators.activation_key import (
-    ActivationKeyValidator,
-    ConfirmationCodeValidator,
     validate_activation_key,
     ActivationKey,
-    ConfirmationCode,
-    generate_activation_key,
     generate_confirmation_code,
 )
 
@@ -346,8 +342,7 @@ class ActivationFlow(BaseFlow):
         # Also try to register with LicenseManager
         try:
             from src.core.license import (
-                LicenseManager, LicenseTier, LicenseStatus,
-                HardwareBindingStrength, get_license_manager,
+                LicenseTier, HardwareBindingStrength, get_license_manager,
             )
             manager = get_license_manager()
             tier_map = {

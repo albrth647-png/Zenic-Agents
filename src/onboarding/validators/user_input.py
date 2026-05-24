@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import ClassVar, Final, List, Optional, Sequence
+from dataclasses import dataclass
+from typing import ClassVar, Final, List
 
 
 # ── Core Validation Result Types ─────────────────────────────

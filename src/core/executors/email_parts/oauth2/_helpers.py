@@ -149,7 +149,7 @@ def config_from_env(prefix: str) -> OAuth2Config:
 
 
 def register_service_from_env(
-    manager: "OAuth2TokenManager",
+    manager: "OAuth2TokenManager",  # noqa: F821  # TODO: Phase3 - verify import
     service_name: str,
     prefix: str,
 ) -> bool:
@@ -177,3 +177,4 @@ def register_service_from_env(
         service_name, prefix,
     )
     return True
+__all__ = ["build_authorization_url", "config_from_env", "generate_pkce_pair", "logger", "register_service_from_env"]

@@ -6,9 +6,8 @@ Now numpy is loaded on first actual use, making the embedding pipeline functiona
 """
 
 import hashlib
-import logging
 
-from ._imports import _get_numpy, HAS_NUMPY, logger
+from ._imports import _get_numpy, logger
 
 # Evict 20% of entries when cache exceeds limit (1/5 = 20%)
 _EVICTION_DIVISOR = 5

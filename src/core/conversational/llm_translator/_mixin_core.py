@@ -6,7 +6,6 @@ import logging
 import re
 import time
 from typing import Any, Dict, Optional
-from ._types import *
 from ._mixin_fallback import FallbackMixin
 
 logger = logging.getLogger("zenic_agents.conversational.llm_translator")
@@ -199,13 +198,13 @@ class LLMTranslator(FallbackMixin):
         result: Dict[str, Any] = {}
 
         # Look for intent mentions
-        for intent in VALID_INTENTS:
+        for intent in VALID_INTENTS:  # noqa: F821
             if intent in text.lower():
                 result["intent"] = intent
                 break
 
         # Look for action type mentions
-        for action in VALID_ACTION_TYPES:
+        for action in VALID_ACTION_TYPES:  # noqa: F821
             if action in text.upper():
                 result["action_type"] = action
                 break
@@ -229,15 +228,15 @@ class LLMTranslator(FallbackMixin):
 
         # Validate intent
         intent = result.get("intent", "unknown")
-        if intent not in VALID_INTENTS:
+        if intent not in VALID_INTENTS:  # noqa: F821
             logger.warning(f"Unknown intent '{intent}', defaulting to 'unknown'")
             result["intent"] = "unknown"
 
         # Validate action_type
         action_type = result.get("action_type", "")
-        if action_type not in VALID_ACTION_TYPES:
+        if action_type not in VALID_ACTION_TYPES:  # noqa: F821
             # Try to derive from intent
-            result["action_type"] = INTENT_TO_ACTION.get(intent, "SEARCH")
+            result["action_type"] = INTENT_TO_ACTION.get(intent, "SEARCH")  # noqa: F821  # TODO: Phase3 - verify import
 
         # Validate confidence
         confidence = result.get("confidence", 0.0)

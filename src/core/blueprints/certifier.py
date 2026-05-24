@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 import logging
 import os
 import time
-from typing import Any, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .schema import CertifiedBlueprint
@@ -32,9 +31,9 @@ logger = logging.getLogger(__name__)
 # Try to import cryptography for ECDSA
 try:
     from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import ec, utils
+    from cryptography.hazmat.primitives.asymmetric import ec, utils  # noqa: F401
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        EllipticCurvePrivateKey, EllipticCurvePublicKey,
+        EllipticCurvePrivateKey, EllipticCurvePublicKey,  # noqa: F401
     )
     from cryptography.exceptions import InvalidSignature
     _HAS_CRYPTO = True
@@ -295,7 +294,6 @@ def certify_blueprint(blueprint: "CertifiedBlueprint") -> BlueprintSignature:
 
     Signs the Blueprint's content hash and updates its metadata.
     """
-    from .schema import CertifiedBlueprint  # Avoid circular import
     certifier = get_default_certifier()
     content_hash = blueprint.content_hash()
     signature = certifier.sign(content_hash)

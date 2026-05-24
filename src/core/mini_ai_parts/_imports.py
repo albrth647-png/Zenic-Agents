@@ -5,7 +5,6 @@ Shared imports, constants, and dataclasses for mini_ai_parts.
 import os
 import logging
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 

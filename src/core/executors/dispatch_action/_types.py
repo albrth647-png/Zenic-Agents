@@ -49,3 +49,4 @@ class DispatchResult:
     blueprint_errors: List[str] = field(default_factory=list)
     total_duration_ms: float = 0.0
     pipeline_stages: Dict[str, float] = field(default_factory=dict)
+__all__ = ["DispatchRequest", "DispatchResult"]

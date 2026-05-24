@@ -1,7 +1,7 @@
 """CommandBus - Core methods."""
 
 import logging
-from typing import Callable, List, Optional
+from typing import Optional
 
 from ._types import Command, CommandHandler, CommandMiddleware, CommandResult, CommandValidator
 from ._helpers import _build_middleware_chain

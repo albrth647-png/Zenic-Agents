@@ -3,11 +3,9 @@ Reason with context mixin for ReasoningEngine.
 """
 
 import time
-import logging
-from typing import Dict, Any, List
 
 from ._imports import (
-    logger, ReasoningStep, ReasoningResult, ReasoningMode,
+    ReasoningStep, ReasoningResult, ReasoningMode,
     MAX_TOKENS_PER_STEP,
 )
 

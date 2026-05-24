@@ -287,7 +287,7 @@ class DefenseManager:
     def _get_integrity_watch_list(self) -> List[str]:
         """Get the list of components to watch for integrity monitoring."""
         import os
-        base = os.environ.get("ZENIC_ROOT", "")
+        os.environ.get("ZENIC_ROOT", "")
         # auth_parts removed — no auth_parts file to watch
         watch: List[str] = []
         return watch

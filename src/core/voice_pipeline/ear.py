@@ -37,7 +37,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Sequence, Type
 
 from ._types import (
-    AudioFormat,
     STTBackendConfig,
     TranscriptionResult,
     VoicePipelineMetrics,

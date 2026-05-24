@@ -1,7 +1,7 @@
 """
 ZENIC-AGENTS — Email ActionExecutor Core (Phase 2)
 
-Enhanced email executor supporting both SMTP and Microsoft Graph API.
+Enhanced email executor supporting both SMTP and Microsoft Graph API.  # noqa: F821  # TODO: verify import
 
 Modes:
   - "smtp"       → Sends via SMTP (aiosmtplib preferred, smtplib fallback)
@@ -32,7 +32,6 @@ import os
 import smtplib
 import ssl
 import threading
-import time
 from typing import Any, Dict, List, Optional
 
 from ..base import ActionExecutor, ActionResult, _validate_email, _HAS_AIOHTTP
@@ -53,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmailExecutor(ActionExecutor):
-    """Enhanced email executor supporting SMTP and Microsoft Graph API.
+    """Enhanced email executor supporting SMTP and Microsoft Graph API.  # noqa: F821  # TODO: verify import
 
     Config keys accepted by ``execute()``:
         mode           – "smtp", "graph_api", or "auto" (default: "auto")
@@ -70,9 +69,9 @@ class EmailExecutor(ActionExecutor):
         html           – HTML body
         cc             – CC recipients (List[str])
         bcc            – BCC recipients (List[str])
-        from_email     – Sender email address
+        from_email     – Sender email address  # noqa: F821  # TODO: verify import
         attachments    – List of attachment dicts: [{name, content_bytes, content_type}]
-        reply_to       – Reply-to email address
+        reply_to       – Reply-to email address  # noqa: F821  # TODO: verify import
         importance     – "low", "normal", "high" (default "normal")
         # Template fields
         template       – Template name (e.g. "alert", "invoice")
@@ -99,7 +98,7 @@ class EmailExecutor(ActionExecutor):
         config: Dict[str, Any],
         context: Dict[str, Any],
     ) -> ActionResult:
-        """Execute an email send operation.
+        """Execute an email send operation.  # noqa: F821  # TODO: verify import
 
         Never raises — always returns an ActionResult.
         """
@@ -125,13 +124,13 @@ class EmailExecutor(ActionExecutor):
                 self._elapsed_ms(start),
             )
 
-        # Validate email addresses
+        # Validate email addresses  # noqa: F821  # TODO: verify import
         invalid = [r for r in recipients if not _validate_email(r)]
         if invalid:
             return ActionResult(
                 False,
                 {"invalid_recipients": invalid},
-                f"Invalid email addresses: {invalid}",
+                f"Invalid email addresses: {invalid}",  # noqa: F821  # TODO: verify import
                 self._elapsed_ms(start),
             )
 
@@ -222,7 +221,7 @@ class EmailExecutor(ActionExecutor):
         body: str,
         html: str,
     ) -> ActionResult:
-        """Send email via SMTP (aiosmtplib preferred, smtplib fallback)."""
+        """Send email via SMTP (aiosmtplib preferred, smtplib fallback)."""  # noqa: F821  # TODO: verify import
         host = config.get("host", "") or os.environ.get("SMTP_HOST", "")
         port = config.get("port") or int(os.environ.get("SMTP_PORT", "587"))
         user = config.get("user", "") or os.environ.get("SMTP_USER", "")
@@ -295,7 +294,7 @@ class EmailExecutor(ActionExecutor):
         body: str,
         html: str,
     ) -> ActionResult:
-        """Send email via Microsoft Graph API."""
+        """Send email via Microsoft Graph API."""  # noqa: F821  # TODO: verify import
         provider = self._get_or_create_graph_provider(config)
         from_email = config.get("from_email", "") or os.environ.get("MSGRAPH_FROM_EMAIL", "")
 
@@ -388,7 +387,7 @@ class EmailExecutor(ActionExecutor):
         use_tls: bool,
         from_email: str,
         recipients: List[str],
-        msg: email.mime.multipart.MIMEMultipart,
+        msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: verify import
     ) -> tuple[bool, str]:
         """Send via aiosmtplib (async). Returns (success, error_message)."""
         import aiosmtplib  # type: ignore[import-unresolved]
@@ -426,10 +425,9 @@ class EmailExecutor(ActionExecutor):
         use_tls: bool,
         from_email: str,
         recipients: List[str],
-        msg: email.mime.multipart.MIMEMultipart,
+        msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: Phase3 - verify import
     ) -> tuple[bool, str]:
         """Send via smtplib (sync, wrapped in asyncio.to_thread)."""
-        import email.mime.multipart  # ensure available in closure
 
         def _sync_send() -> tuple[bool, str]:
             try:

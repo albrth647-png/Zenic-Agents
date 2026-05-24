@@ -12,7 +12,7 @@ El bridge es el "cable" que conecta todo.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Callable
 from enum import Enum
 
 from src.core.channel.a52_voice import VoiceChannelAgent, VoiceMessage, VoiceResult

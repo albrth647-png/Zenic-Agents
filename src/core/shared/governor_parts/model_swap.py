@@ -3,7 +3,6 @@
 from typing import Dict, Any
 
 from ._imports import logger
-import logging
 
 
 class ModelSwapMixin:

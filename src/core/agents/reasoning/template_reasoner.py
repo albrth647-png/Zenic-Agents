@@ -14,7 +14,6 @@ Ported from:
 
 from __future__ import annotations
 
-import re
 from typing import Any, Optional
 
 from ..resilience import BaseAgent
@@ -202,7 +201,7 @@ class TemplateReasoner(BaseAgent[ReasoningResult]):
           - str (raw query text)
         """
         problem_type = self._extract_problem_type(input_data)
-        query = self._extract_query(input_data)
+        self._extract_query(input_data)
         context = self._extract_context(input_data)
 
         ptype_str = problem_type.type if problem_type else "general"

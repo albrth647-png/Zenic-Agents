@@ -21,10 +21,6 @@ with LRU-style eviction when maps exceed _MAX_ENCODE_ENTRIES.
 
 import logging
 
-from ._types import (
-    _MAX_EXHAUSTIVE_PAIRS, _MAX_ENCODE_ENTRIES, _EVICT_BATCH_SIZE,
-    _DEFAULT_MAX_SAMPLES, _REAL_DECIMAL_PRECISION,
-)
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
@@ -36,7 +32,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-from ._constraints import Z3ConstraintMixin
+from ._constraints import Z3ConstraintMixin  # noqa: E402
 
 
 class Z3SolverEncodingMixin(Z3ConstraintMixin):

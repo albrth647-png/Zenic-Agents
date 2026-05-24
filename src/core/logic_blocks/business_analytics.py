@@ -8,9 +8,8 @@ notification dispatch, and data analyzer.
 import json
 import time
 import math
-import hashlib
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .chain import LogicBlock
 

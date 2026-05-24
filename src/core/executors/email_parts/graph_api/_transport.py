@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import base64
-import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from ._types import *  # noqa: F403
-from ._helpers import _send_with_retry, _send_once, _dry_run_response, _upload_attachment_session
+from ._types import _BACKOFF_MULTIPLIER, _GRAPH_BASE_URL, _INITIAL_BACKOFF_SECONDS, _MAX_RETRIES
 
 
 class GraphAPITransportMixin:

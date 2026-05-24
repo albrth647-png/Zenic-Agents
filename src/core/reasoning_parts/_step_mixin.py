@@ -3,11 +3,10 @@ Step-by-step reasoning mixin for ReasoningEngine.
 """
 
 import time
-import logging
 from typing import List
 
 from ._imports import (
-    logger, ReasoningStep, ReasoningResult, ReasoningMode,
+    ReasoningStep, ReasoningResult, ReasoningMode,
     MAX_REASONING_STEPS, MAX_TOKENS_PER_STEP, MIN_CONFIDENCE_ACCEPT,
 )
 

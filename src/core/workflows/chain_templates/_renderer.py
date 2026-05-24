@@ -375,7 +375,7 @@ def instantiate_template(
     template_id: str,
     template: ChainTemplate,
     variables: dict[str, Any],
-) -> "ComposedChain":
+) -> "ComposedChain":  # noqa: F821  # TODO: Phase3 - verify import
     """Create a concrete ComposedChain from a template with variable substitution.
 
     Args:

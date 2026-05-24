@@ -8,7 +8,10 @@ members = [
     "zenic-policy",
     "zenic-safety",
     "zenic-core",
-    "zenic-ffi",
+    # zenic-ffi removed from workspace — was an empty stub with 0 dependents.
+    # Archived to zenic-v2/_archived/zenic-ffi/ for reference.
+    # If C-FFI bindings are needed in the future, create a new crate
+    # with a concrete plan and tracking issue.
     "zenic-pybridge",
     "zenic-bench",
     "zenic-tests",

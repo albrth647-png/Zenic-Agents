@@ -13,11 +13,10 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from typing import Any, Dict, List, Optional
 
 from .types import (
-    BlueprintStats, BlueprintStatus, BlueprintTier,
+    BlueprintStats, BlueprintTier,
 )
 from .schema import CertifiedBlueprint
 from .loader import BlueprintLoaderV2

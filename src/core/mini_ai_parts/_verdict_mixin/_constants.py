@@ -21,12 +21,12 @@ VERDICT_SYSTEM_PROMPT = (
 # Import resilience patterns
 try:
     from ..verdict_parts.resilience import (  # type: ignore[import-unresolved]
-        VerdictCircuitBreaker,
-        VerdictRetryConfig,
-        VerdictHealthMonitor,
-        VerdictAuditor,
-        VerdictAuditEntry,
-        VerdictResilienceOrchestrator,
+        VerdictCircuitBreaker,  # noqa: F401
+        VerdictRetryConfig,  # noqa: F401
+        VerdictHealthMonitor,  # noqa: F401
+        VerdictAuditor,  # noqa: F401
+        VerdictAuditEntry,  # noqa: F401
+        VerdictResilienceOrchestrator,  # noqa: F401
     )
     _RESILIENCE_AVAILABLE = True
 except ImportError:

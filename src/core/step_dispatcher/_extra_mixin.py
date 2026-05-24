@@ -72,7 +72,6 @@ class StepDispatcherExtraMixin:
         """Handle SYMBOLIC_VALIDATION / SYNTAX_VALIDATION action."""
         # Use ValidationAgent (F5) for intelligent validation
         if self._orch._validation_agent and code:
-            from src.core.agents.schemas import ValidationInput  # v18 schema type
             v_output = self._orch._validation_agent.validate_with_runner(
                 self._orch._agent_runner,
                 target="code",

@@ -201,3 +201,62 @@ impl TemplateFieldType {
         format!("TemplateFieldType.{}", self.as_str().to_uppercase())
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Interop with zenic-safety — From conversions
+//
+//  These impls allow seamless conversion between the PyO3-exposed
+//  types in this module and the canonical zenic-safety types. This
+//  eliminates the duplication while keeping the PyO3 #[pyclass]
+//  attributes required for Python interop.
+// ═══════════════════════════════════════════════════════════════
+
+impl From<zenic_safety::NicheCategory> for NicheCategory {
+    fn from(c: zenic_safety::NicheCategory) -> Self {
+        match c {
+            zenic_safety::NicheCategory::AiData => NicheCategory::AiData,
+            zenic_safety::NicheCategory::FinTech => NicheCategory::FinTech,
+            zenic_safety::NicheCategory::HealthTech => NicheCategory::HealthTech,
+            zenic_safety::NicheCategory::GreenTech => NicheCategory::GreenTech,
+            zenic_safety::NicheCategory::EdTech => NicheCategory::EdTech,
+            zenic_safety::NicheCategory::PropTech => NicheCategory::PropTech,
+            zenic_safety::NicheCategory::LegalTech => NicheCategory::LegalTech,
+        }
+    }
+}
+
+impl From<NicheCategory> for zenic_safety::NicheCategory {
+    fn from(c: NicheCategory) -> Self {
+        match c {
+            NicheCategory::AiData => zenic_safety::NicheCategory::AiData,
+            NicheCategory::FinTech => zenic_safety::NicheCategory::FinTech,
+            NicheCategory::HealthTech => zenic_safety::NicheCategory::HealthTech,
+            NicheCategory::GreenTech => zenic_safety::NicheCategory::GreenTech,
+            NicheCategory::EdTech => zenic_safety::NicheCategory::EdTech,
+            NicheCategory::PropTech => zenic_safety::NicheCategory::PropTech,
+            NicheCategory::LegalTech => zenic_safety::NicheCategory::LegalTech,
+        }
+    }
+}
+
+impl From<zenic_safety::DataSensitivity> for DataSensitivity {
+    fn from(s: zenic_safety::DataSensitivity) -> Self {
+        match s {
+            zenic_safety::DataSensitivity::Low => DataSensitivity::Low,
+            zenic_safety::DataSensitivity::Medium => DataSensitivity::Medium,
+            zenic_safety::DataSensitivity::High => DataSensitivity::High,
+            zenic_safety::DataSensitivity::Critical => DataSensitivity::Critical,
+        }
+    }
+}
+
+impl From<DataSensitivity> for zenic_safety::DataSensitivity {
+    fn from(s: DataSensitivity) -> Self {
+        match s {
+            DataSensitivity::Low => zenic_safety::DataSensitivity::Low,
+            DataSensitivity::Medium => zenic_safety::DataSensitivity::Medium,
+            DataSensitivity::High => zenic_safety::DataSensitivity::High,
+            DataSensitivity::Critical => zenic_safety::DataSensitivity::Critical,
+        }
+    }
+}

@@ -7,7 +7,6 @@ from ._imports import logger
 from .monitor import MonitorMixin
 from .api import APIMixin
 from .model_swap import ModelSwapMixin
-import logging
 
 
 class ResourceGovernor(

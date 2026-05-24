@@ -1,7 +1,7 @@
 """MultiLanguage - Core methods."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from ._types import TYPE_MAP
 
@@ -300,7 +300,7 @@ export const AppDataSource = new DataSource({
 '''
 
     def _ts_dockerfile(self, name: str) -> str:
-        return f'''FROM node:20-alpine
+        return '''FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production

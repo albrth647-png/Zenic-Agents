@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._types import (
     BACKOFF_BASE,
@@ -18,7 +18,7 @@ from ._types import (
 )
 
 if TYPE_CHECKING:
-    from ._types import DeadLetterEvent
+    pass
 
 logger = logging.getLogger("zenic_agents.events.replay_queue")
 

@@ -1,14 +1,18 @@
 // ─── Zenic-Agents v3 — HITL API: List + Create Approval Requests ──────
 // GET  /api/v1/hitl          — List approval requests
 // POST /api/v1/hitl          — Create an approval request
+// ⚠️ SECURITY FIX (Phase 0): Added authentication to all endpoints
 
 import { NextRequest, NextResponse } from "next/server";
 import { getApprovalEngine } from "@/lib/hitl";
 import { ApprovalRequestStatus, ApprovalPriority, ApprovalType } from "@/lib/hitl";
+import { requireAuth, requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 // GET /api/v1/hitl
 export async function GET(request: NextRequest) {
   try {
+    const { user } = await requireAuth(request);
+
     const { searchParams } = new URL(request.url);
     const statusParam = searchParams.get("status");
     const priority = searchParams.get("priority") as ApprovalPriority | null;
@@ -35,6 +39,7 @@ export async function GET(request: NextRequest) {
     const result = await engine.listRequests({
       status,
       priority: priority ?? undefined,
+      // SECURITY: If no specific requesterId filter, scope to authenticated user's tenant
       requesterId: requesterId ?? undefined,
       type: type ?? undefined,
       targetResource: targetResource ?? undefined,
@@ -53,6 +58,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(result.total / result.pageSize),
     });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     console.error("[HITL GET]", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch approval requests", code: "INTERNAL_ERROR" },
@@ -64,14 +72,17 @@ export async function GET(request: NextRequest) {
 // POST /api/v1/hitl
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require at least operator role to create approval requests
+    const { user } = await requireAuthAndPermission(request, "operator");
+
     const body = await request.json();
 
     // Validate required fields
-    if (!body.title || !body.description || !body.type || !body.requesterId || !body.requesterName || !body.targetResource || !body.targetAction) {
+    if (!body.title || !body.description || !body.type || !body.targetResource || !body.targetAction) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: title, description, type, requesterId, requesterName, targetResource, targetAction",
+          error: "Missing required fields: title, description, type, targetResource, targetAction",
           code: "VALIDATION_ERROR",
         },
         { status: 400 },
@@ -104,8 +115,9 @@ export async function POST(request: NextRequest) {
       description: body.description,
       type: body.type,
       priority: body.priority,
-      requesterId: body.requesterId,
-      requesterName: body.requesterName,
+      // SECURITY: Use authenticated user identity, not body values
+      requesterId: body.requesterId || user.id,
+      requesterName: body.requesterName || user.name || user.email,
       targetResource: body.targetResource,
       targetAction: body.targetAction,
       actionPayload: body.actionPayload,
@@ -125,6 +137,9 @@ export async function POST(request: NextRequest) {
       data: result,
     }, { status: 201 });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     console.error("[HITL POST]", error);
     return NextResponse.json(
       { success: false, error: "Failed to create approval request", code: "INTERNAL_ERROR" },

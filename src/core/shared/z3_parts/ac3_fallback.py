@@ -90,7 +90,7 @@ class AC3FallbackMixin:
             if hasattr(self, '_TYPE_LATTICE'):
                 # For each pair of variables, add compatibility constraint
                 # based on the type lattice
-                var_names = [v["name"] for v in variables_with_types]
+                [v["name"] for v in variables_with_types]
                 for i, vi in enumerate(variables_with_types):
                     for j, vj in enumerate(variables_with_types):
                         if i == j:

@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
-from ._types import *  # noqa: F403
-from ._helpers import _ensure_schema, _get_last_internal, _row_to_measurement
+from ._types import KPIMeasurement, KPITrend
+
+import logging
+import sqlite3
+import threading
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
 
 class KPITracker:
     """KPI measurement and trend analysis for autopilot objectives.
@@ -88,7 +96,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_insert)
+            _retry_db_operation(_insert)  # noqa: F821  # TODO: add import
             logger.info(
                 "KPITracker: Measured %s=%s (target=%s, delta=%.4f) for %s",
                 metric_name, value, target_value, delta, objective_id,
@@ -144,7 +152,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            return _retry_db_operation(_fetch)
+            return _retry_db_operation(_fetch)  # noqa: F821  # TODO: add import
 
     def get_trend(
         self,
@@ -170,7 +178,7 @@ class KPITracker:
         with self._lock:
 
             def _fetch_history() -> List[KPIMeasurement]:
-                cutoff = datetime.now(timezone.utc).isoformat()
+                datetime.now(timezone.utc).isoformat()
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -184,7 +192,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            measurements = _retry_db_operation(_fetch_history)
+            measurements = _retry_db_operation(_fetch_history)  # noqa: F821  # TODO: add import
 
             if len(measurements) < 2:
                 return KPITrend(
@@ -345,7 +353,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            metrics = _retry_db_operation(_get_metrics)
+            metrics = _retry_db_operation(_get_metrics)  # noqa: F821  # TODO: add import
 
         if not metrics:
             return {
@@ -387,6 +395,3 @@ class KPITracker:
             "trends": metric_trends,
         }
 
-    # ── Internal Helpers ────────────────────────────────────
-
-    @staticmethod

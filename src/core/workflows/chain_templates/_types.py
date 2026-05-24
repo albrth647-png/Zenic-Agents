@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..chain_composer import ComposedChain
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +108,4 @@ def _substitute_value(value: Any, variables: dict[str, Any]) -> Any:
     if isinstance(value, list):
         return [_substitute_value(item, variables) for item in value]
     return value
+__all__ = ["ChainTemplate", "TemplateCategory", "TemplateStep", "TemplateVariable", "_DB_DIR", "_DB_PATH", "_substitute_value", "logger"]

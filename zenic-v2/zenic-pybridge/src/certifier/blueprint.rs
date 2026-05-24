@@ -28,7 +28,7 @@ pub struct CertifiedBlueprint {
     pub(super) signature_algorithm: String,
     pub(super) certified_at: String,
     pub(super) schema_version: String,
-    pub(super) audit_chain: Vec<AuditEntry>,
+    pub(super) audit_chain: Vec<CertificationAuditEntry>,
     pub(super) warnings: Vec<String>,
     pub(super) errors: Vec<String>,
 }

@@ -1,17 +1,14 @@
 """Snapshot Audit — Core engine and singleton."""
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
 import threading
-import time
 import uuid
 from typing import Any, Dict, List, Optional
 
 from src.core.shared.db_initializer import get_data_dir
 from ._types import (
-from ._helpers import _init_db, _persist_snapshot, _update_pairing, _load_snapshot, _row_to_entry
     SnapshotEntry,
     SnapshotPair,
     SnapshotDiff,
@@ -22,6 +19,7 @@ from ._helpers import _init_db, _persist_snapshot, _update_pairing, _load_snapsh
 logger = logging.getLogger(__name__)
 
 
+class SnapshotAuditEngine:
     """Before/After snapshot system for CRUD operation auditing.
 
     Thread-safe.  All DB operations are retried with exponential backoff.
@@ -335,7 +333,3 @@ logger = logging.getLogger(__name__)
             snapshot_id, len(diff.added), len(diff.removed), len(diff.changed),
         )
         return diff.to_dict()
-
-    # ── Internal helpers ─────────────────────────────────
-
-    @staticmethod

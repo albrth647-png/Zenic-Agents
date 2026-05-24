@@ -18,7 +18,7 @@ NATIVE_AVAILABLE: bool = False
 _native = None
 
 try:
-    import _zenic_native as _native  # type: ignore[import-not-found]
+    import _zenic_native as _native  # type: ignore[import-not-found]  # noqa: F401
     NATIVE_AVAILABLE = True
 except ImportError:
     logger.warning(

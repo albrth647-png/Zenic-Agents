@@ -10,7 +10,7 @@
 //! - [`SafetyVeto`] / [`SafetyVetoRegistry`] — immutable deny rules
 //! - [`CriticalityGate`] — node criticality clearance enforcement
 //! - [`PolicyEngine`] — main evaluation engine
-//! - [`AuditLog`] / [`AuditEntry`] — decision audit trail
+//! - [`AuditLog`] / [`PolicyAuditEntry`] — decision audit trail
 
 pub mod audit;
 pub mod engine;
@@ -21,7 +21,7 @@ pub mod role;
 pub mod rule;
 
 // Convenience re-exports.
-pub use audit::{AuditEntry, AuditLog, DenialReason, PolicyDecision};
+pub use audit::{PolicyAuditEntry, AuditLog, DenialReason, PolicyDecision};
 pub use engine::{PolicyContext, PolicyEngine};
 pub use errors::PolicyError;
 pub use gate::{CriticalityGate, CriticalityGateBuilder, SafetyVeto, SafetyVetoRegistry};

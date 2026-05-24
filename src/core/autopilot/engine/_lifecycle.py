@@ -7,7 +7,7 @@ pause, resume, cancel) for the AutopilotEngine class.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ._status import AutopilotStatus
 
@@ -16,10 +16,8 @@ from src.core.autopilot.objective import (
     ObjectiveTarget,
     ObjectivePriority,
     ObjectiveStatus,
-    get_objective_store,
 )
-from src.core.autopilot.planner import AutopilotPlanner, PlannedAction, get_autopilot_planner
-from src.core.autopilot.kpi_tracker import KPITracker, get_kpi_tracker
+from src.core.autopilot.planner import PlannedAction
 
 logger = logging.getLogger(__name__)
 

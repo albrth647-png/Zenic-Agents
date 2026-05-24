@@ -5,7 +5,7 @@ compat._runner — AgentRunnerCompat v1→v2 wrapper.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from src.core.agents.schemas import AgentResult
 from src.core.agents.infrastructure import AgentRunner as V2AgentRunner

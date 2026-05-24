@@ -5,7 +5,6 @@ import logging
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 from ..types import RiskLevel, BlastRadiusReport, RiskPropagationReport, CriticalPathReport, CompositeRiskReport
-from ._types import *
 
 logger = logging.getLogger("zenic_agents.core.risk.engine")
 
@@ -23,8 +22,8 @@ class RiskPredictionEngine:
         with self._lock:
             self._analysis_count += 1
             try:
-                if HAS_NATIVE and calculate_blast_radius is not None:
-                    result = calculate_blast_radius(node_id, edges)
+                if HAS_NATIVE and calculate_blast_radius is not None:  # noqa: F821
+                    result = calculate_blast_radius(node_id, edges)  # noqa: F821
                     risk_level = self._determine_risk_level(result.get("blast_radius_size", 0))
                     report = BlastRadiusReport(
                         source_node=node_id,
@@ -56,8 +55,8 @@ class RiskPredictionEngine:
         with self._lock:
             self._analysis_count += 1
             try:
-                if HAS_NATIVE and propagate_risks is not None:
-                    result = propagate_risks(nodes, edges, base_risks, decay)
+                if HAS_NATIVE and propagate_risks is not None:  # noqa: F821
+                    result = propagate_risks(nodes, edges, base_risks, decay)  # noqa: F821
                     return RiskPropagationReport(
                         effective_risks=result.get("effective_risks", {}),
                         max_effective_risk=result.get("max_effective_risk", 0.0),
@@ -79,8 +78,8 @@ class RiskPredictionEngine:
         with self._lock:
             self._analysis_count += 1
             try:
-                if HAS_NATIVE and find_critical_path is not None:
-                    result = find_critical_path(nodes, edges, durations)
+                if HAS_NATIVE and find_critical_path is not None:  # noqa: F821
+                    result = find_critical_path(nodes, edges, durations)  # noqa: F821
                     return CriticalPathReport(
                         critical_path=result.get("critical_path", []),
                         total_duration_ms=result.get("total_duration_ms", 0),
@@ -204,7 +203,7 @@ class RiskPredictionEngine:
         with self._lock:
             return {
                 "analysis_count": self._analysis_count,
-                "has_native": HAS_NATIVE,
+                "has_native": HAS_NATIVE,  # noqa: F821
             }
 
     def _determine_risk_level(self, score: float) -> RiskLevel:
@@ -238,8 +237,8 @@ class RiskPredictionEngine:
     ) -> BlastRadiusReport:
         """Blast radius for multiple failing nodes."""
         try:
-            if HAS_NATIVE and multi_node_blast_radius is not None:
-                result = multi_node_blast_radius(failed_nodes, edges)
+            if HAS_NATIVE and multi_node_blast_radius is not None:  # noqa: F821
+                result = multi_node_blast_radius(failed_nodes, edges)  # noqa: F821  # TODO: Phase3 - verify import
                 return BlastRadiusReport(
                     source_node=",".join(failed_nodes),
                     affected_nodes=result.get("combined_blast_radius", []),

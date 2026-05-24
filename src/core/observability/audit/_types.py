@@ -102,3 +102,4 @@ class AuditEvent:
     def to_json(self) -> str:
         """Serialize to JSON string."""
         return json.dumps(self.to_dict(), ensure_ascii=False, default=str)
+__all__ = ["AuditEvent", "AuditEventType", "AuditSeverity"]

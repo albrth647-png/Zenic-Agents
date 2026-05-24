@@ -149,3 +149,4 @@ def persist_result(db_path: str, result: SimulationResult, max_history: int = 50
         retry(_do_persist, max_retries=2, base_delay=0.1, label="SimulationEngine._persist_result")
     except Exception as exc:
         logger.debug("SimulationEngine: persist failed: %s", exc)
+__all__ = ["ensure_db", "logger", "persist_result", "retry"]

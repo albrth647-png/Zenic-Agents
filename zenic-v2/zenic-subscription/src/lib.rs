@@ -8,7 +8,7 @@
 //! - [`Subscription`] — Full subscription state machine
 //! - [`Trial`] — 14-day automatic trial (Business plan for ALL users)
 //! - [`UsdtPayment`] — USDT TRC20 payment model (manual/semi-manual)
-//! - [`FeatureGate`] — Feature gates per tier
+//! - [`SubscriptionFeatureGate`] — Feature gates per tier
 //! - [`UsageMeter`] — Usage metering and limits enforcement
 //! - [`saga`] — Saga pattern for subscription lifecycle reliability
 //! - [`SubscriptionEngine`] — Main orchestrator
@@ -26,7 +26,7 @@ pub mod usage;
 // Convenience re-exports.
 pub use engine::SubscriptionEngine;
 pub use errors::SubscriptionError;
-pub use feature_gates::FeatureGate;
+pub use feature_gates::SubscriptionFeatureGate;
 pub use payment::{PaymentStatus, PaymentVerification, UsdtPayment, UsdtPaymentMethod};
 pub use pricing::PricingEngine;
 pub use saga::{

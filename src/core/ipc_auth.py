@@ -27,7 +27,7 @@ import logging
 import os
 import secrets
 import time
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, TypeVar
 
 logger = logging.getLogger("zenic_agents.ipc_auth")
 

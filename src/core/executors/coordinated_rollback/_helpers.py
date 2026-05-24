@@ -23,3 +23,4 @@ def validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
         if ip.is_private or ip.is_loopback or ip.is_reserved:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
+__all__ = ["validate_url"]

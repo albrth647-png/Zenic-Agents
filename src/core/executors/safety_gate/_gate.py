@@ -462,3 +462,32 @@ def reset_safety_gate() -> None:
 
     with _safety_gate_lock:
         _default_safety_gate = None
+
+
+def set_default_safety_gate(gate: SafetyGate) -> None:
+    """Replace the global SafetyGate instance with an enhanced version.
+
+    This is used by Phase 6 integration to replace the default SafetyGate
+    with an EnhancedSafetyGate that adds ApprovalChain integration and
+    degraded-mode enforcement, without resorting to monkey-patching.
+
+    The replacement is thread-safe and preserves any denied actions from
+    the previous instance.
+
+    Args:
+        gate: The new SafetyGate (or EnhancedSafetyGate) instance to use.
+    """
+    global _default_safety_gate
+
+    # Preserve denied actions from the previous instance
+    with _safety_gate_lock:
+        if _default_safety_gate is not None:
+            # Transfer denied actions if the old gate has them
+            if hasattr(gate, 'original') and hasattr(gate.original, '_denied_actions'):
+                # EnhancedSafetyGate — denied actions are on .original
+                pass
+            elif hasattr(_default_safety_gate, '_denied_actions'):
+                denied = _default_safety_gate._denied_actions
+                if hasattr(gate, '_denied_actions'):
+                    gate._denied_actions.update(denied)
+        _default_safety_gate = gate

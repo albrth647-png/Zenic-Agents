@@ -10,17 +10,11 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from src.core.shared.retry import with_retry
 
 from ._types import JournalEntry
-from ._sql_helpers import (
-    _extract_table_and_where_from_delete,
-    _extract_table_and_where_from_update,
-    _extract_set_clause_from_update,
-    _count_placeholders,
-)
 
 logger = logging.getLogger(__name__)
 

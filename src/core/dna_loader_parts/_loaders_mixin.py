@@ -3,11 +3,9 @@ Loader methods mixin for DNALoader.
 """
 
 import os
-import logging
-from typing import Dict, List
 
 from ._imports import (
-    logger, yaml, YAML_AVAILABLE,
+    yaml, YAML_AVAILABLE,
     LogicModule, DomainRule, ValidationGate, GlossaryEntry,
 )
 

@@ -4,10 +4,8 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from .types import MemoryQuery, MemoryRecord, MemorySearchResult, MemoryTier, MemoryType
-from ._types import *
-from ._helpers import *
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +61,7 @@ class MemoryQueryMixin:
                 finally:
                     conn.close()
 
-            return _retry(_search)
+            return _retry(_search)  # noqa: F821
 
     def get_session_summary(self, session_id: str) -> str:
         with self._lock:
@@ -80,7 +78,7 @@ class MemoryQueryMixin:
                     conn.close()
                 return self._generate_summary(records)
 
-            return _retry(_summarize)
+            return _retry(_summarize)  # noqa: F821
 
     def get_stats(self) -> Dict[str, Any]:
         with self._lock:
@@ -115,7 +113,7 @@ class MemoryQueryMixin:
                 finally:
                     conn.close()
 
-            return _retry(_calc)
+            return _retry(_calc)  # noqa: F821  # TODO: Phase3 - verify import
 
     @staticmethod
     def _record_from_row(row: Any) -> MemoryRecord:

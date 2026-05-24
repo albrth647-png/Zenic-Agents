@@ -16,7 +16,7 @@ import json
 from typing import Any, Optional
 
 from ..resilience import BaseAgent
-from ..schemas import ChainResult, ValidationIssue
+from ..schemas import ChainResult
 
 # ──────────────────────────────────────────────────────────────
 # COMPATIBILITY RULES — Between block categories

@@ -18,7 +18,7 @@ import re
 from typing import Any, Optional
 
 from ..resilience import BaseAgent
-from ..schemas import ConfidenceResult, ReasoningResult, ReasoningStep
+from ..schemas import ConfidenceResult, ReasoningResult
 
 # ──────────────────────────────────────────────────────────────
 # CONFIDENCE SCORING RULES

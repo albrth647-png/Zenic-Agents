@@ -14,7 +14,6 @@ Features:
 
 import json
 import logging
-import time
 import traceback
 from datetime import datetime, timezone
 from typing import Optional

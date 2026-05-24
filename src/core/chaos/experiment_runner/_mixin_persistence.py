@@ -8,7 +8,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from ..types import ChaosExperiment, FaultInjection, FaultType, ChaosExperimentState
-from ._types import DB_DIR, DB_PATH
+from ._types import DB_DIR
 from ._helpers import _retry
 
 logger = logging.getLogger("zenic_agents.core.chaos.experiment_runner")

@@ -12,15 +12,8 @@ from ._types import (
     DEFAULT_DB_PATH,
     STATUS_PENDING,
     STATUS_CONFIRMED,
-    STATUS_APPROVED,
     STATUS_DENIED,
-    STATUS_CANCELLED,
     STATUS_EXPIRED,
-)
-from ._helpers import (
-    _init_db, _get_conn, _update_status, _expire_entries,
-    _format_confirm_message, _format_approve_message, _format_detailed_info,
-    _safety_gate_confirm, _safety_gate_approve, cleanup,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.confirm_manager")

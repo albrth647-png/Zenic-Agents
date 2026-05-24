@@ -16,7 +16,6 @@ from src.core.workflows.chain_composer._types import (
     ChainStepType,
     ChainStatus,
     ComposedChain,
-    ChainStepResult,
     ChainExecutionResult,
 )
 

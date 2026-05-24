@@ -265,12 +265,18 @@ class SemanticParser:
         target = tgt.group(1) if tgt else "unknown"
 
         lang = "python"
-        if ".kt" in target: lang = "kotlin"
-        elif ".go" in target: lang = "go"
-        elif ".js" in target: lang = "javascript"
-        elif ".ts" in target: lang = "typescript"
-        elif ".java" in target: lang = "java"
-        elif ".rs" in target: lang = "rust"
+        if ".kt" in target:
+            lang = "kotlin"
+        elif ".go" in target:
+            lang = "go"
+        elif ".js" in target:
+            lang = "javascript"
+        elif ".ts" in target:
+            lang = "typescript"
+        elif ".java" in target:
+            lang = "java"
+        elif ".rs" in target:
+            lang = "rust"
 
         code_lang, raw_code = self._extract_code(text)
         scrap_query = ""
@@ -318,7 +324,7 @@ class SemanticParser:
             return lang_map.get(lang.lower(), 'python'), code
         code_indicators = ['def ', 'class ', 'function ', 'fun ', 'func ', 'import ', 'from ']
         lines = text.strip().split('\n')
-        code_lines = [l for l in lines if any(ind in l for ind in code_indicators)]
+        code_lines = [line for line in lines if any(ind in line for ind in code_indicators)]
         if code_lines:
             return 'python', text.strip()
         return None, None

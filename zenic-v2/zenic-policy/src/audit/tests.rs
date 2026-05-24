@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use super::super::types::{AuditEntry, AuditLog, DenialReason, PolicyDecision};
+    use super::super::types::{PolicyAuditEntry, AuditLog, DenialReason, PolicyDecision};
     use crate::permission::{Action, Resource};
     use zenic_proto::{NodeId, RoleId, SessionId, TenantId};
 
@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn audit_entry_allowed() {
-        let entry = AuditEntry::allowed(
+        let entry = PolicyAuditEntry::allowed(
             1000,
             SessionId::new(),
             TenantId::new(),
@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn audit_entry_denied() {
-        let entry = AuditEntry::denied(
+        let entry = PolicyAuditEntry::denied(
             2000,
             SessionId::new(),
             TenantId::new(),

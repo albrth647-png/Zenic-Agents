@@ -8,9 +8,10 @@ import sqlite3
 import threading
 from typing import Any, Callable, List, Optional
 
-from ._types import *  # noqa: F403
+from ._types import RoutingAction, RoutingRule
 from ._helpers import RoutingActionHelpers
 
+from typing import Dict
 logger = logging.getLogger("zenic_agents.exceptions.routing")
 
 

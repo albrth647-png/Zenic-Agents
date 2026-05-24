@@ -11,7 +11,7 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from .types import (
     Alert, AlertSeverity, AlertStatus, MonitorConfig, MonitorWeight,

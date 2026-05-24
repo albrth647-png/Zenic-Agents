@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from ._types import *  # noqa: F403
+from ._types import PipelineState, PipelineStep
 
 logger = logging.getLogger("zenic_agents.agents.niche_onboarding_pipeline")
 
@@ -192,7 +192,7 @@ class NicheOnboardingStepsMixin:
             "yes" if state.cert_result and state.cert_result.is_certified else "no",
         )
 
-        return PipelineResult(
+        return PipelineResult(  # noqa: F821  # TODO: add import
             success=success,
             pipeline_id=state.pipeline_id,
             niche_id=state.niche_id,

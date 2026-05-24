@@ -5,8 +5,7 @@ FIX (Phase 2): Replaced static `np` import with _get_numpy() lazy loading.
 Now _build_prototypes actually works when numpy is available.
 """
 
-from ._imports import SemanticResult, _get_numpy, HAS_NUMPY, logger
-import logging
+from ._imports import SemanticResult, _get_numpy, logger
 
 # Named constants (previously magic numbers)
 _KEYWORD_CONFIDENCE_DIVISOR = 10.0

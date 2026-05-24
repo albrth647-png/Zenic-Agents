@@ -16,8 +16,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import time
-from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
 from .types.session import (

@@ -19,14 +19,12 @@ import logging
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from ..types.base import Result, Ok
 from ..types.memory import (
-    MemoryEntry, MemoryQuery, MemoryResult, MemoryStats,
-    MemoryType, MemoryCategory,
+    MemoryEntry, MemoryQuery, MemoryType, MemoryCategory,
 )
-from ..types.intent import IntentCategory
 from ..config.constants import MEMORY_MAX_WORKING, MEMORY_MAX_LONG_TERM
 from .working_memory import WorkingMemory
 from .short_term import ShortTermMemory

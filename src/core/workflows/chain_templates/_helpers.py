@@ -26,3 +26,4 @@ def substitute_value(value: Any, variables: dict[str, Any]) -> Any:
     if isinstance(value, list):
         return [substitute_value(item, variables) for item in value]
     return value
+__all__ = ["substitute_value"]

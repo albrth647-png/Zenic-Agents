@@ -10,7 +10,7 @@ from ._async_mixin import SagaAsyncMixin
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
-__all__ = ["SagaStatus", "SagaStep", "SagaContext", "Saga"]
+__all__ = ["SagaStatus", "SagaStep", "SagaContext", "Saga", "Optional"]
 
 
 class Saga(SagaSyncMixin, SagaAsyncMixin):

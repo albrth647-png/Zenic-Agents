@@ -1,4 +1,4 @@
-//! Audit types: PolicyDecision, DenialReason, AuditEntry, AuditLog.
+//! Audit types: PolicyDecision, DenialReason, PolicyAuditEntry, AuditLog.
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -68,7 +68,7 @@ impl fmt::Display for DenialReason {
 }
 
 // ---------------------------------------------------------------------------
-// AuditEntry
+// PolicyAuditEntry
 // ---------------------------------------------------------------------------
 
 /// A single audit entry recording a policy decision.
@@ -77,7 +77,7 @@ impl fmt::Display for DenialReason {
 /// context of a policy evaluation, including the session, tenant,
 /// requested permission, and the outcome.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AuditEntry {
+pub struct PolicyAuditEntry {
     /// Monotonic timestamp when this decision was made (milliseconds).
     pub timestamp_ms: u64,
     /// The session that requested the action.
@@ -94,7 +94,7 @@ pub struct AuditEntry {
     pub role_ids: Vec<RoleId>,
 }
 
-impl AuditEntry {
+impl PolicyAuditEntry {
     /// Creates a new audit entry for an allowed decision.
     pub fn allowed(
         timestamp_ms: u64,
@@ -155,7 +155,7 @@ impl AuditEntry {
 /// the log is stored in memory. The `zenic-core` crate will
 /// add disk persistence later.
 pub struct AuditLog {
-    entries: Vec<AuditEntry>,
+    entries: Vec<PolicyAuditEntry>,
     /// Monotonic clock for timestamps (milliseconds).
     clock_ms: u64,
 }
@@ -177,7 +177,7 @@ impl AuditLog {
         permission: Permission,
         role_ids: Vec<RoleId>,
     ) {
-        let entry = AuditEntry::allowed(
+        let entry = PolicyAuditEntry::allowed(
             self.next_timestamp(),
             session_id,
             tenant_id,
@@ -196,7 +196,7 @@ impl AuditLog {
         reason: DenialReason,
         role_ids: Vec<RoleId>,
     ) {
-        let entry = AuditEntry::denied(
+        let entry = PolicyAuditEntry::denied(
             self.next_timestamp(),
             session_id,
             tenant_id,
@@ -218,22 +218,22 @@ impl AuditLog {
     }
 
     /// Returns all entries in chronological order.
-    pub fn entries(&self) -> &[AuditEntry] {
+    pub fn entries(&self) -> &[PolicyAuditEntry] {
         &self.entries
     }
 
     /// Returns all denial entries.
-    pub fn denials(&self) -> Vec<&AuditEntry> {
+    pub fn denials(&self) -> Vec<&PolicyAuditEntry> {
         self.entries.iter().filter(|e| e.is_denial()).collect()
     }
 
     /// Returns all allowance entries.
-    pub fn allowances(&self) -> Vec<&AuditEntry> {
+    pub fn allowances(&self) -> Vec<&PolicyAuditEntry> {
         self.entries.iter().filter(|e| e.is_allowance()).collect()
     }
 
     /// Returns entries for a specific session.
-    pub fn entries_for_session(&self, session_id: &SessionId) -> Vec<&AuditEntry> {
+    pub fn entries_for_session(&self, session_id: &SessionId) -> Vec<&PolicyAuditEntry> {
         self.entries
             .iter()
             .filter(|e| &e.session_id == session_id)
@@ -241,7 +241,7 @@ impl AuditLog {
     }
 
     /// Returns entries for a specific tenant.
-    pub fn entries_for_tenant(&self, tenant_id: &TenantId) -> Vec<&AuditEntry> {
+    pub fn entries_for_tenant(&self, tenant_id: &TenantId) -> Vec<&PolicyAuditEntry> {
         self.entries
             .iter()
             .filter(|e| &e.tenant_id == tenant_id)

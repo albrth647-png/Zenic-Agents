@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..z3_solver import HAS_Z3
+from ..z3_solver import HAS_Z3  # noqa: E402
 
 # Z3 module reference for convenience (only available when HAS_Z3 is True)
 if HAS_Z3:

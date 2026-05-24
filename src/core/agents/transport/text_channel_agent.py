@@ -21,7 +21,6 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import logging
-import time
 from typing import Any, Dict, List, Optional
 
 from ..resilience import BaseAgent

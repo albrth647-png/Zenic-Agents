@@ -13,7 +13,7 @@ import hmac
 import logging
 import os
 import secrets
-from typing import Optional, Tuple
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class ECDSASigner:
         """Try loading ECDSA keys from PEM format."""
         try:
             from cryptography.hazmat.primitives import serialization
-            from cryptography.hazmat.primitives.asymmetric import ec
+            from cryptography.hazmat.primitives.asymmetric import ec  # noqa: F401
 
             if private_pem:
                 self._private_key = serialization.load_pem_private_key(

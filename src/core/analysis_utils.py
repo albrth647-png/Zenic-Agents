@@ -37,7 +37,7 @@ class AnalysisUtils:
     @staticmethod
     def generate_quality_report(analysis, code, lang):
         parts = [
-            f"QUALITY REPORT - ZENIC-AGENTS",
+            "QUALITY REPORT - ZENIC-AGENTS",
             f"Functions: {analysis.get('functions', 0)}",
             f"Classes: {analysis.get('classes', 0)}",
             f"Max complexity: {analysis.get('max_complexity', 0)}",

@@ -7,8 +7,7 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-from ._types import *  # noqa: F403
-from ._helpers import _ensure_db, _persist_result
+from ._types import SimulationResult
 
 
 class SimulationEngineCoreMixin:
@@ -30,7 +29,7 @@ class SimulationEngineCoreMixin:
     def dry_run_executor(self) -> Any:
         """Lazy-load the DryRunExecutor singleton."""
         if self._dry_run_executor is None:
-            from .dry_run_executor import DryRunExecutor, get_dry_run_executor
+            from .dry_run_executor import get_dry_run_executor
             self._dry_run_executor = get_dry_run_executor()
         return self._dry_run_executor
 
@@ -38,7 +37,7 @@ class SimulationEngineCoreMixin:
     def impact_preview_engine(self) -> Any:
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
-            from .impact_preview import ImpactPreviewEngine, get_impact_preview_engine
+            from .impact_preview import get_impact_preview_engine
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 

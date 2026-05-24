@@ -20,9 +20,6 @@ from typing import Any
 # the circular dependency (agents/ → agents/).
 from src.core.shared.agent_schemas import (
     ValidationIssue,
-    TriggerSpec,
-    ActionSpec,
-    ScheduleSpec,
 )
 
 

@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from .bridge import NicheBridge, NicheCatalog, NicheTemplate
-from .ingest_bridge import DocumentIngestor, IngestionResult
+from .bridge import NicheBridge
+from .ingest_bridge import DocumentIngestor
 from ._types import CertificationResultPy, NATIVE_AVAILABLE, _native
 
 logger = logging.getLogger(__name__)

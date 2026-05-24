@@ -3,7 +3,7 @@
 //! All niche definitions are compiled into the Rust binary at build time.
 //! No YAML loading, no filesystem access, no runtime parsing. This
 //! guarantees deterministic behavior and eliminates the GAP-1 blocker
-//! (empty zenic-ffi) identified in the analysis.
+//! (empty zenic-ffi, now archived) identified in the analysis.
 //!
 //! # Catalog Structure
 //!

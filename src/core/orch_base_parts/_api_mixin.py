@@ -2,7 +2,6 @@
 Shared public API methods for BaseOrchestrator — app, automation, schema, think, list.
 """
 
-from ._imports import logger
 
 
 class APIMixin:
@@ -68,7 +67,6 @@ class APIMixin:
         """Genera un proyecto de automatizacion a partir de una descripcion."""
         automation_design = None
         if self._automation_agent:
-            from src.core.agents.schemas import AutomationInput  # v18 schema type
             automation_design = self._automation_agent.design_with_runner(
                 self._agent_runner, description,
             )
@@ -76,7 +74,7 @@ class APIMixin:
         result = self._automation.generate_automation_project(description, output_dir)
 
         if automation_design:
-            wf_dict = self._automation_agent.to_workflow_dict(automation_design)
+            self._automation_agent.to_workflow_dict(automation_design)
             result["automation_agent"] = {
                 "name": automation_design.name,
                 "triggers": [

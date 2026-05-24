@@ -13,8 +13,8 @@ from __future__ import annotations
 import time
 from typing import Any, Optional
 
-from ..resilience import BaseAgent, GlobalHealthMonitor, AgentHealthSnapshot
-from ..schemas import HealthSnapshot, CircuitState
+from ..resilience import BaseAgent, GlobalHealthMonitor
+from ..schemas import HealthSnapshot
 
 
 class HealthMonitorAgent(BaseAgent[HealthSnapshot]):

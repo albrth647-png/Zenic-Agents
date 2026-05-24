@@ -9,7 +9,7 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from ._types import AuditRecord, AuditEventType, GENESIS_HASH, _MAX_RETRIES, _RETRY_DELAY
 

@@ -30,7 +30,7 @@ from ._codegen_mixin import CodeGenMixin
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["TestGenerator"]
+__all__ = ["TestGenerator", "List", "Dict", "TYPE_FIXTURES"]
 
 
 class TestGenerator(ASTAnalysisMixin, CodeGenMixin):

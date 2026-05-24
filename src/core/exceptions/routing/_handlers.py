@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 
 from ..engine import ExceptionSignal
-from ._router import RoutingAction
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class ExceptionRouterHandlersMixin:
     def _action_pause_automation(self, signal: ExceptionSignal) -> Dict[str, Any]:
         """PAUSE_AUTOMATION: toggle off automation."""
         try:
-            from src.core.automation_engine import AutomationEngine
+            from src.core.automation_engine import AutomationEngine  # noqa: F401
             # Lazy: we don't store a reference; just signal the intent.
             logger.warning(
                 "ExceptionRouter: PAUSE_AUTOMATION requested for signal %s",

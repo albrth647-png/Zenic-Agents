@@ -5,7 +5,6 @@ import logging
 import re
 import time
 from typing import Any, Dict, Optional
-from ._types import *
 
 logger = logging.getLogger("zenic_agents.conversational.llm_drafter")
 
@@ -83,7 +82,7 @@ class LLMDrafter:
 
         # Apply channel formatting
         channel = conversation_context.get("channel", self._default_channel)
-        if channel in CHANNEL_FORMATTERS:
+        if channel in CHANNEL_FORMATTERS:  # noqa: F821
             drafted = self._format_by_channel(drafted, channel)
 
         elapsed_ms = (time.time() - start) * 1000
@@ -129,7 +128,7 @@ class LLMDrafter:
         personality: str,
     ) -> str:
         """Build the drafting prompt for the LLM."""
-        personality_prompt = PERSONALITY_PROMPTS.get(personality, PERSONALITY_PROMPTS["zenic"])
+        personality_prompt = PERSONALITY_PROMPTS.get(personality, PERSONALITY_PROMPTS["zenic"])  # noqa: F821  # TODO: Phase3 - verify import
 
         # Build a concise summary of the DAG result
         status = dag_result.get("status", "UNKNOWN")
@@ -263,7 +262,7 @@ class LLMDrafter:
         """When LLM unavailable, uses template-based response generation."""
         status = dag_result.get("status", "UNKNOWN")
         code = dag_result.get("code", "")
-        error = dag_result.get("error", "")
+        dag_result.get("error", "")
         explanations = dag_result.get("explanations", [])
         route = dag_result.get("route", "")
         processing_time = dag_result.get("processing_time_ms", 0)

@@ -4,7 +4,6 @@ import time
 import gc
 import platform
 
-from ._imports import logger
 
 
 class RAMMixin:

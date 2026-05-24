@@ -38,30 +38,18 @@ Garantías contra errores:
 """
 
 import os
-import re
-import time
 import logging
-import concurrent.futures
-from typing import Optional, Dict, Any, List
 
-from ..types import (
-    EvidenceType,
-    Verdict, Evidence, VerdictInput, VerdictOutput,
-    ConsensusResult, VerdictConfidence,
-)
-from ..evidence_collector import EvidenceCollector
-from ..consensus_resolver import ConsensusResolver
-from ..deterministic_pipeline import DeterministicPipeline
 
 # Import resilience patterns
 try:
     from ..resilience import (
-        VerdictCircuitBreaker,
-        VerdictRetryConfig,
-        VerdictHealthMonitor,
-        VerdictAuditor,
-        VerdictAuditEntry,
-        VerdictResilienceOrchestrator,
+        VerdictCircuitBreaker,  # noqa: F401
+        VerdictRetryConfig,  # noqa: F401
+        VerdictHealthMonitor,  # noqa: F401
+        VerdictAuditor,  # noqa: F401
+        VerdictAuditEntry,  # noqa: F401
+        VerdictResilienceOrchestrator,  # noqa: F401
     )
     _RESILIENCE_AVAILABLE = True
 except ImportError:

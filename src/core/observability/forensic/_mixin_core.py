@@ -6,18 +6,13 @@ from __future__ import annotations
 
 import logging
 import sqlite3
-import time
 import uuid
-from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.core.shared.db_initializer import get_connection, get_data_dir
-from src.core.native import HAS_NATIVE as _HAS_NATIVE
+from src.core.shared.db_initializer import get_connection
 from src.core.observability.forensic._types import (
     ChainVerificationResult,
     EvidenceBundle,
-    ForensicEntry,
     ForensicReport,
 )
 from src.core.observability.forensic._helpers import (

@@ -6,9 +6,8 @@ Tuple) that are never consumed by child modules via `from ._imports import`.
 Only imports actually used within this file or consumed by children are kept.
 """
 
-import time
 import logging
-from typing import Dict, Any, List
+from typing import Dict
 from dataclasses import dataclass, field
 
 # Lazy numpy import — avoids loading ~50-100MB into RAM on module import

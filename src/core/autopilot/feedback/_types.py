@@ -1,16 +1,12 @@
 """Types and constants for feedback."""
 
 from __future__ import annotations
-import json
 import logging
-import sqlite3
-import threading
-import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -89,5 +85,4 @@ class FeedbackCycle:
             "analysis": self.analysis,
             "timestamp": self.timestamp,
         }
-
-
+__all__ = ["FeedbackAction", "FeedbackCycle", "logger"]

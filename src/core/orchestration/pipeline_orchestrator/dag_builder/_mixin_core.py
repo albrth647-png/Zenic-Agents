@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from ._types import DAGNode, DAGEdge, DAGValidationResult, NodeStatus
+from ._types import DAGNode, DAGEdge, DAGValidationResult
 from ._mixin_graph import DAGBuilderGraphMixin
 
 logger = logging.getLogger(__name__)

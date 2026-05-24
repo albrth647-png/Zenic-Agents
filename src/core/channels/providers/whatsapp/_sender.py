@@ -20,16 +20,14 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any, Dict, FrozenSet, Optional
 from urllib.parse import urlparse
 
 from ..._formatter import (
-    MessageFormatter,
     build_whatsapp_interactive_buttons,
     format_whatsapp_text,
     truncate,
 )
-from ..._protocol import ChannelProvider
 from ..._types import (
     ChannelCapability,
     ChannelMessage,
@@ -511,7 +509,7 @@ class WhatsAppChannelProviderBase:
                         success=False,
                         channel="whatsapp",
                         status=DeliveryStatus.RATE_LIMITED,
-                        error=f"Rate limited",
+                        error="Rate limited",
                         timestamp=time.time(),
                     )
                 return ChannelResponse(

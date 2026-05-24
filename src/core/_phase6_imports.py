@@ -7,7 +7,6 @@ Split from src/core/__init__.py for maintainability.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 

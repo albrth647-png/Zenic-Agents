@@ -1,17 +1,14 @@
 """Core logic for experiment_runner."""
 
 from __future__ import annotations
-import json
 import logging
-import sqlite3
 import threading
 import time
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..types import ChaosExperiment, FaultInjection, FaultType, ChaosExperimentState
-from ._types import DB_DIR, DB_PATH
-from ._helpers import _retry
+from ..types import ChaosExperiment, FaultInjection, ChaosExperimentState
+from ._types import DB_PATH
 from ._mixin_persistence import ChaosPersistenceMixin
 
 logger = logging.getLogger("zenic_agents.core.chaos.experiment_runner")

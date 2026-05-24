@@ -1,12 +1,8 @@
 """Shared imports, PowerMode enum, and HardwareState dataclass for low_power_parts."""
 
-import os
-import time
 import logging
-from typing import Dict, Any, Optional
 from enum import Enum
 from dataclasses import dataclass
-from collections import deque
 
 logger = logging.getLogger(__name__)
 

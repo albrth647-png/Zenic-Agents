@@ -45,7 +45,7 @@ class DryRunExecutor(ActionExecutor):
     def impact_preview_engine(self) -> Any:
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
-            from ..impact_preview import ImpactPreviewEngine, get_impact_preview_engine
+            from ..impact_preview import get_impact_preview_engine
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 

@@ -15,7 +15,6 @@ Domain classification and constraint encoding helpers are in solver_encoding.py.
 Bijective value encoding/decoding helpers are in solver_encoding.py.
 """
 
-import time
 import gc
 import logging
 
@@ -230,12 +229,12 @@ class Z3SolverCoreMixin:
                     meta["sort"] = "Bool"
                     # If domain has both True/False, no constraint needed
                     # If only one, constrain to that value
-                    has_true = any(v is True or v == True for v in values)
-                    has_false = any(v is False or v == False for v in values)
+                    has_true = any(v is True or v for v in values)
+                    has_false = any(v is False or not v for v in values)
                     if has_true and not has_false:
-                        solver.add(z3_vars[var_name] == True)
+                        solver.add(z3_vars[var_name])
                     elif has_false and not has_true:
-                        solver.add(z3_vars[var_name] == False)
+                        solver.add(not z3_vars[var_name])
 
                 else:
                     # MIXED domain -> EnumSort (safe fallback)
@@ -335,7 +334,7 @@ class Z3SolverCoreMixin:
                     "variable_types": {k: v.get("type", "UNKNOWN") for k, v in var_meta.items()},
                 }
 
-        except Exception as e:
+        except Exception:
             # Let _z3_solve handle retry and AC-3 fallback
             raise
 

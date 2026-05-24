@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ._limits import LIMITS
 from ._text import truncate, sanitize_plain_text

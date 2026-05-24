@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any, List
 
-from ._types import DiffEntry, DiffResult
+from ._types import DiffResult
 
 
 # ──────────────────────────────────────────────────────────────

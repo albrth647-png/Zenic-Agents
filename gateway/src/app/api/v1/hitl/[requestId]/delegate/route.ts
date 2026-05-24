@@ -1,8 +1,10 @@
 // ─── Zenic-Agents v3 — HITL API: Delegate Request ────────────────────
 // POST /api/v1/hitl/[requestId]/delegate
+// ⚠️ SECURITY FIX (Phase 0): Added authentication — fromUserId from verified session
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDelegationService } from "@/lib/hitl";
+import { requireAuth, handleAuthError } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;
@@ -14,14 +16,17 @@ export async function POST(
   { params }: RouteParams,
 ) {
   try {
+    // SECURITY: Require authentication for delegation
+    const { user } = await requireAuth(request);
+
     const { requestId } = await params;
     const body = await request.json();
 
-    if (!body.fromUserId || !body.fromUserName || !body.toUserId || !body.toUserName) {
+    if (!body.toUserId || !body.toUserName) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: fromUserId, fromUserName, toUserId, toUserName",
+          error: "Missing required fields: toUserId, toUserName",
           code: "VALIDATION_ERROR",
         },
         { status: 400 },
@@ -30,8 +35,9 @@ export async function POST(
 
     const service = getDelegationService();
     const result = await service.delegateRequest(requestId, {
-      fromUserId: body.fromUserId,
-      fromUserName: body.fromUserName,
+      // SECURITY: fromUserId and fromUserName from verified session
+      fromUserId: user.id,
+      fromUserName: user.name || user.email,
       toUserId: body.toUserId,
       toUserName: body.toUserName,
       reason: body.reason,
@@ -43,6 +49,9 @@ export async function POST(
       data: result,
     });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     if (error instanceof Error) {
       if (error.message.includes("not found")) {
         return NextResponse.json(

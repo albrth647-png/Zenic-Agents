@@ -11,12 +11,12 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, Optional
 
-from ..base import _HAS_AIOHTTP, _validate_url_ssrf
+from ..base import _validate_url_ssrf
 
 logger = logging.getLogger(__name__)
 
 try:
-    import aiohttp
+    import aiohttp  # noqa: F401
     _AIOHTTP_AVAILABLE = True
 except ImportError:
     _AIOHTTP_AVAILABLE = False

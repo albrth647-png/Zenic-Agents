@@ -1713,10 +1713,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "zenic-ffi"
-version = "0.1.0"
-
-[[package]]
 name = "zenic-flow"
 version = "0.1.0"
 dependencies = [

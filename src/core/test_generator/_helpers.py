@@ -156,3 +156,4 @@ def test_module_import():
     import {module_name}
     assert {module_name} is not None
 '''
+__all__ = ["TYPE_FIXTURES", "annotation_to_str", "detect_class_type", "generate_edge_case_args", "generate_minimal_tests", "generate_syntax_error_tests", "generate_test_args", "logger"]

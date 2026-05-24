@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from ._parsers import _parse_pdf, _parse_pdf_bytes, _parse_docx, _parse_docx_bytes, _parse_html
 

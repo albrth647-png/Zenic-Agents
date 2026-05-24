@@ -3,8 +3,7 @@
 import asyncio
 import logging
 import threading
-import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
 from ._types import SagaStatus, SagaStep, SagaContext
 

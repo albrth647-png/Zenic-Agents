@@ -7,7 +7,7 @@ La IA solo interviene en el veredicto, y solo con SÍ o NO.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 
 
 class Verdict(str, Enum):

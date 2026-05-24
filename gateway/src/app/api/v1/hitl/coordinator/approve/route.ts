@@ -1,28 +1,22 @@
 // ─── Zenic-Agents v3 — HITL API: Coordinator Full Approve ────────────
 // POST /api/v1/hitl/coordinator/approve
+// ⚠️ SECURITY FIX (Phase 0): Added authentication — identity from verified session
 
 import { NextRequest, NextResponse } from "next/server";
 import { getHITLCoordinator } from "@/lib/hitl";
+import { requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 // POST /api/v1/hitl/coordinator/approve
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require operator+ role for coordinator approve
+    const { user } = await requireAuthAndPermission(request, "operator");
+
     const body = await request.json();
 
     if (!body.requestId) {
       return NextResponse.json(
         { success: false, error: "Missing required field: requestId", code: "VALIDATION_ERROR" },
-        { status: 400 },
-      );
-    }
-
-    if (!body.decisionBy || !body.decisionByName || !body.role) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required fields: decisionBy, decisionByName, role",
-          code: "VALIDATION_ERROR",
-        },
         { status: 400 },
       );
     }
@@ -42,9 +36,10 @@ export async function POST(request: NextRequest) {
     const result = await coordinator.fullApprove(
       body.requestId,
       {
-        decisionBy: body.decisionBy,
-        decisionByName: body.decisionByName,
-        role: body.role,
+        // SECURITY: identity from verified session, NOT request body
+        decisionBy: user.id,
+        decisionByName: user.name || user.email,
+        role: user.role,
         comment: body.comment,
         delegatedFrom: body.delegatedFrom,
       },
@@ -53,8 +48,8 @@ export async function POST(request: NextRequest) {
         riskAcknowledgment: body.riskAcknowledgment,
         complianceCheck: body.complianceCheck,
         businessJustification: body.businessJustification,
-        createdBy: body.createdBy ?? body.decisionBy,
-        createdByName: body.createdByName ?? body.decisionByName,
+        createdBy: user.id,
+        createdByName: user.name || user.email,
         decisionId: body.decisionId,
       },
     );
@@ -64,6 +59,9 @@ export async function POST(request: NextRequest) {
       data: result,
     });
   } catch (error) {
+    const authResponse = handleAuthError(error);
+    if (authResponse) return authResponse;
+
     if (error instanceof Error) {
       if (error.message.includes("not found")) {
         return NextResponse.json(

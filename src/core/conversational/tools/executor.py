@@ -15,11 +15,11 @@ import asyncio
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from ..types.base import Result, Ok, Err
-from ..types.tool_use import ToolCall, ToolResult, ToolPermission
+from ..types.tool_use import ToolCall, ToolResult
 from ..config.constants import TOOL_EXECUTION_TIMEOUT, TOOL_MAX_CONCURRENT
 from .registry import ToolRegistry
 

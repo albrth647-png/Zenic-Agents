@@ -13,21 +13,18 @@ FASE 1.2 Performance Fix:
 """
 
 import time
-import json
 import hashlib
-import logging
 from typing import Optional, Dict, Any, List
 
 from .types import (
-    MemoryEntry, logger,
-    MAX_WORKING_ENTRIES, MAX_COMPRESSED_TOKENS,
+    MemoryEntry, MAX_WORKING_ENTRIES, MAX_COMPRESSED_TOKENS,
     IMPORTANCE_THRESHOLD, SEMANTIC_CACHE_THRESHOLD,
 )
 from .types import HAS_NUMPY
 from .pool import smart_memory_pool, SMART_MEMORY_DB
 
 if HAS_NUMPY:
-    import numpy as np
+    pass
 
 
 class CacheMixin:

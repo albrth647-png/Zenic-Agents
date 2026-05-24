@@ -16,10 +16,7 @@ methods synchronously (db.execute_query() which didn't exist). Now uses sqlite3
 directly (stdlib) so generated code is standalone, synchronous, and actually runs.
 """
 
-import os
-import re
 import logging
-from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.assembler")
 

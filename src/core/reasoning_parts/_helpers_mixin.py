@@ -178,7 +178,7 @@ class HelpersMixin:
         elif any(kw in problem_lower for kw in ["crm", "cliente", "customer"]):
             return "Develop a CRM with lead pipeline management, contact tracking, sales stage progression, and conversion analytics. Include email notification for stage changes."
         else:
-            return f"Based on analysis, this requires a structured implementation with: (1) Data models and validation, (2) Business logic with error handling, (3) API endpoints or automation workflows, (4) Tests for critical paths."
+            return "Based on analysis, this requires a structured implementation with: (1) Data models and validation, (2) Business logic with error handling, (3) API endpoints or automation workflows, (4) Tests for critical paths."
 
     def _fallback_evaluate(self, answer: str, problem: str) -> Tuple[float, List[str]]:
         """Deterministic evaluation of an answer."""

@@ -34,7 +34,6 @@ from src.core.shared.agent_schemas import (
 )
 
 # Local compat types
-from ._types import logger
 
 
 # ══════════════════════════════════════════════════════════════

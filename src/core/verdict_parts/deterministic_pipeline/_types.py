@@ -21,12 +21,7 @@ Ventajas sobre la versión con IA:
   - Funciona sin GPU, sin modelo, sin dependencias externas
 """
 
-import re
-import os
-import json
 import logging
-from typing import Dict, Any, List, Optional
-from ..types import DeterministicResult, Evidence, EvidenceType, Verdict
 
 
 logger = logging.getLogger(__name__)
@@ -94,5 +89,4 @@ PATTERN_HEURISTICS = [
     (["singleton", "single", "unique", "unico"], "singleton"),
     (["test", "testing", "prueba", "spec"], "default"),
 ]
-
-
+__all__ = ["EXT_LANG_MAP", "PATTERN_HEURISTICS", "PATTERN_LIBRARY", "VIOLATION_CATALOG", "logger"]

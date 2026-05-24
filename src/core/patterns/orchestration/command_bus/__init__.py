@@ -43,8 +43,8 @@ __all__ = [
 # ============================================================
 
 
-from ._core_mixin import CommandBusCoreMixin
-from ._extra_mixin import CommandBusExtraMixin
+from ._core_mixin import CommandBusCoreMixin  # noqa: E402
+from ._extra_mixin import CommandBusExtraMixin  # noqa: E402
 
 
 class CommandBus(CommandBusCoreMixin, CommandBusExtraMixin):

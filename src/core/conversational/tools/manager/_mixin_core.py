@@ -7,12 +7,11 @@ import math
 import threading
 from typing import Any
 from ..types.base import Result, Ok, Err
-from ..types.tool_use import ToolPermission, ToolSpec, ToolCall, ToolResult
+from ..types.tool_use import ToolPermission, ToolSpec, ToolResult
 from ..types.intent import IntentCategory
 from .registry import ToolRegistry, ToolHandler
 from .executor import ToolExecutor, ExecutorConfig
 from .permissions import PermissionManager
-from ._types import *
 
 logger = logging.getLogger("zenic_agents.conversational.tools.manager")
 
@@ -24,8 +23,8 @@ class ToolManager:
     de tool calls en una API limpia y cohesiva.
     """
 
-    def __init__(self, config: ToolManagerConfig | None = None) -> None:
-        self._config = config or ToolManagerConfig()
+    def __init__(self, config: ToolManagerConfig | None = None) -> None:  # noqa: F821
+        self._config = config or ToolManagerConfig()  # noqa: F821
         self._registry = ToolRegistry()
         self._executor = ToolExecutor(
             self._registry,
@@ -120,7 +119,7 @@ class ToolManager:
         tool_name: str,
         arguments: dict[str, Any],
         session_id: str = "",
-    ) -> ToolResolution:
+    ) -> ToolResolution:  # noqa: F821
         """
         Resuelve una tool call sin ejecutarla.
 
@@ -129,7 +128,7 @@ class ToolManager:
         """
         spec = self._registry.get(tool_name)
         if spec is None:
-            return ToolResolution(
+            return ToolResolution(  # noqa: F821
                 tool_name=tool_name,
                 error=f"Tool no registrada: {tool_name}",
             )
@@ -140,7 +139,7 @@ class ToolManager:
             if session_perm == ToolPermission.DENIED:
                 permission = ToolPermission.DENIED
 
-        return ToolResolution(
+        return ToolResolution(  # noqa: F821  # TODO: Phase3 - verify import
             tool_name=tool_name,
             arguments=arguments,
             permission=permission,

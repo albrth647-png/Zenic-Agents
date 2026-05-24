@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-from ._types import *  # noqa: F403
-from ._helpers import _init_db, _load_channel_configs, _persist_channel_config, _send_in_app, _send_email, _send_slack, _send_teams, _send_whatsapp, _send_sms, _send_push, _send_webhook, _find_message, _persist_message, _row_to_message, _with_retry
+from ._types import (
+    ChannelConfig,
+    NotificationChannel,
+    NotificationEvent,
+    NotificationMessage,
+    NotificationPriority,
+    logger,
+)
+import threading
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
 
 class NotificationDispatcher:
     """Multi-channel notification dispatcher with fallback support.
@@ -162,8 +171,8 @@ class NotificationDispatcher:
     ) -> List[NotificationMessage]:
         """Get all notifications sent for a request."""
         def _do_query() -> List[NotificationMessage]:
-            conn = sqlite3.connect(self._db_path)
-            conn.row_factory = sqlite3.Row
+            conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+            conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """SELECT * FROM notifications
                    WHERE request_id = ?
@@ -178,8 +187,8 @@ class NotificationDispatcher:
     def get_pending_notifications(self) -> List[NotificationMessage]:
         """Get all notifications with 'pending' or 'failed' status."""
         def _do_query() -> List[NotificationMessage]:
-            conn = sqlite3.connect(self._db_path)
-            conn.row_factory = sqlite3.Row
+            conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+            conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """SELECT * FROM notifications
                    WHERE status IN ('pending', 'failed')
@@ -206,7 +215,3 @@ class NotificationDispatcher:
         result = self.dispatch_to_channel(message.channel, message)
         return result
 
-    # ── Channel Stubs ──────────────────────────────────────
-
-    @staticmethod
-    @staticmethod

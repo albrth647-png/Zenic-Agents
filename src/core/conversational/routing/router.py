@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from ..types.base import Result, Ok, Err
+from ..types.base import Result, Ok
 from ..types.intent import AssistantIntent, IntentCategory
 
 logger = logging.getLogger("zenic_agents.conversational.router")

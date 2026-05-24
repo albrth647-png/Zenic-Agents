@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::cache::MemoryCache;
 use crate::errors::MemoryError;
-use crate::graph::{AuditEntry, SemanticGraph};
+use crate::graph::{LearningAuditEntry, SemanticGraph};
 use crate::hitl_bridge::HitlBridge;
 use crate::merkle_seal::MerkleSeal;
 use crate::subscription_gate::SubscriptionGate;
@@ -64,7 +64,7 @@ impl LifecycleOrchestrator {
     pub fn load_episode(
         &self,
         mapping_id: &str,
-    ) -> Result<Vec<AuditEntry>, MemoryError> {
+    ) -> Result<Vec<LearningAuditEntry>, MemoryError> {
         let graph = self.graph.lock().map_err(|e| {
             MemoryError::Internal(format!("graph lock poisoned: {}", e))
         })?;

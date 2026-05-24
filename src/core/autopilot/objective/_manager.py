@@ -13,7 +13,7 @@ import sqlite3
 import threading
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from ._scoring import (
     Objective,

@@ -8,7 +8,7 @@ to internal counters when prometheus_client is unavailable.
 import logging
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from ._config import MetricsConfig, _init_prometheus
 

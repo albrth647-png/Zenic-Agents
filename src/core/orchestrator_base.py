@@ -18,7 +18,6 @@ Both ZenicOrchestrator (sequential) and DAGOrchestrator (graph-based) share:
 - Shared properties (model_manager, low_power_mode, etc.)
 """
 
-from .orch_base_parts import *  # noqa: F401,F403
 from .orch_base_parts import BaseOrchestrator  # explicit for clarity
 
 __all__ = ["BaseOrchestrator"]

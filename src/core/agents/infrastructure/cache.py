@@ -13,7 +13,7 @@ import time
 import threading
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

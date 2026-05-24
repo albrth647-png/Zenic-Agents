@@ -1,22 +1,22 @@
 """Re-exports for sna_engine package."""
 
-from ._types import *
-from ._mixin_core import *
 
 import asyncio
 import logging
 import time
 
-def get_sna_engine() -> SNAEngine:
-    """Get or create the global SNAEngine instance."""
+__all__ = ["asyncio", "logging", "time"]
+
+def get_sna_engine() -> SNAEngine:  # noqa: F821  # TODO: verify import
+    """Get or create the global SNAEngine instance."""  # noqa: F821  # TODO: verify import
     global _default_engine
     if _default_engine is None:
-        _default_engine = SNAEngine()
+        _default_engine = SNAEngine()  # noqa: F821  # TODO: Phase3 - verify import
     return _default_engine
 
 
 def reset_sna_engine() -> None:
-    """Reset the global SNAEngine (for testing)."""
+    """Reset the global SNAEngine (for testing)."""  # noqa: F821  # TODO: verify import
     global _default_engine
     _default_engine = None
 

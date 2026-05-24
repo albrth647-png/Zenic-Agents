@@ -8,13 +8,7 @@ from typing import Any
 
 _lock = threading.Lock()
 
-__all__ = [
-    "IntegrityStatus",
-    "IntegrityCheckResult",
-    "IntegrityVerifier",
-    "get_integrity_verifier",
-    "reset_integrity_verifier",
-]
+__all__ = ["IntegrityStatus", "IntegrityCheckResult", "IntegrityVerifier", "get_integrity_verifier", "reset_integrity_verifier", "_SAFE_IDENTIFIER_RE"]
 
 
 def get_integrity_verifier(**kwargs: Any) -> IntegrityVerifier:

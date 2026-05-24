@@ -19,9 +19,9 @@ Tipos de evidencia que puede recolectar:
 import re
 import ast
 import logging
-from typing import Dict, Any, List, Optional
+from typing import List
 
-from .types import Evidence, EvidenceType, Verdict, DeterministicResult
+from .types import Evidence, EvidenceType, Verdict
 
 
 logger = logging.getLogger(__name__)

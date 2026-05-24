@@ -3,8 +3,7 @@ ZENIC-AGENTS - Mediator Pattern: Sync Dispatch Mixin
 """
 
 import logging
-import threading
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, List
 
 from ._types import PipelineBehavior, Request, Response
 

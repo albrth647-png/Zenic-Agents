@@ -11,7 +11,7 @@ Phase D extensions:
 """
 
 from ._types import SafetyVerdict, ActionCategory, SafetyRule, SafetyCheckResult, SAFETY_RULES
-from ._gate import ActionRateLimiter, SafetyGate, get_default_safety_gate, reset_safety_gate
+from ._gate import ActionRateLimiter, SafetyGate, get_default_safety_gate, reset_safety_gate, set_default_safety_gate
 from .domain_gate import (
     DomainSafetyGate,
     ComplianceResult,
@@ -29,6 +29,7 @@ __all__ = [
     "SafetyGate",
     "get_default_safety_gate",
     "reset_safety_gate",
+    "set_default_safety_gate",
     "DomainSafetyGate",
     "ComplianceResult",
     "DomainSafetyCheckResult",

@@ -24,7 +24,7 @@ class DuplicateRecordsMonitor(BaseMonitor):
     interval_seconds = 7200  # Cada 2 horas
 
     # Tablas y columnas a verificar por duplicados
-    DEFAULT_CHECKS: list[dict[str, Any]] = [
+    DEFAULT_CHECKS: list[dict[str, Any]] = [  # noqa: F821  # TODO: Phase3 - verify import
         {"table": "clientes", "columns": ["email", "telefono"]},
         {"table": "productos", "columns": ["codigo", "nombre"]},
         {"table": "facturas", "columns": ["numero"]},

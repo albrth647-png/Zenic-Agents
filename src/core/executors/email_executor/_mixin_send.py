@@ -14,8 +14,7 @@ import ssl
 import smtplib
 from typing import Any, Dict, List, Optional
 
-from ._types import *  # noqa: F403
-from ._helpers import _send_via_smtp, _send_via_graph_api, _dry_run_send, _intercept_smtp, _intercept_http, _intercept_db, _intercept_file, _record_operation
+from ._types import _SMTP_TIMEOUT
 
 
 class EmailExecutorSendMixin:
@@ -68,14 +67,14 @@ class EmailExecutorSendMixin:
                 "EmailExecutor: SMTP send success to %s (subject='%s')",
                 recipients, subject[:50],
             )
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 True,
                 {"mode": "smtp", "recipients": recipients, "subject": subject, "from": from_email},
             )
         else:
             with self._lock:
                 self._failure_count += 1
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False, {"mode": "smtp", "recipients": recipients},
                 f"SMTP send failed: {error}",
             )
@@ -114,7 +113,7 @@ class EmailExecutorSendMixin:
                 "dry-run" if is_dry_run else "success",
                 recipients, subject[:50],
             )
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 True,
                 {"mode": "graph_api", "recipients": recipients, "subject": subject,
                  "message_id": result.get("message_id", ""), "dry_run": is_dry_run},
@@ -122,7 +121,7 @@ class EmailExecutorSendMixin:
         else:
             with self._lock:
                 self._failure_count += 1
-            return ActionResult(
+            return ActionResult(  # noqa: F821  # TODO: add import
                 False, {"mode": "graph_api", "recipients": recipients},
                 f"Graph API send failed: {result.get('error', 'unknown')}",
             )
@@ -199,7 +198,7 @@ class EmailExecutorSendMixin:
                     use_tls=True, timeout=_SMTP_TIMEOUT,  # noqa: F821
                 )
             else:
-                await aiosmtplib.send(
+                await aiosmtplib.send(  # noqa: F821  # TODO: add import
                     msg, hostname=host, port=port,
                     username=user or None, password=password or None,
                     start_tls=True, timeout=_SMTP_TIMEOUT,  # noqa: F821

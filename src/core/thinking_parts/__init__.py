@@ -32,10 +32,4 @@ class ThinkingEngine(ContextMixin, PlanningMixin, ReasoningMixin):
         self._thinking_time = 0.0
 
 
-__all__ = [
-    "ThinkingEngine",
-    "GenerationPlan",
-    "ThinkingResult",
-    "APP_TEMPLATES",
-    "AUTOMATION_TEMPLATES",
-]
+__all__ = ["ThinkingEngine", "GenerationPlan", "ThinkingResult", "APP_TEMPLATES", "AUTOMATION_TEMPLATES", "logger", "Optional", "Any"]

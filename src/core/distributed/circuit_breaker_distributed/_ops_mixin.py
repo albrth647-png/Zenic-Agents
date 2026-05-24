@@ -6,7 +6,6 @@ and state synchronization methods for DistributedCircuitBreaker.
 """
 
 import logging
-import threading
 import time
 from typing import Any, Callable
 

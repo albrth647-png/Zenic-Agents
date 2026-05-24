@@ -19,7 +19,7 @@ Funciones exportadas:
 import os
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,6 @@ def _parse_yaml_simple(filepath: Path) -> Dict[str, Any]:
     """
     result: Dict[str, Any] = {}
     current_section = result
-    current_key = None
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -100,7 +99,6 @@ def _parse_yaml_simple(filepath: Path) -> Dict[str, Any]:
                         # Nueva seccion
                         current_section = {}
                         result[key] = current_section
-                        current_key = key
                     else:
                         # Valor simple
                         result[key] = _parse_value(value)

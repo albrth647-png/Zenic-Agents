@@ -14,11 +14,9 @@ Design Patterns:
 from __future__ import annotations
 
 import getpass
-import os
-import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from .validators.user_input import ValidationResult, InvalidResult
 
@@ -26,7 +24,7 @@ try:
     from rich.console import Console
     from rich.prompt import Prompt as RichPrompt
     from rich.panel import Panel
-    from rich.text import Text
+    from rich.text import Text  # noqa: F401
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
@@ -197,7 +195,7 @@ class ChoicePrompt(BasePrompt):
                 console.print(f"  [red]Invalid choice: {raw}[/]")
                 return (raw, False)
             except ValueError:
-                console.print(f"  [red]Please enter a number[/]")
+                console.print("  [red]Please enter a number[/]")
                 return (raw, False)
         except (KeyboardInterrupt, EOFError):
             return ("", False)

@@ -3,10 +3,8 @@ Professional glossary API mixin for DNALoader.
 """
 
 import re
-import logging
 from typing import Dict
 
-from ._imports import logger
 
 
 class GlossaryMixin:

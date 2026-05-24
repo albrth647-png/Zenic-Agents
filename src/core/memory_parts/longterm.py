@@ -9,12 +9,10 @@ Phase 2: Fully tenant-aware — all queries scoped by tenant_id.
 import time
 import json
 import sqlite3
-import logging
 from typing import Optional, Dict, Any, List
 
 from .types import (
-    DB_PATH, logger,
-    MAX_LONG_TERM_ENTRIES, IMPORTANCE_THRESHOLD,
+    DB_PATH, MAX_LONG_TERM_ENTRIES,
 )
 from .types import HAS_NUMPY
 if HAS_NUMPY:

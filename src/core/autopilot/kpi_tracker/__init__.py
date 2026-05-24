@@ -27,13 +27,7 @@ from ._types import KPIMeasurement, KPITrend
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "KPIMeasurement",
-    "KPITrend",
-    "KPITracker",
-    "get_kpi_tracker",
-    "reset_kpi_tracker",
-]
+__all__ = ["KPIMeasurement", "KPITrend", "KPITracker", "get_kpi_tracker", "reset_kpi_tracker", "datetime", "timezone"]
 
 
 class KPITracker:

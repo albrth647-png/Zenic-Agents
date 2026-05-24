@@ -29,3 +29,4 @@ _DEFAULT_FALLBACKS: Dict[str, List[str]] = {
     "push": ["email", "log"],
     "log": [],
 }
+__all__ = ["_DEFAULT_FALLBACKS", "_PRIORITY_CHANNEL_MAP"]

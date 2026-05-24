@@ -31,7 +31,7 @@ from ._helpers_mixin import VerdictHelpersMixin
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
-__all__ = ["VerdictEngine"]
+__all__ = ["VerdictEngine", "os", "re", "ConsensusResult", "VerdictAuditEntry", "VERDICT_MAX_TOKENS", "VERDICT_TEMPERATURE", "VERDICT_CONSENSUS_THRESHOLD"]
 
 
 class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):

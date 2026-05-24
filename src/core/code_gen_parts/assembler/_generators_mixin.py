@@ -1,7 +1,7 @@
 """CodeAssembler - Code Generation Mixin."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.assembler")
 

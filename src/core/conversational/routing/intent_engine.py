@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
 
 from ..types.base import Result, Ok
 from ..types.intent import AssistantIntent, IntentCategory, ConversationMode

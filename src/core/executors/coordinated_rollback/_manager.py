@@ -14,12 +14,10 @@ Every operation is wrapped in retry logic.
 from __future__ import annotations
 
 import logging
-import sqlite3
 import threading
 import uuid
 from typing import Any, Dict, List, Optional
 
-from src.core.shared.retry import with_retry
 from src.core.shared.db_initializer import get_data_dir
 from src.core.executors.coordinated_rollback._types import (
     ResourceType,

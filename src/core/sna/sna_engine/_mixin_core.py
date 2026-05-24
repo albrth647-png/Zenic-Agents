@@ -6,8 +6,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 from ..types import (
-    MonitorWeight, AlertSeverity, AlertStatus, ThresholdOperator,
-    SchedulerState, MonitorResult, ThresholdConfig, Alert,
+    AlertSeverity, SchedulerState, MonitorResult, Alert,
     MonitorConfig, SNAStats,
 )
 from ..persistence import SNAPersistence
@@ -16,7 +15,6 @@ from ..thresholds import ThresholdEngine
 from ..alert_manager import AlertManager
 from ..dag_integration import SNADagBridge, ReflexArc
 from ..monitores.base import create_monitor, get_all_monitor_ids
-from ._types import *
 
 logger = logging.getLogger(__name__)
 

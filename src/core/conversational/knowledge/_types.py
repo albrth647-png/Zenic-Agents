@@ -117,3 +117,4 @@ def _extract_keywords(text: str) -> list[str]:
     """Extrae keywords significativas de un texto."""
     words = re.findall(r"\b\w{3,}\b", text.lower())
     return [w for w in words if w not in _STOP_WORDS][:20]
+__all__ = ["KnowledgeEntry", "KnowledgeQuery", "KnowledgeResult", "KnowledgeType", "_STOP_WORDS", "_extract_keywords"]

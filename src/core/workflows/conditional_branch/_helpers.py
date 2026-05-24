@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
-from .chain_composer import ChainStep
-from ._types import _TOKEN_RE, _KEYWORDS
+from ._types import _TOKEN_RE
 
 logger = logging.getLogger(__name__)
 
@@ -260,3 +258,4 @@ def safe_evaluate(expression: str, context: dict[str, Any]) -> bool:
     except (SyntaxError, IndexError, ValueError) as exc:
         logger.warning("Failed to evaluate expression '%s': %s — defaulting to False", expression, exc)
         return False
+__all__ = ["_ExpressionEvaluator", "_parse_value", "_resolve_context_path", "_tokenize", "logger", "safe_evaluate"]

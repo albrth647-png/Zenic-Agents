@@ -2,7 +2,7 @@
 
 /// A single entry from the learning_audit table.
 #[derive(Debug, Clone)]
-pub struct AuditEntry {
+pub struct LearningAuditEntry {
     /// The auto-incremented audit ID.
     pub audit_id: i64,
     /// The mapping ID this audit entry relates to.

@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 import os
 import signal
 import sys
-import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -183,7 +182,7 @@ def _register_handlers(worker: "DistributedWorker") -> None:
 
     # Try to register reasoning handler
     try:
-        from src.core.reasoning_engine import ReasoningEngine
+        from src.core.reasoning_engine import ReasoningEngine  # noqa: F401
         worker.register_handler("reasoning", _handle_generic)
     except ImportError:
         logger.debug("Worker: ReasoningEngine not available")

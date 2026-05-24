@@ -287,7 +287,7 @@ def _match_template(objective: Any) -> List[Dict[str, Any]]:
     desc_lower = getattr(objective, "description", "").lower()
     tags = getattr(objective, "tags", [])
     tags_lower = [t.lower() for t in tags]
-    metadata = getattr(objective, "metadata", {})
+    getattr(objective, "metadata", {})
     search_terms = [name_lower, desc_lower] + tags_lower
 
     # Keyword mapping for template matching

@@ -9,12 +9,10 @@ Phase 2: Fully tenant-aware — all queries scoped by tenant_id.
 import time
 import json
 import sqlite3
-import logging
 from typing import Optional, Dict, Any, List
 
 from .types import (
-    DB_PATH, logger,
-    MAX_EPISODIC_ENTRIES, MAX_PROCEDURAL_ENTRIES, MAX_PROJECT_ENTRIES,
+    DB_PATH, MAX_EPISODIC_ENTRIES,
 )
 
 
@@ -107,8 +105,10 @@ class EpisodesMixin:
             ).fetchone()
             if existing:
                 sc, fc = existing[1], existing[2]
-                if success: sc += 1
-                else: fc += 1
+                if success:
+                    sc += 1
+                else:
+                    fc += 1
                 rate = sc / max(sc + fc, 1)
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "UPDATE procedural_memory SET success_count=?, fail_count=?, success_rate=?, last_used=?, steps=? WHERE id=?",
@@ -224,7 +224,8 @@ class EpisodesMixin:
                    WHERE project_name=? AND client_id=? AND tenant_id=?""",
                 (project_name, self._client_id, self._tenant_id)
             ).fetchone()
-        if not row: return None
+        if not row:
+            return None
         return {"project_name": row[0], "project_type": row[1], "description": row[2], "path": row[3], "status": row[4], "entities": json.loads(row[5] or "[]"), "endpoints": json.loads(row[6] or "[]"), "config": json.loads(row[7] or "{}"), "created_at": row[8], "updated_at": row[9], "notes": row[10]}
 
     def list_projects(self, status: str = "") -> List[Dict[str, Any]]:

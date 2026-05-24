@@ -20,7 +20,7 @@ import sys
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -161,14 +161,19 @@ class BinaryHardeningLayer:
         - No DEBUG mode
         - Secure secrets configured
         """
+        auth_secret = os.environ.get("ZENIC_AUTH_SECRET")
+        # SECURITY: None (unset) is treated as insecure — the secret MUST be
+        # explicitly configured. No default fallback is provided.
+        weak_secrets = {
+            None, "", "changeme", "secret", "jwt_secret",
+            "CHANGE_ME_GENERATE_A_SECURE_JWT_SECRET",
+            "change-this-in-production", "password", "default",
+        }
         checks = {
             "production_env": os.environ.get("ZENIC_ENV") == "production",
             "hardened_flag": os.environ.get("ZENIC_HARDENED") == "1",
             "no_debug": os.environ.get("DEBUG", "").lower() not in ("1", "true", "yes"),
-            "secure_secret": os.environ.get("ZENIC_AUTH_SECRET", "changeme") not in {
-                "changeme", "secret", "jwt_secret",
-                "CHANGE_ME_GENERATE_A_SECURE_JWT_SECRET",
-            },
+            "secure_secret": auth_secret not in weak_secrets and len(auth_secret or "") >= 16,
         }
         # All checks must pass for environment to be considered hardened
         return all(checks.values())

@@ -20,7 +20,7 @@ import hmac
 import re
 import secrets
 from dataclasses import dataclass
-from typing import ClassVar, Final, List, Optional, Tuple
+from typing import ClassVar, Final, List, Tuple
 
 # ── Constants ────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ class ConfirmationCode:
 
 # ── Validation Result (local, reused from user_input) ────────
 
-from .user_input import ValidationResult, ValidResult, InvalidResult
+from .user_input import ValidationResult, ValidResult, InvalidResult  # noqa: E402
 
 
 # ── Activation Key Validator ─────────────────────────────────

@@ -35,6 +35,7 @@ model User {
   approvalRequests   ApprovalRequest[]   @relation("ApprovalRequester") // FASE 4
   approvalReviews    ApprovalRequest[]   @relation("ApprovalReviewer") // FASE 4
   approvalActions    ApprovalAction[]    // FASE 4
+  passwordResetTokens PasswordResetToken[] // FASE 4: Password reset
 
   @@map("users")
 }
@@ -1565,4 +1566,21 @@ model ScanCache {
 
   @@index([category])
   @@map("scan_cache")
+}
+
+// ─── FASE 4: Password Reset Tokens ─────────────────────────────
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique  // SHA-256 hash of the reset token
+  expiresAt DateTime
+  usedAt    DateTime?          // Set when the token is consumed
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_reset_tokens")
 }

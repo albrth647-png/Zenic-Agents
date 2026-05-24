@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Set
 
-from ._types import DAGNode, DAGEdge, DAGValidationResult
+from ._types import DAGNode, DAGEdge
 
 logger = logging.getLogger(__name__)
 

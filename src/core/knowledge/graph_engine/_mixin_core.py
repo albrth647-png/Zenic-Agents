@@ -6,9 +6,9 @@ import logging
 import sqlite3
 import threading
 from collections import deque
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional, Set
 
-from .types import GraphDomain, KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
+from .types import KnowledgeEdge, KnowledgeNode
 from ._types import DB_PATH
 from ._helpers import _retry, _new_id, _now_iso
 from ._mixin_queries import KnowledgeGraphQueriesMixin

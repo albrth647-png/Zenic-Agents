@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from ._types import *  # noqa: F403
 
 logger = logging.getLogger("zenic_agents.exceptions.routing")
 
@@ -48,7 +46,7 @@ class RoutingActionHelpers:
     def _action_pause_automation(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
         """PAUSE_AUTOMATION: toggle off automation."""
         try:
-            from src.core.automation_engine import AutomationEngine
+            from src.core.automation_engine import AutomationEngine  # noqa: F401
             logger.warning(
                 "ExceptionRouter: PAUSE_AUTOMATION requested for signal %s",
                 signal.signal_id,
@@ -158,3 +156,4 @@ class RoutingActionHelpers:
             "status": "no_alternative_route",
             "detail": "No alternative rule found for rerouting",
         }
+__all__ = ["RoutingActionHelpers", "logger"]

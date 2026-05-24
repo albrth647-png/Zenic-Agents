@@ -88,3 +88,4 @@ def extract_risk_score(result: SimulationResult) -> float:
             if isinstance(score, (int, float)):
                 max_score = max(max_score, float(score))
     return max_score
+__all__ = ["ScenarioComparison", "SimulationResult", "extract_risk_score"]

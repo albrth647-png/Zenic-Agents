@@ -69,7 +69,8 @@ class ScheduleExecutor(ActionExecutor):
         interval = config.get("interval", 60)
         cron = config.get("cron", "")
         args = config.get("args", [])
-        if not func_name: raise ValueError("Schedule add requires 'func' (function name)")
+        if not func_name:
+            raise ValueError("Schedule add requires 'func' (function name)")
 
         job_info = {"job_id": job_id, "func": func_name, "interval": interval, "cron": cron,
                     "args": args, "status": "active", "created_at": time.time(), "next_run": time.time() + interval}
@@ -82,13 +83,16 @@ class ScheduleExecutor(ActionExecutor):
                 if cron:
                     parts = cron.split()
                     kw = {}
-                    if len(parts) >= 1: kw["hour"] = int(parts[0])
-                    if len(parts) >= 2: kw["minute"] = int(parts[1])
+                    if len(parts) >= 1:
+                        kw["hour"] = int(parts[0])
+                    if len(parts) >= 2:
+                        kw["minute"] = int(parts[1])
                     trigger = CronTrigger(**kw)
                 else:
                     trigger = IntervalTrigger(seconds=interval)
                 self._scheduler.add_job(_task, trigger=trigger, id=job_id, args=args, replace_existing=True)
-                if not self._scheduler.running: self._scheduler.start()
+                if not self._scheduler.running:
+                    self._scheduler.start()
                 job_info["scheduler"] = "apscheduler"
             except Exception as e:
                 logger.warning(f"ScheduleExecutor: APScheduler add_job failed: {e}, using fallback")
@@ -101,8 +105,10 @@ class ScheduleExecutor(ActionExecutor):
 
     async def _remove_job(self, job_id):
         if self._scheduler and _HAS_APSCHEDULER:
-            try: self._scheduler.remove_job(job_id)
-            except Exception: logger.debug(f"ScheduleExecutor: remove_job failed for {job_id}")
+            try:
+                self._scheduler.remove_job(job_id)
+            except Exception:
+                logger.debug(f"ScheduleExecutor: remove_job failed for {job_id}")
         removed = self._simple_jobs.pop(job_id, None) is not None
         return {"job_id": job_id, "removed": removed}
 
@@ -120,14 +126,20 @@ class ScheduleExecutor(ActionExecutor):
 
     async def _pause_job(self, job_id):
         if self._scheduler and _HAS_APSCHEDULER:
-            try: self._scheduler.pause_job(job_id)
-            except Exception: logger.debug(f"ScheduleExecutor: pause_job failed for {job_id}")
-        if job_id in self._simple_jobs: self._simple_jobs[job_id]["status"] = "paused"
+            try:
+                self._scheduler.pause_job(job_id)
+            except Exception:
+                logger.debug(f"ScheduleExecutor: pause_job failed for {job_id}")
+        if job_id in self._simple_jobs:
+            self._simple_jobs[job_id]["status"] = "paused"
         return {"job_id": job_id, "status": "paused"}
 
     async def _resume_job(self, job_id):
         if self._scheduler and _HAS_APSCHEDULER:
-            try: self._scheduler.resume_job(job_id)
-            except Exception: logger.debug(f"ScheduleExecutor: resume_job failed for {job_id}")
-        if job_id in self._simple_jobs: self._simple_jobs[job_id]["status"] = "active"
+            try:
+                self._scheduler.resume_job(job_id)
+            except Exception:
+                logger.debug(f"ScheduleExecutor: resume_job failed for {job_id}")
+        if job_id in self._simple_jobs:
+            self._simple_jobs[job_id]["status"] = "active"
         return {"job_id": job_id, "status": "active"}

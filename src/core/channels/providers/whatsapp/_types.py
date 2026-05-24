@@ -2,35 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import ipaddress
-import json
 import logging
-import os
-import threading
-import time
-from typing import Any, Dict, FrozenSet, List, Optional
 from urllib.parse import urlparse
 
-from .._formatter import (
-    MessageFormatter,
-    build_whatsapp_interactive_buttons,
-    format_whatsapp_text,
-    truncate,
-)
-from .._protocol import ChannelProvider, InboundChannelProvider
-from .._types import (
-    ChannelCapability,
-    ChannelMessage,
-    ChannelResponse,
-    ConfirmationHandler,
-    ConfirmationRequest,
-    ConfirmationResult,
-    DeliveryStatus,
-    MessageHandler,
-    RateLimitInfo,
-)
 
 logger = logging.getLogger("zenic_agents.channels.whatsapp")
 
@@ -55,14 +30,14 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
-    import aiohttp
+    import aiohttp  # noqa: F401
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
     import urllib.request
-    import urllib.error
+    import urllib.error  # noqa: F401
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -75,4 +50,4 @@ _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 0.5
 _HTTP_TIMEOUT = 30
 _MAX_BUTTONS = 3  # WhatsApp limit for interactive buttons
-
+__all__ = ["_HTTP_TIMEOUT", "_MAX_BUTTONS", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_WHATSAPP_API_BASE", "_validate_url", "logger"]

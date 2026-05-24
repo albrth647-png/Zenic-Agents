@@ -24,7 +24,6 @@ from ._utils import (
     _RETRY_BASE_DELAY,
     _HTTP_TIMEOUT,
     _WEB_PUSH_TTL,
-    _PUSH_PAYLOAD_MAX,
     _base64url_decode,
     _validate_url,
 )
@@ -265,7 +264,7 @@ class _WebPushHttpMixin:
             info=b"",
             backend=default_backend(),
         )
-        prk = hkdf_extract.derive(ikm)
+        hkdf_extract.derive(ikm)
 
         # CEK = HKDF-Expand(PRK, key_info, 16)
         key_info = b"Content-Encoding: aes128gcm\x00"

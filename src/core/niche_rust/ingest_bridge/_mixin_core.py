@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from .bridge import NicheBridge, NicheCatalog, NicheTemplate
+from .bridge import NicheCatalog, NicheTemplate
 from .document_parser import DocumentParser
 from ._types import IngestionResult, NATIVE_AVAILABLE, _native, os_path_exists
 
@@ -100,7 +100,7 @@ class DocumentIngestor:
         if template_dict is not None:
             validation = self._template.validate(template_dict)
             if isinstance(validation, dict):
-                filled = validation.get("filled_fields", 0)
+                validation.get("filled_fields", 0)
                 missing_names = validation.get("missing_field_names", [])
                 result.unmatched_fields = missing_names
 

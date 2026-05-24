@@ -7,12 +7,15 @@
 import { db } from "@/lib/db";
 import { loadPolicyFromYaml, computeContentHash } from "./yaml-loader";
 import { getPolicyEvaluator } from "./evaluator";
+import { createRedactedLogger } from "@/lib/security/log-redact";
 import type {
   HotReloadEvent,
   HotReloadEventType,
   HotReloadListener,
   PolicyDocument,
 } from "./types";
+
+const logger = createRedactedLogger(console);
 
 // ─── Hot-Reload Manager ───────────────────────────────────────────────
 
@@ -45,7 +48,7 @@ export class PolicyHotReloader {
       });
     }, this.pollIntervalMs);
 
-    console.log(`[PolicyHotReload] Started (interval: ${this.pollIntervalMs}ms)`);
+    logger.info(`[PolicyHotReload] Started (interval: ${this.pollIntervalMs}ms)`);
   }
 
   /**
@@ -57,7 +60,7 @@ export class PolicyHotReloader {
       this.pollInterval = null;
     }
     this.running = false;
-    console.log("[PolicyHotReload] Stopped");
+    logger.info("[PolicyHotReload] Stopped");
   }
 
   /**

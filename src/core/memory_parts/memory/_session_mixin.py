@@ -4,7 +4,6 @@ SmartMemory — Session Management and Memory Consolidation Mixin.
 Session lifecycle, conversation summaries, and memory consolidation.
 """
 
-import hashlib
 import logging
 import sqlite3
 import time

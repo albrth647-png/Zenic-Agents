@@ -108,10 +108,10 @@ from ._extra_mixin import PipelineOrchestratorExtraMixin
 
 logger = logging.getLogger("zenic_agents.agents.pipeline_orchestrator")
 
-__all__ = ["PipelineOrchestrator", "NicheOnboardingPipeline"]
+__all__ = ["PipelineOrchestrator", "NicheOnboardingPipeline", "time", "Verdict", "VerdictOutput", "ConsensusResult", "Evidence", "IntentResult", "EntityResult", "TargetResult", "CriticalityResult", "LanguageResult", "SecurityResult", "SyntaxResult", "RiskResult", "WorkflowSpec", "ProblemType", "ReasoningResult", "ConfidenceResult", "DecomposedSteps", "Conclusion", "TriggerSpec", "ActionSpec", "ScheduleSpec", "ConditionResult", "NameResult", "Ear", "FormatAdapter"]
 
 # Phase D: Niche Onboarding Pipeline
-from .niche_onboarding_pipeline import NicheOnboardingPipeline
+from .niche_onboarding_pipeline import NicheOnboardingPipeline  # noqa: E402
 
 
 class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorExtraMixin):

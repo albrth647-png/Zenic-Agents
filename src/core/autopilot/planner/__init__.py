@@ -26,10 +26,4 @@ from src.core.autopilot.planner._scheduler import (
 )
 from src.core.autopilot.planner._types import PlanStep, PlannedAction
 
-__all__ = [
-    "PlanStep",
-    "PlannedAction",
-    "AutopilotPlanner",
-    "get_autopilot_planner",
-    "reset_autopilot_planner",
-]
+__all__ = ["PlanStep", "PlannedAction", "AutopilotPlanner", "get_autopilot_planner", "reset_autopilot_planner", "estimate_plan_impact", "_GENERIC_PLAN_TEMPLATE", "_PLAN_TEMPLATES", "_match_template"]

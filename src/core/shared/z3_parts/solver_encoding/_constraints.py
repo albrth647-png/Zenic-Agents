@@ -4,7 +4,7 @@ import logging
 
 from ._types import (
     _MAX_EXHAUSTIVE_PAIRS, _MAX_ENCODE_ENTRIES, _EVICT_BATCH_SIZE,
-    _DEFAULT_MAX_SAMPLES, _REAL_DECIMAL_PRECISION,
+    _DEFAULT_MAX_SAMPLES,
 )
 
 try:

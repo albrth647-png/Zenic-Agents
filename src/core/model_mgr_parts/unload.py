@@ -1,7 +1,6 @@
 """Mixin: Model unloading methods for ModelManager."""
 
 from ._imports import logger
-import logging
 
 
 class UnloadMixin:

@@ -10,10 +10,9 @@ Ported from:
 
 from __future__ import annotations
 
-import time
 from typing import Any, Optional
 
-from ..resilience import BaseAgent, CircuitBreakerManager, CircuitState
+from ..resilience import BaseAgent, CircuitBreakerManager
 from ..schemas import AgentResult
 
 

@@ -14,7 +14,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import ast
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 logger = logging.getLogger(__name__)
 

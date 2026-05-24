@@ -15,12 +15,9 @@ FASE 1.1 Performance Fix:
 
 import os
 import time
-import json
 import sqlite3
-import logging
-from typing import List
 
-from .types import DB_DIR, DB_PATH, logger
+from .types import DB_PATH, logger
 from .pool import smart_memory_pool, SMART_MEMORY_DB
 
 class DatabaseMixin:

@@ -18,7 +18,7 @@ from typing import Optional, Dict, Any, List
 
 from . import types as _types
 from .types import (
-    Trigger, Action, Workflow, WorkflowExecution,
+    Workflow, WorkflowExecution,
 )
 from .crud import CoreCRUDMixin
 from .execution import ExecutionMixin

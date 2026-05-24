@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Sequence
 
 
 # ──────────────────────────────────────────────────────────────
@@ -240,7 +240,7 @@ class RateLimitInfo:
 #  HANDLER TYPE ALIASES
 # ──────────────────────────────────────────────────────────────
 
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable  # noqa: E402
 
 # Inbound message handler: receives ChannelMessage, returns ChannelResponse
 MessageHandler = Callable[[ChannelMessage], Awaitable[ChannelResponse]]

@@ -14,12 +14,11 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-from ..oauth2 import OAuth2TokenManager, OAuth2Config, config_from_env
+from ..oauth2 import OAuth2TokenManager, config_from_env
 from ._types import (
     _HAS_AIOHTTP,
     _MAX_ATTACHMENT_SIZE_INLINE,
     _DEFAULT_SCOPES,
-    _RateLimitState,
 )
 
 logger = logging.getLogger("zenic_agents.email_parts.graph_api")

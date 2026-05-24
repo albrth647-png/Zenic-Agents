@@ -13,15 +13,15 @@ Design Patterns:
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 try:
     from rich.console import Console
-    from rich.panel import Panel
-    from rich.text import Text
-    from rich.box import ROUNDED
+    from rich.panel import Panel  # noqa: F401
+    from rich.text import Text  # noqa: F401
+    from rich.box import ROUNDED  # noqa: F401
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False

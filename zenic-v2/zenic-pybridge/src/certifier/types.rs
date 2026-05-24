@@ -73,7 +73,7 @@ impl CertificationStatus {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  AuditEntry — single entry in the certification audit chain
+//  CertificationAuditEntry — single entry in the certification audit chain
 // ═══════════════════════════════════════════════════════════════
 
 /// A single entry in the certification audit chain.
@@ -81,7 +81,7 @@ impl CertificationStatus {
 /// Each entry records a state transition in the certification
 /// pipeline with a hash that chains to the previous entry.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AuditEntry {
+pub struct CertificationAuditEntry {
     pub(super) step: String,
     pub(super) timestamp: String,
     pub(super) hash: String,

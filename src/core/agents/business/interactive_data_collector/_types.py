@@ -61,3 +61,4 @@ class InteractiveCollectionResult:
         self.is_complete = is_complete
         self.round_number = round_number
         self.source = source
+__all__ = ["CompletionSession", "InteractiveCollectionResult"]

@@ -31,12 +31,7 @@ from ._lifecycle_mixin import LifecycleMixin
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "DistributedTaskQueue",
-    "TaskMessage",
-    "TaskStatus",
-    "TaskPriority",
-]
+__all__ = ["DistributedTaskQueue", "TaskMessage", "TaskStatus", "TaskPriority", "Any", "BackendConfig", "with_retry"]
 
 
 class DistributedTaskQueue(CoreMixin, LifecycleMixin):

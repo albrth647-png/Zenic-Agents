@@ -101,7 +101,7 @@ class PipelineMixin(ProcessBuilderMixin):
                 if result and len(result) > 2:
                     # Return the most relevant file (main module)
                     # The full project is available via generate_real_code()
-                    main_key = f"blocks/crud_service.py"
+                    main_key = "blocks/crud_service.py"
                     if main_key in result:
                         logger.info(f"M1: CodeAssembler generated real project for {safe_target}")
                         return result[main_key]
@@ -250,7 +250,7 @@ class PipelineMixin(ProcessBuilderMixin):
 
         # Build final module with real _process()
         cls_name = safe_target.capitalize()
-        table_name = safe_target.lower() + "s"
+        safe_target.lower() + "s"
 
         module_code = f'''{solver_header}"""
 {safe_target} - Feature Module

@@ -7,7 +7,7 @@ use crate::errors::MemoryError;
 use crate::types::{LearningMechanism, SemanticMapping};
 
 use super::struct_and_schema::SemanticGraph;
-use super::types::AuditEntry;
+use super::types::LearningAuditEntry;
 
 impl SemanticGraph {
     /// Inserts a new semantic mapping into the graph.
@@ -229,7 +229,7 @@ impl SemanticGraph {
         &self,
         mapping_id: &str,
         action: &str,
-    ) -> Result<Vec<AuditEntry>, MemoryError> {
+    ) -> Result<Vec<LearningAuditEntry>, MemoryError> {
         let mut stmt = self
             .conn
             .prepare(
@@ -242,7 +242,7 @@ impl SemanticGraph {
 
         let entries = stmt
             .query_map(params![mapping_id, action], |row| {
-                Ok(AuditEntry {
+                Ok(LearningAuditEntry {
                     audit_id: row.get(0)?,
                     mapping_id: row.get(1)?,
                     action: row.get(2)?,

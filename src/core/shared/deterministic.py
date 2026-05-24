@@ -372,7 +372,7 @@ class DeterministicUUID:
         # version = 4, variant = RFC4122 (10xx → y in [8,9,a,b])
         h = hex_digest[:32]  # 32 hex chars = 128 bits
         # Set version nibble to 4 (positions 12-15 → "4xxx")
-        mid = h[:12] + "4" + h[13:16]
+        h[:12] + "4" + h[13:16]
         # Set variant bits: top 2 bits of clock_seq_hi = 10
         # clock_seq_hi is position 16 (hex digit at index 16)
         variant_digit = int(h[16], 16) & 0x3 | 0x8  # 10xx pattern
@@ -729,8 +729,8 @@ def uninstall_random_patch() -> None:
 #  DeterministicClock — Virtual Time for Deterministic Replay
 # ============================================================
 
-import time as _time_module
-from datetime import datetime, timezone, timedelta
+import time as _time_module  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 
 class DeterministicClock:
     """

@@ -2,7 +2,6 @@
 Phase 7 Auth & Logic Builder API mixin for BaseOrchestrator.
 """
 
-from ._imports import logger
 
 
 class Phase7Mixin:

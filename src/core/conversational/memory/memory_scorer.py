@@ -11,7 +11,6 @@ en memoria basado en heurísticas:
 
 from __future__ import annotations
 
-from typing import Any
 
 from ..types.memory import MemoryEntry, MemoryCategory
 
