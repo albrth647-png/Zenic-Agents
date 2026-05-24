@@ -6,7 +6,6 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -48,9 +47,19 @@ _TOKEN_RE = re.compile(
     re.VERBOSE,
 )
 
-_KEYWORDS = frozenset({
-    "and", "or", "not",
-    "contains", "startswith", "endswith", "exists", "not_empty",
-    "True", "False", "None",
-})
-__all__ = ["BranchCondition", "BranchRule", "_KEYWORDS", "_TOKEN_RE", "logger"]
+_KEYWORDS = frozenset(
+    {
+        "and",
+        "or",
+        "not",
+        "contains",
+        "startswith",
+        "endswith",
+        "exists",
+        "not_empty",
+        "True",
+        "False",
+        "None",
+    }
+)
+__all__ = ["_KEYWORDS", "_TOKEN_RE", "BranchCondition", "BranchRule", "logger"]

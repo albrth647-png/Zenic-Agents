@@ -20,7 +20,7 @@ import hmac
 import re
 import secrets
 from dataclasses import dataclass
-from typing import ClassVar, Final, List, Tuple
+from typing import ClassVar, Final
 
 # ── Constants ────────────────────────────────────────────────
 
@@ -33,6 +33,7 @@ _HMAC_KEY_ENV: Final[str] = "ZENIC_VALIDATION_HMAC_KEY"
 
 # ── Newtypes ─────────────────────────────────────────────────
 
+
 @dataclass(frozen=True, slots=True)
 class ActivationKey:
     """Semantic wrapper for a validated ZENIC-xxxx activation key.
@@ -40,10 +41,11 @@ class ActivationKey:
     Can only be constructed via ``ActivationKey.parse()`` which enforces
     the full format + checksum validation pipeline.
     """
+
     value: str
 
     @classmethod
-    def parse(cls, raw: str) -> "ActivationKey":
+    def parse(cls, raw: str) -> ActivationKey:
         """Parse and validate a raw activation key string.
 
         Raises:
@@ -56,7 +58,7 @@ class ActivationKey:
         return cls(value=raw.upper().strip())
 
     @property
-    def groups(self) -> Tuple[str, str, str, str]:
+    def groups(self) -> tuple[str, str, str, str]:
         """Extract the 4 alphanumeric groups from the key."""
         parts = self.value.split("-")
         return (parts[1], parts[2], parts[3], parts[4])
@@ -70,10 +72,11 @@ class ActivationKey:
 @dataclass(frozen=True, slots=True)
 class ConfirmationCode:
     """Semantic wrapper for a validated CONF-xxxxxxxx confirmation code."""
+
     value: str
 
     @classmethod
-    def parse(cls, raw: str) -> "ConfirmationCode":
+    def parse(cls, raw: str) -> ConfirmationCode:
         """Parse and validate a raw confirmation code string."""
         validator = ConfirmationCodeValidator()
         result = validator.validate(raw)
@@ -88,10 +91,10 @@ class ConfirmationCode:
 
 # ── Validation Result (local, reused from user_input) ────────
 
-from .user_input import ValidationResult, ValidResult, InvalidResult  # noqa: E402
-
+from .user_input import InvalidResult, ValidationResult, ValidResult  # noqa: E402
 
 # ── Activation Key Validator ─────────────────────────────────
+
 
 class ActivationKeyValidator:
     """Multi-stage validator for ZENIC-xxxx activation keys.
@@ -137,9 +140,7 @@ class ActivationKeyValidator:
         if not key:
             return InvalidResult("Activation key is empty")
         if not self._PATTERN.match(key):
-            return InvalidResult(
-                f"Invalid activation key format. Expected: ZENIC-XXXX-XXXX-XXXX-XXXX, got: {key[:20]}"
-            )
+            return InvalidResult(f"Invalid activation key format. Expected: ZENIC-XXXX-XXXX-XXXX-XXXX, got: {key[:20]}")
         return ValidResult(sanitized_value=key)
 
     def _validate_checksum(self, key: str) -> ValidationResult:
@@ -151,7 +152,7 @@ class ActivationKeyValidator:
         """
         parts = key.split("-")
         data_groups = parts[1:4]  # First 3 data groups
-        check_group = parts[4]    # Last group is checksum
+        check_group = parts[4]  # Last group is checksum
 
         combined = "".join(data_groups)
         # Deterministic hash-based checksum
@@ -164,9 +165,7 @@ class ActivationKeyValidator:
             expected += _CHECKSUM_ALPHABET[idx % len(_CHECKSUM_ALPHABET)]
 
         if not hmac.compare_digest(check_group, expected):
-            return InvalidResult(
-                "Activation key checksum mismatch — key may be corrupted or mistyped"
-            )
+            return InvalidResult("Activation key checksum mismatch — key may be corrupted or mistyped")
         return ValidResult(sanitized_value=key)
 
     def _validate_semantics(self, key: str) -> ValidationResult:
@@ -183,23 +182,18 @@ class ActivationKeyValidator:
             if len(set(group)) == 1:
                 # Allow in the checksum position only if it's valid
                 if i < 3:
-                    return InvalidResult(
-                        f"Group {i+1} contains all identical characters — invalid key"
-                    )
+                    return InvalidResult(f"Group {i+1} contains all identical characters — invalid key")
             # All zeros
             if group == "0000" and i < 3:
-                return InvalidResult(
-                    f"Group {i+1} is all zeros — invalid key"
-                )
+                return InvalidResult(f"Group {i+1} is all zeros — invalid key")
             # Sequential (1234, ABCD)
             if group in ("1234", "ABCD", "4321", "DCBA") and i < 3:
-                return InvalidResult(
-                    f"Group {i+1} is a sequential pattern — invalid key"
-                )
+                return InvalidResult(f"Group {i+1} is a sequential pattern — invalid key")
         return ValidResult(sanitized_value=key)
 
 
 # ── Confirmation Code Validator ──────────────────────────────
+
 
 class ConfirmationCodeValidator:
     """Validator for CONF-xxxxxxxx confirmation codes.
@@ -218,9 +212,7 @@ class ConfirmationCodeValidator:
             return InvalidResult("Confirmation code is empty")
 
         if not self._PATTERN.match(sanitized):
-            return InvalidResult(
-                f"Invalid confirmation code format. Expected: CONF-XXXXXXXX, got: {sanitized[:15]}"
-            )
+            return InvalidResult(f"Invalid confirmation code format. Expected: CONF-XXXXXXXX, got: {sanitized[:15]}")
 
         # Semantic: the 8-char payload must not be all same character
         payload = sanitized.split("-")[1]
@@ -231,6 +223,7 @@ class ConfirmationCodeValidator:
 
 
 # ── Convenience Functions ────────────────────────────────────
+
 
 def validate_activation_key(raw: str) -> ValidationResult:
     """One-shot validation of a ZENIC-xxxx activation key."""
@@ -244,6 +237,7 @@ def validate_confirmation_code(raw: str) -> ValidationResult:
 
 # ── Key Generation (Admin-side, for testing) ────────────────
 
+
 def generate_activation_key() -> str:
     """Generate a valid ZENIC-xxxx activation key with correct checksum.
 
@@ -251,7 +245,7 @@ def generate_activation_key() -> str:
     key generation happens in the Rust zenic-license crate.
     """
     # Generate 3 random data groups
-    groups: List[str] = []
+    groups: list[str] = []
     for _ in range(3):
         group = "".join(secrets.choice(_CHECKSUM_ALPHABET) for _ in range(4))
         groups.append(group)

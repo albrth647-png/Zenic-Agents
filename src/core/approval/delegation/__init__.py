@@ -6,15 +6,14 @@ Supports explicit delegation rules, automatic delegation, role hierarchy
 verification, and acknowledgement tracking.
 """
 
-from ._types import DelegationRule, DelegationRecord, _MAX_RETRIES, _RETRY_DELAY
-from ._mixin_core import DelegationManager
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_delegation_instance: Optional[DelegationManager] = None
+from ._mixin_core import DelegationManager
+from ._types import _MAX_RETRIES, _RETRY_DELAY, DelegationRecord, DelegationRule
+
+_delegation_instance: DelegationManager | None = None
 _delegation_lock = threading.Lock()
 
 
@@ -39,4 +38,12 @@ def reset_delegation_manager() -> None:
     _delegation_instance = None
 
 
-__all__ = ["DelegationRule", "DelegationRecord", "DelegationManager", "get_delegation_manager", "reset_delegation_manager", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = [
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "DelegationManager",
+    "DelegationRecord",
+    "DelegationRule",
+    "get_delegation_manager",
+    "reset_delegation_manager",
+]

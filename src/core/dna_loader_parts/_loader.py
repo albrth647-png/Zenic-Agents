@@ -2,16 +2,16 @@
 DNALoader — main class inheriting from mixins.
 """
 
-from typing import Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ._imports import LogicModule, DomainRule
+    from ._imports import DomainRule, LogicModule
 
-from ._imports import logger, DNA_ROOT, YAML_AVAILABLE
-from ._loaders_mixin import LoadersMixin
-from ._logic_modules_mixin import LogicModulesMixin
 from ._domain_validation_mixin import DomainValidationMixin
 from ._glossary_mixin import GlossaryMixin
+from ._imports import DNA_ROOT, YAML_AVAILABLE, logger
+from ._loaders_mixin import LoadersMixin
+from ._logic_modules_mixin import LogicModulesMixin
 
 
 class DNALoader(GlossaryMixin, DomainValidationMixin, LogicModulesMixin, LoadersMixin):
@@ -27,21 +27,21 @@ class DNALoader(GlossaryMixin, DomainValidationMixin, LogicModulesMixin, Loaders
 
     def __init__(self, dna_root: str = ""):
         self._root = dna_root or DNA_ROOT
-        self._logic_modules: Dict[str, "LogicModule"] = {}
-        self._domain_rules: Dict[str, "DomainRule"] = {}
+        self._logic_modules: dict[str, LogicModule] = {}
+        self._domain_rules: dict[str, DomainRule] = {}
         self._validation_gates: list = []
-        self._domain_gates: Dict[str, list] = {}
+        self._domain_gates: dict[str, list] = {}
         self._glossary: list = []
-        self._error_messages: Dict[str, str] = {}
-        self._feature_descriptions: Dict[str, Dict] = {}
+        self._error_messages: dict[str, str] = {}
+        self._feature_descriptions: dict[str, dict] = {}
         self._communication_templates: list = []
         self._loaded = False
 
         # Indexes for fast lookup
-        self._modules_by_domain: Dict[str, list] = {}
-        self._gates_by_category: Dict[str, list] = {}
+        self._modules_by_domain: dict[str, list] = {}
+        self._gates_by_category: dict[str, list] = {}
 
-    def load_all(self) -> Dict[str, int]:
+    def load_all(self) -> dict[str, int]:
         """Carga las 4 plantillas maestras. Returns counts."""
         counts = {}
 
@@ -66,7 +66,7 @@ class DNALoader(GlossaryMixin, DomainValidationMixin, LogicModulesMixin, Loaders
     # ================================================================
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas del cargador de ADN."""
         if not self._loaded:
             self.load_all()
@@ -84,8 +84,8 @@ class DNALoader(GlossaryMixin, DomainValidationMixin, LogicModulesMixin, Loaders
 
     def list_all_modules(self):
         """Public accessor for all loaded logic modules."""
-        return list(getattr(self, '_logic_modules', {}).values())
+        return list(getattr(self, "_logic_modules", {}).values())
 
     def list_all_domain_rules(self):
         """Public accessor for all domain rules."""
-        return list(getattr(self, '_domain_rules', {}).values())
+        return list(getattr(self, "_domain_rules", {}).values())

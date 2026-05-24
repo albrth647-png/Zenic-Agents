@@ -10,10 +10,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -108,4 +105,15 @@ def _substitute_value(value: Any, variables: dict[str, Any]) -> Any:
     if isinstance(value, list):
         return [_substitute_value(item, variables) for item in value]
     return value
-__all__ = ["ChainTemplate", "TemplateCategory", "TemplateStep", "TemplateVariable", "_DB_DIR", "_DB_PATH", "_substitute_value", "logger"]
+
+
+__all__ = [
+    "_DB_DIR",
+    "_DB_PATH",
+    "ChainTemplate",
+    "TemplateCategory",
+    "TemplateStep",
+    "TemplateVariable",
+    "_substitute_value",
+    "logger",
+]

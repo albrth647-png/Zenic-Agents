@@ -3,7 +3,6 @@ Shared imports, types, and constants for reasoning_parts.
 """
 
 import logging
-from typing import List
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -19,6 +18,7 @@ MIN_CONFIDENCE_ACCEPT = 0.5  # Minimum confidence to accept a reasoning result
 
 class ReasoningMode(Enum):
     """Available reasoning modes."""
+
     STEP_BY_STEP = "step_by_step"
     SELF_REFLECT = "self_reflect"
     WITH_CONTEXT = "with_context"
@@ -28,6 +28,7 @@ class ReasoningMode(Enum):
 @dataclass
 class ReasoningStep:
     """A single step in a reasoning chain."""
+
     step_number: int
     thought: str = ""
     conclusion: str = ""
@@ -39,10 +40,11 @@ class ReasoningStep:
 @dataclass
 class ReasoningResult:
     """Result of a complete reasoning operation."""
+
     answer: str = ""
     confidence: float = 0.0
     mode: ReasoningMode = ReasoningMode.FALLBACK
-    steps: List[ReasoningStep] = field(default_factory=list)
+    steps: list[ReasoningStep] = field(default_factory=list)
     total_duration_ms: float = 0.0
     refinements: int = 0
     context_used: bool = False

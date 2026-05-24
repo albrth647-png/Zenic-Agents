@@ -7,7 +7,6 @@ Only imports actually used within this file or consumed by children are kept.
 """
 
 import logging
-from typing import Dict
 from dataclasses import dataclass, field
 
 # Lazy numpy import — avoids loading ~50-100MB into RAM on module import
@@ -16,6 +15,7 @@ from dataclasses import dataclass, field
 HAS_NUMPY: bool = False  # Updated to True on successful lazy import
 _np = None
 _numpy_loading = False  # Guard against concurrent loading
+
 
 def _get_numpy():
     """Lazy-load numpy only when actually needed (saves ~50-100MB RAM on Xiaomi).
@@ -30,6 +30,7 @@ def _get_numpy():
     if _numpy_loading:
         # Another thread is loading numpy; wait and re-check
         import time
+
         for _ in range(50):  # Wait up to 5s
             time.sleep(0.1)
             if _np is not None and _np is not False:
@@ -40,6 +41,7 @@ def _get_numpy():
     _numpy_loading = True
     try:
         import numpy as _np_mod
+
         _np = _np_mod
         HAS_NUMPY = True
     except ImportError:
@@ -56,6 +58,7 @@ def _ensure_numpy():
     if np is None:
         raise ImportError("numpy is not available — embeddings pipeline disabled")
     return np
+
 
 logger = logging.getLogger(__name__)
 
@@ -200,8 +203,9 @@ GOAL_PROTOTYPES = {
 @dataclass
 class SemanticResult:
     """Resultado de clasificación semántica."""
+
     operation: str = "SEARCH"
     goal: str = "FEATURE_ADD"
-    confidence: float = 0.0           # 0.0-1.0, similitud coseno del mejor prototype
-    source: str = "embedding"          # "embedding" or "fallback"
-    similarities: Dict[str, float] = field(default_factory=dict)  # top similarities per intent
+    confidence: float = 0.0  # 0.0-1.0, similitud coseno del mejor prototype
+    source: str = "embedding"  # "embedding" or "fallback"
+    similarities: dict[str, float] = field(default_factory=dict)  # top similarities per intent

@@ -16,12 +16,12 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-from src.core.shared.retry import with_retry
-from src.core.executors.db_journal import get_db_journal
 from src.core.executors.coordinated_rollback._types import (
-    ResourceType,
     ResourceRecord,
+    ResourceType,
 )
+from src.core.executors.db_journal import get_db_journal
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -72,22 +72,19 @@ def _compensate_db(action_id: str, record: ResourceRecord) -> None:
 
     journal_id = record.rollback_data.get("journal_id", "")
     if not journal_id:
-        raise ValueError(
-            f"No journal_id in rollback_data for DB record in action {action_id}"
-        )
+        raise ValueError(f"No journal_id in rollback_data for DB record in action {action_id}")
 
     journal = get_db_journal()
     result = journal.rollback_to(journal_id)
 
     if not result.success:
         errors_str = "; ".join(result.errors) if result.errors else "unknown"
-        raise RuntimeError(
-            f"DB rollback failed for journal {journal_id[:12]}: {errors_str}"
-        )
+        raise RuntimeError(f"DB rollback failed for journal {journal_id[:12]}: {errors_str}")
 
     logger.info(
         "CoordinatedRollbackManager: DB compensation done journal=%s restored=%d",
-        journal_id[:12], result.rows_restored,
+        journal_id[:12],
+        result.rows_restored,
     )
 
 
@@ -104,7 +101,10 @@ def _compensate_email(action_id: str, record: ResourceRecord, db_path: str) -> N
         "CoordinatedRollbackManager: EMAIL RECALL notification — "
         "action=%s message_id=%s to=%s subject='%s'. "
         "Note: email cannot be unsent; manual follow-up required.",
-        action_id[:12], message_id, to_addr, subject,
+        action_id[:12],
+        message_id,
+        to_addr,
+        subject,
     )
 
     # Persist the recall log
@@ -151,9 +151,7 @@ def _compensate_file(action_id: str, record: ResourceRecord) -> None:
     operation = record.rollback_data.get("operation", "")
 
     if not source:
-        raise ValueError(
-            f"No source path in rollback_data for FILE record in action {action_id}"
-        )
+        raise ValueError(f"No source path in rollback_data for FILE record in action {action_id}")
 
     if operation == "create":
         # File was created — delete it
@@ -180,9 +178,7 @@ def _compensate_file(action_id: str, record: ResourceRecord) -> None:
     elif operation in ("delete", "modify"):
         # File was deleted or modified — restore from backup
         if not backup_path:
-            raise ValueError(
-                f"No backup_path for {operation.upper()} file rollback in action {action_id}"
-            )
+            raise ValueError(f"No backup_path for {operation.upper()} file rollback in action {action_id}")
 
         def _do_restore() -> None:
             bk = Path(backup_path)
@@ -192,12 +188,12 @@ def _compensate_file(action_id: str, record: ResourceRecord) -> None:
                 shutil.copy2(str(bk), str(dst))
                 logger.info(
                     "CoordinatedRollbackManager: restored %s file %s from %s",
-                    operation, source, backup_path,
+                    operation,
+                    source,
+                    backup_path,
                 )
             else:
-                raise FileNotFoundError(
-                    f"Backup not found at {backup_path} for file {source}"
-                )
+                raise FileNotFoundError(f"Backup not found at {backup_path} for file {source}")
 
         with_retry(
             _do_restore,
@@ -206,9 +202,7 @@ def _compensate_file(action_id: str, record: ResourceRecord) -> None:
             label=f"coordinated_rollback._compensate_file({operation})",
         )
     else:
-        raise ValueError(
-            f"Unknown file operation '{operation}' for rollback in action {action_id}"
-        )
+        raise ValueError(f"Unknown file operation '{operation}' for rollback in action {action_id}")
 
 
 def _compensate_webhook(action_id: str, record: ResourceRecord) -> None:
@@ -219,8 +213,7 @@ def _compensate_webhook(action_id: str, record: ResourceRecord) -> None:
 
     if not url:
         logger.warning(
-            "CoordinatedRollbackManager: no cancellation URL for webhook "
-            "record in action %s — skipping",
+            "CoordinatedRollbackManager: no cancellation URL for webhook " "record in action %s — skipping",
             action_id[:12],
         )
         return
@@ -234,8 +227,8 @@ def _compensate_webhook(action_id: str, record: ResourceRecord) -> None:
     }
 
     def _send_cancellation() -> None:
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         validated_url = _validate_url(url)
         data = json.dumps(cancellation_payload).encode("utf-8")
@@ -249,14 +242,15 @@ def _compensate_webhook(action_id: str, record: ResourceRecord) -> None:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 status = resp.status
                 logger.info(
-                    "CoordinatedRollbackManager: cancellation webhook sent to %s "
-                    "status=%d",
-                    url[:50], status,
+                    "CoordinatedRollbackManager: cancellation webhook sent to %s " "status=%d",
+                    url[:50],
+                    status,
                 )
         except urllib.error.URLError as exc:
             logger.warning(
                 "CoordinatedRollbackManager: cancellation webhook to %s failed: %s",
-                url[:50], exc,
+                url[:50],
+                exc,
             )
             # We do NOT raise — webhook cancellation is best-effort
 

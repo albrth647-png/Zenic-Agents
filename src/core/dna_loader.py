@@ -11,18 +11,24 @@ and validation gates can also come from active Blueprints.
 """
 
 from .dna_loader_parts import (
-    DNALoader, LogicModule, DomainRule, ValidationGate,
-    GlossaryEntry, DNA_ROOT, YAML_AVAILABLE, get_dna_loader,
+    DNA_ROOT,
+    YAML_AVAILABLE,
+    DNALoader,
+    DomainRule,
+    GlossaryEntry,
+    LogicModule,
+    ValidationGate,
+    get_dna_loader,
 )
 
 __all__ = [
-    "DNALoader",
-    "LogicModule",
-    "DomainRule",
-    "ValidationGate",
-    "GlossaryEntry",
     "DNA_ROOT",
     "YAML_AVAILABLE",
+    "DNALoader",
+    "DomainRule",
+    "GlossaryEntry",
+    "LogicModule",
+    "ValidationGate",
     "get_dna_loader",
 ]
 
@@ -41,21 +47,22 @@ def get_domain_rules_from_blueprint(
     """
     try:
         from .blueprints import get_blueprint_registry
+
         registry = get_blueprint_registry()
         bps = registry.get_by_domain(domain)
         if bps:
             rules = []
             for bp in bps:
                 for rule in bp.rules:
-                    rules.append(DomainRule(
-                        name=rule.rule_id,
-                        display_name=rule.name,
-                        description=rule.description,
-                        mandatory_logic=[rule.condition],
-                        compliance_requirements=(
-                            [rule.action] if rule.action else []
-                        ),
-                    ))
+                    rules.append(
+                        DomainRule(
+                            name=rule.rule_id,
+                            display_name=rule.name,
+                            description=rule.description,
+                            mandatory_logic=[rule.condition],
+                            compliance_requirements=([rule.action] if rule.action else []),
+                        )
+                    )
             return rules
     except Exception:
         pass

@@ -23,8 +23,8 @@ from typing import Dict, List
 from ._types import (
     Command,
     CommandHandler,
-    CommandResult,
     CommandMiddleware,
+    CommandResult,
     CommandValidator,
 )
 
@@ -32,9 +32,9 @@ logger = logging.getLogger("zenic_agents.patterns.orchestration.command_bus")
 
 __all__ = [
     "Command",
+    "CommandBus",
     "CommandHandler",
     "CommandResult",
-    "CommandBus",
 ]
 
 
@@ -96,9 +96,9 @@ class CommandBus(CommandBusCoreMixin, CommandBusExtraMixin):
     """
 
     def __init__(self) -> None:
-        self._handlers: Dict[str, CommandHandler] = {}
-        self._middlewares: List[CommandMiddleware] = []
-        self._validators: List[CommandValidator] = []
+        self._handlers: dict[str, CommandHandler] = {}
+        self._middlewares: list[CommandMiddleware] = []
+        self._validators: list[CommandValidator] = []
         self._lock = threading.Lock()
         self._dispatch_count: int = 0
         self._error_count: int = 0

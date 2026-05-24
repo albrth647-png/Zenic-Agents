@@ -10,19 +10,22 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
-    from ..tracing import get_current_trace_id, get_current_span_id
+    from ..tracing import get_current_span_id, get_current_trace_id
 except ImportError:
+
     def get_current_trace_id() -> str:
         return ""
+
     def get_current_span_id() -> str:
         return ""
 
 
 class AuditEventType(str, Enum):
     """Categories of auditable events."""
+
     AUTH_LOGIN_SUCCESS = "auth.login.success"
     AUTH_LOGIN_FAILURE = "auth.login.failure"
     AUTH_LOGOUT = "auth.logout"
@@ -53,6 +56,7 @@ class AuditEventType(str, Enum):
 
 class AuditSeverity(str, Enum):
     """Severity levels for audit events."""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -61,6 +65,7 @@ class AuditSeverity(str, Enum):
 @dataclass
 class AuditEvent:
     """A single auditable event."""
+
     event_id: str = ""
     event_type: AuditEventType = AuditEventType.DATA_ACCESS
     severity: AuditSeverity = AuditSeverity.INFO
@@ -68,10 +73,10 @@ class AuditEvent:
     trace_id: str = ""
     span_id: str = ""
     tenant_id: str = "__anonymous__"
-    user_id: Optional[int] = None
+    user_id: int | None = None
     ip_address: str = ""
     description: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.event_id:
@@ -83,7 +88,7 @@ class AuditEvent:
         if not self.span_id:
             self.span_id = get_current_span_id()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "event_id": self.event_id,
@@ -102,4 +107,6 @@ class AuditEvent:
     def to_json(self) -> str:
         """Serialize to JSON string."""
         return json.dumps(self.to_dict(), ensure_ascii=False, default=str)
+
+
 __all__ = ["AuditEvent", "AuditEventType", "AuditSeverity"]

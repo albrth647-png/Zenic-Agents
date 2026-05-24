@@ -8,15 +8,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  ENUMS
 # ──────────────────────────────────────────────────────────────
 
+
 class PolicyAction(str, Enum):
     """Action that a policy rule prescribes when its condition matches."""
+
     ALLOW = "ALLOW"
     DENY = "DENY"
     REQUIRE_APPROVAL = "REQUIRE_APPROVAL"
@@ -29,6 +30,7 @@ class ConditionOperator(str, Enum):
 
     Canonical source of truth — policy_code.types imports from here.
     """
+
     EQ = "eq"
     NEQ = "neq"
     GT = "gt"
@@ -36,18 +38,19 @@ class ConditionOperator(str, Enum):
     GTE = "gte"
     LTE = "lte"
     IN = "in"
-    NOT_IN = "not_in"       # Added for parity with TypeScript/Rust
+    NOT_IN = "not_in"  # Added for parity with TypeScript/Rust
     CONTAINS = "contains"
     STARTS_WITH = "starts_with"  # Added for parity with TypeScript/Rust
-    ENDS_WITH = "ends_with"      # Added for parity with TypeScript/Rust
+    ENDS_WITH = "ends_with"  # Added for parity with TypeScript/Rust
     REGEX = "regex"
-    EXISTS = "exists"            # Added for parity with TypeScript/Rust
-    NOT_EXISTS = "not_exists"    # Added for parity with TypeScript/Rust
+    EXISTS = "exists"  # Added for parity with TypeScript/Rust
+    NOT_EXISTS = "not_exists"  # Added for parity with TypeScript/Rust
 
 
 # ──────────────────────────────────────────────────────────────
 #  DATACLASSES
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class PolicyRule:
@@ -65,9 +68,10 @@ class PolicyRule:
         escalation_role: Role required for ESCALATE action.
         category_filter: If set, only applies to actions in this category.
     """
+
     name: str
     description: str = ""
-    condition: Optional[Any] = None  # PolicyCondition — avoids circular import
+    condition: Any | None = None  # PolicyCondition — avoids circular import
     action: PolicyAction = PolicyAction.ALLOW
     priority: int = 0
     escalation_role: str = ""
@@ -76,8 +80,8 @@ class PolicyRule:
     def matches(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
         category: str = "",
     ) -> bool:
         """Check if this policy rule matches the given action.
@@ -103,7 +107,7 @@ class PolicyRule:
 
         return self.condition.evaluate(action_type, config, context)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -123,15 +127,16 @@ class PolicyDecision:
     Contains the final decision action, which matched policies contributed,
     and the reasoning chain.
     """
+
     action: PolicyAction
     action_type: str
-    matched_rules: List[str] = field(default_factory=list)
+    matched_rules: list[str] = field(default_factory=list)
     denial_reason: str = ""
     escalation_role: str = ""
     requires_approval: bool = False
     requires_confirmation: bool = False
     evaluation_count: int = 0
-    details: List[Dict[str, Any]] = field(default_factory=list)
+    details: list[dict[str, Any]] = field(default_factory=list)
 
     @property
     def allowed(self) -> bool:
@@ -148,7 +153,7 @@ class PolicyDecision:
         """Whether the action is absolutely denied."""
         return self.action == PolicyAction.DENY
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "action": self.action.value,
@@ -163,4 +168,6 @@ class PolicyDecision:
             "evaluation_count": self.evaluation_count,
             "details": self.details,
         }
+
+
 __all__ = ["ConditionOperator", "PolicyAction", "PolicyDecision", "PolicyRule"]

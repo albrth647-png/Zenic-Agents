@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-import urllib.request
-import urllib.error
-from ..._types import ChannelResponse, DeliveryStatus
-from ..._formatter import truncate
-
 import logging
 import time
-from typing import Any, Dict
+import urllib.error
+import urllib.request
+from typing import Any
+
+from ..._formatter import truncate
+from ..._types import ChannelResponse, DeliveryStatus
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +21,9 @@ def _build_media_payload(
     message: ChannelMessage,  # noqa: F821
     media_type: str,
     media_url: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a WhatsApp media message payload."""
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
         "to": message.recipient,
@@ -44,7 +44,8 @@ def _build_media_payload(
 
     return payload
 
-async def _post_api(self, payload: Dict[str, Any]) -> ChannelResponse:
+
+async def _post_api(self, payload: dict[str, Any]) -> ChannelResponse:
     """POST to WhatsApp Cloud API."""
     url = f"{self._api_base}/{self._phone_number_id}/messages"
 
@@ -66,6 +67,7 @@ async def _post_api(self, payload: Dict[str, Any]) -> ChannelResponse:
             if attempt < _MAX_RETRIES:  # noqa: F821
                 delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))  # noqa: F821
                 import asyncio
+
                 await asyncio.sleep(delay)
             else:
                 return ChannelResponse(
@@ -77,14 +79,18 @@ async def _post_api(self, payload: Dict[str, Any]) -> ChannelResponse:
                 )
 
     return ChannelResponse(
-        success=False, channel="whatsapp",
+        success=False,
+        channel="whatsapp",
         status=DeliveryStatus.FAILED,
         error="Unexpected retry loop exit",
         timestamp=time.time(),
     )
 
+
 async def _post_api_aiohttp(
-    self, url: str, payload: Dict[str, Any],
+    self,
+    url: str,
+    payload: dict[str, Any],
 ) -> ChannelResponse:
     """Send via aiohttp."""
     assert self._session is not None
@@ -132,8 +138,11 @@ async def _post_api_aiohttp(
                 timestamp=time.time(),
             )
 
+
 async def _post_api_urllib(
-    self, url: str, payload: Dict[str, Any],
+    self,
+    url: str,
+    payload: dict[str, Any],
 ) -> ChannelResponse:
     """Send via urllib (sync, wrapped in asyncio.to_thread)."""
 
@@ -191,6 +200,7 @@ async def _post_api_urllib(
 
     return await asyncio.to_thread(_sync_post)
 
+
 # ── Internal: Dry Run ───────────────────────────────────────
 
 
@@ -216,7 +226,8 @@ def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F8
 
 
 def _dry_run_confirmation(
-    self, request: ConfirmationRequest,  # noqa: F821  # TODO: Phase3 - verify import
+    self,
+    request: ConfirmationRequest,  # noqa: F821  # TODO: Phase3 - verify import
 ) -> ChannelResponse:
     """Log confirmation without sending."""
     with self._lock:
@@ -235,6 +246,3 @@ def _dry_run_confirmation(
         metadata={"mode": "dry_run", "action_id": request.action_id},
         timestamp=time.time(),
     )
-
-
-

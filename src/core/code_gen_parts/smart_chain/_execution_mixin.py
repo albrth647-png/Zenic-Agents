@@ -1,9 +1,8 @@
 """SmartPromptChain - Execution, Validation & Repair Mixin."""
 
 import logging
-from typing import Optional, Tuple
 
-from ._types import GenerationStep, MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS
+from ._types import MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS, GenerationStep
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
@@ -15,7 +14,7 @@ class SmartChainExecutionMixin:
     #  EXECUTION
     # ================================================================
 
-    def _execute_step(self, step: GenerationStep, language: str) -> Optional[str]:
+    def _execute_step(self, step: GenerationStep, language: str) -> str | None:
         """Execute a single generation step using the LLM."""
         step.attempts += 1
 
@@ -25,7 +24,7 @@ class SmartChainExecutionMixin:
         # Try LLM generation
         if self._llm:
             try:
-                if hasattr(self._llm, 'generate'):
+                if hasattr(self._llm, "generate"):
                     result = self._llm.generate(full_prompt)
                 elif callable(self._llm):
                     result = self._llm(full_prompt)
@@ -55,9 +54,9 @@ class SmartChainExecutionMixin:
 
         if step.context:
             # Include only the last N lines of context (keep prompt small)
-            context_lines = step.context.strip().split('\n')
+            context_lines = step.context.strip().split("\n")
             if len(context_lines) > 20:
-                context_preview = '\n'.join(context_lines[-20:])
+                context_preview = "\n".join(context_lines[-20:])
                 parts.append(f"PREVIOUS CODE (last 20 lines):\n```{language}\n{context_preview}\n```")
             else:
                 parts.append(f"PREVIOUS CODE:\n```{language}\n{step.context}\n```")
@@ -67,7 +66,7 @@ class SmartChainExecutionMixin:
         parts.append("")
         parts.append("Output ONLY the requested code. No explanations. No markdown fences.")
 
-        return '\n'.join(parts)
+        return "\n".join(parts)
 
     # ================================================================
     #  VALIDATION & REPAIR
@@ -80,7 +79,7 @@ class SmartChainExecutionMixin:
 
         if language == "python":
             try:
-                compile(code, '<fragment>', 'exec')
+                compile(code, "<fragment>", "exec")
                 return True
             except SyntaxError as e:
                 logger.debug(f"SmartPromptChain: Syntax error in fragment: {e}")
@@ -89,8 +88,7 @@ class SmartChainExecutionMixin:
         # For non-Python, just check it's not empty
         return len(code.strip()) > 10
 
-    def _auto_repair(self, step: GenerationStep, broken_code: str,
-                     language: str) -> Tuple[Optional[str], int]:
+    def _auto_repair(self, step: GenerationStep, broken_code: str, language: str) -> tuple[str | None, int]:
         """Try to repair a broken code fragment.
 
         Returns (repaired_code, repair_attempts) or (None, attempts)
@@ -108,7 +106,7 @@ class SmartChainExecutionMixin:
 
             if self._llm:
                 try:
-                    if hasattr(self._llm, 'generate'):
+                    if hasattr(self._llm, "generate"):
                         repaired = self._llm.generate(repair_prompt)
                     elif callable(self._llm):
                         repaired = self._llm(repair_prompt)
@@ -124,7 +122,6 @@ class SmartChainExecutionMixin:
                     logger.debug(f"SmartPromptChain: Repair attempt {attempt+1} failed: {e}")
 
         return None, MAX_REPAIR_ATTEMPTS
-
 
     def _template_fallback(self, step: GenerationStep, language: str) -> str:
         """Generate code without LLM using predefined templates.

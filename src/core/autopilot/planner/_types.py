@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -20,12 +20,13 @@ class PlanStep:
     Each step represents one discrete action the system can take,
     with dependencies on other steps and a risk/impact assessment.
     """
+
     step_id: str = ""
     name: str = ""
     description: str = ""
     action_type: str = ""
-    action_config: Dict[str, Any] = field(default_factory=dict)
-    depends_on: List[str] = field(default_factory=list)
+    action_config: dict[str, Any] = field(default_factory=dict)
+    depends_on: list[str] = field(default_factory=list)
     estimated_impact: float = 0.5
     risk_level: str = "low"
     status: str = "planned"
@@ -35,7 +36,7 @@ class PlanStep:
         if not self.step_id:
             self.step_id = f"step-{uuid.uuid4().hex[:8]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "step_id": self.step_id,
@@ -57,9 +58,10 @@ class PlannedAction:
     Contains an ordered list of steps with dependency tracking
     and overall plan status.
     """
+
     plan_id: str = ""
     objective_id: str = ""
-    steps: List[PlanStep] = field(default_factory=list)
+    steps: list[PlanStep] = field(default_factory=list)
     created_at: str = ""
     status: str = "draft"
     priority: int = 0
@@ -71,7 +73,7 @@ class PlannedAction:
         if not self.created_at:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "plan_id": self.plan_id,
@@ -81,4 +83,6 @@ class PlannedAction:
             "status": self.status,
             "priority": self.priority,
         }
+
+
 __all__ = ["PlanStep", "PlannedAction"]

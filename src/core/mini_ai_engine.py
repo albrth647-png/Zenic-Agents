@@ -55,9 +55,13 @@ Optimizado para:
   - llama-cpp-python con n_ctx=2048, n_threads=4
 """
 
-from .mini_ai_parts import MiniAIEngine, IntentResult  # noqa: F401
-from .verdict_parts import VerdictEngine, Verdict, VerdictOutput  # noqa: F401
+from .mini_ai_parts import IntentResult, MiniAIEngine
+from .verdict_parts import Verdict, VerdictEngine, VerdictOutput
 
 __all__ = [
-    "MiniAIEngine", "IntentResult", "VerdictEngine", "Verdict", "VerdictOutput",
+    "IntentResult",
+    "MiniAIEngine",
+    "Verdict",
+    "VerdictEngine",
+    "VerdictOutput",
 ]

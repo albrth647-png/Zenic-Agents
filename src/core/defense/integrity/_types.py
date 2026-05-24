@@ -1,17 +1,19 @@
 """Types and constants for integrity."""
 
 from __future__ import annotations
+
 import re
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
-_SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 class IntegrityStatus(str, Enum):
     """Status of an integrity check."""
+
     VALID = "valid"
     TAMPERED = "tampered"
     MISSING = "missing"
@@ -21,6 +23,7 @@ class IntegrityStatus(str, Enum):
 @dataclass
 class IntegrityCheckResult:
     """Result of an integrity verification check."""
+
     component: str
     status: IntegrityStatus
     expected_hash: str = ""
@@ -35,5 +38,5 @@ class IntegrityCheckResult:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_integrity_verifier: Optional[Any] = None
-__all__ = ["IntegrityCheckResult", "IntegrityStatus", "_SAFE_IDENTIFIER_RE", "_integrity_verifier"]
+_integrity_verifier: Any | None = None
+__all__ = ["_SAFE_IDENTIFIER_RE", "IntegrityCheckResult", "IntegrityStatus", "_integrity_verifier"]

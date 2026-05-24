@@ -21,13 +21,13 @@ import os
 import threading
 import time
 import urllib.parse
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from ..._formatter import (
     format_sms_text,
-    split_message,
     sanitize_plain_text,
+    split_message,
 )
 from ..._types import (
     ChannelCapability,
@@ -62,13 +62,15 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 
 try:
     import aiohttp
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
-    import urllib.request
     import urllib.error
+    import urllib.request
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -97,10 +99,10 @@ class TwilioSMSChannelProviderBase:
 
     def __init__(
         self,
-        account_sid: Optional[str] = None,
-        auth_token: Optional[str] = None,
-        phone_number: Optional[str] = None,
-        api_base: Optional[str] = None,
+        account_sid: str | None = None,
+        auth_token: str | None = None,
+        phone_number: str | None = None,
+        api_base: str | None = None,
     ) -> None:
         self._account_sid = account_sid or os.environ.get("TWILIO_ACCOUNT_SID", "")
         self._auth_token = auth_token or os.environ.get("TWILIO_AUTH_TOKEN", "")
@@ -112,7 +114,7 @@ class TwilioSMSChannelProviderBase:
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()
-        self._session: Optional[Any] = None
+        self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
 
@@ -121,15 +123,17 @@ class TwilioSMSChannelProviderBase:
         return "sms"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
-        return frozenset({
-            ChannelCapability.SEND_TEXT,
-            ChannelCapability.SEND_SMS,
-            ChannelCapability.SEND_MMS,
-            ChannelCapability.SEND_CONFIRMATION,
-            ChannelCapability.RECEIVE_MESSAGE,
-            ChannelCapability.REPLY,
-        })
+    def capabilities(self) -> frozenset[ChannelCapability]:
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_SMS,
+                ChannelCapability.SEND_MMS,
+                ChannelCapability.SEND_CONFIRMATION,
+                ChannelCapability.RECEIVE_MESSAGE,
+                ChannelCapability.REPLY,
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -167,11 +171,11 @@ class TwilioSMSChannelProviderBase:
         segments = split_message(text, char_limit) if len(text) > char_limit else [text]
 
         # Send each segment
-        last_response: Optional[ChannelResponse] = None
+        last_response: ChannelResponse | None = None
         total_segments = len(segments)
 
         for i, segment in enumerate(segments):
-            payload: Dict[str, str] = {
+            payload: dict[str, str] = {
                 "From": self._phone_number,
                 "To": message.recipient,
                 "Body": segment,
@@ -208,14 +212,16 @@ class TwilioSMSChannelProviderBase:
             )
 
         return last_response or ChannelResponse(
-            success=False, channel="sms",
+            success=False,
+            channel="sms",
             status=DeliveryStatus.FAILED,
             error="No message content to send",
             timestamp=time.time(),
         )
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Send a confirmation request via SMS.
 
@@ -234,7 +240,7 @@ class TwilioSMSChannelProviderBase:
             ChannelResponse with delivery result.
         """
         # Build SMS-friendly confirmation text
-        parts: List[str] = []
+        parts: list[str] = []
 
         if request.title:
             parts.append(f"⚠️ {request.title}")
@@ -248,9 +254,7 @@ class TwilioSMSChannelProviderBase:
             "no": "NO",
             "more_info": "MORE",
         }
-        options_text = "/".join(
-            option_labels.get(o, o.upper()) for o in request.options
-        )
+        options_text = "/".join(option_labels.get(o, o.upper()) for o in request.options)
         parts.append(f"Reply {options_text}")
 
         text = "\n".join(parts)
@@ -276,9 +280,7 @@ class TwilioSMSChannelProviderBase:
 
         if _HAS_AIOHTTP and not self._session:
             # Twilio uses Basic Auth
-            credentials = base64.b64encode(
-                f"{self._account_sid}:{self._auth_token}".encode("utf-8")
-            ).decode("utf-8")
+            credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
 
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),
@@ -289,7 +291,8 @@ class TwilioSMSChannelProviderBase:
 
         self._started = True
         logger.info(
-            "TwilioSMSChannelProvider: started (configured=%s)", self.is_available,
+            "TwilioSMSChannelProvider: started (configured=%s)",
+            self.is_available,
         )
 
     async def stop(self) -> None:
@@ -302,7 +305,7 @@ class TwilioSMSChannelProviderBase:
         logger.info("TwilioSMSChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {
@@ -323,7 +326,7 @@ class TwilioSMSChannelProviderBase:
 
     # ── Internal: API ───────────────────────────────────────────
 
-    async def _post_api(self, payload: Dict[str, str]) -> ChannelResponse:
+    async def _post_api(self, payload: dict[str, str]) -> ChannelResponse:
         """POST to Twilio Messages API.
 
         Uses form-encoded data (Twilio's expected format).
@@ -348,6 +351,7 @@ class TwilioSMSChannelProviderBase:
                 if attempt < _MAX_RETRIES:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     return ChannelResponse(
@@ -359,14 +363,17 @@ class TwilioSMSChannelProviderBase:
                     )
 
         return ChannelResponse(
-            success=False, channel="sms",
+            success=False,
+            channel="sms",
             status=DeliveryStatus.FAILED,
             error="Unexpected retry loop exit",
             timestamp=time.time(),
         )
 
     async def _post_api_aiohttp(
-        self, url: str, payload: Dict[str, str],
+        self,
+        url: str,
+        payload: dict[str, str],
     ) -> ChannelResponse:
         """Send via aiohttp (form-encoded)."""
         assert self._session is not None
@@ -403,15 +410,15 @@ class TwilioSMSChannelProviderBase:
                 )
 
     async def _post_api_urllib(
-        self, url: str, payload: Dict[str, str],
+        self,
+        url: str,
+        payload: dict[str, str],
     ) -> ChannelResponse:
         """Send via urllib (sync, wrapped in asyncio.to_thread)."""
         import asyncio
 
         def _sync_post() -> ChannelResponse:
-            credentials = base64.b64encode(
-                f"{self._account_sid}:{self._auth_token}".encode("utf-8")
-            ).decode("utf-8")
+            credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
 
             encoded = urllib.parse.urlencode(payload).encode("utf-8")
             req = urllib.request.Request(
@@ -489,14 +496,14 @@ class TwilioSMSChannelProviderBase:
 
 
 __all__ = [
-    "TwilioSMSChannelProviderBase",
-    "_validate_url",
     "_HAS_AIOHTTP",
     "_HAS_URLLIB",
-    "_TWILIO_API_BASE",
-    "_MAX_RETRIES",
-    "_RETRY_BASE_DELAY",
     "_HTTP_TIMEOUT",
-    "_SMS_CHAR_LIMIT",
+    "_MAX_RETRIES",
     "_MMS_CHAR_LIMIT",
+    "_RETRY_BASE_DELAY",
+    "_SMS_CHAR_LIMIT",
+    "_TWILIO_API_BASE",
+    "TwilioSMSChannelProviderBase",
+    "_validate_url",
 ]

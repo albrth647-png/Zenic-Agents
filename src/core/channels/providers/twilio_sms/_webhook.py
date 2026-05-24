@@ -14,7 +14,7 @@ import base64
 import hashlib
 import hmac
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..._types import (
     ChannelMessage,
@@ -36,12 +36,12 @@ class TwilioWebhookMixin:
 
     def set_message_handler(self, handler: MessageHandler) -> None:
         """Register a handler for incoming SMS messages."""
-        self._message_handler: Optional[MessageHandler] = handler  # type: ignore[attr-defined]
+        self._message_handler: MessageHandler | None = handler  # type: ignore[attr-defined]
         logger.debug("TwilioSMSChannelProvider: message handler registered")
 
     def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:
         """Register a handler for SMS reply confirmations."""
-        self._confirmation_handler: Optional[ConfirmationHandler] = handler  # type: ignore[attr-defined]
+        self._confirmation_handler: ConfirmationHandler | None = handler  # type: ignore[attr-defined]
         logger.debug("TwilioSMSChannelProvider: confirmation handler registered")
 
     @property
@@ -54,7 +54,7 @@ class TwilioWebhookMixin:
     def verify_signature(
         self,
         url: str,
-        params: Dict[str, str],
+        params: dict[str, str],
         signature: str,
     ) -> bool:
         """Verify Twilio webhook signature (HMAC-SHA1).
@@ -93,8 +93,8 @@ class TwilioWebhookMixin:
 
     def parse_inbound_message(
         self,
-        params: Dict[str, str],
-    ) -> Optional[ChannelMessage]:
+        params: dict[str, str],
+    ) -> ChannelMessage | None:
         """Parse a Twilio webhook POST into a ChannelMessage.
 
         Args:
@@ -112,7 +112,7 @@ class TwilioWebhookMixin:
         if not body and num_media == 0:
             return None
 
-        metadata: Dict[str, Any] = {
+        metadata: dict[str, Any] = {
             "twilio_message_sid": msg_sid,
             "twilio_account_sid": params.get("AccountSid", ""),
             "from_number": from_number,
@@ -120,7 +120,7 @@ class TwilioWebhookMixin:
         }
 
         # Add media URLs if MMS
-        media_urls: List[str] = []
+        media_urls: list[str] = []
         for i in range(num_media):
             url = params.get(f"MediaUrl{i}", "")
             if url:

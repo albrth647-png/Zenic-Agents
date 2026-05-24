@@ -32,14 +32,14 @@ logger = logging.getLogger(__name__)
 # ── Cost Accumulator ─────────────────────────────────────
 
 try:
-    from .cost_accumulator import (  # noqa: F401
+    from .cost_accumulator import (
         CostAccumulator,
         CostCategory,
         CostEntry,
         get_cost_accumulator,
         reset_cost_accumulator,
     )
-except Exception as _exc:  # noqa: BLE001
+except Exception as _exc:
     logger.warning("roi: CostAccumulator import failed: %s", _exc)
     CostAccumulator = None  # type: ignore[assignment,misc]
     CostCategory = None  # type: ignore[assignment,misc]
@@ -50,14 +50,14 @@ except Exception as _exc:  # noqa: BLE001
 # ── Value Tracker ────────────────────────────────────────
 
 try:
-    from .value_tracker import (  # noqa: F401
-        ValueTracker,
+    from .value_tracker import (
         ValueCategory,
         ValueEntry,
+        ValueTracker,
         get_value_tracker,
         reset_value_tracker,
     )
-except Exception as _exc:  # noqa: BLE001
+except Exception as _exc:
     logger.warning("roi: ValueTracker import failed: %s", _exc)
     ValueTracker = None  # type: ignore[assignment,misc]
     ValueCategory = None  # type: ignore[assignment,misc]
@@ -68,13 +68,13 @@ except Exception as _exc:  # noqa: BLE001
 # ── Impact Scorer ────────────────────────────────────────
 
 try:
-    from .impact_scorer import (  # noqa: F401
-        ImpactScorer,
+    from .impact_scorer import (
         ImpactScore,
+        ImpactScorer,
         get_impact_scorer,
         reset_impact_scorer,
     )
-except Exception as _exc:  # noqa: BLE001
+except Exception as _exc:
     logger.warning("roi: ImpactScorer import failed: %s", _exc)
     ImpactScorer = None  # type: ignore[assignment,misc]
     ImpactScore = None  # type: ignore[assignment,misc]
@@ -84,14 +84,14 @@ except Exception as _exc:  # noqa: BLE001
 # ── Dashboard Data ───────────────────────────────────────
 
 try:
-    from .dashboard_data import (  # noqa: F401
-        ROIDashboardData,
+    from .dashboard_data import (
         DashboardWidget,
+        ROIDashboardData,
         TrendPoint,
         get_roi_dashboard_data,
         reset_roi_dashboard_data,
     )
-except Exception as _exc:  # noqa: BLE001
+except Exception as _exc:
     logger.warning("roi: ROIDashboardData import failed: %s", _exc)
     ROIDashboardData = None  # type: ignore[assignment,misc]
     DashboardWidget = None  # type: ignore[assignment,misc]
@@ -101,4 +101,25 @@ except Exception as _exc:  # noqa: BLE001
 
 # ── Public API ───────────────────────────────────────────
 
-__all__ = ["Any", "CostAccumulator", "CostCategory", "CostEntry", "DashboardWidget", "ImpactScore", "ImpactScorer", "ROIDashboardData", "TrendPoint", "ValueCategory", "ValueEntry", "ValueTracker", "get_cost_accumulator", "get_impact_scorer", "get_roi_dashboard_data", "get_value_tracker", "reset_cost_accumulator", "reset_impact_scorer", "reset_roi_dashboard_data", "reset_value_tracker"]
+__all__ = [
+    "Any",
+    "CostAccumulator",
+    "CostCategory",
+    "CostEntry",
+    "DashboardWidget",
+    "ImpactScore",
+    "ImpactScorer",
+    "ROIDashboardData",
+    "TrendPoint",
+    "ValueCategory",
+    "ValueEntry",
+    "ValueTracker",
+    "get_cost_accumulator",
+    "get_impact_scorer",
+    "get_roi_dashboard_data",
+    "get_value_tracker",
+    "reset_cost_accumulator",
+    "reset_impact_scorer",
+    "reset_roi_dashboard_data",
+    "reset_value_tracker",
+]

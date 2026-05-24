@@ -42,8 +42,16 @@ class SymbolicPath:
 
     MAX_Z3_CONDITIONS = 50  # Limite de condiciones Z3 por camino (memoria-safe)
 
-    def __init__(self, condition=None, result=None, is_pruned=False, variables=None,
-                 z3_conditions=None, assignments=None, return_values=None):
+    def __init__(
+        self,
+        condition=None,
+        result=None,
+        is_pruned=False,
+        variables=None,
+        z3_conditions=None,
+        assignments=None,
+        return_values=None,
+    ):
         self.condition = condition or []  # Lista de condiciones simbolicas (string)
         self.result = result  # Resultado al final del camino
         self.is_pruned = is_pruned  # Si fue podado por I/O

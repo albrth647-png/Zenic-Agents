@@ -18,8 +18,8 @@ import re
 import time
 from dataclasses import dataclass, field
 
-from ..types.session import Session, Message, MessageRole
 from ..types.intent import IntentCategory
+from ..types.session import Message, MessageRole, Session
 from .turn_tracker import TurnRecord
 
 logger = logging.getLogger("zenic_agents.conversational.summarizer")
@@ -27,11 +27,13 @@ logger = logging.getLogger("zenic_agents.conversational.summarizer")
 
 # ─── Config del sumarizador ───────────────────────────────────
 
+
 @dataclass
 class SummarizerConfig:
     """Configuracion del sumarizador de contexto."""
-    max_full_messages: int = 10       # Mensajes completos recientes
-    max_summary_length: int = 500     # Caracteres max del resumen
+
+    max_full_messages: int = 10  # Mensajes completos recientes
+    max_summary_length: int = 500  # Caracteres max del resumen
     min_messages_to_summarize: int = 6  # Min mensajes antes de resumir
     preserve_system_messages: bool = True
     preserve_code_blocks: bool = True
@@ -39,9 +41,11 @@ class SummarizerConfig:
 
 # ─── Resultado del resumen ────────────────────────────────────
 
+
 @dataclass
 class ContextSummary:
     """Resultado del proceso de sumarizacion."""
+
     full_messages: list[Message] = field(default_factory=list)
     summary_text: str = ""
     messages_summarized: int = 0
@@ -69,6 +73,7 @@ class ContextSummary:
 
 
 # ─── Sumarizador ──────────────────────────────────────────────
+
 
 class ContextSummarizer:
     """
@@ -115,10 +120,7 @@ class ContextSummarizer:
         # Calcular compresion
         original_chars = sum(len(m.content) for m in to_summarize)
         summary_chars = len(summary_text)
-        compression = (
-            1.0 - (summary_chars / max(original_chars, 1))
-            if original_chars > 0 else 0.0
-        )
+        compression = 1.0 - (summary_chars / max(original_chars, 1)) if original_chars > 0 else 0.0
 
         # Componer mensajes finales
         final_messages: list[Message] = []
@@ -194,9 +196,7 @@ class ContextSummarizer:
 
             sentences = self._split_sentences(msg.content)
             for j, sentence in enumerate(sentences):
-                score = self._score_sentence(
-                    sentence, i, len(messages), j, msg.role
-                )
+                score = self._score_sentence(sentence, i, len(messages), j, msg.role)
                 scored_sentences.append((sentence, score))
 
         # Ordenar por score y tomar las mejores
@@ -213,7 +213,7 @@ class ContextSummarizer:
 
         # Truncar si excede limite
         if len(summary) > self._config.max_summary_length:
-            summary = summary[:self._config.max_summary_length - 3] + "..."
+            summary = summary[: self._config.max_summary_length - 3] + "..."
 
         return summary
 
@@ -221,7 +221,7 @@ class ContextSummarizer:
     def _split_sentences(text: str) -> list[str]:
         """Divide texto en oraciones."""
         # Split por puntos, signos de exclamacion/pregunta
-        parts = re.split(r'(?<=[.!?])\s+', text)
+        parts = re.split(r"(?<=[.!?])\s+", text)
         return [p.strip() for p in parts if len(p.strip()) > 10]
 
     @staticmethod

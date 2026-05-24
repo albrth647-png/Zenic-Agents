@@ -22,7 +22,6 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +33,7 @@ ZENIC_FULL_NAME = "Zenic-Agents Onboarding TUI"
 
 
 # ── Argument Parser ──────────────────────────────────────────
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser.
@@ -57,12 +57,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--version", "-v",
+        "--version",
+        "-v",
         action="version",
         version=f"%(prog)s {VERSION}",
     )
     parser.add_argument(
-        "--no-interactive", "-n",
+        "--no-interactive",
+        "-n",
         action="store_true",
         default=False,
         help="Disable interactive prompts (for scripting / CI)",
@@ -98,28 +100,33 @@ def build_parser() -> argparse.ArgumentParser:
         help="Register as a new user",
     )
     reg_parser.add_argument(
-        "--username", "-u",
+        "--username",
+        "-u",
         default="",
         help="Desired username (3-32 chars, letters/digits/underscore)",
     )
     reg_parser.add_argument(
-        "--email", "-e",
+        "--email",
+        "-e",
         default="",
         help="Email address (permanent, no disposable domains)",
     )
     reg_parser.add_argument(
-        "--device-name", "-d",
+        "--device-name",
+        "-d",
         default="",
         help="Human-readable device name",
     )
     reg_parser.add_argument(
-        "--tier", "-t",
+        "--tier",
+        "-t",
         choices=["starter", "business", "enterprise", "on_premise_enterprise", "trial"],
         default="starter",
         help="License tier (default: starter)",
     )
     reg_parser.add_argument(
-        "--interactive", "-i",
+        "--interactive",
+        "-i",
         action="store_true",
         default=False,
         help="Prompt for missing fields interactively",
@@ -131,17 +138,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Activate a license with an activation key",
     )
     act_parser.add_argument(
-        "--key", "-k",
+        "--key",
+        "-k",
         default="",
         help="Activation key (ZENIC-XXXX-XXXX-XXXX-XXXX format)",
     )
     act_parser.add_argument(
-        "--username", "-u",
+        "--username",
+        "-u",
         default="",
         help="Registered username (optional)",
     )
     act_parser.add_argument(
-        "--interactive", "-i",
+        "--interactive",
+        "-i",
         action="store_true",
         default=False,
         help="Prompt for key interactively",
@@ -171,7 +181,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate an activation key without activating it",
     )
     val_parser.add_argument(
-        "--key", "-k",
+        "--key",
+        "-k",
         required=True,
         help="Activation key to validate",
     )
@@ -181,13 +192,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 # ── Command Handlers ─────────────────────────────────────────
 
-def cmd_welcome(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+
+def cmd_welcome(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'welcome' command."""
     app.show_welcome(version=VERSION)
     return 0
 
 
-def cmd_register(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_register(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'register' command."""
     interactive = args.interactive or (not args.username and not args.email)
 
@@ -204,7 +216,7 @@ def cmd_register(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa
     return 0 if result.success else 1
 
 
-def cmd_activate(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_activate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'activate' command."""
     interactive = args.interactive or not args.key
 
@@ -219,7 +231,7 @@ def cmd_activate(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa
     return 0 if result.success else 1
 
 
-def cmd_status(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_status(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'status' command."""
     result = app.check_status()
 
@@ -228,7 +240,7 @@ def cmd_status(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: 
     return 0 if result.success else 1
 
 
-def cmd_hardware(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_hardware(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'hardware' command."""
     result = app.check_hardware()
 
@@ -237,7 +249,7 @@ def cmd_hardware(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa
     return 0 if result.success else 1
 
 
-def cmd_quickstart(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_quickstart(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'quickstart' command."""
     result = app.quick_start()
 
@@ -246,7 +258,7 @@ def cmd_quickstart(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # no
     return 0 if result.success else 1
 
 
-def cmd_validate(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_validate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
     """Handle the 'validate' command."""
     from .validators.activation_key import validate_activation_key
 
@@ -254,21 +266,29 @@ def cmd_validate(app: "OnboardingTUI", args: argparse.Namespace) -> int:  # noqa
 
     if args.json:
         import json
-        print(json.dumps({
-            "valid": result.is_valid,
-            "error": result.error_message if not result.is_valid else None,
-            "sanitized": result.sanitized_value if result.is_valid else None,
-        }, indent=2))
+
+        print(
+            json.dumps(
+                {
+                    "valid": result.is_valid,
+                    "error": result.error_message if not result.is_valid else None,
+                    "sanitized": result.sanitized_value if result.is_valid else None,
+                },
+                indent=2,
+            )
+        )
     else:
         if result.is_valid:
             try:
                 from rich.console import Console
+
                 Console().print(f"[bold green]Valid activation key:[/] {result.sanitized_value}")
             except ImportError:
                 print(f"Valid activation key: {result.sanitized_value}")
         else:
             try:
                 from rich.console import Console
+
                 Console().print(f"[bold red]Invalid activation key:[/] {result.error_message}")
             except ImportError:
                 print(f"Invalid activation key: {result.error_message}")
@@ -291,15 +311,18 @@ COMMAND_MAP = {
 
 # ── JSON Output Helper ───────────────────────────────────────
 
-def _print_json(result: "FlowResult") -> None:  # noqa: F821  # TODO: Phase3 - verify import
+
+def _print_json(result: FlowResult) -> None:  # noqa: F821  # TODO: Phase3 - verify import
     """Print a FlowResult as JSON."""
     import json
+
     print(json.dumps(result.to_dict(), indent=2))
 
 
 # ── Main Entry Point ────────────────────────────────────────
 
-def main(argv: Optional[List[str]] = None) -> int:
+
+def main(argv: list[str] | None = None) -> int:
     """Main entry point for the onboarding CLI.
 
     Args:
@@ -323,10 +346,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     # Lazy import to avoid circular imports
-    from .app import OnboardingTUI  # noqa: F821  # TODO: verify import
+    from .app import OnboardingTUI  # TODO: verify import
 
     # Create the TUI facade
-    app = OnboardingTUI(no_interactive=args.no_interactive)  # noqa: F821  # TODO: verify import
+    app = OnboardingTUI(no_interactive=args.no_interactive)  # TODO: verify import
 
     # Route to command handler
     handler = COMMAND_MAP.get(args.command)
@@ -340,6 +363,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             logger.error("Command '%s' failed: %s", args.command, exc)
             try:
                 from rich.console import Console
+
                 Console().print(f"[bold red]Error:[/] {exc}")
             except ImportError:
                 print(f"Error: {exc}")

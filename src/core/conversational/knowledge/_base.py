@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Any
 
-from ..types.base import Result, Ok
+from ..types.base import Ok, Result
 from ._types import (
     KnowledgeEntry,
     KnowledgeQuery,
@@ -173,7 +173,7 @@ class KnowledgeBase:
             key=lambda e: e.metadata.get("_search_score", 0.0),
             reverse=True,
         )
-        results = candidates[:query.max_results]
+        results = candidates[: query.max_results]
 
         elapsed = (time.time() - start) * 1000
         self._stats["total_retrieved"] += 1
@@ -270,7 +270,9 @@ class KnowledgeBase:
             if tag.lower() in self._tag_index:
                 self._tag_index[tag.lower()] = [i for i in self._tag_index[tag.lower()] if i != entry_id]
         if entry.knowledge_type in self._type_index:
-            self._type_index[entry.knowledge_type] = [i for i in self._type_index[entry.knowledge_type] if i != entry_id]
+            self._type_index[entry.knowledge_type] = [
+                i for i in self._type_index[entry.knowledge_type] if i != entry_id
+            ]
 
     def _text_search(self, query: KnowledgeQuery) -> list[KnowledgeEntry]:
         """Busqueda de texto cuando no hay keyword matches."""
@@ -278,13 +280,11 @@ class KnowledgeBase:
         candidates: list[tuple[KnowledgeEntry, float]] = []
 
         for entry in self._entries.values():
-            entry_words = set(
-                (entry.title + " " + entry.content).lower().split()[:100]
-            )
+            entry_words = set((entry.title + " " + entry.content).lower().split()[:100])
             overlap = len(query_words & entry_words)
             if overlap > 0:
                 score = overlap / max(len(query_words), 1)
                 candidates.append((entry, score))
 
         candidates.sort(key=lambda x: x[1], reverse=True)
-        return [entry for entry, _ in candidates[:query.max_results]]
+        return [entry for entry, _ in candidates[: query.max_results]]

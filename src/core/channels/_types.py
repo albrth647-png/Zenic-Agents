@@ -16,13 +16,14 @@ Design invariants:
 from __future__ import annotations
 
 import enum
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Dict, Sequence
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  CHANNEL CAPABILITIES
 # ──────────────────────────────────────────────────────────────
+
 
 class ChannelCapability(str, enum.Enum):
     """What a channel provider can do.
@@ -30,24 +31,26 @@ class ChannelCapability(str, enum.Enum):
     Used by ChannelRouter to pick the right channel for a task
     and by AdapterRegistry to query providers by capability.
     """
+
     SEND_TEXT = "send_text"
-    SEND_RICH = "send_rich"            # Markdown, embeds, cards, blocks
+    SEND_RICH = "send_rich"  # Markdown, embeds, cards, blocks
     SEND_CONFIRMATION = "send_confirmation"  # Interactive buttons/keyboards
-    SEND_FILE = "send_file"            # Attachments, media
-    RECEIVE_MESSAGE = "receive_message"     # Inbound (bidirectional)
+    SEND_FILE = "send_file"  # Attachments, media
+    RECEIVE_MESSAGE = "receive_message"  # Inbound (bidirectional)
     RECEIVE_CONFIRMATION = "receive_confirmation"  # Callback responses
-    SEND_HTML = "send_html"            # Email-like HTML body
-    SEND_SMS = "send_sms"              # Plain SMS
-    SEND_MMS = "send_mms"              # SMS with media
-    SEND_PUSH = "send_push"            # Web/mobile push notifications
-    THREAD = "thread"                  # Thread/conversation support
-    REPLY = "reply"                    # Reply-to-message support
-    RECEIVE_VOICE = "receive_voice"    # Inbound voice/audio messages (STT pipeline)
-    SEND_VOICE = "send_voice"          # Outbound voice/audio messages (TTS pipeline)
+    SEND_HTML = "send_html"  # Email-like HTML body
+    SEND_SMS = "send_sms"  # Plain SMS
+    SEND_MMS = "send_mms"  # SMS with media
+    SEND_PUSH = "send_push"  # Web/mobile push notifications
+    THREAD = "thread"  # Thread/conversation support
+    REPLY = "reply"  # Reply-to-message support
+    RECEIVE_VOICE = "receive_voice"  # Inbound voice/audio messages (STT pipeline)
+    SEND_VOICE = "send_voice"  # Outbound voice/audio messages (TTS pipeline)
 
 
 class ChannelPriority(str, enum.Enum):
     """Message priority levels — maps to ChannelRouter priority ranges."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -57,18 +60,20 @@ class ChannelPriority(str, enum.Enum):
 
 class DeliveryStatus(str, enum.Enum):
     """Delivery status for a single channel send attempt."""
+
     PENDING = "pending"
     SENT = "sent"
     DELIVERED = "delivered"
     FAILED = "failed"
     RATE_LIMITED = "rate_limited"
-    FALLBACK = "fallback"             # Sent via fallback channel
-    DRY_RUN = "dry_run"               # Not actually sent (dry-run mode)
+    FALLBACK = "fallback"  # Sent via fallback channel
+    DRY_RUN = "dry_run"  # Not actually sent (dry-run mode)
 
 
 # ──────────────────────────────────────────────────────────────
 #  MESSAGE TYPES
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ChannelMessage:
@@ -77,35 +82,36 @@ class ChannelMessage:
     Every field is optional because channels have different capabilities.
     The provider picks the fields it supports and ignores the rest.
     """
+
     text: str = ""
     subject: str = ""
-    html: str = ""                     # HTML body (email, Teams cards)
-    recipient: str = ""                # Single recipient (chat_id, email, phone)
-    recipients: Sequence[str] = ()     # Multiple recipients
-    reply_to: str = ""                 # Message ID to reply to
-    thread_id: str = ""                # Thread/conversation ID
+    html: str = ""  # HTML body (email, Teams cards)
+    recipient: str = ""  # Single recipient (chat_id, email, phone)
+    recipients: Sequence[str] = ()  # Multiple recipients
+    reply_to: str = ""  # Message ID to reply to
+    thread_id: str = ""  # Thread/conversation ID
     priority: ChannelPriority = ChannelPriority.NORMAL
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Rich content — provider interprets per-platform
-    title: str = ""                    # Embed title, card header, etc.
-    subtitle: str = ""                 # Secondary title
-    color: str = ""                    # Embed/card color (hex or name)
-    footer: str = ""                   # Embed footer text
-    image_url: str = ""                # Main image
-    thumbnail_url: str = ""            # Thumbnail image
-    fields: Sequence[Dict[str, str]] = ()  # Key-value pairs [{title, value, inline}]
-    file_url: str = ""                 # File attachment URL
-    file_name: str = ""                # File attachment name
+    title: str = ""  # Embed title, card header, etc.
+    subtitle: str = ""  # Secondary title
+    color: str = ""  # Embed/card color (hex or name)
+    footer: str = ""  # Embed footer text
+    image_url: str = ""  # Main image
+    thumbnail_url: str = ""  # Thumbnail image
+    fields: Sequence[dict[str, str]] = ()  # Key-value pairs [{title, value, inline}]
+    file_url: str = ""  # File attachment URL
+    file_name: str = ""  # File attachment name
 
     # Voice/Audio content — for RECEIVE_VOICE capable providers
     # On inbound: populated by the provider when a voice message is received
     # On outbound: NOT used (motor responds in TEXT only per user constraint)
-    voice_url: str = ""                # Audio file URL (inbound: download link from platform)
-    voice_duration: float = 0.0        # Audio duration in seconds
-    voice_format: str = ""             # Audio format: ogg|mp3|wav|m4a|opus|amr
-    voice_mime_type: str = ""          # MIME type from platform (e.g. audio/ogg)
-    transcription: str = ""            # STT transcription text (populated after voice pipeline)
+    voice_url: str = ""  # Audio file URL (inbound: download link from platform)
+    voice_duration: float = 0.0  # Audio duration in seconds
+    voice_format: str = ""  # Audio format: ogg|mp3|wav|m4a|opus|amr
+    voice_mime_type: str = ""  # MIME type from platform (e.g. audio/ogg)
+    transcription: str = ""  # STT transcription text (populated after voice pipeline)
 
     def __post_init__(self) -> None:
         """Validate invariant: at least one content field must be set."""
@@ -129,15 +135,16 @@ class ChannelResponse:
 
     Every provider returns this — no exceptions, no channel-specific types.
     """
-    success: bool
-    channel: str                       # Provider name that handled it
-    message_id: str = ""               # Platform message ID (if available)
-    status: DeliveryStatus = DeliveryStatus.SENT
-    error: str = ""                    # Error message if failed
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    timestamp: float = 0.0            # Unix timestamp of delivery
 
-    def to_dict(self) -> Dict[str, Any]:
+    success: bool
+    channel: str  # Provider name that handled it
+    message_id: str = ""  # Platform message ID (if available)
+    status: DeliveryStatus = DeliveryStatus.SENT
+    error: str = ""  # Error message if failed
+    metadata: dict[str, Any] = field(default_factory=dict)
+    timestamp: float = 0.0  # Unix timestamp of delivery
+
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary for logging/audit."""
         return {
             "success": self.success,
@@ -154,6 +161,7 @@ class ChannelResponse:
 #  CONFIRMATION TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class ConfirmationRequest:
     """Request for user confirmation via interactive UI elements.
@@ -166,31 +174,34 @@ class ConfirmationRequest:
       - WhatsApp: interactive button/template
       - SMS: reply with YES/NO
     """
+
     action_id: str
     action_type: str
-    title: str                         # Confirmation prompt title
-    message: str                       # Detailed message
+    title: str  # Confirmation prompt title
+    message: str  # Detailed message
     options: Sequence[str] = ("yes", "no", "more_info")
-    timeout_seconds: int = 300         # 5 minutes default
-    channel: str = ""                  # Target channel
-    recipient: str = ""                # Target user/chat
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    timeout_seconds: int = 300  # 5 minutes default
+    channel: str = ""  # Target channel
+    recipient: str = ""  # Target user/chat
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class ConfirmationResult:
     """Result of a user's response to a confirmation request."""
+
     action_id: str
-    response: str                      # "yes", "no", "more_info", or custom
+    response: str  # "yes", "no", "more_info", or custom
     confirmed: bool
-    responder_id: str = ""             # User who responded
-    channel: str = ""                  # Channel that received the response
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    responder_id: str = ""  # User who responded
+    channel: str = ""  # Channel that received the response
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 # ──────────────────────────────────────────────────────────────
 #  PROVIDER CONFIG
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class ProviderConfig:
@@ -199,6 +210,7 @@ class ProviderConfig:
     Loaded from environment variables, YAML, or passed programmatically.
     Each provider subclass defines its own required_fields.
     """
+
     enabled: bool = True
     webhook_url: str = ""
     api_url: str = ""
@@ -206,7 +218,7 @@ class ProviderConfig:
     phone_number: str = ""
     account_sid: str = ""
     auth_token: str = ""
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_configured(self) -> bool:
@@ -218,12 +230,14 @@ class ProviderConfig:
 #  RATE LIMIT INFO
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class RateLimitInfo:
     """Rate limit status for a channel provider."""
-    remaining: int = -1                # -1 = unknown/unlimited
-    reset_at: float = 0.0             # Unix timestamp when limit resets
-    limit: int = -1                    # Total limit per window (-1 = unknown)
+
+    remaining: int = -1  # -1 = unknown/unlimited
+    reset_at: float = 0.0  # Unix timestamp when limit resets
+    limit: int = -1  # Total limit per window (-1 = unknown)
 
     @property
     def is_limited(self) -> bool:
@@ -240,13 +254,13 @@ class RateLimitInfo:
 #  HANDLER TYPE ALIASES
 # ──────────────────────────────────────────────────────────────
 
-from typing import Awaitable, Callable  # noqa: E402
+from collections.abc import Awaitable, Callable  # noqa: E402
 
 # Inbound message handler: receives ChannelMessage, returns ChannelResponse
 MessageHandler = Callable[[ChannelMessage], Awaitable[ChannelResponse]]
 
 # Inbound confirmation handler: receives ConfirmationResult, returns arbitrary dict
-ConfirmationHandler = Callable[[ConfirmationResult], Awaitable[Dict[str, Any]]]
+ConfirmationHandler = Callable[[ConfirmationResult], Awaitable[dict[str, Any]]]
 
 
 # ──────────────────────────────────────────────────────────────
@@ -255,14 +269,14 @@ ConfirmationHandler = Callable[[ConfirmationResult], Awaitable[Dict[str, Any]]]
 
 __all__ = [
     "ChannelCapability",
-    "ChannelPriority",
-    "DeliveryStatus",
     "ChannelMessage",
+    "ChannelPriority",
     "ChannelResponse",
+    "ConfirmationHandler",
     "ConfirmationRequest",
     "ConfirmationResult",
+    "DeliveryStatus",
+    "MessageHandler",
     "ProviderConfig",
     "RateLimitInfo",
-    "MessageHandler",
-    "ConfirmationHandler",
 ]

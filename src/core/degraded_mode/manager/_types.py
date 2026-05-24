@@ -1,19 +1,23 @@
 """Types and constants for manager."""
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from .types import DegradationLevel
 
 # Modes: NORMAL(0) -> DEGRADED(1) -> PARALYSIS_1(2) -> PARALYSIS_2(3)
 
 logger = logging.getLogger(__name__)
 
+
 class SystemMode(str, Enum):
     """System operating modes, from most to least permissive."""
+
     NORMAL = "normal"
     RESTRICTIVE = "restrictive"
     DEGRADED = "degraded"
@@ -23,8 +27,7 @@ class SystemMode(str, Enum):
 
     @property
     def is_read_only(self) -> bool:
-        return self in (SystemMode.DEGRADED, SystemMode.PARALYSIS_L1,
-                        SystemMode.PARALYSIS_L2, SystemMode.PARALYSIS_L3)
+        return self in (SystemMode.DEGRADED, SystemMode.PARALYSIS_L1, SystemMode.PARALYSIS_L2, SystemMode.PARALYSIS_L3)
 
     @property
     def allows_write(self) -> bool:
@@ -48,37 +51,39 @@ class SystemMode(str, Enum):
 
     @property
     def degradation_level(self) -> DegradationLevel:
-        _m = {SystemMode.NORMAL: DegradationLevel.NORMAL,
-              SystemMode.RESTRICTIVE: DegradationLevel.DEGRADED,
-              SystemMode.DEGRADED: DegradationLevel.DEGRADED,
-              SystemMode.PARALYSIS_L1: DegradationLevel.PARALYSIS_1,
-              SystemMode.PARALYSIS_L2: DegradationLevel.PARALYSIS_2,
-              SystemMode.PARALYSIS_L3: DegradationLevel.PARALYSIS_2}
+        _m = {
+            SystemMode.NORMAL: DegradationLevel.NORMAL,
+            SystemMode.RESTRICTIVE: DegradationLevel.DEGRADED,
+            SystemMode.DEGRADED: DegradationLevel.DEGRADED,
+            SystemMode.PARALYSIS_L1: DegradationLevel.PARALYSIS_1,
+            SystemMode.PARALYSIS_L2: DegradationLevel.PARALYSIS_2,
+            SystemMode.PARALYSIS_L3: DegradationLevel.PARALYSIS_2,
+        }
         return _m.get(self, DegradationLevel.NORMAL)
-
 
 
 @dataclass
 class ModeTransition:
     """Record of a mode transition event."""
+
     from_mode: SystemMode
     to_mode: SystemMode
     reason: str
     timestamp: float = 0.0
     operator: str = "system"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.timestamp:
             self.timestamp = time.time()
 
 
-_FEATURE_RESTRICTIONS: Dict[DegradationLevel, List[str]] = {
+_FEATURE_RESTRICTIONS: dict[DegradationLevel, list[str]] = {
     DegradationLevel.NORMAL: [],
     DegradationLevel.DEGRADED: ["create", "update", "delete"],
     DegradationLevel.PARALYSIS_1: ["create", "update", "delete", "export_bulk"],
     DegradationLevel.PARALYSIS_2: ["create", "update", "delete", "export_bulk", "read_sensitive"],
 }
 
-_degraded_mode_manager: Optional[Any] = None
-__all__ = ["ModeTransition", "SystemMode", "_FEATURE_RESTRICTIONS", "_degraded_mode_manager", "logger"]
+_degraded_mode_manager: Any | None = None
+__all__ = ["_FEATURE_RESTRICTIONS", "ModeTransition", "SystemMode", "_degraded_mode_manager", "logger"]

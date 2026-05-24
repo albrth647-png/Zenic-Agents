@@ -10,7 +10,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..base import _validate_url_ssrf
 
@@ -30,7 +30,7 @@ _STATE_IN_PROGRESS = 2
 class _AuthMixin:
     """Mixin for ServiceNow authentication methods."""
 
-    def _get_instance_url(self, config: Dict[str, Any]) -> str:
+    def _get_instance_url(self, config: dict[str, Any]) -> str:
         """Resolve the ServiceNow instance URL from config or env."""
         url = config.get("instance_url", "") or os.environ.get(_ENV_INSTANCE_URL, "")
         # Strip trailing slash for consistent URL building
@@ -38,7 +38,7 @@ class _AuthMixin:
             url = url.rstrip("/")
         return url
 
-    def _get_auth_headers(self, config: Dict[str, Any]) -> Dict[str, str]:
+    def _get_auth_headers(self, config: dict[str, Any]) -> dict[str, str]:
         """Build authentication headers based on auth_type.
 
         Args:
@@ -57,8 +57,7 @@ class _AuthMixin:
             token = self._get_oauth_token(config)
             if not token:
                 raise ValueError(
-                    "OAuth2 token acquisition failed — check client_id, "
-                    "client_secret, and token_url configuration"
+                    "OAuth2 token acquisition failed — check client_id, " "client_secret, and token_url configuration"
                 )
             return {
                 "Authorization": f"Bearer {token}",
@@ -79,9 +78,8 @@ class _AuthMixin:
         return self._get_basic_auth(username, password)
 
     @staticmethod
-
     @staticmethod
-    def _get_basic_auth(username: str, password: str) -> Dict[str, str]:
+    def _get_basic_auth(username: str, password: str) -> dict[str, str]:
         """Build Basic Authentication headers.
 
         Args:
@@ -91,16 +89,14 @@ class _AuthMixin:
         Returns:
             Dict with ``Authorization`` (Basic) and ``Content-Type`` headers.
         """
-        credentials = base64.b64encode(
-            f"{username}:{password}".encode("utf-8")
-        ).decode("ascii")
+        credentials = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
         return {
             "Authorization": f"Basic {credentials}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
-    def _get_oauth_token(self, config: Dict[str, Any]) -> Optional[str]:
+    def _get_oauth_token(self, config: dict[str, Any]) -> str | None:
         """Obtain an OAuth2 Bearer token via client-credentials flow.
 
         Caches the token per instance_url until expiry.
@@ -120,33 +116,23 @@ class _AuthMixin:
             if cached and cached.get("expires_at", 0) > time.time():
                 return cached["token"]
 
-        client_id = (
-            config.get("client_id", "")
-            or os.environ.get(_ENV_CLIENT_ID, "")
-        )
-        client_secret = (
-            config.get("client_secret", "")
-            or os.environ.get(_ENV_CLIENT_SECRET, "")
-        )
-        token_url = (
-            config.get("oauth_token_url", "")
-            or os.environ.get(_ENV_TOKEN_URL, "")
-        )
+        client_id = config.get("client_id", "") or os.environ.get(_ENV_CLIENT_ID, "")
+        client_secret = config.get("client_secret", "") or os.environ.get(_ENV_CLIENT_SECRET, "")
+        token_url = config.get("oauth_token_url", "") or os.environ.get(_ENV_TOKEN_URL, "")
 
         if not all([client_id, client_secret, token_url]):
-            logger.warning(
-                "ServiceNowExecutor: OAuth2 requires client_id, "
-                "client_secret, and token_url"
-            )
+            logger.warning("ServiceNowExecutor: OAuth2 requires client_id, " "client_secret, and token_url")
             return None
 
         # ── Token request (synchronous — fallback urllib) ─────
         try:
-            token_data = urllib.parse.urlencode({
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret,
-            }).encode("utf-8")
+            token_data = urllib.parse.urlencode(
+                {
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                }
+            ).encode("utf-8")
 
             validated_token_url = _validate_url_ssrf(token_url)
             req = urllib.request.Request(
@@ -175,13 +161,15 @@ class _AuthMixin:
 
             logger.debug(
                 "ServiceNowExecutor: OAuth2 token acquired for %s (expires in %ds)",
-                instance_url, expires_in,
+                instance_url,
+                expires_in,
             )
             return token
 
         except Exception as exc:
             logger.error(
-                "ServiceNowExecutor: OAuth2 token request failed: %s", exc,
+                "ServiceNowExecutor: OAuth2 token request failed: %s",
+                exc,
             )
             return None
 
@@ -190,12 +178,11 @@ class _AuthMixin:
     # ──────────────────────────────────────────────────────────
 
     @staticmethod
-
     @staticmethod
     def _build_url(
         instance_url: str,
         table: str,
-        sys_id: Optional[str] = None,
+        sys_id: str | None = None,
     ) -> str:
         """Build a ServiceNow Table API URL.
 

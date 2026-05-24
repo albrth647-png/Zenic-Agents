@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Set
 
 
 class GraphDomain(str, Enum):
@@ -20,7 +19,7 @@ class KnowledgeNode:
     domain: str = ""
     concept: str = ""
     content: str = ""
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     confidence: float = 0.5
     source: str = ""
     created_at: str = ""
@@ -41,9 +40,9 @@ class KnowledgeEdge:
 
 @dataclass
 class KnowledgeQuery:
-    domain: Optional[str] = None
-    concept: Optional[str] = None
-    tags: Set[str] = field(default_factory=set)
+    domain: str | None = None
+    concept: str | None = None
+    tags: set[str] = field(default_factory=set)
     min_confidence: float = 0.0
     max_results: int = 50
     semantic: bool = False
@@ -51,7 +50,7 @@ class KnowledgeQuery:
 
 @dataclass
 class KnowledgeSearchResult:
-    nodes: List[KnowledgeNode] = field(default_factory=list)
-    edges: List[KnowledgeEdge] = field(default_factory=list)
+    nodes: list[KnowledgeNode] = field(default_factory=list)
+    edges: list[KnowledgeEdge] = field(default_factory=list)
     total_matches: int = 0
     query_time_ms: float = 0.0

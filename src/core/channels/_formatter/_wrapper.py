@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from ._discord import build_discord_confirmation_components, build_discord_embed, format_discord_message
+from ._email import format_email_confirmation_html, format_email_html
 from ._limits import LIMITS
-from ._text import truncate, split_message, sanitize_plain_text, sanitize_html
-from ._telegram import escape_telegram_markdown_v2, format_telegram_message, build_telegram_inline_keyboard
-from ._discord import build_discord_embed, build_discord_confirmation_components, format_discord_message
-from ._slack import escape_slack_text, build_slack_blocks, build_slack_confirmation_blocks, format_slack_message
-from ._teams import build_teams_adaptive_card, build_teams_confirmation_card, format_teams_message
-from ._whatsapp import format_whatsapp_text, build_whatsapp_interactive_buttons
+from ._push import format_push_confirmation_payload, format_push_payload
+from ._slack import build_slack_blocks, build_slack_confirmation_blocks, escape_slack_text, format_slack_message
 from ._sms import format_sms_text
-from ._email import format_email_html, format_email_confirmation_html
-from ._push import format_push_payload, format_push_confirmation_payload
+from ._teams import build_teams_adaptive_card, build_teams_confirmation_card, format_teams_message
+from ._telegram import build_telegram_inline_keyboard, escape_telegram_markdown_v2, format_telegram_message
+from ._text import sanitize_html, sanitize_plain_text, split_message, truncate
+from ._whatsapp import build_whatsapp_interactive_buttons, format_whatsapp_text
+
 
 class MessageFormatter:
     """Stateless convenience wrapper for all formatting functions.

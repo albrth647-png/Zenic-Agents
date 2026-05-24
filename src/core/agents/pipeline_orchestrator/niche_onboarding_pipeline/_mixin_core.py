@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
 
 from ._types import PipelineState, PipelineStep
 
@@ -22,14 +21,14 @@ class NicheOnboardingCoreMixin:
 
     # ── Step 1: SELECT_NICHE ──────────────────────────────────
 
-    def start(self, niche_id: str) -> PipelineState:  # noqa: F821
+    def start(self, niche_id: str) -> PipelineState:
         """Start a new pipeline by selecting a niche."""
-        state = PipelineState(niche_id)  # noqa: F821
+        state = PipelineState(niche_id)
 
         niche = self._bridge.get_niche(niche_id)
         if niche is None:
             state.add_error(f"Niche not found: {niche_id}")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         state.niche_category = getattr(niche, "category", "ai_data")
@@ -39,11 +38,11 @@ class NicheOnboardingCoreMixin:
         template_dict = self._bridge.create_template(niche_id)
         if template_dict is None:
             state.add_error(f"Template generation failed for niche: {niche_id}")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         state.template_dict = template_dict
-        state.advance(PipelineStep.SELECT_NICHE)  # noqa: F821
+        state.advance(PipelineStep.SELECT_NICHE)
 
         validation = self._bridge.validate_template(template_dict)
         if isinstance(validation, dict):
@@ -52,7 +51,9 @@ class NicheOnboardingCoreMixin:
 
         logger.info(
             "Pipeline %s: Started for niche=%s category=%s",
-            state.pipeline_id, niche_id, state.niche_category,
+            state.pipeline_id,
+            niche_id,
+            state.niche_category,
         )
         return state
 
@@ -60,21 +61,23 @@ class NicheOnboardingCoreMixin:
 
     def upload_documents(
         self,
-        state: PipelineState,  # noqa: F821
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
-    ) -> PipelineState:  # noqa: F821
+        state: PipelineState,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
+    ) -> PipelineState:
         """Upload and ingest documents. Auto-fills matched template fields."""
-        if state.current_step == PipelineStep.FAILED:  # noqa: F821
+        if state.current_step == PipelineStep.FAILED:
             return state
 
         if state.template_dict is None:
             state.add_error("No template available for document ingestion")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         result = self._ingestor.ingest_and_match(
-            niche_id=state.niche_id, files=files, texts=texts,
+            niche_id=state.niche_id,
+            files=files,
+            texts=texts,
         )
 
         state.documents_ingested = result.documents_processed
@@ -84,8 +87,7 @@ class NicheOnboardingCoreMixin:
                 state.template_dict = result.template_dict
             state.fields_auto_filled = len(result.matched_fields)
             state.add_warning(
-                f"Auto-filled {len(result.matched_fields)} fields from "
-                f"{result.documents_processed} documents"
+                f"Auto-filled {len(result.matched_fields)} fields from " f"{result.documents_processed} documents"
             )
         else:
             if result.errors:
@@ -99,9 +101,11 @@ class NicheOnboardingCoreMixin:
                 state.total_fields = validation.get("total_fields", 0)
                 state.required_fields = validation.get("missing_required", 0)
 
-        state.advance(PipelineStep.UPLOAD_DOCUMENTS)  # noqa: F821
+        state.advance(PipelineStep.UPLOAD_DOCUMENTS)
         logger.info(
             "Pipeline %s: Ingested %d documents, auto-filled %d fields",
-            state.pipeline_id, state.documents_ingested, state.fields_auto_filled,
+            state.pipeline_id,
+            state.documents_ingested,
+            state.fields_auto_filled,
         )
         return state

@@ -4,17 +4,13 @@ v1-compatible adapter classes: Surgical, Reasoning, and BusinessLogic.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
-# v2 agents
-from ..understanding import (
-    IntentClassifier,
-    EntityExtractor,
-    TargetResolver,
-    CriticalityScorer,
-)
-from ..reasoning import TemplateReasoner
+# Shared utilities
+from src.core.shared.contracts import GoalType, IntentPayload, OperationType
+
 from ..business import OperationRouter
+from ..reasoning import TemplateReasoner
 
 # v2 schemas
 from ..schemas import IntentResult, ReasoningResult
@@ -23,26 +19,33 @@ from ..schemas import IntentResult, ReasoningResult
 from ..schemas._v1_compat_schemas import (
     IntentOutput,
     ReasoningOutput,
+)
+from ..schemas._v1_compat_schemas import (
     ReasoningStep as V1ReasoningStep,
 )
 
-# Shared utilities
-from src.core.shared.contracts import IntentPayload, OperationType, GoalType
+# v2 agents
+from ..understanding import (
+    CriticalityScorer,
+    EntityExtractor,
+    IntentClassifier,
+    TargetResolver,
+)
 from ..understanding.intent_utils import (
     extract_code_block,
-    extract_target_and_language,
     extract_entities,
+    extract_target_and_language,
     infer_criticality,
     infer_template_type,
 )
 
 # Local compat types
-from ._types import VALID_OPERATIONS, VALID_GOALS
-
+from ._types import VALID_GOALS, VALID_OPERATIONS
 
 # ══════════════════════════════════════════════════════════════
 #  SurgicalAgentCompat
 # ══════════════════════════════════════════════════════════════
+
 
 class SurgicalAgentCompat:
     """
@@ -72,8 +75,7 @@ class SurgicalAgentCompat:
 
     # ── v1 API: classify_with_runner ──────────────────────────
 
-    def classify_with_runner(self, runner: Any, message: str,
-                             context: str = "") -> IntentOutput:
+    def classify_with_runner(self, runner: Any, message: str, context: str = "") -> IntentOutput:
         """
         Classify intent using v2 agents with multi-cable fusion.
 
@@ -95,9 +97,7 @@ class SurgicalAgentCompat:
 
         # Cable 3: v2 IntentClassifier (keyword scoring)
         classify_result = self._intent_classifier.run(message)
-        kw_result = self._v2_result_to_intent_output(
-            classify_result, message, context
-        )
+        kw_result = self._v2_result_to_intent_output(classify_result, message, context)
 
         # Fusion: combine keyword + semantic results
         if sem_result is not None:
@@ -164,7 +164,7 @@ class SurgicalAgentCompat:
 
     # ── Internal helpers ──────────────────────────────────────
 
-    def _cable_semantic(self, message: str) -> Optional[IntentOutput]:
+    def _cable_semantic(self, message: str) -> IntentOutput | None:
         """Cable 2: SemanticEngine embedding-based classification."""
         if not self._semantic or not self._semantic.is_loaded:
             return None
@@ -183,9 +183,7 @@ class SurgicalAgentCompat:
             pass
         return None
 
-    def _v2_result_to_intent_output(
-        self, run_result: dict, message: str, context: str
-    ) -> IntentOutput:
+    def _v2_result_to_intent_output(self, run_result: dict, message: str, context: str) -> IntentOutput:
         """Convert v2 IntentClassifier run() dict result to v1 IntentOutput."""
         target, language = extract_target_and_language(message)
         entities = extract_entities(message)
@@ -219,9 +217,7 @@ class SurgicalAgentCompat:
             source=source,
         )
 
-    def _cached_to_intent_output(
-        self, cached: dict, message: str, context: str
-    ) -> IntentOutput:
+    def _cached_to_intent_output(self, cached: dict, message: str, context: str) -> IntentOutput:
         """Convert cached SmartMemory result to IntentOutput."""
         response = cached.get("response", "")
         # Try to parse operation/goal from cached response
@@ -239,9 +235,7 @@ class SurgicalAgentCompat:
             source="cache",
         )
 
-    def _fuse_signals(
-        self, primary: IntentOutput, secondary: IntentOutput
-    ) -> IntentOutput:
+    def _fuse_signals(self, primary: IntentOutput, secondary: IntentOutput) -> IntentOutput:
         """Fuse two classification signals (multi-cable fusion)."""
         # If both agree → high confidence
         if primary.operation == secondary.operation and primary.goal == secondary.goal:
@@ -282,6 +276,7 @@ class SurgicalAgentCompat:
 #  ReasoningAgentCompat
 # ══════════════════════════════════════════════════════════════
 
+
 class ReasoningAgentCompat:
     """
     v1-compatible ReasoningAgent wrapper around v2 TemplateReasoner.
@@ -296,9 +291,9 @@ class ReasoningAgentCompat:
         self._reasoner = TemplateReasoner(**kwargs)
         self._call_count = 0
 
-    def reason_with_runner(self, runner: Any, query: str,
-                           mode: str = "step_by_step",
-                           context: str = "") -> ReasoningOutput:
+    def reason_with_runner(
+        self, runner: Any, query: str, mode: str = "step_by_step", context: str = ""
+    ) -> ReasoningOutput:
         """Reason using v2 TemplateReasoner."""
         self._call_count += 1
 
@@ -350,6 +345,7 @@ class ReasoningAgentCompat:
 # ══════════════════════════════════════════════════════════════
 #  BusinessLogicAgentCompat
 # ══════════════════════════════════════════════════════════════
+
 
 class BusinessLogicAgentCompat:
     """

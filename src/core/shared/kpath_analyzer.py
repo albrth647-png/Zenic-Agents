@@ -56,8 +56,7 @@ class KPathAnalyzer:
             # Buscar nodo(s) por nombre
             escaped = target_name.replace("%", "\\%").replace("_", "\\_")
             target_rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT name, node_type, connections FROM ast_nodes WHERE name LIKE ? ESCAPE '\\'",
-                (f"%{escaped}%",)
+                "SELECT name, node_type, connections FROM ast_nodes WHERE name LIKE ? ESCAPE '\\'", (f"%{escaped}%",)
             ).fetchall()
 
             if not target_rows:
@@ -85,15 +84,16 @@ class KPathAnalyzer:
                 if depth > self.k_limit:
                     continue
 
-                all_affected.append({
-                    "name": current,
-                    "depth": depth,
-                })
+                all_affected.append(
+                    {
+                        "name": current,
+                        "depth": depth,
+                    }
+                )
 
                 # Buscar conexiones del nodo actual
                 conn_rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT name, connections FROM ast_nodes WHERE name = ?",
-                    (current,)
+                    "SELECT name, connections FROM ast_nodes WHERE name = ?", (current,)
                 ).fetchall()
 
                 for c_row in conn_rows:
@@ -110,8 +110,7 @@ class KPathAnalyzer:
                             dep_name = conn_str
 
                         dep_rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                            "SELECT name FROM ast_nodes WHERE name = ?",
-                            (dep_name,)
+                            "SELECT name FROM ast_nodes WHERE name = ?", (dep_name,)
                         ).fetchall()
 
                         for dr in dep_rows:
@@ -162,17 +161,18 @@ class KPathAnalyzer:
                 pass
         else:
             import re
+
             patterns = {
-                "kotlin": r'\bif\b|\bwhen\b|\belse\b|\btry\b',
-                "go": r'\bif\b|\bswitch\b|\belse\b|\bselect\b',
-                "javascript": r'\bif\b|\bswitch\b|\belse\b|\btry\b|\?.*:',
-                "typescript": r'\bif\b|\bswitch\b|\belse\b|\btry\b|\?.*:',
+                "kotlin": r"\bif\b|\bwhen\b|\belse\b|\btry\b",
+                "go": r"\bif\b|\bswitch\b|\belse\b|\bselect\b",
+                "javascript": r"\bif\b|\bswitch\b|\belse\b|\btry\b|\?.*:",
+                "typescript": r"\bif\b|\bswitch\b|\belse\b|\btry\b|\?.*:",
             }
-            pattern = patterns.get(language, r'\bif\b|\belse\b')
+            pattern = patterns.get(language, r"\bif\b|\belse\b")
             branch_count = len(re.findall(pattern, code))
 
         if branch_count == 0:
             return 1
 
-        estimated = min(2 ** branch_count, 1000)
+        estimated = min(2**branch_count, 1000)
         return estimated

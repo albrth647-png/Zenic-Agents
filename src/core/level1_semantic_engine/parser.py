@@ -6,22 +6,68 @@ Soporta ingles y espanol. Sin dependencias externas (no numpy, no fastembed).
 Compatible con Android.
 """
 
-import re
 import logging
+import re
 from collections import Counter
-from src.core.shared.contracts import IntentPayload, OperationType, GoalType
 
+from src.core.shared.contracts import GoalType, IntentPayload, OperationType
 
 logger = logging.getLogger(__name__)
 
-_STOP_WORDS = frozenset({
-    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
-    'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
-    'would', 'could', 'should', 'may', 'might', 'can', 'shall',
-    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from',
-    'it', 'its', 'this', 'that', 'these', 'those', 'and', 'or',
-    'but', 'not', 'no', 'if', 'then', 'than', 'so', 'as', 'up',
-})
+_STOP_WORDS = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "can",
+        "shall",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "with",
+        "at",
+        "by",
+        "from",
+        "it",
+        "its",
+        "this",
+        "that",
+        "these",
+        "those",
+        "and",
+        "or",
+        "but",
+        "not",
+        "no",
+        "if",
+        "then",
+        "than",
+        "so",
+        "as",
+        "up",
+    }
+)
 
 
 class SemanticParser:
@@ -33,7 +79,7 @@ class SemanticParser:
 
     def __init__(self):
         self._semantic_engine = None  # Optional SemanticEngine for better classification
-        self._smart_memory = None     # Optional SmartMemory for caching parsed results
+        self._smart_memory = None  # Optional SmartMemory for caching parsed results
         self.op_corpus = {
             OperationType.CREATE: [
                 "create new file implement function add feature",
@@ -145,8 +191,8 @@ class SemanticParser:
 
     def _tokenize(self, text):
         text = text.lower()
-        text = re.sub(r'```.*?```', ' ', text, flags=re.DOTALL)
-        text = re.sub(r'[^\w\s]', ' ', text)
+        text = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
+        text = re.sub(r"[^\w\s]", " ", text)
         tokens = text.split()
         return [t for t in tokens if t not in _STOP_WORDS and len(t) > 1]
 
@@ -172,8 +218,8 @@ class SemanticParser:
         if not common_keys:
             return 0.0
         dot = sum(vec_a[k] * vec_b[k] for k in common_keys)
-        norm_a = sum(v ** 2 for v in vec_a.values()) ** 0.5
-        norm_b = sum(v ** 2 for v in vec_b.values()) ** 0.5
+        norm_a = sum(v**2 for v in vec_a.values()) ** 0.5
+        norm_b = sum(v**2 for v in vec_b.values()) ** 0.5
         if norm_a == 0 or norm_b == 0:
             return 0.0
         return dot / (norm_a * norm_b)
@@ -227,12 +273,12 @@ class SemanticParser:
         if self._semantic_engine and self._semantic_engine.is_loaded:
             try:
                 classification = self._semantic_engine.classify_intent(text)
-                if classification and hasattr(classification, 'operation') and classification.operation:
+                if classification and hasattr(classification, "operation") and classification.operation:
                     # SemanticEngine returned a SemanticResult dataclass
                     result = IntentPayload(
                         op=classification.operation,
-                        goal=classification.goal if hasattr(classification, 'goal') else "FEATURE_ADD",
-                        confidence=classification.confidence if hasattr(classification, 'confidence') else 0.8,
+                        goal=classification.goal if hasattr(classification, "goal") else "FEATURE_ADD",
+                        confidence=classification.confidence if hasattr(classification, "confidence") else 0.8,
                         context=text,
                     )
                     # Cache the result in SmartMemory
@@ -261,7 +307,7 @@ class SemanticParser:
         best_goal = max(goal_scores, key=goal_scores.get)
         best_goal_score = goal_scores[best_goal]
 
-        tgt = re.search(r'([\w\.\-]+(?:\.kt|\.py|\.go|\.js|\.ts|\.java|\.rs|\.c|\.cpp|\.h))', text)
+        tgt = re.search(r"([\w\.\-]+(?:\.kt|\.py|\.go|\.js|\.ts|\.java|\.rs|\.c|\.cpp|\.h))", text)
         target = tgt.group(1) if tgt else "unknown"
 
         lang = "python"
@@ -285,10 +331,14 @@ class SemanticParser:
 
         confidence = round((best_op_score + best_goal_score) / 2, 3)
         result = IntentPayload(
-            op=best_op, target=target, goal=best_goal,
-            scrap_query=scrap_query, confidence=confidence,
-            language=code_lang or lang, raw_code=raw_code or "",
-            context=text
+            op=best_op,
+            target=target,
+            goal=best_goal,
+            scrap_query=scrap_query,
+            confidence=confidence,
+            language=code_lang or lang,
+            raw_code=raw_code or "",
+            context=text,
         )
 
         # Cache the TF-IDF result in SmartMemory for future lookups
@@ -308,23 +358,31 @@ class SemanticParser:
 
     def _extract_code(self, text):
         """Extrae bloques de codigo de un mensaje."""
-        pattern = r'```(\w*)\n(.*?)```'
+        pattern = r"```(\w*)\n(.*?)```"
         matches = re.findall(pattern, text, re.DOTALL)
         if matches:
             lang, code = matches[0]
             lang_map = {
-                'python': 'python', 'py': 'python',
-                'kotlin': 'kotlin', 'kt': 'kotlin',
-                'go': 'go',
-                'javascript': 'javascript', 'js': 'javascript',
-                'typescript': 'typescript', 'ts': 'typescript',
-                'java': 'java', 'rust': 'rust', 'rs': 'rust',
-                'c': 'c', 'cpp': 'cpp', 'c++': 'cpp',
+                "python": "python",
+                "py": "python",
+                "kotlin": "kotlin",
+                "kt": "kotlin",
+                "go": "go",
+                "javascript": "javascript",
+                "js": "javascript",
+                "typescript": "typescript",
+                "ts": "typescript",
+                "java": "java",
+                "rust": "rust",
+                "rs": "rust",
+                "c": "c",
+                "cpp": "cpp",
+                "c++": "cpp",
             }
-            return lang_map.get(lang.lower(), 'python'), code
-        code_indicators = ['def ', 'class ', 'function ', 'fun ', 'func ', 'import ', 'from ']
-        lines = text.strip().split('\n')
+            return lang_map.get(lang.lower(), "python"), code
+        code_indicators = ["def ", "class ", "function ", "fun ", "func ", "import ", "from "]
+        lines = text.strip().split("\n")
         code_lines = [line for line in lines if any(ind in line for ind in code_indicators)]
         if code_lines:
-            return 'python', text.strip()
+            return "python", text.strip()
         return None, None

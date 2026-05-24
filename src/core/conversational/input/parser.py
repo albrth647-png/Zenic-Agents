@@ -15,16 +15,17 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from ..types.base import Result, Ok
-
+from ..types.base import Ok, Result
 
 # ─── Entidades extraidas ─────────────────────────────────────
+
 
 @dataclass
 class Entity:
     """Entidad extraida del texto."""
+
     text: str
-    entity_type: str      # file, command, language, keyword, url, number
+    entity_type: str  # file, command, language, keyword, url, number
     start: int = 0
     end: int = 0
     confidence: float = 1.0
@@ -33,8 +34,9 @@ class Entity:
 @dataclass
 class ParsedInput:
     """Resultado del parsing."""
+
     text: str = ""
-    normalized: str = ""          # Lowercase, sin acentos para matching
+    normalized: str = ""  # Lowercase, sin acentos para matching
     entities: list[Entity] = field(default_factory=list)
     keywords: list[str] = field(default_factory=list)
     code_snippets: list[dict[str, str]] = field(default_factory=list)
@@ -78,7 +80,7 @@ _URL_PATTERN = re.compile(
 )
 
 _COMMAND_PATTERN = re.compile(
-    r"^[/%](\w+)",          # /comando o %comando al inicio
+    r"^[/%](\w+)",  # /comando o %comando al inicio
     re.MULTILINE,
 )
 
@@ -88,15 +90,36 @@ _QUESTION_MARKERS = {
 }
 
 _GREETING_MARKERS = [
-    "hola", "hey", "hi", "hello", "buenos", "buenas", "que tal",
-    "good morning", "good evening",
+    "hola",
+    "hey",
+    "hi",
+    "hello",
+    "buenos",
+    "buenas",
+    "que tal",
+    "good morning",
+    "good evening",
 ]
 
 _CODE_REQUEST_MARKERS = [
-    "crear", "generar", "create", "build", "make",
-    "escribir", "write", "implementar", "implement",
-    "codigo", "code", "script", "modulo", "module",
-    "funcion", "function", "clase", "class",
+    "crear",
+    "generar",
+    "create",
+    "build",
+    "make",
+    "escribir",
+    "write",
+    "implementar",
+    "implement",
+    "codigo",
+    "code",
+    "script",
+    "modulo",
+    "module",
+    "funcion",
+    "function",
+    "clase",
+    "class",
 ]
 
 
@@ -131,20 +154,22 @@ class InputParser:
         is_greeting = self._is_greeting(normalized)
         is_code_request = self._is_code_request(normalized)
 
-        return Ok(ParsedInput(
-            text=text,
-            normalized=normalized,
-            entities=entities,
-            keywords=keywords,
-            code_snippets=code_snippets,
-            urls=urls,
-            is_question=is_question,
-            is_command=is_command,
-            is_greeting=is_greeting,
-            is_code_request=is_code_request,
-            sentence_count=text.count(".") + text.count("?") + text.count("!") + 1,
-            dominant_language=language,
-        ))
+        return Ok(
+            ParsedInput(
+                text=text,
+                normalized=normalized,
+                entities=entities,
+                keywords=keywords,
+                code_snippets=code_snippets,
+                urls=urls,
+                is_question=is_question,
+                is_command=is_command,
+                is_greeting=is_greeting,
+                is_code_request=is_code_request,
+                sentence_count=text.count(".") + text.count("?") + text.count("!") + 1,
+                dominant_language=language,
+            )
+        )
 
     # ─── Normalizacion ────────────────────────────────────────
 
@@ -152,6 +177,7 @@ class InputParser:
     def _normalize(text: str) -> str:
         """Normaliza texto para matching: lowercase, sin acentos."""
         import unicodedata
+
         result = text.lower()
         # Quitar acentos
         nfkd = unicodedata.normalize("NFD", result)
@@ -167,35 +193,41 @@ class InputParser:
 
         # Archivos
         for match in _FILE_PATTERN.finditer(text):
-            entities.append(Entity(
-                text=match.group(),
-                entity_type="file",
-                start=match.start(),
-                end=match.end(),
-                confidence=0.9,
-            ))
+            entities.append(
+                Entity(
+                    text=match.group(),
+                    entity_type="file",
+                    start=match.start(),
+                    end=match.end(),
+                    confidence=0.9,
+                )
+            )
 
         # Comandos
         for match in _COMMAND_PATTERN.finditer(text):
-            entities.append(Entity(
-                text=match.group(1),
-                entity_type="command",
-                start=match.start(),
-                end=match.end(),
-                confidence=0.95,
-            ))
+            entities.append(
+                Entity(
+                    text=match.group(1),
+                    entity_type="command",
+                    start=match.start(),
+                    end=match.end(),
+                    confidence=0.95,
+                )
+            )
 
         # Numeros significativos
         for match in re.finditer(r"\b\d+(?:\.\d+)?\b", text):
             num_str = match.group()
             if len(num_str) > 1:  # Ignorar digitos sueltos
-                entities.append(Entity(
-                    text=num_str,
-                    entity_type="number",
-                    start=match.start(),
-                    end=match.end(),
-                    confidence=0.7,
-                ))
+                entities.append(
+                    Entity(
+                        text=num_str,
+                        entity_type="number",
+                        start=match.start(),
+                        end=match.end(),
+                        confidence=0.7,
+                    )
+                )
 
         return entities
 
@@ -203,14 +235,60 @@ class InputParser:
     def _extract_keywords(normalized: str, language: str) -> list[str]:
         """Extrae keywords relevantes (stop words removidas)."""
         _STOP_WORDS_ES = {
-            "el", "la", "los", "las", "de", "en", "es", "un", "una",
-            "y", "o", "a", "por", "para", "con", "que", "se", "su",
-            "al", "del", "lo", "le", "mas", "ya", "no", "si", "mi",
+            "el",
+            "la",
+            "los",
+            "las",
+            "de",
+            "en",
+            "es",
+            "un",
+            "una",
+            "y",
+            "o",
+            "a",
+            "por",
+            "para",
+            "con",
+            "que",
+            "se",
+            "su",
+            "al",
+            "del",
+            "lo",
+            "le",
+            "mas",
+            "ya",
+            "no",
+            "si",
+            "mi",
         }
         _STOP_WORDS_EN = {
-            "the", "is", "are", "was", "were", "a", "an", "and",
-            "or", "but", "in", "on", "at", "to", "for", "of", "with",
-            "it", "its", "this", "that", "i", "you", "he", "she",
+            "the",
+            "is",
+            "are",
+            "was",
+            "were",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "it",
+            "its",
+            "this",
+            "that",
+            "i",
+            "you",
+            "he",
+            "she",
         }
 
         stop = _STOP_WORDS_ES if language == "es" else _STOP_WORDS_EN

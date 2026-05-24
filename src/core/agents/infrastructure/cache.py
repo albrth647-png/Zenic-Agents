@@ -9,17 +9,17 @@ of the v1→v2 migration. This is the canonical location for AgentCache.
 """
 
 import hashlib
-import time
-import threading
 import logging
+import threading
+import time
 from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Cache configuration
-MAX_CACHE_SIZE = 500          # Maximum cache entries
-DEFAULT_TTL_SECONDS = 3600   # 1 hour TTL
+MAX_CACHE_SIZE = 500  # Maximum cache entries
+DEFAULT_TTL_SECONDS = 3600  # 1 hour TTL
 SIMILARITY_THRESHOLD = 0.85  # Threshold for semantic cache hit
 
 
@@ -35,9 +35,8 @@ class AgentCache:
     (Xiaomi Redmi 12R Pro, 12GB RAM).
     """
 
-    def __init__(self, ttl_seconds: int = DEFAULT_TTL_SECONDS,
-                 max_size: int = MAX_CACHE_SIZE) -> None:
-        self._cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+    def __init__(self, ttl_seconds: int = DEFAULT_TTL_SECONDS, max_size: int = MAX_CACHE_SIZE) -> None:
+        self._cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self._ttl = ttl_seconds
         self._max_size = max_size
         self._hits = 0
@@ -46,7 +45,7 @@ class AgentCache:
         self._lock = threading.Lock()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "size": len(self._cache),
             "max_size": self._max_size,
@@ -59,7 +58,7 @@ class AgentCache:
         """Wire the SemanticEngine for semantic cache."""
         self._semantic_engine = engine
 
-    def get(self, agent_name: str, input_data: Any) -> Optional[Any]:
+    def get(self, agent_name: str, input_data: Any) -> Any | None:
         """
         Look up in cache by agent and input.
 
@@ -142,16 +141,17 @@ class AgentCache:
     def _serialize(data: Any) -> str:
         """Serialize data for deterministic hashing."""
         import json
+
         if isinstance(data, str):
             return data
-        if hasattr(data, '__dict__'):
+        if hasattr(data, "__dict__"):
             try:
                 return json.dumps(data.__dict__, sort_keys=True, default=str)
             except (TypeError, ValueError):
                 return str(data)
         return str(data)
 
-    def _is_expired(self, entry: Dict[str, Any]) -> bool:
+    def _is_expired(self, entry: dict[str, Any]) -> bool:
         """Check if an entry has expired."""
         age = time.time() - entry.get("timestamp", 0)
         return age > self._ttl
@@ -168,8 +168,7 @@ class AgentCache:
         # Pop the first (oldest/least recently used) item — O(1)
         self._cache.popitem(last=False)
 
-    def _semantic_lookup(self, agent_name: str,
-                         input_data: Any) -> Optional[Any]:
+    def _semantic_lookup(self, agent_name: str, input_data: Any) -> Any | None:
         """
         Look up in cache using semantic similarity.
 

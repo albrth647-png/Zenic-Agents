@@ -2,22 +2,23 @@
 Self-reflect reasoning mixin for ReasoningEngine.
 """
 
-import re
 import json
+import re
 import time
-from typing import List
 
 from ._imports import (
-    ReasoningStep, ReasoningResult, ReasoningMode,
-    MAX_TOKENS_PER_STEP, MIN_CONFIDENCE_ACCEPT,
+    MAX_TOKENS_PER_STEP,
+    MIN_CONFIDENCE_ACCEPT,
+    ReasoningMode,
+    ReasoningResult,
+    ReasoningStep,
 )
 
 
 class SelfReflectMixin:
     """Mixin providing self_reflect reasoning mode."""
 
-    def self_reflect(self, problem: str, max_iterations: int = 2,
-                     context: str = "") -> ReasoningResult:
+    def self_reflect(self, problem: str, max_iterations: int = 2, context: str = "") -> ReasoningResult:
         """
         Razonamiento con auto-evaluación y corrección.
 
@@ -31,7 +32,7 @@ class SelfReflectMixin:
         """
         start = time.time()
         self._call_count += 1
-        all_steps: List[ReasoningStep] = []
+        all_steps: list[ReasoningStep] = []
 
         # Inject context
         mem_ctx = self._get_memory_context(problem)
@@ -73,14 +74,16 @@ class SelfReflectMixin:
 
             current_answer = gen_answer
 
-            all_steps.append(ReasoningStep(
-                step_number=iteration * 2 - 1,
-                thought=f"GENERATE (iteration {iteration})",
-                conclusion=gen_answer[:300],
-                confidence=current_confidence,
-                duration_ms=gen_duration,
-                source="llm" if gen_answer else "fallback",
-            ))
+            all_steps.append(
+                ReasoningStep(
+                    step_number=iteration * 2 - 1,
+                    thought=f"GENERATE (iteration {iteration})",
+                    conclusion=gen_answer[:300],
+                    confidence=current_confidence,
+                    duration_ms=gen_duration,
+                    source="llm" if gen_answer else "fallback",
+                )
+            )
 
             # PHASE 2: EVALUATE
             eval_start = time.time()
@@ -94,7 +97,7 @@ class SelfReflectMixin:
             eval_score = 0.5
             if eval_answer:
                 try:
-                    match = re.search(r'\{[^}]+\}', eval_answer, re.DOTALL)
+                    match = re.search(r"\{[^}]+\}", eval_answer, re.DOTALL)
                     if match:
                         eval_data = json.loads(match.group())
                         eval_score = float(eval_data.get("score", 0.5))
@@ -105,14 +108,16 @@ class SelfReflectMixin:
                 # Fallback evaluation: basic heuristic checks
                 eval_score, eval_issues = self._fallback_evaluate(current_answer, problem)
 
-            all_steps.append(ReasoningStep(
-                step_number=iteration * 2,
-                thought=f"EVALUATE (iteration {iteration})",
-                conclusion=f"Score: {eval_score:.2f}, Issues: {', '.join(eval_issues[:3]) if eval_issues else 'None'}",
-                confidence=eval_score,
-                duration_ms=eval_duration,
-                source="llm" if eval_answer else "fallback",
-            ))
+            all_steps.append(
+                ReasoningStep(
+                    step_number=iteration * 2,
+                    thought=f"EVALUATE (iteration {iteration})",
+                    conclusion=f"Score: {eval_score:.2f}, Issues: {', '.join(eval_issues[:3]) if eval_issues else 'None'}",
+                    confidence=eval_score,
+                    duration_ms=eval_duration,
+                    source="llm" if eval_answer else "fallback",
+                )
+            )
 
             current_confidence = eval_score
 

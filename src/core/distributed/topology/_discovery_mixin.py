@@ -6,7 +6,7 @@ Node discovery, dead node detection, and cleanup methods.
 
 import logging
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 from ._types import NodeInfo, NodeState
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DiscoveryMixin:
     """Mixin providing node discovery and dead node detection for ClusterTopology."""
 
-    async def list_active_nodes(self: Any) -> List[NodeInfo]:
+    async def list_active_nodes(self: Any) -> list[NodeInfo]:
         """
         List all active nodes in the cluster.
 
@@ -26,7 +26,7 @@ class DiscoveryMixin:
         nodes_data = await self._backend.list_nodes(active_only=True)
         return [NodeInfo.from_dict(d) for d in nodes_data]
 
-    async def list_all_nodes(self: Any) -> List[NodeInfo]:
+    async def list_all_nodes(self: Any) -> list[NodeInfo]:
         """
         List all registered nodes (including potentially dead ones).
 
@@ -36,7 +36,7 @@ class DiscoveryMixin:
         nodes_data = await self._backend.list_nodes(active_only=False)
         return [NodeInfo.from_dict(d) for d in nodes_data]
 
-    async def find_capable_nodes(self: Any, task_type: str) -> List[NodeInfo]:
+    async def find_capable_nodes(self: Any, task_type: str) -> list[NodeInfo]:
         """
         Find nodes capable of handling a specific task type.
 
@@ -57,7 +57,7 @@ class DiscoveryMixin:
                 capable.append(node)
         return capable
 
-    async def get_node(self: Any, node_id: str) -> Optional[NodeInfo]:
+    async def get_node(self: Any, node_id: str) -> NodeInfo | None:
         """
         Get information about a specific node.
 
@@ -83,7 +83,7 @@ class DiscoveryMixin:
         active = await self.list_active_nodes()
         return len(active)
 
-    async def detect_dead_nodes(self: Any) -> List[NodeInfo]:
+    async def detect_dead_nodes(self: Any) -> list[NodeInfo]:
         """
         Find nodes that have missed their heartbeats.
 
@@ -117,8 +117,7 @@ class DiscoveryMixin:
             if success:
                 removed += 1
                 logger.info(
-                    "ClusterTopology: Removed dead node %s "
-                    "(last_heartbeat=%.0fs ago)",
+                    "ClusterTopology: Removed dead node %s " "(last_heartbeat=%.0fs ago)",
                     node.node_id,
                     time.time() - node.last_heartbeat,
                 )

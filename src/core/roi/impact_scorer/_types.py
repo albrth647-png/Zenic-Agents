@@ -11,7 +11,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +30,16 @@ class ImpactScore:
     impact_score: float = 0.0
     currency: str = "USD"
     timestamp: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.score_id:
             self.score_id = uuid.uuid4().hex[:16]
         if not self.timestamp:
             self.timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        if self.impact_score == 0.0 and (
-            self.estimated_loss_if_no_action > 0
-            or self.estimated_gain_if_action > 0
-        ):
+        if self.impact_score == 0.0 and (self.estimated_loss_if_no_action > 0 or self.estimated_gain_if_action > 0):
             self.impact_score = round(
-                (self.estimated_loss_if_no_action + self.estimated_gain_if_action)
-                / (self.urgency_hours + 1),
+                (self.estimated_loss_if_no_action + self.estimated_gain_if_action) / (self.urgency_hours + 1),
                 4,
             )
 
@@ -51,7 +47,7 @@ class ImpactScore:
         """Return net impact: gain if action taken minus loss if no action."""
         return round(self.estimated_gain_if_action - self.estimated_loss_if_no_action, 2)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dict."""
         return {
             "score_id": self.score_id,
@@ -76,22 +72,29 @@ _RETRY_BASE_DELAY = 0.1
 
 def _with_retry(fn, label: str = "ImpactScorer DB op"):
     """Execute *fn* with exponential-backoff retry (3 attempts)."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, _MAX_RETRIES + 1):
         try:
             return fn()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last_exc = exc
             if attempt < _MAX_RETRIES:
                 delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                 logger.debug(
                     "%s error (attempt %d/%d): %s — retrying in %.2fs",
-                    label, attempt, _MAX_RETRIES, exc, delay,
+                    label,
+                    attempt,
+                    _MAX_RETRIES,
+                    exc,
+                    delay,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
-                    "%s failed after %d attempts: %s", label, _MAX_RETRIES, exc,
+                    "%s failed after %d attempts: %s",
+                    label,
+                    _MAX_RETRIES,
+                    exc,
                 )
     if last_exc is not None:
         raise last_exc  # type: ignore[misc]
@@ -99,9 +102,10 @@ def _with_retry(fn, label: str = "ImpactScorer DB op"):
 
 # ── Row helper ────────────────────────────────────────────
 
+
 def _row_to_score(row: tuple) -> ImpactScore:
     """Convert a DB row tuple to an ImpactScore dataclass."""
-    meta: Dict[str, Any] = {}
+    meta: dict[str, Any] = {}
     if row[10]:
         try:
             meta = json.loads(row[10])
@@ -121,4 +125,6 @@ def _row_to_score(row: tuple) -> ImpactScore:
         timestamp=row[9],
         metadata=meta,
     )
-__all__ = ["ImpactScore", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_row_to_score", "_with_retry", "logger"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_BASE_DELAY", "ImpactScore", "_row_to_score", "_with_retry", "logger"]

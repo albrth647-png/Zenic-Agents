@@ -1,6 +1,5 @@
 """Re-exports for autonomy package."""
 
-
 import json
 import logging
 import sqlite3
@@ -9,8 +8,10 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-_autonomy_config_instance: Optional[AutonomyConfigManager] = None  # noqa: F821  # TODO: verify import
+_autonomy_config_instance: AutonomyConfigManager | None = None  # noqa: F821  # TODO: verify import
 _autonomy_config_lock = threading.Lock()
+
+
 def get_autonomy_config(db_path: str = "autonomy_config.sqlite") -> AutonomyConfigManager:  # noqa: F821  # TODO: verify import
     """Get or create the global AutonomyConfigManager instance.  # noqa: F821  # TODO: verify import
 
@@ -28,11 +29,24 @@ def get_autonomy_config(db_path: str = "autonomy_config.sqlite") -> AutonomyConf
 
 
 def reset_autonomy_config() -> None:
-    """Reset the global AutonomyConfigManager instance (for testing)."""  # noqa: F821  # TODO: verify import
+    """Reset the global AutonomyConfigManager instance (for testing)."""  # TODO: verify import
     global _autonomy_config_instance
     with _autonomy_config_lock:
         _autonomy_config_instance = None
 
 
-
-__all__ = ["AutonomyLevel", "AutonomyConfig", "AutonomyConfigManager", "get_autonomy_config", "reset_autonomy_config", "json", "logging", "sqlite3", "time", "uuid", "Any", "Dict", "List"]  # noqa: F821  # TODO: verify import
+__all__ = [
+    "Any",
+    "AutonomyConfig",
+    "AutonomyConfigManager",
+    "AutonomyLevel",
+    "Dict",
+    "List",
+    "get_autonomy_config",
+    "json",
+    "logging",
+    "reset_autonomy_config",
+    "sqlite3",
+    "time",
+    "uuid",
+]  # TODO: verify import

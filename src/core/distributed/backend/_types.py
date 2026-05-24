@@ -6,13 +6,14 @@ from dataclasses import dataclass, field
 
 from src.core.patterns.resilience.retry import RetryConfig
 
-
 # ============================================================
 #  ENUMS
 # ============================================================
 
+
 class BackendType(str, enum.Enum):
     """Supported coordination backend types."""
+
     POSTGRESQL = "postgresql"
     MEMORY = "memory"
 
@@ -20,6 +21,7 @@ class BackendType(str, enum.Enum):
 # ============================================================
 #  CONFIGURATION
 # ============================================================
+
 
 @dataclass
 class BackendConfig:
@@ -38,6 +40,7 @@ class BackendConfig:
         node_id: Unique identifier for this node. Auto-generated if empty.
         retry_config: Retry configuration for backend operations.
     """
+
     backend_type: BackendType = BackendType.MEMORY
     connection_string: str = ""
     pool_min: int = 2
@@ -47,16 +50,20 @@ class BackendConfig:
     heartbeat_interval: float = 10.0
     lease_duration: float = 120.0
     node_id: str = ""
-    retry_config: RetryConfig = field(default_factory=lambda: RetryConfig(
-        max_attempts=3,
-        base_delay=0.5,
-        max_delay=10.0,
-        backoff_strategy="exponential",
-        jitter=True,
-        retryable_exceptions=(Exception,),
-    ))
+    retry_config: RetryConfig = field(
+        default_factory=lambda: RetryConfig(
+            max_attempts=3,
+            base_delay=0.5,
+            max_delay=10.0,
+            backoff_strategy="exponential",
+            jitter=True,
+            retryable_exceptions=(Exception,),
+        )
+    )
 
     def __post_init__(self) -> None:
         if not self.node_id:
             self.node_id = f"node-{uuid.uuid4().hex[:8]}"
+
+
 __all__ = ["BackendConfig", "BackendType"]

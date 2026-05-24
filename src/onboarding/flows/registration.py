@@ -23,18 +23,19 @@ import secrets
 import sqlite3
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .base import BaseFlow, FlowContext
 from ..validators.user_input import (
-    UsernameValidator,
     EmailValidator,
+    UsernameValidator,
 )
+from .base import BaseFlow, FlowContext
 
 logger = logging.getLogger(__name__)
 
 
 # ── Registration Data ────────────────────────────────────────
+
 
 @dataclass
 class RegistrationData:
@@ -49,6 +50,7 @@ class RegistrationData:
         registration_id: Unique registration identifier.
         tier_requested: Initial tier requested (default: starter).
     """
+
     username: str = ""
     email: str = ""
     device_name: str = ""
@@ -61,7 +63,7 @@ class RegistrationData:
         """Check if all required fields are filled."""
         return bool(self.username and self.email and self.registration_id)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "username": self.username,
@@ -75,13 +77,15 @@ class RegistrationData:
 
     def to_signable(self) -> str:
         """Create canonical string for signing."""
-        return "|".join([
-            self.registration_id,
-            self.username,
-            self.email,
-            self.device_id,
-            str(self.registered_at),
-        ])
+        return "|".join(
+            [
+                self.registration_id,
+                self.username,
+                self.email,
+                self.device_id,
+                str(self.registered_at),
+            ]
+        )
 
 
 class RegistrationDataBuilder:
@@ -93,9 +97,9 @@ class RegistrationDataBuilder:
 
     def __init__(self) -> None:
         self._data = RegistrationData()
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def set_username(self, username: str) -> "RegistrationDataBuilder":
+    def set_username(self, username: str) -> RegistrationDataBuilder:
         """Set and validate the username."""
         validator = UsernameValidator()
         result = validator.validate(username)
@@ -105,7 +109,7 @@ class RegistrationDataBuilder:
             self._errors.append(result.error_message)
         return self
 
-    def set_email(self, email: str) -> "RegistrationDataBuilder":
+    def set_email(self, email: str) -> RegistrationDataBuilder:
         """Set and validate the email."""
         validator = EmailValidator()
         result = validator.validate(email)
@@ -115,12 +119,12 @@ class RegistrationDataBuilder:
             self._errors.append(result.error_message)
         return self
 
-    def set_device_name(self, name: str) -> "RegistrationDataBuilder":
+    def set_device_name(self, name: str) -> RegistrationDataBuilder:
         """Set the device name (no strict validation)."""
         self._data.device_name = name.strip()[:64] if name else "Unknown"
         return self
 
-    def set_tier(self, tier: str) -> "RegistrationDataBuilder":
+    def set_tier(self, tier: str) -> RegistrationDataBuilder:
         """Set the requested tier."""
         valid_tiers = ("starter", "business", "enterprise", "on_premise_enterprise", "trial")
         normalized = tier.lower().strip()
@@ -144,16 +148,16 @@ class RegistrationDataBuilder:
         if not self._data.device_id:
             try:
                 from src.core.license.license_parts.hw_binding import get_hardware_fingerprint
+
                 self._data.device_id = get_hardware_fingerprint()
             except ImportError:
-                self._data.device_id = hashlib.sha256(
-                    f"{self._data.username}:{time.time()}".encode()
-                ).hexdigest()[:32]
+                self._data.device_id = hashlib.sha256(f"{self._data.username}:{time.time()}".encode()).hexdigest()[:32]
 
         return self._data
 
 
 # ── Registration Persistence ─────────────────────────────────
+
 
 class RegistrationStore:
     """SQLite-backed storage for registration data.
@@ -162,7 +166,7 @@ class RegistrationStore:
     only one registration per device (latest wins).
     """
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._db_path = db_path or os.path.expanduser("~/.zenic/registration.sqlite")
         os.makedirs(os.path.dirname(self._db_path), exist_ok=True)
         self._init_db()
@@ -203,27 +207,30 @@ class RegistrationStore:
             "(registration_id, username, email, device_name, device_id, "
             "tier_requested, registered_at, metadata) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (data.registration_id, data.username, data.email,
-             data.device_name, data.device_id, data.tier_requested,
-             data.registered_at, json.dumps({"version": "1.0"})),
+            (
+                data.registration_id,
+                data.username,
+                data.email,
+                data.device_name,
+                data.device_id,
+                data.tier_requested,
+                data.registered_at,
+                json.dumps({"version": "1.0"}),
+            ),
         )
         conn.execute(
-            "INSERT INTO registration_log (registration_id, event, timestamp, details) "
-            "VALUES (?, ?, ?, ?)",
-            (data.registration_id, "registered", time.time(),
-             json.dumps(data.to_dict())),
+            "INSERT INTO registration_log (registration_id, event, timestamp, details) " "VALUES (?, ?, ?, ?)",
+            (data.registration_id, "registered", time.time(), json.dumps(data.to_dict())),
         )
         conn.commit()
         conn.close()
         logger.info("Registration saved: %s (%s)", data.username, data.registration_id)
 
-    def load(self) -> Optional[RegistrationData]:
+    def load(self) -> RegistrationData | None:
         """Load the most recent registration from the database."""
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
-        row = conn.execute(
-            "SELECT * FROM registrations ORDER BY registered_at DESC LIMIT 1"
-        ).fetchone()
+        row = conn.execute("SELECT * FROM registrations ORDER BY registered_at DESC LIMIT 1").fetchone()
         conn.close()
 
         if row:
@@ -248,6 +255,7 @@ class RegistrationStore:
 
 # ── Registration Flow ────────────────────────────────────────
 
+
 class RegistrationFlow(BaseFlow):
     """End-user registration flow.
 
@@ -265,7 +273,7 @@ class RegistrationFlow(BaseFlow):
     description = "Register as a new Zenic-Agents user"
     version = "1.0.0"
 
-    def __init__(self, store: Optional[RegistrationStore] = None) -> None:
+    def __init__(self, store: RegistrationStore | None = None) -> None:
         super().__init__()
         self._store = store or RegistrationStore()
 
@@ -312,7 +320,8 @@ class RegistrationFlow(BaseFlow):
 
         logger.info(
             "RegistrationFlow: User '%s' registered as %s",
-            reg_data.username, reg_data.registration_id,
+            reg_data.username,
+            reg_data.registration_id,
         )
 
     def on_render(self, ctx: FlowContext) -> str:

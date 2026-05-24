@@ -7,18 +7,16 @@ Keeps converter.py under 400 lines.
 
 from __future__ import annotations
 
-from typing import Dict, Optional
-
 from .types import (
-    DBFieldSchema, FieldType,
+    DBFieldSchema,
+    FieldType,
 )
-
 
 # ──────────────────────────────────────────────────────────────
 #  FIELD TYPE MAPPING
 # ──────────────────────────────────────────────────────────────
 
-NICHE_TYPE_MAP: Dict[str, FieldType] = {
+NICHE_TYPE_MAP: dict[str, FieldType] = {
     "uuid": FieldType.UUID,
     "str": FieldType.STR,
     "string": FieldType.STR,
@@ -38,7 +36,7 @@ NICHE_TYPE_MAP: Dict[str, FieldType] = {
 
 # Block → Executor type mapping
 # External executor types (email, notification, webhook, http) removed — standalone agent.
-BLOCK_EXECUTOR_MAP: Dict[str, str] = {
+BLOCK_EXECUTOR_MAP: dict[str, str] = {
     "pdf_generator": "file",
     "inventory_tracker": "database",
     "report_generator": "file",
@@ -53,7 +51,7 @@ BLOCK_EXECUTOR_MAP: Dict[str, str] = {
 #  TRIGGER → MONITOR MAPPING
 # ──────────────────────────────────────────────────────────────
 
-TRIGGER_MONITOR_MAP: Dict[str, str] = {
+TRIGGER_MONITOR_MAP: dict[str, str] = {
     "low_stock": "low_stock",
     "stock_bajo": "low_stock",
     "stock_low": "low_stock",
@@ -83,29 +81,33 @@ def parse_entity_fields(fields_data: list) -> list:
             name = parts[0].strip()
             type_str = parts[1].strip()
             field_type = NICHE_TYPE_MAP.get(type_str, FieldType.STR)
-            fields.append(DBFieldSchema(
-                name=name,
-                field_type=field_type,
-                required=(name == "id" or name.endswith("_id")),
-            ))
+            fields.append(
+                DBFieldSchema(
+                    name=name,
+                    field_type=field_type,
+                    required=(name == "id" or name.endswith("_id")),
+                )
+            )
         elif isinstance(field_def, dict):
             name = field_def.get("name", "")
             type_str = field_def.get("type", "str")
             field_type = NICHE_TYPE_MAP.get(type_str, FieldType.STR)
-            fields.append(DBFieldSchema(
-                name=name,
-                field_type=field_type,
-                required=field_def.get("required", True),
-                unique=field_def.get("unique", False),
-                indexed=field_def.get("indexed", False),
-                default=field_def.get("default"),
-                description=field_def.get("description", ""),
-            ))
+            fields.append(
+                DBFieldSchema(
+                    name=name,
+                    field_type=field_type,
+                    required=field_def.get("required", True),
+                    unique=field_def.get("unique", False),
+                    indexed=field_def.get("indexed", False),
+                    default=field_def.get("default"),
+                    description=field_def.get("description", ""),
+                )
+            )
 
     return fields
 
 
-def map_trigger_to_monitor(trigger_id: str, domain: str) -> Optional[str]:
+def map_trigger_to_monitor(trigger_id: str, domain: str) -> str | None:
     """Map a niche trigger ID to a known SNA monitor ID."""
     trigger_lower = trigger_id.lower()
     for pattern, monitor_id in TRIGGER_MONITOR_MAP.items():

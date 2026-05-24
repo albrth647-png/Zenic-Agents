@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from ._types import (
     STATUS_APPROVED,
@@ -25,9 +25,10 @@ logger = logging.getLogger("zenic_agents.conversational.confirm_manager")
 
 # ─── Formatting ────────────────────────────────────────────
 
+
 def format_confirm_message(
     action_type: str,
-    config: Dict,
+    config: dict,
     verdict: str,
 ) -> str:
     """Format user-facing confirmation request message."""
@@ -46,20 +47,22 @@ def format_confirm_message(
             val_str = str(value)[:100]
             lines.append(f"  • {key}: {val_str}")
 
-    lines.extend([
-        "",
-        "Do you want to proceed?",
-        "  • Reply **yes** to confirm",
-        "  • Reply **no** to deny",
-        "  • Reply **more_info** for details",
-    ])
+    lines.extend(
+        [
+            "",
+            "Do you want to proceed?",
+            "  • Reply **yes** to confirm",
+            "  • Reply **no** to deny",
+            "  • Reply **more_info** for details",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def format_approve_message(
     action_type: str,
-    config: Dict,
+    config: dict,
     required_role: str,
 ) -> str:
     """Format approval request message."""
@@ -77,17 +80,19 @@ def format_approve_message(
             val_str = str(value)[:100]
             lines.append(f"  • {key}: {val_str}")
 
-    lines.extend([
-        "",
-        f"This action requires approval from a user with the **{required_role}** role.",
-    ])
+    lines.extend(
+        [
+            "",
+            f"This action requires approval from a user with the **{required_role}** role.",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def format_detailed_info(
     action_type: str,
-    config: Dict,
+    config: dict,
     verdict: str,
 ) -> str:
     """Format detailed information about a pending action."""
@@ -107,21 +112,24 @@ def format_detailed_info(
             config_str = config_str[:1000] + "\n... (truncated)"
         lines.append(f"```json\n{config_str}\n```")
 
-    lines.extend([
-        "",
-        "Do you want to proceed? (yes/no)",
-    ])
+    lines.extend(
+        [
+            "",
+            "Do you want to proceed? (yes/no)",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 # ─── SafetyGate Integration ────────────────────────────────
 
+
 def safety_gate_confirm(safety_gate: Any, action_id: str) -> None:
     """Integrate confirmation with SafetyGate."""
     if safety_gate is not None:
         try:
-            if hasattr(safety_gate, 'confirm_action'):
+            if hasattr(safety_gate, "confirm_action"):
                 safety_gate.confirm_action(action_id)
                 logger.debug(f"SafetyGate confirmed: {action_id}")
         except Exception as e:
@@ -132,7 +140,7 @@ def safety_gate_approve(safety_gate: Any, action_id: str, role: str) -> None:
     """Integrate approval with SafetyGate."""
     if safety_gate is not None:
         try:
-            if hasattr(safety_gate, 'approve_action'):
+            if hasattr(safety_gate, "approve_action"):
                 safety_gate.approve_action(action_id, role)
                 logger.debug(f"SafetyGate approved: {action_id} by {role}")
         except Exception as e:
@@ -140,6 +148,7 @@ def safety_gate_approve(safety_gate: Any, action_id: str, role: str) -> None:
 
 
 # ─── Flow Mixin ────────────────────────────────────────────
+
 
 class ConfirmFlowMixin:
     """Mixin providing confirmation/approval flow methods for ConfirmManager.
@@ -160,11 +169,11 @@ class ConfirmFlowMixin:
         self,
         action_id: str,
         action_type: str,
-        config: Dict,
+        config: dict,
         verdict: str,
         channel: str = "cli",
         session_id: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Create a confirmation request for a SafetyGate-flagged action."""
         with self._lock:  # type: ignore[attr-defined]
             self._stats["total_requests"] += 1  # type: ignore[attr-defined]
@@ -220,7 +229,7 @@ class ConfirmFlowMixin:
         self,
         action_id: str,
         user_response: str,
-    ) -> Dict:
+    ) -> dict:
         """Handle user's yes/no/more_info response to a confirmation."""
         with self._lock:  # type: ignore[attr-defined]
             # Expire stale entries first
@@ -300,9 +309,7 @@ class ConfirmFlowMixin:
                 config = json.loads(row["config"]) if row["config"] else {}
                 return {
                     "status": STATUS_PENDING,
-                    "message": format_detailed_info(
-                        row["action_type"], config, row["verdict"]
-                    ),
+                    "message": format_detailed_info(row["action_type"], config, row["verdict"]),
                     "action_id": action_id,
                     "options": ["yes", "no"],
                 }
@@ -311,8 +318,7 @@ class ConfirmFlowMixin:
                 return {
                     "status": STATUS_PENDING,
                     "message": (
-                        f"Unrecognized response '{user_response}'. "
-                        f"Please reply with 'yes', 'no', or 'more_info'."
+                        f"Unrecognized response '{user_response}'. " f"Please reply with 'yes', 'no', or 'more_info'."
                     ),
                     "action_id": action_id,
                     "options": ["yes", "no", "more_info"],
@@ -324,11 +330,11 @@ class ConfirmFlowMixin:
         self,
         action_id: str,
         action_type: str,
-        config: Dict,
+        config: dict,
         required_role: str,
         channel: str = "cli",
         session_id: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Create an approval request for role-based flow."""
         with self._lock:  # type: ignore[attr-defined]
             self._stats["total_requests"] += 1  # type: ignore[attr-defined]
@@ -362,8 +368,7 @@ class ConfirmFlowMixin:
             message = format_approve_message(action_type, config, required_role)
 
             logger.info(
-                f"Approval requested: action_id={action_id}, "
-                f"type={action_type}, required_role={required_role}"
+                f"Approval requested: action_id={action_id}, " f"type={action_type}, required_role={required_role}"
             )
 
             return {
@@ -383,7 +388,7 @@ class ConfirmFlowMixin:
         approver_id: str,
         approved: bool,
         reason: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Handle approval response from a role-bearing approver."""
         with self._lock:  # type: ignore[attr-defined]
             self._expire_entries()  # type: ignore[attr-defined]
@@ -426,7 +431,8 @@ class ConfirmFlowMixin:
 
             if approved:
                 self._update_status(  # type: ignore[attr-defined]
-                    action_id, STATUS_APPROVED,
+                    action_id,
+                    STATUS_APPROVED,
                     responder_id=approver_id,
                     reason=reason,
                 )
@@ -446,7 +452,8 @@ class ConfirmFlowMixin:
                 }
             else:
                 self._update_status(  # type: ignore[attr-defined]
-                    action_id, STATUS_DENIED,
+                    action_id,
+                    STATUS_DENIED,
                     responder_id=approver_id,
                     reason=reason,
                 )

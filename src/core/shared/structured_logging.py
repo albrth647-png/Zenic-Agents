@@ -16,9 +16,8 @@ import json
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import Optional
 
-__all__ = ["StructuredFormatter", "PlainFormatter", "setup_logging", "log_pipeline_step"]
+__all__ = ["PlainFormatter", "StructuredFormatter", "log_pipeline_step", "setup_logging"]
 
 
 class StructuredFormatter(logging.Formatter):
@@ -49,13 +48,28 @@ class StructuredFormatter(logging.Formatter):
 
             # Agregar campos extra si existen
             extra_fields = [
-                "request_id", "pipeline_level", "operation", "target",
-                "route", "criticality", "solver_status", "mcts_sims",
-                "processing_time_ms", "cache_hit", "status",
-                "language", "ast_functions", "ast_classes",
+                "request_id",
+                "pipeline_level",
+                "operation",
+                "target",
+                "route",
+                "criticality",
+                "solver_status",
+                "mcts_sims",
+                "processing_time_ms",
+                "cache_hit",
+                "status",
+                "language",
+                "ast_functions",
+                "ast_classes",
                 # Phase 5: trace correlation fields
-                "trace_id", "span_id", "tenant_id", "user_id",
-                "audit_event_id", "audit_event_type", "audit_severity",
+                "trace_id",
+                "span_id",
+                "tenant_id",
+                "user_id",
+                "audit_event_id",
+                "audit_event_type",
+                "audit_severity",
             ]
             for field in extra_fields:
                 value = getattr(record, field, None)
@@ -76,6 +90,7 @@ class StructuredFormatter(logging.Formatter):
             # Fallback a formato plano si JSON falla
             # Note: using print to stderr instead of logger to avoid recursion in formatter
             import sys
+
             print(f"StructuredFormatter: JSON formatting failed: {e}", file=sys.stderr)
             return super().format(record)
 
@@ -87,10 +102,10 @@ class PlainFormatter(logging.Formatter):
     """
 
     COLORS = {
-        "DEBUG": "\033[36m",     # Cyan
-        "INFO": "\033[32m",      # Green
-        "WARNING": "\033[33m",   # Yellow
-        "ERROR": "\033[31m",     # Red
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
         "CRITICAL": "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
@@ -102,7 +117,7 @@ class PlainFormatter(logging.Formatter):
     def format(self, record):
         timestamp = datetime.now().strftime("%H:%M:%S")
         level = record.levelname
-        logger_name = record.name.split('.')[-1]  # Solo el ultimo componente
+        logger_name = record.name.split(".")[-1]  # Solo el ultimo componente
 
         if self.use_color:
             color = self.COLORS.get(level, "")
@@ -116,10 +131,18 @@ class PlainFormatter(logging.Formatter):
 
         # Agregar extra fields compactos
         extras = []
-        for field in ["request_id", "pipeline_level", "processing_time_ms",
-                      "route", "status", "solver_status",
-                      # Phase 5: trace correlation
-                      "trace_id", "span_id", "tenant_id"]:
+        for field in [
+            "request_id",
+            "pipeline_level",
+            "processing_time_ms",
+            "route",
+            "status",
+            "solver_status",
+            # Phase 5: trace correlation
+            "trace_id",
+            "span_id",
+            "tenant_id",
+        ]:
             value = getattr(record, field, None)
             if value is not None:
                 extras.append(f"{field}={value}")
@@ -149,8 +172,8 @@ def setup_logging(level=logging.INFO, structured=False, service_name="zenic-agen
 
     # Only add our handler if not already present; avoid clearing handlers from other libraries
     has_our_handler = any(
-        isinstance(h, logging.StreamHandler) and
-        isinstance(getattr(h, 'formatter', None), (StructuredFormatter, PlainFormatter))
+        isinstance(h, logging.StreamHandler)
+        and isinstance(getattr(h, "formatter", None), (StructuredFormatter, PlainFormatter))
         for h in root_logger.handlers
     )
     if has_our_handler:
@@ -163,7 +186,8 @@ def setup_logging(level=logging.INFO, structured=False, service_name="zenic-agen
     else:
         # Detectar si tenemos terminal con color support
         import sys
-        use_color = hasattr(sys.stderr, 'isatty') and sys.stderr.isatty()
+
+        use_color = hasattr(sys.stderr, "isatty") and sys.stderr.isatty()
         handler.setFormatter(PlainFormatter(use_color=use_color))
 
     root_logger.addHandler(handler)
@@ -173,8 +197,8 @@ def log_pipeline_step(
     logger_instance,
     level: int,
     message: str,
-    pipeline_level: Optional[int] = None,
-    request_id: Optional[str] = None,
+    pipeline_level: int | None = None,
+    request_id: str | None = None,
     **kwargs,
 ):
     """

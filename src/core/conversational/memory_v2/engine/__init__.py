@@ -1,6 +1,5 @@
 """Re-exports for engine package."""
 
-
 import hashlib
 import json
 import logging
@@ -10,10 +9,12 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, Set
 
-__all__ = ["hashlib", "json", "logging", "sqlite3", "time", "uuid", "Any", "Dict", "List", "Set"]
+__all__ = ["Any", "Dict", "List", "Set", "hashlib", "json", "logging", "sqlite3", "time", "uuid"]
 
-_instance: Optional[MemoryEngineV2] = None  # noqa: F821  # TODO: verify import
+_instance: MemoryEngineV2 | None = None  # noqa: F821  # TODO: verify import
 _instance_lock = threading.Lock()
+
+
 def get_memory_engine_v2() -> MemoryEngineV2:  # noqa: F821  # TODO: verify import
     global _instance
     if _instance is None:
@@ -27,4 +28,3 @@ def reset_memory_engine_v2() -> None:
     global _instance
     with _instance_lock:
         _instance = None
-

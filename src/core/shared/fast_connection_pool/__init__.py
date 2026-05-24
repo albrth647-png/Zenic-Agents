@@ -9,17 +9,26 @@ import threading
 from contextlib import contextmanager
 from typing import Optional
 
-from ._pragmas import _ARM_PRAGMAS, _apply_pragmas, PoolStats
 from ._pool import FastPool
+from ._pragmas import _ARM_PRAGMAS, PoolStats, _apply_pragmas
 
-__all__ = ["FastPool", "fast_pool", "get_pooled_connection", "batch_commit", "close_all_pools", "_ARM_PRAGMAS", "_apply_pragmas", "PoolStats"]
+__all__ = [
+    "_ARM_PRAGMAS",
+    "FastPool",
+    "PoolStats",
+    "_apply_pragmas",
+    "batch_commit",
+    "close_all_pools",
+    "fast_pool",
+    "get_pooled_connection",
+]
 
 
 # ============================================================
 #  Global Singleton
 # ============================================================
 
-_global_pool: Optional[FastPool] = None
+_global_pool: FastPool | None = None
 _pool_lock = threading.Lock()
 
 

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def _create_enhanced_safety_gate(
         A new EnhancedSafetyGate instance that wraps the original.
     """
     try:
-        from src.core.executors.safety_gate import SafetyCheckResult, SafetyVerdict, ActionCategory
+        from src.core.executors.safety_gate import ActionCategory, SafetyCheckResult, SafetyVerdict
     except ImportError:
         logger.warning("Phase6: Cannot import SafetyGate types — skipping enhancement")
         return safety_gate
@@ -79,8 +79,8 @@ def _create_enhanced_safety_gate(
         def check(
             self,
             action_type: str,
-            config: Dict[str, Any],
-            context: Optional[Dict[str, Any]] = None,
+            config: dict[str, Any],
+            context: dict[str, Any] | None = None,
         ) -> Any:
             """Enhanced SafetyGate check that integrates with ApprovalChain.
 
@@ -92,6 +92,7 @@ def _create_enhanced_safety_gate(
             # Check degraded mode before proceeding
             try:
                 from src.core.degraded_mode.manager import get_degraded_mode_manager
+
                 dm = get_degraded_mode_manager()
                 action_check = dm.check_action(action_type)
                 if not action_check["allowed"]:
@@ -128,7 +129,7 @@ def _create_enhanced_safety_gate(
     return EnhancedSafetyGate(safety_gate, approval_chain)
 
 
-def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
+def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     """Initialize all Phase 6 components and wire them together.
 
     Call this during application startup, after AuthService is initialized.
@@ -150,11 +151,12 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
             logger.info("Phase6: Already initialized — skipping (idempotent)")
             return get_phase6_status()
 
-    results: Dict[str, Any] = {}
+    results: dict[str, Any] = {}
 
     # ── 1. Degraded Mode Manager ──────────────────────────
     try:
         from src.core.degraded_mode.manager import get_degraded_mode_manager
+
         dm = get_degraded_mode_manager()
         results["degraded_mode"] = {"status": "ok", "mode": dm.get_current_mode().value}
         logger.info("Phase6: DegradedModeManager initialized (mode=%s)", dm.get_current_mode().value)
@@ -165,6 +167,7 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
     # ── 2. License Manager ────────────────────────────────
     try:
         from src.core.license.manager import get_license_manager
+
         lm = get_license_manager()
         results["license"] = {"status": "ok", "data": lm.get_status()}
 
@@ -174,7 +177,7 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
 
             dm = get_degraded_mode_manager()
 
-            def _on_license_event(event_type: str, data: Dict[str, Any]) -> None:
+            def _on_license_event(event_type: str, data: dict[str, Any]) -> None:
                 """React to license events by adjusting operating mode."""
                 if event_type == "kill_switch_activated":
                     dm.enter_paralysis(level=3, reason=f"Kill switch: {data.get('reason', '')}")
@@ -196,6 +199,7 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
     # ── 3. Defense Manager ────────────────────────────────
     try:
         from src.core.defense import get_defense_manager
+
         defense = get_defense_manager()
         defense.initialize_all(start_monitoring=start_defense_monitoring)
         results["defense"] = {"status": "ok", "active_layers": defense.get_status().active_layers}
@@ -222,11 +226,11 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
 
     # ── 5. Wire SafetyGate → ApprovalChain (Composition) ──
     try:
+        from src.core.approval.chain import get_approval_chain
         from src.core.executors.safety_gate import (
             get_default_safety_gate,
             set_default_safety_gate,
         )
-        from src.core.approval.chain import get_approval_chain
 
         safety_gate = get_default_safety_gate()
         chain = get_approval_chain()
@@ -250,8 +254,9 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
 
     # ── 6. Auto-create default license if none exists ──────
     try:
-        from src.core.license.types import LicenseTier
         from src.core.license.manager import get_license_manager
+        from src.core.license.types import LicenseTier
+
         lm = get_license_manager()
         if not lm.get_current_license():
             # Create a starter-tier license by default
@@ -277,24 +282,27 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> Dict[str, Any]:
     return results
 
 
-def get_phase6_status() -> Dict[str, Any]:
+def get_phase6_status() -> dict[str, Any]:
     """Get comprehensive Phase 6 status across all components."""
-    status: Dict[str, Any] = {}
+    status: dict[str, Any] = {}
 
     try:
         from src.core.degraded_mode.manager import get_degraded_mode_manager
+
         status["degraded_mode"] = get_degraded_mode_manager().get_status()
     except Exception:
         status["degraded_mode"] = {"error": "unavailable"}
 
     try:
         from src.core.license.manager import get_license_manager
+
         status["license"] = get_license_manager().get_status()
     except Exception:
         status["license"] = {"error": "unavailable"}
 
     try:
         from src.core.defense import get_defense_manager
+
         ds = get_defense_manager().get_status()
         status["defense"] = {
             "score": ds.overall_score,
@@ -306,6 +314,7 @@ def get_phase6_status() -> Dict[str, Any]:
 
     try:
         from src.core.approval.chain import get_approval_chain
+
         status["approval"] = get_approval_chain().get_stats()
     except Exception:
         status["approval"] = {"error": "unavailable"}
@@ -327,4 +336,4 @@ def reset_phase6() -> None:
     logger.info("Phase6: Initialization state reset")
 
 
-__all__ = ["initialize_phase6", "get_phase6_status", "reset_phase6"]
+__all__ = ["get_phase6_status", "initialize_phase6", "reset_phase6"]

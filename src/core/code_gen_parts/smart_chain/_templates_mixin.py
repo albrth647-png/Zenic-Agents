@@ -1,8 +1,7 @@
 """SmartPromptChain - Template Fallbacks Mixin."""
 
-import re
 import logging
-
+import re
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
@@ -32,7 +31,7 @@ class SmartChainTemplatesMixin:
                 "from contextlib import contextmanager\n\n"
                 "logger = logging.getLogger(__name__)\n\n\n"
                 "def get_connection(db_path: str = 'data.sqlite'):\n"
-                "    \"\"\"Get SQLite connection with WAL mode.\"\"\"\n"
+                '    """Get SQLite connection with WAL mode."""\n'
                 "    conn = sqlite3.connect(db_path)\n"
                 "    conn.row_factory = sqlite3.Row\n"
                 "    conn.execute('PRAGMA journal_mode=WAL')\n"
@@ -68,14 +67,14 @@ class SmartChainTemplatesMixin:
             return (
                 "\n\n"
                 "class UserCreate:\n"
-                "    \"\"\"Schema for user registration.\"\"\"\n"
+                '    """Schema for user registration."""\n'
                 "    def __init__(self, username: str, email: str, password: str, role: str = 'user'):\n"
                 "        self.username = username\n"
                 "        self.email = email\n"
                 "        self.password = password\n"
                 "        self.role = role\n\n"
                 "class UserResponse:\n"
-                "    \"\"\"Schema for user response.\"\"\"\n"
+                '    """Schema for user response."""\n'
                 "    def __init__(self, id: int, username: str, email: str, role: str, created_at: str):\n"
                 "        self.id = id\n"
                 "        self.username = username\n"
@@ -83,7 +82,7 @@ class SmartChainTemplatesMixin:
                 "        self.role = role\n"
                 "        self.created_at = created_at\n\n"
                 "class TokenResponse:\n"
-                "    \"\"\"Schema for token response.\"\"\"\n"
+                '    """Schema for token response."""\n'
                 "    def __init__(self, access_token: str, token_type: str = 'bearer', expires_in: int = 1800):\n"
                 "        self.access_token = access_token\n"
                 "        self.token_type = token_type\n"
@@ -100,14 +99,14 @@ class SmartChainTemplatesMixin:
         return (
             f"\n\n"
             f"class {entity_name}Create:\n"
-            f"    \"\"\"Schema for creating a {entity_name}.\"\"\"\n"
+            f'    """Schema for creating a {entity_name}."""\n'
             f"    def __init__(self, name: str, status: str = 'active', **kwargs):\n"
             f"        self.name = name\n"
             f"        self.status = status\n"
             f"        for key, value in kwargs.items():\n"
             f"            setattr(self, key, value)\n\n"
             f"class {entity_name}Response:\n"
-            f"    \"\"\"Schema for {entity_name} response.\"\"\"\n"
+            f'    """Schema for {entity_name} response."""\n'
             f"    def __init__(self, id: int, name: str, status: str, created_at: str):\n"
             f"        self.id = id\n"
             f"        self.name = name\n"
@@ -121,7 +120,7 @@ class SmartChainTemplatesMixin:
 
         # Extract class name from description
         class_name = "ModuleService"
-        match = re.search(r'(\w+?)(?:Service|Client|Manager|CRUD)', desc)
+        match = re.search(r"(\w+?)(?:Service|Client|Manager|CRUD)", desc)
         if match:
             class_name = match.group(1) + "Service"
         else:
@@ -135,14 +134,14 @@ class SmartChainTemplatesMixin:
         if "auth" in desc_lower:
             return (
                 "\n\nclass AuthService:\n"
-                '    \"\"\"Authentication service with JWT and password hashing.\"\"\"\n\n'
+                '    """Authentication service with JWT and password hashing."""\n\n'
                 "    def __init__(self, secret_key: str = None, token_expire_minutes: int = 30):\n"
                 "        self._secret_key = secret_key or secrets.token_hex(32)\n"
                 "        self._token_expire = token_expire_minutes\n"
                 "        self._db_path = 'auth.sqlite'\n"
                 "        self._init_db()\n\n"
                 "    def _init_db(self):\n"
-                '        \"\"\"Initialize users table.\"\"\"\n'
+                '        """Initialize users table."""\n'
                 "        conn = get_connection(self._db_path)\n"
                 "        conn.execute('''\n"
                 "            CREATE TABLE IF NOT EXISTS users (\n"
@@ -161,7 +160,7 @@ class SmartChainTemplatesMixin:
         if "integration" in desc_lower or "stripe" in desc_lower:
             return (
                 f"\n\nclass {class_name}:\n"
-                f'    \"\"\"Integration client with retry and error handling.\"\"\"\n\n'
+                f'    """Integration client with retry and error handling."""\n\n'
                 f"    def __init__(self, api_key: str = None, base_url: str = ''):\n"
                 f"        self._api_key = api_key or os.getenv('API_KEY', '')\n"
                 f"        self._base_url = base_url\n"
@@ -171,13 +170,13 @@ class SmartChainTemplatesMixin:
             )
 
         # SECURITY: Validate table_name at generation time
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
             raise ValueError(f"Invalid table name for code generation: {table_name!r}")
 
         # Default: CRUD service with real database
         return (
             f"\n\nclass {class_name}:\n"
-            f'    \"\"\"CRUD service for {table_name} with real SQLite operations.\"\"\"\n\n'
+            f'    """CRUD service for {table_name} with real SQLite operations."""\n\n'
             f"    _SAFE_ID = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')\n\n"
             f"    def __init__(self, db_path: str = 'data.sqlite', table_name: str = '{table_name}'):\n"
             f"        # SECURITY: Validate table_name to prevent SQL injection\n"
@@ -187,7 +186,7 @@ class SmartChainTemplatesMixin:
             f"        self._table_name = table_name\n"
             f"        self._init_db()\n\n"
             f"    def _init_db(self):\n"
-            f'        \"\"\"Initialize table with schema.\"\"\"\n'
+            f'        """Initialize table with schema."""\n'
             f"        conn = get_connection(self._db_path)\n"
             f"        conn.execute(f'''CREATE TABLE IF NOT EXISTS {{self._table_name}} (\n"
             f"            id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -261,14 +260,14 @@ class SmartChainTemplatesMixin:
             return (
                 f"\n"
                 f"    def create(self, data: Dict[str, Any]) -> Dict[str, Any]:\n"
-                f'        \"\"\"Create a new {entity} with parameterized SQL INSERT.\"\"\"\n'
+                f'        """Create a new {entity} with parameterized SQL INSERT."""\n'
                 f"        try:\n"
                 f"            conn = get_connection(self._db_path)\n"
                 f"            columns = list(data.keys())\n"
-            f"            # SECURITY: Validate column names before SQL interpolation\n"
-            f"            for col in columns:\n"
-            f"                if not self._SAFE_ID.match(str(col)):\n"
-            f"                    return {{'success': False, 'error': f'Invalid column: {{col!r}}'}}\n"
+                f"            # SECURITY: Validate column names before SQL interpolation\n"
+                f"            for col in columns:\n"
+                f"                if not self._SAFE_ID.match(str(col)):\n"
+                f"                    return {{'success': False, 'error': f'Invalid column: {{col!r}}'}}\n"
                 f"            values = list(data.values())\n"
                 f"            placeholders = ', '.join(['?' for _ in columns])\n"
                 f"            col_str = ', '.join(columns)\n"
@@ -372,9 +371,9 @@ class SmartChainTemplatesMixin:
                 "                return []\n"
                 "            days = int(days)  # Ensure integer to prevent injection\n"
                 "            rows = conn.execute(\n"
-                "                f\"SELECT date(created_at) as period, COUNT(*) as {metric} FROM {self._table_name} \"\n"
+                '                f"SELECT date(created_at) as period, COUNT(*) as {metric} FROM {self._table_name} "\n'
                 "                f\"WHERE created_at >= datetime('now', '-' || ? || ' days') \"\n"
-                "                f\"GROUP BY period ORDER BY period\", (days,)\n"
+                '                f"GROUP BY period ORDER BY period", (days,)\n'
                 "            ).fetchall()\n"
                 "            conn.close()\n"
                 "            return [dict(r) for r in rows]\n"
@@ -407,4 +406,3 @@ class SmartChainTemplatesMixin:
             "        else:\n"
             "            return {'success': False, 'error': f'Unknown action: {action}'}\n"
         )
-

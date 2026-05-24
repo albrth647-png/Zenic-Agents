@@ -1,27 +1,27 @@
 """VerdictMixin core methods: init, verdict entry point, prompt building."""
 
-import time
-import logging
 import concurrent.futures
-from typing import Dict, Any
+import logging
+import time
+from typing import Any
 
 from ._constants import (
-    VERDICT_CONSENSUS_ATTEMPTS,
-    VERDICT_MAX_RETRIES,
-    VERDICT_BASE_DELAY,
-    VERDICT_MAX_DELAY,
-    VERDICT_TIMEOUT_S,
     _RESILIENCE_AVAILABLE,
+    VERDICT_BASE_DELAY,
+    VERDICT_CONSENSUS_ATTEMPTS,
+    VERDICT_MAX_DELAY,
+    VERDICT_MAX_RETRIES,
+    VERDICT_TIMEOUT_S,
 )
 
 if _RESILIENCE_AVAILABLE:
     from ._constants import (  # noqa: F401 — re-export for sibling modules
-        VerdictCircuitBreaker,
-        VerdictRetryConfig,
-        VerdictHealthMonitor,
-        VerdictAuditor,
         VerdictAuditEntry,
+        VerdictAuditor,
+        VerdictCircuitBreaker,
+        VerdictHealthMonitor,
         VerdictResilienceOrchestrator,
+        VerdictRetryConfig,
     )
 
 logger = logging.getLogger(__name__)
@@ -70,9 +70,14 @@ class VerdictCoreMixin:
             f"consensus_attempts={VERDICT_CONSENSUS_ATTEMPTS}"
         )
 
-    def verdict(self, question: str, context: str = "",
-                evidence_for: str = "", evidence_against: str = "",
-                consensus_hint: float = 0.0) -> Dict[str, Any]:
+    def verdict(
+        self,
+        question: str,
+        context: str = "",
+        evidence_for: str = "",
+        evidence_against: str = "",
+        consensus_hint: float = 0.0,
+    ) -> dict[str, Any]:
         """
         Ask the AI for a binary verdict: YES or NO.
 
@@ -103,9 +108,16 @@ class VerdictCoreMixin:
             self._verdict_fallback += 1
             self._verdict_no += 1
             self._audit_verdict(
-                question, "NO", "fallback_no_model", False, 0.0,
-                int((time.time() - start) * 1000), 0,
-                evidence_for, evidence_against, consensus_hint
+                question,
+                "NO",
+                "fallback_no_model",
+                False,
+                0.0,
+                int((time.time() - start) * 1000),
+                0,
+                evidence_for,
+                evidence_against,
+                consensus_hint,
             )
             return {
                 "verdict": "NO",
@@ -122,9 +134,17 @@ class VerdictCoreMixin:
             self._verdict_no += 1
             elapsed_ms = int((time.time() - start) * 1000)
             self._audit_verdict(
-                question, "NO", "fallback_circuit_open", False, 0.0,
-                elapsed_ms, 0, evidence_for, evidence_against, consensus_hint,
-                circuit_breaker_state="open"
+                question,
+                "NO",
+                "fallback_circuit_open",
+                False,
+                0.0,
+                elapsed_ms,
+                0,
+                evidence_for,
+                evidence_against,
+                consensus_hint,
+                circuit_breaker_state="open",
             )
             return {
                 "verdict": "NO",
@@ -136,9 +156,7 @@ class VerdictCoreMixin:
             }
 
         # Build user prompt with evidence
-        user_prompt = self._build_verdict_prompt(
-            question, context, evidence_for, evidence_against, consensus_hint
-        )
+        user_prompt = self._build_verdict_prompt(question, context, evidence_for, evidence_against, consensus_hint)
 
         # v17.1: Multi-attempt consensus
         if VERDICT_CONSENSUS_ATTEMPTS > 1:
@@ -152,9 +170,9 @@ class VerdictCoreMixin:
 
         return result
 
-    def _build_verdict_prompt(self, question: str, context: str,
-                               evidence_for: str, evidence_against: str,
-                               consensus_hint: float) -> str:
+    def _build_verdict_prompt(
+        self, question: str, context: str, evidence_for: str, evidence_against: str, consensus_hint: float
+    ) -> str:
         """Build the prompt for the verdict."""
         user_parts = [f"Question: {question}"]
         if evidence_for:
@@ -176,5 +194,5 @@ class VerdictCoreMixin:
         This method lazily recreates the executor, matching the pattern
         used by _call_llm() for self._executor.
         """
-        if getattr(self, '_verdict_executor', None) is None:
+        if getattr(self, "_verdict_executor", None) is None:
             self._verdict_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)

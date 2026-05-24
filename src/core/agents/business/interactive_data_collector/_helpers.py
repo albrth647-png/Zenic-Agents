@@ -5,17 +5,18 @@ calculation, field validation, and answer application.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from ._constants import FIELD_SUGGESTIONS, FIELD_VALIDATORS, MAX_ANSWER_LENGTH
 from ._types import CompletionSession
 
 
 def extract_questions_from_template(
-    template_dict: Dict[str, Any], session: CompletionSession,
-) -> List[Dict[str, Any]]:
+    template_dict: dict[str, Any],
+    session: CompletionSession,
+) -> list[dict[str, Any]]:
     """Extract questions for missing required fields from template."""
-    questions: List[Dict[str, Any]] = []
+    questions: list[dict[str, Any]] = []
     template = template_dict.get("template", template_dict)
     sections = template.get("sections", {})
 
@@ -33,19 +34,21 @@ def extract_questions_from_template(
             is_required = field_def.get("required", False)
             if not is_required and field_def.get("default") is not None:
                 continue
-            questions.append({
-                "field_name": field_name,
-                "display_name": field_def.get("display_name", field_name.replace("_", " ").title()),
-                "field_type": field_def.get("type", "text"),
-                "section_id": section_id,
-                "description": field_def.get("description", ""),
-                "is_required": is_required,
-                "order": field_def.get("order", len(questions)),
-                "suggestions": FIELD_SUGGESTIONS.get(field_name, field_def.get("suggestions", [])),
-                "enum_variants": field_def.get("enum", []),
-                "default_value": field_def.get("default"),
-                "validation_hint": field_def.get("validation_hint", ""),
-            })
+            questions.append(
+                {
+                    "field_name": field_name,
+                    "display_name": field_def.get("display_name", field_name.replace("_", " ").title()),
+                    "field_type": field_def.get("type", "text"),
+                    "section_id": section_id,
+                    "description": field_def.get("description", ""),
+                    "is_required": is_required,
+                    "order": field_def.get("order", len(questions)),
+                    "suggestions": FIELD_SUGGESTIONS.get(field_name, field_def.get("suggestions", [])),
+                    "enum_variants": field_def.get("enum", []),
+                    "default_value": field_def.get("default"),
+                    "validation_hint": field_def.get("validation_hint", ""),
+                }
+            )
 
     # Sort: required first, then by order
     questions.sort(key=lambda q: (not q["is_required"], q["order"]))
@@ -53,8 +56,9 @@ def extract_questions_from_template(
 
 
 def calculate_progress(
-    template_dict: Dict[str, Any], session: CompletionSession,
-) -> Dict[str, Any]:
+    template_dict: dict[str, Any],
+    session: CompletionSession,
+) -> dict[str, Any]:
     """Calculate completion progress from template and session answers."""
     template = template_dict.get("template", template_dict)
     sections = template.get("sections", {})
@@ -87,7 +91,9 @@ def calculate_progress(
 
 
 def validate_field_value(
-    field_type: str, value: str, enum_variants: List[str],
+    field_type: str,
+    value: str,
+    enum_variants: list[str],
 ) -> bool:
     """Validate a field value by type (deterministic)."""
     if not value or len(value) > MAX_ANSWER_LENGTH:
@@ -110,7 +116,9 @@ def validate_field_value(
 
 
 def apply_answer_to_template(
-    template_dict: Dict[str, Any], field_name: str, value: str,
+    template_dict: dict[str, Any],
+    field_name: str,
+    value: str,
 ) -> None:
     """Apply an answer to the template dict in-place."""
     template = template_dict.get("template", template_dict)
@@ -126,4 +134,6 @@ def apply_answer_to_template(
             else:
                 fields[field_name] = value
             break
+
+
 __all__ = ["apply_answer_to_template", "calculate_progress", "extract_questions_from_template", "validate_field_value"]

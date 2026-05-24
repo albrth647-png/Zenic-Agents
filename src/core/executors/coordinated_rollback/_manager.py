@@ -16,28 +16,28 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.shared.db_initializer import get_data_dir
-from src.core.executors.coordinated_rollback._types import (
-    ResourceType,
-    ActionStatus,
-    ResourceRecord,
-    CoordinatedAction,
-    CoordinatedRollbackResult,
-)
 from src.core.executors.coordinated_rollback._compensation import (
     execute_compensation,
 )
 from src.core.executors.coordinated_rollback._persistence import (
-    init_db,
-    persist_action,
     add_record,
-    mark_record_compensated,
-    update_action_status,
-    load_action,
+    init_db,
     list_active_action_ids,
+    load_action,
+    mark_record_compensated,
+    persist_action,
+    update_action_status,
 )
+from src.core.executors.coordinated_rollback._types import (
+    ActionStatus,
+    CoordinatedAction,
+    CoordinatedRollbackResult,
+    ResourceRecord,
+    ResourceType,
+)
+from src.core.shared.db_initializer import get_data_dir
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,8 @@ class CoordinatedRollbackManager:
 
         logger.info(
             "CoordinatedRollbackManager: began action %s [tenant=%s]",
-            action_id[:12], tenant_id,
+            action_id[:12],
+            tenant_id,
         )
         return action
 
@@ -104,13 +105,14 @@ class CoordinatedRollbackManager:
             add_record(self._db_path, action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded DB action journal=%s for action=%s",
-            journal_id[:12], action_id[:12],
+            journal_id[:12],
+            action_id[:12],
         )
 
     def record_email_action(
         self,
         action_id: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ) -> None:
         """Record that an email was sent.
 
@@ -158,14 +160,16 @@ class CoordinatedRollbackManager:
             add_record(self._db_path, action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded file action op=%s source=%s for action=%s",
-            operation, source, action_id[:12],
+            operation,
+            source,
+            action_id[:12],
         )
 
     def record_webhook_action(
         self,
         action_id: str,
         url: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> None:
         """Record a webhook call.
 
@@ -187,7 +191,8 @@ class CoordinatedRollbackManager:
             add_record(self._db_path, action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded webhook action url=%s for action=%s",
-            url[:50], action_id[:12],
+            url[:50],
+            action_id[:12],
         )
 
     def commit_action(self, action_id: str) -> None:
@@ -246,7 +251,8 @@ class CoordinatedRollbackManager:
 
             logger.info(
                 "CoordinatedRollbackManager: rolling back action %s reason=%s",
-                action_id[:12], reason,
+                action_id[:12],
+                reason,
             )
 
             result = CoordinatedRollbackResult(action_id=action_id)
@@ -264,12 +270,12 @@ class CoordinatedRollbackManager:
                     result.compensations_succeeded += 1
                 except Exception as exc:
                     error_msg = (
-                        f"Compensation failed for {record.resource_type.value}"
-                        f" ({record.resource_id}): {exc}"
+                        f"Compensation failed for {record.resource_type.value}" f" ({record.resource_id}): {exc}"
                     )
                     result.errors.append(error_msg)
                     logger.error(
-                        "CoordinatedRollbackManager: %s", error_msg,
+                        "CoordinatedRollbackManager: %s",
+                        error_msg,
                     )
                     # Continue with the rest (best-effort)
 
@@ -278,8 +284,7 @@ class CoordinatedRollbackManager:
 
             result.success = len(result.errors) == 0
             logger.info(
-                "CoordinatedRollbackManager: rollback complete action=%s "
-                "attempted=%d succeeded=%d errors=%d",
+                "CoordinatedRollbackManager: rollback complete action=%s " "attempted=%d succeeded=%d errors=%d",
                 action_id[:12],
                 result.compensations_attempted,
                 result.compensations_succeeded,
@@ -287,7 +292,7 @@ class CoordinatedRollbackManager:
             )
             return result
 
-    def get_action(self, action_id: str) -> Optional[CoordinatedAction]:
+    def get_action(self, action_id: str) -> CoordinatedAction | None:
         """Retrieve a coordinated action by its ID.
 
         Args:
@@ -298,7 +303,7 @@ class CoordinatedRollbackManager:
         """
         return load_action(self._db_path, action_id)
 
-    def list_active_actions(self, tenant_id: str) -> List[CoordinatedAction]:
+    def list_active_actions(self, tenant_id: str) -> list[CoordinatedAction]:
         """List all in-progress actions for a tenant.
 
         Args:
@@ -308,7 +313,7 @@ class CoordinatedRollbackManager:
             A list of ``CoordinatedAction`` objects.
         """
         action_ids = list_active_action_ids(self._db_path, tenant_id)
-        actions: List[CoordinatedAction] = []
+        actions: list[CoordinatedAction] = []
         for aid in action_ids:
             action = load_action(self._db_path, aid)
             if action is not None:
@@ -320,7 +325,7 @@ class CoordinatedRollbackManager:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[CoordinatedRollbackManager] = None
+_instance: CoordinatedRollbackManager | None = None
 _instance_lock = threading.Lock()
 
 

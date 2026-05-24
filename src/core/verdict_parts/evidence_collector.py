@@ -16,49 +16,70 @@ Tipos de evidencia que puede recolectar:
   - Sandbox trial (pasó sandbox?)
 """
 
-import re
 import ast
 import logging
-from typing import List
+import re
 
 from .types import Evidence, EvidenceType, Verdict
-
 
 logger = logging.getLogger(__name__)
 
 
 # === Seguridad: Patrones peligrosos que NUNCA deben aprobarse ===
 DANGEROUS_PATTERNS = [
-    (r'\bexec\s*\(', "exec() call - arbitrary code execution"),
-    (r'\beval\s*\(', "eval() call - arbitrary code execution"),
-    (r'\b__import__\s*\(', "__import__() call - dynamic import"),
-    (r'\bos\.system\s*\(', "os.system() - shell command execution"),
-    (r'\bsubprocess\.call\s*\(', "subprocess.call() - process execution"),
-    (r'\bsubprocess\.Popen\s*\(', "subprocess.Popen() - process execution"),
+    (r"\bexec\s*\(", "exec() call - arbitrary code execution"),
+    (r"\beval\s*\(", "eval() call - arbitrary code execution"),
+    (r"\b__import__\s*\(", "__import__() call - dynamic import"),
+    (r"\bos\.system\s*\(", "os.system() - shell command execution"),
+    (r"\bsubprocess\.call\s*\(", "subprocess.call() - process execution"),
+    (r"\bsubprocess\.Popen\s*\(", "subprocess.Popen() - process execution"),
     (r'\bopen\s*\(["\'](/etc|/proc|/sys)', "sensitive file access"),
-    (r'\brm\s+-rf', "dangerous rm -rf command"),
-    (r'\bshutil\.rmtree', "directory tree deletion"),
-    (r'\bpickle\.loads?\s*\(', "pickle deserialization - RCE risk"),
-    (r'\byaml\.load\s*\((?!.*Loader\s*=)', "yaml.load without SafeLoader"),
-    (r'\bsocket\s*\(', "raw socket creation"),
-    (r'\bctypes\b', "ctypes - FFI access"),
+    (r"\brm\s+-rf", "dangerous rm -rf command"),
+    (r"\bshutil\.rmtree", "directory tree deletion"),
+    (r"\bpickle\.loads?\s*\(", "pickle deserialization - RCE risk"),
+    (r"\byaml\.load\s*\((?!.*Loader\s*=)", "yaml.load without SafeLoader"),
+    (r"\bsocket\s*\(", "raw socket creation"),
+    (r"\bctypes\b", "ctypes - FFI access"),
 ]
 
 # === Patrones seguros que siempre aprueban ===
 SAFE_PATTERNS = [
-    (r'\bdef\s+\w+\s*\(', "function definition"),
-    (r'\bclass\s+\w+', "class definition"),
-    (r'\breturn\s+', "return statement"),
-    (r'\bimport\s+\w+', "standard import"),
-    (r'\bfrom\s+\w+\s+import', "from import"),
-    (r'@\w+', "decorator"),
+    (r"\bdef\s+\w+\s*\(", "function definition"),
+    (r"\bclass\s+\w+", "class definition"),
+    (r"\breturn\s+", "return statement"),
+    (r"\bimport\s+\w+", "standard import"),
+    (r"\bfrom\s+\w+\s+import", "from import"),
+    (r"@\w+", "decorator"),
     (r'\bif\s+__name__\s*==\s*["\']__main__["\']', "main guard"),
 ]
 
 # === Keywords para clasificación de intención ===
 OP_KEYWORDS = {
-    "CREATE": ["create", "new", "add", "implement", "crear", "nuevo", "agregar", "generar", "build", "make", "escribir", "write"],
-    "REFACTOR": ["refactor", "restructure", "reorganize", "refactorizar", "reestructurar", "clean", "simplify", "mejorar", "limpiar"],
+    "CREATE": [
+        "create",
+        "new",
+        "add",
+        "implement",
+        "crear",
+        "nuevo",
+        "agregar",
+        "generar",
+        "build",
+        "make",
+        "escribir",
+        "write",
+    ],
+    "REFACTOR": [
+        "refactor",
+        "restructure",
+        "reorganize",
+        "refactorizar",
+        "reestructurar",
+        "clean",
+        "simplify",
+        "mejorar",
+        "limpiar",
+    ],
     "DELETE": ["delete", "remove", "eliminate", "eliminar", "borrar", "quitar", "drop", "remover"],
     "SEARCH": ["search", "find", "where", "locate", "buscar", "encontrar", "donde", "localizar"],
     "ANALYZE": ["analyze", "review", "check", "analizar", "revisar", "verificar", "examine", "inspeccionar"],
@@ -87,7 +108,7 @@ class EvidenceCollector:
     el ConsensusResolver evalúa.
     """
 
-    def collect_intent_evidence(self, text: str) -> List[Evidence]:
+    def collect_intent_evidence(self, text: str) -> list[Evidence]:
         """
         Recolecta evidencia sobre la intención del texto.
 
@@ -112,18 +133,20 @@ class EvidenceCollector:
             if score > 0:
                 # Normalizar score a peso de evidencia
                 weight = min(score / 8.0, 1.0)
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.KEYWORD_CLASSIFY,
-                    favors=Verdict.YES,
-                    weight=weight,
-                    source=f"keyword_{op}",
-                    detail=f"Keywords matched: {', '.join(matched_keywords[:5])}",
-                    metadata={"operation": op, "score": score, "keywords": matched_keywords},
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.KEYWORD_CLASSIFY,
+                        favors=Verdict.YES,
+                        weight=weight,
+                        source=f"keyword_{op}",
+                        detail=f"Keywords matched: {', '.join(matched_keywords[:5])}",
+                        metadata={"operation": op, "score": score, "keywords": matched_keywords},
+                    )
+                )
 
         return evidence
 
-    def collect_goal_evidence(self, text: str) -> List[Evidence]:
+    def collect_goal_evidence(self, text: str) -> list[Evidence]:
         """Recolecta evidencia sobre el goal del texto."""
         evidence = []
         text_lower = text.lower()
@@ -132,18 +155,20 @@ class EvidenceCollector:
             score = sum(1 for kw in keywords if kw in text_lower)
             if score > 0:
                 weight = min(score / 4.0, 1.0)
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.KEYWORD_CLASSIFY,
-                    favors=Verdict.YES,
-                    weight=weight,
-                    source=f"goal_{goal}",
-                    detail=f"Goal keywords: {score} matched",
-                    metadata={"goal": goal, "score": score},
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.KEYWORD_CLASSIFY,
+                        favors=Verdict.YES,
+                        weight=weight,
+                        source=f"goal_{goal}",
+                        detail=f"Goal keywords: {score} matched",
+                        metadata={"goal": goal, "score": score},
+                    )
+                )
 
         return evidence
 
-    def collect_code_safety_evidence(self, code: str) -> List[Evidence]:
+    def collect_code_safety_evidence(self, code: str) -> list[Evidence]:
         """
         Recolecta evidencia sobre la seguridad del código.
 
@@ -158,23 +183,27 @@ class EvidenceCollector:
         for pattern, description in DANGEROUS_PATTERNS:
             if re.search(pattern, code):
                 danger_found.append(description)
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.SECURITY_CHECK,
-                    favors=Verdict.NO,
-                    weight=0.9,  # Muy fuerte: código peligroso
-                    source="security_scanner",
-                    detail=f"Pattern: {description}",
-                    metadata={"pattern": pattern, "danger_level": "high"},
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.SECURITY_CHECK,
+                        favors=Verdict.NO,
+                        weight=0.9,  # Muy fuerte: código peligroso
+                        source="security_scanner",
+                        detail=f"Pattern: {description}",
+                        metadata={"pattern": pattern, "danger_level": "high"},
+                    )
+                )
 
         if not danger_found:
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.SECURITY_CHECK,
-                favors=Verdict.YES,
-                weight=0.6,
-                source="security_scanner",
-                detail="No dangerous patterns detected",
-            ))
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.SECURITY_CHECK,
+                    favors=Verdict.YES,
+                    weight=0.6,
+                    source="security_scanner",
+                    detail="No dangerous patterns detected",
+                )
+            )
 
         # Check safe patterns
         safe_count = 0
@@ -183,17 +212,19 @@ class EvidenceCollector:
                 safe_count += 1
 
         if safe_count > 0:
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.PATTERN_MATCH,
-                favors=Verdict.YES,
-                weight=0.3,
-                source="safe_pattern_scanner",
-                detail=f"{safe_count} safe patterns detected",
-            ))
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.PATTERN_MATCH,
+                    favors=Verdict.YES,
+                    weight=0.3,
+                    source="safe_pattern_scanner",
+                    detail=f"{safe_count} safe patterns detected",
+                )
+            )
 
         return evidence
 
-    def collect_syntax_evidence(self, code: str, language: str = "python") -> List[Evidence]:
+    def collect_syntax_evidence(self, code: str, language: str = "python") -> list[Evidence]:
         """
         Recolecta evidencia sobre la validez sintáctica del código.
 
@@ -204,47 +235,55 @@ class EvidenceCollector:
         if language == "python":
             try:
                 ast.parse(code)
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.SYNTAX_VALID,
-                    favors=Verdict.YES,
-                    weight=0.8,
-                    source="ast_parser",
-                    detail="Python code parses successfully",
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.SYNTAX_VALID,
+                        favors=Verdict.YES,
+                        weight=0.8,
+                        source="ast_parser",
+                        detail="Python code parses successfully",
+                    )
+                )
             except SyntaxError as e:
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.SYNTAX_VALID,
-                    favors=Verdict.NO,
-                    weight=0.9,
-                    source="ast_parser",
-                    detail=f"Syntax error: {e.msg} at line {e.lineno}",
-                    metadata={"line": e.lineno, "msg": e.msg},
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.SYNTAX_VALID,
+                        favors=Verdict.NO,
+                        weight=0.9,
+                        source="ast_parser",
+                        detail=f"Syntax error: {e.msg} at line {e.lineno}",
+                        metadata={"line": e.lineno, "msg": e.msg},
+                    )
+                )
 
         elif language in ("javascript", "typescript"):
             # Basic JS/TS validation: balanced braces, no obvious syntax errors
-            open_braces = code.count('{') + code.count('(') + code.count('[')
-            close_braces = code.count('}') + code.count(')') + code.count(']')
+            open_braces = code.count("{") + code.count("(") + code.count("[")
+            close_braces = code.count("}") + code.count(")") + code.count("]")
             if open_braces == close_braces:
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.SYNTAX_VALID,
-                    favors=Verdict.YES,
-                    weight=0.5,
-                    source="brace_counter",
-                    detail="Braces are balanced",
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.SYNTAX_VALID,
+                        favors=Verdict.YES,
+                        weight=0.5,
+                        source="brace_counter",
+                        detail="Braces are balanced",
+                    )
+                )
             else:
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.SYNTAX_VALID,
-                    favors=Verdict.NO,
-                    weight=0.7,
-                    source="brace_counter",
-                    detail=f"Unbalanced braces: {open_braces} open vs {close_braces} close",
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.SYNTAX_VALID,
+                        favors=Verdict.NO,
+                        weight=0.7,
+                        source="brace_counter",
+                        detail=f"Unbalanced braces: {open_braces} open vs {close_braces} close",
+                    )
+                )
 
         return evidence
 
-    def collect_entity_evidence(self, text: str) -> List[Evidence]:
+    def collect_entity_evidence(self, text: str) -> list[Evidence]:
         """
         Recolecta evidencia sobre entidades extraídas del texto.
 
@@ -253,38 +292,44 @@ class EvidenceCollector:
         evidence = []
 
         # File detection
-        file_match = re.search(r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))', text)
+        file_match = re.search(r"([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))", text)
         if file_match:
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.REGEX_MATCH,
-                favors=Verdict.YES,
-                weight=0.7,
-                source="file_extractor",
-                detail=f"File detected: {file_match.group(1)}",
-                metadata={"file": file_match.group(1)},
-            ))
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.REGEX_MATCH,
+                    favors=Verdict.YES,
+                    weight=0.7,
+                    source="file_extractor",
+                    detail=f"File detected: {file_match.group(1)}",
+                    metadata={"file": file_match.group(1)},
+                )
+            )
 
         # Function detection
-        func_match = re.search(r'(?:function|func|def|fun)\s+(\w+)', text)
+        func_match = re.search(r"(?:function|func|def|fun)\s+(\w+)", text)
         if func_match:
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.REGEX_MATCH,
-                favors=Verdict.YES,
-                weight=0.6,
-                source="function_extractor",
-                detail=f"Function detected: {func_match.group(1)}",
-                metadata={"function": func_match.group(1)},
-            ))
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.REGEX_MATCH,
+                    favors=Verdict.YES,
+                    weight=0.6,
+                    source="function_extractor",
+                    detail=f"Function detected: {func_match.group(1)}",
+                    metadata={"function": func_match.group(1)},
+                )
+            )
 
         # Code block detection
-        if '```' in text or 'def ' in text or 'class ' in text or 'function ' in text:
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.REGEX_MATCH,
-                favors=Verdict.YES,
-                weight=0.5,
-                source="code_block_detector",
-                detail="Code block detected in input",
-            ))
+        if "```" in text or "def " in text or "class " in text or "function " in text:
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.REGEX_MATCH,
+                    favors=Verdict.YES,
+                    weight=0.5,
+                    source="code_block_detector",
+                    detail="Code block detected in input",
+                )
+            )
 
         return evidence
 
@@ -293,7 +338,7 @@ class EvidenceCollector:
         text: str,
         memory_chip=None,
         tenant_id: str = "__anonymous__",
-    ) -> List[Evidence]:
+    ) -> list[Evidence]:
         """
         PASO 2 (Capa 2): Recolecta evidencia del Chip de Memoria Adaptativa.
 
@@ -303,7 +348,7 @@ class EvidenceCollector:
 
         No usa IA. Solo consulta la base de datos determinística.
         """
-        evidence: List[Evidence] = []
+        evidence: list[Evidence] = []
 
         if memory_chip is None:
             return evidence
@@ -312,54 +357,59 @@ class EvidenceCollector:
             lookup_result = memory_chip.lookup(text, tenant_id)
             if lookup_result.get("cache_hit"):
                 mapping = lookup_result.get("mapping", {})
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.CACHE_HIT,
-                    favors=Verdict.YES,
-                    weight=0.9,
-                    source="memory_chip_cache",
-                    detail=f"Memory chip cache hit: '{text}' → '{mapping.get('destination', '?')}'",
-                    metadata={
-                        "mapping_id": mapping.get("mapping_id", ""),
-                        "origin": mapping.get("origin", ""),
-                        "destination": mapping.get("destination", ""),
-                        "mechanism": mapping.get("mechanism", ""),
-                        "source": "cache",
-                    },
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.CACHE_HIT,
+                        favors=Verdict.YES,
+                        weight=0.9,
+                        source="memory_chip_cache",
+                        detail=f"Memory chip cache hit: '{text}' → '{mapping.get('destination', '?')}'",
+                        metadata={
+                            "mapping_id": mapping.get("mapping_id", ""),
+                            "origin": mapping.get("origin", ""),
+                            "destination": mapping.get("destination", ""),
+                            "mechanism": mapping.get("mechanism", ""),
+                            "source": "cache",
+                        },
+                    )
+                )
             else:
                 # Cache miss — weak evidence against (we haven't seen this before)
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.CACHE_HIT,
-                    favors=Verdict.NO,
-                    weight=0.1,
-                    source="memory_chip_cache",
-                    detail=f"Memory chip cache miss for '{text}'",
-                    metadata={"source": "miss"},
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.CACHE_HIT,
+                        favors=Verdict.NO,
+                        weight=0.1,
+                        source="memory_chip_cache",
+                        detail=f"Memory chip cache miss for '{text}'",
+                        metadata={"source": "miss"},
+                    )
+                )
         except Exception as exc:
             # Memory chip errors should never block the pipeline
-            evidence.append(Evidence(
-                evidence_type=EvidenceType.CACHE_HIT,
-                favors=Verdict.NO,
-                weight=0.0,
-                source="memory_chip_error",
-                detail=f"Memory chip lookup error: {exc}",
-                metadata={"error": str(exc)},
-            ))
+            evidence.append(
+                Evidence(
+                    evidence_type=EvidenceType.CACHE_HIT,
+                    favors=Verdict.NO,
+                    weight=0.0,
+                    source="memory_chip_error",
+                    detail=f"Memory chip lookup error: {exc}",
+                    metadata={"error": str(exc)},
+                )
+            )
 
         return evidence
 
-    def collect_all_evidence(self, text: str, code: str = "",
-                             language: str = "python",
-                             memory_chip=None,
-                             tenant_id: str = "__anonymous__") -> List[Evidence]:
+    def collect_all_evidence(
+        self, text: str, code: str = "", language: str = "python", memory_chip=None, tenant_id: str = "__anonymous__"
+    ) -> list[Evidence]:
         """
         Recolecta TODA la evidencia disponible para una decisión.
 
         Este es el método principal que se llama antes del consenso.
         No usa IA en absoluto.
         """
-        all_evidence: List[Evidence] = []
+        all_evidence: list[Evidence] = []
 
         # Intent evidence
         all_evidence.extend(self.collect_intent_evidence(text))

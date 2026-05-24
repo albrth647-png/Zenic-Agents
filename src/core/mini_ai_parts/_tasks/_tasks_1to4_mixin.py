@@ -16,13 +16,17 @@ CAMBIO FUNDAMENTAL (v17.1):
   disponible, o usan métodos fallback propios cuando no.
 """
 
-import re
-import os
 import logging
+import os
+import re
 from typing import Any
+
+from src.core.shared.constants import EXT_LANG_MAP, VALID_INTENT_GOALS, VALID_INTENT_OPERATIONS
+
 from .._imports import IntentResult
-from src.core.shared.constants import VALID_INTENT_OPERATIONS, VALID_INTENT_GOALS, EXT_LANG_MAP
+
 logger = logging.getLogger("core.mini_ai_parts._tasks._tasks_1to4_mixin")
+
 
 class BoundedTasks1To4Mixin:
     """
@@ -49,8 +53,31 @@ class BoundedTasks1To4Mixin:
 
     # Keyword maps with weighted scoring
     OP_KEYWORDS = {
-        "CREATE": ["create", "new", "add", "implement", "crear", "nuevo", "agregar", "generar", "build", "make", "escribir", "write"],
-        "REFACTOR": ["refactor", "restructure", "reorganize", "refactorizar", "reestructurar", "clean", "simplify", "mejorar", "limpiar"],
+        "CREATE": [
+            "create",
+            "new",
+            "add",
+            "implement",
+            "crear",
+            "nuevo",
+            "agregar",
+            "generar",
+            "build",
+            "make",
+            "escribir",
+            "write",
+        ],
+        "REFACTOR": [
+            "refactor",
+            "restructure",
+            "reorganize",
+            "refactorizar",
+            "reestructurar",
+            "clean",
+            "simplify",
+            "mejorar",
+            "limpiar",
+        ],
         "DELETE": ["delete", "remove", "eliminate", "eliminar", "borrar", "quitar", "drop", "remover"],
         "SEARCH": ["search", "find", "where", "locate", "buscar", "encontrar", "donde", "localizar"],
         "ANALYZE": ["analyze", "review", "check", "analizar", "revisar", "verificar", "examine", "inspeccionar"],
@@ -126,7 +153,7 @@ class BoundedTasks1To4Mixin:
         Mejora: 0ms de latencia, 0% de JSON parse errors.
         """
         # File extraction
-        file_match = re.search(r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h|swift|scala))', text)
+        file_match = re.search(r"([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h|swift|scala))", text)
         file_name = file_match.group(1) if file_match else ""
 
         # Language from extension
@@ -148,11 +175,11 @@ class BoundedTasks1To4Mixin:
                 lang = "go"
             elif "rust" in text_lower or "fn " in text or "let mut" in text:
                 lang = "rust"
-            elif "ruby" in text_lower or "def " in text and "end" in text:
+            elif "ruby" in text_lower or ("def " in text and "end" in text):
                 lang = "ruby"
 
         # Function name extraction
-        func_match = re.search(r'(?:function|func|def|fun)\s+(\w+)', text)
+        func_match = re.search(r"(?:function|func|def|fun)\s+(\w+)", text)
         function = func_match.group(1) if func_match else None
 
         confidence = 0.9 if file_name else (0.6 if lang != "unknown" else 0.2)
@@ -217,7 +244,7 @@ class BoundedTasks1To4Mixin:
         100% determinístico. NUNCA llama al LLM.
         Mejora: Siempre rellena todos los huecos, 0% de JSON parse errors.
         """
-        gaps = re.findall(r'__GAP_(\w+)__', template)
+        gaps = re.findall(r"__GAP_(\w+)__", template)
         if not gaps:
             return template
 
@@ -255,7 +282,5 @@ class BoundedTasks1To4Mixin:
             result = result.replace(f"__GAP_{gap}__", str(value))
             filled_count += 1
 
-        logger.debug(
-            f"BoundedTasks.fill_template_gaps: filled {filled_count} gaps (deterministic)"
-        )
+        logger.debug(f"BoundedTasks.fill_template_gaps: filled {filled_count} gaps (deterministic)")
         return result

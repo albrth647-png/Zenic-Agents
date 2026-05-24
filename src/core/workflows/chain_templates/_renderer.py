@@ -20,7 +20,6 @@ from ._types import (
     logger,
 )
 
-
 # ---------------------------------------------------------------------------
 #  Built-in template definitions
 # ---------------------------------------------------------------------------
@@ -375,7 +374,7 @@ def instantiate_template(
     template_id: str,
     template: ChainTemplate,
     variables: dict[str, Any],
-) -> "ComposedChain":  # noqa: F821  # TODO: Phase3 - verify import
+) -> ComposedChain:  # noqa: F821  # TODO: Phase3 - verify import
     """Create a concrete ComposedChain from a template with variable substitution.
 
     Args:
@@ -391,9 +390,9 @@ def instantiate_template(
     """
     # Import here to avoid circular imports at module level
     from ..chain_composer import (
+        ChainStatus,
         ChainStep,
         ChainStepType,
-        ChainStatus,
         ComposedChain,
     )
 
@@ -405,9 +404,7 @@ def instantiate_template(
         elif var.default_value is not None:
             resolved_vars[var.name] = var.default_value
         elif var.required:
-            raise ValueError(
-                f"Required variable '{var.name}' not provided for template '{template_id}'"
-            )
+            raise ValueError(f"Required variable '{var.name}' not provided for template '{template_id}'")
         # optional and no default — skip
 
     # Apply variable substitution to step configs
@@ -456,6 +453,8 @@ def instantiate_template(
 
     logger.info(
         "Instantiated chain %s from template %s with %d steps",
-        chain_id, template_id, len(chain_steps),
+        chain_id,
+        template_id,
+        len(chain_steps),
     )
     return composed

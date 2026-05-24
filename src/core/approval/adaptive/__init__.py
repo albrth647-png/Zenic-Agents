@@ -7,21 +7,20 @@ automatically approves future occurrences after a configurable threshold
 of consecutive approvals.
 """
 
-from ._types import (
-    AdaptiveApprovalRecord,
-    _FINANCIAL_KEYWORDS,
-    _MAX_RETRIES,
-    _RETRY_DELAY,
-    _hash_config,
-)
-from ._mixin_core import AdaptiveApprovalEngine
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_adaptive_instance: Optional[AdaptiveApprovalEngine] = None
+from ._mixin_core import AdaptiveApprovalEngine
+from ._types import (
+    _FINANCIAL_KEYWORDS,
+    _MAX_RETRIES,
+    _RETRY_DELAY,
+    AdaptiveApprovalRecord,
+    _hash_config,
+)
+
+_adaptive_instance: AdaptiveApprovalEngine | None = None
 _adaptive_lock = threading.Lock()
 
 
@@ -46,4 +45,13 @@ def reset_adaptive_approval() -> None:
     _adaptive_instance = None
 
 
-__all__ = ["AdaptiveApprovalRecord", "AdaptiveApprovalEngine", "get_adaptive_approval", "reset_adaptive_approval", "_FINANCIAL_KEYWORDS", "_MAX_RETRIES", "_RETRY_DELAY", "_hash_config"]
+__all__ = [
+    "_FINANCIAL_KEYWORDS",
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "AdaptiveApprovalEngine",
+    "AdaptiveApprovalRecord",
+    "_hash_config",
+    "get_adaptive_approval",
+    "reset_adaptive_approval",
+]

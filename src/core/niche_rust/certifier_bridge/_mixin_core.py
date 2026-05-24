@@ -8,11 +8,11 @@ the Rust _zenic_native extension for certification operations.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
+from ._types import NATIVE_AVAILABLE, CertificationResultPy, _native
 from .bridge import NicheBridge
 from .ingest_bridge import DocumentIngestor
-from ._types import CertificationResultPy, NATIVE_AVAILABLE, _native
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  BlueprintCertifier — Main certifier class
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintCertifier:
     """Blueprint certification engine for Zenic-Agents.
@@ -54,7 +55,7 @@ class BlueprintCertifier:
 
     def certify_template(
         self,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
         private_key: str,
     ) -> CertificationResultPy:
         """Full certification pipeline: template → config → sign → certify.
@@ -82,9 +83,7 @@ class BlueprintCertifier:
             return result
 
         if not NATIVE_AVAILABLE:
-            result.errors.append(
-                "Rust extension not available. Run 'maturin develop' first."
-            )
+            result.errors.append("Rust extension not available. Run 'maturin develop' first.")
             return result
 
         # Step 1: Extract BlueprintConfig from template
@@ -122,9 +121,7 @@ class BlueprintCertifier:
 
         return result
 
-    def extract_config(
-        self, template_dict: Dict[str, Any]
-    ) -> Optional[Any]:
+    def extract_config(self, template_dict: dict[str, Any]) -> Any | None:
         """Extract a BlueprintConfig from a completed template dict."""
         if not template_dict:
             logger.error("BlueprintCertifier.extract_config: template_dict is required")
@@ -140,9 +137,7 @@ class BlueprintCertifier:
             logger.error("BlueprintCertifier.extract_config: %s", e)
             return None
 
-    def sign_config(
-        self, config: Any, private_key: str
-    ) -> Optional[Any]:
+    def sign_config(self, config: Any, private_key: str) -> Any | None:
         """Sign a BlueprintConfig and produce a CertifiedBlueprint."""
         if config is None:
             logger.error("BlueprintCertifier.sign_config: config is required")
@@ -162,9 +157,7 @@ class BlueprintCertifier:
             logger.error("BlueprintCertifier.sign_config: %s", e)
             return None
 
-    def verify_blueprint(
-        self, blueprint: Any, public_key: str
-    ) -> bool:
+    def verify_blueprint(self, blueprint: Any, public_key: str) -> bool:
         """Verify a CertifiedBlueprint's ECDSA signature."""
         if blueprint is None or not public_key:
             return False
@@ -179,7 +172,7 @@ class BlueprintCertifier:
             logger.error("BlueprintCertifier.verify_blueprint: %s", e)
             return False
 
-    def compute_hash(self, config: Any) -> Optional[str]:
+    def compute_hash(self, config: Any) -> str | None:
         """Compute the canonical hash of a BlueprintConfig."""
         if config is None:
             return None
@@ -194,7 +187,7 @@ class BlueprintCertifier:
             logger.error("BlueprintCertifier.compute_hash: %s", e)
             return None
 
-    def validate_config(self, config: Any) -> Dict[str, Any]:
+    def validate_config(self, config: Any) -> dict[str, Any]:
         """Validate a BlueprintConfig for completeness."""
         if config is None:
             return {
@@ -233,7 +226,7 @@ class BlueprintCertifier:
                 "actions": 0,
             }
 
-    def export_blueprint_dict(self, blueprint: Any) -> Optional[Dict[str, Any]]:
+    def export_blueprint_dict(self, blueprint: Any) -> dict[str, Any] | None:
         """Export a CertifiedBlueprint as a Phase 5 compatible dict."""
         if blueprint is None:
             return None
@@ -248,7 +241,7 @@ class BlueprintCertifier:
             logger.error("BlueprintCertifier.export_blueprint_dict: %s", e)
             return None
 
-    def export_yaml(self, blueprint: Any) -> Optional[str]:
+    def export_yaml(self, blueprint: Any) -> str | None:
         """Export a CertifiedBlueprint as a YAML string."""
         if blueprint is None:
             return None
@@ -268,6 +261,7 @@ class BlueprintCertifier:
 #  CertificationHelper — Convenience workflow methods
 # ──────────────────────────────────────────────────────────────
 
+
 class CertificationHelper:
     """Convenience helper for common certification workflows.
 
@@ -282,8 +276,8 @@ class CertificationHelper:
     def certify_from_documents(
         self,
         niche_id: str,
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
         private_key: str = "",
     ) -> CertificationResultPy:
         """Full workflow: niche selection → document ingestion → certification."""
@@ -311,9 +305,7 @@ class CertificationHelper:
 
         # Log ingestion results
         if ingestion.matched_fields:
-            result.warnings.append(
-                f"Auto-filled {len(ingestion.matched_fields)} fields from documents"
-            )
+            result.warnings.append(f"Auto-filled {len(ingestion.matched_fields)} fields from documents")
 
         # Step 3: Check if template is complete enough for certification
         bridge = NicheBridge()
@@ -326,9 +318,7 @@ class CertificationHelper:
             )
 
         # Step 4: Certify the template
-        cert_result = self._certifier.certify_template(
-            ingestion.template_dict, private_key
-        )
+        cert_result = self._certifier.certify_template(ingestion.template_dict, private_key)
 
         # Merge results
         result.success = cert_result.success

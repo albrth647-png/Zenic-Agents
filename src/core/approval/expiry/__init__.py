@@ -5,21 +5,20 @@ Manages expiration of approval requests with configurable TTL and
 automatic revert when approvals expire.
 """
 
-from ._types import ExpiryConfig, ExpiryRecord, _MAX_RETRIES, _RETRY_DELAY
-from ._mixin_core import ExpiryManager
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_expiry_instance: Optional[ExpiryManager] = None
+from ._mixin_core import ExpiryManager
+from ._types import _MAX_RETRIES, _RETRY_DELAY, ExpiryConfig, ExpiryRecord
+
+_expiry_instance: ExpiryManager | None = None
 _expiry_lock = threading.Lock()
 
 
 def get_expiry_manager(
     db_path: str = "expiry.sqlite",
-    config: Optional[ExpiryConfig] = None,
+    config: ExpiryConfig | None = None,
 ) -> ExpiryManager:
     """Get or create the global ExpiryManager instance."""
     global _expiry_instance
@@ -35,4 +34,12 @@ def reset_expiry_manager() -> None:
     _expiry_instance = None
 
 
-__all__ = ["ExpiryConfig", "ExpiryRecord", "ExpiryManager", "get_expiry_manager", "reset_expiry_manager", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = [
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "ExpiryConfig",
+    "ExpiryManager",
+    "ExpiryRecord",
+    "get_expiry_manager",
+    "reset_expiry_manager",
+]

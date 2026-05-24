@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import json
-import sqlite3
-from ._types import NotificationChannel, NotificationEvent, NotificationPriority, NotificationMessage, ChannelConfig
-
 import logging
+import sqlite3
 import threading
 import time
-from typing import Any, Optional
+from typing import Any
+
+from ._types import ChannelConfig, NotificationChannel, NotificationEvent, NotificationMessage, NotificationPriority
 
 logger = logging.getLogger(__name__)
 
 
 def _init_db(self) -> None:
     """Create the notifications and channel_config tables."""
+
     def _do_init() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -54,11 +55,13 @@ def _init_db(self) -> None:
     self._with_retry(_do_init)
     self._load_channel_configs()
 
+
 # ── Channel Management ─────────────────────────────────
 
 
 def _load_channel_configs(self) -> None:
     """Load channel configurations from the database."""
+
     def _do_load() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
@@ -79,6 +82,7 @@ def _load_channel_configs(self) -> None:
 
 def _persist_channel_config(self, config: ChannelConfig) -> None:
     """Persist a channel configuration to the database."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -96,6 +100,7 @@ def _persist_channel_config(self, config: ChannelConfig) -> None:
 
     self._with_retry(_do_persist)
 
+
 # ── Core Operations ────────────────────────────────────
 
 
@@ -103,56 +108,70 @@ def _send_in_app(self, message: NotificationMessage) -> None:
     """Store an in-app notification (always succeeds)."""
     # In-app notifications are simply stored in SQLite via persist_message
     logger.info(
-        "NotificationDispatcher: [IN_APP] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [IN_APP] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_email(self, message: NotificationMessage) -> None:
     """Send an email notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [EMAIL] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [EMAIL] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_slack(self, message: NotificationMessage) -> None:
     """Send a Slack notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [SLACK] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [SLACK] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_teams(self, message: NotificationMessage) -> None:
     """Send a Microsoft Teams notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [TEAMS] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [TEAMS] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_whatsapp(self, message: NotificationMessage) -> None:
     """Send a WhatsApp notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [WHATSAPP] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [WHATSAPP] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_sms(self, message: NotificationMessage) -> None:
     """Send an SMS notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [SMS] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [SMS] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
 def _send_push(self, message: NotificationMessage) -> None:
     """Send a push notification (stub — logs to console)."""
     logger.info(
-        "NotificationDispatcher: [PUSH] To: %s — %s: %s",  # noqa: F821
-        message.recipient_id, message.title, message.body[:80],
+        "NotificationDispatcher: [PUSH] To: %s — %s: %s",
+        message.recipient_id,
+        message.title,
+        message.body[:80],
     )
 
 
@@ -161,16 +180,21 @@ def _send_webhook(self, message: NotificationMessage) -> None:
     config = self._channels.get(message.channel, ChannelConfig())
     webhook_url = config.config.get("webhook_url", "")
     logger.info(
-        "NotificationDispatcher: [WEBHOOK] To: %s — URL: %s — %s: %s",  # noqa: F821
-        message.recipient_id, webhook_url, message.title, message.body[:80],
+        "NotificationDispatcher: [WEBHOOK] To: %s — URL: %s — %s: %s",
+        message.recipient_id,
+        webhook_url,
+        message.title,
+        message.body[:80],
     )
+
 
 # ── Private Helpers ────────────────────────────────────
 
 
-def _find_message(self, notification_id: str) -> Optional[NotificationMessage]:
+def _find_message(self, notification_id: str) -> NotificationMessage | None:
     """Find a notification by ID."""
-    def _do_find() -> Optional[NotificationMessage]:
+
+    def _do_find() -> NotificationMessage | None:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -186,9 +210,13 @@ def _find_message(self, notification_id: str) -> Optional[NotificationMessage]:
 
 
 def _persist_message(
-    self, message: NotificationMessage, *, insert: bool,
+    self,
+    message: NotificationMessage,
+    *,
+    insert: bool,
 ) -> None:
     """Insert or update a notification in the database."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(self._db_path)
         if insert:
@@ -247,38 +275,41 @@ def _with_retry(
     max_retries: int = _MAX_RETRIES,  # noqa: F821
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, max_retries + 1):
         try:
             return fn()
         except sqlite3.OperationalError as exc:
             last_exc = exc
             logger.warning(
-                "NotificationDispatcher: DB retry %d/%d — %s",  # noqa: F821
-                attempt, max_retries, exc,
+                "NotificationDispatcher: DB retry %d/%d — %s",
+                attempt,
+                max_retries,
+                exc,
             )
             if attempt < max_retries:
                 time.sleep(_RETRY_DELAY * attempt)  # noqa: F821
         except Exception as exc:
             last_exc = exc
-            logger.error("NotificationDispatcher: DB error — %s", exc)  # noqa: F821
+            logger.error("NotificationDispatcher: DB error — %s", exc)
             break
     logger.error(
-        "NotificationDispatcher: All retries exhausted — %s", last_exc,  # noqa: F821
+        "NotificationDispatcher: All retries exhausted — %s",
+        last_exc,
     )
     return fallback
 
 
 # ── Singleton ─────────────────────────────────────────────
 
-_notification_instance: Optional[NotificationDispatcher] = None  # noqa: F821
+_notification_instance: NotificationDispatcher | None = None  # noqa: F821
 _notification_lock = threading.Lock()
 
 
 def get_notification_dispatcher(
     db_path: str = "notification.sqlite",
 ) -> NotificationDispatcher:  # noqa: F821
-    """Get or create the global NotificationDispatcher instance."""  # noqa: F821
+    """Get or create the global NotificationDispatcher instance."""
     global _notification_instance
     with _notification_lock:
         if _notification_instance is None:
@@ -287,13 +318,17 @@ def get_notification_dispatcher(
 
 
 def reset_notification_dispatcher() -> None:
-    """Reset the global NotificationDispatcher (for testing)."""  # noqa: F821
+    """Reset the global NotificationDispatcher (for testing)."""
     global _notification_instance
     _notification_instance = None
 
 
 __all__ = [
-    "NotificationChannel", "NotificationPriority", "NotificationEvent", "NotificationMessage",
-    "ChannelConfig", "get_notification_dispatcher", "reset_notification_dispatcher",
+    "ChannelConfig",
+    "NotificationChannel",
+    "NotificationEvent",
+    "NotificationMessage",
+    "NotificationPriority",
+    "get_notification_dispatcher",
+    "reset_notification_dispatcher",
 ]
-

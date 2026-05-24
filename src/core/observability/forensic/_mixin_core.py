@@ -7,19 +7,21 @@ from __future__ import annotations
 import logging
 import sqlite3
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from src.core.shared.db_initializer import get_connection
+from src.core.observability.forensic._helpers import (
+    build_merkle_proofs,
+    verify_local_chain,
+)
+from src.core.observability.forensic._helpers import (
+    retry as _retry,
+)
 from src.core.observability.forensic._types import (
     ChainVerificationResult,
     EvidenceBundle,
     ForensicReport,
 )
-from src.core.observability.forensic._helpers import (
-    retry as _retry,
-    verify_local_chain,
-    build_merkle_proofs,
-)
+from src.core.shared.db_initializer import get_connection
 
 logger = logging.getLogger(__name__)
 
@@ -75,27 +77,27 @@ class CoreMixin:
     def forensic_query(
         self,
         entity_id: str,
-        time_range: Optional[Tuple[float, float]],
+        time_range: tuple[float, float] | None,
         tenant_id: str,
     ) -> ForensicReport:
         """Query audit events + ledger entries for an entity and cross-correlate."""
         logger.info(
             "ForensicEngine: forensic_query entity=%s tenant=%s range=%s",
-            entity_id, tenant_id, time_range,
+            entity_id,
+            tenant_id,
+            time_range,
         )
 
-        audit_rows: List[Dict[str, Any]] = []
-        ledger_rows: List[Dict[str, Any]] = []
+        audit_rows: list[dict[str, Any]] = []
+        ledger_rows: list[dict[str, Any]] = []
 
         # --- Query audit events ---
-        def _query_audit() -> List[Dict[str, Any]]:
+        def _query_audit() -> list[dict[str, Any]]:
             conn = sqlite3.connect(self._get_audit_db_path())
             conn.row_factory = sqlite3.Row
             conditions = ["tenant_id = ?"]
-            params: List[Any] = [tenant_id]
-            conditions.append(
-                "(metadata LIKE ? OR description LIKE ? OR event_id = ?)"
-            )
+            params: list[Any] = [tenant_id]
+            conditions.append("(metadata LIKE ? OR description LIKE ? OR event_id = ?)")
             params.append(f"%{entity_id}%")
             params.append(f"%{entity_id}%")
             params.append(entity_id)
@@ -106,8 +108,7 @@ class CoreMixin:
                 params.append(time_range[1])
             where = " AND ".join(conditions)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM audit_events WHERE {where} "
-                "ORDER BY created_at ASC LIMIT 2000",
+                f"SELECT * FROM audit_events WHERE {where} " "ORDER BY created_at ASC LIMIT 2000",
                 params,
             ).fetchall()
             conn.close()
@@ -119,10 +120,10 @@ class CoreMixin:
             logger.error("ForensicEngine: audit query failed: %s", exc)
 
         # --- Query merkle ledger ---
-        def _query_ledger() -> List[Dict[str, Any]]:
+        def _query_ledger() -> list[dict[str, Any]]:
             conn = get_connection("merkle_ledger.sqlite")
             conditions = ["tenant_id = ?"]
-            params: List[Any] = [tenant_id]
+            params: list[Any] = [tenant_id]
             conditions.append("file_path = ?")
             params.append(entity_id)
             if time_range is not None:
@@ -132,8 +133,7 @@ class CoreMixin:
                 params.append(time_range[1])
             where = " AND ".join(conditions)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM ledger WHERE {where} "
-                "ORDER BY timestamp ASC LIMIT 2000",
+                f"SELECT * FROM ledger WHERE {where} " "ORDER BY timestamp ASC LIMIT 2000",
                 params,
             ).fetchall()
             return [dict(r) for r in rows]
@@ -150,8 +150,10 @@ class CoreMixin:
         chain_intact = verify_local_chain(ledger_rows)
 
         report = ForensicReport(
-            entity_id=entity_id, tenant_id=tenant_id,
-            time_range=time_range, entries=entries,
+            entity_id=entity_id,
+            tenant_id=tenant_id,
+            time_range=time_range,
+            entries=entries,
             total_audit_events=len(audit_rows),
             total_ledger_entries=len(ledger_rows),
             correlated_count=sum(1 for e in entries if e.source == "correlated"),
@@ -159,8 +161,10 @@ class CoreMixin:
         )
 
         self._record_query(
-            query_id=report.report_id, query_type="forensic_query",
-            entity_id=entity_id, tenant_id=tenant_id,
+            query_id=report.report_id,
+            query_type="forensic_query",
+            entity_id=entity_id,
+            tenant_id=tenant_id,
             time_range=time_range,
             result_summary=(
                 f"audit={len(audit_rows)} ledger={len(ledger_rows)} "
@@ -170,7 +174,8 @@ class CoreMixin:
 
         logger.info(
             "ForensicEngine: forensic_query complete — report=%s entries=%d",
-            report.report_id, len(entries),
+            report.report_id,
+            len(entries),
         )
         return report
 
@@ -178,9 +183,9 @@ class CoreMixin:
         """Verify Merkle chain integrity for all ledger entries of a tenant."""
         logger.info("ForensicEngine: verify_chain tenant=%s", tenant_id)
 
-        ledger_rows: List[Dict[str, Any]] = []
+        ledger_rows: list[dict[str, Any]] = []
 
-        def _load() -> List[Dict[str, Any]]:
+        def _load() -> list[dict[str, Any]]:
             conn = get_connection("merkle_ledger.sqlite")
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT id, file_path, hash_sha256, parent_hash, operation, timestamp "
@@ -194,14 +199,17 @@ class CoreMixin:
         except Exception as exc:
             logger.error("ForensicEngine: verify_chain load failed: %s", exc)
             return ChainVerificationResult(
-                tenant_id=tenant_id, total_entries=0, valid_entries=0, is_valid=False,
+                tenant_id=tenant_id,
+                total_entries=0,
+                valid_entries=0,
+                is_valid=False,
             )
 
-        broken_links: List[Dict[str, Any]] = []
+        broken_links: list[dict[str, Any]] = []
         valid_count = 0
-        hash_to_id: Dict[str, int] = {r["hash_sha256"]: r["id"] for r in ledger_rows}
+        hash_to_id: dict[str, int] = {r["hash_sha256"]: r["id"] for r in ledger_rows}
 
-        file_groups: Dict[str, List[Dict[str, Any]]] = {}
+        file_groups: dict[str, list[dict[str, Any]]] = {}
         for r in ledger_rows:
             file_groups.setdefault(r["file_path"], []).append(r)
 
@@ -221,51 +229,61 @@ class CoreMixin:
                 if row["parent_hash"] == expected_parent_hash:
                     valid_count += 1
                 else:
-                    broken_links.append({
-                        "file_path": fp, "entry_id": row["id"],
-                        "expected_parent_hash": expected_parent_hash,
-                        "actual_parent_hash": row["parent_hash"],
-                        "entry_hash": row["hash_sha256"],
-                        "operation": row["operation"],
-                        "timestamp": row["timestamp"],
-                    })
+                    broken_links.append(
+                        {
+                            "file_path": fp,
+                            "entry_id": row["id"],
+                            "expected_parent_hash": expected_parent_hash,
+                            "actual_parent_hash": row["parent_hash"],
+                            "entry_hash": row["hash_sha256"],
+                            "operation": row["operation"],
+                            "timestamp": row["timestamp"],
+                        }
+                    )
 
         total = len(ledger_rows)
         is_valid = len(broken_links) == 0
         root_hash = ledger_rows[-1]["hash_sha256"] if ledger_rows else ""
 
         result = ChainVerificationResult(
-            tenant_id=tenant_id, total_entries=total,
-            valid_entries=valid_count, broken_links=broken_links,
-            is_valid=is_valid, root_hash=root_hash,
+            tenant_id=tenant_id,
+            total_entries=total,
+            valid_entries=valid_count,
+            broken_links=broken_links,
+            is_valid=is_valid,
+            root_hash=root_hash,
         )
 
         self._record_query(
             query_id=f"chain-{uuid.uuid4().hex[:12]}",
-            query_type="verify_chain", entity_id="",
-            tenant_id=tenant_id, time_range=None,
-            result_summary=(
-                f"total={total} valid={valid_count} "
-                f"broken={len(broken_links)} ok={is_valid}"
-            ),
+            query_type="verify_chain",
+            entity_id="",
+            tenant_id=tenant_id,
+            time_range=None,
+            result_summary=(f"total={total} valid={valid_count} " f"broken={len(broken_links)} ok={is_valid}"),
         )
 
         logger.info(
             "ForensicEngine: verify_chain complete — valid=%s total=%d broken=%d",
-            is_valid, total, len(broken_links),
+            is_valid,
+            total,
+            len(broken_links),
         )
         return result
 
     def export_evidence_bundle(
-        self, entity_id: str, tenant_id: str,
+        self,
+        entity_id: str,
+        tenant_id: str,
     ) -> EvidenceBundle:
         """Package all forensic data for an entity into a JSON-serializable bundle."""
         logger.info(
             "ForensicEngine: export_evidence_bundle entity=%s tenant=%s",
-            entity_id, tenant_id,
+            entity_id,
+            tenant_id,
         )
 
-        audit_events: List[Dict[str, Any]] = []
+        audit_events: list[dict[str, Any]] = []
         try:
             audit_events = _retry(
                 lambda: self._load_audit_events(entity_id, tenant_id),
@@ -274,7 +292,7 @@ class CoreMixin:
         except Exception as exc:
             logger.error("ForensicEngine: export audit load failed: %s", exc)
 
-        ledger_entries: List[Dict[str, Any]] = []
+        ledger_entries: list[dict[str, Any]] = []
         try:
             ledger_entries = _retry(
                 lambda: self._load_ledger_entries(entity_id, tenant_id),
@@ -295,14 +313,20 @@ class CoreMixin:
         }
 
         bundle = EvidenceBundle(
-            entity_id=entity_id, tenant_id=tenant_id,
-            audit_events=audit_events, ledger_entries=ledger_entries,
-            merkle_proofs=merkle_proofs, chain_verification=chain_dict,
+            entity_id=entity_id,
+            tenant_id=tenant_id,
+            audit_events=audit_events,
+            ledger_entries=ledger_entries,
+            merkle_proofs=merkle_proofs,
+            chain_verification=chain_dict,
         )
 
         self._record_query(
-            query_id=bundle.bundle_id, query_type="export_evidence_bundle",
-            entity_id=entity_id, tenant_id=tenant_id, time_range=None,
+            query_id=bundle.bundle_id,
+            query_type="export_evidence_bundle",
+            entity_id=entity_id,
+            tenant_id=tenant_id,
+            time_range=None,
             result_summary=(
                 f"audit={len(audit_events)} ledger={len(ledger_entries)} "
                 f"proofs={len(merkle_proofs)} chain_ok={chain_result.is_valid}"

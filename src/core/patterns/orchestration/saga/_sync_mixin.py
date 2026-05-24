@@ -3,9 +3,9 @@
 import logging
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ._types import SagaStatus, SagaStep, SagaContext
+from ._types import SagaContext, SagaStatus, SagaStep
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
@@ -17,7 +17,7 @@ class SagaSyncMixin:
     #  SYNC EXECUTION
     # ----------------------------------------------------------
 
-    def execute(self, context: Optional[SagaContext] = None) -> SagaContext:
+    def execute(self, context: SagaContext | None = None) -> SagaContext:
         """
         Execute all saga steps sequentially with automatic compensation.
 
@@ -46,7 +46,9 @@ class SagaSyncMixin:
 
         logger.info(
             "Saga[%s]: Starting execution (saga_id=%s, steps=%d)",
-            self._name, context.saga_id[:8], len(self._steps),
+            self._name,
+            context.saga_id[:8],
+            len(self._steps),
         )
 
         try:
@@ -59,16 +61,19 @@ class SagaSyncMixin:
                 self._last_execution_time_ms = (time.time() - start_time) * 1000
 
             logger.info(
-                "Saga[%s]: Completed successfully (saga_id=%s, "
-                "steps=%d, time=%.1fms)",
-                self._name, context.saga_id[:8], len(self._steps),
+                "Saga[%s]: Completed successfully (saga_id=%s, " "steps=%d, time=%.1fms)",
+                self._name,
+                context.saga_id[:8],
+                len(self._steps),
                 self._last_execution_time_ms,
             )
 
         except Exception as exc:
             logger.error(
                 "Saga[%s]: Step failed (saga_id=%s): %s",
-                self._name, context.saga_id[:8], exc,
+                self._name,
+                context.saga_id[:8],
+                exc,
             )
             context.add_error(str(exc))
 
@@ -85,9 +90,7 @@ class SagaSyncMixin:
     #  ASYNC EXECUTION
     # ----------------------------------------------------------
 
-    async def execute_async(
-        self, context: Optional[SagaContext] = None
-    ) -> SagaContext:
+    async def execute_async(self, context: SagaContext | None = None) -> SagaContext:
         """
         Asynchronously execute all saga steps with automatic compensation.
 
@@ -111,7 +114,9 @@ class SagaSyncMixin:
 
         logger.info(
             "Saga[%s][async]: Starting execution (saga_id=%s, steps=%d)",
-            self._name, context.saga_id[:8], len(self._steps),
+            self._name,
+            context.saga_id[:8],
+            len(self._steps),
         )
 
         try:
@@ -123,16 +128,18 @@ class SagaSyncMixin:
                 self._last_execution_time_ms = (time.time() - start_time) * 1000
 
             logger.info(
-                "Saga[%s][async]: Completed successfully (saga_id=%s, "
-                "time=%.1fms)",
-                self._name, context.saga_id[:8],
+                "Saga[%s][async]: Completed successfully (saga_id=%s, " "time=%.1fms)",
+                self._name,
+                context.saga_id[:8],
                 self._last_execution_time_ms,
             )
 
         except Exception as exc:
             logger.error(
                 "Saga[%s][async]: Step failed (saga_id=%s): %s",
-                self._name, context.saga_id[:8], exc,
+                self._name,
+                context.saga_id[:8],
+                exc,
             )
             context.add_error(str(exc))
 
@@ -161,7 +168,8 @@ class SagaSyncMixin:
         """
         logger.info(
             "Saga[%s]: Executing step '%s' (timeout=%s)",
-            self._name, step.name,
+            self._name,
+            step.name,
             f"{step.timeout}s" if step.timeout else "none",
         )
 
@@ -174,12 +182,11 @@ class SagaSyncMixin:
 
         logger.info(
             "Saga[%s]: Step '%s' completed successfully",
-            self._name, step.name,
+            self._name,
+            step.name,
         )
 
-    def _execute_step_with_timeout(
-        self, step: SagaStep, context: SagaContext
-    ) -> None:
+    def _execute_step_with_timeout(self, step: SagaStep, context: SagaContext) -> None:
         """
         Execute a step with timeout enforcement.
 
@@ -193,7 +200,7 @@ class SagaSyncMixin:
         Raises:
             TimeoutError: If the step exceeds its timeout.
         """
-        result_holder: Dict[str, Any] = {"result": None, "error": None}
+        result_holder: dict[str, Any] = {"result": None, "error": None}
 
         def _target() -> None:
             try:
@@ -207,10 +214,7 @@ class SagaSyncMixin:
 
         if worker.is_alive():
             # Thread is still running; it timed out
-            raise TimeoutError(
-                f"Saga step '{step.name}' exceeded timeout of "
-                f"{step.timeout}s"
-            )
+            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of " f"{step.timeout}s")
 
         if result_holder["error"] is not None:
             raise result_holder["error"]

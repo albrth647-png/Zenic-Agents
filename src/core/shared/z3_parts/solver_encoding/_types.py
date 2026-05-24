@@ -11,9 +11,9 @@ Defines tuning constants used by the Z3 constraint encoding mixins:
 
 import logging
 
-
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]  # noqa: F401
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -30,4 +30,11 @@ _EVICT_BATCH_SIZE = 2000
 _DEFAULT_MAX_SAMPLES = 20
 # Decimal precision for Z3 Real value conversion
 _REAL_DECIMAL_PRECISION = 6
-__all__ = ["_DEFAULT_MAX_SAMPLES", "_EVICT_BATCH_SIZE", "_MAX_ENCODE_ENTRIES", "_MAX_EXHAUSTIVE_PAIRS", "_REAL_DECIMAL_PRECISION", "logger"]
+__all__ = [
+    "_DEFAULT_MAX_SAMPLES",
+    "_EVICT_BATCH_SIZE",
+    "_MAX_ENCODE_ENTRIES",
+    "_MAX_EXHAUSTIVE_PAIRS",
+    "_REAL_DECIMAL_PRECISION",
+    "logger",
+]

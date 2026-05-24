@@ -20,7 +20,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, FrozenSet, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from ..._formatter import (
@@ -61,13 +61,15 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 
 try:
     import aiohttp
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
-    import urllib.request
     import urllib.error
+    import urllib.request
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -92,11 +94,11 @@ class WhatsAppChannelProviderBase:
 
     def __init__(
         self,
-        access_token: Optional[str] = None,
-        phone_number_id: Optional[str] = None,
-        verify_token: Optional[str] = None,
-        app_secret: Optional[str] = None,
-        api_base: Optional[str] = None,
+        access_token: str | None = None,
+        phone_number_id: str | None = None,
+        verify_token: str | None = None,
+        app_secret: str | None = None,
+        api_base: str | None = None,
     ) -> None:
         self._access_token = access_token or os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
         self._phone_number_id = phone_number_id or os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
@@ -109,7 +111,7 @@ class WhatsAppChannelProviderBase:
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()
-        self._session: Optional[Any] = None
+        self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
 
@@ -118,7 +120,7 @@ class WhatsAppChannelProviderBase:
         return "whatsapp"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
+    def capabilities(self) -> frozenset[ChannelCapability]:
         caps = {
             ChannelCapability.SEND_TEXT,
             ChannelCapability.SEND_RICH,
@@ -126,7 +128,7 @@ class WhatsAppChannelProviderBase:
             ChannelCapability.SEND_FILE,
             ChannelCapability.RECEIVE_MESSAGE,
             ChannelCapability.RECEIVE_CONFIRMATION,
-            ChannelCapability.RECEIVE_VOICE,    # WhatsApp supports receiving audio/voice notes
+            ChannelCapability.RECEIVE_VOICE,  # WhatsApp supports receiving audio/voice notes
             ChannelCapability.REPLY,
         }
         return frozenset(caps)
@@ -170,7 +172,8 @@ class WhatsAppChannelProviderBase:
         return response
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Send an interactive confirmation via WhatsApp buttons.
 
@@ -222,7 +225,8 @@ class WhatsAppChannelProviderBase:
 
         self._started = True
         logger.info(
-            "WhatsAppChannelProvider: started (configured=%s)", self.is_available,
+            "WhatsAppChannelProvider: started (configured=%s)",
+            self.is_available,
         )
 
     async def stop(self) -> None:
@@ -235,7 +239,7 @@ class WhatsAppChannelProviderBase:
         logger.info("WhatsAppChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {
@@ -261,9 +265,9 @@ class WhatsAppChannelProviderBase:
         message: ChannelMessage,
         media_type: str,
         media_url: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Build a WhatsApp media message payload."""
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "messaging_product": "whatsapp",
             "recipient_type": "individual",
             "to": message.recipient,
@@ -284,7 +288,7 @@ class WhatsAppChannelProviderBase:
 
         return payload
 
-    def _build_audio_payload(self, message: ChannelMessage) -> Dict[str, Any]:
+    def _build_audio_payload(self, message: ChannelMessage) -> dict[str, Any]:
         """Build a WhatsApp audio message payload.
 
         Used for outbound audio messages (TTS-generated voice notes).
@@ -299,7 +303,7 @@ class WhatsAppChannelProviderBase:
             WhatsApp API payload for audio message.
         """
         audio_url = message.voice_url or message.file_url
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "messaging_product": "whatsapp",
             "recipient_type": "individual",
             "to": message.recipient,
@@ -310,7 +314,7 @@ class WhatsAppChannelProviderBase:
         }
         return payload
 
-    async def download_media(self, media_id: str) -> Optional[bytes]:
+    async def download_media(self, media_id: str) -> bytes | None:
         """Download media from WhatsApp Cloud API by media ID.
 
         Two-step process:
@@ -358,7 +362,7 @@ class WhatsAppChannelProviderBase:
                 # Sync path via urllib
                 import asyncio
 
-                def _sync_download() -> Optional[bytes]:
+                def _sync_download() -> bytes | None:
                     # Get download URL
                     req = urllib.request.Request(url, headers=headers)
                     with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
@@ -382,7 +386,7 @@ class WhatsAppChannelProviderBase:
             logger.error("WhatsApp: media download failed: %s", e)
             return None
 
-    async def _post_api(self, payload: Dict[str, Any]) -> ChannelResponse:
+    async def _post_api(self, payload: dict[str, Any]) -> ChannelResponse:
         """POST to WhatsApp Cloud API."""
         url = f"{self._api_base}/{self._phone_number_id}/messages"
 
@@ -404,6 +408,7 @@ class WhatsAppChannelProviderBase:
                 if attempt < _MAX_RETRIES:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     return ChannelResponse(
@@ -415,14 +420,17 @@ class WhatsAppChannelProviderBase:
                     )
 
         return ChannelResponse(
-            success=False, channel="whatsapp",
+            success=False,
+            channel="whatsapp",
             status=DeliveryStatus.FAILED,
             error="Unexpected retry loop exit",
             timestamp=time.time(),
         )
 
     async def _post_api_aiohttp(
-        self, url: str, payload: Dict[str, Any],
+        self,
+        url: str,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """Send via aiohttp."""
         assert self._session is not None
@@ -471,7 +479,9 @@ class WhatsAppChannelProviderBase:
                 )
 
     async def _post_api_urllib(
-        self, url: str, payload: Dict[str, Any],
+        self,
+        url: str,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """Send via urllib (sync, wrapped in asyncio.to_thread)."""
         import asyncio
@@ -553,7 +563,8 @@ class WhatsAppChannelProviderBase:
         )
 
     def _dry_run_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Log confirmation without sending."""
         with self._lock:
@@ -575,13 +586,13 @@ class WhatsAppChannelProviderBase:
 
 
 __all__ = [
-    "WhatsAppChannelProviderBase",
-    "_validate_url",
     "_HAS_AIOHTTP",
     "_HAS_URLLIB",
-    "_WHATSAPP_API_BASE",
-    "_MAX_RETRIES",
-    "_RETRY_BASE_DELAY",
     "_HTTP_TIMEOUT",
     "_MAX_BUTTONS",
+    "_MAX_RETRIES",
+    "_RETRY_BASE_DELAY",
+    "_WHATSAPP_API_BASE",
+    "WhatsAppChannelProviderBase",
+    "_validate_url",
 ]

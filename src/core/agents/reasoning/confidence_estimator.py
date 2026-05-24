@@ -15,7 +15,7 @@ Ported from:
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import ConfidenceResult, ReasoningResult
@@ -26,22 +26,49 @@ from ..schemas import ConfidenceResult, ReasoningResult
 
 # Certainty markers increase confidence
 CERTAINTY_MARKERS_EN = [
-    "certainly", "clearly", "definitely", "obviously", "surely",
-    "without doubt", "undoubtedly", "absolutely", "guaranteed",
+    "certainly",
+    "clearly",
+    "definitely",
+    "obviously",
+    "surely",
+    "without doubt",
+    "undoubtedly",
+    "absolutely",
+    "guaranteed",
 ]
 CERTAINTY_MARKERS_ES = [
-    "ciertamente", "claramente", "definitivamente", "obviamente",
-    "seguramente", "sin duda", "indudablemente", "absolutamente",
+    "ciertamente",
+    "claramente",
+    "definitivamente",
+    "obviamente",
+    "seguramente",
+    "sin duda",
+    "indudablemente",
+    "absolutamente",
 ]
 
 # Hedging markers decrease confidence
 HEDGING_MARKERS_EN = [
-    "maybe", "perhaps", "might", "could be", "possibly",
-    "it seems", "likely", "probably", "i think", "might not",
+    "maybe",
+    "perhaps",
+    "might",
+    "could be",
+    "possibly",
+    "it seems",
+    "likely",
+    "probably",
+    "i think",
+    "might not",
 ]
 HEDGING_MARKERS_ES = [
-    "quizás", "tal vez", "puede que", "posiblemente",
-    "parece que", "probablemente", "creo que", "a lo mejor",
+    "quizás",
+    "tal vez",
+    "puede que",
+    "posiblemente",
+    "parece que",
+    "probablemente",
+    "creo que",
+    "a lo mejor",
 ]
 
 # Security risk patterns significantly decrease confidence
@@ -56,8 +83,14 @@ SECURITY_RISK_PATTERNS = [
 
 # Quality issues that decrease confidence
 QUALITY_ISSUES = [
-    "TODO", "FIXME", "HACK", "XXX", "NOQA",
-    "placeholder", "stub", "not implemented",
+    "TODO",
+    "FIXME",
+    "HACK",
+    "XXX",
+    "NOQA",
+    "placeholder",
+    "stub",
+    "not implemented",
 ]
 
 # Thresholds for recommendation levels
@@ -152,7 +185,7 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
             source="deterministic",
         )
 
-    def _extract_result(self, input_data: Any) -> Optional[ReasoningResult]:
+    def _extract_result(self, input_data: Any) -> ReasoningResult | None:
         """Extract ReasoningResult from input."""
         if isinstance(input_data, ReasoningResult):
             return input_data
@@ -210,19 +243,13 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
         score = 0.5
 
         # Check certainty markers
-        certainty_count = sum(
-            1 for m in CERTAINTY_MARKERS_EN + CERTAINTY_MARKERS_ES
-            if m in answer_lower
-        )
+        certainty_count = sum(1 for m in CERTAINTY_MARKERS_EN + CERTAINTY_MARKERS_ES if m in answer_lower)
         if certainty_count > 0:
             score += 0.05 * certainty_count
             factors.append(f"certainty_markers({certainty_count}): +{0.05 * certainty_count:.2f}")
 
         # Check hedging markers
-        hedging_count = sum(
-            1 for m in HEDGING_MARKERS_EN + HEDGING_MARKERS_ES
-            if m in answer_lower
-        )
+        hedging_count = sum(1 for m in HEDGING_MARKERS_EN + HEDGING_MARKERS_ES if m in answer_lower)
         if hedging_count > 0:
             score -= 0.1 * hedging_count
             factors.append(f"hedging_markers({hedging_count}): -{0.1 * hedging_count:.2f}")
@@ -265,9 +292,7 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
 
         return max(0.1, min(0.95, score))
 
-    def _score_step_completeness(
-        self, result: Optional[ReasoningResult], factors: list[str]
-    ) -> float:
+    def _score_step_completeness(self, result: ReasoningResult | None, factors: list[str]) -> float:
         """Score based on reasoning step completeness."""
         if not result or not result.steps:
             factors.append("no_steps_provided: neutral")
@@ -282,9 +307,7 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
             factors.append(f"steps_present({total_steps}): +0.1")
 
         # All steps having conclusions is better
-        steps_with_conclusions = sum(
-            1 for s in result.steps if s.conclusion
-        )
+        steps_with_conclusions = sum(1 for s in result.steps if s.conclusion)
         if steps_with_conclusions == total_steps and total_steps > 0:
             score += 0.1
             factors.append("all_steps_have_conclusions: +0.1")
@@ -301,9 +324,7 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
 
         return max(0.1, min(0.95, score))
 
-    def _score_template_match(
-        self, result: Optional[ReasoningResult], factors: list[str]
-    ) -> float:
+    def _score_template_match(self, result: ReasoningResult | None, factors: list[str]) -> float:
         """Score bonus for matching a known template."""
         if not result:
             return 0.5

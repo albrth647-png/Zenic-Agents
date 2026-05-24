@@ -13,20 +13,21 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "CircularDependencyError",
-    "ResolutionResult",
     "DependencyResolver",
+    "ResolutionResult",
 ]
 
 
 # ──────────────────────────────────────────────────────────────
 #  EXCEPTIONS
 # ──────────────────────────────────────────────────────────────
+
 
 class CircularDependencyError(Exception):
     """
@@ -36,16 +37,15 @@ class CircularDependencyError(Exception):
         cycle: The list of step IDs forming the cycle.
     """
 
-    def __init__(self, cycle: List[str]) -> None:
+    def __init__(self, cycle: list[str]) -> None:
         self.cycle = cycle
-        super().__init__(
-            f"Circular dependency detected: {' -> '.join(cycle)}"
-        )
+        super().__init__(f"Circular dependency detected: {' -> '.join(cycle)}")
 
 
 # ──────────────────────────────────────────────────────────────
 #  DATA CONTRACTS
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class ResolutionResult:
@@ -59,16 +59,18 @@ class ResolutionResult:
         cycles: Detected cycles (if any).
         unresolved: Step IDs with unresolved dependencies.
     """
+
     is_valid: bool = True
-    execution_order: List[str] = field(default_factory=list)
-    execution_layers: List[List[str]] = field(default_factory=list)
-    cycles: List[List[str]] = field(default_factory=list)
-    unresolved: List[str] = field(default_factory=list)
+    execution_order: list[str] = field(default_factory=list)
+    execution_layers: list[list[str]] = field(default_factory=list)
+    cycles: list[list[str]] = field(default_factory=list)
+    unresolved: list[str] = field(default_factory=list)
 
 
 # ──────────────────────────────────────────────────────────────
 #  DEPENDENCY RESOLVER
 # ──────────────────────────────────────────────────────────────
+
 
 class DependencyResolver:
     """
@@ -97,16 +99,16 @@ class DependencyResolver:
     """
 
     def __init__(self) -> None:
-        self._steps: Dict[str, Set[str]] = {}  # step_id -> set of dependency step_ids
-        self._step_metadata: Dict[str, Dict[str, Any]] = {}
+        self._steps: dict[str, set[str]] = {}  # step_id -> set of dependency step_ids
+        self._step_metadata: dict[str, dict[str, Any]] = {}
 
     # ── Step Registration ────────────────────────────────────
 
     def add_step(
         self,
         step_id: str,
-        depends_on: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        depends_on: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Register a step with its dependencies.
@@ -126,7 +128,8 @@ class DependencyResolver:
         self._step_metadata[step_id] = metadata or {}
         logger.debug(
             "DependencyResolver: Added step '%s' (depends_on=%s)",
-            step_id, depends_on or [],
+            step_id,
+            depends_on or [],
         )
 
     def remove_step(self, step_id: str) -> bool:
@@ -195,7 +198,7 @@ class DependencyResolver:
             return result
 
         # Compute topological order (Kahn's algorithm)
-        in_degree: Dict[str, int] = {sid: 0 for sid in self._steps}
+        in_degree: dict[str, int] = {sid: 0 for sid in self._steps}
         for sid, deps in self._steps.items():
             for dep in deps:
                 if dep in in_degree:
@@ -215,7 +218,7 @@ class DependencyResolver:
             result.is_valid = False
 
         # Compute execution layers
-        layers: List[List[str]] = []
+        layers: list[list[str]] = []
         remaining = dict(in_degree)
 
         while remaining:
@@ -238,12 +241,12 @@ class DependencyResolver:
         result.execution_order = [sid for layer in layers for sid in layer]
         return result
 
-    def _detect_cycles(self) -> List[List[str]]:
+    def _detect_cycles(self) -> list[list[str]]:
         """Detect cycles using DFS with coloring."""
         WHITE, GRAY, BLACK = 0, 1, 2
-        color: Dict[str, int] = {sid: WHITE for sid in self._steps}
-        cycles: List[List[str]] = []
-        path: List[str] = []
+        color: dict[str, int] = {sid: WHITE for sid in self._steps}
+        cycles: list[list[str]] = []
+        path: list[str] = []
 
         def dfs(node: str) -> None:
             color[node] = GRAY
@@ -267,21 +270,21 @@ class DependencyResolver:
 
     # ── Queries ──────────────────────────────────────────────
 
-    def get_dependencies(self, step_id: str) -> Set[str]:
+    def get_dependencies(self, step_id: str) -> set[str]:
         """Get direct dependencies of a step."""
         return set(self._steps.get(step_id, set()))
 
-    def get_dependents(self, step_id: str) -> Set[str]:
+    def get_dependents(self, step_id: str) -> set[str]:
         """Get steps that depend on the given step."""
-        dependents: Set[str] = set()
+        dependents: set[str] = set()
         for sid, deps in self._steps.items():
             if step_id in deps:
                 dependents.add(sid)
         return dependents
 
-    def get_all_ancestors(self, step_id: str) -> Set[str]:
+    def get_all_ancestors(self, step_id: str) -> set[str]:
         """Get all transitive dependencies of a step."""
-        ancestors: Set[str] = set()
+        ancestors: set[str] = set()
         stack = list(self._steps.get(step_id, set()))
         while stack:
             dep = stack.pop()
@@ -290,9 +293,9 @@ class DependencyResolver:
                 stack.extend(self._steps[dep])
         return ancestors
 
-    def get_all_descendants(self, step_id: str) -> Set[str]:
+    def get_all_descendants(self, step_id: str) -> set[str]:
         """Get all transitive dependents of a step."""
-        descendants: Set[str] = set()
+        descendants: set[str] = set()
         stack = list(self.get_dependents(step_id))
         while stack:
             dep = stack.pop()
@@ -301,27 +304,21 @@ class DependencyResolver:
                 stack.extend(self.get_dependents(dep))
         return descendants
 
-    def get_root_steps(self) -> List[str]:
+    def get_root_steps(self) -> list[str]:
         """Get steps with no dependencies (entry points)."""
-        return sorted([
-            sid for sid, deps in self._steps.items()
-            if not deps or not any(d in self._steps for d in deps)
-        ])
+        return sorted([sid for sid, deps in self._steps.items() if not deps or not any(d in self._steps for d in deps)])
 
-    def get_leaf_steps(self) -> List[str]:
+    def get_leaf_steps(self) -> list[str]:
         """Get steps that no other step depends on (exit points)."""
-        all_deps: Set[str] = set()
+        all_deps: set[str] = set()
         for deps in self._steps.values():
             all_deps.update(deps)
-        return sorted([
-            sid for sid in self._steps
-            if sid not in all_deps
-        ])
+        return sorted([sid for sid in self._steps if sid not in all_deps])
 
     # ── Accessors ────────────────────────────────────────────
 
     @property
-    def steps(self) -> Dict[str, Set[str]]:
+    def steps(self) -> dict[str, set[str]]:
         """Read-only view of all steps and their dependencies."""
         return {sid: set(deps) for sid, deps in self._steps.items()}
 

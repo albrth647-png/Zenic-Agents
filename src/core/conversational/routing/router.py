@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from ..types.base import Result, Ok
+from ..types.base import Ok, Result
 from ..types.intent import AssistantIntent, IntentCategory
 
 logger = logging.getLogger("zenic_agents.conversational.router")
@@ -25,27 +25,31 @@ logger = logging.getLogger("zenic_agents.conversational.router")
 
 # ─── Rutas disponibles ───────────────────────────────────────
 
+
 class Pipeline(str, Enum):
     """Pipelines de procesamiento disponibles."""
-    CONVERSATIONAL = "conversational"     # Chat general, sin motor
-    CODE_ENGINE = "code_engine"           # Via motor Zenic-Agents
-    QUESTION_ANSWER = "question_answer"   # Preguntas factuales
-    COMMAND_HANDLER = "command_handler"   # Comandos directos
-    CONFIG_HANDLER = "config_handler"     # Cambios de config
-    TOOL_PIPELINE = "tool_pipeline"       # Tool execution
-    FALLBACK = "fallback"                 # Cuando todo falla
+
+    CONVERSATIONAL = "conversational"  # Chat general, sin motor
+    CODE_ENGINE = "code_engine"  # Via motor Zenic-Agents
+    QUESTION_ANSWER = "question_answer"  # Preguntas factuales
+    COMMAND_HANDLER = "command_handler"  # Comandos directos
+    CONFIG_HANDLER = "config_handler"  # Cambios de config
+    TOOL_PIPELINE = "tool_pipeline"  # Tool execution
+    FALLBACK = "fallback"  # Cuando todo falla
 
 
 # ─── Regla de routing ────────────────────────────────────────
 
+
 @dataclass
 class RouteRule:
     """Regla de routing: categoria → pipeline."""
+
     category: IntentCategory
     pipeline: Pipeline
-    requires_engine: bool = False   # Necesita motor Zenic-Agents?
-    priority: int = 0               # Mayor = se evalua primero
-    condition: str = ""             # Condicion adicional (descriptive)
+    requires_engine: bool = False  # Necesita motor Zenic-Agents?
+    priority: int = 0  # Mayor = se evalua primero
+    condition: str = ""  # Condicion adicional (descriptive)
 
 
 # ─── Reglas por defecto ──────────────────────────────────────
@@ -137,9 +141,11 @@ DEFAULT_RULES: list[RouteRule] = [
 
 # ─── Resultado de routing ────────────────────────────────────
 
+
 @dataclass
 class RouteResult:
     """Resultado del proceso de routing."""
+
     pipeline: Pipeline = Pipeline.FALLBACK
     rule_used: RouteRule | None = None
     engine_available: bool = False
@@ -150,6 +156,7 @@ class RouteResult:
 
 
 # ─── Router ──────────────────────────────────────────────────
+
 
 class AssistantRouter:
     """
@@ -211,10 +218,7 @@ class AssistantRouter:
             # Fallback: code engine no disponible → conversacional
             pipeline = Pipeline.CONVERSATIONAL
             fallback_used = True
-            logger.info(
-                f"Engine no disponible. "
-                f"Fallback: {matched_rule.pipeline.value} → {pipeline.value}"
-            )
+            logger.info(f"Engine no disponible. " f"Fallback: {matched_rule.pipeline.value} → {pipeline.value}")
             self._stats["fallbacks"] += 1
         else:
             # Actualizar stat del pipeline seleccionado
@@ -255,10 +259,7 @@ class AssistantRouter:
         """Busca pipelines alternativos para la categoria."""
         alternatives: list[Pipeline] = []
         for rule in self._rules:
-            if (
-                rule.category == category
-                and rule.pipeline != selected
-            ):
+            if rule.category == category and rule.pipeline != selected:
                 alternatives.append(rule.pipeline)
         # Siempre agregar fallback como alternativa
         if Pipeline.FALLBACK not in alternatives:

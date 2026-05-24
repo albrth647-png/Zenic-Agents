@@ -11,7 +11,7 @@ Ported from:
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent, GlobalHealthMonitor
 from ..schemas import HealthSnapshot
@@ -28,7 +28,7 @@ class HealthMonitorAgent(BaseAgent[HealthSnapshot]):
 
     def __init__(
         self,
-        health_monitor: Optional[GlobalHealthMonitor] = None,
+        health_monitor: GlobalHealthMonitor | None = None,
         **kwargs,
     ) -> None:
         super().__init__(name="A45_HealthMonitor", **kwargs)

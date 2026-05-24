@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import functools
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, TypeVar
 
 from src.core.shared.deterministic import ControllableJitter
 
@@ -23,6 +24,7 @@ _jitter_gen = ControllableJitter("agent_retry")
 @dataclass
 class AgentRetryConfig:
     """Retry configuration for an agent."""
+
     max_attempts: int = 3
     base_delay: float = 1.0
     max_delay: float = 10.0
@@ -55,10 +57,10 @@ RETRY_CONFIGS = {
 
 
 def with_agent_retry(
-    func: Optional[Callable] = None,
+    func: Callable | None = None,
     *,
-    config: Optional[AgentRetryConfig] = None,
-    on_retry: Optional[Callable[[int, Exception, float], None]] = None,
+    config: AgentRetryConfig | None = None,
+    on_retry: Callable[[int, Exception, float], None] | None = None,
 ):
     """
     Decorator that adds retry with exponential backoff to an agent method.

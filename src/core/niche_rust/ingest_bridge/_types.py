@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ _native = None
 
 try:
     import _zenic_native as _native  # type: ignore[import-not-found]
+
     NATIVE_AVAILABLE = True
 except ImportError:
     logger.warning(
@@ -34,6 +35,7 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 #  IngestionResult — result of a full ingestion operation
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class IngestionResult:
@@ -49,13 +51,13 @@ class IngestionResult:
         errors: List of error messages.
     """
 
-    template_dict: Optional[Dict[str, Any]] = None
-    extraction_result: Optional[Any] = None
-    matched_fields: List[str] = field(default_factory=list)
-    unmatched_fields: List[str] = field(default_factory=list)
+    template_dict: dict[str, Any] | None = None
+    extraction_result: Any | None = None
+    matched_fields: list[str] = field(default_factory=list)
+    unmatched_fields: list[str] = field(default_factory=list)
     confidence_avg: float = 0.0
     documents_processed: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def is_success(self) -> bool:
@@ -70,7 +72,7 @@ class IngestionResult:
             return 0.0
         return len(self.matched_fields) / total
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """Get a summary dict for display purposes."""
         return {
             "matched_fields": len(self.matched_fields),
@@ -87,11 +89,15 @@ class IngestionResult:
 #  Utility
 # ──────────────────────────────────────────────────────────────
 
+
 def os_path_exists(path: str) -> bool:
     """Check if a file path exists, with error handling."""
     try:
         import os
+
         return os.path.exists(path)
     except Exception:
         return False
-__all__ = ["IngestionResult", "NATIVE_AVAILABLE", "_native", "logger", "os_path_exists"]
+
+
+__all__ = ["NATIVE_AVAILABLE", "IngestionResult", "_native", "logger", "os_path_exists"]

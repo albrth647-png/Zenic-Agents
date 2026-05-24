@@ -14,6 +14,7 @@
 //! 5. Default deny — if nothing matched, deny.
 
 pub mod compiler;
+pub mod engine_impl;
 pub mod evaluator;
 pub mod optimizer;
 pub mod types;
@@ -25,3 +26,10 @@ pub use compiler::*;
 pub use evaluator::*;
 pub use optimizer::*;
 pub use types::*;
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests;

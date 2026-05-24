@@ -13,15 +13,16 @@ Design Patterns:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Dict, List, Optional
 
 try:
+    from rich.box import ROUNDED  # noqa: F401
     from rich.console import Console
     from rich.panel import Panel  # noqa: F401
     from rich.text import Text  # noqa: F401
-    from rich.box import ROUNDED  # noqa: F401
+
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
@@ -29,8 +30,10 @@ except ImportError:
 
 # ── Step Status ──────────────────────────────────────────────
 
+
 class StepStatus(str, Enum):
     """Status of a single onboarding step."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -41,11 +44,11 @@ class StepStatus(str, Enum):
     def icon(self) -> str:
         """Get the status icon for display."""
         icons = {
-            StepStatus.PENDING:   "\u25cb",   # ○
-            StepStatus.RUNNING:   "\u25cf",   # ● (animated in Rich)
-            StepStatus.COMPLETED: "\u2713",   # ✓
-            StepStatus.FAILED:    "\u2717",   # ✗
-            StepStatus.SKIPPED:   "\u2298",   # ⊘
+            StepStatus.PENDING: "\u25cb",  # ○
+            StepStatus.RUNNING: "\u25cf",  # ● (animated in Rich)
+            StepStatus.COMPLETED: "\u2713",  # ✓
+            StepStatus.FAILED: "\u2717",  # ✗
+            StepStatus.SKIPPED: "\u2298",  # ⊘
         }
         return icons.get(self, "?")
 
@@ -53,16 +56,17 @@ class StepStatus(str, Enum):
     def rich_style(self) -> str:
         """Get the Rich style for this status."""
         styles = {
-            StepStatus.PENDING:   "dim",
-            StepStatus.RUNNING:   "bold yellow",
+            StepStatus.PENDING: "dim",
+            StepStatus.RUNNING: "bold yellow",
             StepStatus.COMPLETED: "bold green",
-            StepStatus.FAILED:    "bold red",
-            StepStatus.SKIPPED:   "dim",
+            StepStatus.FAILED: "bold red",
+            StepStatus.SKIPPED: "dim",
         }
         return styles.get(self, "white")
 
 
 # ── Step Indicator ───────────────────────────────────────────
+
 
 @dataclass(frozen=True, slots=True)
 class StepIndicator:
@@ -76,6 +80,7 @@ class StepIndicator:
         completed_at: Timestamp when the step completed.
         error_message: Error message if the step failed.
     """
+
     name: str
     label: str
     status: StepStatus = StepStatus.PENDING
@@ -93,6 +98,7 @@ class StepIndicator:
 
 
 # ── Progress Renderer ────────────────────────────────────────
+
 
 class ProgressRenderer:
     """Renders multi-step progress indicators for onboarding flows.
@@ -117,16 +123,16 @@ class ProgressRenderer:
 
     def __init__(self, title: str = "Progress") -> None:
         self._title = title
-        self._steps: Dict[str, StepIndicator] = {}
-        self._step_order: List[str] = []
-        self._callbacks: List[Callable[[StepIndicator], None]] = []
+        self._steps: dict[str, StepIndicator] = {}
+        self._step_order: list[str] = []
+        self._callbacks: list[Callable[[StepIndicator], None]] = []
 
     @property
     def title(self) -> str:
         return self._title
 
     @property
-    def steps(self) -> List[StepIndicator]:
+    def steps(self) -> list[StepIndicator]:
         """Get all steps in order."""
         return [self._steps[name] for name in self._step_order if name in self._steps]
 
@@ -150,10 +156,7 @@ class ProgressRenderer:
     @property
     def is_complete(self) -> bool:
         """Whether all steps are completed or skipped."""
-        return all(
-            s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED)
-            for s in self.steps
-        )
+        return all(s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED) for s in self.steps)
 
     @property
     def has_failure(self) -> bool:
@@ -162,7 +165,7 @@ class ProgressRenderer:
 
     # ── Step Management ──────────────────────────────────────
 
-    def add_step(self, name: str, label: str) -> "ProgressRenderer":
+    def add_step(self, name: str, label: str) -> ProgressRenderer:
         """Add a step to the progress tracker (fluent API)."""
         self._steps[name] = StepIndicator(name=name, label=label)
         self._step_order.append(name)
@@ -173,7 +176,8 @@ class ProgressRenderer:
         if name in self._steps:
             old = self._steps[name]
             self._steps[name] = StepIndicator(
-                name=old.name, label=old.label,
+                name=old.name,
+                label=old.label,
                 status=StepStatus.RUNNING,
                 started_at=time.monotonic(),
             )
@@ -184,7 +188,8 @@ class ProgressRenderer:
         if name in self._steps:
             old = self._steps[name]
             self._steps[name] = StepIndicator(
-                name=old.name, label=old.label,
+                name=old.name,
+                label=old.label,
                 status=StepStatus.COMPLETED,
                 started_at=old.started_at or time.monotonic(),
                 completed_at=time.monotonic(),
@@ -196,7 +201,8 @@ class ProgressRenderer:
         if name in self._steps:
             old = self._steps[name]
             self._steps[name] = StepIndicator(
-                name=old.name, label=old.label,
+                name=old.name,
+                label=old.label,
                 status=StepStatus.FAILED,
                 started_at=old.started_at,
                 completed_at=time.monotonic(),
@@ -209,7 +215,8 @@ class ProgressRenderer:
         if name in self._steps:
             old = self._steps[name]
             self._steps[name] = StepIndicator(
-                name=old.name, label=old.label,
+                name=old.name,
+                label=old.label,
                 status=StepStatus.SKIPPED,
                 started_at=old.started_at,
                 completed_at=time.monotonic(),
@@ -240,6 +247,7 @@ class ProgressRenderer:
     def _render_rich(self) -> str:
         """Render with Rich formatting."""
         import io
+
         buf = io.StringIO()
         console = Console(file=buf, force_terminal=True, width=60)
 
@@ -284,8 +292,8 @@ class ProgressRenderer:
 
 # ── Convenience Function ────────────────────────────────────
 
-def render_progress(title: str = "Progress",
-                    steps: Optional[List[tuple]] = None) -> str:
+
+def render_progress(title: str = "Progress", steps: list[tuple] | None = None) -> str:
     """One-shot progress rendering with step tuples.
 
     Args:

@@ -104,8 +104,9 @@ class ZenicBridge:
     def _sync_execute(self, message: str) -> Any:
         """Ejecucion sincrona del orquestador (se llama en executor)."""
         # Intentar metodo async primero
-        if hasattr(self._orchestrator, 'execute'):
+        if hasattr(self._orchestrator, "execute"):
             import inspect
+
             if inspect.iscoroutinefunction(self._orchestrator.execute):
                 loop = asyncio.new_event_loop()
                 try:
@@ -178,11 +179,7 @@ class ZenicBridge:
     @property
     def stats(self) -> dict[str, Any]:
         """Estadisticas del bridge."""
-        avg_latency = (
-            self._total_latency_ms / self._call_count
-            if self._call_count > 0
-            else 0.0
-        )
+        avg_latency = self._total_latency_ms / self._call_count if self._call_count > 0 else 0.0
         return {
             "available": self.is_available,
             "call_count": self._call_count,
@@ -197,7 +194,7 @@ class ZenicBridge:
             "bridge": "healthy" if self.is_available else "unavailable",
             "orchestrator_type": type(self._orchestrator).__name__ if self._orchestrator else "None",
         }
-        if self._orchestrator and hasattr(self._orchestrator, '_health'):
+        if self._orchestrator and hasattr(self._orchestrator, "_health"):
             try:
                 health["engine_health"] = self._orchestrator._health
             except Exception:

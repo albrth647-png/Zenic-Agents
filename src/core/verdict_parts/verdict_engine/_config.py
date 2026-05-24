@@ -37,20 +37,20 @@ Garantías contra errores:
   - Auditoría permite análisis post-mortem
 """
 
-import os
 import logging
-
+import os
 
 # Import resilience patterns
 try:
     from ..resilience import (
-        VerdictCircuitBreaker,  # noqa: F401
-        VerdictRetryConfig,  # noqa: F401
-        VerdictHealthMonitor,  # noqa: F401
-        VerdictAuditor,  # noqa: F401
         VerdictAuditEntry,  # noqa: F401
+        VerdictAuditor,  # noqa: F401
+        VerdictCircuitBreaker,  # noqa: F401
+        VerdictHealthMonitor,  # noqa: F401
         VerdictResilienceOrchestrator,  # noqa: F401
+        VerdictRetryConfig,  # noqa: F401
     )
+
     _RESILIENCE_AVAILABLE = True
 except ImportError:
     _RESILIENCE_AVAILABLE = False
@@ -58,16 +58,16 @@ except ImportError:
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
 # === Configuración del VerdictEngine ===
-VERDICT_TIMEOUT_S = 5.0           # Timeout estricto para la IA (5 segundos)
-VERDICT_MAX_TOKENS = 10           # Solo necesita 1 token, damos margen
-VERDICT_TEMPERATURE = 0.0         # 0.0 = determinismo absoluto (Phase 5: ALWAYS 0.0)
-VERDICT_MAX_RETRIES = 3           # Reintentos con exponential backoff (antes 1)
+VERDICT_TIMEOUT_S = 5.0  # Timeout estricto para la IA (5 segundos)
+VERDICT_MAX_TOKENS = 10  # Solo necesita 1 token, damos margen
+VERDICT_TEMPERATURE = 0.0  # 0.0 = determinismo absoluto (Phase 5: ALWAYS 0.0)
+VERDICT_MAX_RETRIES = 3  # Reintentos con exponential backoff (antes 1)
 try:
     _attempts = int(os.environ.get("ZENIC_VERDICT_CONSENSUS", "1"))
     VERDICT_CONSENSUS_ATTEMPTS = max(1, min(_attempts, 10))  # Clamp 1-10
 except (ValueError, TypeError):
     VERDICT_CONSENSUS_ATTEMPTS = 1  # ARM: 1 attempt (was 3, too many LLM timeouts on ARM)
-VERDICT_CONSENSUS_THRESHOLD = 2   # Mínimo de YES para verdict YES
+VERDICT_CONSENSUS_THRESHOLD = 2  # Mínimo de YES para verdict YES
 
 VERDICT_PROMPT_TEMPLATE = """You are a binary decision maker. Based on the evidence below, answer with ONLY one word: YES or NO.
 

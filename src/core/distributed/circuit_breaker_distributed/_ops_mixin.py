@@ -7,11 +7,12 @@ and state synchronization methods for DistributedCircuitBreaker.
 
 import logging
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from src.core.patterns.resilience.circuit_breaker import (
-    CircuitState,
     CircuitOpenError,
+    CircuitState,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,9 +62,9 @@ class BreakerOpsMixin:
                     state.half_open_call_count = 0
                     state.opened_at = None
                     logger.info(
-                        "DistCircuit '%s': HALF_OPEN -> CLOSED "
-                        "(%d successes)",
-                        self._name, state.success_count,
+                        "DistCircuit '%s': HALF_OPEN -> CLOSED " "(%d successes)",
+                        self._name,
+                        state.success_count,
                     )
             elif state.state == "closed":
                 state.failure_count = 0
@@ -99,9 +100,9 @@ class BreakerOpsMixin:
                     state.state = "open"
                     state.opened_at = time.monotonic()
                     logger.warning(
-                        "DistCircuit '%s': CLOSED -> OPEN "
-                        "(%d consecutive failures)",
-                        self._name, state.failure_count,
+                        "DistCircuit '%s': CLOSED -> OPEN " "(%d consecutive failures)",
+                        self._name,
+                        state.failure_count,
                     )
 
         # Also update local fallback
@@ -158,9 +159,7 @@ class BreakerOpsMixin:
             self.record_success()
             return result
 
-    async def call_async(
-        self, coro_func: Callable[..., Any], *args: Any, **kwargs: Any
-    ) -> Any:
+    async def call_async(self, coro_func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """
         Execute an async function through the distributed circuit breaker.
 
@@ -250,11 +249,10 @@ class BreakerOpsMixin:
 
         try:
             import asyncio
+
             loop = asyncio.new_event_loop()
             try:
-                remote_state = loop.run_until_complete(
-                    self._backend.get_circuit_state(self._name)
-                )
+                remote_state = loop.run_until_complete(self._backend.get_circuit_state(self._name))
             finally:
                 loop.close()
 
@@ -264,7 +262,8 @@ class BreakerOpsMixin:
                     # Only update if remote is newer
                     if version >= self._local_state.version:
                         self._local_state = SharedCircuitState.from_dict(
-                            remote_state, version=version,
+                            remote_state,
+                            version=version,
                         )
 
                         # Check OPEN -> HALF_OPEN transition
@@ -277,8 +276,7 @@ class BreakerOpsMixin:
                                     self._local_state.success_count = 0
                                     self._local_state.half_open_call_count = 0
                                     logger.info(
-                                        "DistCircuit '%s': OPEN -> HALF_OPEN "
-                                        "(recovery timeout elapsed)",
+                                        "DistCircuit '%s': OPEN -> HALF_OPEN " "(recovery timeout elapsed)",
                                         self._name,
                                     )
 
@@ -288,7 +286,8 @@ class BreakerOpsMixin:
             self._sync_errors += 1
             logger.debug(
                 "DistCircuit '%s': Sync failed, using local state: %s",
-                self._name, exc,
+                self._name,
+                exc,
             )
 
     def _persist_state(self) -> None:
@@ -299,6 +298,7 @@ class BreakerOpsMixin:
 
         try:
             import asyncio
+
             loop = asyncio.new_event_loop()
             try:
                 loop.run_until_complete(
@@ -312,5 +312,7 @@ class BreakerOpsMixin:
                 loop.close()
         except Exception as exc:
             logger.debug(
-                "DistCircuit '%s': Persist failed: %s", self._name, exc,
+                "DistCircuit '%s': Persist failed: %s",
+                self._name,
+                exc,
             )

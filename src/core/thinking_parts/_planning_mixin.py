@@ -3,13 +3,15 @@ Planning methods mixin for ThinkingEngine — plan_generation, identify_template
 identify_entities, generate_endpoints, identify_modules, default_entities, generate_config.
 """
 
-import re
 import json
 import os
+import re
 
 from ._imports import (
-    APP_TEMPLATES, AUTOMATION_TEMPLATES,
-    MAX_PLAN_TOKENS, GenerationPlan,
+    APP_TEMPLATES,
+    AUTOMATION_TEMPLATES,
+    MAX_PLAN_TOKENS,
+    GenerationPlan,
 )
 
 
@@ -22,6 +24,7 @@ def _generate_secure_secret() -> str:
     """
     import secrets as _secrets
     import warnings
+
     generated = _secrets.token_urlsafe(32)
     warnings.warn(
         "ZENIC_SECRET_KEY not set — generated a random secret key. "
@@ -122,7 +125,7 @@ class PlanningMixin:
         )
         if answer:
             try:
-                match = re.search(r'\[.*\]', answer, re.DOTALL)
+                match = re.search(r"\[.*\]", answer, re.DOTALL)
                 if match:
                     entities = json.loads(match.group())
                     if isinstance(entities, list) and entities:
@@ -146,13 +149,15 @@ class PlanningMixin:
         endpoints.extend(base_endpoints.get(template, []))
         for entity in entities[:5]:
             name = entity.get("name", "item").lower()
-            endpoints.extend([
-                {"method": "GET", "path": f"/api/{name}s", "desc": f"List all {name}s"},
-                {"method": "GET", "path": f"/api/{name}s/{{id}}", "desc": f"Get {name} by ID"},
-                {"method": "POST", "path": f"/api/{name}s", "desc": f"Create {name}"},
-                {"method": "PUT", "path": f"/api/{name}s/{{id}}", "desc": f"Update {name}"},
-                {"method": "DELETE", "path": f"/api/{name}s/{{id}}", "desc": f"Delete {name}"},
-            ])
+            endpoints.extend(
+                [
+                    {"method": "GET", "path": f"/api/{name}s", "desc": f"List all {name}s"},
+                    {"method": "GET", "path": f"/api/{name}s/{{id}}", "desc": f"Get {name} by ID"},
+                    {"method": "POST", "path": f"/api/{name}s", "desc": f"Create {name}"},
+                    {"method": "PUT", "path": f"/api/{name}s/{{id}}", "desc": f"Update {name}"},
+                    {"method": "DELETE", "path": f"/api/{name}s/{{id}}", "desc": f"Delete {name}"},
+                ]
+            )
         return endpoints
 
     def _identify_modules(self, template: str) -> list:
@@ -188,37 +193,74 @@ class PlanningMixin:
         """Entidades por defecto según el template."""
         defaults = {
             "crm": [
-                {"name": "Customer", "fields": ["id:int", "name:str", "email:str", "phone:str", "address:str", "created_at:datetime"]},
-                {"name": "Sale", "fields": ["id:int", "customer_id:int", "amount:float", "date:datetime", "status:str"]},
+                {
+                    "name": "Customer",
+                    "fields": ["id:int", "name:str", "email:str", "phone:str", "address:str", "created_at:datetime"],
+                },
+                {
+                    "name": "Sale",
+                    "fields": ["id:int", "customer_id:int", "amount:float", "date:datetime", "status:str"],
+                },
             ],
             "inventory": [
-                {"name": "Product", "fields": ["id:int", "name:str", "sku:str", "quantity:int", "price:float", "category:str"]},
-                {"name": "Movement", "fields": ["id:int", "product_id:int", "type:str", "quantity:int", "date:datetime"]},
+                {
+                    "name": "Product",
+                    "fields": ["id:int", "name:str", "sku:str", "quantity:int", "price:float", "category:str"],
+                },
+                {
+                    "name": "Movement",
+                    "fields": ["id:int", "product_id:int", "type:str", "quantity:int", "date:datetime"],
+                },
             ],
             "invoice_billing": [
-                {"name": "Invoice", "fields": ["id:int", "customer_id:int", "items:list", "total:float", "date:datetime", "status:str"]},
+                {
+                    "name": "Invoice",
+                    "fields": ["id:int", "customer_id:int", "items:list", "total:float", "date:datetime", "status:str"],
+                },
                 {"name": "Customer", "fields": ["id:int", "name:str", "email:str", "tax_id:str"]},
             ],
             "task_manager": [
-                {"name": "Task", "fields": ["id:int", "title:str", "description:str", "status:str", "priority:str", "due_date:datetime"]},
+                {
+                    "name": "Task",
+                    "fields": [
+                        "id:int",
+                        "title:str",
+                        "description:str",
+                        "status:str",
+                        "priority:str",
+                        "due_date:datetime",
+                    ],
+                },
                 {"name": "Project", "fields": ["id:int", "name:str", "description:str", "status:str"]},
             ],
             "auth_system": [
-                {"name": "User", "fields": ["id:int", "username:str", "email:str", "password_hash:str", "role:str", "active:bool"]},
+                {
+                    "name": "User",
+                    "fields": ["id:int", "username:str", "email:str", "password_hash:str", "role:str", "active:bool"],
+                },
             ],
             "web_api": [
-                {"name": "Item", "fields": ["id:int", "name:str", "description:str", "data:dict", "created_at:datetime"]},
+                {
+                    "name": "Item",
+                    "fields": ["id:int", "name:str", "description:str", "data:dict", "created_at:datetime"],
+                },
             ],
             "report_generator": [
                 {"name": "Report", "fields": ["id:int", "name:str", "type:str", "data:dict", "generated_at:datetime"]},
             ],
             "scheduler": [
-                {"name": "Appointment", "fields": ["id:int", "title:str", "date:datetime", "duration:int", "client:str", "status:str"]},
+                {
+                    "name": "Appointment",
+                    "fields": ["id:int", "title:str", "date:datetime", "duration:int", "client:str", "status:str"],
+                },
             ],
         }
-        return defaults.get(template, [
-            {"name": "Item", "fields": ["id:int", "name:str", "description:str", "created_at:datetime"]},
-        ])
+        return defaults.get(
+            template,
+            [
+                {"name": "Item", "fields": ["id:int", "name:str", "description:str", "created_at:datetime"]},
+            ],
+        )
 
     def _generate_config(self, template: str, entities: list) -> dict:
         """Genera configuración por defecto para el proyecto."""
@@ -241,8 +283,7 @@ class PlanningMixin:
             confidence = max(confidence, sim)
         return template, confidence
 
-    def customize_template(self, template_code: str, variables: dict,
-                           request: str = "") -> str:
+    def customize_template(self, template_code: str, variables: dict, request: str = "") -> str:
         """Personaliza un template con variables del contexto."""
         result = template_code
         for key, value in variables.items():
@@ -250,23 +291,21 @@ class PlanningMixin:
             if placeholder in result:
                 result = result.replace(placeholder, str(value))
 
-        remaining_gaps = re.findall(r'__(\w+)__', result)
+        remaining_gaps = re.findall(r"__(\w+)__", result)
         if remaining_gaps and self._ai and self._ai.is_loaded:
             filled = self._ai.fill_template_gaps(result, variables)
-            if filled and not re.search(r'__\w+__', filled):
+            if filled and not re.search(r"__\w+__", filled):
                 result = filled
             else:
                 for gap in remaining_gaps:
                     result = result.replace(f"__{gap}__", self._gap_default(gap, variables))
 
         if request and self._ai and self._ai.is_loaded:
-            enhanced = self._ai.generate_pattern(
-                f"business logic for: {request[:100]}", "python"
-            )
+            enhanced = self._ai.generate_pattern(f"business logic for: {request[:100]}", "python")
             if enhanced and len(enhanced) > 30:
                 result = result.replace(
                     'return {"processed": True, "input": payload}',
-                    '# Business logic (AI-generated)\n        return {"processed": True, "result": "customized", "input": payload}'
+                    '# Business logic (AI-generated)\n        return {"processed": True, "result": "customized", "input": payload}',
                 )
         return result
 
@@ -278,7 +317,9 @@ class PlanningMixin:
             "DB_NAME": variables.get("db_name", "app.db"),
             "PORT": str(variables.get("port", 8000)),
             "HOST": variables.get("host", "0.0.0.0"),
-            "SECRET_KEY": variables.get("secret_key") or os.environ.get("ZENIC_SECRET_KEY") or _generate_secure_secret(),
+            "SECRET_KEY": variables.get("secret_key")
+            or os.environ.get("ZENIC_SECRET_KEY")
+            or _generate_secure_secret(),
             "ENTITY_NAME": variables.get("entity_name", "Item"),
             "ENTITY_NAME_LOWER": variables.get("entity_name", "Item").lower(),
             "FIELDS_INIT": "",

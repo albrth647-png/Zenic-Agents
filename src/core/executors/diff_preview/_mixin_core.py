@@ -8,19 +8,21 @@ import json
 import logging
 import os
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.executors.diff_preview._types import DiffEntry, DiffResult
 from src.core.executors.diff_preview._helpers import (
-    retry as _retry,
+    build_db_summary,
+    count_placeholders_in_set,
     estimate_risk_from_diffs,
     extract_where_clause,
-    parse_set_fields,
-    count_placeholders_in_set,
     parse_insert_columns,
-    build_db_summary,
+    parse_set_fields,
     truncate,
 )
+from src.core.executors.diff_preview._helpers import (
+    retry as _retry,
+)
+from src.core.executors.diff_preview._types import DiffEntry, DiffResult
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,7 @@ class CoreMixin:
         """Lazy-load the DBTransactionJournal singleton."""
         if self._db_journal is None:
             from src.core.executors.db_journal import get_db_journal
+
             self._db_journal = get_db_journal()
         return self._db_journal
 
@@ -48,8 +51,8 @@ class CoreMixin:
     def preview_diff(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> DiffResult:
         """Compute a before/after diff for the given action."""
         with self._lock:
@@ -70,12 +73,12 @@ class CoreMixin:
 
     def _diff_db(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for a database operation."""
-        diffs: List[DiffEntry] = []
-        affected_tables: List[str] = []
+        diffs: list[DiffEntry] = []
+        affected_tables: list[str] = []
 
         db_path = config.get("db_path", ":memory:")
         operation = str(config.get("operation", "query")).upper()
@@ -89,26 +92,34 @@ class CoreMixin:
         if table:
             affected_tables.append(table)
 
-        current_rows: List[Dict[str, Any]] = []
+        current_rows: list[dict[str, Any]] = []
         if table and db_path != ":memory:" and operation in ("DELETE", "UPDATE"):
             try:
                 current_rows = self._fetch_current_rows(
-                    db_path, operation, query, list(params), table,
+                    db_path,
+                    operation,
+                    query,
+                    list(params),
+                    table,
                 )
             except Exception as exc:
                 logger.debug(
                     "DiffPreviewEngine: could not fetch current rows for %s: %s",
-                    operation, exc,
+                    operation,
+                    exc,
                 )
 
         if operation == "DELETE":
             for row_idx, row in enumerate(current_rows):
                 for col_name, col_value in row.items():
-                    diffs.append(DiffEntry(
-                        field_path=f"{table}.{col_name}[row{row_idx}]",
-                        old_value=col_value, new_value=None,
-                        change_type="removed",
-                    ))
+                    diffs.append(
+                        DiffEntry(
+                            field_path=f"{table}.{col_name}[row{row_idx}]",
+                            old_value=col_value,
+                            new_value=None,
+                            change_type="removed",
+                        )
+                    )
 
         elif operation == "UPDATE":
             set_fields = parse_set_fields(query)
@@ -119,43 +130,57 @@ class CoreMixin:
                         current_value = row.get(field_name)
                         changed = current_value != proposed_value
                         change_type = "modified" if current_value is not None else "added"
-                        diffs.append(DiffEntry(
-                            field_path=f"{table}.{field_name}[row{row_idx}]",
-                            old_value=current_value, new_value=proposed_value,
-                            change_type=change_type if changed else "modified",
-                        ))
+                        diffs.append(
+                            DiffEntry(
+                                field_path=f"{table}.{field_name}[row{row_idx}]",
+                                old_value=current_value,
+                                new_value=proposed_value,
+                                change_type=change_type if changed else "modified",
+                            )
+                        )
 
         elif operation == "INSERT":
             insert_cols = parse_insert_columns(query)
             for idx, col_name in enumerate(insert_cols):
                 value = params[idx] if idx < len(params) else None
-                diffs.append(DiffEntry(
-                    field_path=f"{table}.{col_name}",
-                    old_value=None, new_value=value, change_type="added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=f"{table}.{col_name}",
+                        old_value=None,
+                        new_value=value,
+                        change_type="added",
+                    )
+                )
 
         risk = estimate_risk_from_diffs(diffs, operation)
         summary = build_db_summary(operation, table, len(current_rows), diffs)
 
         return DiffResult(
-            action_type="database", diffs=diffs,
-            affected_tables=affected_tables, affected_files=[],
-            estimated_risk=risk, summary=summary,
+            action_type="database",
+            diffs=diffs,
+            affected_tables=affected_tables,
+            affected_files=[],
+            estimated_risk=risk,
+            summary=summary,
         )
 
     def _fetch_current_rows(
-        self, db_path: str, operation: str, query: str,
-        params: List[Any], table: str,
-    ) -> List[Dict[str, Any]]:
+        self,
+        db_path: str,
+        operation: str,
+        query: str,
+        params: list[Any],
+        table: str,
+    ) -> list[dict[str, Any]]:
         """Fetch current rows that would be affected by the operation."""
 
-        def _do_fetch() -> List[Dict[str, Any]]:
+        def _do_fetch() -> list[dict[str, Any]]:
             if db_path == ":memory:":
                 return []
 
             where_clause = extract_where_clause(query, operation)
             select_query = f"SELECT * FROM {table}"
-            select_params: List[Any] = []
+            select_params: list[Any] = []
 
             if where_clause:
                 select_query += f" WHERE {where_clause}"
@@ -176,18 +201,22 @@ class CoreMixin:
                 conn.close()
 
         return _retry(
-            _do_fetch, max_retries=3, base_delay=0.1,
+            _do_fetch,
+            max_retries=3,
+            base_delay=0.1,
             label=f"DiffPreviewEngine._fetch_current_rows({table})",
         )
 
     # ── File diff ──────────────────────────────────────────────
 
     def _diff_file(
-        self, config: Dict[str, Any], context: Dict[str, Any],
+        self,
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for a file operation."""
-        diffs: List[DiffEntry] = []
-        affected_files: List[str] = []
+        diffs: list[DiffEntry] = []
+        affected_files: list[str] = []
 
         operation = str(config.get("operation", "read")).lower()
         source = str(config.get("source", ""))
@@ -202,75 +231,105 @@ class CoreMixin:
         if operation == "write":
             exists = os.path.exists(os.path.join(base_dir, target_path)) if target_path else False
             if exists:
-                diffs.append(DiffEntry(
-                    field_path=target_path,
-                    old_value="<existing_file>",
-                    new_value=content if content is not None else "<new_content>",
-                    change_type="modified",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=target_path,
+                        old_value="<existing_file>",
+                        new_value=content if content is not None else "<new_content>",
+                        change_type="modified",
+                    )
+                )
             else:
-                diffs.append(DiffEntry(
-                    field_path=target_path, old_value=None,
-                    new_value=content if content is not None else "<new_content>",
-                    change_type="added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=target_path,
+                        old_value=None,
+                        new_value=content if content is not None else "<new_content>",
+                        change_type="added",
+                    )
+                )
         elif operation == "delete":
             exists = os.path.exists(os.path.join(base_dir, source)) if source else False
             if exists:
-                diffs.append(DiffEntry(
-                    field_path=source, old_value="<existing_file>",
-                    new_value=None, change_type="removed",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=source,
+                        old_value="<existing_file>",
+                        new_value=None,
+                        change_type="removed",
+                    )
+                )
         elif operation == "append":
-            diffs.append(DiffEntry(
-                field_path=target_path, old_value="<current_content>",
-                new_value="<current_content + appended_data>", change_type="modified",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=target_path,
+                    old_value="<current_content>",
+                    new_value="<current_content + appended_data>",
+                    change_type="modified",
+                )
+            )
         elif operation == "move":
             if source:
-                diffs.append(DiffEntry(
-                    field_path=source, old_value="<existing_file>",
-                    new_value=None, change_type="removed",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=source,
+                        old_value="<existing_file>",
+                        new_value=None,
+                        change_type="removed",
+                    )
+                )
             if destination:
                 dest_exists = os.path.exists(os.path.join(base_dir, destination)) if destination else False
-                diffs.append(DiffEntry(
-                    field_path=destination,
-                    old_value="<existing_file>" if dest_exists else None,
-                    new_value="<moved_file>",
-                    change_type="modified" if dest_exists else "added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=destination,
+                        old_value="<existing_file>" if dest_exists else None,
+                        new_value="<moved_file>",
+                        change_type="modified" if dest_exists else "added",
+                    )
+                )
         elif operation == "copy":
             if destination:
                 dest_exists = os.path.exists(os.path.join(base_dir, destination)) if destination else False
-                diffs.append(DiffEntry(
-                    field_path=destination,
-                    old_value="<existing_file>" if dest_exists else None,
-                    new_value="<copied_file>",
-                    change_type="modified" if dest_exists else "added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=destination,
+                        old_value="<existing_file>" if dest_exists else None,
+                        new_value="<copied_file>",
+                        change_type="modified" if dest_exists else "added",
+                    )
+                )
         else:
-            diffs.append(DiffEntry(
-                field_path=target_path, old_value="<current>",
-                new_value="<current>", change_type="modified",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=target_path,
+                    old_value="<current>",
+                    new_value="<current>",
+                    change_type="modified",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, operation)
         summary = f"File {operation}: {target_path}" if target_path else f"File {operation}"
 
         return DiffResult(
-            action_type="file", diffs=diffs,
-            affected_tables=[], affected_files=affected_files,
-            estimated_risk=risk, summary=summary,
+            action_type="file",
+            diffs=diffs,
+            affected_tables=[],
+            affected_files=affected_files,
+            estimated_risk=risk,
+            summary=summary,
         )
 
     # ── Email diff ─────────────────────────────────────────────
 
     def _diff_email(
-        self, config: Dict[str, Any], context: Dict[str, Any],
+        self,
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for an email operation."""
-        diffs: List[DiffEntry] = []
+        diffs: list[DiffEntry] = []
 
         to_emails = config.get("to", [])
         if isinstance(to_emails, str):
@@ -281,57 +340,87 @@ class CoreMixin:
         bcc = config.get("bcc", [])
 
         diffs.append(DiffEntry(field_path="email.from", old_value=None, new_value=from_email, change_type="added"))
-        diffs.append(DiffEntry(field_path="email.to", old_value=None, new_value=[str(r) for r in to_emails], change_type="added"))
+        diffs.append(
+            DiffEntry(field_path="email.to", old_value=None, new_value=[str(r) for r in to_emails], change_type="added")
+        )
         diffs.append(DiffEntry(field_path="email.subject", old_value=None, new_value=subject, change_type="added"))
         if cc:
-            diffs.append(DiffEntry(field_path="email.cc", old_value=None, new_value=[str(c) for c in cc] if isinstance(cc, list) else [str(cc)], change_type="added"))
+            diffs.append(
+                DiffEntry(
+                    field_path="email.cc",
+                    old_value=None,
+                    new_value=[str(c) for c in cc] if isinstance(cc, list) else [str(cc)],
+                    change_type="added",
+                )
+            )
         if bcc:
-            diffs.append(DiffEntry(field_path="email.bcc", old_value=None, new_value=[str(b) for b in bcc] if isinstance(bcc, list) else [str(bcc)], change_type="added"))
+            diffs.append(
+                DiffEntry(
+                    field_path="email.bcc",
+                    old_value=None,
+                    new_value=[str(b) for b in bcc] if isinstance(bcc, list) else [str(bcc)],
+                    change_type="added",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, "send_email")
         summary = f"Would send email from '{from_email}' to {len(to_emails)} recipient(s) with subject '{subject}'"
 
         return DiffResult(
-            action_type="email", diffs=diffs,
-            affected_tables=[], affected_files=[],
-            estimated_risk=risk, summary=summary,
+            action_type="email",
+            diffs=diffs,
+            affected_tables=[],
+            affected_files=[],
+            estimated_risk=risk,
+            summary=summary,
         )
 
     # ── Generic diff ───────────────────────────────────────────
 
     def _diff_generic(
-        self, action_type: str, config: Dict[str, Any],
-        context: Dict[str, Any],
+        self,
+        action_type: str,
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a generic diff for any action type."""
-        diffs: List[DiffEntry] = []
+        diffs: list[DiffEntry] = []
 
         for key, value in config.items():
-            diffs.append(DiffEntry(
-                field_path=f"{action_type}.{key}",
-                old_value=None, new_value=value, change_type="added",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=f"{action_type}.{key}",
+                    old_value=None,
+                    new_value=value,
+                    change_type="added",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, action_type)
         summary = f"Generic diff for {action_type}: {len(diffs)} field(s) would change"
 
         return DiffResult(
-            action_type=action_type, diffs=diffs,
-            affected_tables=[], affected_files=[],
-            estimated_risk=risk, summary=summary,
+            action_type=action_type,
+            diffs=diffs,
+            affected_tables=[],
+            affected_files=[],
+            estimated_risk=risk,
+            summary=summary,
         )
 
     # ── Formatting ─────────────────────────────────────────────
 
     def format_diff(
-        self, diff_result: DiffResult, format: str = "text",
+        self,
+        diff_result: DiffResult,
+        format: str = "text",
     ) -> str:
         """Format a DiffResult as text or JSON."""
         with self._lock:
             if format.lower() == "json":
                 return json.dumps(diff_result.to_dict(), indent=2, default=str)
 
-            lines: List[str] = []
+            lines: list[str] = []
             lines.append(f"Diff Preview: {diff_result.action_type}")
             lines.append(f"Risk: {diff_result.estimated_risk}")
             lines.append(f"Summary: {diff_result.summary}")
@@ -347,11 +436,12 @@ class CoreMixin:
                 lines.append("Changes:")
                 for d in diff_result.diffs:
                     change_symbol = {
-                        "added": "+", "modified": "~", "removed": "-",
+                        "added": "+",
+                        "modified": "~",
+                        "removed": "-",
                     }.get(d.change_type, "?")
                     lines.append(
-                        f"  [{change_symbol}] {d.field_path}: "
-                        f"{truncate(d.old_value)} → {truncate(d.new_value)}"
+                        f"  [{change_symbol}] {d.field_path}: " f"{truncate(d.old_value)} → {truncate(d.new_value)}"
                     )
 
             return "\n".join(lines)
@@ -362,5 +452,6 @@ class CoreMixin:
         """Estimate risk level based on the number and type of diffs."""
         with self._lock:
             return estimate_risk_from_diffs(
-                diff_result.diffs, diff_result.action_type,
+                diff_result.diffs,
+                diff_result.action_type,
             )

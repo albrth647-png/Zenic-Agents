@@ -3,15 +3,18 @@
 import threading
 
 from ._imports import (
-    logger, IDLE_TIMEOUT_S, RAM_BUDGET_MB, ENABLE_LAZY_LOAD,
     ENABLE_AUTO_UNLOAD,
+    ENABLE_LAZY_LOAD,
+    IDLE_TIMEOUT_S,
+    RAM_BUDGET_MB,
+    logger,
 )
-from .semantic_access import SemanticAccessMixin
 from .ai_access import AIAccessMixin
-from .unload import UnloadMixin
 from .monitor import AutoUnloadMixin
 from .ram_mgmt import RAMMixin
+from .semantic_access import SemanticAccessMixin
 from .status import StatusMixin
+from .unload import UnloadMixin
 
 
 class ModelManager(
@@ -34,8 +37,7 @@ class ModelManager(
     protegiendo el telefono del sobrecalentamiento y desgaste.
     """
 
-    def __init__(self, lazy_load: bool = None, idle_timeout_s: int = None,
-                 ram_budget_mb: int = None):
+    def __init__(self, lazy_load: bool = None, idle_timeout_s: int = None, ram_budget_mb: int = None):
         self._lazy_load = lazy_load if lazy_load is not None else ENABLE_LAZY_LOAD
         self._idle_timeout_s = idle_timeout_s if idle_timeout_s is not None else IDLE_TIMEOUT_S
         self._ram_budget_mb = ram_budget_mb if ram_budget_mb is not None else RAM_BUDGET_MB

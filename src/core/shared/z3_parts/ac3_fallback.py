@@ -44,7 +44,7 @@ class AC3FallbackMixin:
                     "solver_type": "AC3",
                     "verified": True,
                     "counterexamples": [],
-                    "proof": "AC-3 proved: constraints are unsatisfiable when non-nullable = None"
+                    "proof": "AC-3 proved: constraints are unsatisfiable when non-nullable = None",
                 }
             elif result["status"] == "SATISFIED":
                 assignment = result.get("assignment", {})
@@ -55,21 +55,21 @@ class AC3FallbackMixin:
                         "solver_type": "AC3",
                         "verified": False,
                         "counterexamples": [violations],
-                        "proof": f"AC-3 found: {violations}"
+                        "proof": f"AC-3 found: {violations}",
                     }
                 return {
                     "status": "PROVEN",
                     "solver_type": "AC3",
                     "verified": True,
                     "counterexamples": [],
-                    "proof": "AC-3 proved: non-nullable variables are not None in all valid assignments"
+                    "proof": "AC-3 proved: non-nullable variables are not None in all valid assignments",
                 }
             return {
                 "status": result["status"],
                 "solver_type": "AC3",
                 "verified": False,
                 "counterexamples": [],
-                "proof": f"AC-3 result: {result['status']}"
+                "proof": f"AC-3 result: {result['status']}",
             }
 
         except Exception as e:
@@ -87,7 +87,7 @@ class AC3FallbackMixin:
             # Without constraints, SAT just means "some assignment exists"
             # which is NOT the same as PROVEN (all assignments are safe).
             constraints = []
-            if hasattr(self, '_TYPE_LATTICE'):
+            if hasattr(self, "_TYPE_LATTICE"):
                 # For each pair of variables, add compatibility constraint
                 # based on the type lattice
                 [v["name"] for v in variables_with_types]
@@ -103,18 +103,19 @@ class AC3FallbackMixin:
                         # assignment (j -> i), they can't coexist
                         for ti in types_i:
                             compatible = self._TYPE_LATTICE.get(ti, {"unknown"})
-                            incompatible_j_types = [
-                                t for t in types_j if t not in compatible
-                            ]
+                            incompatible_j_types = [t for t in types_j if t not in compatible]
                             if incompatible_j_types:
-                                constraints.append(Constraint(
-                                    name_j, name_i,
-                                    lambda x, y, compat=compatible: x in compat,
-                                    description=(
-                                        f"type compat: {name_j} -> "
-                                        f"{name_i} (source type must be in {compatible})"
-                                    ),
-                                ))
+                                constraints.append(
+                                    Constraint(
+                                        name_j,
+                                        name_i,
+                                        lambda x, y, compat=compatible: x in compat,
+                                        description=(
+                                            f"type compat: {name_j} -> "
+                                            f"{name_i} (source type must be in {compatible})"
+                                        ),
+                                    )
+                                )
 
             solver = ConstraintSolver(timeout_ms=self.timeout_ms)
             result = solver.solve(domains, constraints)
@@ -141,14 +142,14 @@ class AC3FallbackMixin:
                     "solver_type": "AC3",
                     "verified": False,
                     "assignment": None,
-                    "proof": "AC-3: no valid type assignment exists"
+                    "proof": "AC-3: no valid type assignment exists",
                 }
             return {
                 "status": result["status"],
                 "solver_type": "AC3",
                 "verified": False,
                 "assignment": None,
-                "proof": f"AC-3 type verification: {result['status']}"
+                "proof": f"AC-3 type verification: {result['status']}",
             }
 
         except Exception as e:
@@ -176,45 +177,41 @@ class AC3FallbackMixin:
             nullable_vars = set()
             for v in variables_info:
                 annotation = v.get("annotation") or ""
-                if v.get("nullable", False):
-                    nullable_vars.add(v["name"])
-                elif isinstance(annotation, str) and (
-                    "Optional" in annotation or "None" in annotation
+                if v.get("nullable", False) or (
+                    isinstance(annotation, str) and ("Optional" in annotation or "None" in annotation)
                 ):
                     nullable_vars.add(v["name"])
 
             if all_var_names:
-                results["null_safety"] = self._ac3_prove_null_safety(
-                    all_var_names, nullable_vars
-                )
+                results["null_safety"] = self._ac3_prove_null_safety(all_var_names, nullable_vars)
 
             # Type-safety
             variables_with_types = []
             for v in variables_info:
                 annotation = v.get("annotation") or "unknown"
                 types_for_var = self._annotation_to_types(annotation)
-                variables_with_types.append({
-                    "name": v["name"],
-                    "types": types_for_var if types_for_var else ["unknown"],
-                })
-            if variables_with_types:
-                results["type_safety"] = self._ac3_prove_type_safety(
-                    variables_with_types
+                variables_with_types.append(
+                    {
+                        "name": v["name"],
+                        "types": types_for_var if types_for_var else ["unknown"],
+                    }
                 )
+            if variables_with_types:
+                results["type_safety"] = self._ac3_prove_type_safety(variables_with_types)
 
             # Invariant-safety (simple pattern check)
             try:
                 tree = ast.parse(raw_code)
                 invariants = []
                 for node in ast.walk(tree):
-                    if isinstance(node, ast.BinOp) and isinstance(
-                        node.op, (ast.Div, ast.FloorDiv)
-                    ):
+                    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.FloorDiv)):
                         if isinstance(node.right, ast.Name):
-                            invariants.append({
-                                "kind": "no_div_zero",
-                                "variables": [node.right.id],
-                            })
+                            invariants.append(
+                                {
+                                    "kind": "no_div_zero",
+                                    "variables": [node.right.id],
+                                }
+                            )
                 results["invariant_safety"] = {
                     "status": "LIKELY_PROVEN" if not invariants else "UNKNOWN",
                     "solver_type": "AC3",
@@ -240,9 +237,7 @@ class AC3FallbackMixin:
             sub_results = [r for r in sub_results if r is not None]
             if all(r.get("verified", False) for r in sub_results):
                 results["overall_status"] = "LIKELY_PROVEN"
-            elif any(
-                r.get("status") in ("VIOLATED", "UNSATISFIABLE") for r in sub_results
-            ):
+            elif any(r.get("status") in ("VIOLATED", "UNSATISFIABLE") for r in sub_results):
                 results["overall_status"] = "VIOLATED"
             else:
                 results["overall_status"] = "PARTIAL"

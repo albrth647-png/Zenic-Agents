@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List
 
 
 class RiskLevel(str, Enum):
@@ -16,27 +15,27 @@ class RiskLevel(str, Enum):
 @dataclass
 class BlastRadiusReport:
     source_node: str
-    affected_nodes: List[str] = field(default_factory=list)
-    direct_dependents: List[str] = field(default_factory=list)
-    transitive_dependents: List[str] = field(default_factory=list)
+    affected_nodes: list[str] = field(default_factory=list)
+    direct_dependents: list[str] = field(default_factory=list)
+    transitive_dependents: list[str] = field(default_factory=list)
     risk_level: RiskLevel = RiskLevel.NEGLIGIBLE
     blast_radius_size: int = 0
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 @dataclass
 class RiskPropagationReport:
-    effective_risks: Dict[str, float] = field(default_factory=dict)
+    effective_risks: dict[str, float] = field(default_factory=dict)
     max_effective_risk: float = 0.0
-    high_risk_nodes: List[str] = field(default_factory=list)
-    risk_paths: Dict[str, List[str]] = field(default_factory=dict)
+    high_risk_nodes: list[str] = field(default_factory=list)
+    risk_paths: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass
 class CriticalPathReport:
-    critical_path: List[str] = field(default_factory=list)
+    critical_path: list[str] = field(default_factory=list)
     total_duration_ms: int = 0
-    is_on_critical_path: Dict[str, bool] = field(default_factory=dict)
+    is_on_critical_path: dict[str, bool] = field(default_factory=dict)
 
 
 @dataclass

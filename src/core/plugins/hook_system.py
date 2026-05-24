@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.core.plugins.hook_system")
 
@@ -23,7 +23,7 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 1.0) -> Any:
         except Exception:
             if attempt == max_retries - 1:
                 raise
-            time.sleep(base_delay * (2 ** attempt))
+            time.sleep(base_delay * (2**attempt))
 
 
 class HookType(str, Enum):
@@ -50,9 +50,9 @@ class HookRegistration:
 class PluginHookSystem:
     """Thread-safe hook/event system for plugins with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._hooks: Dict[str, HookRegistration] = {}
+        self._hooks: dict[str, HookRegistration] = {}
         self._db_path = db_path or str(DB_PATH)
         self._init_db()
 
@@ -106,8 +106,16 @@ class PluginHookSystem:
                 """INSERT OR REPLACE INTO plugin_hooks
                    (hook_id, plugin_id, hook_type, hook_name, priority, callback_ref, active, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (reg.id, reg.plugin_id, reg.hook_type.value, reg.hook_name,
-                 reg.priority, reg.callback_ref, int(reg.active), time.time()),
+                (
+                    reg.id,
+                    reg.plugin_id,
+                    reg.hook_type.value,
+                    reg.hook_name,
+                    reg.priority,
+                    reg.callback_ref,
+                    int(reg.active),
+                    time.time(),
+                ),
             )
             conn.commit()
             conn.close()
@@ -117,7 +125,9 @@ class PluginHookSystem:
     def _delete_from_db(self, hook_id: str) -> None:
         def _del() -> None:
             conn = sqlite3.connect(self._db_path)
-            conn.execute("DELETE FROM plugin_hooks WHERE hook_id = ?", (hook_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            conn.execute(
+                "DELETE FROM plugin_hooks WHERE hook_id = ?", (hook_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             conn.commit()
             conn.close()
 
@@ -161,38 +171,39 @@ class PluginHookSystem:
         self,
         hook_type: HookType,
         hook_name: str,
-        context: Dict[str, Any],
-    ) -> List[Any]:
+        context: dict[str, Any],
+    ) -> list[Any]:
         """Fire hooks matching type/name and collect results."""
         with self._lock:
             matching = [
-                h for h in self._hooks.values()
-                if h.hook_type == hook_type
-                and h.hook_name == hook_name
-                and h.active
+                h for h in self._hooks.values() if h.hook_type == hook_type and h.hook_name == hook_name and h.active
             ]
             matching.sort(key=lambda h: h.priority)
 
-        results: List[Any] = []
+        results: list[Any] = []
         for hook in matching:
             try:
                 # Attempt to call the callback via lifecycle manager
                 from .lifecycle import get_plugin_lifecycle
+
                 lifecycle = get_plugin_lifecycle()
                 result = lifecycle._call_hook(hook.plugin_id, hook.callback_ref, context)
                 if result is not None:
                     results.append(result)
             except Exception as exc:
                 logger.error(
-                    "Hook %s (%s) failed: %s", hook.id, hook.callback_ref, exc,
+                    "Hook %s (%s) failed: %s",
+                    hook.id,
+                    hook.callback_ref,
+                    exc,
                 )
         return results
 
     def get_hooks(
         self,
-        hook_type: Optional[HookType] = None,
-        plugin_id: Optional[str] = None,
-    ) -> List[HookRegistration]:
+        hook_type: HookType | None = None,
+        plugin_id: str | None = None,
+    ) -> list[HookRegistration]:
         with self._lock:
             result = list(self._hooks.values())
             if hook_type is not None:
@@ -220,11 +231,11 @@ class PluginHookSystem:
             return True
 
 
-_hook_system_instance: Optional[PluginHookSystem] = None
+_hook_system_instance: PluginHookSystem | None = None
 _hook_system_lock = threading.Lock()
 
 
-def get_plugin_hook_system(db_path: Optional[str] = None) -> PluginHookSystem:
+def get_plugin_hook_system(db_path: str | None = None) -> PluginHookSystem:
     global _hook_system_instance
     with _hook_system_lock:
         if _hook_system_instance is None:

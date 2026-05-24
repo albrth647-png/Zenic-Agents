@@ -30,33 +30,33 @@ Decomposed into focused modules:
 - analysis_utils: AnalysisUtils (quality reports, explanations, logging)
 """
 
-import time
 import logging
-from typing import Dict, Any
+import time
+from typing import Any
 
 from src.config.loader import load_settings
-from src.core.shared.db_initializer import get_projects_dir
+from src.core.agents.compat import SurgicalAgentCompat as SurgicalAgent
+from src.core.mini_ai_engine import MiniAIEngine  # Capa 4: ARBITRA (solo SÍ/NO)
 
 # Base class with shared initialization, public API, backward-compat
 from src.core.orchestrator_base import BaseOrchestrator
 
+# Decomposed modules - 4-Layer Verdict Architecture (v17)
+from src.core.semantic_engine import SemanticEngine  # Capa 1: ENTIENDE
+from src.core.shared.db_initializer import get_projects_dir
+from src.core.smart_memory import SmartMemory  # Capa 3: RECUERDA
+
 # Step dispatcher for unified step execution
 from src.core.step_dispatcher import StepDispatcher
-
-# Decomposed modules - 4-Layer Verdict Architecture (v17)
-from src.core.semantic_engine import SemanticEngine   # Capa 1: ENTIENDE
-from src.core.mini_ai_engine import MiniAIEngine      # Capa 4: ARBITRA (solo SÍ/NO)
-from src.core.smart_memory import SmartMemory          # Capa 3: RECUERDA
 from src.core.verdict_engine_module import VerdictEngine  # Verdict pipeline completo
-from src.core.agents.compat import SurgicalAgentCompat as SurgicalAgent
 
 logger = logging.getLogger(__name__)
 
 # === Extracted Constants (previously hardcoded inline) ===
-MAX_MEMORY_SNIPPET_LEN = 500      # Max chars for memory save snippets
-SANDBOX_TTL_MULTIPLIER = 3        # Sandbox TTL = timeout * multiplier
-SANDBOX_TTL_MIN = 120             # Minimum sandbox TTL in seconds
-MAX_CODE_SNIPPET_LEN = 200        # Max chars for code context snippets
+MAX_MEMORY_SNIPPET_LEN = 500  # Max chars for memory save snippets
+SANDBOX_TTL_MULTIPLIER = 3  # Sandbox TTL = timeout * multiplier
+SANDBOX_TTL_MIN = 120  # Minimum sandbox TTL in seconds
+MAX_CODE_SNIPPET_LEN = 200  # Max chars for code context snippets
 
 
 class ZenicOrchestrator(BaseOrchestrator):
@@ -149,7 +149,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         # 9. Scan project
         self._scan_project()
 
-    async def execute(self, msg: str) -> Dict[str, Any]:
+    async def execute(self, msg: str) -> dict[str, Any]:
         """
         Ejecuta el pipeline completo de 8 niveles con Arquitectura de Veredicto.
 
@@ -180,9 +180,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         # ============================================================
         #  INTENT CLASSIFICATION - Deterministic (sin IA)
         # ============================================================
-        intent_output = self._surgical_agent.classify_with_runner(
-            self._agent_runner, msg, context=""
-        )
+        intent_output = self._surgical_agent.classify_with_runner(self._agent_runner, msg, context="")
         intent = self._surgical_agent.to_intent_payload(intent_output, context=msg)
 
         # Extraer codigo del mensaje (separado de la clasificacion)
@@ -192,9 +190,11 @@ class ZenicOrchestrator(BaseOrchestrator):
             if code_lang:
                 intent.language = code_lang
 
-        logger.info(f"SurgicalAgent: {intent_output.operation}/{intent_output.goal} "
-                    f"(source={intent_output.source}, conf={intent_output.confidence:.2f}, "
-                    f"target={intent.target})")
+        logger.info(
+            f"SurgicalAgent: {intent_output.operation}/{intent_output.goal} "
+            f"(source={intent_output.source}, conf={intent_output.confidence:.2f}, "
+            f"target={intent.target})"
+        )
 
         # Nivel 3: Analisis AST del codigo proporcionado
         ast_analysis = {}
@@ -227,9 +227,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         #  PROTOCOLO ABORTIVO: Auto-subdivision cuando solver timeout
         # ============================================================
         if plan.solver_status == "TIMEOUT_SUBDIVIDE_REQUIRED":
-            return await self._abortive.handle_abortive_protocol(
-                intent, routing, plan, ast_analysis, start_time
-            )
+            return await self._abortive.handle_abortive_protocol(intent, routing, plan, ast_analysis, start_time)
 
         # Nivel 5: Ejecutar pasos del plan via StepDispatcher
         code = intent.raw_code or ""
@@ -237,7 +235,12 @@ class ZenicOrchestrator(BaseOrchestrator):
         lang = intent.language
 
         result_code, code, explanations = await self._step_dispatcher.execute_plan_steps(
-            plan, intent, code, explanations, lang, ast_analysis,
+            plan,
+            intent,
+            code,
+            explanations,
+            lang,
+            ast_analysis,
         )
 
         final_code = result_code if result_code else code
@@ -282,30 +285,31 @@ class ZenicOrchestrator(BaseOrchestrator):
 
         if verdict_result.verdict.value == "YES" and trial.status == "PASS" and final_code:
             # APPROVED: Veredicto YES + Sandbox PASS
-            node = self.ledger.commit(intent.target, final_code, p_dir,
-                                       workspace=sandbox_workspace)
+            node = self.ledger.commit(intent.target, final_code, p_dir, workspace=sandbox_workspace)
             try:
                 self._isolation_manager.release_workspace(sandbox_workspace.sandbox_id)
             except Exception as e:
                 logger.debug("Orchestrator: Failed to release workspace: %s", e)
-            self.cache.save(intent, "PROVEN",
-                          {"h": node.hash_sha256[:8], "code": final_code},
-                          final_code, lang)
+            self.cache.save(intent, "PROVEN", {"h": node.hash_sha256[:8], "code": final_code}, final_code, lang)
             elapsed = int((time.time() - start_time) * 1000)
-            self._analysis.log_request(intent, "SUCCESS", elapsed,
-                            solver_status=plan.solver_status,
-                            mcts_sims=plan.mcts_simulations)
+            self._analysis.log_request(
+                intent, "SUCCESS", elapsed, solver_status=plan.solver_status, mcts_sims=plan.mcts_simulations
+            )
 
             # SmartMemory: Save successful interaction (learning)
             importance = SmartMemory.compute_importance(
-                msg, intent.op, intent.goal, success=True, response_length=len(final_code))
+                msg, intent.op, intent.goal, success=True, response_length=len(final_code)
+            )
             self._memory.add_working(msg, final_code[:MAX_MEMORY_SNIPPET_LEN], intent.op, intent.goal, importance)
             self._memory.save_to_cache(msg, final_code[:MAX_MEMORY_SNIPPET_LEN], intent.op, intent.goal, importance)
 
             return {
-                "status": "SUCCESS", "code": final_code,
-                "hash": node.hash_sha256[:12], "error": "",
-                "processing_time_ms": elapsed, "route": routing.route,
+                "status": "SUCCESS",
+                "code": final_code,
+                "hash": node.hash_sha256[:12],
+                "error": "",
+                "processing_time_ms": elapsed,
+                "route": routing.route,
                 "criticality": routing.criticality,
                 "solver_status": plan.solver_status,
                 "solver_proof": plan.solver_proof,
@@ -313,7 +317,8 @@ class ZenicOrchestrator(BaseOrchestrator):
                 "mcts_depth_reached": plan.mcts_depth_reached,
                 "ast_analysis": ast_analysis,
                 "explanations": explanations,
-                "warnings": trial.warnings, "metrics": trial.metrics,
+                "warnings": trial.warnings,
+                "metrics": trial.metrics,
                 "paths_explored": trial.paths_explored,
                 "paths_pruned": trial.paths_pruned,
                 "verdict": verdict_result.verdict.value,
@@ -333,13 +338,15 @@ class ZenicOrchestrator(BaseOrchestrator):
             except Exception as e:
                 logger.debug("Orchestrator: Failed to release workspace on NO: %s", e)
             elapsed = int((time.time() - start_time) * 1000)
-            self._analysis.log_request(intent, "VERDICT_NO", elapsed,
-                            solver_status=plan.solver_status)
+            self._analysis.log_request(intent, "VERDICT_NO", elapsed, solver_status=plan.solver_status)
 
             return {
-                "status": "REJECTED", "code": final_code, "hash": "N/A",
+                "status": "REJECTED",
+                "code": final_code,
+                "hash": "N/A",
                 "error": f"Verdict: NO (source={verdict_result.source})",
-                "processing_time_ms": elapsed, "route": routing.route,
+                "processing_time_ms": elapsed,
+                "route": routing.route,
                 "criticality": routing.criticality,
                 "solver_status": plan.solver_status,
                 "ast_analysis": ast_analysis,
@@ -357,8 +364,7 @@ class ZenicOrchestrator(BaseOrchestrator):
             except Exception as e:
                 logger.debug("Orchestrator: Failed to release workspace: %s", e)
             elapsed = int((time.time() - start_time) * 1000)
-            self._analysis.log_request(intent, "ROLLBACK", elapsed,
-                            solver_status=plan.solver_status)
+            self._analysis.log_request(intent, "ROLLBACK", elapsed, solver_status=plan.solver_status)
 
             # Si fallo por K-Path, devolver Razonamiento Parcial
             if trial.status == "FAIL_K_PATH":
@@ -367,9 +373,12 @@ class ZenicOrchestrator(BaseOrchestrator):
                 )
 
             return {
-                "status": "ROLLBACK", "code": final_code, "hash": "N/A",
+                "status": "ROLLBACK",
+                "code": final_code,
+                "hash": "N/A",
                 "error": trial.error_message,
-                "processing_time_ms": elapsed, "route": routing.route,
+                "processing_time_ms": elapsed,
+                "route": routing.route,
                 "criticality": routing.criticality,
                 "solver_status": plan.solver_status,
                 "ast_analysis": ast_analysis,
@@ -395,9 +404,12 @@ class ZenicOrchestrator(BaseOrchestrator):
             self._memory.add_working(msg, "NO_OP", intent.op, intent.goal, importance=0.2)
 
             return {
-                "status": "NO_OP", "code": "", "hash": "N/A",
+                "status": "NO_OP",
+                "code": "",
+                "hash": "N/A",
                 "error": "No new code generated",
-                "processing_time_ms": elapsed, "route": routing.route,
+                "processing_time_ms": elapsed,
+                "route": routing.route,
                 "criticality": routing.criticality,
                 "solver_status": plan.solver_status,
                 "ast_analysis": ast_analysis,

@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
-from .circuit_breaker import CircuitBreakerManager
-from .retry import AgentRetryConfig
+from .audit_logger import AuditEntry, AuditLogger
 from .bulkhead import BulkheadManager
+from .circuit_breaker import CircuitBreakerManager
 from .health_monitor import GlobalHealthMonitor
-from .audit_logger import AuditLogger, AuditEntry
+from .retry import AgentRetryConfig
 
 T = TypeVar("T")
 
@@ -37,11 +37,11 @@ class BaseAgent(Generic[T]):
     def __init__(
         self,
         name: str,
-        circuit_breaker_manager: Optional[CircuitBreakerManager] = None,
-        bulkhead_manager: Optional[BulkheadManager] = None,
-        health_monitor: Optional[GlobalHealthMonitor] = None,
-        audit_logger: Optional[AuditLogger] = None,
-        retry_config: Optional[AgentRetryConfig] = None,
+        circuit_breaker_manager: CircuitBreakerManager | None = None,
+        bulkhead_manager: BulkheadManager | None = None,
+        health_monitor: GlobalHealthMonitor | None = None,
+        audit_logger: AuditLogger | None = None,
+        retry_config: AgentRetryConfig | None = None,
     ) -> None:
         self.name = name
         self._cb_manager = circuit_breaker_manager or CircuitBreakerManager()
@@ -66,18 +66,14 @@ class BaseAgent(Generic[T]):
         MUST be deterministic (no AI calls).
         MUST always return a valid result (never raises).
         """
-        raise NotImplementedError(
-            f"Agent {self.name} must implement execute() with exactly ONE responsibility"
-        )
+        raise NotImplementedError(f"Agent {self.name} must implement execute() with exactly ONE responsibility")
 
     def fallback(self, input_data: Any) -> T:
         """
         Deterministic fallback when execute() fails.
         MUST be overridden. MUST always succeed.
         """
-        raise NotImplementedError(
-            f"Agent {self.name} must implement fallback()"
-        )
+        raise NotImplementedError(f"Agent {self.name} must implement fallback()")
 
     def run(self, input_data: Any) -> dict[str, Any]:
         """
@@ -196,14 +192,16 @@ class BaseAgent(Generic[T]):
 
         # Audit
         cb_state = self._cb_manager.get_breaker(self.name).state.value
-        self._audit_logger.record(AuditEntry(
-            agent=self.name,
-            source=source,
-            duration_ms=duration_ms,
-            retry_count=retry_count,
-            circuit_breaker_state=cb_state,
-            evidence_summary=error[:200] if error else "",
-        ))
+        self._audit_logger.record(
+            AuditEntry(
+                agent=self.name,
+                source=source,
+                duration_ms=duration_ms,
+                retry_count=retry_count,
+                circuit_breaker_state=cb_state,
+                evidence_summary=error[:200] if error else "",
+            )
+        )
 
     def _format_result(
         self,
@@ -226,16 +224,8 @@ class BaseAgent(Generic[T]):
     @property
     def stats(self) -> dict[str, Any]:
         with self._stats_lock:
-            avg_duration = (
-                self._total_duration_ms / self._call_count
-                if self._call_count > 0
-                else 0.0
-            )
-            success_rate = (
-                self._success_count / self._call_count
-                if self._call_count > 0
-                else 1.0
-            )
+            avg_duration = self._total_duration_ms / self._call_count if self._call_count > 0 else 0.0
+            success_rate = self._success_count / self._call_count if self._call_count > 0 else 1.0
             return {
                 "name": self.name,
                 "call_count": self._call_count,

@@ -9,6 +9,7 @@ NO espera a que el usuario reporte "la API no funciona".
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 from src.data.local_scanner import LocalDataScanner
 

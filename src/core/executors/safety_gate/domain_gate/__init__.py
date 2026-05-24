@@ -14,13 +14,17 @@ Compliance failures for critical violations result in DENY.
 Python fallback is fully deterministic — mirrors the Rust logic exactly.
 """
 
+from ._core import (
+    DomainSafetyGate,
+    get_default_domain_safety_gate,
+)
 from ._helpers import (
-    ComplianceResult,
-    DomainSafetyCheckResult,
-    _COMPLIANCE_CHECKERS,
     _COMPILED_DOMAIN_RULES,
+    _COMPLIANCE_CHECKERS,
     _PYTHON_DOMAIN_RULES,
     _VERDICT_SEVERITY,
+    ComplianceResult,
+    DomainSafetyCheckResult,
     _check_compliance_aml_kyc,
     _check_compliance_coppa,
     _check_compliance_gdpr,
@@ -32,9 +36,24 @@ from ._helpers import (
     _escalate_verdict,
     _sensitivity_escalate,
 )
-from ._core import (
-    DomainSafetyGate,
-    get_default_domain_safety_gate,
-)
 
-__all__ = ["ComplianceResult", "DomainSafetyCheckResult", "DomainSafetyGate", "get_default_domain_safety_gate", "_COMPLIANCE_CHECKERS", "_COMPILED_DOMAIN_RULES", "_PYTHON_DOMAIN_RULES", "_VERDICT_SEVERITY", "_check_compliance_aml_kyc", "_check_compliance_coppa", "_check_compliance_gdpr", "_check_compliance_hipaa", "_check_compliance_iso_27001", "_check_compliance_pci_dss", "_check_compliance_soc2", "_check_compliance_sox", "_escalate_verdict", "_sensitivity_escalate"]
+__all__ = [
+    "_COMPILED_DOMAIN_RULES",
+    "_COMPLIANCE_CHECKERS",
+    "_PYTHON_DOMAIN_RULES",
+    "_VERDICT_SEVERITY",
+    "ComplianceResult",
+    "DomainSafetyCheckResult",
+    "DomainSafetyGate",
+    "_check_compliance_aml_kyc",
+    "_check_compliance_coppa",
+    "_check_compliance_gdpr",
+    "_check_compliance_hipaa",
+    "_check_compliance_iso_27001",
+    "_check_compliance_pci_dss",
+    "_check_compliance_soc2",
+    "_check_compliance_sox",
+    "_escalate_verdict",
+    "_sensitivity_escalate",
+    "get_default_domain_safety_gate",
+]

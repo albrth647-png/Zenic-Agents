@@ -13,7 +13,7 @@ import time
 import urllib.parse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .safety_gate import get_default_safety_gate  # SECURITY: C4 fix
 
@@ -27,14 +27,16 @@ except ImportError:
 
 try:
     import aiohttp  # noqa: F401
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
     from apscheduler.schedulers.asyncio import AsyncIOScheduler  # noqa: F401
-    from apscheduler.triggers.interval import IntervalTrigger  # noqa: F401
     from apscheduler.triggers.cron import CronTrigger  # noqa: F401
+    from apscheduler.triggers.interval import IntervalTrigger  # noqa: F401
+
     _HAS_APSCHEDULER = True
 except ImportError:
     _HAS_APSCHEDULER = False
@@ -44,6 +46,7 @@ except ImportError:
 #  RESULTADO DE ACCIÓN (Enhanced)
 # ============================================================
 
+
 @dataclass
 class ActionResult:
     """Resultado estandarizado de cualquier acción ejecutada.
@@ -51,15 +54,16 @@ class ActionResult:
     Enhanced (Phase 3): Added audit_id and safety_verdict fields
     for traceability through the Safety Gate → Executor → Audit pipeline.
     """
+
     success: bool
-    data: Dict[str, Any]
+    data: dict[str, Any]
     error: str = ""
     duration_ms: float = 0.0
-    audit_id: str = ""            # Links to ExecutorAuditLogger entry
-    safety_verdict: str = ""      # ALLOW, CONFIRM, DENY, RATE_LIMITED
-    blueprint_valid: bool = True   # Whether config passed Blueprint validation
+    audit_id: str = ""  # Links to ExecutorAuditLogger entry
+    safety_verdict: str = ""  # ALLOW, CONFIRM, DENY, RATE_LIMITED
+    blueprint_valid: bool = True  # Whether config passed Blueprint validation
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "success": self.success,
@@ -76,6 +80,7 @@ class ActionResult:
 #  CLASE BASE ABSTRACTA
 # ============================================================
 
+
 class ActionExecutor(ABC):
     """Clase base abstracta para todos los ejecutores de acciones.
 
@@ -84,7 +89,7 @@ class ActionExecutor(ABC):
     """
 
     @abstractmethod
-    async def execute(self, config: Dict[str, Any], context: Dict[str, Any]) -> ActionResult:
+    async def execute(self, config: dict[str, Any], context: dict[str, Any]) -> ActionResult:
         """Ejecuta la acción con la configuración y contexto dados."""
         ...
 
@@ -104,9 +109,11 @@ class ActionExecutor(ABC):
 #  VALIDADORES UTILITARIOS
 # ============================================================
 
+
 def _validate_email(email: str) -> bool:
     """Valida formato básico de email."""
-    return bool(re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email))
+    return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
+
 
 def _validate_url(url: str) -> bool:
     """Valida formato básico de URL."""
@@ -116,6 +123,7 @@ def _validate_url(url: str) -> bool:
     except Exception:
         return False
 
+
 def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks.
 
@@ -123,6 +131,7 @@ def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> 
     Returns the URL string if valid, raises ValueError otherwise.
     """
     import ipaddress
+
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme not in allowed_schemes:
         raise ValueError(f"URL scheme '{parsed.scheme}' not allowed. Use: {allowed_schemes}")
@@ -136,6 +145,7 @@ def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> 
         if ip.is_private or ip.is_loopback or ip.is_reserved:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
+
 
 def _safe_path(path: str, base_dir: str = "") -> str:
     """Resuelve path y verifica que no escape del base_dir (path traversal).
@@ -166,15 +176,18 @@ def _safe_path(path: str, base_dir: str = "") -> str:
         raise ValueError(f"Path traversal detected: '{path}' escapes base directory")
     return resolved
 
+
 def _validate_sql(query: str) -> bool:
     """Valida que un query SQL no contenga patrones de inyección peligrosos."""
-    dangerous = [r"(?:^|;)\s*DROP\s+(?:TABLE|INDEX|VIEW|TRIGGER|DATABASE)\b",
-                 r"(?:^|;)\s*DELETE\s+FROM\s",
-                 r"(?:^|;)\s*UPDATE\s+\w+\s+SET\s",
-                 r"(?:^|;)\s*INSERT\s+INTO\s",
-                 r"UNION\s+SELECT\s",
-                 r"--\s*$",
-                 r"/\*.*\*/"]
+    dangerous = [
+        r"(?:^|;)\s*DROP\s+(?:TABLE|INDEX|VIEW|TRIGGER|DATABASE)\b",
+        r"(?:^|;)\s*DELETE\s+FROM\s",
+        r"(?:^|;)\s*UPDATE\s+\w+\s+SET\s",
+        r"(?:^|;)\s*INSERT\s+INTO\s",
+        r"UNION\s+SELECT\s",
+        r"--\s*$",
+        r"/\*.*\*/",
+    ]
     for pattern in dangerous:
         if re.search(pattern, query, re.MULTILINE | re.IGNORECASE):
             logger.warning(f"SQL validation: potentially dangerous pattern: {pattern}")
@@ -185,6 +198,7 @@ def _validate_sql(query: str) -> bool:
 # ============================================================
 #  REGISTRY DE EJECUTORES (Enhanced with Safety Gate + Audit)
 # ============================================================
+
 
 class ExecutorRegistry:
     """Registry centralizado que gestiona todos los action executors.
@@ -199,11 +213,11 @@ class ExecutorRegistry:
 
     def __init__(
         self,
-        safety_gate: Optional[Any] = None,
-        audit_logger: Optional[Any] = None,
-        blueprint: Optional[Any] = None,
+        safety_gate: Any | None = None,
+        audit_logger: Any | None = None,
+        blueprint: Any | None = None,
     ) -> None:
-        self._executors: Dict[str, ActionExecutor] = {}
+        self._executors: dict[str, ActionExecutor] = {}
         self._safety_gate = safety_gate
         self._audit_logger = audit_logger
         self._blueprint = blueprint
@@ -219,12 +233,12 @@ class ExecutorRegistry:
         """
         # Lazy imports to avoid circular dependencies
         from .database_executor import DatabaseExecutor
-        from .file_executor import FileExecutor
-        from .transform_executor import TransformExecutor
-        from .schedule_executor import ScheduleExecutor
         from .email_executor import EmailExecutor
-        from .servicenow_executor import ServiceNowExecutor
+        from .file_executor import FileExecutor
         from .jira_executor import JiraExecutor
+        from .schedule_executor import ScheduleExecutor
+        from .servicenow_executor import ServiceNowExecutor
+        from .transform_executor import TransformExecutor
 
         db_exec = DatabaseExecutor()
         file_exec = FileExecutor()
@@ -236,26 +250,39 @@ class ExecutorRegistry:
 
         # Mapeo de tipos de accion a ejecutores (alias incluidos)
         for key, executor in [
-            ("database_operation", db_exec), ("database", db_exec), ("db", db_exec),
-            ("file_operation", file_exec), ("file", file_exec),
-            ("data_transform", transform_exec), ("transform", transform_exec),
+            ("database_operation", db_exec),
+            ("database", db_exec),
+            ("db", db_exec),
+            ("file_operation", file_exec),
+            ("file", file_exec),
+            ("data_transform", transform_exec),
+            ("transform", transform_exec),
             ("schedule", schedule_exec),
             # Phase 2 — Email
-            ("send_email", email_exec), ("email", email_exec),
+            ("send_email", email_exec),
+            ("email", email_exec),
             # Phase 2 — ServiceNow
-            ("servicenow", servicenow_exec), ("create_incident", servicenow_exec),
-            ("update_incident", servicenow_exec), ("close_incident", servicenow_exec),
-            ("get_incident", servicenow_exec), ("search_incidents", servicenow_exec),
-            ("add_comment", servicenow_exec), ("create_change_request", servicenow_exec),
+            ("servicenow", servicenow_exec),
+            ("create_incident", servicenow_exec),
+            ("update_incident", servicenow_exec),
+            ("close_incident", servicenow_exec),
+            ("get_incident", servicenow_exec),
+            ("search_incidents", servicenow_exec),
+            ("add_comment", servicenow_exec),
+            ("create_change_request", servicenow_exec),
             # Phase 2 — Jira
-            ("jira", jira_exec), ("create_issue", jira_exec),
-            ("update_issue", jira_exec), ("transition_issue", jira_exec),
-            ("get_issue", jira_exec), ("search_issues", jira_exec),
-            ("add_jira_comment", jira_exec), ("link_issues", jira_exec),
+            ("jira", jira_exec),
+            ("create_issue", jira_exec),
+            ("update_issue", jira_exec),
+            ("transition_issue", jira_exec),
+            ("get_issue", jira_exec),
+            ("search_issues", jira_exec),
+            ("add_jira_comment", jira_exec),
+            ("link_issues", jira_exec),
         ]:
             self.register_executor(key, executor)
 
-    def get_executor(self, action_type: str) -> Optional[ActionExecutor]:
+    def get_executor(self, action_type: str) -> ActionExecutor | None:
         """Obtiene el executor registrado para un tipo de acción."""
         return self._executors.get(action_type)
 
@@ -264,8 +291,9 @@ class ExecutorRegistry:
         self._executors[action_type] = executor
         logger.debug(f"ExecutorRegistry: Registered '{action_type}' -> {executor.__class__.__name__}")
 
-    async def execute_action(self, action_type: str, config: Dict[str, Any],
-                             context: Optional[Dict[str, Any]] = None) -> ActionResult:
+    async def execute_action(
+        self, action_type: str, config: dict[str, Any], context: dict[str, Any] | None = None
+    ) -> ActionResult:
         """Ejecuta una acción a través del executor correspondiente.
 
         Enhanced (Phase 3): Runs Safety Gate check before execution
@@ -278,19 +306,24 @@ class ExecutorRegistry:
         safety_verdict = ""
         if self._safety_enabled and self._safety_gate:
             from .safety_gate import SafetyVerdict as SV
+
             check = self._safety_gate.check(action_type, config, context)
             safety_verdict = check.verdict.value
             if check.verdict == SV.DENY:
                 logger.warning("ExecutorRegistry: Safety DENY for %s: %s", action_type, check.reason)
                 return ActionResult(
-                    False, {"action_type": action_type, "safety_reason": check.reason},
-                    f"Safety gate denied: {check.reason}", 0.0,
+                    False,
+                    {"action_type": action_type, "safety_reason": check.reason},
+                    f"Safety gate denied: {check.reason}",
+                    0.0,
                     safety_verdict=safety_verdict,
                 )
             if check.verdict == SV.RATE_LIMITED:
                 return ActionResult(
-                    False, {"action_type": action_type},
-                    f"Rate limited: {check.reason}", 0.0,
+                    False,
+                    {"action_type": action_type},
+                    f"Rate limited: {check.reason}",
+                    0.0,
                     safety_verdict=safety_verdict,
                 )
 
@@ -298,7 +331,8 @@ class ExecutorRegistry:
         executor = self.get_executor(action_type)
         if not executor:
             return ActionResult(
-                False, {"action_type": action_type},
+                False,
+                {"action_type": action_type},
                 f"No executor for '{action_type}'. Available: {list(self._executors.keys())}",
             )
         try:
@@ -340,17 +374,17 @@ class ExecutorRegistry:
         self._audit_enabled = True
 
     @property
-    def registered_types(self) -> List[str]:
+    def registered_types(self) -> list[str]:
         """Lista de tipos de acción registrados."""
         return list(self._executors.keys())
 
     @property
-    def executor_classes(self) -> Dict[str, str]:
+    def executor_classes(self) -> dict[str, str]:
         """Mapeo de tipo de acción a clase de executor."""
         return {k: v.__class__.__name__ for k, v in self._executors.items()}
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         return {
             "registered_types": len(self._executors),
@@ -365,7 +399,7 @@ class ExecutorRegistry:
 #  INSTANCIA GLOBAL DEL REGISTRY
 # ============================================================
 
-_default_registry: Optional[ExecutorRegistry] = None
+_default_registry: ExecutorRegistry | None = None
 _registry_lock = threading.Lock()
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,27 +18,34 @@ def retry_db_operation(
     base_delay: float = 0.5,
 ) -> Any:
     """Execute a function with retry logic for DB operations."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return func()
         except sqlite3.OperationalError as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "AutopilotPlanner: DB retry %d/%d after %.2fs — %s",
-                attempt + 1, max_retries, delay, exc,
+                attempt + 1,
+                max_retries,
+                delay,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)
         except Exception as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "AutopilotPlanner: Unexpected error on retry %d/%d — %s",
-                attempt + 1, max_retries, exc,
+                attempt + 1,
+                max_retries,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)
     raise last_exc  # type: ignore[misc]
+
+
 __all__ = ["logger", "retry_db_operation"]

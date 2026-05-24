@@ -3,8 +3,9 @@ ZENIC-AGENTS - Mediator Pattern: Data Contracts and Handler Interface
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Any
 
 
 @dataclass
@@ -17,9 +18,10 @@ class Request:
         payload: Arbitrary data carried by the request.
         metadata: Optional metadata for logging/tracing.
     """
+
     request_type: str
-    payload: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.request_type:
@@ -37,9 +39,10 @@ class Response:
         error: Error message if success is False.
         source: Identifier of the handler that produced this response.
     """
+
     success: bool
-    data: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[str] = None
+    data: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
     source: str = ""
 
 

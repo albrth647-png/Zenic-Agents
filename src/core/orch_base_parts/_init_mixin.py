@@ -6,21 +6,20 @@ for testability, replaceability, and clear boundaries.
 The phase classes live in _phases.py and can be tested in isolation.
 """
 
+from src.core.orch_base_parts._phases import (
+    AgentFrameworkPhase,
+    AIArchitecturePhase,
+    CommonStatePhase,
+    DecomposedModulesPhase,
+    ExtendedArchitecturePhase,
+    GodLevelImprovementsPhase,
+    Phase7EnginesPhase,
+    Phase8IntelligencePhase,
+    PipelinePhase,
+)
 
 from ._imports import (
     Path,
-)
-
-from src.core.orch_base_parts._phases import (
-    CommonStatePhase,
-    PipelinePhase,
-    AIArchitecturePhase,
-    ExtendedArchitecturePhase,
-    Phase7EnginesPhase,
-    Phase8IntelligencePhase,
-    DecomposedModulesPhase,
-    AgentFrameworkPhase,
-    GodLevelImprovementsPhase,
 )
 
 
@@ -45,17 +44,20 @@ class InitMixin:
         self._memory = memory
         AIArchitecturePhase.run(self)
 
-    def _init_extended_architecture(self, thinking_engine=None,
-                                     template_engine=None,
-                                     executor_registry=None,
-                                     logic_builder=None,
-                                     auth=None,
-                                     reasoning=None,
-                                     chain_validator=None,
-                                     chain_executor=None,
-                                     app_gen=None,
-                                     automation=None,
-                                     schema_designer=None) -> None:
+    def _init_extended_architecture(
+        self,
+        thinking_engine=None,
+        template_engine=None,
+        executor_registry=None,
+        logic_builder=None,
+        auth=None,
+        reasoning=None,
+        chain_validator=None,
+        chain_executor=None,
+        app_gen=None,
+        automation=None,
+        schema_designer=None,
+    ) -> None:
         """Initialize thinking, template, app, automation, schema engines."""
         self._thinking = thinking_engine
         self._template_engine = template_engine
@@ -86,8 +88,9 @@ class InitMixin:
         """Initialize abortive, partial, code_gen, code_transform, analysis."""
         DecomposedModulesPhase.run(self)
 
-    def _init_agent_framework(self, context_agent=None, criticality_agent=None,
-                               zenic_meta_router=None, fractal_gen=None) -> None:
+    def _init_agent_framework(
+        self, context_agent=None, criticality_agent=None, zenic_meta_router=None, fractal_gen=None
+    ) -> None:
         """Initialize all F1-F5 agents."""
         AgentFrameworkPhase.run(self)
         self._context_agent = context_agent

@@ -1,9 +1,9 @@
 """Mixin: Eager/lazy init, status and stats for ModelManager."""
 
 import time
-from typing import Dict, Any
+from typing import Any
 
-from ._imports import logger, ENABLE_AUTO_UNLOAD
+from ._imports import ENABLE_AUTO_UNLOAD, logger
 
 
 class StatusMixin:
@@ -22,17 +22,15 @@ class StatusMixin:
     @property
     def semantic_loaded(self) -> bool:
         """True si SemanticEngine esta cargado y listo."""
-        return (self._semantic_engine is not None
-                and self._semantic_engine.is_loaded)
+        return self._semantic_engine is not None and self._semantic_engine.is_loaded
 
     @property
     def ai_loaded(self) -> bool:
         """True si MiniAIEngine esta cargado y listo."""
-        return (self._mini_ai_engine is not None
-                and self._mini_ai_engine.is_loaded)
+        return self._mini_ai_engine is not None and self._mini_ai_engine.is_loaded
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadisticas del gestor de modelos."""
         return {
             **self._stats,
@@ -47,7 +45,7 @@ class StatusMixin:
             "current_ram_mb": round(self._get_current_ram_mb(), 1),
         }
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Estado completo para el endpoint /health."""
         status = {
             "model_manager": "active",
@@ -66,11 +64,11 @@ class StatusMixin:
             },
         }
         if self.semantic_loaded:
-            status["models"]["semantic_engine"]["idle_s"] = int(
-                time.time() - self._semantic_last_access
-            ) if self._semantic_last_access > 0 else 0
+            status["models"]["semantic_engine"]["idle_s"] = (
+                int(time.time() - self._semantic_last_access) if self._semantic_last_access > 0 else 0
+            )
         if self.ai_loaded:
-            status["models"]["mini_ai_engine"]["idle_s"] = int(
-                time.time() - self._ai_last_access
-            ) if self._ai_last_access > 0 else 0
+            status["models"]["mini_ai_engine"]["idle_s"] = (
+                int(time.time() - self._ai_last_access) if self._ai_last_access > 0 else 0
+            )
         return status

@@ -21,7 +21,7 @@ import logging
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import ScoredEntries, ScoredEntry, CompressedContext
+from ..schemas import CompressedContext, ScoredEntries, ScoredEntry
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-TOTAL_CONTEXT_BUDGET = 500       # Total tokens available for context
-MIN_ENTRY_TOKENS = 30            # Minimum tokens to include a truncated entry
-CHARS_PER_TOKEN = 4              # Approximate chars per token (English/Spanish mix)
+TOTAL_CONTEXT_BUDGET = 500  # Total tokens available for context
+MIN_ENTRY_TOKENS = 30  # Minimum tokens to include a truncated entry
+CHARS_PER_TOKEN = 4  # Approximate chars per token (English/Spanish mix)
 MIN_PARTIAL_CONTENT_CHARS = 120  # Minimum chars for a truncated entry
 
 # ──────────────────────────────────────────────────────────────
@@ -50,38 +50,58 @@ DEFAULT_TOKEN_BUDGET: dict[str, int] = {
 # Per-operation budget adjustments (multipliers applied to default)
 OP_BUDGET_ADJUSTMENTS: dict[str, dict[str, float]] = {
     "CREATE": {
-        "code": 1.25, "intent": 0.6, "validation": 0.7,
-        "reasoning": 0.9, "reserve": 1.0,
+        "code": 1.25,
+        "intent": 0.6,
+        "validation": 0.7,
+        "reasoning": 0.9,
+        "reserve": 1.0,
     },
     "DEBUG": {
-        "reasoning": 1.33, "intent": 0.6, "code": 0.75,
-        "validation": 1.0, "reserve": 1.0,
+        "reasoning": 1.33,
+        "intent": 0.6,
+        "code": 0.75,
+        "validation": 1.0,
+        "reserve": 1.0,
     },
     "EXPLAIN": {
-        "reasoning": 1.33, "code": 0.5, "intent": 1.0,
-        "validation": 0.8, "reserve": 1.0,
+        "reasoning": 1.33,
+        "code": 0.5,
+        "intent": 1.0,
+        "validation": 0.8,
+        "reserve": 1.0,
     },
     "OPTIMIZE": {
-        "code": 1.25, "reasoning": 0.8, "intent": 1.0,
-        "validation": 0.9, "reserve": 1.0,
+        "code": 1.25,
+        "reasoning": 0.8,
+        "intent": 1.0,
+        "validation": 0.9,
+        "reserve": 1.0,
     },
     "ANALYZE": {
-        "reasoning": 1.2, "code": 0.7, "intent": 1.0,
-        "validation": 0.9, "reserve": 1.0,
+        "reasoning": 1.2,
+        "code": 0.7,
+        "intent": 1.0,
+        "validation": 0.9,
+        "reserve": 1.0,
     },
     "SEARCH": {
-        "reasoning": 1.2, "code": 0.7, "intent": 1.0,
-        "validation": 0.9, "reserve": 1.0,
+        "reasoning": 1.2,
+        "code": 0.7,
+        "intent": 1.0,
+        "validation": 0.9,
+        "reserve": 1.0,
     },
 }
 
 # Per-goal budget adjustments
 GOAL_BUDGET_ADJUSTMENTS: dict[str, dict[str, float]] = {
     "SECURITY_HARDEN": {
-        "validation": 1.5, "reserve": 0.5,
+        "validation": 1.5,
+        "reserve": 0.5,
     },
     "BUG_FIX": {
-        "reasoning": 1.2, "reserve": 0.6,
+        "reasoning": 1.2,
+        "reserve": 0.6,
     },
     "PERFORMANCE": {
         "code": 1.15,
@@ -109,8 +129,7 @@ class ContextCompressor(BaseAgent[CompressedContext]):
         self._design_system_mode: bool = False
         self._design_system_budget_multiplier: float = 1.0
 
-    def set_design_system_mode(self, enabled: bool = False,
-                                budget_multiplier: float = 1.0) -> None:
+    def set_design_system_mode(self, enabled: bool = False, budget_multiplier: float = 1.0) -> None:
         """Enable/disable Design System preservation mode.
 
         When enabled, the compressor will NOT truncate Design System
@@ -149,8 +168,11 @@ class ContextCompressor(BaseAgent[CompressedContext]):
         entries = scored_entries.entries
         if not entries:
             return CompressedContext(
-                text="", ratio=1.0, tokens_used=0,
-                budget=budget, design_system_preserved=self._design_system_mode,
+                text="",
+                ratio=1.0,
+                tokens_used=0,
+                budget=budget,
+                design_system_preserved=self._design_system_mode,
                 source="deterministic",
             )
 
@@ -182,13 +204,15 @@ class ContextCompressor(BaseAgent[CompressedContext]):
                 budget = int(budget * self._design_system_budget_multiplier)
 
         return CompressedContext(
-            text="", ratio=1.0, tokens_used=0,
-            budget=budget, design_system_preserved=False,
+            text="",
+            ratio=1.0,
+            tokens_used=0,
+            budget=budget,
+            design_system_preserved=False,
             source="fallback",
         )
 
-    def allocate_budget_for(self, operation: str, goal: str,
-                             total: int = TOTAL_CONTEXT_BUDGET) -> dict[str, int]:
+    def allocate_budget_for(self, operation: str, goal: str, total: int = TOTAL_CONTEXT_BUDGET) -> dict[str, int]:
         """Public API for budget allocation (used by pipeline orchestrator)."""
         return self._allocate_budget(operation, goal, total)
 
@@ -196,9 +220,7 @@ class ContextCompressor(BaseAgent[CompressedContext]):
     # PRIVATE: Compression & Budget Methods
     # ──────────────────────────────────────────────────────────
 
-    def _compress_entries(
-        self, entries: list[ScoredEntry], max_tokens: int
-    ) -> tuple[str, int]:
+    def _compress_entries(self, entries: list[ScoredEntry], max_tokens: int) -> tuple[str, int]:
         """
         Compress entries to fit within max_tokens budget.
 
@@ -229,7 +251,7 @@ class ContextCompressor(BaseAgent[CompressedContext]):
         if not selected:
             # Last resort: include the most relevant entry truncated
             best = entries[0]
-            return best.content[:max_tokens * CHARS_PER_TOKEN], 1
+            return best.content[: max_tokens * CHARS_PER_TOKEN], 1
 
         # Build compressed text
         parts: list[str] = []
@@ -249,13 +271,11 @@ class ContextCompressor(BaseAgent[CompressedContext]):
         # Safety: enforce hard limit
         max_chars = max_tokens * CHARS_PER_TOKEN
         if len(compressed) > max_chars:
-            compressed = compressed[:max_chars - 3] + "..."
+            compressed = compressed[: max_chars - 3] + "..."
 
         return compressed, token_count
 
-    def _allocate_budget(
-        self, op: str, goal: str, total: int = TOTAL_CONTEXT_BUDGET
-    ) -> dict[str, int]:
+    def _allocate_budget(self, op: str, goal: str, total: int = TOTAL_CONTEXT_BUDGET) -> dict[str, int]:
         """
         Allocate token budget per category based on operation and goal.
 

@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .anti_tampering import (
     AntiTamperingLayer,
@@ -35,23 +36,23 @@ from .binary_hardening import (
     reset_binary_hardening,
 )
 from .encryption import (
-    EncryptionManager,
     EncryptionLevel,
+    EncryptionManager,
     EncryptionStatus,
     get_encryption_manager,
     reset_encryption_manager,
 )
 from .integrity import (
-    IntegrityVerifier,
     IntegrityCheckResult,
     IntegrityStatus,
+    IntegrityVerifier,
     get_integrity_verifier,
     reset_integrity_verifier,
 )
 from .server_secrets import (
-    ServerSecretsLayer,
     SecretType,
     SecretVerification,
+    ServerSecretsLayer,
     get_server_secrets,
     reset_server_secrets,
 )
@@ -62,15 +63,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DefenseStatus:
     """Overall defense-in-depth status across all 6 layers."""
-    layer1_anti_tampering: Dict[str, Any] = field(default_factory=dict)
-    layer2_binary_hardening: Dict[str, Any] = field(default_factory=dict)
-    layer3_encryption: Dict[str, Any] = field(default_factory=dict)
-    layer4_integrity: Dict[str, Any] = field(default_factory=dict)
-    layer5_licensing: Dict[str, Any] = field(default_factory=dict)
-    layer6_server_secrets: Dict[str, Any] = field(default_factory=dict)
+
+    layer1_anti_tampering: dict[str, Any] = field(default_factory=dict)
+    layer2_binary_hardening: dict[str, Any] = field(default_factory=dict)
+    layer3_encryption: dict[str, Any] = field(default_factory=dict)
+    layer4_integrity: dict[str, Any] = field(default_factory=dict)
+    layer5_licensing: dict[str, Any] = field(default_factory=dict)
+    layer6_server_secrets: dict[str, Any] = field(default_factory=dict)
     overall_score: float = 0.0
     active_layers: int = 0
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class DefenseManager:
@@ -86,11 +88,11 @@ class DefenseManager:
     def __init__(self) -> None:
         self._anti_tampering = get_anti_tampering()
         self._binary_hardening = get_binary_hardening()
-        self._encryption_manager: Optional[EncryptionManager] = None
+        self._encryption_manager: EncryptionManager | None = None
         self._integrity_verifier = get_integrity_verifier()
         self._server_secrets = get_server_secrets()
-        self._license_manager: Optional[Any] = None
-        self._callbacks: List[Callable[[str, Dict[str, Any]], None]] = []
+        self._license_manager: Any | None = None
+        self._callbacks: list[Callable[[str, dict[str, Any]], None]] = []
         self._lock = threading.Lock()
 
         # Wire anti-tampering events to defense manager
@@ -117,6 +119,7 @@ class DefenseManager:
         # Layer 5: Licensing
         try:
             from src.core.license.manager import get_license_manager
+
             self._license_manager = get_license_manager()
         except ImportError:
             logger.debug("DefenseManager: License manager not available yet")
@@ -159,7 +162,7 @@ class DefenseManager:
         # Layer 4
         l4 = self._integrity_verifier.get_status()
         # Layer 5
-        l5: Dict[str, Any] = {}
+        l5: dict[str, Any] = {}
         if self._license_manager:
             try:
                 l5 = self._license_manager.get_status()
@@ -191,7 +194,7 @@ class DefenseManager:
             active += 1
 
         # Recommendations
-        recs: List[str] = []
+        recs: list[str] = []
         if not l2["nuitka_compiled"]:
             recs.append("Compile with Nuitka for binary hardening")
         if not l2["rust_ffi_available"]:
@@ -219,18 +222,24 @@ class DefenseManager:
         """Handle anti-tampering detection events."""
         logger.warning(
             "DefenseManager: Tampering detected! severity=%s method=%s: %s",
-            event.severity.value, event.detection_method, event.description,
+            event.severity.value,
+            event.detection_method,
+            event.description,
         )
-        self._notify_callbacks("tamper_detected", {
-            "severity": event.severity.value,
-            "method": event.detection_method,
-            "description": event.description,
-        })
+        self._notify_callbacks(
+            "tamper_detected",
+            {
+                "severity": event.severity.value,
+                "method": event.detection_method,
+                "description": event.description,
+            },
+        )
 
         # If critical, trigger degraded mode
         if event.severity in (TamperSeverity.HIGH, TamperSeverity.CRITICAL):
             try:
                 from src.core.degraded_mode.manager import get_degraded_mode_manager
+
                 dm = get_degraded_mode_manager()
                 dm.enter_paralysis(level=1 if event.severity == TamperSeverity.HIGH else 2)
             except ImportError:
@@ -240,19 +249,23 @@ class DefenseManager:
         """Handle integrity verification violations."""
         logger.critical(
             "DefenseManager: Integrity violation! component=%s: %s",
-            result.component, result.message,
+            result.component,
+            result.message,
         )
-        self._notify_callbacks("integrity_violation", {
-            "component": result.component,
-            "status": result.status.value,
-            "message": result.message,
-        })
+        self._notify_callbacks(
+            "integrity_violation",
+            {
+                "component": result.component,
+                "status": result.status.value,
+                "message": result.message,
+            },
+        )
 
-    def on_security_event(self, callback: Callable[[str, Dict[str, Any]], None]) -> None:
+    def on_security_event(self, callback: Callable[[str, dict[str, Any]], None]) -> None:
         """Register a callback for security events across all layers."""
         self._callbacks.append(callback)
 
-    def _notify_callbacks(self, event_type: str, data: Dict[str, Any]) -> None:
+    def _notify_callbacks(self, event_type: str, data: dict[str, Any]) -> None:
         """Notify all registered callbacks."""
         for cb in self._callbacks:
             try:
@@ -265,6 +278,7 @@ class DefenseManager:
     def _establish_integrity_baselines(self) -> None:
         """Establish integrity baselines for critical components."""
         import os
+
         base = os.environ.get("ZENIC_ROOT", "")
         if not base:
             candidate = os.path.dirname(os.path.abspath(__file__))
@@ -284,18 +298,19 @@ class DefenseManager:
                 if os.path.exists(fpath):
                     self._integrity_verifier.establish_file_baseline(fpath)
 
-    def _get_integrity_watch_list(self) -> List[str]:
+    def _get_integrity_watch_list(self) -> list[str]:
         """Get the list of components to watch for integrity monitoring."""
         import os
+
         os.environ.get("ZENIC_ROOT", "")
         # auth_parts removed — no auth_parts file to watch
-        watch: List[str] = []
+        watch: list[str] = []
         return watch
 
 
 # ── Singleton ─────────────────────────────────────────────
 
-_defense_manager: Optional[DefenseManager] = None
+_defense_manager: DefenseManager | None = None
 _lock = threading.Lock()
 
 
@@ -316,21 +331,38 @@ def reset_defense_manager() -> None:
 
 __all__ = [
     # Layer 1
-    "AntiTamperingLayer", "TamperEvent", "TamperSeverity",
-    "get_anti_tampering", "reset_anti_tampering",
+    "AntiTamperingLayer",
+    "TamperEvent",
+    "TamperSeverity",
+    "get_anti_tampering",
+    "reset_anti_tampering",
     # Layer 2
-    "BinaryHardeningLayer", "HardeningLevel", "HardeningStatus",
-    "get_binary_hardening", "reset_binary_hardening",
+    "BinaryHardeningLayer",
+    "HardeningLevel",
+    "HardeningStatus",
+    "get_binary_hardening",
+    "reset_binary_hardening",
     # Layer 3
-    "EncryptionManager", "EncryptionLevel", "EncryptionStatus",
-    "get_encryption_manager", "reset_encryption_manager",
+    "EncryptionManager",
+    "EncryptionLevel",
+    "EncryptionStatus",
+    "get_encryption_manager",
+    "reset_encryption_manager",
     # Layer 4
-    "IntegrityVerifier", "IntegrityCheckResult", "IntegrityStatus",
-    "get_integrity_verifier", "reset_integrity_verifier",
+    "IntegrityVerifier",
+    "IntegrityCheckResult",
+    "IntegrityStatus",
+    "get_integrity_verifier",
+    "reset_integrity_verifier",
     # Layer 6
-    "ServerSecretsLayer", "SecretType", "SecretVerification",
-    "get_server_secrets", "reset_server_secrets",
+    "ServerSecretsLayer",
+    "SecretType",
+    "SecretVerification",
+    "get_server_secrets",
+    "reset_server_secrets",
     # Manager
-    "DefenseManager", "DefenseStatus",
-    "get_defense_manager", "reset_defense_manager",
+    "DefenseManager",
+    "DefenseStatus",
+    "get_defense_manager",
+    "reset_defense_manager",
 ]

@@ -10,9 +10,9 @@ import email.mime.multipart
 import email.mime.text
 import email.utils
 import os
-import ssl
 import smtplib
-from typing import Any, Dict, List, Optional
+import ssl
+from typing import Any
 
 from ._types import _SMTP_TIMEOUT
 
@@ -24,8 +24,8 @@ class EmailExecutorSendMixin:
 
     async def _execute_smtp(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
@@ -44,20 +44,39 @@ class EmailExecutorSendMixin:
             return self._dry_run_result(recipients, subject, "smtp_not_configured")
 
         msg = self._build_mime_message(
-            from_email=from_email, recipients=recipients, subject=subject,
-            body=body, html=html, cc=config.get("cc", []),
-            bcc=config.get("bcc", []), reply_to=config.get("reply_to", ""),
+            from_email=from_email,
+            recipients=recipients,
+            subject=subject,
+            body=body,
+            html=html,
+            cc=config.get("cc", []),
+            bcc=config.get("bcc", []),
+            reply_to=config.get("reply_to", ""),
             importance=config.get("importance", "normal"),
             attachments=config.get("attachments", []),
         )
 
         if _HAS_AIOSMTPLIB_LOCAL:  # noqa: F821
             success, error = await self._send_aiosmtplib(
-                host, port, user, password, use_tls, from_email, recipients, msg,
+                host,
+                port,
+                user,
+                password,
+                use_tls,
+                from_email,
+                recipients,
+                msg,
             )
         else:
             success, error = await self._send_smtplib_sync(
-                host, port, user, password, use_tls, from_email, recipients, msg,
+                host,
+                port,
+                user,
+                password,
+                use_tls,
+                from_email,
+                recipients,
+                msg,
             )
 
         if success:
@@ -65,7 +84,8 @@ class EmailExecutorSendMixin:
                 self._smtp_send_count += 1
             __import__("logging").getLogger("zenic_agents.executors.email_executor").info(
                 "EmailExecutor: SMTP send success to %s (subject='%s')",
-                recipients, subject[:50],
+                recipients,
+                subject[:50],
             )
             return ActionResult(  # noqa: F821  # TODO: add import
                 True,
@@ -75,7 +95,8 @@ class EmailExecutorSendMixin:
             with self._lock:
                 self._failure_count += 1
             return ActionResult(  # noqa: F821  # TODO: add import
-                False, {"mode": "smtp", "recipients": recipients},
+                False,
+                {"mode": "smtp", "recipients": recipients},
                 f"SMTP send failed: {error}",
             )
 
@@ -83,8 +104,8 @@ class EmailExecutorSendMixin:
 
     async def _execute_graph_api(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
@@ -94,9 +115,14 @@ class EmailExecutorSendMixin:
         from_email = config.get("from_email", "") or os.environ.get("MSGRAPH_FROM_EMAIL", "")
 
         result = await provider.send_email(
-            to=recipients, subject=subject, body=body, html=html,
-            cc=config.get("cc"), bcc=config.get("bcc"),
-            from_email=from_email, attachments=config.get("attachments"),
+            to=recipients,
+            subject=subject,
+            body=body,
+            html=html,
+            cc=config.get("cc"),
+            bcc=config.get("bcc"),
+            from_email=from_email,
+            attachments=config.get("attachments"),
             reply_to=[config["reply_to"]] if config.get("reply_to") else None,
             importance=config.get("importance", "normal"),
         )
@@ -111,18 +137,25 @@ class EmailExecutorSendMixin:
             __import__("logging").getLogger("zenic_agents.executors.email_executor").info(
                 "EmailExecutor: Graph API send %s to %s (subject='%s')",
                 "dry-run" if is_dry_run else "success",
-                recipients, subject[:50],
+                recipients,
+                subject[:50],
             )
             return ActionResult(  # noqa: F821  # TODO: add import
                 True,
-                {"mode": "graph_api", "recipients": recipients, "subject": subject,
-                 "message_id": result.get("message_id", ""), "dry_run": is_dry_run},
+                {
+                    "mode": "graph_api",
+                    "recipients": recipients,
+                    "subject": subject,
+                    "message_id": result.get("message_id", ""),
+                    "dry_run": is_dry_run,
+                },
             )
         else:
             with self._lock:
                 self._failure_count += 1
             return ActionResult(  # noqa: F821  # TODO: add import
-                False, {"mode": "graph_api", "recipients": recipients},
+                False,
+                {"mode": "graph_api", "recipients": recipients},
                 f"Graph API send failed: {result.get('error', 'unknown')}",
             )
 
@@ -131,15 +164,15 @@ class EmailExecutorSendMixin:
     @staticmethod
     def _build_mime_message(
         from_email: str,
-        recipients: List[str],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
-        cc: Optional[List[str]] = None,
-        bcc: Optional[List[str]] = None,
+        cc: list[str] | None = None,
+        bcc: list[str] | None = None,
         reply_to: str = "",
         importance: str = "normal",
-        attachments: Optional[List[Dict[str, Any]]] = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> email.mime.multipart.MIMEMultipart:
         """Build a MIME message for SMTP sending."""
         msg = email.mime.multipart.MIMEMultipart("alternative")
@@ -166,9 +199,10 @@ class EmailExecutorSendMixin:
         if not body and not html:
             msg.attach(email.mime.text.MIMEText(" ", "plain", "utf-8"))
 
-        for att in (attachments or []):
+        for att in attachments or []:
             part = email.mime.base.MIMEBase(
-                "application", att.get("content_type", "octet-stream"),
+                "application",
+                att.get("content_type", "octet-stream"),
             )
             content = att.get("content_bytes", b"")
             if isinstance(content, str):
@@ -185,23 +219,36 @@ class EmailExecutorSendMixin:
 
     async def _send_aiosmtplib(
         self,
-        host: str, port: int, user: str, password: str,
-        use_tls: bool, from_email: str, recipients: List[str],
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        use_tls: bool,
+        from_email: str,
+        recipients: list[str],
         msg: email.mime.multipart.MIMEMultipart,
     ) -> tuple[bool, str]:
         """Send via aiosmtplib (async)."""
         try:
             if use_tls:
                 await aiosmtplib.send(  # noqa: F821
-                    msg, hostname=host, port=port,
-                    username=user or None, password=password or None,
-                    use_tls=True, timeout=_SMTP_TIMEOUT,  # noqa: F821
+                    msg,
+                    hostname=host,
+                    port=port,
+                    username=user or None,
+                    password=password or None,
+                    use_tls=True,
+                    timeout=_SMTP_TIMEOUT,
                 )
             else:
                 await aiosmtplib.send(  # noqa: F821  # TODO: add import
-                    msg, hostname=host, port=port,
-                    username=user or None, password=password or None,
-                    start_tls=True, timeout=_SMTP_TIMEOUT,  # noqa: F821
+                    msg,
+                    hostname=host,
+                    port=port,
+                    username=user or None,
+                    password=password or None,
+                    start_tls=True,
+                    timeout=_SMTP_TIMEOUT,
                 )
             return True, ""
         except Exception as exc:
@@ -209,8 +256,13 @@ class EmailExecutorSendMixin:
 
     async def _send_smtplib_sync(
         self,
-        host: str, port: int, user: str, password: str,
-        use_tls: bool, from_email: str, recipients: List[str],
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        use_tls: bool,
+        from_email: str,
+        recipients: list[str],
         msg: email.mime.multipart.MIMEMultipart,
     ) -> tuple[bool, str]:
         """Send via smtplib (sync, wrapped in asyncio.to_thread)."""
@@ -219,7 +271,7 @@ class EmailExecutorSendMixin:
             try:
                 if use_tls:
                     context = ssl.create_default_context()
-                    with smtplib.SMTP(host, port, timeout=_SMTP_TIMEOUT) as server:  # noqa: F821
+                    with smtplib.SMTP(host, port, timeout=_SMTP_TIMEOUT) as server:
                         server.ehlo()
                         server.starttls(context=context)
                         server.ehlo()
@@ -227,7 +279,7 @@ class EmailExecutorSendMixin:
                             server.login(user, password)
                         server.sendmail(from_email, recipients, msg.as_string())
                 else:
-                    with smtplib.SMTP(host, port, timeout=_SMTP_TIMEOUT) as server:  # noqa: F821
+                    with smtplib.SMTP(host, port, timeout=_SMTP_TIMEOUT) as server:
                         server.ehlo()
                         if user and password:
                             server.login(user, password)
@@ -241,16 +293,19 @@ class EmailExecutorSendMixin:
     # ── Graph API Helpers ──────────────────────────────────────────
 
     def _get_or_create_graph_provider(
-        self, config: Dict[str, Any],
-    ) -> "GraphAPIEmailProvider":  # noqa: F821
+        self,
+        config: dict[str, Any],
+    ) -> GraphAPIEmailProvider:  # noqa: F821
         """Get or create the GraphAPIEmailProvider instance."""
         with self._lock:
             if self._graph_provider is None:
                 from ..email_parts.graph_api import GraphAPIEmailProvider, OAuth2TokenManager
+
                 token_manager = OAuth2TokenManager()
                 from_email = config.get("from_email", "") or os.environ.get("MSGRAPH_FROM_EMAIL", "")
                 self._graph_provider = GraphAPIEmailProvider(
-                    token_manager=token_manager, service_name="msgraph",
+                    token_manager=token_manager,
+                    service_name="msgraph",
                     from_email=from_email,
                 )
             return self._graph_provider

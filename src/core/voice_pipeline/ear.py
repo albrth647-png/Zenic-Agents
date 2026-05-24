@@ -34,7 +34,8 @@ import logging
 import threading
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Sequence, Type
+from collections.abc import Sequence
+from typing import Any
 
 from ._types import (
     STTBackendConfig,
@@ -48,6 +49,7 @@ _logger = logging.getLogger("zenic_agents.voice_pipeline.ear")
 # ──────────────────────────────────────────────────────────────
 #  STT BACKEND PROTOCOL (Strategy Pattern)
 # ──────────────────────────────────────────────────────────────
+
 
 class STTBackend(ABC):
     """Abstract base class for Speech-to-Text backends.
@@ -98,7 +100,7 @@ class STTBackend(ABC):
         ...
 
     @abstractmethod
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Return backend health status for monitoring."""
         ...
 
@@ -106,6 +108,7 @@ class STTBackend(ABC):
 # ──────────────────────────────────────────────────────────────
 #  DUMMY BACKEND — Always available, zero deps
 # ──────────────────────────────────────────────────────────────
+
 
 class DummyBackend(STTBackend):
     """Dummy STT backend — always available, returns empty result.
@@ -152,11 +155,11 @@ class DummyBackend(STTBackend):
             audio_format=audio_format,
             backend="dummy",
             error="Dummy backend — no STT engine configured. "
-                  "Install whisper, faster-whisper, or configure a cloud API.",
+            "Install whisper, faster-whisper, or configure a cloud API.",
             source="dummy",
         )
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         return {
             "backend": "dummy",
             "available": True,
@@ -167,6 +170,7 @@ class DummyBackend(STTBackend):
 # ──────────────────────────────────────────────────────────────
 #  FASTER-WHISPER BACKEND — Best local STT (CTranslate2)
 # ──────────────────────────────────────────────────────────────
+
 
 class FasterWhisperBackend(STTBackend):
     """STT backend using faster-whisper (CTranslate2-based).
@@ -194,7 +198,7 @@ class FasterWhisperBackend(STTBackend):
         self._device = device
         self._compute_type = compute_type
         self._language = language
-        self._model: Optional[Any] = None
+        self._model: Any | None = None
         self._load_error: str = ""
 
     @property
@@ -206,6 +210,7 @@ class FasterWhisperBackend(STTBackend):
         """Check if faster-whisper is importable."""
         try:
             import faster_whisper  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -220,9 +225,12 @@ class FasterWhisperBackend(STTBackend):
 
         try:
             from faster_whisper import WhisperModel
+
             _logger.info(
                 "FasterWhisperBackend: loading model=%s device=%s compute=%s",
-                self._model_size, self._device, self._compute_type,
+                self._model_size,
+                self._device,
+                self._compute_type,
             )
             self._model = WhisperModel(
                 self._model_size,
@@ -267,8 +275,8 @@ class FasterWhisperBackend(STTBackend):
         try:
             # faster-whisper can read from a numpy array or file path
             # We write to a temp file for format compatibility
-            import tempfile
             import os
+            import tempfile
 
             ext = audio_format if audio_format else "wav"
             suffix = f".{ext}" if not ext.startswith(".") else ext
@@ -283,14 +291,14 @@ class FasterWhisperBackend(STTBackend):
                     tmp_path,
                     language=lang,
                     beam_size=5,
-                    vad_filter=True,      # Voice Activity Detection
+                    vad_filter=True,  # Voice Activity Detection
                     vad_parameters=dict(
                         min_silence_duration_ms=500,
                     ),
                 )
 
                 # Collect all segments
-                text_parts: List[str] = []
+                text_parts: list[str] = []
                 total_confidence = 0.0
                 segment_count = 0
 
@@ -301,16 +309,16 @@ class FasterWhisperBackend(STTBackend):
 
                 transcribed = " ".join(text_parts)
                 avg_confidence = (
-                    min(1.0, max(0.0, (total_confidence / segment_count + 1.0) / 2.0))
-                    if segment_count > 0
-                    else 0.0
+                    min(1.0, max(0.0, (total_confidence / segment_count + 1.0) / 2.0)) if segment_count > 0 else 0.0
                 )
 
                 duration = time.monotonic() - start
                 _logger.info(
-                    "FasterWhisperBackend: transcribed in %.1fs "
-                    "(lang=%s, segments=%d, text_len=%d)",
-                    duration, info.language, segment_count, len(transcribed),
+                    "FasterWhisperBackend: transcribed in %.1fs " "(lang=%s, segments=%d, text_len=%d)",
+                    duration,
+                    info.language,
+                    segment_count,
+                    len(transcribed),
                 )
 
                 return TranscriptionResult(
@@ -334,7 +342,8 @@ class FasterWhisperBackend(STTBackend):
             duration = time.monotonic() - start
             _logger.error(
                 "FasterWhisperBackend: transcription failed in %.1fs: %s",
-                duration, e,
+                duration,
+                e,
             )
             return TranscriptionResult(
                 success=False,
@@ -344,7 +353,7 @@ class FasterWhisperBackend(STTBackend):
                 source="faster_whisper",
             )
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         return {
             "backend": "faster_whisper",
             "available": self.is_available,
@@ -359,6 +368,7 @@ class FasterWhisperBackend(STTBackend):
 # ──────────────────────────────────────────────────────────────
 #  WHISPER BACKEND — Whisper local (PyTorch)
 # ──────────────────────────────────────────────────────────────
+
 
 class WhisperBackend(STTBackend):
     """STT backend using Whisper local (PyTorch-based).
@@ -383,7 +393,7 @@ class WhisperBackend(STTBackend):
         self._model_size = model_size
         self._device = device
         self._language = language
-        self._model: Optional[Any] = None
+        self._model: Any | None = None
         self._load_error: str = ""
 
     @property
@@ -394,6 +404,7 @@ class WhisperBackend(STTBackend):
     def is_available(self) -> bool:
         try:
             import whisper  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -408,9 +419,11 @@ class WhisperBackend(STTBackend):
 
         try:
             import whisper
+
             _logger.info(
                 "WhisperBackend: loading model=%s device=%s",
-                self._model_size, self._device,
+                self._model_size,
+                self._device,
             )
             self._model = whisper.load_model(self._model_size, device=self._device)
             _logger.info("WhisperBackend: model loaded successfully")
@@ -449,8 +462,8 @@ class WhisperBackend(STTBackend):
             )
 
         try:
-            import tempfile
             import os
+            import tempfile
 
             ext = audio_format if audio_format else "wav"
             suffix = f".{ext}" if not ext.startswith(".") else ext
@@ -461,7 +474,7 @@ class WhisperBackend(STTBackend):
 
             try:
                 lang = language or self._language or None
-                options: Dict[str, Any] = {}
+                options: dict[str, Any] = {}
                 if lang:
                     options["language"] = lang
 
@@ -472,9 +485,7 @@ class WhisperBackend(STTBackend):
                 segments = result.get("segments", [])
                 avg_confidence = 0.0
                 if segments:
-                    total_prob = sum(
-                        s.get("avg_logprob", 0.0) for s in segments
-                    )
+                    total_prob = sum(s.get("avg_logprob", 0.0) for s in segments)
                     avg_confidence = min(1.0, max(0.0, (total_prob / len(segments) + 1.0) / 2.0))
 
                 detected_lang = result.get("language", lang or "")
@@ -482,7 +493,8 @@ class WhisperBackend(STTBackend):
                 duration = time.monotonic() - start
                 _logger.info(
                     "WhisperBackend: transcribed in %.1fs (text_len=%d)",
-                    duration, len(transcribed),
+                    duration,
+                    len(transcribed),
                 )
 
                 return TranscriptionResult(
@@ -505,7 +517,8 @@ class WhisperBackend(STTBackend):
             duration = time.monotonic() - start
             _logger.error(
                 "WhisperBackend: transcription failed in %.1fs: %s",
-                duration, e,
+                duration,
+                e,
             )
             return TranscriptionResult(
                 success=False,
@@ -515,7 +528,7 @@ class WhisperBackend(STTBackend):
                 source="whisper",
             )
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         return {
             "backend": "whisper",
             "available": self.is_available,
@@ -530,7 +543,7 @@ class WhisperBackend(STTBackend):
 #  BACKEND REGISTRY — Known backend classes
 # ──────────────────────────────────────────────────────────────
 
-_BACKEND_CLASSES: Dict[str, Type[STTBackend]] = {
+_BACKEND_CLASSES: dict[str, type[STTBackend]] = {
     "dummy": DummyBackend,
     "faster_whisper": FasterWhisperBackend,
     "whisper": WhisperBackend,
@@ -547,6 +560,7 @@ _DEFAULT_FALLBACK_CHAIN: Sequence[str] = (
 # ──────────────────────────────────────────────────────────────
 #  EAR — The STT Service
 # ──────────────────────────────────────────────────────────────
+
 
 class Ear:
     """Speech-to-Text service — the ONLY entry point for audio transcription.
@@ -581,9 +595,9 @@ class Ear:
 
     def __init__(
         self,
-        config: Optional[STTBackendConfig] = None,
+        config: STTBackendConfig | None = None,
         *,
-        backends: Optional[Sequence[STTBackend]] = None,
+        backends: Sequence[STTBackend] | None = None,
     ) -> None:
         """Initialize the Ear STT service.
 
@@ -601,7 +615,7 @@ class Ear:
         # Build backend instances
         if backends:
             # Explicit backends provided
-            self._backends: List[STTBackend] = list(backends)
+            self._backends: list[STTBackend] = list(backends)
         else:
             # Build from config / auto-detect
             self._backends = self._build_backends(self._config)
@@ -610,22 +624,21 @@ class Ear:
         self._active: STTBackend = self._select_backend()
 
         _logger.info(
-            "Ear: initialized with active_backend=%s "
-            "(available_backends=%s)",
+            "Ear: initialized with active_backend=%s " "(available_backends=%s)",
             self._active.name,
             [b.name for b in self._backends if b.is_available],
         )
 
     # ── Backend Management ────────────────────────────────────
 
-    def _build_backends(self, config: STTBackendConfig) -> List[STTBackend]:
+    def _build_backends(self, config: STTBackendConfig) -> list[STTBackend]:
         """Build backend instances from configuration.
 
         If config.fallback_chain is set, builds those backends
         in order. Otherwise, uses the default fallback chain.
         """
         chain = config.fallback_chain or _DEFAULT_FALLBACK_CHAIN
-        backends: List[STTBackend] = []
+        backends: list[STTBackend] = []
 
         for name in chain:
             cls = _BACKEND_CLASSES.get(name)
@@ -683,7 +696,8 @@ class Ear:
                     self._active = backend
                     _logger.info(
                         "Ear: switched backend %s → %s",
-                        old_name, backend_name,
+                        old_name,
+                        backend_name,
                     )
                     return True
 
@@ -699,7 +713,7 @@ class Ear:
         return self._active.name
 
     @property
-    def available_backends(self) -> List[str]:
+    def available_backends(self) -> list[str]:
         """Names of all available backends."""
         return [b.name for b in self._backends if b.is_available]
 
@@ -744,7 +758,10 @@ class Ear:
 
         # Try active backend first
         result = self._try_transcribe(
-            self._active, audio_bytes, audio_format, language,
+            self._active,
+            audio_bytes,
+            audio_format,
+            language,
         )
 
         # If active backend failed, try fallback chain
@@ -757,10 +774,14 @@ class Ear:
 
                 _logger.info(
                     "Ear: falling back from '%s' to '%s'",
-                    self._active.name, backend.name,
+                    self._active.name,
+                    backend.name,
                 )
                 result = self._try_transcribe(
-                    backend, audio_bytes, audio_format, language,
+                    backend,
+                    audio_bytes,
+                    audio_format,
+                    language,
                 )
                 if result.success:
                     break
@@ -773,13 +794,14 @@ class Ear:
             else:
                 metrics.failed_transcriptions += 1
             backend_name = result.backend or "unknown"
-            metrics.backend_usage[backend_name] = (
-                metrics.backend_usage.get(backend_name, 0) + 1
-            )
+            metrics.backend_usage[backend_name] = metrics.backend_usage.get(backend_name, 0) + 1
 
         _logger.info(
             "Ear: transcription completed in %.2fs (success=%s, backend=%s, text_len=%d)",
-            duration, result.success, result.backend, len(result.transcribed_text),
+            duration,
+            result.success,
+            result.backend,
+            len(result.transcribed_text),
         )
 
         return result
@@ -796,7 +818,10 @@ class Ear:
         to avoid blocking the event loop.
         """
         return await asyncio.to_thread(
-            self.transcribe, audio_bytes, audio_format, language,
+            self.transcribe,
+            audio_bytes,
+            audio_format,
+            language,
         )
 
     def _try_transcribe(
@@ -819,7 +844,8 @@ class Ear:
         except Exception as e:
             _logger.error(
                 "Ear: backend '%s' raised unexpected error: %s",
-                backend.name, e,
+                backend.name,
+                e,
             )
             return TranscriptionResult(
                 success=False,
@@ -846,15 +872,13 @@ class Ear:
                 backend_usage=dict(self._metrics.backend_usage),
             )
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Full health check of the Ear service and all backends."""
         return {
             "service": "ear",
             "active_backend": self._active.name,
             "available_backends": self.available_backends,
-            "all_backends": [
-                b.health_check() for b in self._backends
-            ],
+            "all_backends": [b.health_check() for b in self._backends],
             "metrics": {
                 "total": self._metrics.total_transcriptions,
                 "success_rate": self._metrics.success_rate,
@@ -867,11 +891,11 @@ class Ear:
 # ──────────────────────────────────────────────────────────────
 
 __all__ = [
-    "STTBackend",
-    "DummyBackend",
-    "FasterWhisperBackend",
-    "WhisperBackend",
-    "Ear",
     "_BACKEND_CLASSES",
     "_DEFAULT_FALLBACK_CHAIN",
+    "DummyBackend",
+    "Ear",
+    "FasterWhisperBackend",
+    "STTBackend",
+    "WhisperBackend",
 ]

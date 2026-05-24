@@ -6,7 +6,7 @@ Extracted from data.py to keep file sizes under 400 lines.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .chain import LogicBlock
 
@@ -27,7 +27,7 @@ class DataTransformBlock(LogicBlock):
     inputs = ["data", "transform_type", "config"]
     outputs = ["transformed_data", "metadata"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             source_data = data.get("data", data.get("items", []))
             transform_type = data.get("transform_type", "identity")  # map, filter, aggregate, pivot, identity
@@ -66,7 +66,8 @@ class DataTransformBlock(LogicBlock):
                 operator = config.get("operator", "==")
                 value = config.get("value", None)
                 result_data = [
-                    item for item in source_data
+                    item
+                    for item in source_data
                     if isinstance(item, dict) and self._compare(item.get(field_name), operator, value)
                 ]
 
@@ -109,7 +110,7 @@ class DataTransformBlock(LogicBlock):
                 "metadata": metadata,
             }
         except Exception as e:
-            return {"success": False, "error": f"DataTransformBlock: {str(e)}"}
+            return {"success": False, "error": f"DataTransformBlock: {e!s}"}
 
     @staticmethod
     def _compare(actual, operator: str, expected) -> bool:
@@ -138,7 +139,7 @@ class DataTransformBlock(LogicBlock):
         return False
 
     @staticmethod
-    def _safe_eval_expression(expression: str, item: Dict[str, Any]) -> Any:
+    def _safe_eval_expression(expression: str, item: dict[str, Any]) -> Any:
         """
         SECURITY FIX: Reemplaza eval() con evaluación segura de expresiones.
 
@@ -161,18 +162,18 @@ class DataTransformBlock(LogicBlock):
         expr = expression.strip()
 
         # Pattern 1: Simple field reference — "{field_name}" or just "field_name"
-        if _re.match(r'^[a-zA-Z_]\w*$', expr):
+        if _re.match(r"^[a-zA-Z_]\w*$", expr):
             return item.get(expr)
 
         # Pattern 2: Field reference with braces — "{field_name}"
-        brace_match = _re.match(r'^\{([a-zA-Z_]\w*)\}$', expr)
+        brace_match = _re.match(r"^\{([a-zA-Z_]\w*)\}$", expr)
         if brace_match:
             return item.get(brace_match.group(1))
 
         # Pattern 3: Simple arithmetic — "field * 0.16" or "field1 + field2"
         # Allowed: field names, numbers, +, -, *, /, (, ), spaces
         # SECURITY: Replaced eval() with safe AST-based expression parser
-        if _re.match(r'^[a-zA-Z_\d\s\+\-\*/\(\)\.\,]+$', expr):
+        if _re.match(r"^[a-zA-Z_\d\s\+\-\*/\(\)\.\,]+$", expr):
             try:
                 result = DataTransformBlock._safe_eval_arithmetic(expr, item, _re)
                 if result is not None:
@@ -194,22 +195,22 @@ class DataTransformBlock(LogicBlock):
             "lower": lambda x: str(x).lower(),
             "strip": lambda x: str(x).strip(),
         }
-        func_match = _re.match(r'^(\w+)\(([^)]*)\)$', expr)
+        func_match = _re.match(r"^(\w+)\(([^)]*)\)$", expr)
         if func_match:
             func_name = func_match.group(1)
             func_args_str = func_match.group(2).strip()
             if func_name in safe_funcs:
                 # Parse arguments
                 args = []
-                for arg in func_args_str.split(','):
+                for arg in func_args_str.split(","):
                     arg = arg.strip()
-                    if _re.match(r'^[a-zA-Z_]\w*$', arg):
+                    if _re.match(r"^[a-zA-Z_]\w*$", arg):
                         args.append(item.get(arg, arg))
                     elif arg.startswith('"') or arg.startswith("'"):
-                        args.append(arg.strip('"\''))
+                        args.append(arg.strip("\"'"))
                     else:
                         try:
-                            args.append(float(arg) if '.' in arg else int(arg))
+                            args.append(float(arg) if "." in arg else int(arg))
                         except ValueError:
                             args.append(arg)
                 try:
@@ -222,7 +223,7 @@ class DataTransformBlock(LogicBlock):
         return None
 
     @staticmethod
-    def _safe_eval_arithmetic(expr: str, item: Dict[str, Any], _re) -> Any:
+    def _safe_eval_arithmetic(expr: str, item: dict[str, Any], _re) -> Any:
         """
         SECURITY: Evaluador aritmético seguro basado en AST.
 
@@ -237,7 +238,7 @@ class DataTransformBlock(LogicBlock):
         # Primero, reemplazar nombres de campos con sus valores numéricos
         safe_expr = expr
         for field_name in sorted(item.keys(), key=len, reverse=True):
-            if _re.match(r'^[a-zA-Z_]\w*$', field_name):
+            if _re.match(r"^[a-zA-Z_]\w*$", field_name):
                 value = item.get(field_name, 0)
                 if isinstance(value, (int, float)):
                     safe_expr = safe_expr.replace(field_name, str(value))
@@ -245,18 +246,27 @@ class DataTransformBlock(LogicBlock):
                     safe_expr = safe_expr.replace(field_name, repr(str(value)))
 
         # Validar que solo queden números, operadores y paréntesis
-        if not _re.match(r'^[\d\s\+\-\*/\(\)\.\'\"]+$', safe_expr):
+        if not _re.match(r"^[\d\s\+\-\*/\(\)\.\'\"]+$", safe_expr):
             return None
 
         try:
-            tree = _ast.parse(safe_expr, mode='eval')
+            tree = _ast.parse(safe_expr, mode="eval")
         except SyntaxError:
             return None
 
         # Definir los nodos AST permitidos
         allowed_nodes = (
-            _ast.Expression, _ast.BinOp, _ast.UnaryOp, _ast.Num, _ast.Constant,
-            _ast.Add, _ast.Sub, _ast.Mult, _ast.Div, _ast.USub, _ast.UAdd,
+            _ast.Expression,
+            _ast.BinOp,
+            _ast.UnaryOp,
+            _ast.Num,
+            _ast.Constant,
+            _ast.Add,
+            _ast.Sub,
+            _ast.Mult,
+            _ast.Div,
+            _ast.USub,
+            _ast.UAdd,
         )
 
         # Verificar que todos los nodos del árbol sean seguros

@@ -20,14 +20,16 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
 
 from ..constraint_solver import ConstraintSolver
-from ..retry import with_retry
+
 # Phase 5 — Deterministic ID generation for sort names
 from ..deterministic import FencingTokenGenerator
+from ..retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +165,8 @@ class Z3SolverCoreMixin:
             solver.set("timeout", self.timeout_ms)
 
             # --- Phase 1: Classify domains and create Z3 variables ---
-            z3_vars = {}          # var_name -> z3 variable
-            var_meta = {}         # var_name -> {type, sort, const_map, domain_vals}
+            z3_vars = {}  # var_name -> z3 variable
+            var_meta = {}  # var_name -> {type, sort, const_map, domain_vals}
             # NOTE (Phase 3): Removed dead 'enum_sorts = []' list — it was
             # tracked but never used for cleanup. Z3 EnumSort cleanup is
             # handled by gc.collect() after solver operations.
@@ -271,31 +273,22 @@ class Z3SolverCoreMixin:
                 if type1 == "ENUM" or type2 == "ENUM" or type1 == "MIXED" or type2 == "MIXED":
                     # Enum/Mixed domains: build constraint from valid pairs
                     # but express them as native Z3 equality, not int comparisons
-                    self._add_enum_constraint(
-                        solver, z3_vars, var_meta, c
-                    )
+                    self._add_enum_constraint(solver, z3_vars, var_meta, c)
                 elif type1 == "NUMERIC_INT" and type2 == "NUMERIC_INT":
                     # Both Int: try to build native arithmetic constraint
                     # Pass var_meta for domain-aware fallback encoding
-                    self._add_numeric_constraint(
-                        solver, z3_vars, c, "int", var_meta=var_meta
-                    )
-                elif (type1 == "NUMERIC_REAL" and type2 == "NUMERIC_REAL") or \
-                     (type1.startswith("NUMERIC") and type2.startswith("NUMERIC")):
+                    self._add_numeric_constraint(solver, z3_vars, c, "int", var_meta=var_meta)
+                elif (type1 == "NUMERIC_REAL" and type2 == "NUMERIC_REAL") or (
+                    type1.startswith("NUMERIC") and type2.startswith("NUMERIC")
+                ):
                     # Real or mixed-numeric: build arithmetic constraint
-                    self._add_numeric_constraint(
-                        solver, z3_vars, c, "real", var_meta=var_meta
-                    )
+                    self._add_numeric_constraint(solver, z3_vars, c, "real", var_meta=var_meta)
                 elif type1 == "BOOLEAN" and type2 == "BOOLEAN":
                     # Both Bool: build logical constraint
-                    self._add_boolean_constraint(
-                        solver, z3_vars, c
-                    )
+                    self._add_boolean_constraint(solver, z3_vars, c)
                 else:
                     # Cross-type: use EnumSort valid-pair encoding
-                    self._add_enum_constraint(
-                        solver, z3_vars, var_meta, c
-                    )
+                    self._add_enum_constraint(solver, z3_vars, var_meta, c)
 
             # --- Phase 3: Solve and extract model ---
             result = solver.check()
@@ -307,9 +300,7 @@ class Z3SolverCoreMixin:
                 for var_name, z3_var in z3_vars.items():
                     val = model.eval(z3_var, model_completion=True)
                     meta = var_meta.get(var_name, {})
-                    assignment[var_name] = self._decode_native_z3_value(
-                        val, meta
-                    )
+                    assignment[var_name] = self._decode_native_z3_value(val, meta)
                     counterexample[var_name] = str(val)
 
                 return {

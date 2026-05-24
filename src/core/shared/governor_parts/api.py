@@ -21,7 +21,7 @@ class APIMixin:
         elif cpu_usage > 0.6:
             sleep_ms = self.DEFAULT_CPU_SLEEP_MS * 2  # 100ms
         else:
-            sleep_ms = self.DEFAULT_CPU_SLEEP_MS       # 50ms
+            sleep_ms = self.DEFAULT_CPU_SLEEP_MS  # 50ms
 
         # Aplicar throttle termico
         sleep_ms = int(sleep_ms / self._thermal_throttle)
@@ -30,7 +30,7 @@ class APIMixin:
 
     def _get_cpu_usage(self) -> float:
         """Thread-safe read of CPU usage."""
-        cpu_lock = getattr(self, '_cpu_lock', None)
+        cpu_lock = getattr(self, "_cpu_lock", None)
         if cpu_lock:
             with cpu_lock:
                 return self._cpu_usage
@@ -63,8 +63,10 @@ class APIMixin:
         if adaptive < base_simulations:
             logger.info(
                 "MCTS adaptive: %d -> %d sims (CPU=%.0f%%, throttle=%.0f%%)",
-                base_simulations, adaptive,
-                cpu_usage * 100, self._thermal_throttle * 100
+                base_simulations,
+                adaptive,
+                cpu_usage * 100,
+                self._thermal_throttle * 100,
             )
 
         return adaptive

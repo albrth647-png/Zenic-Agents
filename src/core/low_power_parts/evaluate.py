@@ -3,7 +3,7 @@
 import os
 import time
 
-from ._imports import logger, PowerMode, HardwareState
+from ._imports import HardwareState, PowerMode, logger
 
 
 class EvaluateMixin:
@@ -88,14 +88,16 @@ class EvaluateMixin:
         self._current_mode = new_mode
 
         # Record in history
-        self._history.append({
-            "timestamp": time.time(),
-            "mode": new_mode.value,
-            "cpu": hw.cpu_usage,
-            "ram_pct": hw.ram_pct,
-            "temp": hw.temperature_c,
-            "battery": hw.battery_level,
-        })
+        self._history.append(
+            {
+                "timestamp": time.time(),
+                "mode": new_mode.value,
+                "cpu": hw.cpu_usage,
+                "ram_pct": hw.ram_pct,
+                "temp": hw.temperature_c,
+                "battery": hw.battery_level,
+            }
+        )
 
         return self._current_mode
 
@@ -106,13 +108,13 @@ class EvaluateMixin:
         # From governor if available — use public API when possible
         if self._governor:
             # Use _get_cpu_usage() if available (thread-safe), fallback to direct attr
-            if hasattr(self._governor, '_get_cpu_usage'):
+            if hasattr(self._governor, "_get_cpu_usage"):
                 hw.cpu_usage = self._governor._get_cpu_usage()
             else:
-                hw.cpu_usage = getattr(self._governor, '_cpu_usage', 0.0)
-            hw.ram_usage_mb = getattr(self._governor, '_ram_usage_mb', 0.0)
-            hw.ram_limit_mb = getattr(self._governor, 'ram_limit_mb', 4096)
-            hw.thermal_throttle = getattr(self._governor, '_thermal_throttle', 1.0)
+                hw.cpu_usage = getattr(self._governor, "_cpu_usage", 0.0)
+            hw.ram_usage_mb = getattr(self._governor, "_ram_usage_mb", 0.0)
+            hw.ram_limit_mb = getattr(self._governor, "ram_limit_mb", 4096)
+            hw.thermal_throttle = getattr(self._governor, "_thermal_throttle", 1.0)
 
         # Read temperature from thermal zone (Android/Linux)
         hw.temperature_c = self._read_temperature()
@@ -129,12 +131,12 @@ class EvaluateMixin:
             "/sys/class/thermal/thermal_zone0/temp",  # Generic
             "/sys/class/thermal/thermal_zone1/temp",  # CPU
             "/sys/class/thermal/thermal_zone2/temp",  # GPU
-            "/sys/class/hwmon/hwmon0/temp1_input",    # hwmon
+            "/sys/class/hwmon/hwmon0/temp1_input",  # hwmon
         ]
 
         for path in thermal_paths:
             try:
-                with open(path, "r") as f:
+                with open(path) as f:
                     raw = int(f.read().strip())
                     # Some report in millidegrees, some in degrees
                     if raw > 1000:
@@ -145,8 +147,8 @@ class EvaluateMixin:
 
         # Fallback: estimate from CPU usage and thermal throttle
         if self._governor:
-            cpu = getattr(self._governor, '_cpu_usage', 0.3)
-            throttle = getattr(self._governor, '_thermal_throttle', 1.0)
+            cpu = getattr(self._governor, "_cpu_usage", 0.3)
+            throttle = getattr(self._governor, "_thermal_throttle", 1.0)
             # Rough estimate: idle=38C, 100% CPU=70C, throttle reduces
             estimated = 38 + (cpu * 35) * throttle
             return estimated
@@ -164,13 +166,13 @@ class EvaluateMixin:
             # Battery level
             cap_path = os.path.join(battery_path, "capacity")
             if os.path.isfile(cap_path):
-                with open(cap_path, "r") as f:
+                with open(cap_path) as f:
                     level = float(f.read().strip())
 
             # Charging status
             status_path = os.path.join(battery_path, "status")
             if os.path.isfile(status_path):
-                with open(status_path, "r") as f:
+                with open(status_path) as f:
                     status = f.read().strip().lower()
                     charging = status in ("charging", "full")
 

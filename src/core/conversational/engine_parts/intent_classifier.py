@@ -9,56 +9,114 @@ categorias conversacionales.
 
 from __future__ import annotations
 
-
+from ..types.intent import AssistantIntent, ConversationMode, IntentCategory
 from ..types.session import Session
-from ..types.intent import AssistantIntent, IntentCategory, ConversationMode
-
 
 # ─── Patrones de intencion ────────────────────────────────────
 
 CHAT_PATTERNS: list[str] = [
-    "hola", "hey", "buenos dias", "buenas tardes", "que tal",
-    "hi", "hello", "good morning", "how are you",
-    "gracias", "thanks", "ok", "bien", "perfecto",
+    "hola",
+    "hey",
+    "buenos dias",
+    "buenas tardes",
+    "que tal",
+    "hi",
+    "hello",
+    "good morning",
+    "how are you",
+    "gracias",
+    "thanks",
+    "ok",
+    "bien",
+    "perfecto",
 ]
 
 QUESTION_PATTERNS: list[str] = [
-    "que es", "que significa", "como se", "por que",
-    "what is", "how does", "why", "explain", "explica",
-    "cual es la diferencia", "difference between",
+    "que es",
+    "que significa",
+    "como se",
+    "por que",
+    "what is",
+    "how does",
+    "why",
+    "explain",
+    "explica",
+    "cual es la diferencia",
+    "difference between",
 ]
 
 COMMAND_PATTERNS: list[str] = [
-    "limpiar", "reset", "borrar", "clear",
-    "cambiar idioma", "change language", "cambiar tono",
-    "ayuda", "help", "comandos", "estado", "status",
+    "limpiar",
+    "reset",
+    "borrar",
+    "clear",
+    "cambiar idioma",
+    "change language",
+    "cambiar tono",
+    "ayuda",
+    "help",
+    "comandos",
+    "estado",
+    "status",
 ]
 
 CONFIG_PATTERNS: list[str] = [
-    "configura", "ajusta", "cambia la personalidad",
-    "configure", "adjust", "change personality",
-    "modo tecnico", "modo casual", "technical mode",
-    "cambiar idioma", "cambiar tono", "cambiar personalidad",
-    "change language", "change tone", "change personality",
+    "configura",
+    "ajusta",
+    "cambia la personalidad",
+    "configure",
+    "adjust",
+    "change personality",
+    "modo tecnico",
+    "modo casual",
+    "technical mode",
+    "cambiar idioma",
+    "cambiar tono",
+    "cambiar personalidad",
+    "change language",
+    "change tone",
+    "change personality",
 ]
 
 FEEDBACK_PATTERNS: list[str] = [
-    "no me gusta", "mal", "incorrecto", "wrong",
-    "me gusta", "bien", "correcto", "good",
-    "intenta de nuevo", "try again",
+    "no me gusta",
+    "mal",
+    "incorrecto",
+    "wrong",
+    "me gusta",
+    "bien",
+    "correcto",
+    "good",
+    "intenta de nuevo",
+    "try again",
 ]
 
 CODE_CREATE_PATTERNS: list[str] = [
-    "crear", "generar", "create", "build", "make", "nuevo modulo",
+    "crear",
+    "generar",
+    "create",
+    "build",
+    "make",
+    "nuevo modulo",
 ]
 CODE_DEBUG_PATTERNS: list[str] = [
-    "debug", "fix", "corregir", "error", "bug", "arreglar",
+    "debug",
+    "fix",
+    "corregir",
+    "error",
+    "bug",
+    "arreglar",
 ]
 CODE_REFACTOR_PATTERNS: list[str] = [
-    "refactor", "limpiar codigo", "reestructurar",
+    "refactor",
+    "limpiar codigo",
+    "reestructurar",
 ]
 CODE_OPTIMIZE_PATTERNS: list[str] = [
-    "optimizar", "optimize", "mejorar rendimiento", "speed up",
+    "optimizar",
+    "optimize",
+    "mejorar rendimiento",
+    "speed up",
 ]
 
 # Mapa de categoria → patrones + peso

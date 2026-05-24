@@ -11,38 +11,41 @@ import base64
 import ipaddress
 from urllib.parse import urlparse
 
-
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
     import aiohttp  # noqa: F401
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
+    import urllib.error
     import urllib.request
-    import urllib.error  # noqa: F401
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
 
 try:
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes, serialization  # noqa: F401
     from cryptography.hazmat.primitives.asymmetric import ec, padding, utils  # noqa: F401
     from cryptography.hazmat.primitives.asymmetric.ec import (
         ECDSA,  # noqa: F401
+        SECP256R1,  # noqa: F401
         EllipticCurvePrivateKey,  # noqa: F401
         EllipticCurvePublicNumbers,  # noqa: F401
-        SECP256R1,  # noqa: F401
     )
-    from cryptography.hazmat.backends import default_backend
+
     _HAS_CRYPTOGRAPHY = True
 except ImportError:
     _HAS_CRYPTOGRAPHY = False
 
 try:
     import jwt as pyjwt  # noqa: F401
+
     _HAS_PYJWT = True
 except ImportError:
     _HAS_PYJWT = False
@@ -52,8 +55,8 @@ except ImportError:
 
 _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 0.5  # seconds
-_HTTP_TIMEOUT = 30       # seconds
-_WEB_PUSH_TTL = 241920   # 28 days in seconds (max TTL for push)
+_HTTP_TIMEOUT = 30  # seconds
+_WEB_PUSH_TTL = 241920  # 28 days in seconds (max TTL for push)
 _VAPID_JWT_EXPIRY = 43200  # 12 hours
 
 # FCM HTTP v1 API
@@ -63,10 +66,11 @@ _FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 
 # Push notification size limits
 _PUSH_PAYLOAD_MAX = 4096  # 4KB max for Web Push
-_FCM_PAYLOAD_MAX = 4096   # 4KB max for FCM data message
+_FCM_PAYLOAD_MAX = 4096  # 4KB max for FCM data message
 
 
 # ── Utility ───────────────────────────────────────────────────
+
 
 def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks."""
@@ -109,7 +113,8 @@ def _pem_to_base64url(pem_key: str) -> str:
             return pem_key
 
         public_key = serialization.load_pem_public_key(
-            pem_key.encode("utf-8"), backend=default_backend(),
+            pem_key.encode("utf-8"),
+            backend=default_backend(),
         )
         numbers = public_key.public_numbers()
         # x and y are 32 bytes each for P-256

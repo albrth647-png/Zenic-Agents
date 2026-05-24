@@ -13,16 +13,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "StepStatus",
-    "StepResult",
     "StepExecutor",
+    "StepResult",
+    "StepStatus",
 ]
 
 
@@ -30,8 +31,10 @@ __all__ = [
 #  DATA CONTRACTS
 # ──────────────────────────────────────────────────────────────
 
+
 class StepStatus(str, Enum):
     """Status of a pipeline step execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -55,13 +58,14 @@ class StepResult:
         attempts: Number of execution attempts.
         metadata: Additional metadata.
     """
+
     step_id: str
     status: StepStatus = StepStatus.PENDING
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     duration_ms: float = 0.0
     attempts: int = 1
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -102,7 +106,7 @@ class StepExecutor:
     def __init__(
         self,
         max_retries: int = 0,
-        default_timeout: Optional[float] = None,
+        default_timeout: float | None = None,
         backoff_base: float = 1.0,
     ) -> None:
         """
@@ -116,7 +120,7 @@ class StepExecutor:
         self._max_retries = max_retries
         self._default_timeout = default_timeout
         self._backoff_base = backoff_base
-        self._results: Dict[str, StepResult] = {}
+        self._results: dict[str, StepResult] = {}
         self._execution_count: int = 0
         self._error_count: int = 0
 
@@ -127,9 +131,9 @@ class StepExecutor:
         step_id: str,
         step_fn: StepCallable,
         input_data: Any = None,
-        timeout: Optional[float] = None,
-        retries: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        timeout: float | None = None,
+        retries: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """
         Execute a synchronous step.
@@ -152,7 +156,7 @@ class StepExecutor:
             metadata=metadata or {},
         )
 
-        last_error: Optional[str] = None
+        last_error: str | None = None
         for attempt in range(1, effective_retries + 2):  # +1 for initial attempt
             result.attempts = attempt
             start = time.monotonic()
@@ -164,7 +168,9 @@ class StepExecutor:
                 self._execution_count += 1
                 logger.debug(
                     "StepExecutor: Step '%s' completed in %.1fms (attempt %d)",
-                    step_id, result.duration_ms, attempt,
+                    step_id,
+                    result.duration_ms,
+                    attempt,
                 )
                 break
             except Exception as exc:
@@ -174,9 +180,12 @@ class StepExecutor:
                     result.status = StepStatus.RETRYING
                     backoff = self._backoff_base * (2 ** (attempt - 1))
                     logger.warning(
-                        "StepExecutor: Step '%s' failed (attempt %d/%d), "
-                        "retrying in %.1fs: %s",
-                        step_id, attempt, effective_retries + 1, backoff, exc,
+                        "StepExecutor: Step '%s' failed (attempt %d/%d), " "retrying in %.1fs: %s",
+                        step_id,
+                        attempt,
+                        effective_retries + 1,
+                        backoff,
+                        exc,
                     )
                     time.sleep(backoff)
                 else:
@@ -186,7 +195,9 @@ class StepExecutor:
                     self._execution_count += 1
                     logger.error(
                         "StepExecutor: Step '%s' FAILED after %d attempts: %s",
-                        step_id, attempt, exc,
+                        step_id,
+                        attempt,
+                        exc,
                     )
 
         self._results[step_id] = result
@@ -197,11 +208,11 @@ class StepExecutor:
     async def execute_async(
         self,
         step_id: str,
-        step_fn: Union[StepCallable, AsyncStepCallable],
+        step_fn: StepCallable | AsyncStepCallable,
         input_data: Any = None,
-        timeout: Optional[float] = None,
-        retries: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        timeout: float | None = None,
+        retries: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """
         Execute a step asynchronously.
@@ -228,7 +239,7 @@ class StepExecutor:
             metadata=metadata or {},
         )
 
-        last_error: Optional[str] = None
+        last_error: str | None = None
         for attempt in range(1, effective_retries + 2):
             result.attempts = attempt
             start = time.monotonic()
@@ -255,7 +266,8 @@ class StepExecutor:
                 self._execution_count += 1
                 logger.debug(
                     "StepExecutor[async]: Step '%s' completed in %.1fms",
-                    step_id, result.duration_ms,
+                    step_id,
+                    result.duration_ms,
                 )
                 break
 
@@ -267,7 +279,8 @@ class StepExecutor:
                 self._execution_count += 1
                 logger.error(
                     "StepExecutor[async]: Step '%s' TIMED OUT after %.1fs",
-                    step_id, effective_timeout,
+                    step_id,
+                    effective_timeout,
                 )
                 break
 
@@ -279,7 +292,10 @@ class StepExecutor:
                     backoff = self._backoff_base * (2 ** (attempt - 1))
                     logger.warning(
                         "StepExecutor[async]: Step '%s' failed (attempt %d/%d): %s",
-                        step_id, attempt, effective_retries + 1, exc,
+                        step_id,
+                        attempt,
+                        effective_retries + 1,
+                        exc,
                     )
                     await asyncio.sleep(backoff)
                 else:
@@ -289,7 +305,9 @@ class StepExecutor:
                     self._execution_count += 1
                     logger.error(
                         "StepExecutor[async]: Step '%s' FAILED after %d attempts: %s",
-                        step_id, attempt, exc,
+                        step_id,
+                        attempt,
+                        exc,
                     )
 
         self._results[step_id] = result
@@ -299,8 +317,8 @@ class StepExecutor:
 
     def execute_batch(
         self,
-        steps: List[Dict[str, Any]],
-    ) -> List[StepResult]:
+        steps: list[dict[str, Any]],
+    ) -> list[StepResult]:
         """
         Execute a batch of steps sequentially.
 
@@ -311,7 +329,7 @@ class StepExecutor:
         Returns:
             List of StepResult objects in the same order.
         """
-        results: List[StepResult] = []
+        results: list[StepResult] = []
         for step_spec in steps:
             result = self.execute(
                 step_id=step_spec["step_id"],
@@ -326,9 +344,9 @@ class StepExecutor:
 
     async def execute_batch_async(
         self,
-        steps: List[Dict[str, Any]],
+        steps: list[dict[str, Any]],
         max_concurrency: int = 4,
-    ) -> List[StepResult]:
+    ) -> list[StepResult]:
         """
         Execute a batch of steps concurrently with bounded concurrency.
 
@@ -341,7 +359,7 @@ class StepExecutor:
         """
         semaphore = asyncio.Semaphore(max_concurrency)
 
-        async def _run_step(spec: Dict[str, Any]) -> StepResult:
+        async def _run_step(spec: dict[str, Any]) -> StepResult:
             async with semaphore:
                 return await self.execute_async(
                     step_id=spec["step_id"],
@@ -357,17 +375,17 @@ class StepExecutor:
 
     # ── Accessors ────────────────────────────────────────────
 
-    def get_result(self, step_id: str) -> Optional[StepResult]:
+    def get_result(self, step_id: str) -> StepResult | None:
         """Retrieve the result of a previously executed step."""
         return self._results.get(step_id)
 
     @property
-    def results(self) -> Dict[str, StepResult]:
+    def results(self) -> dict[str, StepResult]:
         """All step results keyed by step_id."""
         return dict(self._results)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
         return {
             "total_executions": self._execution_count,

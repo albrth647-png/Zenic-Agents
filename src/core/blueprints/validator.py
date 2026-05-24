@@ -13,12 +13,11 @@ Validates:
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Set
 
+from .schema import CertifiedBlueprint
 from .types import (
     FieldType,
 )
-from .schema import CertifiedBlueprint
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +26,13 @@ logger = logging.getLogger(__name__)
 #  VALIDATION RESULT
 # ──────────────────────────────────────────────────────────────
 
+
 class ValidationResult:
     """Result of Blueprint validation."""
 
     def __init__(self) -> None:
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
 
     @property
     def is_valid(self) -> bool:
@@ -47,21 +47,19 @@ class ValidationResult:
         """Add a validation warning."""
         self.warnings.append(msg)
 
-    def merge(self, other: "ValidationResult") -> None:
+    def merge(self, other: ValidationResult) -> None:
         """Merge another validation result into this one."""
         self.errors.extend(other.errors)
         self.warnings.extend(other.warnings)
 
     def __repr__(self) -> str:
-        return (
-            f"ValidationResult(valid={self.is_valid}, "
-            f"errors={len(self.errors)}, warnings={len(self.warnings)})"
-        )
+        return f"ValidationResult(valid={self.is_valid}, " f"errors={len(self.errors)}, warnings={len(self.warnings)})"
 
 
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT VALIDATOR
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintValidatorV2:
     """Comprehensive validator for CertifiedBlueprint objects.
@@ -83,13 +81,23 @@ class BlueprintValidatorV2:
 
     # Valid safety categories
     VALID_SAFETY_CATEGORIES = {
-        "safe", "moderate", "destructive", "financial",
+        "safe",
+        "moderate",
+        "destructive",
+        "financial",
     }
 
     # Valid executor types
     KNOWN_EXECUTOR_TYPES = {
-        "email", "http", "database", "file", "notification",
-        "schedule", "transform", "webhook", "discord",
+        "email",
+        "http",
+        "database",
+        "file",
+        "notification",
+        "schedule",
+        "transform",
+        "webhook",
+        "discord",
     }
 
     def validate(self, blueprint: CertifiedBlueprint) -> ValidationResult:
@@ -107,7 +115,7 @@ class BlueprintValidatorV2:
 
     def validate_compatibility(
         self,
-        blueprints: List[CertifiedBlueprint],
+        blueprints: list[CertifiedBlueprint],
     ) -> ValidationResult:
         """Validate compatibility between multiple Blueprints for composition."""
         result = ValidationResult()
@@ -119,7 +127,9 @@ class BlueprintValidatorV2:
         for i in range(len(blueprints)):
             for j in range(i + 1, len(blueprints)):
                 self._check_pair_compatibility(
-                    blueprints[i], blueprints[j], result,
+                    blueprints[i],
+                    blueprints[j],
+                    result,
                 )
 
         # Check for entity name collisions
@@ -133,7 +143,9 @@ class BlueprintValidatorV2:
     # ── Metadata Validation ────────────────────────────────
 
     def _validate_metadata(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate Blueprint metadata completeness."""
         meta = bp.metadata
@@ -147,23 +159,21 @@ class BlueprintValidatorV2:
         if meta.version:
             parts = meta.version.split(".")
             if len(parts) < 2:
-                result.add_warning(
-                    f"Version '{meta.version}' doesn't follow semver (X.Y.Z)"
-                )
+                result.add_warning(f"Version '{meta.version}' doesn't follow semver (X.Y.Z)")
 
         # Name format check
         if meta.name and not meta.name.replace("_", "").replace("-", "").isalnum():
-            result.add_error(
-                f"Blueprint name '{meta.name}' contains invalid characters"
-            )
+            result.add_error(f"Blueprint name '{meta.name}' contains invalid characters")
 
     # ── DB Schema Validation ───────────────────────────────
 
     def _validate_db_schema(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate database schema integrity."""
-        entity_names: Set[str] = set()
+        entity_names: set[str] = set()
 
         for entity in bp.db_schema.entities:
             # Check entity name uniqueness
@@ -176,66 +186,54 @@ class BlueprintValidatorV2:
                 result.add_warning(f"Entity '{entity.name}' has no fields")
 
             # Validate fields
-            field_names: Set[str] = set()
+            field_names: set[str] = set()
             for fld in entity.fields:
                 if fld.name in field_names:
-                    result.add_error(
-                        f"Duplicate field '{fld.name}' in entity '{entity.name}'"
-                    )
+                    result.add_error(f"Duplicate field '{fld.name}' in entity '{entity.name}'")
                 field_names.add(fld.name)
 
                 # Validate field type
                 try:
                     FieldType(fld.field_type.value if isinstance(fld.field_type, FieldType) else fld.field_type)
                 except ValueError:
-                    result.add_error(
-                        f"Invalid field type '{fld.field_type}' "
-                        f"on '{entity.name}.{fld.name}'"
-                    )
+                    result.add_error(f"Invalid field type '{fld.field_type}' " f"on '{entity.name}.{fld.name}'")
 
     # ── Monitor Hook Validation ────────────────────────────
 
     def _validate_monitor_hooks(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate SNA monitor hook configurations."""
-        hook_ids: Set[str] = set()
+        hook_ids: set[str] = set()
 
         for hook in bp.monitor_hooks:
             if hook.monitor_id in hook_ids:
-                result.add_error(
-                    f"Duplicate monitor hook: {hook.monitor_id}"
-                )
+                result.add_error(f"Duplicate monitor hook: {hook.monitor_id}")
             hook_ids.add(hook.monitor_id)
 
             # Validate weight
             valid_weights = {"lightweight", "medium", "heavy"}
             if hook.weight not in valid_weights:
-                result.add_error(
-                    f"Invalid monitor weight '{hook.weight}' "
-                    f"for hook '{hook.monitor_id}'"
-                )
+                result.add_error(f"Invalid monitor weight '{hook.weight}' " f"for hook '{hook.monitor_id}'")
 
             # Validate thresholds structure
             for i, th in enumerate(hook.thresholds):
                 if "field" not in th:
-                    result.add_warning(
-                        f"Threshold [{i}] in '{hook.monitor_id}' "
-                        f"missing 'field' key"
-                    )
+                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' " f"missing 'field' key")
                 if "value" not in th:
-                    result.add_warning(
-                        f"Threshold [{i}] in '{hook.monitor_id}' "
-                        f"missing 'value' key"
-                    )
+                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' " f"missing 'value' key")
 
     # ── Business Rule Validation ───────────────────────────
 
     def _validate_rules(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate business rules."""
-        rule_ids: Set[str] = set()
+        rule_ids: set[str] = set()
 
         for rule in bp.rules:
             if rule.rule_id in rule_ids:
@@ -243,54 +241,47 @@ class BlueprintValidatorV2:
             rule_ids.add(rule.rule_id)
 
             if rule.severity not in self.VALID_SEVERITIES:
-                result.add_error(
-                    f"Invalid severity '{rule.severity}' in rule '{rule.rule_id}'"
-                )
+                result.add_error(f"Invalid severity '{rule.severity}' in rule '{rule.rule_id}'")
 
             if rule.executor_type and rule.executor_type not in self.KNOWN_EXECUTOR_TYPES:
-                result.add_warning(
-                    f"Unknown executor type '{rule.executor_type}' "
-                    f"in rule '{rule.rule_id}'"
-                )
+                result.add_warning(f"Unknown executor type '{rule.executor_type}' " f"in rule '{rule.rule_id}'")
 
     # ── Action Template Validation ─────────────────────────
 
     def _validate_actions(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate action templates."""
-        template_ids: Set[str] = set()
+        template_ids: set[str] = set()
 
         for action in bp.actions:
             if action.template_id in template_ids:
-                result.add_error(
-                    f"Duplicate action template ID: {action.template_id}"
-                )
+                result.add_error(f"Duplicate action template ID: {action.template_id}")
             template_ids.add(action.template_id)
 
             if action.safety_category not in self.VALID_SAFETY_CATEGORIES:
                 result.add_error(
-                    f"Invalid safety category '{action.safety_category}' "
-                    f"in action '{action.template_id}'"
+                    f"Invalid safety category '{action.safety_category}' " f"in action '{action.template_id}'"
                 )
 
             if action.executor_type and action.executor_type not in self.KNOWN_EXECUTOR_TYPES:
                 result.add_warning(
-                    f"Unknown executor type '{action.executor_type}' "
-                    f"in action '{action.template_id}'"
+                    f"Unknown executor type '{action.executor_type}' " f"in action '{action.template_id}'"
                 )
 
     # ── Executor Schema Validation ─────────────────────────
 
     def _validate_executor_schemas(
-        self, bp: CertifiedBlueprint, result: ValidationResult,
+        self,
+        bp: CertifiedBlueprint,
+        result: ValidationResult,
     ) -> None:
         """Validate executor schemas reference known types."""
         for exec_type in bp.executor_schemas:
             if exec_type not in self.KNOWN_EXECUTOR_TYPES:
-                result.add_warning(
-                    f"Executor schema for unknown type: {exec_type}"
-                )
+                result.add_warning(f"Executor schema for unknown type: {exec_type}")
 
     # ── Compatibility Checks ───────────────────────────────
 
@@ -304,26 +295,20 @@ class BlueprintValidatorV2:
         # Check A → B compatibility
         conflicts = bp_a.get_known_conflicts(bp_b.metadata.name)
         for conflict in conflicts:
-            result.add_error(
-                f"Conflict between '{bp_a.metadata.name}' and "
-                f"'{bp_b.metadata.name}': {conflict}"
-            )
+            result.add_error(f"Conflict between '{bp_a.metadata.name}' and " f"'{bp_b.metadata.name}': {conflict}")
 
         # Check B → A compatibility
         conflicts = bp_b.get_known_conflicts(bp_a.metadata.name)
         for conflict in conflicts:
-            result.add_error(
-                f"Conflict between '{bp_b.metadata.name}' and "
-                f"'{bp_a.metadata.name}': {conflict}"
-            )
+            result.add_error(f"Conflict between '{bp_b.metadata.name}' and " f"'{bp_a.metadata.name}': {conflict}")
 
     def _check_entity_collisions(
         self,
-        blueprints: List[CertifiedBlueprint],
+        blueprints: list[CertifiedBlueprint],
         result: ValidationResult,
     ) -> None:
         """Check for entity name collisions across Blueprints."""
-        entity_map: Dict[str, List[str]] = {}
+        entity_map: dict[str, list[str]] = {}
 
         for bp in blueprints:
             for entity in bp.db_schema.entities:
@@ -341,26 +326,22 @@ class BlueprintValidatorV2:
 
     def _check_rule_conflicts(
         self,
-        blueprints: List[CertifiedBlueprint],
+        blueprints: list[CertifiedBlueprint],
         result: ValidationResult,
     ) -> None:
         """Check for conflicting business rules across Blueprints."""
-        rule_map: Dict[str, List[str]] = {}
+        rule_map: dict[str, list[str]] = {}
 
         for bp in blueprints:
             for rule in bp.rules:
                 key = f"{rule.executor_type}:{rule.condition}"
                 if key not in rule_map:
                     rule_map[key] = []
-                rule_map[key].append(
-                    f"{bp.metadata.name}/{rule.rule_id}:{rule.action}"
-                )
+                rule_map[key].append(f"{bp.metadata.name}/{rule.rule_id}:{rule.action}")
 
         for key, rules in rule_map.items():
             if len(rules) > 1:
                 # Different actions for same condition = potential conflict
                 actions = set(r.split(":")[-1] for r in rules)
                 if len(actions) > 1:
-                    result.add_warning(
-                        f"Conflicting rules for '{key}': {rules}"
-                    )
+                    result.add_warning(f"Conflicting rules for '{key}': {rules}")

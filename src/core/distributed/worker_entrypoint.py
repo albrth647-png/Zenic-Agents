@@ -10,7 +10,7 @@ and processes tasks from the configured queues.
 """
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .worker import DistributedWorker
@@ -35,7 +35,7 @@ def main() -> None:
         DistributedWorker,
         WorkerConfig,
     )
-    from src.core.distributed.topology import NodeInfo, ClusterTopology
+    from src.core.distributed.topology import ClusterTopology, NodeInfo
 
     # ── Read configuration from environment ──────────────────
     node_id = os.environ.get("ZENIC_NODE_ID", "")
@@ -63,6 +63,7 @@ def main() -> None:
 
     # ── Create task queue ────────────────────────────────────
     import asyncio
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -154,6 +155,7 @@ def _register_handlers(worker: "DistributedWorker") -> None:
     pipeline task types. Handlers are registered based on
     available modules.
     """
+
     # Register basic handlers that are always available
     def _handle_generic(task: dict) -> dict:
         """Generic task handler — logs and returns basic response."""
@@ -168,7 +170,9 @@ def _register_handlers(worker: "DistributedWorker") -> None:
 
     # Try to register pipeline-specific handlers
     try:
-        raise ImportError("DAGOrchestrator migrated to zenic-core Rust crate")  # from src.core.dag_parts.orchestrator import DAGOrchestrator
+        raise ImportError(
+            "DAGOrchestrator migrated to zenic-core Rust crate"
+        )  # from src.core.dag_parts.orchestrator import DAGOrchestrator
         # Pipeline handler would process DAG pipeline tasks
         worker.register_handler("pipeline", _handle_generic)
         worker.register_handler("saga_step_pipeline", _handle_generic)
@@ -183,6 +187,7 @@ def _register_handlers(worker: "DistributedWorker") -> None:
     # Try to register reasoning handler
     try:
         from src.core.reasoning_engine import ReasoningEngine  # noqa: F401
+
         worker.register_handler("reasoning", _handle_generic)
     except ImportError:
         logger.debug("Worker: ReasoningEngine not available")
@@ -195,7 +200,8 @@ def _register_handlers(worker: "DistributedWorker") -> None:
         step_name = payload.get("step_name", "")
         logger.info(
             "Worker: Processing saga step '%s' for saga %s",
-            step_name, saga_id[:8] if saga_id else "unknown",
+            step_name,
+            saga_id[:8] if saga_id else "unknown",
         )
         return {"step_completed": True, "step_name": step_name}
 

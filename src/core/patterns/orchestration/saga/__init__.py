@@ -1,29 +1,30 @@
 """ZENIC-AGENTS - Saga Pattern (Multi-Step Rollback)."""
+
 import logging
 import threading
 import uuid
 from typing import Any, Dict, List, Optional
 
-from ._types import SagaStatus, SagaStep, SagaContext
-from ._sync_mixin import SagaSyncMixin
 from ._async_mixin import SagaAsyncMixin
+from ._sync_mixin import SagaSyncMixin
+from ._types import SagaContext, SagaStatus, SagaStep
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
-__all__ = ["SagaStatus", "SagaStep", "SagaContext", "Saga", "Optional"]
+__all__ = ["Optional", "Saga", "SagaContext", "SagaStatus", "SagaStep"]
 
 
 class Saga(SagaSyncMixin, SagaAsyncMixin):
     """Orchestrator for multi-step operations with automatic rollback."""
 
-    def __init__(self, name: str, steps: List[SagaStep]) -> None:
+    def __init__(self, name: str, steps: list[SagaStep]) -> None:
         if not name:
             raise ValueError("Saga name must not be empty")
         if not steps:
             raise ValueError("Saga must have at least one step")
 
         self._name: str = name
-        self._steps: List[SagaStep] = list(steps)
+        self._steps: list[SagaStep] = list(steps)
         self._status: SagaStatus = SagaStatus.PENDING
         self._lock = threading.Lock()
         self._saga_id: str = str(uuid.uuid4())
@@ -45,7 +46,7 @@ class Saga(SagaSyncMixin, SagaAsyncMixin):
         return self._name
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics for monitoring and debugging."""
         with self._lock:
             return {

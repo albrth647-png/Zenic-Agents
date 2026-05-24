@@ -1,22 +1,29 @@
 """Core logic for sna_engine."""
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional
-from ..types import (
-    AlertSeverity, SchedulerState, MonitorResult, Alert,
-    MonitorConfig, SNAStats,
-)
+from typing import Any
+
+from ..alert_manager import AlertManager
+from ..dag_integration import ReflexArc, SNADagBridge
+from ..monitores.base import create_monitor, get_all_monitor_ids
 from ..persistence import SNAPersistence
 from ..scheduler import SNAScheduler
 from ..thresholds import ThresholdEngine
-from ..alert_manager import AlertManager
-from ..dag_integration import SNADagBridge, ReflexArc
-from ..monitores.base import create_monitor, get_all_monitor_ids
+from ..types import (
+    Alert,
+    AlertSeverity,
+    MonitorConfig,
+    MonitorResult,
+    SchedulerState,
+    SNAStats,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class SNAEngine:
     """Main engine for the Sistema Nervioso Autónomo.
@@ -32,11 +39,11 @@ class SNAEngine:
 
     def __init__(
         self,
-        persistence: Optional[SNAPersistence] = None,
-        alert_manager: Optional[AlertManager] = None,
-        threshold_engine: Optional[ThresholdEngine] = None,
-        scheduler: Optional[SNAScheduler] = None,
-        dag_bridge: Optional[SNADagBridge] = None,
+        persistence: SNAPersistence | None = None,
+        alert_manager: AlertManager | None = None,
+        threshold_engine: ThresholdEngine | None = None,
+        scheduler: SNAScheduler | None = None,
+        dag_bridge: SNADagBridge | None = None,
     ) -> None:
         self._persistence = persistence or SNAPersistence()
         self._alert_mgr = alert_manager or AlertManager(self._persistence)
@@ -95,8 +102,7 @@ class SNAEngine:
 
     # ── Monitor Management ─────────────────────────────────
 
-    def load_default_monitors(self, tenant_id: str = "",
-                              blueprint_name: str = "") -> int:
+    def load_default_monitors(self, tenant_id: str = "", blueprint_name: str = "") -> int:
         """Load all built-in monitors with default configurations.
 
         Returns the number of monitors loaded.
@@ -129,7 +135,7 @@ class SNAEngine:
         """Remove a monitor by ID."""
         self._scheduler.remove_monitor(monitor_id)
 
-    def get_monitors(self) -> Dict[str, MonitorConfig]:
+    def get_monitors(self) -> dict[str, MonitorConfig]:
         """Get all active monitor configurations."""
         return self._scheduler.get_monitors()
 
@@ -138,17 +144,22 @@ class SNAEngine:
     def add_threshold(self, threshold_config: Any) -> None:
         """Add a threshold configuration."""
         from .types import ThresholdConfig
+
         if isinstance(threshold_config, dict):
             threshold_config = ThresholdConfig(**threshold_config)
         self._threshold_engine.add_threshold(threshold_config)
 
     def load_blueprint_thresholds(
-        self, monitor_hooks: Dict[str, Dict[str, Any]],
-        blueprint_name: str = "", tenant_id: str = "",
+        self,
+        monitor_hooks: dict[str, dict[str, Any]],
+        blueprint_name: str = "",
+        tenant_id: str = "",
     ) -> int:
         """Load thresholds from a Blueprint's monitor_hooks."""
         return self._threshold_engine.load_from_blueprint_hooks(
-            monitor_hooks, blueprint_name, tenant_id,
+            monitor_hooks,
+            blueprint_name,
+            tenant_id,
         )
 
     # ── DAG Integration ────────────────────────────────────
@@ -157,21 +168,22 @@ class SNAEngine:
         """Set the ActionDispatcher for full-pipeline dispatching."""
         self._dag_bridge.set_dispatcher(dispatcher)
 
-    def register_reflex_arc(self, monitor_id: str, action_type: str,
-                            action_config: Dict[str, Any],
-                            max_per_hour: int = 5) -> None:
+    def register_reflex_arc(
+        self, monitor_id: str, action_type: str, action_config: dict[str, Any], max_per_hour: int = 5
+    ) -> None:
         """Register a reflex arc for time-critical responses."""
-        self._dag_bridge.register_reflex_arc(ReflexArc(
-            monitor_id=monitor_id,
-            action_type=action_type,
-            action_config=action_config,
-            max_per_hour=max_per_hour,
-        ))
+        self._dag_bridge.register_reflex_arc(
+            ReflexArc(
+                monitor_id=monitor_id,
+                action_type=action_type,
+                action_config=action_config,
+                max_per_hour=max_per_hour,
+            )
+        )
 
     # ── Manual Check (API/CLI) ─────────────────────────────
 
-    async def check_monitor(self, monitor_id: str,
-                            tenant_id: str = "") -> Optional[MonitorResult]:
+    async def check_monitor(self, monitor_id: str, tenant_id: str = "") -> MonitorResult | None:
         """Manually trigger a monitor check.
 
         Useful for testing and CLI inspection.
@@ -185,9 +197,9 @@ class SNAEngine:
         self._process_result(result, tenant_id, config)
         return result
 
-    async def check_all(self, tenant_id: str = "") -> List[MonitorResult]:
+    async def check_all(self, tenant_id: str = "") -> list[MonitorResult]:
         """Run all active monitors once (regardless of schedule)."""
-        results: List[MonitorResult] = []
+        results: list[MonitorResult] = []
         for monitor_id in get_all_monitor_ids():
             result = await self.check_monitor(monitor_id, tenant_id)
             if result is not None:
@@ -196,7 +208,7 @@ class SNAEngine:
 
     # ── Alert Management ───────────────────────────────────
 
-    def get_active_alerts(self, tenant_id: str = "") -> List[Alert]:
+    def get_active_alerts(self, tenant_id: str = "") -> list[Alert]:
         """Get all active (non-resolved) alerts."""
         return self._alert_mgr.get_active_alerts(tenant_id)
 
@@ -205,8 +217,7 @@ class SNAEngine:
         self._alert_mgr.acknowledge_alert(alert_id)
         return True
 
-    def resolve_alert(self, alert_id: str, monitor_id: str = "",
-                      tenant_id: str = "") -> bool:
+    def resolve_alert(self, alert_id: str, monitor_id: str = "", tenant_id: str = "") -> bool:
         """Resolve an alert."""
         self._alert_mgr.resolve_alert(alert_id, monitor_id, tenant_id)
         return True
@@ -219,14 +230,15 @@ class SNAEngine:
         metric_name: str,
         check_interval_seconds: int = 300,
         tenant_id: str = "",
-    ) -> Optional[str]:
+    ) -> str | None:
         """Add a monitor that checks KPI progress for an objective.
-        
+
         Phase D1: Integration with AutopilotEngine.
         Creates a periodic check that measures KPI and feeds
         results back to the autopilot feedback loop.
         """
         from .types import MonitorConfig
+
         monitor_id = f"kpi_{objective_id}_{metric_name}"
         config = MonitorConfig(
             monitor_id=monitor_id,
@@ -244,7 +256,8 @@ class SNAEngine:
         self.add_monitor(config)
         logger.info(
             "SNAEngine: Added KPI-driven monitor %s for objective %s",
-            monitor_id, objective_id,
+            monitor_id,
+            objective_id,
         )
         return monitor_id
 
@@ -291,14 +304,15 @@ class SNAEngine:
         except Exception as e:
             logger.error(
                 "SNAEngine: Monitor %s check failed: %s",
-                config.monitor_id, e,
+                config.monitor_id,
+                e,
             )
 
     def _process_result(
         self,
         result: MonitorResult,
         tenant_id: str,
-        config: Optional[MonitorConfig] = None,
+        config: MonitorConfig | None = None,
     ) -> None:
         """Process a monitor result: evaluate thresholds and dispatch alerts.
 
@@ -312,16 +326,22 @@ class SNAEngine:
         # Override severity if threshold breached but monitor not triggered
         if threshold and not result.triggered:
             result = MonitorResult(
-                monitor_id=result.monitor_id, monitor_name=result.monitor_name,
-                triggered=True, value=result.value,
-                detail=f"[THRESHOLD] {result.detail}", weight=result.weight,
-                severity=threshold.severity, metadata=result.metadata,
+                monitor_id=result.monitor_id,
+                monitor_name=result.monitor_name,
+                triggered=True,
+                value=result.value,
+                detail=f"[THRESHOLD] {result.detail}",
+                weight=result.weight,
+                severity=threshold.severity,
+                metadata=result.metadata,
                 duration_ms=result.duration_ms,
             )
 
         alert = self._alert_mgr.create_alert(
-            result=result, threshold=threshold,
-            config=config, tenant_id=tenant_id,
+            result=result,
+            threshold=threshold,
+            config=config,
+            tenant_id=tenant_id,
         )
         if alert is None:
             return
@@ -334,7 +354,9 @@ class SNAEngine:
         task.add_done_callback(self._background_tasks.discard)
 
     async def _dispatch_reflex_and_alert(
-        self, result: MonitorResult, alert: Alert,
+        self,
+        result: MonitorResult,
+        alert: Alert,
     ) -> None:
         """Dispatch reflex arcs and then the full alert."""
         # First: reflex arcs for immediate response
@@ -352,7 +374,8 @@ class SNAEngine:
                 if config.enabled:
                     self._scheduler.add_monitor(config)
             logger.info(
-                "SNAEngine: Loaded %d persisted monitor configs", len(configs),
+                "SNAEngine: Loaded %d persisted monitor configs",
+                len(configs),
             )
         except Exception as e:
             logger.debug("SNAEngine: No persisted configs: %s", e)
@@ -378,7 +401,7 @@ class SNAEngine:
         )
 
     @property
-    def detailed_stats(self) -> Dict[str, Any]:
+    def detailed_stats(self) -> dict[str, Any]:
         """Get detailed statistics from all SNA components."""
         return {
             "engine": {
@@ -394,4 +417,3 @@ class SNAEngine:
 
 
 # ── GLOBAL INSTANCE ──────────────────────────────────────────
-

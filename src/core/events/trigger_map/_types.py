@@ -20,6 +20,7 @@ _MISSING = object()
 
 class ConditionOperator(str, Enum):
     """Supported condition operators for event data filtering."""
+
     EQ = "eq"
     NEQ = "neq"
     GT = "gt"
@@ -38,6 +39,7 @@ class TriggerCondition:
         operator: Comparison operator (eq, neq, gt, lt, contains, in).
         value: The value to compare against.
     """
+
     field: str
     operator: ConditionOperator = ConditionOperator.EQ
     value: Any = None
@@ -73,13 +75,17 @@ class TriggerCondition:
                 return False
             else:
                 logger.warning(
-                    "TriggerCondition: unknown operator %s", self.operator,
+                    "TriggerCondition: unknown operator %s",
+                    self.operator,
                 )
                 return False
         except (TypeError, ValueError) as exc:
             logger.debug(
                 "TriggerCondition: error evaluating %s %s %s: %s",
-                self.field, self.operator, self.value, exc,
+                self.field,
+                self.operator,
+                self.value,
+                exc,
             )
             return False
 
@@ -98,6 +104,7 @@ class TriggerMapping:
         enabled: Whether this mapping is active.
         created_at: Unix timestamp.
     """
+
     trigger_id: str
     event_pattern: str
     automation_id: str
@@ -117,4 +124,15 @@ def _resolve_field(path: str, data: dict[str, Any]) -> Any:
         else:
             return _MISSING
     return current
-__all__ = ["ConditionOperator", "DB_DIR", "DB_PATH", "TriggerCondition", "TriggerMapping", "_MISSING", "_resolve_field", "logger"]
+
+
+__all__ = [
+    "DB_DIR",
+    "DB_PATH",
+    "_MISSING",
+    "ConditionOperator",
+    "TriggerCondition",
+    "TriggerMapping",
+    "_resolve_field",
+    "logger",
+]

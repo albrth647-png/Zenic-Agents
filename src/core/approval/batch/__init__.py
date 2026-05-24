@@ -6,15 +6,14 @@ identical-type approval requests so that an approver can act on all
 of them in a single operation, with optional partial approval support.
 """
 
-from ._types import BatchRequest, BatchResult, _MAX_RETRIES, _RETRY_DELAY
-from ._mixin_core import BatchApprovalEngine
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_batch_instance: Optional[BatchApprovalEngine] = None
+from ._mixin_core import BatchApprovalEngine
+from ._types import _MAX_RETRIES, _RETRY_DELAY, BatchRequest, BatchResult
+
+_batch_instance: BatchApprovalEngine | None = None
 _batch_lock = threading.Lock()
 
 
@@ -33,4 +32,12 @@ def reset_batch_approval() -> None:
     _batch_instance = None
 
 
-__all__ = ["BatchRequest", "BatchResult", "BatchApprovalEngine", "get_batch_approval", "reset_batch_approval", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = [
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "BatchApprovalEngine",
+    "BatchRequest",
+    "BatchResult",
+    "get_batch_approval",
+    "reset_batch_approval",
+]

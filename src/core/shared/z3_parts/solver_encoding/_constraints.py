@@ -3,12 +3,15 @@
 import logging
 
 from ._types import (
-    _MAX_EXHAUSTIVE_PAIRS, _MAX_ENCODE_ENTRIES, _EVICT_BATCH_SIZE,
     _DEFAULT_MAX_SAMPLES,
+    _EVICT_BATCH_SIZE,
+    _MAX_ENCODE_ENTRIES,
+    _MAX_EXHAUSTIVE_PAIRS,
 )
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     z3_module = None
@@ -59,8 +62,7 @@ class Z3ConstraintMixin:
         else:
             solver.add(z3_module.BoolVal(False))
 
-    def _add_numeric_constraint(self, solver, z3_vars, constraint, num_type="int",
-                                 var_meta=None):
+    def _add_numeric_constraint(self, solver, z3_vars, constraint, num_type="int", var_meta=None):
         """
         Add a constraint between numeric variables using native
         Z3 arithmetic/comparison expressions.
@@ -121,8 +123,7 @@ class Z3ConstraintMixin:
                     else:
                         solver.add(z3_module.BoolVal(False))
                         logger.debug(
-                            "Numeric constraint '%s': no valid pairs found — adding False",
-                            constraint.description
+                            "Numeric constraint '%s': no valid pairs found — adding False", constraint.description
                         )
                     return
                 else:
@@ -155,7 +156,7 @@ class Z3ConstraintMixin:
 
         logger.warning(
             "Numeric constraint '%s' has no domain info — skipping constraint (no safe fallback).",
-            constraint.description
+            constraint.description,
         )
         # Don't add any constraint — unknown relationship
 
@@ -226,8 +227,7 @@ class Z3ConstraintMixin:
                 if eid is not None:
                     self._decode_map.pop(eid, None)
             logger.debug(
-                "Z3Solver: Encoding map evicted %d entries (limit: %d)",
-                len(keys_to_evict), _MAX_ENCODE_ENTRIES
+                "Z3Solver: Encoding map evicted %d entries (limit: %d)", len(keys_to_evict), _MAX_ENCODE_ENTRIES
             )
 
         try:

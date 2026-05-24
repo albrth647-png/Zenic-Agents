@@ -9,9 +9,9 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ...._formatter import truncate, sanitize_plain_text
+from ...._formatter import sanitize_plain_text, truncate
 from ...._types import (
     ChannelMessage,
     ChannelResponse,
@@ -47,7 +47,7 @@ async def send_via_fcm(
     title = message.title or message.subject or ""
     body = sanitize_plain_text(message.text) if message.text else ""
 
-    fcm_message: Dict[str, Any] = {}
+    fcm_message: dict[str, Any] = {}
 
     # Determine target type
     if target.startswith("topic:"):
@@ -58,7 +58,7 @@ async def send_via_fcm(
         fcm_message["token"] = target
 
     # Add notification
-    notification: Dict[str, str] = {}
+    notification: dict[str, str] = {}
     if title:
         notification["title"] = truncate(title, 200)
     if body:
@@ -69,7 +69,7 @@ async def send_via_fcm(
         fcm_message["notification"] = notification
 
     # Add FCM-specific options
-    fcm_options: Dict[str, Any] = {}
+    fcm_options: dict[str, Any] = {}
     if message.metadata.get("fcm_android"):
         fcm_options["android"] = message.metadata["fcm_android"]
     if message.metadata.get("fcm_apns"):
@@ -79,7 +79,7 @@ async def send_via_fcm(
     fcm_message.update(fcm_options)
 
     # Add data payload
-    data: Dict[str, str] = {}
+    data: dict[str, str] = {}
     if message.metadata:
         for k, v in message.metadata.items():
             if k.startswith("fcm_"):
@@ -144,7 +144,7 @@ async def send_via_web_push(
     title = message.title or message.subject or ""
     body = sanitize_plain_text(message.text) if message.text else ""
 
-    push_payload: Dict[str, Any] = {
+    push_payload: dict[str, Any] = {
         "title": title,
         "body": body,
     }
@@ -152,24 +152,25 @@ async def send_via_web_push(
     if message.image_url:
         push_payload["icon"] = message.image_url
     if message.metadata:
-        push_payload["data"] = {
-            k: v for k, v in message.metadata.items()
-            if not k.startswith("fcm_")
-        }
+        push_payload["data"] = {k: v for k, v in message.metadata.items() if not k.startswith("fcm_")}
     if message.fields:
         push_payload["data"] = push_payload.get("data", {})
-        push_payload["data"]["fields"] = [
-            {k: v for k, v in f.items()} for f in message.fields
-        ]
+        push_payload["data"]["fields"] = [{k: v for k, v in f.items()} for f in message.fields]
 
     # Check payload size
     payload_json = json.dumps(push_payload, separators=(",", ":"))
     if len(payload_json) > _PUSH_PAYLOAD_MAX:
         # Truncate body to fit
-        max_body = _PUSH_PAYLOAD_MAX - len(json.dumps(
-            {k: v for k, v in push_payload.items() if k != "body"},
-            separators=(",", ":"),
-        )) - 10  # overhead for "body":""
+        max_body = (
+            _PUSH_PAYLOAD_MAX
+            - len(
+                json.dumps(
+                    {k: v for k, v in push_payload.items() if k != "body"},
+                    separators=(",", ":"),
+                )
+            )
+            - 10
+        )  # overhead for "body":""
         push_payload["body"] = truncate(body, max_body)
         payload_json = json.dumps(push_payload, separators=(",", ":"))
 
@@ -190,7 +191,7 @@ async def send_fcm_message(
     token: str,
     title: str,
     body: str,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
 ) -> ChannelResponse:
     """Send an FCM push notification to a specific device token.
 
@@ -210,10 +211,10 @@ async def send_fcm_message(
             timestamp=time.time(),
         )
 
-    message_payload: Dict[str, Any] = {"token": token}
+    message_payload: dict[str, Any] = {"token": token}
 
     # Add notification
-    notification: Dict[str, str] = {}
+    notification: dict[str, str] = {}
     if title:
         notification["title"] = title
     if body:
@@ -223,10 +224,7 @@ async def send_fcm_message(
 
     # Add data
     if data:
-        message_payload["data"] = {
-            str(k): str(v) if not isinstance(v, str) else v
-            for k, v in data.items()
-        }
+        message_payload["data"] = {str(k): str(v) if not isinstance(v, str) else v for k, v in data.items()}
 
     return await provider._post_fcm({"message": message_payload})
 
@@ -236,7 +234,7 @@ async def send_fcm_to_topic(
     topic: str,
     title: str,
     body: str,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
 ) -> ChannelResponse:
     """Send an FCM push notification to a topic.
 
@@ -256,9 +254,9 @@ async def send_fcm_to_topic(
             timestamp=time.time(),
         )
 
-    message_payload: Dict[str, Any] = {"topic": topic}
+    message_payload: dict[str, Any] = {"topic": topic}
 
-    notification: Dict[str, str] = {}
+    notification: dict[str, str] = {}
     if title:
         notification["title"] = title
     if body:
@@ -267,10 +265,7 @@ async def send_fcm_to_topic(
         message_payload["notification"] = notification
 
     if data:
-        message_payload["data"] = {
-            str(k): str(v) if not isinstance(v, str) else v
-            for k, v in data.items()
-        }
+        message_payload["data"] = {str(k): str(v) if not isinstance(v, str) else v for k, v in data.items()}
 
     return await provider._post_fcm({"message": message_payload})
 
@@ -278,7 +273,7 @@ async def send_fcm_to_topic(
 async def send_web_push_message(
     provider: Any,
     user_id: str,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
 ) -> ChannelResponse:
     """Send a Web Push notification to a registered user.
 

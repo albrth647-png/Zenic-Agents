@@ -9,10 +9,7 @@ and retrying once often succeeds. Retry is only for ERROR results, not TIMEOUT
 import gc
 import time
 
-from ._imports import (
-    logger, HAS_Z3, Z3Solver, TimeoutEnforcer,
-    CodeConstraintBuilder, Constraint, get_governor
-)
+from ._imports import HAS_Z3, CodeConstraintBuilder, Constraint, TimeoutEnforcer, Z3Solver, get_governor, logger
 
 # Retry configuration for solver execution
 _SOLVER_MAX_ATTEMPTS = 2  # 1 initial + 1 retry
@@ -40,8 +37,9 @@ class SolverMixin:
         effective_timeout = timeout_ms or self.solver_timeout_ms
         get_governor()
 
-        logger.info("Running %s solver for surgical node: %s (timeout: %dms)",
-                     solver_type, intent.target, effective_timeout)
+        logger.info(
+            "Running %s solver for surgical node: %s (timeout: %dms)", solver_type, intent.target, effective_timeout
+        )
 
         last_error_result = None
         for attempt in range(1, _SOLVER_MAX_ATTEMPTS + 1):
@@ -58,29 +56,35 @@ class SolverMixin:
                 domains["validation_needed"] = ["full", "partial", "none"]
 
                 # Restriccion critica: si es target critico, requiere validacion completa
-                constraints = CodeConstraintBuilder.build_null_safety_constraints([
-                    {"name": "target_type", "can_be_none": False},
-                    {"name": "mutation_risk", "can_be_none": False},
-                    {"name": "validation_needed", "can_be_none": False}
-                ])
+                constraints = CodeConstraintBuilder.build_null_safety_constraints(
+                    [
+                        {"name": "target_type", "can_be_none": False},
+                        {"name": "mutation_risk", "can_be_none": False},
+                        {"name": "validation_needed", "can_be_none": False},
+                    ]
+                )
 
-                constraints.append(Constraint(
-                    "target_type", "validation_needed",
-                    lambda t, v: t != "critical" or v == "full",
-                    description="critical_targets_require_full_validation"
-                ))
+                constraints.append(
+                    Constraint(
+                        "target_type",
+                        "validation_needed",
+                        lambda t, v: t != "critical" or v == "full",
+                        description="critical_targets_require_full_validation",
+                    )
+                )
 
-                constraints.append(Constraint(
-                    "mutation_risk", "validation_needed",
-                    lambda r, v: r != "high" or v in ["full", "partial"],
-                    description="high_risk_requires_validation"
-                ))
+                constraints.append(
+                    Constraint(
+                        "mutation_risk",
+                        "validation_needed",
+                        lambda r, v: r != "high" or v in ["full", "partial"],
+                        description="high_risk_requires_validation",
+                    )
+                )
 
                 # Ejecutar con timeout enforcement real
                 enforcer = TimeoutEnforcer(timeout_ms=effective_timeout)
-                result, timed_out = enforcer.execute_with_timeout(
-                    z3_solver.solve_constraints, domains, constraints
-                )
+                result, timed_out = enforcer.execute_with_timeout(z3_solver.solve_constraints, domains, constraints)
 
                 # GC forzado despues de solver pesado (Z3 puede dejar mucha basura)
                 gc.collect(1)
@@ -88,7 +92,8 @@ class SolverMixin:
                 if timed_out:
                     logger.warning(
                         "SMT Solver TIMEOUT (%d ms) para %s - Protocolo Abortivo activado",
-                        effective_timeout, intent.target
+                        effective_timeout,
+                        intent.target,
                     )
                     return {
                         "status": "TIMEOUT",
@@ -110,8 +115,10 @@ class SolverMixin:
                 delay = _SOLVER_RETRY_DELAY * (2 ** (attempt - 1))
                 logger.error(
                     "SMT Solver error (attempt %d/%d): %s%s",
-                    attempt, _SOLVER_MAX_ATTEMPTS, e,
-                    f" — retrying in {delay:.1f}s" if attempt < _SOLVER_MAX_ATTEMPTS else ""
+                    attempt,
+                    _SOLVER_MAX_ATTEMPTS,
+                    e,
+                    f" — retrying in {delay:.1f}s" if attempt < _SOLVER_MAX_ATTEMPTS else "",
                 )
                 # GC de emergencia
                 gc.collect(2)
@@ -140,14 +147,15 @@ class SolverMixin:
                 domains = {
                     "target_type": ["standard", "unknown"],
                     "mutation_risk": ["medium", "low", "none"],
-                    "validation_needed": ["partial", "none"]
+                    "validation_needed": ["partial", "none"],
                 }
 
                 constraints = [
                     Constraint(
-                        "mutation_risk", "validation_needed",
+                        "mutation_risk",
+                        "validation_needed",
                         lambda r, v: r != "medium" or v != "none",
-                        description="medium_risk_needs_some_validation"
+                        description="medium_risk_needs_some_validation",
                     )
                 ]
 
@@ -156,15 +164,10 @@ class SolverMixin:
 
                 # Ejecutar con timeout enforcement real
                 enforcer = TimeoutEnforcer(timeout_ms=self.solver_fast_timeout_ms)
-                result, timed_out = enforcer.execute_with_timeout(
-                    z3_solver.solve_constraints, domains, constraints
-                )
+                result, timed_out = enforcer.execute_with_timeout(z3_solver.solve_constraints, domains, constraints)
 
                 if timed_out:
-                    logger.warning(
-                        "Fast Solver TIMEOUT (%d ms) para %s",
-                        self.solver_fast_timeout_ms, intent.target
-                    )
+                    logger.warning("Fast Solver TIMEOUT (%d ms) para %s", self.solver_fast_timeout_ms, intent.target)
                     return {
                         "status": "TIMEOUT",
                         "assignment": None,
@@ -180,8 +183,10 @@ class SolverMixin:
                 delay = _SOLVER_RETRY_DELAY * (2 ** (attempt - 1))
                 logger.warning(
                     "Fast solver error (attempt %d/%d): %s%s",
-                    attempt, _SOLVER_MAX_ATTEMPTS, e,
-                    f" — retrying in {delay:.1f}s" if attempt < _SOLVER_MAX_ATTEMPTS else ""
+                    attempt,
+                    _SOLVER_MAX_ATTEMPTS,
+                    e,
+                    f" — retrying in {delay:.1f}s" if attempt < _SOLVER_MAX_ATTEMPTS else "",
                 )
                 last_error_result = {"status": "ERROR", "message": str(e)}
                 if attempt < _SOLVER_MAX_ATTEMPTS:

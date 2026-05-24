@@ -7,12 +7,12 @@ and error/fallback test generation.
 
 import ast
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Type mapping for test fixtures
-TYPE_FIXTURES: Dict[str, str] = {
+TYPE_FIXTURES: dict[str, str] = {
     "str": '""',
     "int": "1",
     "float": "1.0",
@@ -25,7 +25,7 @@ TYPE_FIXTURES: Dict[str, str] = {
 }
 
 
-def detect_class_type(class_name: str, methods: List[Dict]) -> str:
+def detect_class_type(class_name: str, methods: list[dict]) -> str:
     """Detect what type of class this is based on name and methods."""
     name_lower = class_name.lower()
     method_names = [m["name"].lower() for m in methods]
@@ -48,7 +48,7 @@ def detect_class_type(class_name: str, methods: List[Dict]) -> str:
     return "generic"
 
 
-def generate_test_args(args: List[Dict], method_name: str = "") -> str:
+def generate_test_args(args: list[dict], method_name: str = "") -> str:
     """Generate test argument values."""
     if not args:
         return ""
@@ -92,7 +92,7 @@ def generate_test_args(args: List[Dict], method_name: str = "") -> str:
     return ", ".join(parts)
 
 
-def generate_edge_case_args(args: List[Dict]) -> str:
+def generate_edge_case_args(args: list[dict]) -> str:
     """Generate edge case argument values."""
     if not args:
         return ""
@@ -156,4 +156,15 @@ def test_module_import():
     import {module_name}
     assert {module_name} is not None
 '''
-__all__ = ["TYPE_FIXTURES", "annotation_to_str", "detect_class_type", "generate_edge_case_args", "generate_minimal_tests", "generate_syntax_error_tests", "generate_test_args", "logger"]
+
+
+__all__ = [
+    "TYPE_FIXTURES",
+    "annotation_to_str",
+    "detect_class_type",
+    "generate_edge_case_args",
+    "generate_minimal_tests",
+    "generate_syntax_error_tests",
+    "generate_test_args",
+    "logger",
+]

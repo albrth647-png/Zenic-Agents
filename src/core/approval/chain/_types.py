@@ -7,13 +7,14 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class ApprovalStatus(str, Enum):
     """Status of an approval request."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -24,6 +25,7 @@ class ApprovalStatus(str, Enum):
 
 class ApprovalPriority(str, Enum):
     """Priority level for approval requests."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -33,19 +35,20 @@ class ApprovalPriority(str, Enum):
 @dataclass
 class ApprovalRequest:
     """A request for approval of a pending action."""
+
     request_id: str = ""
     action_type: str = ""
-    action_config: Dict[str, Any] = field(default_factory=dict)
+    action_config: dict[str, Any] = field(default_factory=dict)
     required_role: str = "gerente"
     requested_by: int = 0
     status: ApprovalStatus = ApprovalStatus.PENDING
     priority: ApprovalPriority = ApprovalPriority.NORMAL
     created_at: str = ""
     expires_at: str = ""
-    approved_by: Optional[int] = None
-    approved_at: Optional[str] = None
+    approved_by: int | None = None
+    approved_at: str | None = None
     rejection_reason: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.request_id:
@@ -60,7 +63,7 @@ class ApprovalRequest:
         exp = datetime.fromisoformat(self.expires_at)
         return datetime.now(timezone.utc) > exp
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "request_id": self.request_id,
@@ -82,6 +85,7 @@ class ApprovalRequest:
 @dataclass
 class ApprovalResult:
     """Result of an approval action."""
+
     success: bool
     request_id: str
     status: ApprovalStatus
@@ -91,6 +95,7 @@ class ApprovalResult:
 # ═══════════════════════════════════════════════════════════════
 # GRIETA 3: MemoryApprovalPayload — HITL Mandatory Fields
 # ═══════════════════════════════════════════════════════════════
+
 
 @dataclass
 class MemoryApprovalPayload:
@@ -124,8 +129,8 @@ class MemoryApprovalPayload:
     mapping_id: str = ""
     ia_question: str = ""
     ia_response: bool = False
-    evidence_for: List[str] = field(default_factory=list)
-    evidence_against: List[str] = field(default_factory=list)
+    evidence_for: list[str] = field(default_factory=list)
+    evidence_against: list[str] = field(default_factory=list)
     consensus_score: float = 0.0
 
     # Minimum character count for admin justification
@@ -160,8 +165,7 @@ class MemoryApprovalPayload:
             )
         if not self.admin_session_id.strip():
             raise ValueError(
-                "HITL: admin_session_id es OBLIGATORIO. "
-                "Debe estar ligado al ID criptográfico de la sesión."
+                "HITL: admin_session_id es OBLIGATORIO. " "Debe estar ligado al ID criptográfico de la sesión."
             )
 
     def is_valid(self) -> bool:
@@ -172,7 +176,7 @@ class MemoryApprovalPayload:
         except ValueError:
             return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "admin_evidence_review": self.admin_evidence_review,
@@ -186,4 +190,6 @@ class MemoryApprovalPayload:
             "evidence_against": self.evidence_against,
             "consensus_score": self.consensus_score,
         }
+
+
 __all__ = ["ApprovalPriority", "ApprovalRequest", "ApprovalResult", "ApprovalStatus", "MemoryApprovalPayload", "logger"]

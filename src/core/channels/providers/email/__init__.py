@@ -31,7 +31,7 @@ import threading
 import time
 from typing import Any, Dict, FrozenSet, List, Optional
 
-from ..._formatter import MessageFormatter, truncate, sanitize_html
+from ..._formatter import MessageFormatter, sanitize_html, truncate
 from ..._protocol import ChannelProvider
 from ..._types import (
     ChannelCapability,
@@ -55,6 +55,7 @@ logger = logging.getLogger("zenic_agents.channels.email")
 
 try:
     import aiohttp
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
@@ -88,14 +89,14 @@ class EmailChannelProvider(_SendMixin):
     def __init__(
         self,
         mode: str = "auto",
-        smtp_host: Optional[str] = None,
-        smtp_port: Optional[int] = None,
-        smtp_user: Optional[str] = None,
-        smtp_password: Optional[str] = None,
-        graph_client_id: Optional[str] = None,
-        graph_client_secret: Optional[str] = None,
-        graph_tenant_id: Optional[str] = None,
-        graph_from_email: Optional[str] = None,
+        smtp_host: str | None = None,
+        smtp_port: int | None = None,
+        smtp_user: str | None = None,
+        smtp_password: str | None = None,
+        graph_client_id: str | None = None,
+        graph_client_secret: str | None = None,
+        graph_tenant_id: str | None = None,
+        graph_from_email: str | None = None,
     ) -> None:
         """Initialize the email channel provider.
 
@@ -135,7 +136,7 @@ class EmailChannelProvider(_SendMixin):
         self._dry_run_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()
-        self._executor: Optional[Any] = None  # Lazy-initialized EmailExecutor
+        self._executor: Any | None = None  # Lazy-initialized EmailExecutor
 
     # ── ChannelProvider Protocol ───────────────────────────────────
 
@@ -145,15 +146,17 @@ class EmailChannelProvider(_SendMixin):
         return "email"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
+    def capabilities(self) -> frozenset[ChannelCapability]:
         """Set of capabilities this provider supports."""
-        return frozenset({
-            ChannelCapability.SEND_TEXT,
-            ChannelCapability.SEND_RICH,
-            ChannelCapability.SEND_HTML,
-            ChannelCapability.SEND_FILE,
-            ChannelCapability.SEND_CONFIRMATION,
-        })
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_RICH,
+                ChannelCapability.SEND_HTML,
+                ChannelCapability.SEND_FILE,
+                ChannelCapability.SEND_CONFIRMATION,
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -192,7 +195,7 @@ class EmailChannelProvider(_SendMixin):
         logger.info("EmailChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics for monitoring and health checks."""
         with self._lock:
             return {
@@ -222,9 +225,7 @@ class EmailChannelProvider(_SendMixin):
     def _is_graph_api_configured(self) -> bool:
         """Check if Microsoft Graph API is configured."""
         return bool(
-            self._graph_client_id
-            and self._graph_client_secret
-            and self._graph_tenant_id,
+            self._graph_client_id and self._graph_client_secret and self._graph_tenant_id,
         )
 
     # ── Internal: Executor Management ──────────────────────────────
@@ -234,12 +235,13 @@ class EmailChannelProvider(_SendMixin):
         with self._lock:
             if self._executor is None:
                 from ...executors.email_executor import EmailExecutor
+
                 self._executor = EmailExecutor()
             return self._executor
 
     # ── Internal: Message Mapping ──────────────────────────────────
 
-    def _message_to_config(self, message: ChannelMessage) -> Dict[str, Any]:
+    def _message_to_config(self, message: ChannelMessage) -> dict[str, Any]:
         """Map a ChannelMessage to an EmailExecutor config dict.
 
         Field mappings:
@@ -256,14 +258,14 @@ class EmailChannelProvider(_SendMixin):
           - message.metadata      → extra context
         """
         # Resolve recipients
-        recipients: List[str] = []
+        recipients: list[str] = []
         if message.recipient:
             recipients.append(message.recipient)
         if message.recipients:
             recipients.extend(message.recipients)
         # Deduplicate while preserving order
         seen: set[str] = set()
-        unique_recipients: List[str] = []
+        unique_recipients: list[str] = []
         for r in recipients:
             if r not in seen:
                 seen.add(r)
@@ -274,7 +276,7 @@ class EmailChannelProvider(_SendMixin):
         importance = PRIORITY_TO_IMPORTANCE.get(priority_value, "normal")
 
         # Build config
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             "mode": self._mode,
             "to": unique_recipients,
             "subject": message.subject or message.title or "(No Subject)",
@@ -289,10 +291,12 @@ class EmailChannelProvider(_SendMixin):
 
         # File attachments (URL reference → metadata for executor)
         if message.file_url:
-            config["attachments"] = [{
-                "name": message.file_name or "attachment",
-                "url": message.file_url,
-            }]
+            config["attachments"] = [
+                {
+                    "name": message.file_name or "attachment",
+                    "url": message.file_url,
+                }
+            ]
 
         # Fields → HTML table
         if message.fields:
@@ -352,7 +356,8 @@ class EmailChannelProvider(_SendMixin):
         )
 
     def _dry_run_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Log confirmation without sending (dry-run mode)."""
         with self._lock:
@@ -374,4 +379,13 @@ class EmailChannelProvider(_SendMixin):
         )
 
 
-__all__ = ["EmailChannelProvider", "MessageFormatter", "truncate", "sanitize_html", "ChannelProvider", "build_confirmation_html", "build_confirmation_text", "aiohttp"]
+__all__ = [
+    "ChannelProvider",
+    "EmailChannelProvider",
+    "MessageFormatter",
+    "aiohttp",
+    "build_confirmation_html",
+    "build_confirmation_text",
+    "sanitize_html",
+    "truncate",
+]

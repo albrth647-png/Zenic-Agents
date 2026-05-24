@@ -20,15 +20,25 @@ instead of creating/destroying a new loop for every async operation.
 
 import logging
 
-from ._types import WorkerState, WorkerConfig, TaskHandler
-from ._helpers import _local, _run_async, _METRICS_AVAILABLE
-
 from ..backend import CoordinationBackend
 from ..task_queue import DistributedTaskQueue, TaskStatus
+from ._helpers import _METRICS_AVAILABLE, _local, _run_async
+from ._types import TaskHandler, WorkerConfig, WorkerState
 
 logger = logging.getLogger("zenic_agents.distributed.worker")
 
-__all__ = ["DistributedWorker", "WorkerState", "WorkerConfig", "TaskHandler", "_local", "_run_async", "_METRICS_AVAILABLE", "CoordinationBackend", "DistributedTaskQueue", "TaskStatus"]
+__all__ = [
+    "_METRICS_AVAILABLE",
+    "CoordinationBackend",
+    "DistributedTaskQueue",
+    "DistributedWorker",
+    "TaskHandler",
+    "TaskStatus",
+    "WorkerConfig",
+    "WorkerState",
+    "_local",
+    "_run_async",
+]
 
 
 # ============================================================
@@ -51,4 +61,5 @@ class DistributedWorker(DistributedWorkerCoreMixin, DistributedWorkerExtraMixin)
     5. Renews leases for long-running tasks
     6. Gracefully shuts down when signalled
     """
+
     pass

@@ -1,9 +1,9 @@
 """Mixin: Auto-unload monitor methods for ModelManager."""
 
-import time
 import threading
+import time
 
-from ._imports import logger, ENABLE_AUTO_UNLOAD
+from ._imports import ENABLE_AUTO_UNLOAD, logger
 
 
 class AutoUnloadMixin:
@@ -19,9 +19,7 @@ class AutoUnloadMixin:
             return
 
         self._stop_event.clear()
-        self._monitor_thread = threading.Thread(
-            target=self._auto_unload_loop, daemon=True
-        )
+        self._monitor_thread = threading.Thread(target=self._auto_unload_loop, daemon=True)
         self._monitor_thread.start()
         logger.info(
             f"ModelManager: Auto-unload monitor started "
@@ -51,18 +49,14 @@ class AutoUnloadMixin:
         now = time.time()
 
         # Check SemanticEngine idle
-        if (self._semantic_engine is not None
-                and self._semantic_engine.is_loaded
-                and self._semantic_last_access > 0):
+        if self._semantic_engine is not None and self._semantic_engine.is_loaded and self._semantic_last_access > 0:
             idle_time = now - self._semantic_last_access
             if idle_time > self._idle_timeout_s:
                 self.unload_semantic(reason=f"idle_{int(idle_time)}s")
                 self._stats["auto_unloads"] += 1
 
         # Check MiniAIEngine idle
-        if (self._mini_ai_engine is not None
-                and self._mini_ai_engine.is_loaded
-                and self._ai_last_access > 0):
+        if self._mini_ai_engine is not None and self._mini_ai_engine.is_loaded and self._ai_last_access > 0:
             idle_time = now - self._ai_last_access
             if idle_time > self._idle_timeout_s:
                 self.unload_ai(reason=f"idle_{int(idle_time)}s")
@@ -81,12 +75,13 @@ class AutoUnloadMixin:
                 self._stats["ram_budget_exceeded"] += 1
 
                 # Unload the least recently used model
-                if (self._semantic_last_access <= self._ai_last_access
-                        and self._semantic_engine is not None
-                        and self._semantic_engine.is_loaded):
+                if (
+                    self._semantic_last_access <= self._ai_last_access
+                    and self._semantic_engine is not None
+                    and self._semantic_engine.is_loaded
+                ):
                     self.unload_semantic(reason="ram_pressure")
-                elif (self._mini_ai_engine is not None
-                      and self._mini_ai_engine.is_loaded):
+                elif self._mini_ai_engine is not None and self._mini_ai_engine.is_loaded:
                     self.unload_ai(reason="ram_pressure")
         except Exception as e:
             logger.debug(f"RAM pressure check error: {e}")

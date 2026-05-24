@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from ._types import KPIMeasurement, KPITrend
-
 import logging
 import sqlite3
 import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
+
+from ._types import KPIMeasurement, KPITrend
 
 logger = logging.getLogger(__name__)
 
@@ -99,13 +99,19 @@ class KPITracker:
             _retry_db_operation(_insert)  # noqa: F821  # TODO: add import
             logger.info(
                 "KPITracker: Measured %s=%s (target=%s, delta=%.4f) for %s",
-                metric_name, value, target_value, delta, objective_id,
+                metric_name,
+                value,
+                target_value,
+                delta,
+                objective_id,
             )
             return measurement
 
     def get_latest(
-        self, objective_id: str, metric_name: str,
-    ) -> Optional[KPIMeasurement]:
+        self,
+        objective_id: str,
+        metric_name: str,
+    ) -> KPIMeasurement | None:
         """Get the latest measurement for a metric.
 
         Args:
@@ -124,7 +130,7 @@ class KPITracker:
         objective_id: str,
         metric_name: str,
         limit: int = 100,
-    ) -> List[KPIMeasurement]:
+    ) -> list[KPIMeasurement]:
         """Get measurement history for a metric.
 
         Args:
@@ -138,7 +144,7 @@ class KPITracker:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> List[KPIMeasurement]:
+            def _fetch() -> list[KPIMeasurement]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -177,7 +183,7 @@ class KPITracker:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch_history() -> List[KPIMeasurement]:
+            def _fetch_history() -> list[KPIMeasurement]:
                 datetime.now(timezone.utc).isoformat()
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
@@ -208,11 +214,12 @@ class KPITracker:
             cutoff_dt = now
             try:
                 from datetime import timedelta
+
                 cutoff_dt = now - timedelta(days=days)
             except Exception:
                 pass
 
-            recent: List[KPIMeasurement] = []
+            recent: list[KPIMeasurement] = []
             for m in measurements:
                 try:
                     m_dt = datetime.fromisoformat(m.timestamp)
@@ -235,10 +242,7 @@ class KPITracker:
             x_mean = sum(x_indices) / n
             y_mean = sum(values) / n
 
-            numerator = sum(
-                (xi - x_mean) * (yi - y_mean)
-                for xi, yi in zip(x_indices, values)
-            )
+            numerator = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x_indices, values, strict=False))
             denominator = sum((xi - x_mean) ** 2 for xi in x_indices)
 
             slope = numerator / denominator if denominator != 0 else 0.0
@@ -264,6 +268,7 @@ class KPITracker:
                 if steps_to_target != float("inf") and steps_to_target > 0:
                     try:
                         from datetime import timedelta
+
                         # Estimate time per step from measurement intervals
                         if len(recent) >= 2:
                             first_dt = datetime.fromisoformat(recent[0].timestamp)
@@ -294,7 +299,7 @@ class KPITracker:
     def measure_all_for_objective(
         self,
         objective: Any,
-    ) -> List[KPIMeasurement]:
+    ) -> list[KPIMeasurement]:
         """Measure all KPIs for an objective.
 
         For each target in the objective, queries the database for the
@@ -307,7 +312,7 @@ class KPITracker:
         Returns:
             A list of KPIMeasurements, one per target.
         """
-        results: List[KPIMeasurement] = []
+        results: list[KPIMeasurement] = []
         for target in objective.targets:
             latest = self.get_latest(objective.objective_id, target.metric_name)
             if latest is not None:
@@ -326,8 +331,9 @@ class KPITracker:
         return results
 
     def get_objective_progress(
-        self, objective_id: str,
-    ) -> Dict[str, Any]:
+        self,
+        objective_id: str,
+    ) -> dict[str, Any]:
         """Get comprehensive progress information for an objective.
 
         Args:
@@ -341,7 +347,7 @@ class KPITracker:
         # Get all distinct metric names for this objective
         with self._lock:
 
-            def _get_metrics() -> List[str]:
+            def _get_metrics() -> list[str]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -363,9 +369,9 @@ class KPITracker:
                 "trends": {},
             }
 
-        metric_progress: Dict[str, Any] = {}
-        metric_trends: Dict[str, Any] = {}
-        progress_values: List[float] = []
+        metric_progress: dict[str, Any] = {}
+        metric_trends: dict[str, Any] = {}
+        progress_values: list[float] = []
 
         for metric_name in metrics:
             latest = self.get_latest(objective_id, metric_name)
@@ -394,4 +400,3 @@ class KPITracker:
             "metrics": metric_progress,
             "trends": metric_trends,
         }
-

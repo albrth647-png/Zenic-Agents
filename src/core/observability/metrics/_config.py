@@ -9,7 +9,7 @@ import logging
 import os
 import threading
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from ._collector import MetricsCollector
@@ -33,13 +33,24 @@ class MetricsConfig:
         histograms: Whether to enable histogram metrics.
         default_buckets: Default histogram buckets in seconds.
     """
+
     enabled: bool = True
     port: int = 0
     path: str = "/metrics"
     namespace: str = "zenic"
     histograms: bool = True
-    default_buckets: Tuple[float, ...] = (
-        0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+    default_buckets: tuple[float, ...] = (
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0,
+        2.5,
+        5.0,
+        10.0,
     )
 
     @classmethod
@@ -58,7 +69,7 @@ def _init_prometheus(config: MetricsConfig) -> dict:
     Returns a dict with the initialized Prometheus objects,
     or empty dict if prometheus_client is not available.
     """
-    prom_objects: Dict[str, Any] = {}
+    prom_objects: dict[str, Any] = {}
 
     try:
         import prometheus_client
@@ -156,8 +167,7 @@ def _init_prometheus(config: MetricsConfig) -> dict:
     except ImportError:
         prom_objects["_prom_available"] = False
         logger.info(
-            "MetricsCollector: prometheus_client not installed — "
-            "using internal counters with text format export"
+            "MetricsCollector: prometheus_client not installed — " "using internal counters with text format export"
         )
 
     return prom_objects

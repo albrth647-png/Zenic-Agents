@@ -1,7 +1,7 @@
 """Shared imports and constants for model_mgr_parts."""
 
-import os
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 

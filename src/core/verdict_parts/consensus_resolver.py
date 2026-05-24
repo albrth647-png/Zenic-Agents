@@ -16,40 +16,43 @@ Es preferible rechazar algo seguro que aprobar algo peligroso.
 """
 
 import logging
-from typing import Dict, List
 
 from .types import (
-    Evidence, EvidenceType, Verdict, VerdictConfidence,
-    ConsensusResult, DeterministicResult,
+    ConsensusResult,
+    DeterministicResult,
+    Evidence,
+    EvidenceType,
+    Verdict,
+    VerdictConfidence,
 )
 
 logger = logging.getLogger(__name__)
 
 # === Umbrales de consenso ===
-CONSENSUS_HIGH_THRESHOLD = 0.6      # |score| >= 0.6 → Confianza alta
-CONSENSUS_MEDIUM_THRESHOLD = 0.3    # |score| >= 0.3 → Confianza media
+CONSENSUS_HIGH_THRESHOLD = 0.6  # |score| >= 0.6 → Confianza alta
+CONSENSUS_MEDIUM_THRESHOLD = 0.3  # |score| >= 0.3 → Confianza media
 CONSENSUS_CERTAIN_THRESHOLD = 0.85  # |score| >= 0.85 → Unanimidad
 
 # === Pesos por tipo de evidencia ===
-EVIDENCE_TYPE_WEIGHTS: Dict[EvidenceType, float] = {
-    EvidenceType.SECURITY_CHECK: 1.5,       # Seguridad es lo más importante
-    EvidenceType.SYNTAX_VALID: 1.2,         # Sintaxis válida es fuerte
-    EvidenceType.SANDBOX_PASS: 1.5,         # Pasó sandbox = muy confiable
-    EvidenceType.AST_VALIDATION: 1.2,       # AST válido es fuerte
-    EvidenceType.CACHE_HIT: 1.3,            # Cache de teoremas es confiable
-    EvidenceType.TYPE_SAFETY: 1.1,          # Seguridad de tipos es importante
-    EvidenceType.RULE_ENGINE: 1.0,          # Motor de reglas = base
-    EvidenceType.PATTERN_MATCH: 0.8,        # Patrones son moderados
-    EvidenceType.STRUCTURAL_MATCH: 0.7,     # Estructural es moderado
-    EvidenceType.REGEX_MATCH: 0.6,          # Regex es débil
-    EvidenceType.KEYWORD_CLASSIFY: 0.5,     # Keywords son débiles
+EVIDENCE_TYPE_WEIGHTS: dict[EvidenceType, float] = {
+    EvidenceType.SECURITY_CHECK: 1.5,  # Seguridad es lo más importante
+    EvidenceType.SYNTAX_VALID: 1.2,  # Sintaxis válida es fuerte
+    EvidenceType.SANDBOX_PASS: 1.5,  # Pasó sandbox = muy confiable
+    EvidenceType.AST_VALIDATION: 1.2,  # AST válido es fuerte
+    EvidenceType.CACHE_HIT: 1.3,  # Cache de teoremas es confiable
+    EvidenceType.TYPE_SAFETY: 1.1,  # Seguridad de tipos es importante
+    EvidenceType.RULE_ENGINE: 1.0,  # Motor de reglas = base
+    EvidenceType.PATTERN_MATCH: 0.8,  # Patrones son moderados
+    EvidenceType.STRUCTURAL_MATCH: 0.7,  # Estructural es moderado
+    EvidenceType.REGEX_MATCH: 0.6,  # Regex es débil
+    EvidenceType.KEYWORD_CLASSIFY: 0.5,  # Keywords son débiles
     EvidenceType.SEMANTIC_SIMILARITY: 0.4,  # Semántica es la más débil (sin IA)
 }
 
 # === Veto automático: Ciertos tipos de evidencia pueden vetar YES ===
 VETO_TYPES = {
-    EvidenceType.SECURITY_CHECK,   # Si el security check dice NO, es NO
-    EvidenceType.SANDBOX_PASS,     # Si el sandbox falla, es NO
+    EvidenceType.SECURITY_CHECK,  # Si el security check dice NO, es NO
+    EvidenceType.SANDBOX_PASS,  # Si el sandbox falla, es NO
 }
 
 # === Dynamic Memory Chip weight multipliers [T2-11] ===
@@ -57,10 +60,10 @@ VETO_TYPES = {
 # - cache_hit with high confidence → 1.8x (strongest: pre-approved by HITL)
 # - cache_hit with medium confidence → 1.5x (approved but less validated)
 # - cache_hit with low confidence → 1.3x (new mapping, minimal validation)
-MEMORY_CHIP_WEIGHT_MULTIPLIERS: Dict[str, float] = {
-    "high": 1.8,    # Pre-approved mapping, high confidence
+MEMORY_CHIP_WEIGHT_MULTIPLIERS: dict[str, float] = {
+    "high": 1.8,  # Pre-approved mapping, high confidence
     "medium": 1.5,  # Approved mapping, medium confidence
-    "low": 1.3,     # New mapping, minimal validation
+    "low": 1.3,  # New mapping, minimal validation
 }
 
 
@@ -80,8 +83,7 @@ class ConsensusResolver:
     que el código peligroso NUNCA se apruebe.
     """
 
-    def resolve(self, evidence: List[Evidence],
-                question: str = "") -> ConsensusResult:
+    def resolve(self, evidence: list[Evidence], question: str = "") -> ConsensusResult:
         """
         Resuelve el consenso basándose en la evidencia.
 
@@ -113,8 +115,7 @@ class ConsensusResolver:
         for e in evidence_against:
             if e.evidence_type in VETO_TYPES and e.weight >= 0.7:
                 logger.warning(
-                    f"ConsensusResolver: VETO automático por {e.evidence_type.value} "
-                    f"from {e.source}: {e.detail}"
+                    f"ConsensusResolver: VETO automático por {e.evidence_type.value} " f"from {e.source}: {e.detail}"
                 )
                 return ConsensusResult(
                     verdict=Verdict.NO,
@@ -173,14 +174,14 @@ class ConsensusResolver:
             # Consenso medio: IA opcional (no requerida)
             verdict = Verdict.YES if normalized > 0 else Verdict.NO
             confidence = VerdictConfidence.MEDIUM
-            needs_llm = True   # SECURITY (A3 fix): MEDIUM confidence requires LLM oversight
+            needs_llm = True  # SECURITY (A3 fix): MEDIUM confidence requires LLM oversight
 
         else:
             # Empate o casi empate: IA REQUERIDA para arbitraje
             # Principio de precaución: si no hay consenso, default a NO
             verdict = Verdict.NO  # Default conservador
             confidence = VerdictConfidence.LOW
-            needs_llm = True     # ← Aquí es donde Qwen interviene
+            needs_llm = True  # ← Aquí es donde Qwen interviene
 
         # Verificar unanimidad
         unanimous = len(evidence_against) == 0 or len(evidence_for) == 0
@@ -204,8 +205,7 @@ class ConsensusResolver:
 
         return result
 
-    def resolve_classification(self, text: str,
-                               evidence: List[Evidence]) -> DeterministicResult:
+    def resolve_classification(self, text: str, evidence: list[Evidence]) -> DeterministicResult:
         """
         Resuelve la clasificación de intención usando evidencia.
 
@@ -216,7 +216,7 @@ class ConsensusResolver:
             DeterministicResult con la clasificación y su confianza
         """
         # Agrupar evidencia por operación
-        op_scores: Dict[str, float] = {}
+        op_scores: dict[str, float] = {}
 
         for e in evidence:
             if e.evidence_type == EvidenceType.KEYWORD_CLASSIFY:
@@ -249,7 +249,7 @@ class ConsensusResolver:
 
         # Determinar goal
         goal_evidence = [e for e in evidence if e.source.startswith("goal_")]
-        goal_scores: Dict[str, float] = {}
+        goal_scores: dict[str, float] = {}
         for e in goal_evidence:
             goal = e.metadata.get("goal")
             if goal:

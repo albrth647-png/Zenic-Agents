@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -18,6 +18,7 @@ _RETRY_DELAY = 0.1
 
 class RollbackStatus(str, Enum):
     """Status of a rollback operation."""
+
     PENDING = "pending"
     EXECUTING = "executing"
     COMPLETED = "completed"
@@ -27,6 +28,7 @@ class RollbackStatus(str, Enum):
 
 class RollbackTrigger(str, Enum):
     """What triggered the rollback."""
+
     APPROVAL_EXPIRED = "APPROVAL_EXPIRED"
     ACTION_FAILED = "ACTION_FAILED"
     MANUAL_UNDO = "MANUAL_UNDO"
@@ -43,14 +45,14 @@ class CompensationAction:
 
     action_id: str = ""
     action_type: str = ""
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
     def __post_init__(self) -> None:
         if not self.action_id:
             self.action_id = f"cmp-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "action_id": self.action_id,
@@ -60,7 +62,7 @@ class CompensationAction:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "CompensationAction":
+    def from_dict(cls, data: dict[str, Any]) -> CompensationAction:
         """Deserialize from dictionary."""
         return cls(
             action_id=data.get("action_id", ""),
@@ -81,10 +83,10 @@ class RollbackRecord:
     rollback_id: str = ""
     request_id: str = ""
     trigger: RollbackTrigger = RollbackTrigger.MANUAL_UNDO
-    compensation_actions: List[CompensationAction] = field(default_factory=list)
+    compensation_actions: list[CompensationAction] = field(default_factory=list)
     status: RollbackStatus = RollbackStatus.PENDING
-    executed_at: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
+    executed_at: str | None = None
+    result: dict[str, Any] | None = None
     created_at: str = ""
     merkle_hash: str = ""
 
@@ -98,16 +100,20 @@ class RollbackRecord:
 
     def _compute_hash(self) -> str:
         """Compute SHA-256 Merkle hash of the rollback record."""
-        payload = json.dumps({
-            "rollback_id": self.rollback_id,
-            "request_id": self.request_id,
-            "trigger": self.trigger.value if isinstance(self.trigger, RollbackTrigger) else self.trigger,
-            "compensation_actions": [a.to_dict() for a in self.compensation_actions],
-            "created_at": self.created_at,
-        }, sort_keys=True, separators=(",", ":"))
+        payload = json.dumps(
+            {
+                "rollback_id": self.rollback_id,
+                "request_id": self.request_id,
+                "trigger": self.trigger.value if isinstance(self.trigger, RollbackTrigger) else self.trigger,
+                "compensation_actions": [a.to_dict() for a in self.compensation_actions],
+                "created_at": self.created_at,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(payload.encode()).hexdigest()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "rollback_id": self.rollback_id,
@@ -120,4 +126,6 @@ class RollbackRecord:
             "created_at": self.created_at,
             "merkle_hash": self.merkle_hash,
         }
-__all__ = ["CompensationAction", "RollbackRecord", "RollbackStatus", "RollbackTrigger", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_DELAY", "CompensationAction", "RollbackRecord", "RollbackStatus", "RollbackTrigger"]

@@ -1,19 +1,21 @@
 """Helpers for schema."""
 
 from __future__ import annotations
-import logging
-from typing import Any, Dict
 
-from ..types import BlueprintMetadataV2, DBSchema, BusinessRuleDef, ActionTemplateDef, MonitorHook
+import logging
+from typing import Any
+
+from ..types import ActionTemplateDef, BlueprintMetadataV2, BusinessRuleDef, DBSchema, MonitorHook
 
 logger = logging.getLogger(__name__)
 
 
 def _metadata_to_dict(
-    meta: BlueprintMetadataV2, include_signature: bool = True,
-) -> Dict[str, Any]:
+    meta: BlueprintMetadataV2,
+    include_signature: bool = True,
+) -> dict[str, Any]:
     """Convert Blueprint metadata to dict."""
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "name": meta.name,
         "version": meta.version,
         "domain": meta.domain,
@@ -49,7 +51,7 @@ def _metadata_to_dict(
     return result
 
 
-def _dbschema_to_dict(schema: DBSchema) -> Dict[str, Any]:
+def _dbschema_to_dict(schema: DBSchema) -> dict[str, Any]:
     """Convert DB schema to dict."""
     return {
         "version": schema.version,
@@ -78,8 +80,7 @@ def _dbschema_to_dict(schema: DBSchema) -> Dict[str, Any]:
     }
 
 
-
-def _rule_to_dict(rule: BusinessRuleDef) -> Dict[str, Any]:
+def _rule_to_dict(rule: BusinessRuleDef) -> dict[str, Any]:
     """Convert a business rule to dict."""
     return {
         "rule_id": rule.rule_id,
@@ -93,14 +94,12 @@ def _rule_to_dict(rule: BusinessRuleDef) -> Dict[str, Any]:
     }
 
 
-
 def _action_to_key(action: ActionTemplateDef) -> str:
     """Get a dict key for an action template."""
     return action.template_id
 
 
-
-def _action_to_dict(action: ActionTemplateDef) -> Dict[str, Any]:
+def _action_to_dict(action: ActionTemplateDef) -> dict[str, Any]:
     """Convert an action template to dict."""
     return {
         "name": action.name,
@@ -113,8 +112,7 @@ def _action_to_dict(action: ActionTemplateDef) -> Dict[str, Any]:
     }
 
 
-
-def _monitor_hook_to_dict(hook: MonitorHook) -> Dict[str, Any]:
+def _monitor_hook_to_dict(hook: MonitorHook) -> dict[str, Any]:
     """Convert a monitor hook to dict."""
     return {
         "weight": hook.weight,
@@ -124,7 +122,6 @@ def _monitor_hook_to_dict(hook: MonitorHook) -> Dict[str, Any]:
         "params": hook.params,
         "notification_channel": hook.notification_channel,
     }
-
 
 
 def _check_version_range(version: str, range_spec: str) -> bool:
@@ -177,4 +174,15 @@ def _check_version_range(version: str, range_spec: str) -> bool:
                 pass
 
     return True
-__all__ = ["_action_to_dict", "_action_to_key", "_check_version_range", "_dbschema_to_dict", "_metadata_to_dict", "_monitor_hook_to_dict", "_rule_to_dict", "logger"]
+
+
+__all__ = [
+    "_action_to_dict",
+    "_action_to_key",
+    "_check_version_range",
+    "_dbschema_to_dict",
+    "_metadata_to_dict",
+    "_monitor_hook_to_dict",
+    "_rule_to_dict",
+    "logger",
+]

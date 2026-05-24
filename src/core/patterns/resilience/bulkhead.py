@@ -18,11 +18,11 @@ Usage::
 """
 
 import asyncio
+import logging
 import threading
 import time
-import logging
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ __all__ = ["Bulkhead", "BulkheadFullError"]
 #  EXCEPTIONS
 # ============================================================
 
+
 class BulkheadFullError(Exception):
     """Raised when the bulkhead cannot accept more work within the timeout."""
 
@@ -41,15 +42,13 @@ class BulkheadFullError(Exception):
         self.active = active
         self.max_concurrent = max_concurrent
         self.queue_size = queue_size
-        super().__init__(
-            f"Bulkhead '{name}' is full: "
-            f"active={active}/{max_concurrent}, queue={queue_size}"
-        )
+        super().__init__(f"Bulkhead '{name}' is full: " f"active={active}/{max_concurrent}, queue={queue_size}")
 
 
 # ============================================================
 #  BULKHEAD
 # ============================================================
+
 
 class Bulkhead:
     """
@@ -123,7 +122,7 @@ class Bulkhead:
             return self._max_concurrent - self._active_count
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Snapshot of bulkhead statistics."""
         with self._lock:
             return {
@@ -145,7 +144,7 @@ class Bulkhead:
     # ----------------------------------------------------------
 
     @contextmanager
-    def acquire(self):  # noqa: ANN201
+    def acquire(self):
         """
         Context manager that acquires a bulkhead slot, blocking until
         one is available or the timeout expires.
@@ -197,7 +196,9 @@ class Bulkhead:
                 self._total_rejected += 1
                 logger.warning(
                     "Bulkhead '%s': queue full (%d/%d), rejecting",
-                    self._name, self._queue_size, self._max_queue,
+                    self._name,
+                    self._queue_size,
+                    self._max_queue,
                 )
                 return False
             self._queue_size += 1
@@ -220,7 +221,8 @@ class Bulkhead:
                 self._total_rejected += 1
                 logger.warning(
                     "Bulkhead '%s': timeout waiting for slot after %.1fs",
-                    self._name, self._timeout,
+                    self._name,
+                    self._timeout,
                 )
         return acquired
 
@@ -240,7 +242,7 @@ class Bulkhead:
     # ----------------------------------------------------------
 
     @asynccontextmanager
-    async def acquire_async(self):  # noqa: ANN201
+    async def acquire_async(self):
         """
         Async context manager that acquires a bulkhead slot.
 

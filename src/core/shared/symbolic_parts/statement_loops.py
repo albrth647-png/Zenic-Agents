@@ -21,7 +21,7 @@ from ..z3_solver import HAS_Z3  # noqa: E402
 if HAS_Z3:
     pass  # type: ignore[import-unresolved]
 
-from .types import SymbolicValue, SymbolicPath  # noqa: E402
+from .types import SymbolicPath, SymbolicValue  # noqa: E402
 
 
 class StatementLoopsMixin:
@@ -71,7 +71,7 @@ class StatementLoopsMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
         # Add condition: loop didn't execute (i.e., iterator was empty)
         if iter_concrete is not None and len(iter_concrete) == 0:
@@ -92,24 +92,20 @@ class StatementLoopsMixin:
                     is_pruned=cp.is_pruned,
                     z3_conditions=list(cp.z3_conditions),
                     assignments=list(cp.assignments),
-                    return_values=list(cp.return_values)
+                    return_values=list(cp.return_values),
                 )
 
                 # Set loop variable value
                 if iter_concrete is not None and iteration < len(iter_concrete):
                     loop_val = iter_concrete[iteration]
-                    iter_path.variables[loop_var] = SymbolicValue(
-                        name=loop_var, var_type="int", concrete=loop_val
-                    )
+                    iter_path.variables[loop_var] = SymbolicValue(name=loop_var, var_type="int", concrete=loop_val)
                     # Z3: constrain loop variable
                     if HAS_Z3:
                         z3_var = self._get_or_create_z3_var(loop_var, "int")
                         if z3_var is not None and len(iter_path.z3_conditions) < SymbolicPath.MAX_Z3_CONDITIONS:
                             iter_path.z3_conditions.append(z3_var == loop_val)
                 else:
-                    iter_path.variables[loop_var] = SymbolicValue(
-                        name=loop_var, var_type="int"
-                    )
+                    iter_path.variables[loop_var] = SymbolicValue(name=loop_var, var_type="int")
 
                 iter_path.add_condition(f"LOOP_ITER_{loop_var}_{iteration}")
                 iter_path.add_assignment(loop_var, f"iter_{iteration}")
@@ -131,7 +127,7 @@ class StatementLoopsMixin:
                         is_pruned=cp.is_pruned,
                         z3_conditions=list(cp.z3_conditions),
                         assignments=list(cp.assignments),
-                        return_values=list(cp.return_values)
+                        return_values=list(cp.return_values),
                     )
                     exit_after.add_condition(f"LOOP_EXIT_{loop_var}")
                     all_paths.append(exit_after)
@@ -144,13 +140,13 @@ class StatementLoopsMixin:
                         is_pruned=cp.is_pruned,
                         z3_conditions=list(cp.z3_conditions),
                         assignments=list(cp.assignments),
-                        return_values=list(cp.return_values)
+                        return_values=list(cp.return_values),
                     )
                     exit_after.add_condition(f"LOOP_EXIT_{loop_var}_after_{iteration + 1}")
                     all_paths.append(exit_after)
 
         all_paths.extend(current_paths)
-        return all_paths[:self.k_path_limit]
+        return all_paths[: self.k_path_limit]
 
     def _process_while(self, stmt, path):
         """
@@ -171,7 +167,7 @@ class StatementLoopsMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
         if false_z3 is not None:
             exit_path.add_condition(false_str, false_z3)
@@ -192,7 +188,7 @@ class StatementLoopsMixin:
                     is_pruned=cp.is_pruned,
                     z3_conditions=list(cp.z3_conditions),
                     assignments=list(cp.assignments),
-                    return_values=list(cp.return_values)
+                    return_values=list(cp.return_values),
                 )
                 if true_z3 is not None:
                     iter_path.add_condition(true_str, true_z3)
@@ -213,7 +209,7 @@ class StatementLoopsMixin:
                     is_pruned=cp.is_pruned,
                     z3_conditions=list(cp.z3_conditions),
                     assignments=list(cp.assignments),
-                    return_values=list(cp.return_values)
+                    return_values=list(cp.return_values),
                 )
                 if exit_z3 is not None:
                     exit_iter_path.add_condition(exit_str, exit_z3)
@@ -227,7 +223,7 @@ class StatementLoopsMixin:
 
         # Add remaining paths (after all unrolled iterations)
         all_paths.extend(current_paths)
-        return all_paths[:self.k_path_limit]
+        return all_paths[: self.k_path_limit]
 
     def _process_try(self, stmt, path):
         """Process ast.Try: create paths for try body and each handler."""
@@ -245,7 +241,7 @@ class StatementLoopsMixin:
                 is_pruned=path.is_pruned,
                 z3_conditions=list(path.z3_conditions),
                 assignments=list(path.assignments),
-                return_values=list(path.return_values)
+                return_values=list(path.return_values),
             )
             exc_type = "Exception"
             if handler.type:
@@ -253,9 +249,7 @@ class StatementLoopsMixin:
             handler_path.add_condition(f"EXCEPTION_{exc_type}")
 
             if handler.name:
-                handler_path.variables[handler.name] = SymbolicValue(
-                    name=handler.name, var_type="exception"
-                )
+                handler_path.variables[handler.name] = SymbolicValue(name=handler.name, var_type="exception")
                 handler_path.add_assignment(handler.name, f"caught_{exc_type}")
 
             handler_body_paths = self._process_stmts(handler.body, handler_path)
@@ -284,18 +278,16 @@ class StatementLoopsMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
 
         if isinstance(stmt.value, ast.Call):
             call_name = self._get_call_name(stmt.value)
-            base_name = call_name.split('.')[-1] if '.' in call_name else call_name
+            base_name = call_name.split(".")[-1] if "." in call_name else call_name
             if base_name in self.IO_OPERATIONS:
                 new_path.is_pruned = True
                 new_path.variables[f"_mocked_{call_name}"] = SymbolicValue(
-                    name=f"_mocked_{call_name}",
-                    var_type="mocked_io",
-                    constraint=lambda x: True
+                    name=f"_mocked_{call_name}", var_type="mocked_io", constraint=lambda x: True
                 )
 
         return new_path

@@ -22,16 +22,12 @@ class ContextMixin:
         if self._memory and self._semantic and self._semantic.is_loaded:
             similar = self._memory.find_similar_solutions(query, top_k=2)
             for sol in similar:
-                context_parts.append(
-                    f"Past solution (sim={sol['similarity']:.2f}): {sol['solution'][:150]}"
-                )
+                context_parts.append(f"Past solution (sim={sol['similarity']:.2f}): {sol['solution'][:150]}")
 
         if self._semantic and self._semantic.is_loaded:
             sem_result = self._semantic.classify_intent(query)
             if sem_result.source == "embedding" and sem_result.confidence > 0.3:
-                context_parts.append(
-                    f"Semantic: operation={sem_result.operation}, goal={sem_result.goal}"
-                )
+                context_parts.append(f"Semantic: operation={sem_result.operation}, goal={sem_result.goal}")
 
         if not context_parts:
             return ""
@@ -43,8 +39,7 @@ class ContextMixin:
 
         return f"Context: {combined}"
 
-    def _call_with_context(self, system_prompt: str, user_prompt: str,
-                            max_tokens: int, query: str = ""):
+    def _call_with_context(self, system_prompt: str, user_prompt: str, max_tokens: int, query: str = ""):
         """Llama a Qwen INYECTANDO contexto de memoria + semántica."""
         if not self._ai or not self._ai.is_loaded:
             return None

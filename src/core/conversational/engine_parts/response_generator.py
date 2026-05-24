@@ -7,8 +7,8 @@ de intencion: chat, preguntas, comandos, config, feedback.
 
 from __future__ import annotations
 
-from ..types.session import Session
 from ..types.personality import PersonalityProfile
+from ..types.session import Session
 
 
 class ResponseGenerator:
@@ -21,13 +21,17 @@ class ResponseGenerator:
 
     # ─── Chat general ─────────────────────────────────────────
 
-    def generate_chat(
-        self, text: str, profile: PersonalityProfile, session: Session
-    ) -> str:
+    def generate_chat(self, text: str, profile: PersonalityProfile, session: Session) -> str:
         """Genera respuesta para chat general."""
         greetings = [
-            "hola", "hey", "hi", "hello", "buenos", "buenas",
-            "que tal", "how are you",
+            "hola",
+            "hey",
+            "hi",
+            "hello",
+            "buenos",
+            "buenas",
+            "que tal",
+            "how are you",
         ]
         if any(g in text for g in greetings):
             lang = session.config.language

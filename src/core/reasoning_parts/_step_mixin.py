@@ -3,19 +3,21 @@ Step-by-step reasoning mixin for ReasoningEngine.
 """
 
 import time
-from typing import List
 
 from ._imports import (
-    ReasoningStep, ReasoningResult, ReasoningMode,
-    MAX_REASONING_STEPS, MAX_TOKENS_PER_STEP, MIN_CONFIDENCE_ACCEPT,
+    MAX_REASONING_STEPS,
+    MAX_TOKENS_PER_STEP,
+    MIN_CONFIDENCE_ACCEPT,
+    ReasoningMode,
+    ReasoningResult,
+    ReasoningStep,
 )
 
 
 class StepByStepMixin:
     """Mixin providing step_by_step reasoning mode."""
 
-    def step_by_step(self, problem: str, max_steps: int = MAX_REASONING_STEPS,
-                     context: str = "") -> ReasoningResult:
+    def step_by_step(self, problem: str, max_steps: int = MAX_REASONING_STEPS, context: str = "") -> ReasoningResult:
         """
         Razonamiento estructurado paso a paso.
 
@@ -29,7 +31,7 @@ class StepByStepMixin:
         """
         start = time.time()
         self._call_count += 1
-        steps: List[ReasoningStep] = []
+        steps: list[ReasoningStep] = []
         accumulated = f"Problem: {problem}"
         if context:
             accumulated += f"\nAdditional context: {context[:300]}"

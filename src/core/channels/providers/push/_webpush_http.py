@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from ..._types import (
     ChannelResponse,
@@ -20,9 +20,9 @@ from ._utils import (
     _HAS_AIOHTTP,
     _HAS_CRYPTOGRAPHY,
     _HAS_URLLIB,
+    _HTTP_TIMEOUT,
     _MAX_RETRIES,
     _RETRY_BASE_DELAY,
-    _HTTP_TIMEOUT,
     _WEB_PUSH_TTL,
     _base64url_decode,
     _validate_url,
@@ -30,13 +30,13 @@ from ._utils import (
 
 # Conditional imports for type hints
 if _HAS_CRYPTOGRAPHY:
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        EllipticCurvePublicNumbers,
         SECP256R1,
+        EllipticCurvePublicNumbers,
     )
-    from cryptography.hazmat.backends import default_backend
 
 
 logger = logging.getLogger("zenic_agents.channels.push")
@@ -47,8 +47,8 @@ class _WebPushHttpMixin:
 
     async def _post_web_push(
         self,
-        subscription: Dict[str, Any],
-        payload: Dict[str, Any],
+        subscription: dict[str, Any],
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """POST an encrypted push message to a subscription endpoint.
 
@@ -90,29 +90,28 @@ class _WebPushHttpMixin:
         # accept empty payloads).
         content_encoding = ""
         encrypted_payload = b""
-        crypto_headers: Dict[str, str] = {}
+        crypto_headers: dict[str, str] = {}
 
         if _HAS_CRYPTOGRAPHY:
             try:
                 encrypted_payload, crypto_headers = self._encrypt_web_push_payload(
-                    subscription, payload_bytes,
+                    subscription,
+                    payload_bytes,
                 )
                 content_encoding = "aes128gcm"
             except Exception as e:
                 logger.warning(
-                    "PushChannelProvider: payload encryption failed: %s "
-                    "(sending empty body)",
+                    "PushChannelProvider: payload encryption failed: %s " "(sending empty body)",
                     e,
                 )
                 encrypted_payload = b""
         else:
             logger.debug(
-                "PushChannelProvider: cryptography package not available, "
-                "sending push without payload encryption"
+                "PushChannelProvider: cryptography package not available, " "sending push without payload encryption"
             )
 
         # Build headers
-        request_headers: Dict[str, str] = {
+        request_headers: dict[str, str] = {
             "TTL": str(_WEB_PUSH_TTL),
             "Content-Type": "application/octet-stream",
             **vapid_headers,
@@ -125,9 +124,7 @@ class _WebPushHttpMixin:
             # Merge with VAPID Crypto-Key header
             existing_ck = request_headers.get("Crypto-Key", "")
             if existing_ck:
-                request_headers["Crypto-Key"] = (
-                    f"{existing_ck};{crypto_headers['Crypto-Key']}"
-                )
+                request_headers["Crypto-Key"] = f"{existing_ck};{crypto_headers['Crypto-Key']}"
             else:
                 request_headers["Crypto-Key"] = crypto_headers["Crypto-Key"]
 
@@ -139,11 +136,15 @@ class _WebPushHttpMixin:
             try:
                 if _HAS_AIOHTTP and self._session:
                     return await self._post_web_push_aiohttp(
-                        endpoint, encrypted_payload, request_headers,
+                        endpoint,
+                        encrypted_payload,
+                        request_headers,
                     )
                 elif _HAS_URLLIB:
                     return await self._post_web_push_urllib(
-                        endpoint, encrypted_payload, request_headers,
+                        endpoint,
+                        encrypted_payload,
+                        request_headers,
                     )
                 else:
                     return ChannelResponse(
@@ -157,24 +158,26 @@ class _WebPushHttpMixin:
                 if attempt < _MAX_RETRIES:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
-                        "PushChannelProvider: Web Push attempt %d/%d failed: "
-                        "%s — retrying in %.1fs",
-                        attempt, _MAX_RETRIES, e, delay,
+                        "PushChannelProvider: Web Push attempt %d/%d failed: " "%s — retrying in %.1fs",
+                        attempt,
+                        _MAX_RETRIES,
+                        e,
+                        delay,
                     )
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
-                        "PushChannelProvider: Web Push all %d attempts "
-                        "failed: %s",
-                        _MAX_RETRIES, e,
+                        "PushChannelProvider: Web Push all %d attempts " "failed: %s",
+                        _MAX_RETRIES,
+                        e,
                     )
                     return ChannelResponse(
                         success=False,
                         channel="push",
                         status=DeliveryStatus.FAILED,
-                        error=f"Web Push HTTP error after {_MAX_RETRIES} "
-                        f"attempts: {e}",
+                        error=f"Web Push HTTP error after {_MAX_RETRIES} " f"attempts: {e}",
                         timestamp=time.time(),
                     )
 
@@ -188,9 +191,9 @@ class _WebPushHttpMixin:
 
     def _encrypt_web_push_payload(
         self,
-        subscription: Dict[str, Any],
+        subscription: dict[str, Any],
         payload: bytes,
-    ) -> tuple[bytes, Dict[str, str]]:
+    ) -> tuple[bytes, dict[str, str]]:
         """Encrypt a Web Push payload using aes128gcm encoding.
 
         Implements RFC 8291 (Message Encryption for Web Push) with
@@ -205,8 +208,9 @@ class _WebPushHttpMixin:
         Returns:
             Tuple of (encrypted_data, extra_headers).
         """
-        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         import os as _os
+
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
         keys = subscription.get("keys", {})
         p256dh_b64 = keys.get("p256dh", "")
@@ -225,27 +229,29 @@ class _WebPushHttpMixin:
             if len(p256dh_bytes) == 64:
                 p256dh_bytes = b"\x04" + p256dh_bytes
             else:
-                raise ValueError(
-                    f"Invalid p256dh key length: {len(p256dh_bytes)}"
-                )
+                raise ValueError(f"Invalid p256dh key length: {len(p256dh_bytes)}")
 
         # Load subscription public key
         x = int.from_bytes(p256dh_bytes[1:33], "big")
         y = int.from_bytes(p256dh_bytes[33:65], "big")
         sub_public_numbers = EllipticCurvePublicNumbers(
-            x, y, SECP256R1(),
+            x,
+            y,
+            SECP256R1(),
         )
         sub_public_key = sub_public_numbers.public_key(default_backend())
 
         # Generate ephemeral ECDH key pair
         ephemeral_key = ec.generate_private_key(
-            SECP256R1(), default_backend(),
+            SECP256R1(),
+            default_backend(),
         )
         ephemeral_public_key = ephemeral_key.public_key()
 
         # ECDH key agreement → shared secret
         shared_key = ephemeral_key.exchange(
-            ec.ECDH(), sub_public_key,
+            ec.ECDH(),
+            sub_public_key,
         )
 
         # Derive PRK using HKDF-SHA-256
@@ -312,7 +318,7 @@ class _WebPushHttpMixin:
 
         # For aes128gcm encoding, Crypto-Key and Encryption headers
         # are NOT needed (they're in the binary header)
-        extra_headers: Dict[str, str] = {}
+        extra_headers: dict[str, str] = {}
 
         return encrypted_data, extra_headers
 
@@ -320,13 +326,15 @@ class _WebPushHttpMixin:
         self,
         endpoint: str,
         data: bytes,
-        headers: Dict[str, str],
+        headers: dict[str, str],
     ) -> ChannelResponse:
         """Send Web Push via aiohttp."""
         assert self._session is not None
 
         async with self._session.post(
-            endpoint, data=data, headers=headers,
+            endpoint,
+            data=data,
+            headers=headers,
         ) as resp:
             body = await resp.text()
 
@@ -363,8 +371,7 @@ class _WebPushHttpMixin:
             elif resp.status == 410:
                 # Subscription has expired or been unsubscribed
                 logger.info(
-                    "PushChannelProvider: subscription expired (410) for "
-                    "endpoint %s",
+                    "PushChannelProvider: subscription expired (410) for " "endpoint %s",
                     endpoint[:60],
                 )
                 return ChannelResponse(
@@ -405,22 +412,26 @@ class _WebPushHttpMixin:
         self,
         endpoint: str,
         data: bytes,
-        headers: Dict[str, str],
+        headers: dict[str, str],
     ) -> ChannelResponse:
         """Send Web Push via urllib (sync, wrapped in asyncio.to_thread)."""
         import asyncio
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         validated_endpoint = _validate_url(endpoint)
 
         def _sync_post() -> ChannelResponse:
             req = urllib.request.Request(
-                validated_endpoint, data=data, headers=headers, method="POST",
+                validated_endpoint,
+                data=data,
+                headers=headers,
+                method="POST",
             )
             try:
                 with urllib.request.urlopen(
-                    req, timeout=_HTTP_TIMEOUT,
+                    req,
+                    timeout=_HTTP_TIMEOUT,
                 ) as resp:
                     return ChannelResponse(
                         success=True,

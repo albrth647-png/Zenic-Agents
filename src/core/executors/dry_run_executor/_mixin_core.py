@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..base import ActionExecutor, ActionResult
 from ._types import DryRunOperation, _retry
@@ -36,8 +36,8 @@ class DryRunExecutor(ActionExecutor):
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._operations: List[DryRunOperation] = []
-        self._impact_preview_engine: Optional[Any] = None
+        self._operations: list[DryRunOperation] = []
+        self._impact_preview_engine: Any | None = None
 
     # ── Lazy dependencies ──────────────────────────────────────
 
@@ -46,6 +46,7 @@ class DryRunExecutor(ActionExecutor):
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
             from ..impact_preview import get_impact_preview_engine
+
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 
@@ -53,8 +54,8 @@ class DryRunExecutor(ActionExecutor):
 
     async def execute(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> ActionResult:
         """Simulate execution without performing real I/O."""
         start = self._measure()
@@ -101,7 +102,7 @@ class DryRunExecutor(ActionExecutor):
 
     # ── Interception helpers ────────────────────────────────────
 
-    def _intercept_smtp(self, config: Dict[str, Any]) -> None:
+    def _intercept_smtp(self, config: dict[str, Any]) -> None:
         """Intercept an SMTP send — no email is actually sent."""
         recipients = config.get("to", [])
         if isinstance(recipients, str):
@@ -121,7 +122,7 @@ class DryRunExecutor(ActionExecutor):
         )
         logger.debug("DryRunExecutor: intercepted SMTP to %s", recipients)
 
-    def _intercept_http(self, config: Dict[str, Any]) -> None:
+    def _intercept_http(self, config: dict[str, Any]) -> None:
         """Intercept an HTTP request — no real network call."""
         url = config.get("url", config.get("endpoint", "(unknown)"))
         method = config.get("method", "GET").upper()
@@ -138,7 +139,7 @@ class DryRunExecutor(ActionExecutor):
         )
         logger.debug("DryRunExecutor: intercepted HTTP %s %s", method, url)
 
-    def _intercept_db(self, config: Dict[str, Any]) -> None:
+    def _intercept_db(self, config: dict[str, Any]) -> None:
         """Intercept a DB operation — use journal snapshots instead."""
         query = config.get("query", "")
         table = config.get("table", "")
@@ -156,7 +157,7 @@ class DryRunExecutor(ActionExecutor):
         )
         logger.debug("DryRunExecutor: intercepted DB %s on %s", operation, table)
 
-    def _intercept_file(self, config: Dict[str, Any]) -> None:
+    def _intercept_file(self, config: dict[str, Any]) -> None:
         """Intercept a file operation — no disk writes."""
         source = config.get("source", "")
         destination = config.get("destination", "")
@@ -178,7 +179,7 @@ class DryRunExecutor(ActionExecutor):
         self,
         operation_type: str,
         target: str,
-        would_affect: Dict[str, Any],
+        would_affect: dict[str, Any],
     ) -> None:
         """Thread-safe recording of an intercepted operation."""
         with self._lock:
@@ -192,7 +193,7 @@ class DryRunExecutor(ActionExecutor):
     # ── Public query methods ────────────────────────────────────
 
     @property
-    def operations(self) -> List[DryRunOperation]:
+    def operations(self) -> list[DryRunOperation]:
         """Return a *copy* of the list of simulated operations."""
         with self._lock:
             return list(self._operations)
@@ -203,10 +204,10 @@ class DryRunExecutor(ActionExecutor):
             self._operations.clear()
             logger.debug("DryRunExecutor: operation log cleared")
 
-    def summary(self) -> Dict[str, int]:
+    def summary(self) -> dict[str, int]:
         """Return count of simulated operations grouped by operation_type."""
         with self._lock:
-            counts: Dict[str, int] = {}
+            counts: dict[str, int] = {}
             for op in self._operations:
                 counts[op.operation_type] = counts.get(op.operation_type, 0) + 1
             return counts
@@ -216,20 +217,23 @@ class DryRunExecutor(ActionExecutor):
     def preview_action(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Preview an action using the ImpactPreviewEngine."""
         with self._lock:
             try:
                 preview = self.impact_preview_engine.preview_action(
-                    action_type, config, context,
+                    action_type,
+                    config,
+                    context,
                 )
                 return preview.to_dict()
             except Exception as exc:
                 logger.warning(
                     "DryRunExecutor: preview_action failed for %s: %s",
-                    action_type, exc,
+                    action_type,
+                    exc,
                 )
                 return {
                     "action_type": action_type,

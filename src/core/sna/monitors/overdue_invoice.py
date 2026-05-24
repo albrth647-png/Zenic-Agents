@@ -9,6 +9,7 @@ NO espera a que el cliente reclame.
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 
 logger = logging.getLogger(__name__)
@@ -46,14 +47,16 @@ class OverdueInvoiceMonitor(BaseMonitor):
             except (ValueError, TypeError):
                 pass
             label = f"{numero} " if numero else ""
-            findings.append({
-                "type": "overdue_invoice",
-                "invoice_number": numero,
-                "client": client,
-                "amount": amount,
-                "due_date": due,
-                "message": f"Factura vencida {label}cliente {client} — {amount} (venció: {due})",
-            })
+            findings.append(
+                {
+                    "type": "overdue_invoice",
+                    "invoice_number": numero,
+                    "client": client,
+                    "amount": amount,
+                    "due_date": due,
+                    "message": f"Factura vencida {label}cliente {client} — {amount} (venció: {due})",
+                }
+            )
 
         return MonitorResult(
             monitor_name=self.name,

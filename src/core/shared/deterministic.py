@@ -39,28 +39,29 @@ import os
 import random
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "SeedManager",
+    "ControllableJitter",
+    "DeterministicClock",
     "DeterministicRNG",
     "DeterministicUUID",
-    "DeterministicClock",
     "FencingTokenGenerator",
-    "ControllableJitter",
-    "set_global_seed",
+    "SeedManager",
     "get_global_seed",
-    "reset_all_deterministic_state",
-    "install_uuid4_patch",
-    "uninstall_uuid4_patch",
-    "is_uuid4_patched",
     "install_random_patch",
-    "uninstall_random_patch",
     "install_time_patch",
-    "uninstall_time_patch",
+    "install_uuid4_patch",
     "is_time_patched",
+    "is_uuid4_patched",
+    "reset_all_deterministic_state",
+    "set_global_seed",
+    "uninstall_random_patch",
+    "uninstall_time_patch",
+    "uninstall_uuid4_patch",
 ]
 
 # ============================================================
@@ -75,6 +76,7 @@ _PRODUCTION_SEED = 0xC0FFEE  # 12648430
 # ============================================================
 #  SeedManager — Global Singleton
 # ============================================================
+
 
 class SeedManager:
     """
@@ -102,16 +104,17 @@ class SeedManager:
         if self._initialized:
             return
         self._master_seed: int = self._resolve_seed()
-        self._module_seeds: Dict[str, int] = {}
+        self._module_seeds: dict[str, int] = {}
         self._module_lock = threading.Lock()
-        self._uuid_counters: Dict[str, int] = {}
+        self._uuid_counters: dict[str, int] = {}
         self._uuid_lock = threading.Lock()
-        self._fencing_counters: Dict[str, int] = {}
+        self._fencing_counters: dict[str, int] = {}
         self._fencing_lock = threading.Lock()
         self._initialized = True
         logger.info(
             "SeedManager: Initialized with master_seed=%d (0x%X)",
-            self._master_seed, self._master_seed,
+            self._master_seed,
+            self._master_seed,
         )
 
     def _resolve_seed(self) -> int:
@@ -198,6 +201,7 @@ class SeedManager:
 #  Convenience Functions
 # ============================================================
 
+
 def set_global_seed(seed: int) -> None:
     """
     Set the global deterministic seed. Call at test entry point.
@@ -247,6 +251,7 @@ def reset_all_deterministic_state() -> None:
 #  DeterministicRNG — Per-Module Seeded Random
 # ============================================================
 
+
 class DeterministicRNG:
     """
     Deterministic random number generator scoped to a module.
@@ -266,7 +271,7 @@ class DeterministicRNG:
         value = rng.uniform(0, 1)
     """
 
-    def __init__(self, module_name: str, seed_override: Optional[int] = None) -> None:
+    def __init__(self, module_name: str, seed_override: int | None = None) -> None:
         self._module_name = module_name
         if seed_override is not None:
             self._seed = seed_override
@@ -275,7 +280,9 @@ class DeterministicRNG:
         self._rng = random.Random(self._seed)
         logger.debug(
             "DeterministicRNG[%s]: seed=%d (0x%X)",
-            module_name, self._seed, self._seed,
+            module_name,
+            self._seed,
+            self._seed,
         )
 
     @property
@@ -286,7 +293,7 @@ class DeterministicRNG:
     def seed(self) -> int:
         return self._seed
 
-    def reseed(self, seed: Optional[int] = None) -> None:
+    def reseed(self, seed: int | None = None) -> None:
         """Re-seed this RNG. If seed is None, re-derive from SeedManager."""
         if seed is not None:
             self._seed = seed
@@ -300,7 +307,7 @@ class DeterministicRNG:
             raise IndexError("Cannot choose from an empty sequence")
         return self._rng.choice(seq)
 
-    def choices(self, population: Sequence[Any], k: int = 1) -> List[Any]:
+    def choices(self, population: Sequence[Any], k: int = 1) -> list[Any]:
         """Deterministic choices with replacement."""
         return self._rng.choices(population, k=k)
 
@@ -316,11 +323,11 @@ class DeterministicRNG:
         """Deterministic random integer in [a, b]."""
         return self._rng.randint(a, b)
 
-    def shuffle(self, x: List[Any]) -> None:
+    def shuffle(self, x: list[Any]) -> None:
         """Deterministic shuffle in-place."""
         self._rng.shuffle(x)
 
-    def sample(self, population: Sequence[Any], k: int) -> List[Any]:
+    def sample(self, population: Sequence[Any], k: int) -> list[Any]:
         """Deterministic sample without replacement."""
         return self._rng.sample(population, k)
 
@@ -328,6 +335,7 @@ class DeterministicRNG:
 # ============================================================
 #  DeterministicUUID — Reproducible UUID Generation
 # ============================================================
+
 
 class DeterministicUUID:
     """
@@ -344,13 +352,15 @@ class DeterministicUUID:
         plan_id2 = uuid_gen.next()  # different, but reproducible on replay
     """
 
-    def __init__(self, namespace: str, seed_override: Optional[int] = None) -> None:
+    def __init__(self, namespace: str, seed_override: int | None = None) -> None:
         self._namespace = namespace
         self._seed = seed_override if seed_override is not None else SeedManager().derive_seed(f"uuid:{namespace}")
         self._counter = 0
         self._lock = threading.Lock()
         logger.debug(
-            "DeterministicUUID[%s]: seed=%d", namespace, self._seed,
+            "DeterministicUUID[%s]: seed=%d",
+            namespace,
+            self._seed,
         )
 
     def next(self) -> str:
@@ -379,8 +389,8 @@ class DeterministicUUID:
         parts = [
             h[0:8],
             h[8:12],
-            "4" + h[13:16],                   # version 4
-            format(variant_digit, 'x') + h[17:20],  # variant 10xx
+            "4" + h[13:16],  # version 4
+            format(variant_digit, "x") + h[17:20],  # variant 10xx
             h[20:32],
         ]
         return "-".join(parts)
@@ -394,6 +404,7 @@ class DeterministicUUID:
 # ============================================================
 #  FencingTokenGenerator — Monotonic Counter-Based Tokens
 # ============================================================
+
 
 class FencingTokenGenerator:
     """
@@ -413,13 +424,15 @@ class FencingTokenGenerator:
         token2 = token_gen.next()  # e.g. 12648432
     """
 
-    def __init__(self, namespace: str, seed_override: Optional[int] = None) -> None:
+    def __init__(self, namespace: str, seed_override: int | None = None) -> None:
         self._namespace = namespace
         self._seed = seed_override if seed_override is not None else SeedManager().derive_seed(f"fencing:{namespace}")
         self._counter = 0
         self._lock = threading.Lock()
         logger.debug(
-            "FencingTokenGenerator[%s]: base_seed=%d", namespace, self._seed,
+            "FencingTokenGenerator[%s]: base_seed=%d",
+            namespace,
+            self._seed,
         )
 
     def next(self) -> int:
@@ -448,6 +461,7 @@ class FencingTokenGenerator:
 # ============================================================
 #  ControllableJitter — Deterministic Jitter for Retries/Backoff
 # ============================================================
+
 
 class ControllableJitter:
     """
@@ -487,7 +501,7 @@ class ControllableJitter:
         self,
         namespace: str,
         enabled: bool = True,
-        seed_override: Optional[int] = None,
+        seed_override: int | None = None,
     ) -> None:
         self._namespace = namespace
         self._enabled = enabled
@@ -522,7 +536,7 @@ _original_uuid4 = uuid.uuid4
 
 # Module-level state for the patch
 _uuid4_patched: bool = False
-_uuid4_global_gen: Optional[DeterministicUUID] = None
+_uuid4_global_gen: DeterministicUUID | None = None
 _uuid4_patch_lock = threading.Lock()
 
 
@@ -576,8 +590,8 @@ def install_uuid4_patch() -> None:
         uuid.uuid4 = _deterministic_uuid4
         _uuid4_patched = True
     logger.info(
-        "install_uuid4_patch: uuid.uuid4() replaced with deterministic version "
-        "(seed=%d)", SeedManager().master_seed,
+        "install_uuid4_patch: uuid.uuid4() replaced with deterministic version " "(seed=%d)",
+        SeedManager().master_seed,
     )
 
 
@@ -616,7 +630,7 @@ _original_random_shuffle = random.shuffle
 _original_random_sample = random.sample
 
 _random_patched: bool = False
-_random_global_rng: Optional[random.Random] = None
+_random_global_rng: random.Random | None = None
 _random_patch_lock = threading.Lock()
 
 
@@ -732,6 +746,7 @@ def uninstall_random_patch() -> None:
 import time as _time_module  # noqa: E402
 from datetime import datetime, timezone  # noqa: E402
 
+
 class DeterministicClock:
     """
     Virtual clock that produces deterministic timestamps.
@@ -759,7 +774,7 @@ class DeterministicClock:
         self,
         namespace: str,
         increment: float = 0.1,
-        seed_override: Optional[int] = None,
+        seed_override: int | None = None,
     ) -> None:
         self._namespace = namespace
         seed = seed_override if seed_override is not None else SeedManager().derive_seed(f"clock:{namespace}")
@@ -768,7 +783,9 @@ class DeterministicClock:
         self._lock = threading.Lock()
         logger.debug(
             "DeterministicClock[%s]: start=%.1f, increment=%.3f",
-            namespace, self._current, self._increment,
+            namespace,
+            self._current,
+            self._increment,
         )
 
     def time(self) -> float:
@@ -813,7 +830,7 @@ _original_time_time = _time_module.time
 _original_time_monotonic = _time_module.monotonic
 
 _time_patched: bool = False
-_time_global_clock: Optional[DeterministicClock] = None
+_time_global_clock: DeterministicClock | None = None
 _time_patch_lock = threading.Lock()
 
 
@@ -855,9 +872,9 @@ def install_time_patch(increment: float = 0.001) -> None:
         _time_module.time = _deterministic_time_time
         _time_patched = True
     logger.info(
-        "install_time_patch: time.time() replaced with deterministic clock "
-        "(seed=%d, increment=%.4fs)",
-        SeedManager().master_seed, increment,
+        "install_time_patch: time.time() replaced with deterministic clock " "(seed=%d, increment=%.4fs)",
+        SeedManager().master_seed,
+        increment,
     )
 
 

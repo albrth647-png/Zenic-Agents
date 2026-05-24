@@ -13,7 +13,6 @@ import hmac
 import logging
 import os
 import secrets
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ class ECDSASigner:
         elif os.environ.get("NODE_ENV") == "production":
             raise RuntimeError(
                 "ZENIC_SIGNING_KEY is required in production when "
-                "ECDSA is unavailable. Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'ECDSA is unavailable. Generate with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
         else:
             self._fallback_key = secrets.token_hex(32)
@@ -73,7 +72,8 @@ class ECDSASigner:
 
             if private_pem:
                 self._private_key = serialization.load_pem_private_key(
-                    private_pem.encode(), password=None,
+                    private_pem.encode(),
+                    password=None,
                 )
             if public_pem:
                 self._public_key = serialization.load_pem_public_key(
@@ -95,9 +95,9 @@ class ECDSASigner:
 
         if os.path.exists(priv_path) and os.path.exists(pub_path):
             try:
-                with open(priv_path, "r") as f:
+                with open(priv_path) as f:
                     priv_pem = f.read()
-                with open(pub_path, "r") as f:
+                with open(pub_path) as f:
                     pub_pem = f.read()
                 self._try_load_keys(priv_pem, pub_pem)
                 return
@@ -110,8 +110,8 @@ class ECDSASigner:
     def _try_generate_keys(self) -> None:
         """Try generating new ECDSA key pair."""
         try:
-            from cryptography.hazmat.primitives.asymmetric import ec
             from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric import ec
 
             self._private_key = ec.generate_private_key(ec.SECP256R1())
             self._public_key = self._private_key.public_key()
@@ -161,6 +161,7 @@ class ECDSASigner:
             try:
                 from cryptography.hazmat.primitives import hashes
                 from cryptography.hazmat.primitives.asymmetric import ec
+
                 signature = self._private_key.sign(
                     data.encode(),
                     ec.ECDSA(hashes.SHA256()),
@@ -177,7 +178,9 @@ class ECDSASigner:
             )
 
         mac = hmac.new(
-            self._fallback_key.encode(), data.encode(), hashlib.sha256,
+            self._fallback_key.encode(),
+            data.encode(),
+            hashlib.sha256,
         ).hexdigest()
         return f"{self.ALGO_HMAC}:{mac}"
 
@@ -208,9 +211,12 @@ class ECDSASigner:
             try:
                 from cryptography.hazmat.primitives import hashes
                 from cryptography.hazmat.primitives.asymmetric import ec
+
                 signature = bytes.fromhex(sig)
                 self._public_key.verify(
-                    signature, data.encode(), ec.ECDSA(hashes.SHA256()),
+                    signature,
+                    data.encode(),
+                    ec.ECDSA(hashes.SHA256()),
                 )
                 return True
             except Exception:
@@ -223,7 +229,9 @@ class ECDSASigner:
         if algo == self.ALGO_HMAC or algo is None:
             if self._fallback_key:
                 expected = hmac.new(
-                    self._fallback_key.encode(), data.encode(), hashlib.sha256,
+                    self._fallback_key.encode(),
+                    data.encode(),
+                    hashlib.sha256,
                 ).hexdigest()
                 return hmac.compare_digest(expected, sig)
 
@@ -234,6 +242,7 @@ class ECDSASigner:
         if self._public_key and not self._use_fallback:
             try:
                 from cryptography.hazmat.primitives import serialization
+
                 return self._public_key.public_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -255,7 +264,7 @@ class ECDSASigner:
 
 # ── Module-level helpers ──────────────────────────────────
 
-_default_signer: Optional[ECDSASigner] = None
+_default_signer: ECDSASigner | None = None
 
 
 def get_signer() -> ECDSASigner:

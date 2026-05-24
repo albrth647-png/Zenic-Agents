@@ -1,6 +1,7 @@
 """Helpers for inter_workflow."""
 
 from __future__ import annotations
+
 import logging
 import re
 from typing import Any
@@ -8,6 +9,7 @@ from typing import Any
 from ._types import _KEYWORDS
 
 logger = logging.getLogger(__name__)
+
 
 def _resolve_dot_path(data: dict[str, Any], path: str) -> Any:
     """Resolve a dot-notation path like 'output.invoice_id' from a dict.
@@ -22,7 +24,6 @@ def _resolve_dot_path(data: dict[str, Any], path: str) -> Any:
         else:
             return None
     return current
-
 
 
 def _safe_eval_condition(condition: str, source_output: dict[str, Any]) -> bool:
@@ -49,11 +50,11 @@ def _safe_eval_condition(condition: str, source_output: dict[str, Any]) -> bool:
     eval_context = _build_eval_context(source_output)
 
     from ..conditional_branch import safe_evaluate
+
     # Prefix identifiers with "context." so the evaluator can resolve them
     # using its own dot-notation resolution.
     rewritten = _prefix_context(condition)
     return safe_evaluate(rewritten, eval_context)
-
 
 
 def _build_eval_context(source_output: dict[str, Any]) -> dict[str, Any]:
@@ -68,7 +69,6 @@ def _build_eval_context(source_output: dict[str, Any]) -> dict[str, Any]:
     context: dict[str, Any] = dict(source_output)
     # Also ensure nested sub-dicts are preserved for dot access.
     return context
-
 
 
 def _prefix_context(expression: str) -> str:
@@ -92,7 +92,7 @@ def _prefix_context(expression: str) -> str:
                 # No close quote — take the rest as a literal
                 parts.append(expression[i:])
                 break
-            parts.append(expression[i:close + 1])
+            parts.append(expression[i : close + 1])
             i = close + 1
         else:
             # Collect characters until the next quote
@@ -108,9 +108,9 @@ def _prefix_context(expression: str) -> str:
     return "".join(parts)
 
 
-
 def _replace_identifiers(segment: str) -> str:
     """Replace bare identifiers in a non-literal segment with context.-prefixed ones."""
+
     def _replace(match: re.Match[str]) -> str:
         ident = match.group(0)
         if ident in _KEYWORDS:
@@ -119,8 +119,7 @@ def _replace_identifiers(segment: str) -> str:
             return ident
         return f"context.{ident}"
 
-    return re.sub(r'[a-zA-Z_][\w.]*', _replace, segment)
-
+    return re.sub(r"[a-zA-Z_][\w.]*", _replace, segment)
 
 
 def _set_dot_path(data: dict[str, Any], path: str, value: Any) -> None:
@@ -135,4 +134,14 @@ def _set_dot_path(data: dict[str, Any], path: str, value: Any) -> None:
             current[part] = {}
         current = current[part]
     current[parts[-1]] = value
-__all__ = ["_build_eval_context", "_prefix_context", "_replace_identifiers", "_resolve_dot_path", "_safe_eval_condition", "_set_dot_path", "logger"]
+
+
+__all__ = [
+    "_build_eval_context",
+    "_prefix_context",
+    "_replace_identifiers",
+    "_resolve_dot_path",
+    "_safe_eval_condition",
+    "_set_dot_path",
+    "logger",
+]

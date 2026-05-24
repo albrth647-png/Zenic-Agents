@@ -20,27 +20,29 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from .types.session import Session, MessageRole
-from .types.intent import AssistantIntent, IntentCategory
-from .types.personality import PersonalityProfile
 from ..config.constants import (  # type: ignore[import-unresolved]
-    MAX_CONTEXT_TOKENS,
-    CONTEXT_RESERVE_SYSTEM,
     CONTEXT_RESERVE_RESPONSE,
+    CONTEXT_RESERVE_SYSTEM,
+    MAX_CONTEXT_TOKENS,
 )
 from .conversation import ConversationManager
-from .memory import MemoryManager
 from .knowledge import KnowledgeBase
+from .memory import MemoryManager
 from .tools import ToolManager
+from .types.intent import AssistantIntent, IntentCategory
+from .types.personality import PersonalityProfile
+from .types.session import MessageRole, Session
 
 logger = logging.getLogger("zenic_agents.conversational.context_builder")
 
 
 # ─── Config ───────────────────────────────────────────────────
 
+
 @dataclass
 class ContextBuilderConfig:
     """Configuracion del ContextBuilder."""
+
     max_context_tokens: int = MAX_CONTEXT_TOKENS
     system_reserve: int = CONTEXT_RESERVE_SYSTEM
     response_reserve: int = CONTEXT_RESERVE_RESPONSE
@@ -53,9 +55,11 @@ class ContextBuilderConfig:
 
 # ─── Resultado del builder ────────────────────────────────────
 
+
 @dataclass
 class BuiltContext:
     """Contexto construido listo para el pipeline/LLM."""
+
     system_prompt: str = ""
     messages: list[dict[str, Any]] = field(default_factory=list)
     memory_context: list[dict[str, Any]] = field(default_factory=list)
@@ -87,14 +91,11 @@ class BuiltContext:
             system_content = self.system_prompt
             # Inyectar memoria y conocimiento en system prompt
             if self.memory_context:
-                mem_str = "\n".join(
-                    f"- {m.get('content', '')}" for m in self.memory_context
-                )
+                mem_str = "\n".join(f"- {m.get('content', '')}" for m in self.memory_context)
                 system_content += f"\n\nMemoria relevante:\n{mem_str}"
             if self.knowledge_context:
                 kno_str = "\n".join(
-                    f"- {k.get('title', '')}: {k.get('content', '')[:200]}"
-                    for k in self.knowledge_context
+                    f"- {k.get('title', '')}: {k.get('content', '')[:200]}" for k in self.knowledge_context
                 )
                 system_content += f"\n\nConocimiento relevante:\n{kno_str}"
 
@@ -107,6 +108,7 @@ class BuiltContext:
 
 
 # ─── ContextBuilder ───────────────────────────────────────────
+
 
 class ContextBuilder:
     """
@@ -178,13 +180,9 @@ class ContextBuilder:
                 sources.append("conversation_state")
 
         # 7. Estimar tokens y truncar si es necesario
-        total_tokens = self._estimate_tokens(
-            system_prompt, messages, memory_ctx, knowledge_ctx
-        )
+        total_tokens = self._estimate_tokens(system_prompt, messages, memory_ctx, knowledge_ctx)
         if total_tokens > self._config.max_context_tokens:
-            messages = self._truncate_history(
-                messages, total_tokens - self._config.max_context_tokens
-            )
+            messages = self._truncate_history(messages, total_tokens - self._config.max_context_tokens)
 
         elapsed = (time.time() - start) * 1000
 
@@ -195,9 +193,7 @@ class ContextBuilder:
             knowledge_context=knowledge_ctx,
             tools=tools,
             conversation_state=conv_state,
-            total_tokens_estimated=self._estimate_tokens(
-                system_prompt, messages, memory_ctx, knowledge_ctx
-            ),
+            total_tokens_estimated=self._estimate_tokens(system_prompt, messages, memory_ctx, knowledge_ctx),
             build_time_ms=elapsed,
             sources_used=sources,
         )
@@ -226,10 +222,7 @@ class ContextBuilder:
                 "Proporciona respuestas tecnicas precisas con ejemplos.\n"
             )
         elif intent.category == IntentCategory.QUESTION:
-            base += (
-                "El usuario esta haciendo una pregunta. "
-                "Responde de forma clara y completa.\n"
-            )
+            base += "El usuario esta haciendo una pregunta. " "Responde de forma clara y completa.\n"
 
         return base
 
@@ -237,12 +230,15 @@ class ContextBuilder:
         """Construye el historial de mensajes."""
         recent = session.get_recent_messages(self._config.max_history_messages)
         return [
-            m.to_chat_format() for m in recent
+            m.to_chat_format()
+            for m in recent
             if m.role in (MessageRole.USER, MessageRole.ASSISTANT, MessageRole.SYSTEM)
         ]
 
     def _build_memory(
-        self, session_id: str, query: str,
+        self,
+        session_id: str,
+        query: str,
     ) -> list[dict[str, Any]]:
         """Busca memoria relevante."""
         if not query:
@@ -255,7 +251,9 @@ class ContextBuilder:
         return result
 
     def _build_knowledge(
-        self, intent: AssistantIntent, query: str,
+        self,
+        intent: AssistantIntent,
+        query: str,
     ) -> list[dict[str, Any]]:
         """Busca conocimiento relevante."""
         if not query:

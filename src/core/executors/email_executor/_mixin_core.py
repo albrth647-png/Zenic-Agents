@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import _VALID_MODES
 
@@ -16,7 +16,7 @@ class EmailExecutorCoreMixin:
         self._lock = threading.Lock()
         self._template_engine = EmailTemplateEngine()  # noqa: F821
         self._rate_limiter = EmailRateLimiter()  # noqa: F821
-        self._graph_provider: Optional[GraphAPIEmailProvider] = None  # noqa: F821
+        self._graph_provider: GraphAPIEmailProvider | None = None  # noqa: F821
         self._smtp_send_count: int = 0
         self._graph_send_count: int = 0
         self._dry_run_count: int = 0
@@ -27,40 +27,43 @@ class EmailExecutorCoreMixin:
 
     async def execute(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> ActionResult:  # noqa: F821
         """Execute an email send operation.
 
         Never raises — always returns an ActionResult.
         """
-        start = self._measure()  # noqa: F821
+        start = self._measure()
 
         # ── Resolve mode ────────────────────────────────────────
         mode = config.get("mode", "auto").lower()
-        if mode not in _VALID_MODES:  # noqa: F821
+        if mode not in _VALID_MODES:
             return ActionResult(  # noqa: F821  # TODO: add import
-                False, {"mode": mode},
-                f"Invalid mode: '{mode}'. Must be one of {sorted(_VALID_MODES)}",  # noqa: F821
-                self._elapsed_ms(start),  # noqa: F821
+                False,
+                {"mode": mode},
+                f"Invalid mode: '{mode}'. Must be one of {sorted(_VALID_MODES)}",
+                self._elapsed_ms(start),
             )
 
         # ── Resolve recipients ──────────────────────────────────
         recipients = self._resolve_recipients(config)
         if not recipients:
             return ActionResult(  # noqa: F821  # TODO: add import
-                False, {"recipients": []},
+                False,
+                {"recipients": []},
                 "No recipients specified (config.to is required)",
-                self._elapsed_ms(start),  # noqa: F821
+                self._elapsed_ms(start),
             )
 
         # Validate email addresses
         invalid = [r for r in recipients if not _validate_email(r)]  # noqa: F821
         if invalid:
             return ActionResult(  # noqa: F821  # TODO: add import
-                False, {"invalid_recipients": invalid},
+                False,
+                {"invalid_recipients": invalid},
                 f"Invalid email addresses: {invalid}",
-                self._elapsed_ms(start),  # noqa: F821
+                self._elapsed_ms(start),
             )
 
         # ── Rate limiting ───────────────────────────────────────
@@ -72,11 +75,12 @@ class EmailExecutorCoreMixin:
                 self._rate_limited_count += 1
             return ActionResult(  # noqa: F821  # TODO: add import
                 False,
-                {"rate_limited": True, "denied_recipients": [
-                    {"recipient": r.recipient, "reason": r.reason} for r in denied
-                ]},
+                {
+                    "rate_limited": True,
+                    "denied_recipients": [{"recipient": r.recipient, "reason": r.reason} for r in denied],
+                },
                 f"Rate limited: {reasons}",
-                self._elapsed_ms(start),  # noqa: F821
+                self._elapsed_ms(start),
             )
 
         # ── Render template ─────────────────────────────────────
@@ -103,21 +107,24 @@ class EmailExecutorCoreMixin:
                 result = await self._execute_auto(config, recipients, subject, body, html)
         except Exception as exc:
             __import__("logging").getLogger("zenic_agents.executors.email_executor").error(
-                "EmailExecutor: unhandled exception: %s", exc, exc_info=True,
+                "EmailExecutor: unhandled exception: %s",
+                exc,
+                exc_info=True,
             )
             with self._lock:
                 self._failure_count += 1
             result = ActionResult(  # noqa: F821  # TODO: add import
-                False, {"mode": mode, "recipients": recipients},
+                False,
+                {"mode": mode, "recipients": recipients},
                 f"Unexpected error: {exc}",
-                self._elapsed_ms(start),  # noqa: F821
+                self._elapsed_ms(start),
             )
 
         if result.success:
             self._rate_limiter.record_send(recipients)
 
         if result.duration_ms == 0.0:
-            result.duration_ms = self._elapsed_ms(start)  # noqa: F821
+            result.duration_ms = self._elapsed_ms(start)
 
         return result
 
@@ -129,8 +136,8 @@ class EmailExecutorCoreMixin:
 
     async def _execute_auto(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
@@ -152,7 +159,7 @@ class EmailExecutorCoreMixin:
     # ── Recipient Resolution ───────────────────────────────────────
 
     @staticmethod
-    def _resolve_recipients(config: Dict[str, Any]) -> List[str]:
+    def _resolve_recipients(config: dict[str, Any]) -> list[str]:
         """Resolve recipients from config, normalizing to a list."""
         to = config.get("to", [])
         if isinstance(to, str):
@@ -165,7 +172,7 @@ class EmailExecutorCoreMixin:
 
     def _dry_run_result(
         self,
-        recipients: List[str],
+        recipients: list[str],
         subject: str,
         reason: str,
     ) -> ActionResult:  # noqa: F821
@@ -173,21 +180,26 @@ class EmailExecutorCoreMixin:
         dry_run_id = f"dry-run-{uuid.uuid4().hex[:12]}"
         __import__("logging").getLogger("zenic_agents.executors.email_executor").info(
             "EmailExecutor: Dry-run (reason=%s) to=%s subject='%s'",
-            reason, recipients, subject[:50],
+            reason,
+            recipients,
+            subject[:50],
         )
         return ActionResult(  # noqa: F821  # TODO: add import
             True,
             {
-                "mode": "dry_run", "recipients": recipients,
-                "subject": subject, "dry_run": True,
-                "dry_run_reason": reason, "message_id": dry_run_id,
+                "mode": "dry_run",
+                "recipients": recipients,
+                "subject": subject,
+                "dry_run": True,
+                "dry_run_reason": reason,
+                "message_id": dry_run_id,
             },
         )
 
     # ── Statistics ─────────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get executor statistics."""
         with self._lock:
             return {

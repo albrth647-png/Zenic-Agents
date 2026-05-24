@@ -14,17 +14,24 @@ Handles:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .types import (
-    ActionTemplateDef, BlueprintCompatibility, BlueprintMetadataV2,
-    BlueprintStatus, BlueprintTier,
-    BusinessRuleDef, ConflictStrategy,
-    DBEntitySchema, DBFieldSchema, DBSchema, MonitorHook,
-)
-from .schema import CertifiedBlueprint
-from .validator import BlueprintValidatorV2, ValidationResult
 from .certifier import certify_blueprint
+from .schema import CertifiedBlueprint
+from .types import (
+    ActionTemplateDef,
+    BlueprintCompatibility,
+    BlueprintMetadataV2,
+    BlueprintStatus,
+    BlueprintTier,
+    BusinessRuleDef,
+    ConflictStrategy,
+    DBEntitySchema,
+    DBFieldSchema,
+    DBSchema,
+    MonitorHook,
+)
+from .validator import BlueprintValidatorV2, ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +40,15 @@ logger = logging.getLogger(__name__)
 #  COMPOSITION RESULT
 # ──────────────────────────────────────────────────────────────
 
+
 class CompositionResult:
     """Result of a Blueprint composition operation."""
 
     def __init__(self) -> None:
-        self.blueprint: Optional[CertifiedBlueprint] = None
+        self.blueprint: CertifiedBlueprint | None = None
         self.validation: ValidationResult = ValidationResult()
-        self.warnings: List[str] = []
-        self.source_names: List[str] = []
+        self.warnings: list[str] = []
+        self.source_names: list[str] = []
         self.conflicts_resolved: int = 0
 
     @property
@@ -52,6 +60,7 @@ class CompositionResult:
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT COMPOSER
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintComposer:
     """Composes multiple Blueprints into a single unified Blueprint.
@@ -76,7 +85,7 @@ class BlueprintComposer:
 
     def compose(
         self,
-        blueprints: List[CertifiedBlueprint],
+        blueprints: list[CertifiedBlueprint],
         composed_name: str = "",
         signer_id: str = "",
     ) -> CompositionResult:
@@ -156,7 +165,7 @@ class BlueprintComposer:
 
     def _compose_metadata(
         self,
-        blueprints: List[CertifiedBlueprint],
+        blueprints: list[CertifiedBlueprint],
         composed_name: str,
     ) -> BlueprintMetadataV2:
         """Compose metadata from multiple Blueprints."""
@@ -170,22 +179,20 @@ class BlueprintComposer:
             BlueprintTier.ENTERPRISE: 2,
             BlueprintTier.PARTNER: 3,
         }
-        max_tier = max(
-            blueprints, key=lambda bp: tier_order.get(bp.metadata.tier, 0)
-        ).metadata.tier
+        max_tier = max(blueprints, key=lambda bp: tier_order.get(bp.metadata.tier, 0)).metadata.tier
 
         # Collect all domains
         domains = list({bp.metadata.domain for bp in blueprints if bp.metadata.domain})
         domain = domains[0] if len(domains) == 1 else "composed"
 
         # Collect all tags
-        all_tags: List[str] = []
+        all_tags: list[str] = []
         for bp in blueprints:
             all_tags.extend(bp.metadata.tags)
         tags = list(dict.fromkeys(all_tags))  # Deduplicated, order-preserved
 
         # Collect all compatibilities
-        all_compat: List[BlueprintCompatibility] = []
+        all_compat: list[BlueprintCompatibility] = []
         for bp in blueprints:
             all_compat.extend(bp.metadata.compatibility)
 
@@ -205,13 +212,14 @@ class BlueprintComposer:
     # ── DB Schema Composition ──────────────────────────────
 
     def _compose_db_schema(
-        self, blueprints: List[CertifiedBlueprint],
+        self,
+        blueprints: list[CertifiedBlueprint],
     ) -> tuple:
         """Compose database schemas from multiple Blueprints.
 
         Returns (DBSchema, conflicts_resolved_count).
         """
-        entity_map: Dict[str, DBEntitySchema] = {}
+        entity_map: dict[str, DBEntitySchema] = {}
         conflicts = 0
 
         for bp in blueprints:
@@ -219,7 +227,8 @@ class BlueprintComposer:
                 if entity.name in entity_map:
                     conflicts += 1
                     entity_map[entity.name] = self._merge_entity(
-                        entity_map[entity.name], entity,
+                        entity_map[entity.name],
+                        entity,
                     )
                 else:
                     entity_map[entity.name] = entity
@@ -227,7 +236,9 @@ class BlueprintComposer:
         return DBSchema(entities=list(entity_map.values())), conflicts
 
     def _merge_entity(
-        self, existing: DBEntitySchema, new: DBEntitySchema,
+        self,
+        existing: DBEntitySchema,
+        new: DBEntitySchema,
     ) -> DBEntitySchema:
         """Merge two entity schemas based on conflict strategy."""
         if self._strategy == ConflictStrategy.FIRST_WINS:
@@ -235,13 +246,10 @@ class BlueprintComposer:
         if self._strategy == ConflictStrategy.LAST_WINS:
             return new
         if self._strategy == ConflictStrategy.FAIL:
-            raise ValueError(
-                f"Entity conflict: {existing.name} — "
-                f"FAIL strategy aborts composition"
-            )
+            raise ValueError(f"Entity conflict: {existing.name} — " f"FAIL strategy aborts composition")
 
         # MERGE strategy: combine fields
-        field_map: Dict[str, DBFieldSchema] = {}
+        field_map: dict[str, DBFieldSchema] = {}
         for fld in existing.fields:
             field_map[fld.name] = fld
         for fld in new.fields:
@@ -263,10 +271,11 @@ class BlueprintComposer:
     # ── Executor Schema Composition ────────────────────────
 
     def _compose_executor_schemas(
-        self, blueprints: List[CertifiedBlueprint],
-    ) -> Dict[str, Any]:
+        self,
+        blueprints: list[CertifiedBlueprint],
+    ) -> dict[str, Any]:
         """Compose executor schemas (last-wins for conflicts)."""
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for bp in blueprints:
             result.update(bp.executor_schemas)
         return result
@@ -274,11 +283,12 @@ class BlueprintComposer:
     # ── Rules Composition ──────────────────────────────────
 
     def _compose_rules(
-        self, blueprints: List[CertifiedBlueprint],
-    ) -> List[BusinessRuleDef]:
+        self,
+        blueprints: list[CertifiedBlueprint],
+    ) -> list[BusinessRuleDef]:
         """Compose business rules (all appended, deduplicated by rule_id)."""
         seen_ids: set = set()
-        rules: List[BusinessRuleDef] = []
+        rules: list[BusinessRuleDef] = []
         for bp in blueprints:
             for rule in bp.rules:
                 if rule.rule_id not in seen_ids:
@@ -289,10 +299,11 @@ class BlueprintComposer:
     # ── Actions Composition ────────────────────────────────
 
     def _compose_actions(
-        self, blueprints: List[CertifiedBlueprint],
+        self,
+        blueprints: list[CertifiedBlueprint],
     ) -> tuple:
         """Compose action templates. Returns (actions, conflicts)."""
-        action_map: Dict[str, ActionTemplateDef] = {}
+        action_map: dict[str, ActionTemplateDef] = {}
         conflicts = 0
 
         for bp in blueprints:
@@ -309,10 +320,11 @@ class BlueprintComposer:
     # ── Monitor Hooks Composition ──────────────────────────
 
     def _compose_monitor_hooks(
-        self, blueprints: List[CertifiedBlueprint],
+        self,
+        blueprints: list[CertifiedBlueprint],
     ) -> tuple:
         """Compose monitor hooks. Returns (hooks, conflicts)."""
-        hook_map: Dict[str, MonitorHook] = {}
+        hook_map: dict[str, MonitorHook] = {}
         conflicts = 0
 
         for bp in blueprints:

@@ -1,10 +1,12 @@
 """Query and stats mixin for MemoryEngineV2."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List
+from typing import Any
+
 from .types import MemoryQuery, MemoryRecord, MemorySearchResult, MemoryTier, MemoryType
 
 logger = logging.getLogger(__name__)
@@ -15,11 +17,12 @@ class MemoryQueryMixin:
 
     def search(self, query: MemoryQuery) -> MemorySearchResult:
         with self._lock:
+
             def _search() -> MemorySearchResult:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    conditions: List[str] = []
-                    params: List[Any] = []
+                    conditions: list[str] = []
+                    params: list[Any] = []
 
                     if query.query_text:
                         conditions.append("content LIKE ?")
@@ -54,7 +57,9 @@ class MemoryQueryMixin:
                     records = [self._record_from_row(row) for row in cursor.fetchall()]
 
                     count_sql = f"SELECT COUNT(*) FROM memory_v2_records WHERE {where}"
-                    total = conn.execute(count_sql, params[:-1]).fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
+                    total = conn.execute(count_sql, params[:-1]).fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
 
                     best = max((r.importance for r in records), default=0.0)
                     return MemorySearchResult(records=records, total=total, best_score=best)
@@ -65,12 +70,12 @@ class MemoryQueryMixin:
 
     def get_session_summary(self, session_id: str) -> str:
         with self._lock:
+
             def _summarize() -> str:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT * FROM memory_v2_records WHERE session_id = ? "
-                        "ORDER BY created_at ASC",
+                        "SELECT * FROM memory_v2_records WHERE session_id = ? " "ORDER BY created_at ASC",
                         (session_id,),
                     )
                     records = [self._record_from_row(row) for row in cursor.fetchall()]
@@ -80,29 +85,35 @@ class MemoryQueryMixin:
 
             return _retry(_summarize)  # noqa: F821
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
-            def _calc() -> Dict[str, Any]:
+
+            def _calc() -> dict[str, Any]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    total = conn.execute("SELECT COUNT(*) FROM memory_v2_records").fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
-                    tier_counts: Dict[str, int] = {}
+                    total = conn.execute("SELECT COUNT(*) FROM memory_v2_records").fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
+                    tier_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT tier, COUNT(*) FROM memory_v2_records GROUP BY tier"
                     )
                     for tier, cnt in cursor.fetchall():
                         tier_counts[tier] = cnt
 
-                    type_counts: Dict[str, int] = {}
+                    type_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT mem_type, COUNT(*) FROM memory_v2_records GROUP BY mem_type"
                     )
                     for mtype, cnt in cursor.fetchall():
                         type_counts[mtype] = cnt
 
-                    avg_importance = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT AVG(importance) FROM memory_v2_records"
-                    ).fetchone()[0] or 0.0
+                    avg_importance = (
+                        conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                            "SELECT AVG(importance) FROM memory_v2_records"
+                        ).fetchone()[0]
+                        or 0.0
+                    )
 
                     return {
                         "total_records": total,
@@ -136,12 +147,12 @@ class MemoryQueryMixin:
         )
 
     @staticmethod
-    def _generate_summary(records: List[MemoryRecord]) -> str:
+    def _generate_summary(records: list[MemoryRecord]) -> str:
         if not records:
             return ""
         facts = [r.content for r in records if r.mem_type == MemoryType.FACT]
         convos = [r.content for r in records if r.mem_type == MemoryType.CONVERSATION]
-        parts: List[str] = []
+        parts: list[str] = []
         if facts:
             parts.append("Facts: " + "; ".join(facts[:10]))
         if convos:

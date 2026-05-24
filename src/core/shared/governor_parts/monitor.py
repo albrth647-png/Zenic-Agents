@@ -1,8 +1,8 @@
 """Mixin: Background monitoring for ResourceGovernor."""
 
-import time
-import threading
 import gc
+import threading
+import time
 
 from ._imports import logger, resource
 
@@ -16,9 +16,7 @@ class MonitorMixin:
             return
         self._stop_event.clear()
         self._cpu_lock = threading.Lock()
-        self._monitor_thread = threading.Thread(
-            target=self._monitor_loop, daemon=True
-        )
+        self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self._monitor_thread.start()
         logger.info("ResourceGovernor: monitoring started")
 
@@ -50,7 +48,7 @@ class MonitorMixin:
         """
         try:
             # Metodo 1: Leer /proc/stat (disponible en proot-distro Debian)
-            with open('/proc/stat', 'r') as f:
+            with open("/proc/stat") as f:
                 line = f.readline()
             values = [int(x) for x in line.split()[1:]]
             idle = values[3]
@@ -62,7 +60,7 @@ class MonitorMixin:
             if self._stop_event.is_set():
                 return  # Early exit if monitoring was stopped
 
-            with open('/proc/stat', 'r') as f:
+            with open("/proc/stat") as f:
                 line = f.readline()
             values2 = [int(x) for x in line.split()[1:]]
             idle2 = values2[3]
@@ -96,9 +94,9 @@ class MonitorMixin:
         """Mide el uso de RAM del proceso actual."""
         try:
             # Metodo 1: /proc/self/status (mas preciso en Linux)
-            with open('/proc/self/status', 'r') as f:
+            with open("/proc/self/status") as f:
                 for line in f:
-                    if line.startswith('VmRSS:'):
+                    if line.startswith("VmRSS:"):
                         self._ram_usage_mb = int(line.split()[1]) / 1024
                         break
         except (FileNotFoundError, PermissionError):
@@ -125,9 +123,9 @@ class MonitorMixin:
                     self._thermal_throttle = max(0.4, self._thermal_throttle * 0.8)
                     self.stats["thermal_throttles"] += 1
                     logger.warning(
-                        "Thermal throttle: CPU >70%% por %.0fs, "
-                        "reduciendo agresividad a %.0f%%",
-                        elapsed, self._thermal_throttle * 100
+                        "Thermal throttle: CPU >70%% por %.0fs, " "reduciendo agresividad a %.0f%%",
+                        elapsed,
+                        self._thermal_throttle * 100,
                     )
         else:
             # CPU normal: restaurar gradualmente
@@ -152,7 +150,9 @@ class MonitorMixin:
                 self.stats["gc_forced"] += 1
                 logger.info(
                     "Auto-GC: RAM=%.0fMB > threshold=%.0fMB, gen-0 collected %d objects",
-                    self._ram_usage_mb, self.gc_threshold_mb, collected
+                    self._ram_usage_mb,
+                    self.gc_threshold_mb,
+                    collected,
                 )
             except Exception as e:
                 logger.debug("Auto-GC error (non-critical): %s", e)

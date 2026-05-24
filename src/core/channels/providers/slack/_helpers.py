@@ -31,13 +31,15 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 
 try:
     import aiohttp  # noqa: F401
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
+    import urllib.error
     import urllib.request
-    import urllib.error  # noqa: F401
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -50,4 +52,11 @@ _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 0.5
 _HTTP_TIMEOUT = 30
 _SOCKET_MODE_RECONNECT_DELAY = 5  # seconds
-__all__ = ["_HTTP_TIMEOUT", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_SLACK_API_BASE", "_SOCKET_MODE_RECONNECT_DELAY", "_validate_url"]
+__all__ = [
+    "_HTTP_TIMEOUT",
+    "_MAX_RETRIES",
+    "_RETRY_BASE_DELAY",
+    "_SLACK_API_BASE",
+    "_SOCKET_MODE_RECONNECT_DELAY",
+    "_validate_url",
+]

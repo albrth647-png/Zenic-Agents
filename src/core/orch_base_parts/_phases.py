@@ -17,10 +17,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Any, Dict, List
-
-if TYPE_CHECKING:
-    pass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +40,14 @@ class CommonStatePhase(OrchestratorPhase):
 
     @classmethod
     def run(cls, orch: Any) -> None:
+        from src.core.orch_base_parts._imports import get_isolation_manager
+        from src.core.patterns.concurrency import ReadWriteLock
         from src.core.patterns.orchestration import EventBus, Mediator
         from src.core.patterns.resilience import CircuitBreaker, RetryConfig
-        from src.core.patterns.concurrency import ReadWriteLock
-        from src.core.orch_base_parts._imports import get_isolation_manager
 
         orch._request_count = 0
         orch._request_count_lock = threading.Lock()
-        orch._pending_resumptions: Dict[str, Any] = {}
+        orch._pending_resumptions: dict[str, Any] = {}
         orch._resumptions_lock = threading.Lock()
         orch._isolation_manager = get_isolation_manager()
         orch._current_client_id = "default"
@@ -62,20 +59,18 @@ class CommonStatePhase(OrchestratorPhase):
         orch._db_rwlock = ReadWriteLock()
 
         # Circuit Breakers for external services
-        orch._llm_circuit = CircuitBreaker(
-            name="llm_engine", failure_threshold=5, recovery_timeout=30.0
-        )
-        orch._http_circuit = CircuitBreaker(
-            name="http_requests", failure_threshold=3, recovery_timeout=60.0
-        )
-        orch._db_circuit = CircuitBreaker(
-            name="database", failure_threshold=10, recovery_timeout=15.0
-        )
+        orch._llm_circuit = CircuitBreaker(name="llm_engine", failure_threshold=5, recovery_timeout=30.0)
+        orch._http_circuit = CircuitBreaker(name="http_requests", failure_threshold=3, recovery_timeout=60.0)
+        orch._db_circuit = CircuitBreaker(name="database", failure_threshold=10, recovery_timeout=15.0)
 
         # Default retry config
         orch._pipeline_retry = RetryConfig(
-            max_attempts=3, base_delay=1.0, max_delay=30.0,
-            exponential_base=2, jitter=True, backoff_strategy="exponential"
+            max_attempts=3,
+            base_delay=1.0,
+            max_delay=30.0,
+            exponential_base=2,
+            jitter=True,
+            backoff_strategy="exponential",
         )
 
         logger.info("Phase [common_state]: EventBus + Mediator + CircuitBreakers + Retry initialized")
@@ -89,9 +84,16 @@ class PipelinePhase(OrchestratorPhase):
     @classmethod
     def run(cls, orch: Any) -> None:
         from src.core.orch_base_parts._imports import (
-            initialize_databases, SemanticParser, MacroRouter,
-            GraphASTEngine, APAPlanner, GitHubScrapAgent, ASTSurgeon,
-            ReflexionSandbox, MerkleLedger, TheoremCache,
+            APAPlanner,
+            ASTSurgeon,
+            GitHubScrapAgent,
+            GraphASTEngine,
+            MacroRouter,
+            MerkleLedger,
+            ReflexionSandbox,
+            SemanticParser,
+            TheoremCache,
+            initialize_databases,
         )
 
         initialize_databases()
@@ -133,7 +135,8 @@ class ExtendedArchitecturePhase(OrchestratorPhase):
     @classmethod
     def run(cls, orch: Any) -> None:
         from src.core.orch_base_parts._imports import (
-            ThinkingEngine, AutomationEngine,
+            AutomationEngine,
+            ThinkingEngine,
         )
 
         orch._thinking = ThinkingEngine(
@@ -167,7 +170,9 @@ class Phase7EnginesPhase(OrchestratorPhase):
     @classmethod
     def run(cls, orch: Any) -> None:
         from src.core.orch_base_parts._imports import (
-            get_default_registry, LogicBuilder, AuthService,
+            AuthService,
+            LogicBuilder,
+            get_default_registry,
         )
 
         orch._executor_registry = get_default_registry()
@@ -176,7 +181,7 @@ class Phase7EnginesPhase(OrchestratorPhase):
 
         logger.info(
             "Phase [phase7_engines]: ActionExecutor=%d types | LogicBuilder=%d blocks | AuthService=ready",
-            len(getattr(orch._executor_registry, 'list_types', lambda: [])()),
+            len(getattr(orch._executor_registry, "list_types", lambda: [])()),
             len(orch._logic_builder.list_blocks()),
         )
 
@@ -206,7 +211,9 @@ class DecomposedModulesPhase(OrchestratorPhase):
     @classmethod
     def run(cls, orch: Any) -> None:
         from src.core.orch_base_parts._imports import (
-            AbortiveProtocol, PartialReasoningManager, AnalysisUtils,
+            AbortiveProtocol,
+            AnalysisUtils,
+            PartialReasoningManager,
         )
 
         orch._abortive = AbortiveProtocol(orch) if AbortiveProtocol is not None else None
@@ -226,8 +233,12 @@ class AgentFrameworkPhase(OrchestratorPhase):
     @classmethod
     def run(cls, orch: Any) -> None:
         from src.core.orch_base_parts._imports import (
-            AgentRunner, SurgicalAgent, ReasoningAgent,
-            BusinessLogicAgent, AutomationAgent, ValidationAgent,
+            AgentRunner,
+            AutomationAgent,
+            BusinessLogicAgent,
+            ReasoningAgent,
+            SurgicalAgent,
+            ValidationAgent,
         )
 
         orch._agent_runner = AgentRunner(
@@ -276,15 +287,21 @@ class GodLevelImprovementsPhase(OrchestratorPhase):
         orch._niche_auto_scraper = None
         orch._niche_cron = None
         try:
-            from src.core.niche_auto_scraper import NicheAutoUpdater, NicheCronScheduler  # type: ignore[import-unresolved]
+            from src.core.niche_auto_scraper import (  # type: ignore[import-unresolved]
+                NicheAutoUpdater,
+                NicheCronScheduler,
+            )
+
             if orch._template_engine:
                 niche_loader = orch._template_engine._get_niche_loader()
                 if niche_loader:
                     orch._niche_auto_scraper = NicheAutoUpdater(
-                        niche_loader=niche_loader, scrap_agent=orch.scrap,
+                        niche_loader=niche_loader,
+                        scrap_agent=orch.scrap,
                     )
                     orch._niche_cron = NicheCronScheduler(
-                        auto_updater=orch._niche_auto_scraper, interval_hours=24,
+                        auto_updater=orch._niche_auto_scraper,
+                        interval_hours=24,
                     )
                     logger.info("Phase [god_level]: NicheAutoScraper + Cron initialized")
         except ImportError as e:
@@ -293,6 +310,7 @@ class GodLevelImprovementsPhase(OrchestratorPhase):
         orch._context_pointer_engine = None
         try:
             from src.core.context_pointer_engine import SignatureIndex  # type: ignore[import-unresolved]
+
             orch._context_pointer_engine = SignatureIndex(project_root=orch.p_dir)
             logger.info("Phase [god_level]: ContextPointerEngine initialized")
         except ImportError as e:
@@ -301,6 +319,7 @@ class GodLevelImprovementsPhase(OrchestratorPhase):
         orch._low_power_mode = None
         try:
             from src.core.low_power_sequential import LowPowerSequentialMode
+
             orch._low_power_mode = LowPowerSequentialMode(governor=None)
             logger.info("Phase [god_level]: LowPowerSequentialMode initialized")
         except ImportError as e:
@@ -308,12 +327,12 @@ class GodLevelImprovementsPhase(OrchestratorPhase):
 
 
 # ── Phase execution order ──────────────────────────────────
-PHASE_ORDER: List[type] = [
-    CommonStatePhase,        # 1
-    PipelinePhase,           # 2
-    AIArchitecturePhase,     # 3
+PHASE_ORDER: list[type] = [
+    CommonStatePhase,  # 1
+    PipelinePhase,  # 2
+    AIArchitecturePhase,  # 3
     ExtendedArchitecturePhase,  # 4 (includes 4a + 4b)
     DecomposedModulesPhase,  # 5
-    AgentFrameworkPhase,     # 6
+    AgentFrameworkPhase,  # 6
     GodLevelImprovementsPhase,  # 7
 ]

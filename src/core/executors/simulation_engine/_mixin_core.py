@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import SimulationResult
 
@@ -18,9 +18,9 @@ class SimulationEngineCoreMixin:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._dry_run_executor: Optional[Any] = None  # lazy
-        self._impact_preview_engine: Optional[Any] = None  # lazy
-        self._db_path: Optional[str] = None  # initialised lazily
+        self._dry_run_executor: Any | None = None  # lazy
+        self._impact_preview_engine: Any | None = None  # lazy
+        self._db_path: str | None = None  # initialised lazily
         self._simulation_count: int = 0
 
     # ── Lazy dependencies ──────────────────────────────────────
@@ -30,6 +30,7 @@ class SimulationEngineCoreMixin:
         """Lazy-load the DryRunExecutor singleton."""
         if self._dry_run_executor is None:
             from .dry_run_executor import get_dry_run_executor
+
             self._dry_run_executor = get_dry_run_executor()
         return self._dry_run_executor
 
@@ -38,12 +39,13 @@ class SimulationEngineCoreMixin:
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
             from .impact_preview import get_impact_preview_engine
+
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 
     # ── SQLite history persistence ─────────────────────────────
 
-    def simulate_dag(self, ctx: Dict[str, Any]) -> SimulationResult:  # noqa: F821
+    def simulate_dag(self, ctx: dict[str, Any]) -> SimulationResult:
         """Run through the DAG nodes in dry-run mode.
 
         Iterates over the nodes in *ctx* (key ``"dag_nodes"`` or
@@ -64,7 +66,7 @@ class SimulationEngineCoreMixin:
             nodes = ctx.get("dag_nodes", ctx.get("actions", []))
 
             if not nodes:
-                result = SimulationResult(  # noqa: F821
+                result = SimulationResult(
                     dag_id=dag_id,
                     nodes_simulated=0,
                     would_succeed=True,
@@ -77,10 +79,10 @@ class SimulationEngineCoreMixin:
 
             start = time.monotonic()
 
-            def _run_simulation() -> SimulationResult:  # noqa: F821
-                simulated_actions: List[Any] = []
-                estimated_impacts: List[Dict[str, Any]] = []
-                node_results: Dict[str, Any] = {}
+            def _run_simulation() -> SimulationResult:
+                simulated_actions: list[Any] = []
+                estimated_impacts: list[dict[str, Any]] = []
+                node_results: dict[str, Any] = {}
                 all_succeed = True
 
                 for idx, node in enumerate(nodes):
@@ -90,15 +92,18 @@ class SimulationEngineCoreMixin:
                     node_ctx = node.get("context", {})
 
                     # Get impact preview
-                    impact_dict: Dict[str, Any] = {}
+                    impact_dict: dict[str, Any] = {}
                     try:
                         impact_dict = self.dry_run_executor.preview_action(
-                            action_type, config, node_ctx,
+                            action_type,
+                            config,
+                            node_ctx,
                         )
                     except Exception as exc:
                         __import__("logging").getLogger("zenic_agents.executors.simulation_engine").debug(
                             "SimulationEngine: preview failed for node %s: %s",
-                            node_id, exc,
+                            node_id,
+                            exc,
                         )
                         impact_dict = {"error": str(exc)}
 
@@ -124,7 +129,8 @@ class SimulationEngineCoreMixin:
                     except Exception as exc:
                         __import__("logging").getLogger("zenic_agents.executors.simulation_engine").warning(
                             "SimulationEngine: intercept failed for node %s: %s",
-                            node_id, exc,
+                            node_id,
+                            exc,
                         )
                         all_succeed = False
 
@@ -167,7 +173,8 @@ class SimulationEngineCoreMixin:
             except Exception as exc:
                 __import__("logging").getLogger("zenic_agents.executors.simulation_engine").error(
                     "SimulationEngine: simulate_dag failed for %s: %s",
-                    dag_id, exc,
+                    dag_id,
+                    exc,
                 )
                 result = SimulationResult(
                     dag_id=dag_id,
@@ -182,7 +189,9 @@ class SimulationEngineCoreMixin:
 
             __import__("logging").getLogger("zenic_agents.executors.simulation_engine").info(
                 "SimulationEngine: simulate_dag %s — nodes=%d succeed=%s duration=%.1fms",
-                dag_id, result.nodes_simulated, result.would_succeed,
+                dag_id,
+                result.nodes_simulated,
+                result.would_succeed,
                 result.total_duration_ms,
             )
 

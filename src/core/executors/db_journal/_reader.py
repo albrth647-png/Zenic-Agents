@@ -10,7 +10,6 @@ import json
 import logging
 import sqlite3
 import time
-from typing import List, Optional
 
 from src.core.shared.retry import with_retry
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 class _ReaderMixin:
     """Read and query methods for DBTransactionJournal."""
 
-    def get_journal(self, journal_id: str) -> Optional[JournalEntry]:
+    def get_journal(self, journal_id: str) -> JournalEntry | None:
         """Retrieve a journal entry by its ID.
 
         Args:
@@ -32,7 +31,7 @@ class _ReaderMixin:
             The ``JournalEntry`` if found, else ``None``.
         """
 
-        def _do_get() -> Optional[JournalEntry]:
+        def _do_get() -> JournalEntry | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             try:
@@ -59,7 +58,7 @@ class _ReaderMixin:
         db_path: str,
         tenant_id: str,
         limit: int = 100,
-    ) -> List[JournalEntry]:
+    ) -> list[JournalEntry]:
         """List journal entries for a specific database and tenant.
 
         Args:
@@ -71,7 +70,7 @@ class _ReaderMixin:
             A list of ``JournalEntry`` objects, newest first.
         """
 
-        def _do_list() -> List[JournalEntry]:
+        def _do_list() -> list[JournalEntry]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             try:
@@ -125,9 +124,10 @@ class _ReaderMixin:
                 conn.commit()
                 deleted = cursor.rowcount
                 logger.info(
-                    "DBTransactionJournal: prune_journals deleted %d entries "
-                    "older than %dh [tenant=%s]",
-                    deleted, older_than_hours, tenant_id,
+                    "DBTransactionJournal: prune_journals deleted %d entries " "older than %dh [tenant=%s]",
+                    deleted,
+                    older_than_hours,
+                    tenant_id,
                 )
                 return deleted
             finally:

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ._types import _VALID_MODES
 from ._transport import EmailTransportMixin
+from ._types import _VALID_MODES
 
 
 class EmailChannelProvider(EmailTransportMixin):
@@ -27,18 +27,18 @@ class EmailChannelProvider(EmailTransportMixin):
     def __init__(
         self,
         mode: str = "auto",
-        smtp_host: Optional[str] = None,
-        smtp_port: Optional[int] = None,
-        smtp_user: Optional[str] = None,
-        smtp_password: Optional[str] = None,
-        graph_client_id: Optional[str] = None,
-        graph_client_secret: Optional[str] = None,
-        graph_tenant_id: Optional[str] = None,
-        graph_from_email: Optional[str] = None,
+        smtp_host: str | None = None,
+        smtp_port: int | None = None,
+        smtp_user: str | None = None,
+        smtp_password: str | None = None,
+        graph_client_id: str | None = None,
+        graph_client_secret: str | None = None,
+        graph_tenant_id: str | None = None,
+        graph_from_email: str | None = None,
     ) -> None:
         """Initialize the email channel provider."""
         mode = mode.lower()
-        if mode not in _VALID_MODES:  # noqa: F821
+        if mode not in _VALID_MODES:
             mode = "auto"
         self._mode = mode
 
@@ -56,6 +56,7 @@ class EmailChannelProvider(EmailTransportMixin):
 
         # Internal state
         import threading
+
         self._lock = threading.Lock()
         self._sent_count: int = 0
         self._failed_count: int = 0
@@ -63,7 +64,7 @@ class EmailChannelProvider(EmailTransportMixin):
         self._dry_run_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()  # noqa: F821
-        self._executor: Optional[Any] = None  # Lazy-initialized EmailExecutor
+        self._executor: Any | None = None  # Lazy-initialized EmailExecutor
 
     async def start(self) -> None:
         """Initialize the provider. Idempotent."""
@@ -73,7 +74,9 @@ class EmailChannelProvider(EmailTransportMixin):
         self._started = True
         __import__("logging").getLogger("zenic_agents.channels.email").info(
             "EmailChannelProvider: started (mode=%s, smtp=%s, graph_api=%s)",
-            self._mode, self._is_smtp_configured(), self._is_graph_api_configured(),
+            self._mode,
+            self._is_smtp_configured(),
+            self._is_graph_api_configured(),
         )
 
     async def stop(self) -> None:
@@ -82,7 +85,7 @@ class EmailChannelProvider(EmailTransportMixin):
         __import__("logging").getLogger("zenic_agents.channels.email").info("EmailChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics for monitoring and health checks."""
         with self._lock:
             return {
@@ -99,7 +102,7 @@ class EmailChannelProvider(EmailTransportMixin):
             }
 
     @property
-    def rate_limit_info(self) -> "RateLimitInfo":  # noqa: F821
+    def rate_limit_info(self) -> RateLimitInfo:  # noqa: F821
         """Current rate limit status."""
         return self._rate_limit_info
 

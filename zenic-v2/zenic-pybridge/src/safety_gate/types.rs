@@ -99,6 +99,50 @@ impl SafetyVerdict {
             SafetyVerdict::RateLimited => "RATE_LIMITED",
         }
     }
+
+    /// Delegate severity() to zenic-safety canonical implementation.
+    pub fn severity(&self) -> u8 {
+        let canonical: zenic_safety::SafetyVerdict = (*self).into();
+        canonical.severity()
+    }
+
+    /// Delegate can_proceed() to zenic-safety canonical implementation.
+    pub fn can_proceed(&self) -> bool {
+        let canonical: zenic_safety::SafetyVerdict = (*self).into();
+        canonical.can_proceed()
+    }
+
+    /// Delegate escalate() to zenic-safety canonical implementation.
+    pub fn escalate(self) -> Self {
+        let canonical: zenic_safety::SafetyVerdict = self.into();
+        canonical.escalate().into()
+    }
+
+    /// Delegate is_blocked() to zenic-safety canonical implementation.
+    pub fn is_blocked(&self) -> bool {
+        let canonical: zenic_safety::SafetyVerdict = (*self).into();
+        canonical.is_blocked()
+    }
+}
+
+impl Default for SafetyVerdict {
+    fn default() -> Self {
+        SafetyVerdict::Allow
+    }
+}
+
+impl Ord for SafetyVerdict {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let a: zenic_safety::SafetyVerdict = (*self).into();
+        let b: zenic_safety::SafetyVerdict = (*other).into();
+        a.cmp(&b)
+    }
+}
+
+impl PartialOrd for SafetyVerdict {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[pymethods]
@@ -109,6 +153,28 @@ impl SafetyVerdict {
 
     fn __repr__(&self) -> String {
         format!("SafetyVerdict.{}", self.as_str())
+    }
+
+    /// Severity level (0=Allow .. 4=Deny). Delegates to zenic-safety.
+    #[getter]
+    fn severity(&self) -> u8 {
+        SafetyVerdict::severity(self)
+    }
+
+    /// Whether action can proceed. Delegates to zenic-safety.
+    fn can_proceed(&self) -> bool {
+        SafetyVerdict::can_proceed(self)
+    }
+
+    /// Escalate verdict one level. Delegates to zenic-safety.
+    fn escalate(me: &Bound<'_, Self>) -> PyResult<Self> {
+        let val: SafetyVerdict = me.extract()?;
+        Ok(val.escalate())
+    }
+
+    /// Whether verdict is blocked (Deny or RateLimited).
+    fn is_blocked(&self) -> bool {
+        SafetyVerdict::is_blocked(self)
     }
 }
 

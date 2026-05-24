@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ...._formatter import sanitize_plain_text
 from ...._types import (
@@ -22,6 +22,7 @@ logger = logging.getLogger("zenic_agents.channels.push")
 
 
 # ── Dry Run ──────────────────────────────────────────────────────
+
 
 def dry_run_send(provider: Any, message: ChannelMessage) -> ChannelResponse:
     """Log message without sending (dry-run mode).
@@ -89,10 +90,11 @@ def dry_run_confirmation(
 
 # ── Subscription Management ──────────────────────────────────────
 
+
 def register_subscription(
     provider: Any,
     user_id: str,
-    subscription: Dict[str, Any],
+    subscription: dict[str, Any],
 ) -> None:
     """Register a Web Push subscription for a user.
 
@@ -108,8 +110,7 @@ def register_subscription(
         provider._subscriptions[user_id] = subscription
 
     logger.debug(
-        "PushChannelProvider: registered subscription for user '%s' "
-        "(endpoint=%s)",
+        "PushChannelProvider: registered subscription for user '%s' " "(endpoint=%s)",
         user_id,
         subscription.get("endpoint", "N/A")[:60],
     )
@@ -140,7 +141,7 @@ def unregister_subscription(provider: Any, user_id: str) -> bool:
 def get_subscription(
     provider: Any,
     user_id: str,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Get a Web Push subscription for a user.
 
     Args:
@@ -152,4 +153,13 @@ def get_subscription(
     """
     with provider._sub_lock:
         return provider._subscriptions.get(user_id)
-__all__ = ["dry_run_confirmation", "dry_run_send", "get_subscription", "logger", "register_subscription", "unregister_subscription"]
+
+
+__all__ = [
+    "dry_run_confirmation",
+    "dry_run_send",
+    "get_subscription",
+    "logger",
+    "register_subscription",
+    "unregister_subscription",
+]

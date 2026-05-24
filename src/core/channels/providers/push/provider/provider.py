@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any
 
 from ...._types import (
     ChannelCapability,
@@ -21,27 +21,27 @@ from ...._types import (
     ConfirmationRequest,
     RateLimitInfo,
 )
-from .._vapid import _VapidMixin
 from .._fcm_auth import _FcmAuthMixin
 from .._fcm_http import _FcmHttpMixin
-from .._webpush_http import _WebPushHttpMixin
 from .._utils import (
     _HAS_AIOHTTP,
     _HAS_CRYPTOGRAPHY,
 )
-from ._routing import (
-    send_via_fcm,
-    send_via_web_push,
-    send_fcm_message,
-    send_fcm_to_topic,
-    send_web_push_message,
-)
+from .._vapid import _VapidMixin
+from .._webpush_http import _WebPushHttpMixin
 from ._helpers import (
-    dry_run_send,
     dry_run_confirmation,
+    dry_run_send,
+    get_subscription,
     register_subscription,
     unregister_subscription,
-    get_subscription,
+)
+from ._routing import (
+    send_fcm_message,
+    send_fcm_to_topic,
+    send_via_fcm,
+    send_via_web_push,
+    send_web_push_message,
 )
 
 logger = logging.getLogger("zenic_agents.channels.push")
@@ -66,11 +66,11 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
 
     def __init__(
         self,
-        vapid_private_key: Optional[str] = None,
-        vapid_public_key: Optional[str] = None,
-        vapid_subject: Optional[str] = None,
-        fcm_project_id: Optional[str] = None,
-        fcm_service_account_key_path: Optional[str] = None,
+        vapid_private_key: str | None = None,
+        vapid_public_key: str | None = None,
+        vapid_subject: str | None = None,
+        fcm_project_id: str | None = None,
+        fcm_service_account_key_path: str | None = None,
     ) -> None:
         # Web Push (VAPID) configuration
         self._vapid_private_key = vapid_private_key or os.environ.get("VAPID_PRIVATE_KEY", "")
@@ -79,22 +79,21 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
 
         # FCM configuration
         self._fcm_project_id = fcm_project_id or os.environ.get("FCM_PROJECT_ID", "")
-        self._fcm_service_account_key_path = (
-            fcm_service_account_key_path
-            or os.environ.get("FCM_SERVICE_ACCOUNT_KEY", "")
+        self._fcm_service_account_key_path = fcm_service_account_key_path or os.environ.get(
+            "FCM_SERVICE_ACCOUNT_KEY", ""
         )
 
         # Loaded FCM service account data (lazy)
-        self._fcm_service_account_data: Optional[Dict[str, str]] = None
+        self._fcm_service_account_data: dict[str, str] | None = None
         self._fcm_access_token: str = ""
         self._fcm_token_expiry: float = 0.0
 
         # Web Push subscription storage (user_id -> subscription JSON)
-        self._subscriptions: Dict[str, Dict[str, Any]] = {}
+        self._subscriptions: dict[str, dict[str, Any]] = {}
         self._sub_lock = threading.Lock()
 
         # VAPID private key object (lazy)
-        self._vapid_private_key_obj: Optional[Any] = None
+        self._vapid_private_key_obj: Any | None = None
 
         # Stats
         self._lock = threading.Lock()
@@ -107,7 +106,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         self._rate_limit_info = RateLimitInfo()
 
         # HTTP session
-        self._session: Optional[Any] = None  # aiohttp.ClientSession
+        self._session: Any | None = None  # aiohttp.ClientSession
 
     # ── ChannelProvider Protocol ────────────────────────────────
 
@@ -116,13 +115,15 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         return "push"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
-        return frozenset({
-            ChannelCapability.SEND_TEXT,
-            ChannelCapability.SEND_RICH,
-            ChannelCapability.SEND_PUSH,
-            ChannelCapability.SEND_CONFIRMATION,
-        })
+    def capabilities(self) -> frozenset[ChannelCapability]:
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_RICH,
+                ChannelCapability.SEND_PUSH,
+                ChannelCapability.SEND_CONFIRMATION,
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -132,11 +133,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
     @property
     def _has_web_push(self) -> bool:
         """Whether Web Push (VAPID) is fully configured."""
-        return bool(
-            self._vapid_private_key
-            and self._vapid_public_key
-            and self._vapid_subject
-        )
+        return bool(self._vapid_private_key and self._vapid_public_key and self._vapid_subject)
 
     @property
     def _has_fcm(self) -> bool:
@@ -161,7 +158,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
             return await send_via_web_push(self, message, user_id)
 
         # No prefix — try both backends, return first success
-        responses: List[ChannelResponse] = []
+        responses: list[ChannelResponse] = []
 
         if self._has_fcm:
             fcm_resp = await send_via_fcm(self, message, recipient)
@@ -182,7 +179,8 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         return dry_run_send(self, message)
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Send confirmation as push notification with action options."""
         if not self.is_available:
@@ -194,17 +192,14 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
             "no": "Deny",
             "more_info": "More Info",
         }
-        options_text = " | ".join(
-            option_labels.get(o, o.replace("_", " ").title())
-            for o in request.options
-        )
+        options_text = " | ".join(option_labels.get(o, o.replace("_", " ").title()) for o in request.options)
 
         body = request.message
         if options_text:
             body = f"{body}\n\nActions: {options_text}" if body else f"Actions: {options_text}"
 
         # Build data payload with confirmation metadata
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "type": "confirmation",
             "action_id": request.action_id,
             "action_type": request.action_type,
@@ -237,7 +232,9 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
 
         if _HAS_AIOHTTP and not self._session:
             import aiohttp
+
             from ._utils import _HTTP_TIMEOUT
+
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),
             )
@@ -267,7 +264,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         logger.info("PushChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {
@@ -292,7 +289,9 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
     # ── Web Push Subscription Management ────────────────────────
 
     def register_subscription(
-        self, user_id: str, subscription: Dict[str, Any],
+        self,
+        user_id: str,
+        subscription: dict[str, Any],
     ) -> None:
         """Register a Web Push subscription for a user."""
         return register_subscription(self, user_id, subscription)
@@ -301,7 +300,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         """Remove a Web Push subscription."""
         return unregister_subscription(self, user_id)
 
-    def get_subscription(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_subscription(self, user_id: str) -> dict[str, Any] | None:
         """Get a Web Push subscription for a user."""
         return get_subscription(self, user_id)
 
@@ -312,7 +311,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         token: str,
         title: str,
         body: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> ChannelResponse:
         """Send an FCM push notification to a specific device token."""
         return await send_fcm_message(self, token, title, body, data)
@@ -322,7 +321,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
         topic: str,
         title: str,
         body: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> ChannelResponse:
         """Send an FCM push notification to a topic."""
         return await send_fcm_to_topic(self, topic, title, body, data)
@@ -332,7 +331,7 @@ class PushChannelProvider(_VapidMixin, _FcmAuthMixin, _FcmHttpMixin, _WebPushHtt
     async def send_web_push(
         self,
         user_id: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """Send a Web Push notification to a registered user."""
         return await send_web_push_message(self, user_id, payload)

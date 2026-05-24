@@ -7,10 +7,10 @@ import hashlib
 import hmac
 import os
 import time
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any
 
-from ._types import _HTTP_TIMEOUT, _MMS_CHAR_LIMIT, _SMS_CHAR_LIMIT, _TWILIO_API_BASE
 from ._transport import TwilioSMSTransportMixin
+from ._types import _HTTP_TIMEOUT, _MMS_CHAR_LIMIT, _SMS_CHAR_LIMIT, _TWILIO_API_BASE
 
 
 class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
@@ -25,25 +25,26 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
 
     def __init__(
         self,
-        account_sid: Optional[str] = None,
-        auth_token: Optional[str] = None,
-        phone_number: Optional[str] = None,
-        api_base: Optional[str] = None,
+        account_sid: str | None = None,
+        auth_token: str | None = None,
+        phone_number: str | None = None,
+        api_base: str | None = None,
     ) -> None:
         self._account_sid = account_sid or os.environ.get("TWILIO_ACCOUNT_SID", "")
         self._auth_token = auth_token or os.environ.get("TWILIO_AUTH_TOKEN", "")
         self._phone_number = phone_number or os.environ.get("TWILIO_PHONE_NUMBER", "")
-        self._api_base = api_base or os.environ.get("TWILIO_API_BASE", _TWILIO_API_BASE)  # noqa: F821
+        self._api_base = api_base or os.environ.get("TWILIO_API_BASE", _TWILIO_API_BASE)
         import threading
+
         self._lock = threading.Lock()
         self._sent_count: int = 0
         self._failed_count: int = 0
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()  # noqa: F821
-        self._message_handler: Optional[MessageHandler] = None  # noqa: F821
-        self._confirmation_handler: Optional[ConfirmationHandler] = None  # noqa: F821
-        self._session: Optional[Any] = None
+        self._message_handler: MessageHandler | None = None  # noqa: F821
+        self._confirmation_handler: ConfirmationHandler | None = None  # noqa: F821
+        self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
 
@@ -52,15 +53,17 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         return "sms"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:  # noqa: F821
-        return frozenset({
-            ChannelCapability.SEND_TEXT,  # noqa: F821
-            ChannelCapability.SEND_SMS,  # noqa: F821
-            ChannelCapability.SEND_MMS,  # noqa: F821
-            ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
-            ChannelCapability.RECEIVE_MESSAGE,  # noqa: F821
-            ChannelCapability.REPLY,  # noqa: F821
-        })
+    def capabilities(self) -> frozenset[ChannelCapability]:  # noqa: F821
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,  # noqa: F821
+                ChannelCapability.SEND_SMS,  # noqa: F821
+                ChannelCapability.SEND_MMS,  # noqa: F821
+                ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
+                ChannelCapability.RECEIVE_MESSAGE,  # noqa: F821
+                ChannelCapability.REPLY,  # noqa: F821
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -78,14 +81,14 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
             text = message.text or ""
         text = sanitize_plain_text(text)  # noqa: F821
 
-        char_limit = _MMS_CHAR_LIMIT if is_mms else _SMS_CHAR_LIMIT  # noqa: F821
+        char_limit = _MMS_CHAR_LIMIT if is_mms else _SMS_CHAR_LIMIT
         segments = split_message(text, char_limit) if len(text) > char_limit else [text]  # noqa: F821
 
-        last_response: Optional[ChannelResponse] = None  # noqa: F821  # TODO: add import
+        last_response: ChannelResponse | None = None  # noqa: F821  # TODO: add import
         total_segments = len(segments)
 
         for i, segment in enumerate(segments):
-            payload: Dict[str, str] = {
+            payload: dict[str, str] = {
                 "From": self._phone_number,
                 "To": message.recipient,
                 "Body": segment,
@@ -107,24 +110,29 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
 
         if last_response and total_segments > 1:
             return ChannelResponse(  # noqa: F821  # TODO: add import
-                success=last_response.success, channel="sms",
+                success=last_response.success,
+                channel="sms",
                 message_id=last_response.message_id,
-                status=last_response.status, error=last_response.error,
+                status=last_response.status,
+                error=last_response.error,
                 metadata={**last_response.metadata, "segments": total_segments},
                 timestamp=last_response.timestamp,
             )
 
         return last_response or ChannelResponse(  # noqa: F821  # TODO: add import
-            success=False, channel="sms",
+            success=False,
+            channel="sms",
             status=DeliveryStatus.FAILED,  # noqa: F821
-            error="No message content to send", timestamp=time.time(),
+            error="No message content to send",
+            timestamp=time.time(),
         )
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,  # noqa: F821
+        self,
+        request: ConfirmationRequest,  # noqa: F821
     ) -> ChannelResponse:  # noqa: F821  # TODO: add import
         """Send a confirmation request via SMS."""
-        parts: List[str] = []
+        parts: list[str] = []
         if request.title:
             parts.append(f"⚠️ {request.title}")
         if request.message:
@@ -135,7 +143,8 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         text = "\n".join(parts)
 
         msg = ChannelMessage(  # noqa: F821
-            text=text, recipient=request.recipient,
+            text=text,
+            recipient=request.recipient,
             metadata={"action_id": request.action_id, "type": "confirmation"},
         )
         response = await self.send(msg)
@@ -148,16 +157,15 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         if self._started:
             return
         if _HAS_AIOHTTP and not self._session:  # noqa: F821
-            credentials = base64.b64encode(
-                f"{self._account_sid}:{self._auth_token}".encode("utf-8")
-            ).decode("utf-8")
+            credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
             self._session = aiohttp.ClientSession(  # noqa: F821
                 timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),  # noqa: F821
                 headers={"Authorization": f"Basic {credentials}"},
             )
         self._started = True
         __import__("logging").getLogger("zenic_agents.channels.twilio_sms").info(
-            "TwilioSMSChannelProvider: started (configured=%s)", self.is_available,
+            "TwilioSMSChannelProvider: started (configured=%s)",
+            self.is_available,
         )
 
     async def stop(self) -> None:
@@ -169,7 +177,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         __import__("logging").getLogger("zenic_agents.channels.twilio_sms").info("TwilioSMSChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {
@@ -184,17 +192,17 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
             }
 
     @property
-    def rate_limit_info(self) -> "RateLimitInfo":  # noqa: F821
+    def rate_limit_info(self) -> RateLimitInfo:  # noqa: F821
         """Current rate limit status."""
         return self._rate_limit_info
 
     # ── InboundChannelProvider Protocol ─────────────────────────
 
-    def set_message_handler(self, handler: "MessageHandler") -> None:  # noqa: F821
+    def set_message_handler(self, handler: MessageHandler) -> None:  # noqa: F821
         """Register a handler for incoming SMS messages."""
         self._message_handler = handler
 
-    def set_confirmation_handler(self, handler: "ConfirmationHandler") -> None:  # noqa: F821
+    def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:  # noqa: F821
         """Register a handler for SMS reply confirmations."""
         self._confirmation_handler = handler
 
@@ -205,7 +213,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
 
     # ── Webhook Signature Verification ──────────────────────────
 
-    def verify_signature(self, url: str, params: Dict[str, str], signature: str) -> bool:
+    def verify_signature(self, url: str, params: dict[str, str], signature: str) -> bool:
         """Verify Twilio webhook signature (HMAC-SHA1)."""
         if not self._auth_token:
             return False
@@ -221,7 +229,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         ).decode("utf-8")
         return hmac.compare(computed, signature)
 
-    def parse_inbound_message(self, params: Dict[str, str]) -> Optional[ChannelMessage]:  # noqa: F821
+    def parse_inbound_message(self, params: dict[str, str]) -> ChannelMessage | None:  # noqa: F821
         """Parse a Twilio webhook POST into a ChannelMessage."""
         body = params.get("Body", "")
         from_number = params.get("From", "")
@@ -232,13 +240,13 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         if not body and num_media == 0:
             return None
 
-        metadata: Dict[str, Any] = {
+        metadata: dict[str, Any] = {
             "twilio_message_sid": msg_sid,
             "twilio_account_sid": params.get("AccountSid", ""),
             "from_number": from_number,
             "to_number": to_number,
         }
-        media_urls: List[str] = []
+        media_urls: list[str] = []
         for i in range(num_media):
             url = params.get(f"MediaUrl{i}", "")
             if url:
@@ -247,7 +255,9 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
             metadata["media_urls"] = media_urls
 
         return ChannelMessage(  # noqa: F821  # TODO: add import
-            text=body, recipient=from_number, metadata=metadata,
+            text=body,
+            recipient=from_number,
+            metadata=metadata,
         )
 
 

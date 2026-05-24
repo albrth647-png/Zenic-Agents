@@ -5,7 +5,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._circuit_breaker import VerdictHealthSnapshot
 
@@ -48,12 +48,13 @@ class VerdictHealthMonitor:
 
         # Latency tracking
         self._total_latency = 0.0
-        self._last_call_time: Optional[float] = None
+        self._last_call_time: float | None = None
 
         self._lock = threading.RLock()
 
-    def record_call(self, success: bool, latency_s: float,
-                    was_timeout: bool = False, was_ambiguous: bool = False) -> None:
+    def record_call(
+        self, success: bool, latency_s: float, was_timeout: bool = False, was_ambiguous: bool = False
+    ) -> None:
         """Record the result of an LLM call."""
         with self._lock:
             self._total_calls += 1
@@ -70,13 +71,15 @@ class VerdictHealthMonitor:
             if was_ambiguous:
                 self._total_ambiguous += 1
 
-            self._results.append({
-                "success": success,
-                "latency": latency_s,
-                "timeout": was_timeout,
-                "ambiguous": was_ambiguous,
-                "time": time.monotonic(),
-            })
+            self._results.append(
+                {
+                    "success": success,
+                    "latency": latency_s,
+                    "timeout": was_timeout,
+                    "ambiguous": was_ambiguous,
+                    "time": time.monotonic(),
+                }
+            )
 
     @property
     def is_healthy(self) -> bool:
@@ -118,7 +121,7 @@ class VerdictHealthMonitor:
             )
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Health statistics."""
         snap = self.snapshot
         return {
@@ -136,13 +139,15 @@ class VerdictHealthMonitor:
 #  VERDICT AUDITOR
 # ============================================================
 
+
 @dataclass
 class VerdictAuditEntry:
     """Single audit entry for a verdict decision."""
+
     timestamp: float
     question: str
-    verdict: str                  # YES or NO
-    source: str                   # llm, consensus, fallback
+    verdict: str  # YES or NO
+    source: str  # llm, consensus, fallback
     llm_used: bool
     confidence: float
     latency_ms: int
@@ -182,12 +187,12 @@ class VerdictAuditor:
         with self._lock:
             self._entries.append(entry)
 
-    def get_recent(self, count: int = 20) -> List[VerdictAuditEntry]:
+    def get_recent(self, count: int = 20) -> list[VerdictAuditEntry]:
         """Get the N most recent audit entries."""
         with self._lock:
             return list(self._entries)[-count:]
 
-    def get_failure_pattern(self) -> Dict[str, Any]:
+    def get_failure_pattern(self) -> dict[str, Any]:
         """
         Analyze recent entries for failure patterns.
 
@@ -201,7 +206,7 @@ class VerdictAuditor:
             recent = list(self._entries)[-50:]  # Last 50
 
             # Count by source
-            source_counts: Dict[str, int] = {}
+            source_counts: dict[str, int] = {}
             timeout_count = 0
             ambiguous_count = 0
             max_llm_failure_streak = 0
@@ -254,7 +259,7 @@ class VerdictAuditor:
             }
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Audit statistics."""
         with self._lock:
             total = len(self._entries)
@@ -278,4 +283,3 @@ class VerdictAuditor:
 # ============================================================
 #  VERDICT RESILIENCE ORCHESTRATOR
 # ============================================================
-

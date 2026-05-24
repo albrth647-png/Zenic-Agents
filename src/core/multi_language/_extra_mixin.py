@@ -1,7 +1,6 @@
 """MultiLanguage - Additional methods."""
 
 import logging
-from typing import Dict, List
 
 logger = logging.getLogger("zenic_agents.multi_language")
 
@@ -9,14 +8,13 @@ logger = logging.getLogger("zenic_agents.multi_language")
 class MultiLanguageExtraMixin:
     """Additional methods mixin."""
 
-    def _generate_go(self, entities: List[Dict], project_name: str,
-                      description: str) -> Dict[str, str]:
+    def _generate_go(self, entities: list[dict], project_name: str, description: str) -> dict[str, str]:
         """Generate Go Gin project."""
         files = {}
         mod_name = project_name.lower().replace("-", "_")
 
         # go.mod
-        files["go.mod"] = f'''module {mod_name}
+        files["go.mod"] = f"""module {mod_name}
 
 go 1.21
 
@@ -25,7 +23,7 @@ require (
 \tgorm.io/gorm v1.25.0
 \tgorm.io/driver/sqlite v1.5.0
 )
-'''
+"""
 
         # Models
         for entity in entities:
@@ -42,12 +40,11 @@ require (
 
         return files
 
-    def _go_model(self, name: str, fields: List[Dict], mod_name: str) -> str:
+    def _go_model(self, name: str, fields: list[dict], mod_name: str) -> str:
         field_defs = "\n".join(
-            f"\t{f['name'].capitalize()} {f['type']} `json:\"{f['name']}\" gorm:\"column:{f['name']}\"`"
-            for f in fields
+            f"\t{f['name'].capitalize()} {f['type']} `json:\"{f['name']}\" gorm:\"column:{f['name']}\"`" for f in fields
         )
-        return f'''package models
+        return f"""package models
 
 import "time"
 
@@ -60,10 +57,10 @@ type {name} struct {{
 func ({name}) TableName() string {{
 \treturn "{name.lower()}s"
 }}
-'''
+"""
 
     def _go_handler(self, name: str, mod_name: str) -> str:
-        return f'''package handlers
+        return f"""package handlers
 
 import (
 \t"net/http"
@@ -126,21 +123,21 @@ func (h *{name}Handler) Delete(c *gin.Context) {{
 \th.DB.Delete(&models.{name}{{}}, id)
 \tc.JSON(http.StatusOK, gin.H{{"success": true}})
 }}
-'''
+"""
 
-    def _go_main(self, project_name: str, entities: List[Dict], mod_name: str) -> str:
+    def _go_main(self, project_name: str, entities: list[dict], mod_name: str) -> str:
         imports = [f'\t"{mod_name}/handlers"' for _ in entities]
         routes = []
         for e in entities:
             name = e.get("name", "Item")
-            routes.append(f'\t{name.lower()}Handler := handlers.New{name}Handler(db)')
+            routes.append(f"\t{name.lower()}Handler := handlers.New{name}Handler(db)")
             routes.append(f'\tv1.GET("/{name.lower()}s", {name.lower()}Handler.List)')
             routes.append(f'\tv1.GET("/{name.lower()}s/:id", {name.lower()}Handler.GetByID)')
             routes.append(f'\tv1.POST("/{name.lower()}s", {name.lower()}Handler.Create)')
             routes.append(f'\tv1.PUT("/{name.lower()}s/:id", {name.lower()}Handler.Update)')
             routes.append(f'\tv1.DELETE("/{name.lower()}s/:id", {name.lower()}Handler.Delete)')
 
-        return f'''package main
+        return f"""package main
 
 import (
 \t"{mod_name}/models"
@@ -169,10 +166,10 @@ func main() {{
 
 \tr.Run(":3000")
 }}
-'''
+"""
 
     def _go_dockerfile(self, mod_name: str) -> str:
-        return '''FROM golang:1.21-alpine AS builder
+        return """FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -184,14 +181,13 @@ RUN apk add --no-cache gcc musl-dev
 COPY --from=builder /app/server /app/server
 EXPOSE 3000
 CMD ["/app/server"]
-'''
+"""
 
     # ================================================================
     #  KOTLIN (Spring Boot + JPA)
     # ================================================================
 
-    def _generate_kotlin(self, entities: List[Dict], project_name: str,
-                          description: str) -> Dict[str, str]:
+    def _generate_kotlin(self, entities: list[dict], project_name: str, description: str) -> dict[str, str]:
         """Generate Kotlin Spring Boot project."""
         files = {}
         pkg = project_name.lower().replace("-", ".")
@@ -215,7 +211,7 @@ CMD ["/app/server"]
         return files
 
     def _kt_build(self, name: str) -> str:
-        return f'''plugins {{
+        return f"""plugins {{
 \tkotlin("jvm") version "1.9.20"
 \tkotlin("plugin.spring") version "1.9.20"
 \tkotlin("plugin.jpa") version "1.9.20"
@@ -235,10 +231,10 @@ dependencies {{
 \truntimeOnly("com.h2database:h2")
 \ttestImplementation("org.springframework.boot:spring-boot-starter-test")
 }}
-'''
+"""
 
     def _kt_main(self, name: str, pkg: str) -> str:
-        return f'''package {pkg}
+        return f"""package {pkg}
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -249,14 +245,13 @@ class Application
 fun main(args: Array<String>) {{
 \trunApplication<Application>(*args)
 }}
-'''
+"""
 
-    def _kt_model(self, name: str, fields: List[Dict], pkg: str) -> str:
+    def _kt_model(self, name: str, fields: list[dict], pkg: str) -> str:
         props = "\n".join(
-            f'\tval {f["name"]}: {f["type"]}' + ('? = null' if f["name"] != "id" else ' = null')
-            for f in fields
+            f'\tval {f["name"]}: {f["type"]}' + ("? = null" if f["name"] != "id" else " = null") for f in fields
         )
-        return f'''package {pkg}.models
+        return f"""package {pkg}.models
 
 import jakarta.persistence.*
 
@@ -265,10 +260,10 @@ import jakarta.persistence.*
 data class {name}(
 {props}
 )
-'''
+"""
 
     def _kt_repository(self, name: str, pkg: str) -> str:
-        return f'''package {pkg}.repositories
+        return f"""package {pkg}.repositories
 
 import {pkg}.models.{name}
 import org.springframework.data.jpa.repository.JpaRepository
@@ -276,10 +271,10 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface {name}Repository : JpaRepository<{name}, Long>
-'''
+"""
 
     def _kt_service(self, name: str, pkg: str) -> str:
-        return f'''package {pkg}.services
+        return f"""package {pkg}.services
 
 import {pkg}.models.{name}
 import {pkg}.repositories.{name}Repository
@@ -304,10 +299,10 @@ class {name}Service(private val repository: {name}Repository) {{
 \t\treturn if (repository.existsById(id)) {{ repository.deleteById(id); true }} else false
 \t}}
 }}
-'''
+"""
 
     def _kt_controller(self, name: str, pkg: str) -> str:
-        return f'''package {pkg}.controllers
+        return f"""package {pkg}.controllers
 
 import {pkg}.models.{name}
 import {pkg}.services.{name}Service
@@ -343,4 +338,4 @@ class {name}Controller(private val service: {name}Service) {{
 \t\tif (service.delete(id)) ResponseEntity.ok(mapOf("success" to true))
 \t\telse ResponseEntity.notFound().build()
 }}
-'''
+"""

@@ -21,24 +21,29 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..types.base import Result, Ok
+from ..config.constants import MEMORY_MAX_LONG_TERM, MEMORY_MAX_WORKING
+from ..types.base import Ok, Result
 from ..types.memory import (
-    MemoryEntry, MemoryQuery, MemoryType, MemoryCategory,
+    MemoryCategory,
+    MemoryEntry,
+    MemoryQuery,
+    MemoryType,
 )
-from ..config.constants import MEMORY_MAX_WORKING, MEMORY_MAX_LONG_TERM
-from .working_memory import WorkingMemory
-from .short_term import ShortTermMemory
 from .long_term import LongTermMemory
 from .memory_scorer import MemoryScorer
+from .short_term import ShortTermMemory
+from .working_memory import WorkingMemory
 
 logger = logging.getLogger("zenic_agents.conversational.memory.manager")
 
 
 # ─── Config del MemoryManager ─────────────────────────────────
 
+
 @dataclass
 class MemoryManagerConfig:
     """Configuracion del MemoryManager."""
+
     working_max: int = MEMORY_MAX_WORKING
     short_term_max: int = MEMORY_MAX_LONG_TERM
     long_term_max: int = MEMORY_MAX_LONG_TERM
@@ -50,9 +55,11 @@ class MemoryManagerConfig:
 
 # ─── Resultado de retrieval unificado ─────────────────────────
 
+
 @dataclass
 class UnifiedMemoryResult:
     """Resultado de busqueda unificada en todos los niveles."""
+
     entries: list[MemoryEntry] = field(default_factory=list)
     total_matches: int = 0
     search_time_ms: float = 0.0
@@ -86,6 +93,7 @@ class UnifiedMemoryResult:
 
 
 # ─── MemoryManager ────────────────────────────────────────────
+
 
 class MemoryManager:
     """
@@ -352,12 +360,10 @@ class MemoryManager:
 
         if self._long_term.should_promote(entry):
             promoted = self._long_term.promote(entry)
-            if promoted.unwrap if hasattr(promoted, 'unwrap') else promoted:
+            if promoted.unwrap if hasattr(promoted, "unwrap") else promoted:
                 self._stats["total_promoted"] += 1
 
-    def _get_existing_entries(
-        self, content: str, category: MemoryCategory
-    ) -> list[MemoryEntry]:
+    def _get_existing_entries(self, content: str, category: MemoryCategory) -> list[MemoryEntry]:
         """Busca entradas existentes similares para scoring."""
         result = self.retrieve(
             query_text=content,

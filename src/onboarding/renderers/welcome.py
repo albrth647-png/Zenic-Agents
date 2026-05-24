@@ -13,14 +13,14 @@ from __future__ import annotations
 
 import os
 import platform
-from typing import Optional
 
 try:
+    from rich.align import Align
+    from rich.box import HEAVY, ROUNDED  # noqa: F401
     from rich.console import Console
     from rich.panel import Panel
     from rich.text import Text
-    from rich.align import Align
-    from rich.box import HEAVY, ROUNDED  # noqa: F401
+
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
@@ -55,7 +55,7 @@ class WelcomeRenderer:
       4. Environment detection (Android/Termux)
     """
 
-    def __init__(self, console: Optional["Console"] = None) -> None:
+    def __init__(self, console: Console | None = None) -> None:
         self._console = console or (Console() if HAS_RICH else None)
 
     def render(self, version: str = "3.0.0") -> str:
@@ -74,6 +74,7 @@ class WelcomeRenderer:
     def _render_rich(self, version: str) -> str:
         """Render with Rich formatting."""
         import io
+
         buf = io.StringIO()
         console = Console(file=buf, force_terminal=True, width=70)
 
@@ -136,6 +137,7 @@ class WelcomeRenderer:
 
 
 # ── Convenience Function ────────────────────────────────────
+
 
 def render_welcome(version: str = "3.0.0") -> str:
     """One-shot welcome screen rendering."""

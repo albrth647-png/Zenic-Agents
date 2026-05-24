@@ -6,15 +6,17 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class ComplianceStandard(str, Enum):
     """Supported compliance standards."""
+
     HIPAA = "hipaa"
     PCI_DSS = "pci_dss"
     SOC2 = "soc2"
@@ -27,6 +29,7 @@ class ComplianceStandard(str, Enum):
 
 class ComplianceSeverity(str, Enum):
     """Severity of a compliance violation."""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -48,13 +51,14 @@ class ComplianceViolation:
         affected_resource: The resource or step that is non-compliant.
         metadata: Additional metadata.
     """
+
     rule_id: str
     standard: ComplianceStandard
     severity: ComplianceSeverity = ComplianceSeverity.MEDIUM
     description: str = ""
     remediation: str = ""
     affected_resource: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -71,13 +75,14 @@ class ComplianceResult:
         duration_ms: Duration of the check in milliseconds.
         metadata: Additional metadata.
     """
+
     compliant: bool = True
     standard: ComplianceStandard = ComplianceStandard.CUSTOM
-    violations: List[ComplianceViolation] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    violations: list[ComplianceViolation] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     checked_at: float = field(default_factory=time.time)
     duration_ms: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def has_critical(self) -> bool:
@@ -104,8 +109,7 @@ class ComplianceResult:
         medium = sum(1 for v in self.violations if v.severity == ComplianceSeverity.MEDIUM)
         low = sum(1 for v in self.violations if v.severity == ComplianceSeverity.LOW)
         return (
-            f"NON-COMPLIANT ({self.standard.value}): "
-            f"{critical} critical, {high} high, {medium} medium, {low} low"
+            f"NON-COMPLIANT ({self.standard.value}): " f"{critical} critical, {high} high, {medium} medium, {low} low"
         )
 
 
@@ -127,7 +131,7 @@ class ComplianceRule:
         standard: ComplianceStandard,
         description: str,
         severity: ComplianceSeverity = ComplianceSeverity.MEDIUM,
-        check_fn: Optional[Callable[[Dict[str, Any]], bool]] = None,
+        check_fn: Callable[[dict[str, Any]], bool] | None = None,
         remediation: str = "",
     ) -> None:
         self.rule_id = rule_id
@@ -137,7 +141,7 @@ class ComplianceRule:
         self.check_fn = check_fn or (lambda _: True)
         self.remediation = remediation
 
-    def check(self, context: Dict[str, Any]) -> Optional[ComplianceViolation]:
+    def check(self, context: dict[str, Any]) -> ComplianceViolation | None:
         """
         Check this rule against the given context.
 
@@ -161,7 +165,8 @@ class ComplianceRule:
         except Exception as exc:
             logger.error(
                 "ComplianceChecker: Rule '%s' check failed: %s",
-                self.rule_id, exc,
+                self.rule_id,
+                exc,
             )
             return ComplianceViolation(
                 rule_id=self.rule_id,
@@ -174,4 +179,13 @@ class ComplianceRule:
                 description=f"Rule check error: {exc}",
                 remediation="Fix the rule implementation or context data.",
             )
-__all__ = ["ComplianceResult", "ComplianceRule", "ComplianceSeverity", "ComplianceStandard", "ComplianceViolation", "logger"]
+
+
+__all__ = [
+    "ComplianceResult",
+    "ComplianceRule",
+    "ComplianceSeverity",
+    "ComplianceStandard",
+    "ComplianceViolation",
+    "logger",
+]

@@ -350,7 +350,7 @@ fn repro_compliance_gdpr_n100() {
 }
 
 #[test]
-fn repro_compliance_all_8_standards_n100() {
+fn repro_compliance_all_10_standards_n100() {
     use crate::compliance::ComplianceEngine;
     let engine = ComplianceEngine::new();
     let config = serde_json::json!({"data_type": "phi", "action": "access"});

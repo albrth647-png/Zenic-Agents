@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: verify import
     """Format a ChannelMessage into an HTML email body.  # noqa: F821  # TODO: verify import
 
@@ -16,7 +17,9 @@ def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: ve
 
     # Subtitle
     if message.subtitle:
-        parts.append(f'<p style="color:#666;margin:0 0 8px 0;font-size:14px;">{html_module.escape(message.subtitle)}</p>')  # noqa: F821  # TODO: verify import
+        parts.append(
+            f'<p style="color:#666;margin:0 0 8px 0;font-size:14px;">{html_module.escape(message.subtitle)}</p>'
+        )  # noqa: F821  # TODO: verify import
 
     # Body
     if message.html:
@@ -31,11 +34,12 @@ def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: ve
         for f in message.fields[:20]:
             key = html_module.escape(f.get("title", f.get("name", "")))  # noqa: F821  # TODO: verify import
             val = html_module.escape(str(f.get("value", "")))  # noqa: F821  # TODO: verify import
-            rows.append(f'<tr><td style="padding:6px 12px;font-weight:bold;border-bottom:1px solid #eee;">{key}</td>'
-                       f'<td style="padding:6px 12px;border-bottom:1px solid #eee;">{val}</td></tr>')
+            rows.append(
+                f'<tr><td style="padding:6px 12px;font-weight:bold;border-bottom:1px solid #eee;">{key}</td>'
+                f'<td style="padding:6px 12px;border-bottom:1px solid #eee;">{val}</td></tr>'
+            )
         parts.append(
-            f'<table style="border-collapse:collapse;width:100%;margin:0 0 12px 0;">'
-            f'{"".join(rows)}</table>'
+            f'<table style="border-collapse:collapse;width:100%;margin:0 0 12px 0;">' f'{"".join(rows)}</table>'
         )
 
     # Image
@@ -46,13 +50,12 @@ def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: ve
 
     # Footer
     if message.footer:
-        parts.append(f'<p style="color:#999;font-size:12px;margin:12px 0 0 0;">{html_module.escape(message.footer)}</p>')  # noqa: F821  # TODO: verify import
+        parts.append(
+            f'<p style="color:#999;font-size:12px;margin:12px 0 0 0;">{html_module.escape(message.footer)}</p>'
+        )  # noqa: F821  # TODO: verify import
 
     body = "\n".join(parts)
-    return (
-        f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
-        f'{body}</div>'
-    )
+    return f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">' f"{body}</div>"
 
 
 def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # noqa: F821  # TODO: verify import
@@ -77,7 +80,7 @@ def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # noqa
         label = button_labels.get(option, option.replace("_", " ").title())
         buttons.append(
             f'<a href="#action-{option}" style="display:inline-block;padding:10px 20px;'
-            f'background-color:{color};color:white;text-decoration:none;border-radius:4px;'
+            f"background-color:{color};color:white;text-decoration:none;border-radius:4px;"
             f'margin-right:8px;font-weight:bold;">{label}</a>'
         )
 

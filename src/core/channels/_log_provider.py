@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Dict, FrozenSet
+from typing import Any
 
 from ._types import (
     ChannelCapability,
@@ -49,12 +49,14 @@ class LogChannelProvider:
         return "log"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
-        return frozenset({
-            ChannelCapability.SEND_TEXT,
-            ChannelCapability.SEND_RICH,
-            ChannelCapability.SEND_CONFIRMATION,
-        })
+    def capabilities(self) -> frozenset[ChannelCapability]:
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_RICH,
+                ChannelCapability.SEND_CONFIRMATION,
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -100,9 +102,7 @@ class LogChannelProvider:
             timestamp=time.time(),
         )
 
-    async def send_confirmation(
-        self, request: ConfirmationRequest
-    ) -> ChannelResponse:
+    async def send_confirmation(self, request: ConfirmationRequest) -> ChannelResponse:
         """Log the confirmation request at INFO level.
 
         Args:
@@ -137,7 +137,7 @@ class LogChannelProvider:
         """No-op — logging cannot be stopped."""
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {

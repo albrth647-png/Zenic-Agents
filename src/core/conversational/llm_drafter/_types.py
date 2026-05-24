@@ -1,13 +1,13 @@
 """Types and constants for llm_drafter."""
 
 from __future__ import annotations
+
 import logging
-from typing import Dict
 
 logger = logging.getLogger("zenic_agents.conversational.llm_drafter")
 
 # Personalities:
-PERSONALITY_PROMPTS: Dict[str, str] = {
+PERSONALITY_PROMPTS: dict[str, str] = {
     "zenic": (
         "You are Zenic, a professional and helpful AI coding assistant. "
         "You explain things clearly and concisely. You are thorough but not verbose."

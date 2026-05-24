@@ -13,7 +13,7 @@ export interface AuthUser {
 /**
  * Get the authenticated user from the session or API key.
  * Supports both NextAuth session and API key authentication.
- * 
+ *
  * #41 Fix: All API endpoints MUST use this function to verify identity.
  */
 export async function getAuthUser(req?: NextRequest): Promise<AuthUser | null> {
@@ -107,7 +107,7 @@ function verifyRequestSignature(url: string, timestamp: string, signature: strin
   // Verify HMAC
   const message = `${url}:${timestamp}`;
   const expected = crypto.createHmac('sha256', secret).update(message).digest('hex');
-  
+
   // Timing-safe comparison to prevent timing attacks
   try {
     return crypto.timingSafeEqual(

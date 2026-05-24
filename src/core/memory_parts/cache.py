@@ -12,16 +12,19 @@ FASE 1.2 Performance Fix:
 - This eliminates SQLITE_BUSY errors from competing connection systems.
 """
 
-import time
 import hashlib
-from typing import Optional, Dict, Any, List
+import time
+from typing import Any
 
+from .pool import SMART_MEMORY_DB, smart_memory_pool
 from .types import (
-    MemoryEntry, MAX_WORKING_ENTRIES, MAX_COMPRESSED_TOKENS,
-    IMPORTANCE_THRESHOLD, SEMANTIC_CACHE_THRESHOLD,
+    HAS_NUMPY,
+    IMPORTANCE_THRESHOLD,
+    MAX_COMPRESSED_TOKENS,
+    MAX_WORKING_ENTRIES,
+    SEMANTIC_CACHE_THRESHOLD,
+    MemoryEntry,
 )
-from .types import HAS_NUMPY
-from .pool import smart_memory_pool, SMART_MEMORY_DB
 
 if HAS_NUMPY:
     pass
@@ -40,10 +43,10 @@ class CacheMixin:
     #  1. SEMANTIC CACHE (tenant-aware)
     # ================================================================
 
-    def check_cache(self, query: str) -> Optional[Dict[str, Any]]:
+    def check_cache(self, query: str) -> dict[str, Any] | None:
         """
         Busca en el cache semántico: "Ya respondí algo similar antes?"
-        
+
         Usa embeddings si SemanticEngine está disponible, si no usa hash exacto.
         Scoped by tenant_id and client_id.
         Returns cached response or None.
@@ -58,11 +61,13 @@ class CacheMixin:
                 """SELECT response_summary, operation, goal, importance, access_count, id
                    FROM semantic_cache
                    WHERE query_hash=? AND tenant_id=? AND client_id=?""",
-                (query_hash, self._tenant_id, self._client_id)
+                (query_hash, self._tenant_id, self._client_id),
             ).fetchone()
             if row:
                 # Update access count
-                conn.execute("UPDATE semantic_cache SET access_count=access_count+1 WHERE id=?", (row[5],))  # nosemgrep: sqlalchemy-execute-raw-query
+                conn.execute(
+                    "UPDATE semantic_cache SET access_count=access_count+1 WHERE id=?", (row[5],)
+                )  # nosemgrep: sqlalchemy-execute-raw-query
                 return {
                     "response": row[0],
                     "operation": row[1],
@@ -82,7 +87,7 @@ class CacheMixin:
                        FROM semantic_cache
                        WHERE tenant_id=? AND client_id=?
                        ORDER BY id DESC LIMIT 100""",
-                    (self._tenant_id, self._client_id)
+                    (self._tenant_id, self._client_id),
                 ).fetchall()
 
                 for row in rows:
@@ -92,7 +97,9 @@ class CacheMixin:
                         if sim >= SEMANTIC_CACHE_THRESHOLD:
                             # FASE 1.2: Use pool's write() for UPDATE (access_count)
                             with smart_memory_pool.write(SMART_MEMORY_DB) as w_conn:
-                                w_conn.execute("UPDATE semantic_cache SET access_count=access_count+1 WHERE id=?", (row[0],))  # nosemgrep: sqlalchemy-execute-raw-query
+                                w_conn.execute(
+                                    "UPDATE semantic_cache SET access_count=access_count+1 WHERE id=?", (row[0],)
+                                )  # nosemgrep: sqlalchemy-execute-raw-query
                             return {
                                 "response": row[2],
                                 "operation": row[3],
@@ -104,14 +111,13 @@ class CacheMixin:
 
         return None
 
-    def save_to_cache(self, query: str, response: str, operation: str = "",
-                       goal: str = "", importance: float = 0.5):
+    def save_to_cache(self, query: str, response: str, operation: str = "", goal: str = "", importance: float = 0.5):
         """Guarda una entrada en el cache semántico (tenant-aware).
 
         FASE 1.2: Uses smart_memory_pool.write() for INSERT.
         """
         query_hash = hashlib.sha256(query.lower().strip().encode()).hexdigest()
-        
+
         # Compute embedding if possible
         emb_blob = None
         if self._semantic and self._semantic.is_loaded:
@@ -125,13 +131,23 @@ class CacheMixin:
         # FASE 1.2: Use pool's write() for INSERT (auto-commit, write-locked)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                """INSERT OR REPLACE INTO semantic_cache 
+                """INSERT OR REPLACE INTO semantic_cache
                    (query_hash, query_text, response_summary, operation, goal,
                     importance, embedding, created_at, session_id, client_id, tenant_id)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (query_hash, query[:500], response_summary, operation, goal,
-                 importance, emb_blob, time.time(), self._session_id,
-                 self._client_id, self._tenant_id)
+                (
+                    query_hash,
+                    query[:500],
+                    response_summary,
+                    operation,
+                    goal,
+                    importance,
+                    emb_blob,
+                    time.time(),
+                    self._session_id,
+                    self._client_id,
+                    self._tenant_id,
+                ),
             )
             # write() auto-commits on exit
 
@@ -143,8 +159,7 @@ class CacheMixin:
     #  2. WORKING MEMORY (context for Qwen, tenant-aware)
     # ================================================================
 
-    def add_working(self, query: str, response: str, operation: str = "", 
-                     goal: str = "", importance: float = 0.5):
+    def add_working(self, query: str, response: str, operation: str = "", goal: str = "", importance: float = 0.5):
         """Añade entrada a la memoria de trabajo (contexto actual, tenant-aware)."""
         entry = MemoryEntry(
             query=query[:500],
@@ -168,7 +183,7 @@ class CacheMixin:
     def get_working_context(self, max_tokens: int = MAX_COMPRESSED_TOKENS) -> str:
         """
         Obtiene contexto comprimido de la memoria de trabajo para Qwen.
-        
+
         Formato: "Previous context: [summarized interactions]"
         Scoped by tenant_id and client_id.
         """
@@ -179,23 +194,22 @@ class CacheMixin:
             # Build context from working memory, prioritizing important entries
             # Filter by tenant_id and client_id
             scoped_entries = [
-                e for e in self._working_memory
-                if e.tenant_id == self._tenant_id and e.client_id == self._client_id
+                e for e in self._working_memory if e.tenant_id == self._tenant_id and e.client_id == self._client_id
             ]
             sorted_entries = sorted(scoped_entries, key=lambda e: (-e.importance, -e.timestamp))
 
         context_parts = []
         token_estimate = 0
-        
+
         for entry in sorted_entries:
             part = f"[{entry.operation}/{entry.goal}] Q: {entry.query[:80]}"
             if entry.response:
                 part += f" → A: {entry.response[:100]}"
-            
+
             part_tokens = len(part.split())  # Rough estimate
             if token_estimate + part_tokens > max_tokens:
                 break
-            
+
             context_parts.append(part)
             token_estimate += part_tokens
 
@@ -204,10 +218,7 @@ class CacheMixin:
 
         return "Previous context: " + " | ".join(context_parts)
 
-    def get_recent_operations(self, n: int = 5) -> List[str]:
+    def get_recent_operations(self, n: int = 5) -> list[str]:
         """Obtiene las últimas N operaciones realizadas (tenant-scoped)."""
         with self._working_lock:
-            return [
-                e.operation for e in self._working_memory[-n:]
-                if e.operation and e.tenant_id == self._tenant_id
-            ]
+            return [e.operation for e in self._working_memory[-n:] if e.operation and e.tenant_id == self._tenant_id]

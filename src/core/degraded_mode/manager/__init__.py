@@ -1,16 +1,18 @@
 """Re-exports for manager package."""
 
-
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional
 
-__all__ = ["logging", "time", "Callable", "Dict", "List", "Optional"]
+__all__ = ["Callable", "Dict", "List", "Optional", "logging", "time"]
 
 _lock = threading.Lock()
+
+
 def get_degraded_mode_manager(**kwargs: Any) -> DegradedModeManager:  # noqa: F821  # TODO: verify import
-    """Get or create the global DegradedModeManager instance."""  # noqa: F821  # TODO: verify import
+    """Get or create the global DegradedModeManager instance."""  # TODO: verify import
     global _degraded_mode_manager
     with _lock:
         if _degraded_mode_manager is None:
@@ -19,7 +21,6 @@ def get_degraded_mode_manager(**kwargs: Any) -> DegradedModeManager:  # noqa: F8
 
 
 def reset_degraded_mode_manager() -> None:
-    """Reset the global DegradedModeManager (for testing)."""  # noqa: F821  # TODO: verify import
+    """Reset the global DegradedModeManager (for testing)."""  # TODO: verify import
     global _degraded_mode_manager
     _degraded_mode_manager = None
-

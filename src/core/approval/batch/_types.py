@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -19,7 +19,7 @@ class BatchRequest:
 
     batch_id: str = ""
     action_type: str = ""
-    action_configs: List[Dict[str, Any]] = field(default_factory=list)
+    action_configs: list[dict[str, Any]] = field(default_factory=list)
     requested_by: int = 0
     required_role: str = ""
     status: str = "pending"
@@ -28,7 +28,7 @@ class BatchRequest:
     rejected_count: int = 0
     created_at: str = ""
     # Stores the individual request_ids created via ApprovalChain
-    request_ids: List[str] = field(default_factory=list)
+    request_ids: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.batch_id:
@@ -38,7 +38,7 @@ class BatchRequest:
         if self.total_count == 0 and self.action_configs:
             self.total_count = len(self.action_configs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "batch_id": self.batch_id,
@@ -63,10 +63,10 @@ class BatchResult:
     total: int = 0
     approved: int = 0
     rejected: int = 0
-    errors: List[str] = field(default_factory=list)
-    individual_results: List[Dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    individual_results: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "batch_id": self.batch_id,
@@ -76,4 +76,6 @@ class BatchResult:
             "errors": self.errors,
             "individual_results": self.individual_results,
         }
-__all__ = ["BatchRequest", "BatchResult", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_DELAY", "BatchRequest", "BatchResult"]

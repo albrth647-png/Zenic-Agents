@@ -8,13 +8,13 @@ for the EmailExecutor.
 from __future__ import annotations
 
 import email.encoders
+import email.mime.base
 import email.mime.multipart
 import email.mime.text
-import email.mime.base
 import email.utils
 import logging
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..base import ActionResult
 
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import aiosmtplib  # type: ignore[import-unresolved]  # noqa: F401
+
     _HAS_AIOSMTPLIB_LOCAL = True
 except ImportError:
     _HAS_AIOSMTPLIB_LOCAL = False
@@ -31,8 +32,9 @@ except ImportError:
 # ── Optional: urllib fallback ─────────────────────────────────────
 
 try:
+    import urllib.error
     import urllib.request
-    import urllib.error  # noqa: F401
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -46,15 +48,15 @@ _SMTP_TIMEOUT = 30  # seconds
 
 def build_mime_message(
     from_email: str,
-    recipients: List[str],
+    recipients: list[str],
     subject: str,
     body: str,
     html: str,
-    cc: Optional[List[str]] = None,
-    bcc: Optional[List[str]] = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
     reply_to: str = "",
     importance: str = "normal",
-    attachments: Optional[List[Dict[str, Any]]] = None,
+    attachments: list[dict[str, Any]] | None = None,
 ) -> email.mime.multipart.MIMEMultipart:
     """Build a MIME message for SMTP sending."""
     msg = email.mime.multipart.MIMEMultipart("alternative")
@@ -83,9 +85,10 @@ def build_mime_message(
         msg.attach(email.mime.text.MIMEText(" ", "plain", "utf-8"))
 
     # Attachments
-    for att in (attachments or []):
+    for att in attachments or []:
         part = email.mime.base.MIMEBase(
-            "application", att.get("content_type", "octet-stream"),
+            "application",
+            att.get("content_type", "octet-stream"),
         )
         content = att.get("content_bytes", b"")
         if isinstance(content, str):
@@ -101,7 +104,7 @@ def build_mime_message(
     return msg
 
 
-def resolve_recipients(config: Dict[str, Any]) -> List[str]:
+def resolve_recipients(config: dict[str, Any]) -> list[str]:
     """Resolve recipients from config, normalizing to a list."""
     to = config.get("to", [])
     if isinstance(to, str):
@@ -112,7 +115,7 @@ def resolve_recipients(config: Dict[str, Any]) -> List[str]:
 
 
 def build_dry_run_result(
-    recipients: List[str],
+    recipients: list[str],
     subject: str,
     reason: str,
 ) -> ActionResult:
@@ -120,7 +123,9 @@ def build_dry_run_result(
     dry_run_id = f"dry-run-{uuid.uuid4().hex[:12]}"
     logger.info(
         "EmailExecutor: Dry-run (reason=%s) to=%s subject='%s'",
-        reason, recipients, subject[:50],
+        reason,
+        recipients,
+        subject[:50],
     )
     return ActionResult(
         True,
@@ -136,12 +141,12 @@ def build_dry_run_result(
 
 
 __all__ = [
-    "build_mime_message",
-    "resolve_recipients",
-    "build_dry_run_result",
     "_HAS_AIOSMTPLIB_LOCAL",
     "_HAS_URLLIB",
-    "_VALID_MODES",
-    "_VALID_IMPORTANCE",
     "_SMTP_TIMEOUT",
+    "_VALID_IMPORTANCE",
+    "_VALID_MODES",
+    "build_dry_run_result",
+    "build_mime_message",
+    "resolve_recipients",
 ]

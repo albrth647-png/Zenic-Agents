@@ -12,12 +12,13 @@ it fell back to sync stubs that only logged, bypassing real executors.
 """
 
 import asyncio
-import time
 import logging
+import time
 
 from .types import (
+    Action,
     ActionType,
-    Action, WorkflowExecution,
+    WorkflowExecution,
 )
 
 logger = logging.getLogger(__name__)
@@ -166,9 +167,7 @@ class ExecutionMixin:
         """Ejecuta una acción individual usando ActionExecutor async."""
         if self._executor_registry:
             try:
-                result = await self._executor_registry.execute_action(
-                    action.type.value, action.config, {}
-                )
+                result = await self._executor_registry.execute_action(action.type.value, action.config, {})
                 if result.success:
                     logger.info(f"Automation: {action.type.value} executed successfully in {result.duration_ms:.0f}ms")
                 else:
@@ -186,9 +185,7 @@ class ExecutionMixin:
         # Use real ActionExecutor if registry is available
         if self._executor_registry:
             try:
-                result = self._executor_registry.execute_action(
-                    action.type.value, action.config, {}
-                )
+                result = self._executor_registry.execute_action(action.type.value, action.config, {})
                 if result.success:
                     logger.info(f"Automation: {action.type.value} executed successfully in {result.duration_ms:.0f}ms")
                 else:
@@ -204,7 +201,9 @@ class ExecutionMixin:
             logger.info(f"Automation: Notification - {action.config.get('message', 'No message')}")
             return True
         elif action.type == ActionType.SEND_EMAIL:
-            logger.info(f"Automation: Email to {action.config.get('to', 'N/A')} - {action.config.get('subject', 'N/A')}")
+            logger.info(
+                f"Automation: Email to {action.config.get('to', 'N/A')} - {action.config.get('subject', 'N/A')}"
+            )
             return True
         elif action.type == ActionType.DATABASE_OPERATION:
             logger.info(f"Automation: Database {action.config.get('operation', 'query')}")
@@ -219,7 +218,9 @@ class ExecutionMixin:
             logger.info("Automation: Data sync")
             return True
         elif action.type == ActionType.HTTP_REQUEST:
-            logger.info(f"Automation: HTTP {action.config.get('method', 'GET')} {_sanitize(action.config.get('url', 'N/A'))}")
+            logger.info(
+                f"Automation: HTTP {action.config.get('method', 'GET')} {_sanitize(action.config.get('url', 'N/A'))}"
+            )
             return True
         elif action.type == ActionType.FILE_OPERATION:
             logger.info(f"Automation: File operation - {action.config.get('operation', 'N/A')}")

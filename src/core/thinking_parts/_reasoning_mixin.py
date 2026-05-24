@@ -3,14 +3,20 @@ Reasoning methods mixin for ThinkingEngine — reason, evaluate_code,
 decompose_problem, design_architecture, chain_of_thought.
 """
 
-import re
 import json
+import re
 import time
 
 from ._imports import (
-    MAX_THINKING_TOKENS, MAX_PLAN_TOKENS, MAX_DECOMPOSE_TOKENS,
-    MAX_EVALUATE_TOKENS, CHAIN_MAX_STEPS, ThinkingResult,
-    AUTOMATION_TEMPLATES, APP_TEMPLATES, GenerationPlan,
+    APP_TEMPLATES,
+    AUTOMATION_TEMPLATES,
+    CHAIN_MAX_STEPS,
+    MAX_DECOMPOSE_TOKENS,
+    MAX_EVALUATE_TOKENS,
+    MAX_PLAN_TOKENS,
+    MAX_THINKING_TOKENS,
+    GenerationPlan,
+    ThinkingResult,
 )
 
 
@@ -96,7 +102,7 @@ class ReasoningMixin:
             )
             if answer:
                 try:
-                    match = re.search(r'\{.*\}', answer, re.DOTALL)
+                    match = re.search(r"\{.*\}", answer, re.DOTALL)
                     if match:
                         eval_result = json.loads(match.group())
                         if "score" in eval_result:
@@ -136,7 +142,7 @@ class ReasoningMixin:
         )
         if answer:
             try:
-                match = re.search(r'\[.*\]', answer, re.DOTALL)
+                match = re.search(r"\[.*\]", answer, re.DOTALL)
                 if match:
                     subproblems = json.loads(match.group())
                     if isinstance(subproblems, list):
@@ -148,19 +154,39 @@ class ReasoningMixin:
     def _fallback_decompose(self, problem: str) -> list:
         """Descomposición determinística basada en keywords."""
         subproblems = [
-            {"name": "analyze_requirements", "description": "Analyze the requirements and define scope", "priority": "high"},
-            {"name": "design_data_model", "description": "Design the data model and database schema", "priority": "high"},
+            {
+                "name": "analyze_requirements",
+                "description": "Analyze the requirements and define scope",
+                "priority": "high",
+            },
+            {
+                "name": "design_data_model",
+                "description": "Design the data model and database schema",
+                "priority": "high",
+            },
             {"name": "implement_api", "description": "Implement API endpoints and business logic", "priority": "high"},
             {"name": "add_validation", "description": "Add input validation and error handling", "priority": "medium"},
             {"name": "create_tests", "description": "Create test cases for critical paths", "priority": "medium"},
         ]
         problem_lower = problem.lower()
         if any(kw in problem_lower for kw in ["auth", "login", "seguridad"]):
-            subproblems.insert(2, {"name": "implement_auth", "description": "Implement authentication and authorization", "priority": "high"})
+            subproblems.insert(
+                2,
+                {
+                    "name": "implement_auth",
+                    "description": "Implement authentication and authorization",
+                    "priority": "high",
+                },
+            )
         if any(kw in problem_lower for kw in ["email", "notificacion", "notification"]):
-            subproblems.insert(3, {"name": "setup_notifications", "description": "Setup notification/email system", "priority": "medium"})
+            subproblems.insert(
+                3,
+                {"name": "setup_notifications", "description": "Setup notification/email system", "priority": "medium"},
+            )
         if any(kw in problem_lower for kw in ["reporte", "report", "pdf"]):
-            subproblems.insert(3, {"name": "setup_reports", "description": "Setup report generation system", "priority": "medium"})
+            subproblems.insert(
+                3, {"name": "setup_reports", "description": "Setup report generation system", "priority": "medium"}
+            )
         return subproblems[:5]
 
     def design_architecture(self, request: str) -> dict:
@@ -174,7 +200,7 @@ class ReasoningMixin:
         )
         if answer:
             try:
-                match = re.search(r'\{.*\}', answer, re.DOTALL)
+                match = re.search(r"\{.*\}", answer, re.DOTALL)
                 if match:
                     arch = json.loads(match.group())
                     arch["generation_plan"] = plan
@@ -233,7 +259,14 @@ class ReasoningMixin:
                 break
             steps.append(step_result)
             current_context = f"Previous reasoning: {step_result[:200]}\n\nNow continue reasoning about: {problem}"
-            conclusion_markers = ["therefore", "in conclusion", "the answer is", "final answer", "por lo tanto", "en conclusión"]
+            conclusion_markers = [
+                "therefore",
+                "in conclusion",
+                "the answer is",
+                "final answer",
+                "por lo tanto",
+                "en conclusión",
+            ]
             if any(marker in step_result.lower() for marker in conclusion_markers):
                 break
 

@@ -7,17 +7,17 @@ pause, resume, cancel) for the AutopilotEngine class.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
-
-from ._status import AutopilotStatus
+from typing import Any
 
 from src.core.autopilot.objective import (
     Objective,
-    ObjectiveTarget,
     ObjectivePriority,
     ObjectiveStatus,
+    ObjectiveTarget,
 )
 from src.core.autopilot.planner import PlannedAction
+
+from ._status import AutopilotStatus
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class _LifecycleMixin:
         self,
         name: str,
         description: str,
-        targets: List[Dict[str, Any]],
+        targets: list[dict[str, Any]],
         priority: str = "normal",
         deadline: str = "",
         tenant_id: str = "",
@@ -77,7 +77,9 @@ class _LifecycleMixin:
 
         logger.info(
             "AutopilotEngine: Created objective %s '%s' with %d targets",
-            objective.objective_id, name, len(objective_targets),
+            objective.objective_id,
+            name,
+            len(objective_targets),
         )
         return objective
 
@@ -125,7 +127,9 @@ class _LifecycleMixin:
 
         logger.info(
             "AutopilotEngine: Started objective %s with plan %s (%d steps)",
-            objective_id, plan.plan_id, len(plan.steps),
+            objective_id,
+            plan.plan_id,
+            len(plan.steps),
         )
         return plan
 

@@ -8,7 +8,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class OrchestratorBuilder:
     """
 
     # Required keys for build() – at least these must be set
-    _REQUIRED_FULL: Dict[str, str] = {
+    _REQUIRED_FULL: dict[str, str] = {
         "model_manager": "ModelManager",
         "semantic_engine": "SemanticEngine",
         "mini_ai": "MiniAIEngine",
@@ -57,13 +57,13 @@ class OrchestratorBuilder:
     }
 
     # Required keys for build_minimal()
-    _REQUIRED_MINIMAL: Dict[str, str] = {
+    _REQUIRED_MINIMAL: dict[str, str] = {
         "model_manager": "ModelManager",
         "mini_ai": "MiniAIEngine",
     }
 
     def __init__(self) -> None:
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     # Fluent setters
@@ -123,7 +123,7 @@ class OrchestratorBuilder:
     # Build
     # ------------------------------------------------------------------
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """
         Build and validate a full orchestrator configuration dict.
 
@@ -133,22 +133,17 @@ class OrchestratorBuilder:
         Raises:
             ValueError: If any required component is missing.
         """
-        missing = [
-            key for key, label in self._REQUIRED_FULL.items()
-            if key not in self._config
-        ]
+        missing = [key for key, label in self._REQUIRED_FULL.items() if key not in self._config]
         if missing:
             labels = [self._REQUIRED_FULL[k] for k in missing]
-            raise ValueError(
-                f"OrchestratorBuilder: missing required components: {', '.join(labels)}"
-            )
+            raise ValueError(f"OrchestratorBuilder: missing required components: {', '.join(labels)}")
         logger.debug(
             "OrchestratorBuilder: built full config with %d components",
             len(self._config),
         )
         return dict(self._config)
 
-    def build_minimal(self) -> Dict[str, Any]:
+    def build_minimal(self) -> dict[str, Any]:
         """
         Build a minimal orchestrator configuration dict.
 
@@ -160,15 +155,10 @@ class OrchestratorBuilder:
         Raises:
             ValueError: If any minimal required component is missing.
         """
-        missing = [
-            key for key, label in self._REQUIRED_MINIMAL.items()
-            if key not in self._config
-        ]
+        missing = [key for key, label in self._REQUIRED_MINIMAL.items() if key not in self._config]
         if missing:
             labels = [self._REQUIRED_MINIMAL[k] for k in missing]
-            raise ValueError(
-                f"OrchestratorBuilder: missing minimal components: {', '.join(labels)}"
-            )
+            raise ValueError(f"OrchestratorBuilder: missing minimal components: {', '.join(labels)}")
         logger.debug(
             "OrchestratorBuilder: built minimal config with %d components",
             len(self._config),

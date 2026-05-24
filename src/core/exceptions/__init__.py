@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 try:
     from .taxonomy import (
         ExceptionCategory,
+        ExceptionContext,
         ExceptionSeverity,
         ZenicException,
-        ExceptionContext,
     )
 except ImportError as exc:
     logger.warning("exceptions: failed to import taxonomy submodule: %s", exc)
@@ -49,8 +49,8 @@ except ImportError as exc:
 try:
     from .engine import (
         ExceptionEngine,
-        ExceptionSignal,
         ExceptionRecord,
+        ExceptionSignal,
         get_exception_engine,
         reset_exception_engine,
     )
@@ -67,8 +67,8 @@ except ImportError as exc:
 try:
     from .routing import (
         ExceptionRouter,
-        RoutingRule,
         RoutingAction,
+        RoutingRule,
         get_exception_router,
         reset_exception_router,
     )
@@ -84,9 +84,9 @@ except ImportError as exc:
 
 try:
     from .analytics import (
+        AnalyticsSnapshot,
         ExceptionAnalytics,
         ExceptionPattern,
-        AnalyticsSnapshot,
         get_exception_analytics,
         reset_exception_analytics,
     )
@@ -101,4 +101,26 @@ except ImportError as exc:
 
 # ── Public API ────────────────────────────────────────────────
 
-__all__ = ["AnalyticsSnapshot", "Any", "ExceptionAnalytics", "ExceptionCategory", "ExceptionContext", "ExceptionEngine", "ExceptionPattern", "ExceptionRecord", "ExceptionRouter", "ExceptionSeverity", "ExceptionSignal", "Optional", "RoutingAction", "RoutingRule", "ZenicException", "get_exception_analytics", "get_exception_engine", "get_exception_router", "reset_exception_analytics", "reset_exception_engine", "reset_exception_router"]
+__all__ = [
+    "AnalyticsSnapshot",
+    "Any",
+    "ExceptionAnalytics",
+    "ExceptionCategory",
+    "ExceptionContext",
+    "ExceptionEngine",
+    "ExceptionPattern",
+    "ExceptionRecord",
+    "ExceptionRouter",
+    "ExceptionSeverity",
+    "ExceptionSignal",
+    "Optional",
+    "RoutingAction",
+    "RoutingRule",
+    "ZenicException",
+    "get_exception_analytics",
+    "get_exception_engine",
+    "get_exception_router",
+    "reset_exception_analytics",
+    "reset_exception_engine",
+    "reset_exception_router",
+]

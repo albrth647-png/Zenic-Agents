@@ -23,15 +23,16 @@ import logging
 import threading
 from typing import Any, Optional
 
-from ..backend import BackendConfig, CoordinationBackend
 from src.core.patterns.resilience.retry import RetryConfig, with_retry
-from ._types import TaskMessage, TaskPriority, TaskStatus
+
+from ..backend import BackendConfig, CoordinationBackend
 from ._core_mixin import CoreMixin
 from ._lifecycle_mixin import LifecycleMixin
+from ._types import TaskMessage, TaskPriority, TaskStatus
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["DistributedTaskQueue", "TaskMessage", "TaskStatus", "TaskPriority", "Any", "BackendConfig", "with_retry"]
+__all__ = ["Any", "BackendConfig", "DistributedTaskQueue", "TaskMessage", "TaskPriority", "TaskStatus", "with_retry"]
 
 
 class DistributedTaskQueue(CoreMixin, LifecycleMixin):
@@ -81,7 +82,7 @@ class DistributedTaskQueue(CoreMixin, LifecycleMixin):
         backend: CoordinationBackend,
         max_queue_depth: int = DEFAULT_MAX_QUEUE_DEPTH,
         default_lease_seconds: float = 120.0,
-        retry_config: Optional[RetryConfig] = None,
+        retry_config: RetryConfig | None = None,
     ) -> None:
         """
         Initialize the distributed task queue.

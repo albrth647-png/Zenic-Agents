@@ -1,21 +1,23 @@
 """Types and constants for dag_builder."""
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class NodeStatus(str, Enum):
     """Status of a DAG node."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"
-
 
 
 @dataclass
@@ -31,19 +33,19 @@ class DAGNode:
         status: Current execution status.
         metadata: Additional metadata for observability.
     """
+
     node_id: str
     name: str = ""
     node_type: str = "generic"
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     status: NodeStatus = NodeStatus.PENDING
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.node_id:
             raise ValueError("DAGNode node_id must not be empty")
         if not self.name:
             self.name = self.node_id
-
 
 
 @dataclass
@@ -57,6 +59,7 @@ class DAGEdge:
         edge_type: Type of dependency (e.g. 'data', 'control').
         label: Optional human-readable label.
     """
+
     source_id: str
     target_id: str
     edge_type: str = "data"
@@ -65,7 +68,6 @@ class DAGEdge:
     def __post_init__(self) -> None:
         if not self.source_id or not self.target_id:
             raise ValueError("DAGEdge source_id and target_id must not be empty")
-
 
 
 @dataclass
@@ -80,9 +82,12 @@ class DAGValidationResult:
         cycles: List of detected cycles (each cycle is a list of node IDs).
         orphan_nodes: Node IDs with no incoming or outgoing edges.
     """
+
     is_valid: bool = True
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    cycles: List[List[str]] = field(default_factory=list)
-    orphan_nodes: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    cycles: list[list[str]] = field(default_factory=list)
+    orphan_nodes: list[str] = field(default_factory=list)
+
+
 __all__ = ["DAGEdge", "DAGNode", "DAGValidationResult", "NodeStatus", "logger"]

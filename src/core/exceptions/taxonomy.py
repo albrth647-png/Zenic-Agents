@@ -13,14 +13,14 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Type
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "ExceptionCategory",
-    "ExceptionSeverity",
     "ExceptionContext",
+    "ExceptionSeverity",
     "ZenicException",
     "categorize_error",
     "severity_from_confidence",
@@ -77,7 +77,7 @@ class ExceptionContext:
     category: ExceptionCategory
     severity: ExceptionSeverity
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     confidence_score: float = 0.0
     tenant_id: str = ""
     timestamp: str = ""
@@ -89,7 +89,7 @@ class ExceptionContext:
         if not self.correlation_id:
             self.correlation_id = str(uuid.uuid4())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the context to a plain dictionary."""
         return {
             "source": self.source,
@@ -140,7 +140,7 @@ class ZenicException(Exception):
 # Mapping from Python exception types to ExceptionCategory.
 # Order matters: more specific types are listed first so that MRO
 # walking hits them before their base classes.
-_ERROR_CATEGORY_MAP: Dict[Type[Exception], ExceptionCategory] = {
+_ERROR_CATEGORY_MAP: dict[type[Exception], ExceptionCategory] = {
     PermissionError: ExceptionCategory.PERMISSION_DENIED,
     TimeoutError: ExceptionCategory.TIMEOUT,
     MemoryError: ExceptionCategory.RESOURCE_EXHAUSTED,

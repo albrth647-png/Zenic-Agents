@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -17,6 +17,7 @@ _RETRY_DELAY = 0.1
 
 class EscalationLevel(int, Enum):
     """Escalation hierarchy levels."""
+
     L0_DIRECT = 0
     L1_TEAM_LEAD = 1
     L2_DIRECTOR = 2
@@ -32,7 +33,7 @@ class SLAPolicy:
     max_response_time_ms: int = 3600000  # 60 minutes in ms
     auto_escalate: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "level": self.level.value,
@@ -52,13 +53,13 @@ class EscalationSLA:
     sla_deadline: str = ""
     breached: bool = False
     auto_escalated: bool = False
-    escalated_at: Optional[str] = None
+    escalated_at: str | None = None
 
     def __post_init__(self) -> None:
         if not self.request_id:
             raise ValueError("request_id is required")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "request_id": self.request_id,
@@ -82,7 +83,7 @@ class EscalationSLA:
 
 
 # Default SLA policies
-_DEFAULT_SLA_POLICIES: Dict[EscalationLevel, SLAPolicy] = {
+_DEFAULT_SLA_POLICIES: dict[EscalationLevel, SLAPolicy] = {
     EscalationLevel.L0_DIRECT: SLAPolicy(
         level=EscalationLevel.L0_DIRECT,
         role="reviewer",
@@ -108,4 +109,4 @@ _DEFAULT_SLA_POLICIES: Dict[EscalationLevel, SLAPolicy] = {
         auto_escalate=False,
     ),
 }
-__all__ = ["EscalationLevel", "EscalationSLA", "SLAPolicy", "_DEFAULT_SLA_POLICIES", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = ["_DEFAULT_SLA_POLICIES", "_MAX_RETRIES", "_RETRY_DELAY", "EscalationLevel", "EscalationSLA", "SLAPolicy"]

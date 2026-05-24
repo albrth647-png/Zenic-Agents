@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, List
+from typing import Any
 
-from ._types import DashboardWidget
 from ._mixin_trends import DashboardTrendsMixin
+from ._types import DashboardWidget
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class ROIDashboardData(DashboardTrendsMixin):
         if self._cost_accumulator is None:
             try:
                 from ..cost_accumulator import get_cost_accumulator
+
                 self._cost_accumulator = get_cost_accumulator()
             except Exception as exc:
                 logger.error("ROIDashboardData: CostAccumulator unavailable: %s", exc)
@@ -53,6 +54,7 @@ class ROIDashboardData(DashboardTrendsMixin):
         if self._value_tracker is None:
             try:
                 from ..value_tracker import get_value_tracker
+
                 self._value_tracker = get_value_tracker()
             except Exception as exc:
                 logger.error("ROIDashboardData: ValueTracker unavailable: %s", exc)
@@ -63,6 +65,7 @@ class ROIDashboardData(DashboardTrendsMixin):
         if self._impact_scorer is None:
             try:
                 from ..impact_scorer import get_impact_scorer
+
                 self._impact_scorer = get_impact_scorer()
             except Exception as exc:
                 logger.error("ROIDashboardData: ImpactScorer unavailable: %s", exc)
@@ -70,10 +73,10 @@ class ROIDashboardData(DashboardTrendsMixin):
 
     # ── Metrics ─────────────────────────────────────────
 
-    def get_metrics(self, tenant_id: str = "") -> Dict[str, Any]:
+    def get_metrics(self, tenant_id: str = "") -> dict[str, Any]:
         """Return aggregated ROI metrics."""
         with self._lock:
-            metrics: Dict[str, Any] = {
+            metrics: dict[str, Any] = {
                 "hours_saved": 0.0,
                 "errors_avoided": 0,
                 "revenue_recovered": 0.0,
@@ -94,16 +97,13 @@ class ROIDashboardData(DashboardTrendsMixin):
                     metrics["hours_saved"] = vt.get_total_value(
                         category=self._value_cat("hours_saved"),
                         tenant_id=tenant_id,
-                    ) / max(
-                        self._unit_val("hours_saved"), 1.0
-                    )
+                    ) / max(self._unit_val("hours_saved"), 1.0)
                     metrics["errors_avoided"] = int(
                         vt.get_total_value(
                             category=self._value_cat("errors_avoided"),
                             tenant_id=tenant_id,
-                        ) / max(
-                            self._unit_val("errors_avoided"), 1.0
                         )
+                        / max(self._unit_val("errors_avoided"), 1.0)
                     )
                     metrics["revenue_recovered"] = vt.get_total_value(
                         category=self._value_cat("revenue_recovered"),
@@ -113,9 +113,8 @@ class ROIDashboardData(DashboardTrendsMixin):
                         vt.get_total_value(
                             category=self._value_cat("tasks_automated"),
                             tenant_id=tenant_id,
-                        ) / max(
-                            self._unit_val("tasks_automated"), 1.0
                         )
+                        / max(self._unit_val("tasks_automated"), 1.0)
                     )
                     metrics["total_value"] = vt.get_total_value(tenant_id=tenant_id)
                     metrics["value_breakdown"] = vt.get_value_breakdown(tenant_id=tenant_id)
@@ -135,9 +134,7 @@ class ROIDashboardData(DashboardTrendsMixin):
             total_value = metrics.get("total_value", 0.0)
             total_cost = metrics.get("total_cost", 0.0)
             if total_cost > 0:
-                metrics["roi_percent"] = round(
-                    ((total_value - total_cost) / total_cost) * 100, 2
-                )
+                metrics["roi_percent"] = round(((total_value - total_cost) / total_cost) * 100, 2)
             metrics["net_value"] = round(total_value - total_cost, 2)
 
             # Impact summary
@@ -152,87 +149,97 @@ class ROIDashboardData(DashboardTrendsMixin):
 
     # ── Widgets ─────────────────────────────────────────
 
-    def get_widgets(self, tenant_id: str = "") -> List[DashboardWidget]:
+    def get_widgets(self, tenant_id: str = "") -> list[DashboardWidget]:
         """Return the pre-configured dashboard widget set."""
         with self._lock:
-            widgets: List[DashboardWidget] = []
+            widgets: list[DashboardWidget] = []
 
             # 1. ROI Overview — metric
             metrics = self.get_metrics(tenant_id=tenant_id)
-            widgets.append(DashboardWidget(
-                widget_id="roi_overview",
-                title="ROI Overview",
-                widget_type="metric",
-                data={
-                    "value": metrics.get("roi_percent", 0.0),
-                    "suffix": "%",
-                    "subtitle": "Return on Investment",
-                },
-                position=1,
-                refresh_seconds=60,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="roi_overview",
+                    title="ROI Overview",
+                    widget_type="metric",
+                    data={
+                        "value": metrics.get("roi_percent", 0.0),
+                        "suffix": "%",
+                        "subtitle": "Return on Investment",
+                    },
+                    position=1,
+                    refresh_seconds=60,
+                )
+            )
 
             # 2. Hours Saved — metric
-            widgets.append(DashboardWidget(
-                widget_id="hours_saved",
-                title="Hours Saved",
-                widget_type="metric",
-                data={
-                    "value": metrics.get("hours_saved", 0.0),
-                    "suffix": "hrs",
-                    "subtitle": "By Automation",
-                },
-                position=2,
-                refresh_seconds=60,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="hours_saved",
+                    title="Hours Saved",
+                    widget_type="metric",
+                    data={
+                        "value": metrics.get("hours_saved", 0.0),
+                        "suffix": "hrs",
+                        "subtitle": "By Automation",
+                    },
+                    position=2,
+                    refresh_seconds=60,
+                )
+            )
 
             # 3. Revenue Recovered — metric
-            widgets.append(DashboardWidget(
-                widget_id="revenue_recovered",
-                title="Revenue Recovered",
-                widget_type="metric",
-                data={
-                    "value": metrics.get("revenue_recovered", 0.0),
-                    "prefix": "$",
-                    "subtitle": "Total USD",
-                },
-                position=3,
-                refresh_seconds=60,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="revenue_recovered",
+                    title="Revenue Recovered",
+                    widget_type="metric",
+                    data={
+                        "value": metrics.get("revenue_recovered", 0.0),
+                        "prefix": "$",
+                        "subtitle": "Total USD",
+                    },
+                    position=3,
+                    refresh_seconds=60,
+                )
+            )
 
             # 4. Cost Trend — chart
             ca = self._get_cost_accumulator()
             daily_costs = ca.get_daily_costs(days=30) if ca is not None else []
-            widgets.append(DashboardWidget(
-                widget_id="cost_trend",
-                title="Cost Trend",
-                widget_type="chart",
-                data={
-                    "type": "line",
-                    "labels": [d.get("date", "") for d in daily_costs],
-                    "values": [d.get("cost", 0) for d in daily_costs],
-                    "y_label": "USD",
-                },
-                position=4,
-                refresh_seconds=300,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="cost_trend",
+                    title="Cost Trend",
+                    widget_type="chart",
+                    data={
+                        "type": "line",
+                        "labels": [d.get("date", "") for d in daily_costs],
+                        "values": [d.get("cost", 0) for d in daily_costs],
+                        "y_label": "USD",
+                    },
+                    position=4,
+                    refresh_seconds=300,
+                )
+            )
 
             # 5. Value Trend — chart
             vt = self._get_value_tracker()
             daily_values = vt.get_daily_value(days=30) if vt is not None else []
-            widgets.append(DashboardWidget(
-                widget_id="value_trend",
-                title="Value Trend",
-                widget_type="chart",
-                data={
-                    "type": "line",
-                    "labels": [d.get("date", "") for d in daily_values],
-                    "values": [d.get("value", 0) for d in daily_values],
-                    "y_label": "USD",
-                },
-                position=5,
-                refresh_seconds=300,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="value_trend",
+                    title="Value Trend",
+                    widget_type="chart",
+                    data={
+                        "type": "line",
+                        "labels": [d.get("date", "") for d in daily_values],
+                        "values": [d.get("value", 0) for d in daily_values],
+                        "y_label": "USD",
+                    },
+                    position=5,
+                    refresh_seconds=300,
+                )
+            )
 
             # 6. Top Impacts — table
             iscorer = self._get_impact_scorer()
@@ -245,32 +252,36 @@ class ROIDashboardData(DashboardTrendsMixin):
                 except Exception as exc:
                     logger.error("ROIDashboardData: top impacts failed: %s", exc)
 
-            widgets.append(DashboardWidget(
-                widget_id="top_impacts",
-                title="Top Impacts",
-                widget_type="table",
-                data={
-                    "columns": ["impact_type", "loss", "gain", "urgency", "score"],
-                    "rows": top_impacts,
-                },
-                position=6,
-                refresh_seconds=120,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="top_impacts",
+                    title="Top Impacts",
+                    widget_type="table",
+                    data={
+                        "columns": ["impact_type", "loss", "gain", "urgency", "score"],
+                        "rows": top_impacts,
+                    },
+                    position=6,
+                    refresh_seconds=120,
+                )
+            )
 
             # 7. Category Breakdown — chart
-            widgets.append(DashboardWidget(
-                widget_id="category_breakdown",
-                title="Category Breakdown",
-                widget_type="chart",
-                data={
-                    "type": "bar",
-                    "labels": list(metrics.get("value_breakdown", {}).keys()),
-                    "values": list(metrics.get("value_breakdown", {}).values()),
-                    "y_label": "USD",
-                },
-                position=7,
-                refresh_seconds=300,
-            ))
+            widgets.append(
+                DashboardWidget(
+                    widget_id="category_breakdown",
+                    title="Category Breakdown",
+                    widget_type="chart",
+                    data={
+                        "type": "bar",
+                        "labels": list(metrics.get("value_breakdown", {}).keys()),
+                        "values": list(metrics.get("value_breakdown", {}).values()),
+                        "y_label": "USD",
+                    },
+                    position=7,
+                    refresh_seconds=300,
+                )
+            )
 
             return widgets
 
@@ -281,6 +292,7 @@ class ROIDashboardData(DashboardTrendsMixin):
         """Get ValueCategory enum by name (lazy import)."""
         try:
             from ..value_tracker import ValueCategory
+
             return ValueCategory(name)
         except Exception:
             return None
@@ -289,7 +301,8 @@ class ROIDashboardData(DashboardTrendsMixin):
     def _unit_val(name: str) -> float:
         """Get default unit value by category name (lazy import)."""
         try:
-            from ..value_tracker import ValueCategory, DEFAULT_UNIT_VALUES
+            from ..value_tracker import DEFAULT_UNIT_VALUES, ValueCategory
+
             cat = ValueCategory(name)
             return DEFAULT_UNIT_VALUES.get(cat, 1.0)
         except Exception:

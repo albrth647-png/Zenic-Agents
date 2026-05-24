@@ -18,16 +18,20 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
-from typing import Any, Optional
+from typing import Any
 
-from .types.session import (
-    Session, SessionId, SessionState, SessionConfig,
-    Message, MessageRole,
-)
 from .config.constants import (
-    SESSION_TIMEOUT_SECONDS,
-    MAX_SESSIONS,
     MAX_MESSAGES_PER_SESSION,
+    MAX_SESSIONS,
+    SESSION_TIMEOUT_SECONDS,
+)
+from .types.session import (
+    Message,
+    MessageRole,
+    Session,
+    SessionConfig,
+    SessionId,
+    SessionState,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.session")
@@ -58,7 +62,7 @@ class SessionManager:
         self,
         max_sessions: int = MAX_SESSIONS,
         default_timeout: int = SESSION_TIMEOUT_SECONDS,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
     ) -> None:
         self._sessions: dict[SessionId, Session] = {}
         self._lock = threading.RLock()
@@ -75,7 +79,7 @@ class SessionManager:
         self._redis_url = redis_url
         self._redis_store: Any = None
         self._redis_connected = False
-        self._event_loop: Optional[asyncio.AbstractEventLoop] = None
+        self._event_loop: asyncio.AbstractEventLoop | None = None
 
         if redis_url:
             self._init_redis_store(redis_url)
@@ -84,20 +88,15 @@ class SessionManager:
         """Initialize the Redis session store (lazy — connects on first use)."""
         try:
             from .redis_session_store import RedisSessionStore
+
             self._redis_store = RedisSessionStore(
                 redis_url=redis_url,
                 key_prefix="zenic:session",
                 default_ttl=self._default_timeout,
             )
-            logger.info(
-                f"RedisSessionStore created for {redis_url} "
-                f"(will connect on first async operation)"
-            )
+            logger.info(f"RedisSessionStore created for {redis_url} " f"(will connect on first async operation)")
         except ImportError:
-            logger.warning(
-                "redis_session_store not available — "
-                "running without Redis session persistence"
-            )
+            logger.warning("redis_session_store not available — " "running without Redis session persistence")
             self._redis_store = None
 
     def _get_or_create_event_loop(self) -> asyncio.AbstractEventLoop:
@@ -110,6 +109,7 @@ class SessionManager:
             if loop.is_running():
                 # We're inside an async context — create a new loop in a thread
                 import concurrent.futures
+
                 self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
                 new_loop = asyncio.new_event_loop()
                 self._event_loop = new_loop
@@ -128,6 +128,7 @@ class SessionManager:
             if loop.is_running():
                 # We're inside an async context already — schedule in a thread
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                     future = pool.submit(asyncio.run, coro)
                     return future.result(timeout=10)
@@ -184,10 +185,7 @@ class SessionManager:
                             restored += 1
 
             if restored > 0:
-                logger.info(
-                    f"Restored {restored} sessions from Redis "
-                    f"(total in-memory: {len(self._sessions)})"
-                )
+                logger.info(f"Restored {restored} sessions from Redis " f"(total in-memory: {len(self._sessions)})")
             return restored
         except Exception as exc:
             logger.warning(f"Failed to restore sessions from Redis: {exc}")
@@ -198,7 +196,7 @@ class SessionManager:
     def create_session(
         self,
         user_id: str = "",
-        config: Optional[SessionConfig] = None,
+        config: SessionConfig | None = None,
     ) -> Session:
         """
         Crea una nueva sesion de conversacion.
@@ -219,9 +217,7 @@ class SessionManager:
 
             if len(self._sessions) >= self._max_sessions:
                 self._stats["rejected_max"] += 1
-                raise RuntimeError(
-                    f"Maximo de sesiones alcanzado ({self._max_sessions})"
-                )
+                raise RuntimeError(f"Maximo de sesiones alcanzado ({self._max_sessions})")
 
             session_config = config or SessionConfig(
                 idle_timeout_seconds=self._default_timeout,
@@ -259,10 +255,7 @@ class SessionManager:
         try:
             self._run_async(self._async_store_to_redis(session))
         except Exception as exc:
-            logger.debug(
-                f"Redis store failed for session {session.session_id[:8]}... "
-                f"({exc}) — in-memory only"
-            )
+            logger.debug(f"Redis store failed for session {session.session_id[:8]}... " f"({exc}) — in-memory only")
 
     async def _async_store_to_redis(self, session: Session) -> None:
         """Async implementation of Redis store."""
@@ -271,7 +264,7 @@ class SessionManager:
 
     # ─── Recuperacion ─────────────────────────────────────────
 
-    def get_session(self, session_id: SessionId) -> Optional[Session]:
+    def get_session(self, session_id: SessionId) -> Session | None:
         """Recupera una sesion por su ID. Retorna None si no existe.
 
         Phase 3.3: Dual-read pattern.
@@ -298,19 +291,17 @@ class SessionManager:
 
         return None
 
-    def _get_from_redis(self, session_id: SessionId) -> Optional[Session]:
+    def _get_from_redis(self, session_id: SessionId) -> Session | None:
         """Try to get a session from Redis."""
         if self._redis_store is None:
             return None
         try:
             return self._run_async(self._async_get_from_redis(session_id))
         except Exception as exc:
-            logger.debug(
-                f"Redis get failed for session {session_id[:8]}... ({exc})"
-            )
+            logger.debug(f"Redis get failed for session {session_id[:8]}... ({exc})")
             return None
 
-    async def _async_get_from_redis(self, session_id: SessionId) -> Optional[Session]:
+    async def _async_get_from_redis(self, session_id: SessionId) -> Session | None:
         """Async implementation of Redis get."""
         if await self._ensure_redis_connected():
             return await self._redis_store.get(session_id)
@@ -318,7 +309,7 @@ class SessionManager:
 
     def get_or_create(
         self,
-        session_id: Optional[SessionId] = None,
+        session_id: SessionId | None = None,
         user_id: str = "",
     ) -> Session:
         """Recupera una sesion existente o crea una nueva."""
@@ -356,9 +347,7 @@ class SessionManager:
         try:
             self._run_async(self._async_delete_from_redis(session_id))
         except Exception as exc:
-            logger.debug(
-                f"Redis delete failed for session {session_id[:8]}... ({exc})"
-            )
+            logger.debug(f"Redis delete failed for session {session_id[:8]}... ({exc})")
 
     async def _async_delete_from_redis(self, session_id: SessionId) -> None:
         """Async implementation of Redis delete."""
@@ -367,9 +356,7 @@ class SessionManager:
 
     # ─── Mensajes ─────────────────────────────────────────────
 
-    def add_user_message(
-        self, session_id: SessionId, content: str
-    ) -> Optional[Message]:
+    def add_user_message(self, session_id: SessionId, content: str) -> Message | None:
         """Agrega un mensaje de usuario a una sesion."""
         session = self.get_session(session_id)
         if session is None:
@@ -387,14 +374,15 @@ class SessionManager:
         return msg
 
     def add_assistant_message(
-        self, session_id: SessionId, content: str, metadata: Optional[dict] = None
-    ) -> Optional[Message]:
+        self, session_id: SessionId, content: str, metadata: dict | None = None
+    ) -> Message | None:
         """Agrega un mensaje del asistente a una sesion."""
         session = self.get_session(session_id)
         if session is None:
             return None
 
         from .types.session import MessageMetadata
+
         msg_metadata = MessageMetadata()
         if metadata:
             for k, v in metadata.items():
@@ -443,10 +431,7 @@ class SessionManager:
     def stats(self) -> dict:
         """Estadisticas del gestor de sesiones."""
         with self._lock:
-            active = sum(
-                1 for s in self._sessions.values()
-                if s.state == SessionState.ACTIVE
-            )
+            active = sum(1 for s in self._sessions.values() if s.state == SessionState.ACTIVE)
             result = {
                 **self._stats,
                 "active_sessions": active,
@@ -469,19 +454,13 @@ class SessionManager:
     @property
     def redis_available(self) -> bool:
         """Whether Redis session store is available."""
-        return (
-            self._redis_store is not None
-            and self._redis_store.is_redis_available
-        )
+        return self._redis_store is not None and self._redis_store.is_redis_available
 
     # ─── Privados ─────────────────────────────────────────────
 
     def _cleanup_expired(self) -> int:
         """Elimina sesiones expiradas (debe llamarse con lock)."""
-        expired_ids = [
-            sid for sid, session in self._sessions.items()
-            if session.is_expired
-        ]
+        expired_ids = [sid for sid, session in self._sessions.items() if session.is_expired]
         for sid in expired_ids:
             self._expire_session(sid)
         return len(expired_ids)

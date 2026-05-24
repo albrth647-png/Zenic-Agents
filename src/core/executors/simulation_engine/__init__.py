@@ -25,14 +25,28 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from src.core.native import (
-    topological_sort as _native_topological_sort,  # noqa: F401
-    detect_cycles as _native_detect_cycles,  # noqa: F401
-    aggregate_impact as _native_aggregate_impact,  # noqa: F401
-    simulate_dag as _native_simulate_dag,  # noqa: F401
-    calculate_blast_radius as _native_calculate_blast_radius,  # noqa: F401
-    propagate_risks as _native_propagate_risks,  # noqa: F401
-    find_critical_path as _native_find_critical_path,  # noqa: F401
-    HAS_NATIVE as _HAS_NATIVE,  # noqa: F401
+    HAS_NATIVE as _HAS_NATIVE,
+)
+from src.core.native import (
+    aggregate_impact as _native_aggregate_impact,
+)
+from src.core.native import (
+    calculate_blast_radius as _native_calculate_blast_radius,
+)
+from src.core.native import (
+    detect_cycles as _native_detect_cycles,
+)
+from src.core.native import (
+    find_critical_path as _native_find_critical_path,
+)
+from src.core.native import (
+    propagate_risks as _native_propagate_risks,
+)
+from src.core.native import (
+    simulate_dag as _native_simulate_dag,
+)
+from src.core.native import (
+    topological_sort as _native_topological_sort,
 )
 
 from ._helpers import ensure_db, persist_result, retry
@@ -40,7 +54,23 @@ from ._types import ScenarioComparison, SimulationResult, extract_risk_score
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["SimulationResult", "ScenarioComparison", "SimulationEngine", "get_simulation_engine", "reset_simulation_engine", "topological_sort", "detect_cycles", "aggregate_impact", "simulate_dag", "calculate_blast_radius", "propagate_risks", "find_critical_path", "HAS_NATIVE", "DryRunExecutor", "ImpactPreviewEngine"]
+__all__ = [
+    "HAS_NATIVE",
+    "DryRunExecutor",
+    "ImpactPreviewEngine",
+    "ScenarioComparison",
+    "SimulationEngine",
+    "SimulationResult",
+    "aggregate_impact",
+    "calculate_blast_radius",
+    "detect_cycles",
+    "find_critical_path",
+    "get_simulation_engine",
+    "propagate_risks",
+    "reset_simulation_engine",
+    "simulate_dag",
+    "topological_sort",
+]
 
 
 class SimulationEngine:
@@ -58,9 +88,9 @@ class SimulationEngine:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._dry_run_executor: Optional[Any] = None  # lazy
-        self._impact_preview_engine: Optional[Any] = None  # lazy
-        self._db_path: Optional[str] = None  # initialised lazily
+        self._dry_run_executor: Any | None = None  # lazy
+        self._impact_preview_engine: Any | None = None  # lazy
+        self._db_path: str | None = None  # initialised lazily
         self._simulation_count: int = 0
 
     # ── Lazy dependencies ──────────────────────────────────────
@@ -69,7 +99,8 @@ class SimulationEngine:
     def dry_run_executor(self) -> Any:
         """Lazy-load the DryRunExecutor singleton."""
         if self._dry_run_executor is None:
-            from .dry_run_executor import DryRunExecutor, get_dry_run_executor  # noqa: F401
+            from .dry_run_executor import DryRunExecutor, get_dry_run_executor
+
             self._dry_run_executor = get_dry_run_executor()
         return self._dry_run_executor
 
@@ -77,7 +108,8 @@ class SimulationEngine:
     def impact_preview_engine(self) -> Any:
         """Lazy-load the ImpactPreviewEngine singleton."""
         if self._impact_preview_engine is None:
-            from .impact_preview import ImpactPreviewEngine, get_impact_preview_engine  # noqa: F401
+            from .impact_preview import ImpactPreviewEngine, get_impact_preview_engine
+
             self._impact_preview_engine = get_impact_preview_engine()
         return self._impact_preview_engine
 
@@ -96,7 +128,7 @@ class SimulationEngine:
 
     # ── Core API ───────────────────────────────────────────────
 
-    def simulate_dag(self, ctx: Dict[str, Any]) -> SimulationResult:
+    def simulate_dag(self, ctx: dict[str, Any]) -> SimulationResult:
         """Run through the DAG nodes in dry-run mode.
 
         Iterates over the nodes in *ctx* (key ``"dag_nodes"`` or
@@ -134,8 +166,8 @@ class SimulationEngine:
             start = time.monotonic()
 
             def _run_simulation() -> SimulationResult:
-                estimated_impacts: List[Dict[str, Any]] = []
-                node_results: Dict[str, Any] = {}
+                estimated_impacts: list[dict[str, Any]] = []
+                node_results: dict[str, Any] = {}
                 all_succeed = True
 
                 for idx, node in enumerate(nodes):
@@ -145,15 +177,18 @@ class SimulationEngine:
                     node_ctx = node.get("context", {})
 
                     # Get impact preview
-                    impact_dict: Dict[str, Any] = {}
+                    impact_dict: dict[str, Any] = {}
                     try:
                         impact_dict = self.dry_run_executor.preview_action(
-                            action_type, config, node_ctx,
+                            action_type,
+                            config,
+                            node_ctx,
                         )
                     except Exception as exc:
                         logger.debug(
                             "SimulationEngine: preview failed for node %s: %s",
-                            node_id, exc,
+                            node_id,
+                            exc,
                         )
                         impact_dict = {"error": str(exc)}
 
@@ -179,7 +214,8 @@ class SimulationEngine:
                     except Exception as exc:
                         logger.warning(
                             "SimulationEngine: intercept failed for node %s: %s",
-                            node_id, exc,
+                            node_id,
+                            exc,
                         )
                         all_succeed = False
 
@@ -222,7 +258,8 @@ class SimulationEngine:
             except Exception as exc:
                 logger.error(
                     "SimulationEngine: simulate_dag failed for %s: %s",
-                    dag_id, exc,
+                    dag_id,
+                    exc,
                 )
                 result = SimulationResult(
                     dag_id=dag_id,
@@ -237,7 +274,9 @@ class SimulationEngine:
 
             logger.info(
                 "SimulationEngine: simulate_dag %s — nodes=%d succeed=%s duration=%.1fms",
-                dag_id, result.nodes_simulated, result.would_succeed,
+                dag_id,
+                result.nodes_simulated,
+                result.would_succeed,
                 result.total_duration_ms,
             )
 
@@ -245,7 +284,7 @@ class SimulationEngine:
 
     def simulate_dispatch(
         self,
-        dispatch_request_dict: Dict[str, Any],
+        dispatch_request_dict: dict[str, Any],
     ) -> SimulationResult:
         """Simulate a single action dispatch.
 
@@ -297,8 +336,8 @@ class SimulationEngine:
 
     def compare_scenarios(
         self,
-        scenario_a: Dict[str, Any],
-        scenario_b: Dict[str, Any],
+        scenario_a: dict[str, Any],
+        scenario_b: dict[str, Any],
     ) -> ScenarioComparison:
         """A/B comparison of two action scenarios.
 
@@ -320,28 +359,34 @@ class SimulationEngine:
             result_b = self.simulate_dispatch(scenario_b)
 
             # Compute differences
-            differences: List[Dict[str, Any]] = []
+            differences: list[dict[str, Any]] = []
 
             if result_a.nodes_simulated != result_b.nodes_simulated:
-                differences.append({
-                    "field": "nodes_simulated",
-                    "scenario_a": result_a.nodes_simulated,
-                    "scenario_b": result_b.nodes_simulated,
-                })
+                differences.append(
+                    {
+                        "field": "nodes_simulated",
+                        "scenario_a": result_a.nodes_simulated,
+                        "scenario_b": result_b.nodes_simulated,
+                    }
+                )
 
             if result_a.would_succeed != result_b.would_succeed:
-                differences.append({
-                    "field": "would_succeed",
-                    "scenario_a": result_a.would_succeed,
-                    "scenario_b": result_b.would_succeed,
-                })
+                differences.append(
+                    {
+                        "field": "would_succeed",
+                        "scenario_a": result_a.would_succeed,
+                        "scenario_b": result_b.would_succeed,
+                    }
+                )
 
             if abs(result_a.total_duration_ms - result_b.total_duration_ms) > 1.0:
-                differences.append({
-                    "field": "total_duration_ms",
-                    "scenario_a": result_a.total_duration_ms,
-                    "scenario_b": result_b.total_duration_ms,
-                })
+                differences.append(
+                    {
+                        "field": "total_duration_ms",
+                        "scenario_a": result_a.total_duration_ms,
+                        "scenario_b": result_b.total_duration_ms,
+                    }
+                )
 
             # Compare estimated impacts
             impacts_a = result_a.estimated_impacts
@@ -350,24 +395,30 @@ class SimulationEngine:
                 risk_a = impacts_a[0].get("risk_level", "none") if impacts_a else "none"
                 risk_b = impacts_b[0].get("risk_level", "none") if impacts_b else "none"
                 if risk_a != risk_b:
-                    differences.append({
-                        "field": "risk_level",
-                        "scenario_a": risk_a,
-                        "scenario_b": risk_b,
-                    })
+                    differences.append(
+                        {
+                            "field": "risk_level",
+                            "scenario_a": risk_a,
+                            "scenario_b": risk_b,
+                        }
+                    )
 
                 score_a = impacts_a[0].get("risk_score", 0.0) if impacts_a else 0.0
                 score_b = impacts_b[0].get("risk_score", 0.0) if impacts_b else 0.0
                 if abs(score_a - score_b) > 0.1:
-                    differences.append({
-                        "field": "risk_score",
-                        "scenario_a": score_a,
-                        "scenario_b": score_b,
-                    })
+                    differences.append(
+                        {
+                            "field": "risk_score",
+                            "scenario_a": score_a,
+                            "scenario_b": score_b,
+                        }
+                    )
 
             # Generate recommendation
             recommendation = self._generate_recommendation(
-                result_a, result_b, differences,
+                result_a,
+                result_b,
+                differences,
             )
 
             comparison = ScenarioComparison(
@@ -379,7 +430,8 @@ class SimulationEngine:
 
             logger.info(
                 "SimulationEngine: compare_scenarios — %d differences, recommendation: %s",
-                len(differences), recommendation[:80],
+                len(differences),
+                recommendation[:80],
             )
 
             return comparison
@@ -390,7 +442,7 @@ class SimulationEngine:
     def _generate_recommendation(
         result_a: SimulationResult,
         result_b: SimulationResult,
-        differences: List[Dict[str, Any]],
+        differences: list[dict[str, Any]],
     ) -> str:
         """Generate a human-readable recommendation from the comparison.
 
@@ -412,15 +464,9 @@ class SimulationEngine:
         risk_b = extract_risk_score(result_b)
 
         if risk_a < risk_b:
-            return (
-                f"Scenario A is recommended: lower estimated risk "
-                f"({risk_a:.2f} vs {risk_b:.2f})."
-            )
+            return f"Scenario A is recommended: lower estimated risk " f"({risk_a:.2f} vs {risk_b:.2f})."
         elif risk_b < risk_a:
-            return (
-                f"Scenario B is recommended: lower estimated risk "
-                f"({risk_b:.2f} vs {risk_a:.2f})."
-            )
+            return f"Scenario B is recommended: lower estimated risk " f"({risk_b:.2f} vs {risk_a:.2f})."
 
         if result_a.total_duration_ms < result_b.total_duration_ms:
             return (
@@ -442,7 +488,7 @@ class SimulationEngine:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[SimulationEngine] = None
+_instance: SimulationEngine | None = None
 _instance_lock = threading.Lock()
 
 

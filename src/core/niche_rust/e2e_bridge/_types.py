@@ -6,24 +6,22 @@ Contains PipelineProgress and PipelineResult data classes.
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 
 class PipelineProgress:
     """Progress information for an E2E pipeline."""
 
     __slots__ = (
-        "pipeline_id",
-        "niche_id",
         "current_step",
-        "progress_pct",
         "documents_ingested",
+        "error_count",
         "fields_auto_filled",
         "fields_manual_filled",
-        "total_fields",
+        "niche_id",
+        "pipeline_id",
+        "progress_pct",
         "required_fields",
         "template_completion_pct",
-        "error_count",
+        "total_fields",
         "warning_count",
     )
 
@@ -56,27 +54,24 @@ class PipelineProgress:
         self.warning_count = warning_count
 
     def __repr__(self) -> str:
-        return (
-            f"PipelineProgress(id={self.pipeline_id!r}, step={self.current_step}, "
-            f"pct={self.progress_pct:.1f}%)"
-        )
+        return f"PipelineProgress(id={self.pipeline_id!r}, step={self.current_step}, " f"pct={self.progress_pct:.1f}%)"
 
 
 class PipelineResult:
     """Final result of the E2E pipeline."""
 
     __slots__ = (
-        "success",
-        "pipeline_id",
-        "niche_id",
-        "final_step",
-        "progress_pct",
-        "template_complete",
-        "safety_passed",
         "blueprint_certified",
-        "yaml_output",
         "errors",
+        "final_step",
+        "niche_id",
+        "pipeline_id",
+        "progress_pct",
+        "safety_passed",
+        "success",
+        "template_complete",
         "warnings",
+        "yaml_output",
     )
 
     def __init__(
@@ -90,8 +85,8 @@ class PipelineResult:
         safety_passed: bool = False,
         blueprint_certified: bool = False,
         yaml_output: str = "",
-        errors: Optional[List[str]] = None,
-        warnings: Optional[List[str]] = None,
+        errors: list[str] | None = None,
+        warnings: list[str] | None = None,
     ) -> None:
         self.success = success
         self.pipeline_id = pipeline_id
@@ -110,4 +105,6 @@ class PipelineResult:
             f"PipelineResult(success={self.success}, niche={self.niche_id!r}, "
             f"safety={self.safety_passed}, certified={self.blueprint_certified})"
         )
+
+
 __all__ = ["PipelineProgress", "PipelineResult"]

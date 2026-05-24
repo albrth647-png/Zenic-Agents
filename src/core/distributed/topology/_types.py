@@ -10,13 +10,14 @@ import socket
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class NodeState(str, enum.Enum):
     """Node states."""
+
     JOINING = "joining"
     ACTIVE = "active"
     IDLE = "idle"
@@ -40,14 +41,15 @@ class NodeInfo:
         last_heartbeat: Timestamp of last heartbeat.
         status: Current status payload (load, queue depth, etc.).
     """
+
     node_id: str = ""
     hostname: str = ""
     ip_address: str = ""
-    capabilities: Dict[str, Any] = field(default_factory=dict)
+    capabilities: dict[str, Any] = field(default_factory=dict)
     state: NodeState = NodeState.JOINING
     registered_at: float = 0.0
     last_heartbeat: float = 0.0
-    status: Dict[str, Any] = field(default_factory=dict)
+    status: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.node_id:
@@ -59,7 +61,7 @@ class NodeInfo:
         if self.last_heartbeat == 0.0:
             self.last_heartbeat = time.time()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dict for backend storage."""
         return {
             "node_id": self.node_id,
@@ -73,7 +75,7 @@ class NodeInfo:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "NodeInfo":
+    def from_dict(cls, data: dict[str, Any]) -> "NodeInfo":
         """Deserialize from backend dict."""
         state_str = data.get("state", "joining")
         try:
@@ -91,4 +93,6 @@ class NodeInfo:
             last_heartbeat=data.get("last_heartbeat", 0.0),
             status=data.get("status", {}),
         )
+
+
 __all__ = ["NodeInfo", "NodeState", "logger"]

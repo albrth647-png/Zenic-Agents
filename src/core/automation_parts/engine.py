@@ -11,18 +11,19 @@ Plus own methods:
     delete_workflow, get_execution_history, stats
 """
 
+import logging
 import os
 import sqlite3
-import logging
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 from . import types as _types
-from .types import (
-    Workflow, WorkflowExecution,
-)
 from .crud import CoreCRUDMixin
 from .execution import ExecutionMixin
 from .project_gen import ProjectGenMixin
+from .types import (
+    Workflow,
+    WorkflowExecution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +41,8 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
         self._thinking = thinking_engine
         self._template_engine = template_engine
         self._executor_registry = executor_registry
-        self._workflows: Dict[str, Workflow] = {}
-        self._execution_history: List[WorkflowExecution] = []
+        self._workflows: dict[str, Workflow] = {}
+        self._execution_history: list[WorkflowExecution] = []
         os.makedirs(_types.DB_DIR, exist_ok=True)
         self._init_db()
         self._load_workflows()
@@ -55,6 +56,7 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
         if self._executor_registry is None:
             try:
                 from src.core.action_executor import get_default_registry
+
                 self._executor_registry = get_default_registry()
                 logger.info("AutomationEngine: ActionExecutor registry initialized")
             except ImportError:
@@ -64,7 +66,7 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
     #  QUERY METHODS
     # ================================================================
 
-    def list_workflows(self) -> List[Dict[str, Any]]:
+    def list_workflows(self) -> list[dict[str, Any]]:
         """Lista todos los workflows."""
         return [
             {
@@ -81,7 +83,7 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
             for wf in self._workflows.values()
         ]
 
-    def get_workflow(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+    def get_workflow(self, workflow_id: str) -> dict[str, Any] | None:
         """Obtiene un workflow por ID."""
         wf = self._workflows.get(workflow_id)
         if not wf:
@@ -112,35 +114,42 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
         if workflow_id in self._workflows:
             del self._workflows[workflow_id]
             with sqlite3.connect(_types.DB_PATH) as conn:
-                conn.execute("DELETE FROM workflows WHERE id=?", (workflow_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+                conn.execute(
+                    "DELETE FROM workflows WHERE id=?", (workflow_id,)
+                )  # nosemgrep: sqlalchemy-execute-raw-query
             return True
         return False
 
-    def get_execution_history(self, workflow_id: str = "", limit: int = 20) -> List[Dict]:
+    def get_execution_history(self, workflow_id: str = "", limit: int = 20) -> list[dict]:
         """Obtiene historial de ejecuciones."""
         with sqlite3.connect(_types.DB_PATH) as conn:
             if workflow_id:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT * FROM execution_log WHERE workflow_id=? ORDER BY started_at DESC LIMIT ?",
-                    (workflow_id, limit)
+                    (workflow_id, limit),
                 ).fetchall()
             else:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT * FROM execution_log ORDER BY started_at DESC LIMIT ?",
-                    (limit,)
+                    "SELECT * FROM execution_log ORDER BY started_at DESC LIMIT ?", (limit,)
                 ).fetchall()
 
         return [
             {
-                "id": r[0], "workflow_id": r[1], "started_at": r[2],
-                "finished_at": r[3], "status": r[4], "actions_executed": r[5],
-                "actions_failed": r[6], "output": r[7], "error": r[8],
+                "id": r[0],
+                "workflow_id": r[1],
+                "started_at": r[2],
+                "finished_at": r[3],
+                "status": r[4],
+                "actions_executed": r[5],
+                "actions_failed": r[6],
+                "output": r[7],
+                "error": r[8],
             }
             for r in rows
         ]
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas del motor de automatización."""
         return {
             "total_workflows": len(self._workflows),
@@ -155,12 +164,13 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
         """Lazy-load and return the AutopilotEngine (Phase D1)."""
         try:
             from src.core.autopilot import get_autopilot_engine
+
             return get_autopilot_engine()
         except ImportError:
             logger.warning("AutomationEngine: AutopilotEngine not available")
             return None
 
-    def list_autopilot_objectives(self) -> List[Dict[str, Any]]:
+    def list_autopilot_objectives(self) -> list[dict[str, Any]]:
         """List all autopilot objectives and their status."""
         ap = self.get_autopilot_engine()
         if ap is None:
@@ -170,7 +180,7 @@ class AutomationEngine(CoreCRUDMixin, ExecutionMixin, ProjectGenMixin):
         except Exception:
             return []
 
-    def execute_autopilot_cycle(self) -> List[Dict[str, Any]]:
+    def execute_autopilot_cycle(self) -> list[dict[str, Any]]:
         """Run one autopilot execution cycle for all active objectives."""
         ap = self.get_autopilot_engine()
         if ap is None:

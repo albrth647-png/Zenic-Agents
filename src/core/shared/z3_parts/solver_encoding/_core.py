@@ -21,9 +21,9 @@ with LRU-style eviction when maps exceed _MAX_ENCODE_ENTRIES.
 
 import logging
 
-
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     z3_module = None

@@ -17,21 +17,22 @@ import logging
 import os
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .flows.base import FlowResult, FlowRegistry, FlowState
-from .flows.registration import RegistrationFlow, RegistrationStore
 from .flows.activation import ActivationFlow
-from .flows.status import StatusFlow
+from .flows.base import FlowRegistry, FlowResult, FlowState
 from .flows.hardware import HardwareFlow
-from .renderers.welcome import WelcomeRenderer
+from .flows.registration import RegistrationFlow, RegistrationStore
+from .flows.status import StatusFlow
+from .prompts import prompt_activation, prompt_registration
 from .renderers.progress import ProgressRenderer
-from .prompts import prompt_registration, prompt_activation
+from .renderers.welcome import WelcomeRenderer
 
 logger = logging.getLogger(__name__)
 
 
 # ── Onboarding State ─────────────────────────────────────────
+
 
 class OnboardingState(str, Enum):
     """Overall onboarding state for the user.
@@ -43,6 +44,7 @@ class OnboardingState(str, Enum):
       - EXPIRED:    License has expired
       - REVOKED:    License has been revoked
     """
+
     FRESH = "fresh"
     REGISTERED = "registered"
     ACTIVATED = "activated"
@@ -51,6 +53,7 @@ class OnboardingState(str, Enum):
 
 
 # ── Onboarding TUI App ──────────────────────────────────────
+
 
 class OnboardingTUI:
     """Facade for the Zenic-Agents User Onboarding TUI.
@@ -86,8 +89,8 @@ class OnboardingTUI:
         self._registry = FlowRegistry()
         self._store = RegistrationStore()
         self._state = OnboardingState.FRESH
-        self._last_result: Optional[FlowResult] = None
-        self._event_log: List[Dict[str, Any]] = []
+        self._last_result: FlowResult | None = None
+        self._event_log: list[dict[str, Any]] = []
 
         # Register flows
         self._registry.register("registration", RegistrationFlow)
@@ -117,11 +120,11 @@ class OnboardingTUI:
         return self._state == OnboardingState.ACTIVATED
 
     @property
-    def available_flows(self) -> List[Dict[str, str]]:
+    def available_flows(self) -> list[dict[str, str]]:
         return self._registry.list_flows()
 
     @property
-    def last_result(self) -> Optional[FlowResult]:
+    def last_result(self) -> FlowResult | None:
         return self._last_result
 
     # ── State Detection ──────────────────────────────────────
@@ -131,6 +134,7 @@ class OnboardingTUI:
         # Check for license first
         try:
             from src.core.license import get_license_manager
+
             manager = get_license_manager()
             if manager.is_licensed():
                 self._state = OnboardingState.ACTIVATED
@@ -147,13 +151,12 @@ class OnboardingTUI:
 
         # Check activation DB
         import sqlite3
+
         db_path = os.path.expanduser("~/.zenic/activations.sqlite")
         if os.path.exists(db_path):
             try:
                 conn = sqlite3.connect(db_path)
-                count = conn.execute(
-                    "SELECT COUNT(*) FROM activations"
-                ).fetchone()[0]
+                count = conn.execute("SELECT COUNT(*) FROM activations").fetchone()[0]
                 conn.close()
                 if count > 0:
                     self._state = OnboardingState.ACTIVATED
@@ -198,6 +201,7 @@ class OnboardingTUI:
 
         try:
             from rich.console import Console
+
             console = Console()
             console.print(output)
         except ImportError:
@@ -207,9 +211,14 @@ class OnboardingTUI:
 
     # ── Registration ─────────────────────────────────────────
 
-    def register(self, username: str = "", email: str = "",
-                 device_name: str = "", tier: str = "starter",
-                 interactive: bool = False) -> FlowResult:
+    def register(
+        self,
+        username: str = "",
+        email: str = "",
+        device_name: str = "",
+        tier: str = "starter",
+        interactive: bool = False,
+    ) -> FlowResult:
         """Register a new user.
 
         Can be called with explicit parameters or in interactive mode
@@ -234,7 +243,8 @@ class OnboardingTUI:
                 if not prompt_result:
                     self._log_event("register_cancelled")
                     return FlowResult(
-                        success=False, state=FlowState.CANCELLED,
+                        success=False,
+                        state=FlowState.CANCELLED,
                         message="Registration cancelled by user",
                         flow_name="registration",
                     )
@@ -246,7 +256,8 @@ class OnboardingTUI:
         # Validate required fields
         if not username or not email:
             return FlowResult(
-                success=False, state=FlowState.FAILED,
+                success=False,
+                state=FlowState.FAILED,
                 message="Username and email are required for registration",
                 errors=["Missing required fields"],
                 flow_name="registration",
@@ -254,12 +265,14 @@ class OnboardingTUI:
 
         # Execute the registration flow
         flow = RegistrationFlow(store=self._store)
-        result = flow.run(user_input={
-            "username": username,
-            "email": email,
-            "device_name": device_name,
-            "tier": tier,
-        })
+        result = flow.run(
+            user_input={
+                "username": username,
+                "email": email,
+                "device_name": device_name,
+                "tier": tier,
+            }
+        )
 
         self._last_result = result
 
@@ -276,8 +289,7 @@ class OnboardingTUI:
 
     # ── Activation ───────────────────────────────────────────
 
-    def activate(self, key: str = "", username: str = "",
-                 interactive: bool = False) -> FlowResult:
+    def activate(self, key: str = "", username: str = "", interactive: bool = False) -> FlowResult:
         """Activate a license with a ZENIC-xxxx key.
 
         Args:
@@ -297,7 +309,8 @@ class OnboardingTUI:
                 if not prompt_result:
                     self._log_event("activate_cancelled")
                     return FlowResult(
-                        success=False, state=FlowState.CANCELLED,
+                        success=False,
+                        state=FlowState.CANCELLED,
                         message="Activation cancelled by user",
                         flow_name="activation",
                     )
@@ -306,7 +319,8 @@ class OnboardingTUI:
 
         if not key:
             return FlowResult(
-                success=False, state=FlowState.FAILED,
+                success=False,
+                state=FlowState.FAILED,
                 message="Activation key is required",
                 errors=["Missing activation key"],
                 flow_name="activation",
@@ -314,18 +328,18 @@ class OnboardingTUI:
 
         # Execute the activation flow
         flow = ActivationFlow()
-        result = flow.run(user_input={
-            "key": key,
-            "username": username,
-        })
+        result = flow.run(
+            user_input={
+                "key": key,
+                "username": username,
+            }
+        )
 
         self._last_result = result
 
         if result.success:
             self._state = OnboardingState.ACTIVATED
-            self._log_event("activate_success",
-                           license_id=result.data.get("license_id"),
-                           tier=result.data.get("tier"))
+            self._log_event("activate_success", license_id=result.data.get("license_id"), tier=result.data.get("tier"))
         else:
             self._log_event("activate_failed", errors=result.errors)
 
@@ -447,25 +461,28 @@ class OnboardingTUI:
         if result.message:
             try:
                 from rich.console import Console
+
                 console = Console()
                 console.print(result.message)
             except ImportError:
                 # Strip Rich markup for plain display
                 import re
-                clean = re.sub(r'\[/?[^\]]*\]', '', result.message)
+
+                clean = re.sub(r"\[/?[^\]]*\]", "", result.message)
                 print(clean)
 
         if result.errors:
             for error in result.errors:
                 try:
                     from rich.console import Console
+
                     Console().print(f"[red]Error:[/] {error}")
                 except ImportError:
                     print(f"Error: {error}")
 
     # ── Summary ──────────────────────────────────────────────
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of the current onboarding state."""
         return {
             "state": self._state.value,

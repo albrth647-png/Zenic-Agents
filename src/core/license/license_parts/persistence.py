@@ -10,10 +10,12 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Optional
 
 from ..types import (
-    LicenseInfo, LicenseStatus, LicenseTier, HardwareBindingStrength,
+    HardwareBindingStrength,
+    LicenseInfo,
+    LicenseStatus,
+    LicenseTier,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,7 +55,7 @@ class LicenseDB:
         except Exception as exc:
             logger.error("LicenseDB: DB init failed: %s", exc)
 
-    def load_cached_license(self) -> Optional[LicenseInfo]:
+    def load_cached_license(self) -> LicenseInfo | None:
         """Load the most recently cached active license."""
         try:
             conn = sqlite3.connect(self._db_path)
@@ -84,6 +86,7 @@ class LicenseDB:
     def persist_license(self, info: LicenseInfo) -> None:
         """Persist a license to the database."""
         import time
+
         try:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -91,11 +94,21 @@ class LicenseDB:
                 "(license_id,tier,status,issued_to,issued_at,expires_at,"
                 "features,max_users,hardware_id,binding_strength,"
                 "signature,metadata,cached_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (info.license_id, info.tier.value, info.status.value,
-                 info.issued_to, info.issued_at, info.expires_at,
-                 json.dumps(info.features), info.max_users, info.hardware_id,
-                 info.binding_strength.value, info.signature,
-                 json.dumps(info.metadata), time.time()),
+                (
+                    info.license_id,
+                    info.tier.value,
+                    info.status.value,
+                    info.issued_to,
+                    info.issued_at,
+                    info.expires_at,
+                    json.dumps(info.features),
+                    info.max_users,
+                    info.hardware_id,
+                    info.binding_strength.value,
+                    info.signature,
+                    json.dumps(info.metadata),
+                    time.time(),
+                ),
             )
             conn.commit()
             conn.close()

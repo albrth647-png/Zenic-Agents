@@ -12,10 +12,10 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from src.core.shared.retry import with_retry
-from src.core.executors.db_journal import get_db_journal
-from src.core.executors.coordinated_rollback._types import ResourceType
 from src.core.executors.coordinated_rollback._helpers import validate_url
+from src.core.executors.coordinated_rollback._types import ResourceType
+from src.core.executors.db_journal import get_db_journal
+from src.core.shared.retry import with_retry
 
 if TYPE_CHECKING:
     from src.core.executors.coordinated_rollback._types import ResourceRecord
@@ -46,9 +46,7 @@ class CompensationMixin:
         elif record.resource_type == ResourceType.WEBHOOK:
             self._compensate_webhook(action_id, record)
         else:
-            raise ValueError(
-                f"Unknown resource type: {record.resource_type}"
-            )
+            raise ValueError(f"Unknown resource type: {record.resource_type}")
 
     def _compensate_db(
         self,
@@ -59,22 +57,19 @@ class CompensationMixin:
 
         journal_id = record.rollback_data.get("journal_id", "")
         if not journal_id:
-            raise ValueError(
-                f"No journal_id in rollback_data for DB record in action {action_id}"
-            )
+            raise ValueError(f"No journal_id in rollback_data for DB record in action {action_id}")
 
         journal = get_db_journal()
         result = journal.rollback_to(journal_id)
 
         if not result.success:
             errors_str = "; ".join(result.errors) if result.errors else "unknown"
-            raise RuntimeError(
-                f"DB rollback failed for journal {journal_id[:12]}: {errors_str}"
-            )
+            raise RuntimeError(f"DB rollback failed for journal {journal_id[:12]}: {errors_str}")
 
         logger.info(
             "CoordinatedRollbackManager: DB compensation done journal=%s restored=%d",
-            journal_id[:12], result.rows_restored,
+            journal_id[:12],
+            result.rows_restored,
         )
 
     def _compensate_email(
@@ -94,7 +89,10 @@ class CompensationMixin:
             "CoordinatedRollbackManager: EMAIL RECALL notification — "
             "action=%s message_id=%s to=%s subject='%s'. "
             "Note: email cannot be unsent; manual follow-up required.",
-            action_id[:12], message_id, to_addr, subject,
+            action_id[:12],
+            message_id,
+            to_addr,
+            subject,
         )
 
         # Persist the recall log
@@ -144,9 +142,7 @@ class CompensationMixin:
         operation = record.rollback_data.get("operation", "")
 
         if not source:
-            raise ValueError(
-                f"No source path in rollback_data for FILE record in action {action_id}"
-            )
+            raise ValueError(f"No source path in rollback_data for FILE record in action {action_id}")
 
         if operation == "create":
             # File was created — delete it
@@ -173,9 +169,7 @@ class CompensationMixin:
         elif operation == "delete":
             # File was deleted — restore from backup
             if not backup_path:
-                raise ValueError(
-                    f"No backup_path for DELETE file rollback in action {action_id}"
-                )
+                raise ValueError(f"No backup_path for DELETE file rollback in action {action_id}")
 
             def _do_restore() -> None:
                 bk = Path(backup_path)
@@ -185,12 +179,11 @@ class CompensationMixin:
                     shutil.copy2(str(bk), str(dst))
                     logger.info(
                         "CoordinatedRollbackManager: restored deleted file %s from %s",
-                        source, backup_path,
+                        source,
+                        backup_path,
                     )
                 else:
-                    raise FileNotFoundError(
-                        f"Backup not found at {backup_path} for file {source}"
-                    )
+                    raise FileNotFoundError(f"Backup not found at {backup_path} for file {source}")
 
             with_retry(
                 _do_restore,
@@ -201,9 +194,7 @@ class CompensationMixin:
         elif operation == "modify":
             # File was modified — restore from backup
             if not backup_path:
-                raise ValueError(
-                    f"No backup_path for MODIFY file rollback in action {action_id}"
-                )
+                raise ValueError(f"No backup_path for MODIFY file rollback in action {action_id}")
 
             def _do_restore() -> None:
                 bk = Path(backup_path)
@@ -213,12 +204,11 @@ class CompensationMixin:
                     shutil.copy2(str(bk), str(dst))
                     logger.info(
                         "CoordinatedRollbackManager: restored modified file %s from %s",
-                        source, backup_path,
+                        source,
+                        backup_path,
                     )
                 else:
-                    raise FileNotFoundError(
-                        f"Backup not found at {backup_path} for file {source}"
-                    )
+                    raise FileNotFoundError(f"Backup not found at {backup_path} for file {source}")
 
             with_retry(
                 _do_restore,
@@ -227,9 +217,7 @@ class CompensationMixin:
                 label="coordinated_rollback._compensate_file(modify)",
             )
         else:
-            raise ValueError(
-                f"Unknown file operation '{operation}' for rollback in action {action_id}"
-            )
+            raise ValueError(f"Unknown file operation '{operation}' for rollback in action {action_id}")
 
     def _compensate_webhook(
         self,
@@ -243,8 +231,7 @@ class CompensationMixin:
 
         if not url:
             logger.warning(
-                "CoordinatedRollbackManager: no cancellation URL for webhook "
-                "record in action %s — skipping",
+                "CoordinatedRollbackManager: no cancellation URL for webhook " "record in action %s — skipping",
                 action_id[:12],
             )
             return
@@ -258,8 +245,8 @@ class CompensationMixin:
         }
 
         def _send_cancellation() -> None:
-            import urllib.request
             import urllib.error
+            import urllib.request
 
             validated_url = validate_url(url)
             data = json.dumps(cancellation_payload).encode("utf-8")
@@ -273,14 +260,15 @@ class CompensationMixin:
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     status = resp.status
                     logger.info(
-                        "CoordinatedRollbackManager: cancellation webhook sent to %s "
-                        "status=%d",
-                        url[:50], status,
+                        "CoordinatedRollbackManager: cancellation webhook sent to %s " "status=%d",
+                        url[:50],
+                        status,
                     )
             except urllib.error.URLError as exc:
                 logger.warning(
                     "CoordinatedRollbackManager: cancellation webhook to %s failed: %s",
-                    url[:50], exc,
+                    url[:50],
+                    exc,
                 )
                 # We do NOT raise — webhook cancellation is best-effort
 

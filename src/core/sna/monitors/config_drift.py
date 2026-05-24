@@ -9,6 +9,7 @@ NO espera a que la app falle al iniciar.
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 
 logger = logging.getLogger(__name__)
@@ -32,27 +33,33 @@ class ConfigDriftMonitor(BaseMonitor):
             exists = config.get("exists", False)
 
             if not exists:
-                findings.append({
-                    "type": "config_missing",
-                    "path": path,
-                    "message": f"Config faltante: {path}",
-                })
+                findings.append(
+                    {
+                        "type": "config_missing",
+                        "path": path,
+                        "message": f"Config faltante: {path}",
+                    }
+                )
                 continue
 
             if config.get("valid_json") is False:
-                findings.append({
-                    "type": "config_malformed",
-                    "path": path,
-                    "error": config.get("json_error", "unknown"),
-                    "message": f"Config malformada: {path} — {config.get('json_error', '')}",
-                })
+                findings.append(
+                    {
+                        "type": "config_malformed",
+                        "path": path,
+                        "error": config.get("json_error", "unknown"),
+                        "message": f"Config malformada: {path} — {config.get('json_error', '')}",
+                    }
+                )
 
             if config.get("readable") is False:
-                findings.append({
-                    "type": "config_unreadable",
-                    "path": path,
-                    "message": f"Config sin permisos de lectura: {path}",
-                })
+                findings.append(
+                    {
+                        "type": "config_unreadable",
+                        "path": path,
+                        "message": f"Config sin permisos de lectura: {path}",
+                    }
+                )
 
         if not findings:
             return MonitorResult(

@@ -10,8 +10,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
-
+from typing import Any
 
 # ── Retry constants ──────────────────────────────────────────
 RETRY_MAX_ATTEMPTS: int = 3
@@ -26,7 +25,7 @@ class SnapshotEntry:
     entity_type: str = ""
     entity_id: str = ""
     tenant_id: str = ""
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     captured_at: str = ""
     captured_at_epoch: float = 0.0
     snapshot_kind: str = ""  # "before" | "after"
@@ -50,8 +49,8 @@ class SnapshotPair:
     entity_type: str = ""
     entity_id: str = ""
     tenant_id: str = ""
-    before: Optional[SnapshotEntry] = None
-    after: Optional[SnapshotEntry] = None
+    before: SnapshotEntry | None = None
+    after: SnapshotEntry | None = None
     created_at: str = ""
 
     def __post_init__(self) -> None:
@@ -72,12 +71,12 @@ class SnapshotDiff:
     pair_id: str = ""
     entity_type: str = ""
     entity_id: str = ""
-    added: Dict[str, Any] = field(default_factory=dict)
-    removed: Dict[str, Any] = field(default_factory=dict)
-    changed: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    added: dict[str, Any] = field(default_factory=dict)
+    removed: dict[str, Any] = field(default_factory=dict)
+    changed: dict[str, dict[str, Any]] = field(default_factory=dict)
     is_empty: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-compatible dictionary."""
         return {
             "snapshot_id": self.snapshot_id,
@@ -89,4 +88,6 @@ class SnapshotDiff:
             "changed": self.changed,
             "is_empty": self.is_empty,
         }
+
+
 __all__ = ["RETRY_BASE_DELAY", "RETRY_MAX_ATTEMPTS", "SnapshotDiff", "SnapshotEntry", "SnapshotPair"]

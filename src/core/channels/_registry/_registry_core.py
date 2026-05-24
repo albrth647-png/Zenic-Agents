@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from .._protocol import ChannelProvider, InboundChannelProvider
 from .._types import (
@@ -50,9 +50,9 @@ class AdapterRegistry:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._providers: Dict[str, ChannelProvider] = {}
-        self._inbound_providers: Dict[str, InboundChannelProvider] = {}
-        self._fallback_map: Dict[str, List[str]] = {}  # channel → [fallback_chain]
+        self._providers: dict[str, ChannelProvider] = {}
+        self._inbound_providers: dict[str, InboundChannelProvider] = {}
+        self._fallback_map: dict[str, list[str]] = {}  # channel → [fallback_chain]
         self._stats = {
             "total_sent": 0,
             "total_sent_success": 0,
@@ -65,7 +65,7 @@ class AdapterRegistry:
     def register(
         self,
         provider: ChannelProvider,
-        aliases: Optional[List[str]] = None,
+        aliases: list[str] | None = None,
     ) -> None:
         """Register a channel provider.
 
@@ -88,7 +88,8 @@ class AdapterRegistry:
 
             logger.debug(
                 "AdapterRegistry: registered provider '%s' (aliases=%s)",
-                name, aliases,
+                name,
+                aliases,
             )
 
     def unregister(self, name: str) -> bool:
@@ -105,10 +106,7 @@ class AdapterRegistry:
                 return False
 
             # Also remove aliases pointing to the same provider
-            to_remove = [
-                k for k, v in self._providers.items()
-                if v is provider and k != name
-            ]
+            to_remove = [k for k, v in self._providers.items() if v is provider and k != name]
             for k in to_remove:
                 del self._providers[k]
                 self._inbound_providers.pop(k, None)
@@ -116,14 +114,14 @@ class AdapterRegistry:
             logger.info("AdapterRegistry: unregistered provider '%s'", name)
             return True
 
-    def get(self, name: str) -> Optional[ChannelProvider]:
+    def get(self, name: str) -> ChannelProvider | None:
         """Get a provider by name."""
         with self._lock:
             return self._providers.get(name)
 
     # ── Fallback Configuration ──────────────────────────────────
 
-    def set_fallback_chain(self, channel: str, fallbacks: List[str]) -> None:
+    def set_fallback_chain(self, channel: str, fallbacks: list[str]) -> None:
         """Set the fallback chain for a channel.
 
         When send_with_fallback() is called and the primary channel fails,
@@ -138,10 +136,11 @@ class AdapterRegistry:
             self._fallback_map[channel] = fallbacks
             logger.debug(
                 "AdapterRegistry: set fallback for '%s' → %s",
-                channel, fallbacks,
+                channel,
+                fallbacks,
             )
 
-    def get_fallback_chain(self, channel: str) -> List[str]:
+    def get_fallback_chain(self, channel: str) -> list[str]:
         """Get the fallback chain for a channel."""
         with self._lock:
             return list(self._fallback_map.get(channel, []))
@@ -199,7 +198,9 @@ class AdapterRegistry:
             return response
         except Exception as e:
             logger.error(
-                "AdapterRegistry: error sending via '%s': %s", channel, e,
+                "AdapterRegistry: error sending via '%s': %s",
+                channel,
+                e,
             )
             with self._lock:
                 self._stats["total_sent_failed"] += 1
@@ -215,7 +216,7 @@ class AdapterRegistry:
         self,
         channel: str,
         message: ChannelMessage,
-        exclude_channels: Optional[Set[str]] = None,
+        exclude_channels: set[str] | None = None,
     ) -> ChannelResponse:
         """Send a message with automatic fallback chain.
 
@@ -234,7 +235,7 @@ class AdapterRegistry:
         exclude = exclude_channels or set()
         chain = [channel] + self.get_fallback_chain(channel)
 
-        last_response: Optional[ChannelResponse] = None
+        last_response: ChannelResponse | None = None
 
         for ch in chain:
             if ch in exclude:
@@ -321,7 +322,8 @@ class AdapterRegistry:
         except Exception as e:
             logger.error(
                 "AdapterRegistry: error sending confirmation via '%s': %s",
-                channel, e,
+                channel,
+                e,
             )
             return ChannelResponse(
                 success=False,
@@ -347,7 +349,8 @@ class AdapterRegistry:
             provider = self._inbound_providers.get(channel)
             if provider is None:
                 logger.warning(
-                    "AdapterRegistry: no inbound provider for '%s'", channel,
+                    "AdapterRegistry: no inbound provider for '%s'",
+                    channel,
                 )
                 return False
             provider.set_message_handler(handler)
@@ -367,7 +370,8 @@ class AdapterRegistry:
             provider = self._inbound_providers.get(channel)
             if provider is None:
                 logger.warning(
-                    "AdapterRegistry: no inbound provider for '%s'", channel,
+                    "AdapterRegistry: no inbound provider for '%s'",
+                    channel,
                 )
                 return False
             provider.set_confirmation_handler(handler)
@@ -393,7 +397,9 @@ class AdapterRegistry:
                 logger.info("AdapterRegistry: started inbound provider '%s'", name)
             except Exception as e:
                 logger.error(
-                    "AdapterRegistry: failed to start '%s': %s", name, e,
+                    "AdapterRegistry: failed to start '%s': %s",
+                    name,
+                    e,
                 )
 
     async def stop_all(self) -> None:
@@ -402,8 +408,8 @@ class AdapterRegistry:
             providers = list(self._providers.values())
 
         # Deduplicate (aliases point to same instance)
-        seen: Set[int] = set()
-        unique_providers: List[ChannelProvider] = []
+        seen: set[int] = set()
+        unique_providers: list[ChannelProvider] = []
         for p in providers:
             if id(p) not in seen:
                 seen.add(id(p))
@@ -415,16 +421,17 @@ class AdapterRegistry:
             except Exception as e:
                 logger.error(
                     "AdapterRegistry: error stopping '%s': %s",
-                    provider.name, e,
+                    provider.name,
+                    e,
                 )
 
     # ── Query ───────────────────────────────────────────────────
 
-    def list_providers(self) -> Dict[str, Dict[str, Any]]:
+    def list_providers(self) -> dict[str, dict[str, Any]]:
         """List all registered providers with their status."""
         with self._lock:
-            result: Dict[str, Dict[str, Any]] = {}
-            seen: Set[int] = set()
+            result: dict[str, dict[str, Any]] = {}
+            seen: set[int] = set()
             for name, provider in self._providers.items():
                 if id(provider) in seen:
                     continue
@@ -440,18 +447,18 @@ class AdapterRegistry:
     def get_providers_by_capability(
         self,
         capability: ChannelCapability,
-    ) -> List[ChannelProvider]:
+    ) -> list[ChannelProvider]:
         """Get all providers that support a specific capability."""
         with self._lock:
-            seen: Set[int] = set()
-            result: List[ChannelProvider] = []
+            seen: set[int] = set()
+            result: list[ChannelProvider] = []
             for provider in self._providers.values():
                 if id(provider) not in seen and capability in provider.capabilities:
                     seen.add(id(provider))
                     result.append(provider)
             return result
 
-    def get_voice_capable_providers(self) -> List[ChannelProvider]:
+    def get_voice_capable_providers(self) -> list[ChannelProvider]:
         """Get all providers that can receive voice/audio messages.
 
         Convenience method for the voice pipeline to discover
@@ -465,7 +472,7 @@ class AdapterRegistry:
     def get_provider_for_channel(
         self,
         channel: str,
-    ) -> Optional[ChannelProvider]:
+    ) -> ChannelProvider | None:
         """Get a provider by channel name, with inbound fallback.
 
         If the exact channel name is not found, tries to find
@@ -480,11 +487,11 @@ class AdapterRegistry:
         return self.get(channel)
 
     @property
-    def registered_channels(self) -> List[str]:
+    def registered_channels(self) -> list[str]:
         """List of unique registered channel names."""
         with self._lock:
-            seen: Set[int] = set()
-            names: List[str] = []
+            seen: set[int] = set()
+            names: list[str] = []
             for name, provider in self._providers.items():
                 if id(provider) not in seen:
                     seen.add(id(provider))
@@ -492,7 +499,7 @@ class AdapterRegistry:
             return names
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Registry statistics."""
         with self._lock:
             return {
@@ -507,7 +514,7 @@ class AdapterRegistry:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_default_registry: Optional[AdapterRegistry] = None
+_default_registry: AdapterRegistry | None = None
 _registry_lock = threading.Lock()
 
 
@@ -520,6 +527,7 @@ def get_default_registry() -> AdapterRegistry:
                 _default_registry = AdapterRegistry()
                 # Register the log provider as terminal fallback
                 from .._log_provider import LogChannelProvider
+
                 _default_registry.register(LogChannelProvider())
     return _default_registry
 

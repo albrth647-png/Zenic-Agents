@@ -20,9 +20,9 @@ import logging
 import os
 from typing import Optional
 
-from ._types import RunResult
-from ._helpers_mixin import HelpersMixin
 from ._api_mixin import PublicAPIMixin
+from ._helpers_mixin import HelpersMixin
+from ._types import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ __all__ = ["ProjectRunner", "RunResult", "os"]
 class ProjectRunner(PublicAPIMixin, HelpersMixin):
     """Run generated projects automatically with venv + deps + server start."""
 
-    def __init__(self, projects_dir: Optional[str] = None):
+    def __init__(self, projects_dir: str | None = None):
         """
         Args:
             projects_dir: Base directory for generated projects.
@@ -42,4 +42,5 @@ class ProjectRunner(PublicAPIMixin, HelpersMixin):
             self._projects_dir = projects_dir
         else:
             from src.core.shared.db_initializer import get_projects_dir
+
             self._projects_dir = str(get_projects_dir())

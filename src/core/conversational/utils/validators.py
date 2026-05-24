@@ -10,8 +10,8 @@ from __future__ import annotations
 import re
 import uuid
 
-from .types.personality import PERSONALITY_PRESETS  # type: ignore[import-unresolved]
 from ..config.constants import MAX_MESSAGES_PER_SESSION
+from .types.personality import PERSONALITY_PRESETS  # type: ignore[import-unresolved]
 
 
 def validate_message(message: str) -> tuple[bool, str]:
@@ -48,7 +48,7 @@ def validate_personality_name(name: str) -> tuple[bool, str]:
     if name in PERSONALITY_PRESETS:
         return True, ""
     # Nombres personalizados: alfanumerico + guion bajo, 2-30 chars
-    if re.match(r'^[a-zA-Z0-9_]{2,30}$', name):
+    if re.match(r"^[a-zA-Z0-9_]{2,30}$", name):
         return True, ""
     return False, f"Nombre de personalidad invalido: {name}"
 

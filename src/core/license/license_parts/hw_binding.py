@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import List
 
 from ..types import HardwareBindingStrength
 
@@ -28,12 +27,12 @@ def get_hardware_fingerprint() -> str:
     Returns:
         SHA-256 hex digest (first 32 chars) of the combined identifiers.
     """
-    components: List[str] = []
+    components: list[str] = []
 
     # Machine ID (Linux)
     for path in ["/etc/machine-id", "/var/lib/dbus/machine-id"]:
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 components.append(f.read().strip()[:32])
                 break
         except (FileNotFoundError, PermissionError):
@@ -41,7 +40,7 @@ def get_hardware_fingerprint() -> str:
 
     # CPU info
     try:
-        with open("/proc/cpuinfo", "r") as f:
+        with open("/proc/cpuinfo") as f:
             for line in f:
                 if line.startswith("model name"):
                     components.append(line.split(":")[1].strip()[:32])
@@ -51,7 +50,7 @@ def get_hardware_fingerprint() -> str:
 
     # Memory
     try:
-        with open("/proc/meminfo", "r") as f:
+        with open("/proc/meminfo") as f:
             for line in f:
                 if line.startswith("MemTotal:"):
                     components.append(line.split(":")[1].strip()[:16])
@@ -62,8 +61,12 @@ def get_hardware_fingerprint() -> str:
     # Disk serial (best-effort)
     try:
         import subprocess
+
         result = subprocess.run(
-            ["lsblk", "-ndo", "SERIAL"], capture_output=True, text=True, timeout=3,
+            ["lsblk", "-ndo", "SERIAL"],
+            capture_output=True,
+            text=True,
+            timeout=3,
         )
         if result.returncode == 0:
             serials = [s.strip() for s in result.stdout.split("\n") if s.strip()]
@@ -77,7 +80,9 @@ def get_hardware_fingerprint() -> str:
 
 
 def check_hardware_match(
-    expected: str, current: str, strength: HardwareBindingStrength,
+    expected: str,
+    current: str,
+    strength: HardwareBindingStrength,
 ) -> bool:
     """Check if current hardware matches the expected fingerprint.
 

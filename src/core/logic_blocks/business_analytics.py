@@ -6,10 +6,10 @@ notification dispatch, and data analyzer.
 """
 
 import json
-import time
-import math
 import logging
-from typing import Any, Dict
+import math
+import time
+from typing import Any
 
 from .chain import LogicBlock
 
@@ -30,7 +30,7 @@ class ReportGeneratorBlock(LogicBlock):
     inputs = ["data", "report_type", "format"]
     outputs = ["report_content", "metadata"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             report_data = data.get("data", data.get("dataset", []))
             report_type = data.get("report_type", "summary")  # summary, detailed, comparison
@@ -79,14 +79,22 @@ class ReportGeneratorBlock(LogicBlock):
             if fmt == "json":
                 report_output = json.dumps(report_content, indent=2, default=str)
             elif fmt == "text":
-                lines = [f"Report: {report_type}", f"Records: {len(report_data)}", f"Fields: {', '.join(sorted(all_fields))}"]
+                lines = [
+                    f"Report: {report_type}",
+                    f"Records: {len(report_data)}",
+                    f"Fields: {', '.join(sorted(all_fields))}",
+                ]
                 for field_name, field_stats in stats.items():
-                    lines.append(f"  {field_name}: sum={field_stats['sum']}, avg={field_stats['avg']}, min={field_stats['min']}, max={field_stats['max']}")
+                    lines.append(
+                        f"  {field_name}: sum={field_stats['sum']}, avg={field_stats['avg']}, min={field_stats['min']}, max={field_stats['max']}"
+                    )
                 report_output = "\n".join(lines)
             else:
                 report_output = report_content
 
-            logger.debug(f"ReportGeneratorBlock: type={report_type}, records={len(report_data)}, fields={len(all_fields)}")
+            logger.debug(
+                f"ReportGeneratorBlock: type={report_type}, records={len(report_data)}, fields={len(all_fields)}"
+            )
             return {
                 "success": True,
                 "report_content": report_output,
@@ -98,7 +106,7 @@ class ReportGeneratorBlock(LogicBlock):
                 },
             }
         except Exception as e:
-            return {"success": False, "error": f"ReportGeneratorBlock: {str(e)}"}
+            return {"success": False, "error": f"ReportGeneratorBlock: {e!s}"}
 
 
 # NotificationDispatchBlock removed — external notification channels (email, SMS, push, webhook)
@@ -114,7 +122,7 @@ class DataAnalyzerBlock(LogicBlock):
     inputs = ["dataset", "metrics"]
     outputs = ["analysis_result", "summary"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             dataset = data.get("dataset", data.get("data", []))
             metrics = data.get("metrics", ["mean", "median", "std", "min", "max"])
@@ -149,8 +157,8 @@ class DataAnalyzerBlock(LogicBlock):
                     field_analysis["mean"] = round(sum(values) / n, 4)
                 if "median" in metrics:
                     mid = n // 2
-                    field_analysis["median"] = sorted_vals[mid] if n % 2 else round(
-                        (sorted_vals[mid - 1] + sorted_vals[mid]) / 2, 4
+                    field_analysis["median"] = (
+                        sorted_vals[mid] if n % 2 else round((sorted_vals[mid - 1] + sorted_vals[mid]) / 2, 4)
                     )
                 if "std" in metrics and n > 1:
                     mean_val = sum(values) / n
@@ -184,4 +192,4 @@ class DataAnalyzerBlock(LogicBlock):
                 "total_records": len(dataset),
             }
         except Exception as e:
-            return {"success": False, "error": f"DataAnalyzerBlock: {str(e)}"}
+            return {"success": False, "error": f"DataAnalyzerBlock: {e!s}"}

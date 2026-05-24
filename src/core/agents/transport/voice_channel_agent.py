@@ -39,7 +39,7 @@ import concurrent.futures
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas.types._transport_types import VoiceChannelInput, VoiceChannelResult
@@ -51,12 +51,12 @@ from ..schemas.types._transport_types import VoiceChannelInput, VoiceChannelResu
 _logger = logging.getLogger("zenic_agents.agents.transport.voice_channel")
 
 # Module-level references (resolved on first use)
-_voice_pipeline_cls = None     # VoicePipeline
-_stt_config_cls = None         # STTBackendConfig
-_audio_format_cls = None       # AudioFormat
+_voice_pipeline_cls = None  # VoicePipeline
+_stt_config_cls = None  # STTBackendConfig
+_audio_format_cls = None  # AudioFormat
 _transcription_result_cls = None  # TranscriptionResult
-_can_receive_voice_fn = None   # can_receive_voice
-_platform_limits_cls = None    # PlatformLimits
+_can_receive_voice_fn = None  # can_receive_voice
+_platform_limits_cls = None  # PlatformLimits
 
 
 def _resolve_deps() -> None:
@@ -71,14 +71,18 @@ def _resolve_deps() -> None:
     if _voice_pipeline_cls is not None:
         return  # Already resolved
 
+    from src.core.channels._formatter._limits import PlatformLimits as _PL
+    from src.core.channels._protocol import can_receive_voice as _crv
     from src.core.voice_pipeline import VoicePipeline as _VP
     from src.core.voice_pipeline._types import (
-        STTBackendConfig as _SBC,
         AudioFormat as _AF,
+    )
+    from src.core.voice_pipeline._types import (
+        STTBackendConfig as _SBC,
+    )
+    from src.core.voice_pipeline._types import (
         TranscriptionResult as _TR,
     )
-    from src.core.channels._protocol import can_receive_voice as _crv
-    from src.core.channels._formatter._limits import PlatformLimits as _PL
 
     _voice_pipeline_cls = _VP
     _stt_config_cls = _SBC
@@ -91,6 +95,7 @@ def _resolve_deps() -> None:
 # ──────────────────────────────────────────────────────────────
 #  ASYNC BRIDGE
 # ──────────────────────────────────────────────────────────────
+
 
 def _run_async(coro: Any, timeout: float = 60.0) -> Any:
     """Bridge an async coroutine to synchronous execution.
@@ -116,10 +121,11 @@ def _run_async(coro: Any, timeout: float = 60.0) -> Any:
 #  AUDIO DOWNLOAD HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 async def _download_from_provider(
     provider: Any,
     media_id: str,
-) -> Optional[bytes]:
+) -> bytes | None:
     """Download audio bytes from a channel provider.
 
     Uses the provider's download_media() method (WhatsApp) or
@@ -134,7 +140,7 @@ async def _download_from_provider(
     """
     try:
         # Try provider's download_media first (WhatsApp pattern)
-        if hasattr(provider, 'download_media') and callable(provider.download_media):
+        if hasattr(provider, "download_media") and callable(provider.download_media):
             return await provider.download_media(media_id)
 
         # Try direct URL download
@@ -147,13 +153,14 @@ async def _download_from_provider(
         return None
 
 
-async def _download_url(url: str) -> Optional[bytes]:
+async def _download_url(url: str) -> bytes | None:
     """Download audio from a direct URL.
 
     Uses aiohttp if available, falls back to urllib.
     """
     try:
         import aiohttp
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status == 200:
@@ -167,7 +174,7 @@ async def _download_url(url: str) -> Optional[bytes]:
     try:
         import urllib.request
 
-        def _sync_download() -> Optional[bytes]:
+        def _sync_download() -> bytes | None:
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return resp.read()
@@ -178,7 +185,7 @@ async def _download_url(url: str) -> Optional[bytes]:
         return None
 
 
-def _read_local_file(path: str) -> Optional[bytes]:
+def _read_local_file(path: str) -> bytes | None:
     """Read audio bytes from a local filesystem path.
 
     Args:
@@ -198,7 +205,8 @@ def _read_local_file(path: str) -> Optional[bytes]:
         if size > max_size:
             _logger.error(
                 "Audio file too large: %d bytes (max %d)",
-                size, max_size,
+                size,
+                max_size,
             )
             return None
 
@@ -212,6 +220,7 @@ def _read_local_file(path: str) -> Optional[bytes]:
 # ──────────────────────────────────────────────────────────────
 #  AUDIO LIMIT VALIDATION
 # ──────────────────────────────────────────────────────────────
+
 
 def _get_voice_duration_limit(channel: str) -> int:
     """Get the maximum audio duration (seconds) for a channel.
@@ -243,6 +252,7 @@ def _get_voice_size_limit(channel: str) -> int:
 #  A52 VOICE CHANNEL AGENT
 # ──────────────────────────────────────────────────────────────
 
+
 class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
     """A52: Deterministic voice transcription agent.
 
@@ -267,15 +277,15 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A52_VoiceChannelAgent", **kwargs)
-        self._voice_pipeline: Optional[Any] = None  # VoicePipeline — wired at startup
-        self._registry: Optional[Any] = None        # AdapterRegistry — wired at startup
+        self._voice_pipeline: Any | None = None  # VoicePipeline — wired at startup
+        self._registry: Any | None = None  # AdapterRegistry — wired at startup
 
     # ── Dependency Wiring ─────────────────────────────────────
 
     def wire(
         self,
-        voice_pipeline: Any,     # VoicePipeline
-        registry: Any = None,    # AdapterRegistry (for provider download)
+        voice_pipeline: Any,  # VoicePipeline
+        registry: Any = None,  # AdapterRegistry (for provider download)
     ) -> None:
         """Wire voice pipeline and channel infrastructure dependencies.
 
@@ -398,7 +408,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
         start = time.monotonic()
 
         # ── Step 1: Download audio bytes ──
-        audio_bytes: Optional[bytes] = None
+        audio_bytes: bytes | None = None
 
         if data.audio_path:
             # Local file path
@@ -410,7 +420,8 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
                     error=f"Cannot read audio file: {data.audio_path}",
                 )
             _logger.info(
-                "A52: loaded audio from path (%d bytes)", len(audio_bytes),
+                "A52: loaded audio from path (%d bytes)",
+                len(audio_bytes),
             )
 
         elif data.audio_url:
@@ -424,7 +435,8 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
                     error=f"Cannot download audio from: {data.audio_url[:100]}",
                 )
             _logger.info(
-                "A52: downloaded audio (%d bytes)", len(audio_bytes),
+                "A52: downloaded audio (%d bytes)",
+                len(audio_bytes),
             )
 
         if not audio_bytes:
@@ -443,8 +455,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             return self._make_result(
                 data=data,
                 success=False,
-                error=f"Audio too large: {len(audio_bytes)} bytes "
-                      f"(limit: {size_limit} bytes for {channel})",
+                error=f"Audio too large: {len(audio_bytes)} bytes " f"(limit: {size_limit} bytes for {channel})",
             )
 
         # ── Step 3 + 4: Convert → Transcribe via VoicePipeline ──
@@ -462,8 +473,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
 
         if transcription.success:
             _logger.info(
-                "A52: transcription succeeded in %.2fs "
-                "(text_len=%d, lang=%s, backend=%s)",
+                "A52: transcription succeeded in %.2fs " "(text_len=%d, lang=%s, backend=%s)",
                 elapsed,
                 len(transcription.transcribed_text),
                 transcription.language,
@@ -491,7 +501,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
 
     # ── Audio Download ────────────────────────────────────────
 
-    async def _download_audio(self, data: VoiceChannelInput) -> Optional[bytes]:
+    async def _download_audio(self, data: VoiceChannelInput) -> bytes | None:
         """Download audio bytes from URL or channel provider.
 
         Tries in order:
@@ -520,7 +530,8 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             except Exception as e:
                 _logger.debug(
                     "A52: provider download failed for %s: %s",
-                    data.channel, e,
+                    data.channel,
+                    e,
                 )
 
         # Direct URL download
@@ -642,7 +653,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             return self._voice_pipeline.active_backend
         return "not_wired"
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """VoiceChannelAgent health check."""
         return {
             "agent": "A52_VoiceChannelAgent",
@@ -650,9 +661,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             "stt_backend": self.stt_backend,
             "registry_wired": self._registry is not None,
             "voice_pipeline_health": (
-                self._voice_pipeline.health_check()
-                if self._voice_pipeline is not None
-                else None
+                self._voice_pipeline.health_check() if self._voice_pipeline is not None else None
             ),
         }
 

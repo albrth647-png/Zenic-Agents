@@ -1,6 +1,7 @@
 """Core logic for trigger_map."""
 
 from __future__ import annotations
+
 import fnmatch
 import json
 import logging
@@ -12,6 +13,7 @@ import uuid
 from typing import Any
 
 logger = logging.getLogger("zenic_agents.events.trigger_map")
+
 
 class TriggerMap:
     """
@@ -72,7 +74,8 @@ class TriggerMap:
             conn.close()
         logger.info(
             "TriggerMap: loaded %d mappings from %s",
-            len(self._mappings), self._db_path,
+            len(self._mappings),
+            self._db_path,
         )
 
     # ── Register ────────────────────────────────────────────────
@@ -147,7 +150,10 @@ class TriggerMap:
 
         logger.info(
             "TriggerMap: registered %s → %s (pattern=%s, priority=%d)",
-            trigger_id, automation_id, event_pattern, priority,
+            trigger_id,
+            automation_id,
+            event_pattern,
+            priority,
         )
         return trigger_id
 
@@ -241,14 +247,11 @@ class TriggerMap:
         try:
             import yaml  # type: ignore[import-untyped]
         except ImportError:
-            logger.error(
-                "TriggerMap: PyYAML not installed, cannot load from YAML. "
-                "Install with: pip install pyyaml"
-            )
+            logger.error("TriggerMap: PyYAML not installed, cannot load from YAML. " "Install with: pip install pyyaml")
             return 0
 
         try:
-            with open(yaml_path, "r", encoding="utf-8") as fh:
+            with open(yaml_path, encoding="utf-8") as fh:
                 data = yaml.safe_load(fh)
         except (OSError, yaml.YAMLError) as exc:
             logger.error("TriggerMap: failed to load YAML from %s: %s", yaml_path, exc)
@@ -283,8 +286,8 @@ class TriggerMap:
                 condition = m.get("condition")
                 if not event_pattern or not automation_id:
                     logger.warning(
-                        "TriggerMap: skipping mapping with missing "
-                        "event_pattern or automation_id: %s", m,
+                        "TriggerMap: skipping mapping with missing " "event_pattern or automation_id: %s",
+                        m,
                     )
                     continue
                 self.register(
@@ -296,7 +299,9 @@ class TriggerMap:
                 count += 1
             except Exception as exc:
                 logger.warning(
-                    "TriggerMap: failed to load mapping %s: %s", m, exc,
+                    "TriggerMap: failed to load mapping %s: %s",
+                    m,
+                    exc,
                 )
         logger.info("TriggerMap: loaded %d mappings from dict", count)
         return count
@@ -322,9 +327,7 @@ class TriggerMap:
 
         if event_pattern is not None:
             result = [
-                m for m in result
-                if m.event_pattern == event_pattern
-                or fnmatch.fnmatch(m.event_pattern, event_pattern)
+                m for m in result if m.event_pattern == event_pattern or fnmatch.fnmatch(m.event_pattern, event_pattern)
             ]
 
         result.sort(key=lambda m: (m.event_pattern, -m.priority))
@@ -332,4 +335,3 @@ class TriggerMap:
 
 
 # ─── Singleton ──────────────────────────────────────────────────
-

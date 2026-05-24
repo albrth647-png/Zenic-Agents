@@ -22,10 +22,12 @@ Use Cases:
 import enum
 import logging
 import threading
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
+
+from src.core.shared.deterministic import FencingTokenGenerator
 
 from .backend import CoordinationBackend
-from src.core.shared.deterministic import FencingTokenGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +41,10 @@ __all__ = [
 #  ENUMS
 # ============================================================
 
+
 class LeadershipState(str, enum.Enum):
     """Leadership states."""
+
     FOLLOWER = "follower"
     CANDIDATE = "candidate"
     LEADER = "leader"
@@ -49,6 +53,7 @@ class LeadershipState(str, enum.Enum):
 # ============================================================
 #  LEADER ELECTION
 # ============================================================
+
 
 class LeaderElection:
     """
@@ -92,7 +97,7 @@ class LeaderElection:
         candidate_id: str,
         backend: CoordinationBackend,
         ttl_seconds: float = 30.0,
-        renewal_interval: Optional[float] = None,
+        renewal_interval: float | None = None,
     ) -> None:
         """
         Initialize the leader election.
@@ -120,12 +125,12 @@ class LeaderElection:
         self._fencing_gen = FencingTokenGenerator(f"leader:{election_name}")
 
         # Background renewal
-        self._renewal_thread: Optional[threading.Thread] = None
+        self._renewal_thread: threading.Thread | None = None
         self._stop_renewal_event = threading.Event()
 
         # Callbacks
-        self._on_elected: Optional[Callable[[], None]] = None
-        self._on_deposed: Optional[Callable[[], None]] = None
+        self._on_elected: Callable[[], None] | None = None
+        self._on_deposed: Callable[[], None] | None = None
 
     # ----------------------------------------------------------
     #  PROPERTIES
@@ -186,9 +191,9 @@ class LeaderElection:
                 self._fencing_token = self._fencing_gen.next()
 
             logger.info(
-                "LeaderElection: '%s' — %s is now LEADER "
-                "(fencing_token=%d)",
-                self._election_name, self._candidate_id,
+                "LeaderElection: '%s' — %s is now LEADER " "(fencing_token=%d)",
+                self._election_name,
+                self._candidate_id,
                 self._fencing_token,
             )
 
@@ -197,7 +202,8 @@ class LeaderElection:
                     self._on_elected()
                 except Exception as exc:
                     logger.error(
-                        "LeaderElection: on_elected callback error: %s", exc,
+                        "LeaderElection: on_elected callback error: %s",
+                        exc,
                     )
         else:
             with self._lock:
@@ -227,7 +233,8 @@ class LeaderElection:
 
             logger.info(
                 "LeaderElection: '%s' — %s abdicated",
-                self._election_name, self._candidate_id,
+                self._election_name,
+                self._candidate_id,
             )
 
             if self._on_deposed:
@@ -235,7 +242,8 @@ class LeaderElection:
                     self._on_deposed()
                 except Exception as exc:
                     logger.error(
-                        "LeaderElection: on_deposed callback error: %s", exc,
+                        "LeaderElection: on_deposed callback error: %s",
+                        exc,
                     )
 
         return success
@@ -267,7 +275,8 @@ class LeaderElection:
 
             logger.warning(
                 "LeaderElection: '%s' — %s lost leadership (renew failed)",
-                self._election_name, self._candidate_id,
+                self._election_name,
+                self._candidate_id,
             )
 
             if self._on_deposed:
@@ -275,7 +284,8 @@ class LeaderElection:
                     self._on_deposed()
                 except Exception as exc:
                     logger.error(
-                        "LeaderElection: on_deposed callback error: %s", exc,
+                        "LeaderElection: on_deposed callback error: %s",
+                        exc,
                     )
 
         return success
@@ -284,7 +294,7 @@ class LeaderElection:
     #  QUERY
     # ----------------------------------------------------------
 
-    async def get_leader(self) -> Optional[str]:
+    async def get_leader(self) -> str | None:
         """
         Get the current leader for this election.
 
@@ -314,9 +324,9 @@ class LeaderElection:
         )
         self._renewal_thread.start()
         logger.debug(
-            "LeaderElection: Started renewal for '%s' "
-            "(interval=%.1fs)",
-            self._election_name, self._renewal_interval,
+            "LeaderElection: Started renewal for '%s' " "(interval=%.1fs)",
+            self._election_name,
+            self._renewal_interval,
         )
 
     def stop_renewal(self) -> None:
@@ -335,6 +345,7 @@ class LeaderElection:
             if self._state == LeadershipState.LEADER:
                 try:
                     import asyncio
+
                     loop = asyncio.new_event_loop()
                     try:
                         loop.run_until_complete(self.renew())
@@ -343,12 +354,11 @@ class LeaderElection:
                 except Exception as exc:
                     logger.error(
                         "LeaderElection: Renewal error for '%s': %s",
-                        self._election_name, exc,
+                        self._election_name,
+                        exc,
                     )
 
-            self._stop_renewal_event.wait(
-                timeout=self._renewal_interval
-            )
+            self._stop_renewal_event.wait(timeout=self._renewal_interval)
 
     # ----------------------------------------------------------
     #  CALLBACKS
@@ -377,7 +387,7 @@ class LeaderElection:
     # ----------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Election statistics."""
         return {
             "election_name": self._election_name,

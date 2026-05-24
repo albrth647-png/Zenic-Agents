@@ -14,21 +14,23 @@ Uso:
   python3 main_headless.py --ram-limit 4096   # Limite RAM en MB
 """
 
+import argparse
+import logging
 import os
 import time
-import logging
-import argparse
 
 # ============================================================
 #  INICIALIZACION - Antes de importar modulos pesados
 # ============================================================
-
 from src.core.env_loader import load_env
+
 load_env()
 
 from src.core.shared.resource_governor import (  # noqa: E402
-    tune_gc_for_arm, set_process_priority_low,
-    limit_open_files, init_governor,
+    init_governor,
+    limit_open_files,
+    set_process_priority_low,
+    tune_gc_for_arm,
 )
 
 # Phase 5 — Deterministic mode: Install global patches for production determinism.
@@ -38,9 +40,12 @@ from src.core.shared.resource_governor import (  # noqa: E402
 _ZENIC_DETERMINISTIC = os.environ.get("ZENIC_DETERMINISTIC", "1") == "1"
 if _ZENIC_DETERMINISTIC:
     from src.core.shared.deterministic import (
-        set_global_seed, install_uuid4_patch, install_random_patch,
         get_global_seed,
+        install_random_patch,
+        install_uuid4_patch,
+        set_global_seed,
     )
+
     _seed = get_global_seed()  # Resolves from ZENIC_DETERMINISTIC_SEED or default 0xC0FFEE
     set_global_seed(_seed)
     install_uuid4_patch()
@@ -48,15 +53,16 @@ if _ZENIC_DETERMINISTIC:
     # time.time() patch is optional — only enable for full replay mode
     if os.environ.get("ZENIC_DETERMINISTIC_TIME", "0") == "1":
         from src.core.shared.deterministic import install_time_patch
+
         install_time_patch(increment=0.001)
 
 tune_gc_for_arm()
 set_process_priority_low()
 limit_open_files()
 
+from src.core.shared._version import ZENIC_FULL_NAME, ZENIC_VERSION_STR  # noqa: E402
 from src.core.shared.contracts import HAS_Z3  # noqa: E402
 from src.core.shared.db_initializer import initialize_databases  # noqa: E402
-from src.core.shared._version import ZENIC_VERSION_STR, ZENIC_FULL_NAME  # noqa: E402
 
 # Feature flags
 _ZENIC_USE_SNA = os.environ.get("ZENIC_USE_SNA", "1") == "1"
@@ -64,29 +70,24 @@ _ZENIC_USE_BLUEPRINTS = os.environ.get("ZENIC_USE_BLUEPRINTS", "1") == "1"
 
 # dag_orchestrator migrated to Rust — use ZenicOrchestrator directly
 from src.core.orchestrator import ZenicOrchestrator  # noqa: E402
+
 _ORCHESTRATOR_CLASS = ZenicOrchestrator
 _ORCHESTRATOR_NAME = f"ZenicOrchestrator ({ZENIC_VERSION_STR})"
 
 # Server module removed — no more HTTP server imports
 # from src.server import (ZenicHTTPHandler, ThreadedHTTPServer, ...)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-    datefmt='%H:%M:%S'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("ZENIC")
 
 START_TIME = time.time()
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description=f"ZENIC-AGENTS {ZENIC_VERSION_STR} - Local Engine CLI"
-    )
-    parser.add_argument('--ram-limit', type=int, default=4096, help='Limite RAM MB (default: 4096)')
-    parser.add_argument('--debug', action='store_true', help='Modo debug')
-    parser.add_argument('--sna', action='store_true', default=False, help='Habilitar SNA')
+    parser = argparse.ArgumentParser(description=f"ZENIC-AGENTS {ZENIC_VERSION_STR} - Local Engine CLI")
+    parser.add_argument("--ram-limit", type=int, default=4096, help="Limite RAM MB (default: 4096)")
+    parser.add_argument("--debug", action="store_true", help="Modo debug")
+    parser.add_argument("--sna", action="store_true", default=False, help="Habilitar SNA")
     args = parser.parse_args()
 
     if args.debug:
@@ -105,7 +106,7 @@ def main():
     logger.info(f"Orchestrator: {_ORCHESTRATOR_NAME} [HYBRID MODE]")
 
     # Connect governor to ModelManager
-    if hasattr(orchestrator, '_model_mgr'):
+    if hasattr(orchestrator, "_model_mgr"):
         governor.set_model_manager(orchestrator._model_mgr)
 
     # Reset circuit breakers
@@ -121,9 +122,11 @@ def main():
     blueprint_registry = None
     if _ZENIC_USE_BLUEPRINTS:
         from src.core.blueprints.boot import init_blueprint_registry
+
         project_root = os.path.dirname(os.path.abspath(__file__))
         blueprint_registry = init_blueprint_registry(
-            project_root=project_root, sna_engine=sna_engine,
+            project_root=project_root,
+            sna_engine=sna_engine,
         )
 
     # ── Init Phase 6: Multi-Rol + Seguridad Completa ──
@@ -132,6 +135,7 @@ def main():
     if _ZENIC_USE_PHASE6:
         try:
             from src.core.phase6_init import initialize_phase6
+
             phase6_status = initialize_phase6(start_defense_monitoring=True)
             ok_count = sum(1 for v in phase6_status.values() if v.get("status") == "ok")
             logger.info("Phase 6 (Multi-Rol + Seguridad): %d/%d components initialized", ok_count, len(phase6_status))
@@ -155,9 +159,11 @@ def main():
 
 # ── Helper Functions ──────────────────────────────────────────
 
+
 def _run_interactive_loop(orchestrator, governor, sna_engine=None, blueprint_registry=None):
     """Simple interactive loop for local engine testing."""
     import asyncio
+
     while True:
         try:
             user_input = input("zenic> ").strip()
@@ -179,16 +185,16 @@ def _run_interactive_loop(orchestrator, governor, sna_engine=None, blueprint_reg
             result = loop.run_until_complete(orchestrator.execute(user_input))
             loop.close()
 
-            status = result.get('status', 'N/A')
-            route = result.get('route', 'N/A')
-            crit = result.get('criticality', 'N/A')
-            time_ms = result.get('processing_time_ms', 0)
+            status = result.get("status", "N/A")
+            route = result.get("route", "N/A")
+            crit = result.get("criticality", "N/A")
+            time_ms = result.get("processing_time_ms", 0)
             print(f"  Status: {status} | Route: {route} | Crit: {crit} | Time: {time_ms}ms")
 
-            if result.get('error'):
+            if result.get("error"):
                 print(f"  Error: {result['error']}")
-            if result.get('explanations'):
-                for exp in result['explanations']:
+            if result.get("explanations"):
+                for exp in result["explanations"]:
                     print(f"  {exp}")
         except Exception as e:
             print(f"  Error: {e}")
@@ -197,7 +203,7 @@ def _run_interactive_loop(orchestrator, governor, sna_engine=None, blueprint_reg
 def _print_status(orchestrator, governor, sna_engine=None):
     """Print current engine status."""
     print(f"  Orchestrator: {type(orchestrator).__name__}")
-    if hasattr(orchestrator, '_model_mgr'):
+    if hasattr(orchestrator, "_model_mgr"):
         mgr = orchestrator._model_mgr
         print(f"  AI Loaded: {mgr.ai_loaded}")
         print(f"  Semantic Loaded: {mgr.semantic_loaded}")
@@ -208,20 +214,20 @@ def _print_status(orchestrator, governor, sna_engine=None):
 
 def _reset_circuit_breakers(orchestrator: object) -> None:
     """Reset circuit breakers on startup."""
-    if hasattr(orchestrator, '_agent_runner') and orchestrator._agent_runner is not None:
-        cb = getattr(orchestrator._agent_runner, '_circuit_breaker', None)
+    if hasattr(orchestrator, "_agent_runner") and orchestrator._agent_runner is not None:
+        cb = getattr(orchestrator._agent_runner, "_circuit_breaker", None)
         if cb is not None:
             cb.reset()
-    if hasattr(orchestrator, '_model_mgr') and orchestrator._model_mgr.ai_loaded:
+    if hasattr(orchestrator, "_model_mgr") and orchestrator._model_mgr.ai_loaded:
         ai = orchestrator._model_mgr.mini_ai_engine
-        if hasattr(ai, '_verdict_cb') and ai._verdict_cb is not None:
+        if hasattr(ai, "_verdict_cb") and ai._verdict_cb is not None:
             ai._verdict_cb.reset()
 
 
 def _preload_models(orchestrator: object) -> None:
     """Preload AI models if configured."""
     preload = os.environ.get("ZENIC_PRELOAD_MODELS", "1") == "1"
-    if not preload or not hasattr(orchestrator, '_model_mgr'):
+    if not preload or not hasattr(orchestrator, "_model_mgr"):
         return
     logger.info("Preloading AI models...")
     try:
@@ -242,11 +248,14 @@ def _init_sna(args: argparse.Namespace) -> object:
     if not (_ZENIC_USE_SNA or args.sna):
         return None
     try:
-        from src.core.sna import get_sna_engine
         import asyncio
+
+        from src.core.sna import get_sna_engine
+
         sna_engine = get_sna_engine()
         try:
             from src.core.executors.dispatch_action import get_default_dispatcher
+
             sna_engine.set_dispatcher(get_default_dispatcher())
         except Exception:
             pass
@@ -272,6 +281,7 @@ def _shutdown(governor: object, sna_engine: object = None) -> None:
     if sna_engine:
         try:
             import asyncio
+
             asyncio.get_event_loop().run_until_complete(sna_engine.stop())
         except Exception:
             pass
@@ -280,6 +290,7 @@ def _shutdown(governor: object, sna_engine: object = None) -> None:
         from src.core.defense.anti_tampering import reset_anti_tampering
         from src.core.defense.integrity import reset_integrity_verifier
         from src.core.license.manager import reset_license_manager
+
         reset_anti_tampering()
         reset_integrity_verifier()
         reset_license_manager()
@@ -287,5 +298,5 @@ def _shutdown(governor: object, sna_engine: object = None) -> None:
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

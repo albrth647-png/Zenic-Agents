@@ -1,11 +1,18 @@
 """VerdictEngine - LLM Request Mixin."""
 
+import concurrent.futures
 import logging
 import time
-import concurrent.futures
 
 from ..types import Verdict, VerdictInput, VerdictOutput
-from ._config import VERDICT_TIMEOUT_S, VERDICT_MAX_TOKENS, VERDICT_MAX_RETRIES, VERDICT_CONSENSUS_ATTEMPTS, VERDICT_CONSENSUS_THRESHOLD, VERDICT_PROMPT_TEMPLATE
+from ._config import (
+    VERDICT_CONSENSUS_ATTEMPTS,
+    VERDICT_CONSENSUS_THRESHOLD,
+    VERDICT_MAX_RETRIES,
+    VERDICT_MAX_TOKENS,
+    VERDICT_PROMPT_TEMPLATE,
+    VERDICT_TIMEOUT_S,
+)
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
@@ -13,13 +20,11 @@ logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 class VerdictLLMMixin:
     """Mixin providing LLM verdict request methods."""
 
-
     # ================================================================
     #  INTERNAL: LLM verdict request with full resilience
     # ================================================================
 
-    def _request_llm_verdict(self, input_data: VerdictInput,
-                              start_time: float) -> VerdictOutput:
+    def _request_llm_verdict(self, input_data: VerdictInput, start_time: float) -> VerdictOutput:
         """
         Solicita un veredicto al LLM con resiliencia completa.
 
@@ -47,11 +52,17 @@ class VerdictLLMMixin:
             logger.warning("VerdictEngine: Circuit breaker OPEN, using fallback NO")
 
             self._audit_result(
-                input_data.question, "NO", "fallback_circuit_open",
-                False, 0.0, int(elapsed * 1000), 0,
-                len(input_data.evidence_for), len(input_data.evidence_against),
+                input_data.question,
+                "NO",
+                "fallback_circuit_open",
+                False,
+                0.0,
+                int(elapsed * 1000),
+                0,
+                len(input_data.evidence_for),
+                len(input_data.evidence_against),
                 input_data.consensus_score,
-                circuit_breaker_state=self._resilience.circuit_breaker.state.value if self._resilience else "unknown"
+                circuit_breaker_state=self._resilience.circuit_breaker.state.value if self._resilience else "unknown",
             )
 
             return VerdictOutput(
@@ -77,18 +88,12 @@ class VerdictLLMMixin:
 
         # v17.1: Multi-attempt consensus
         if VERDICT_CONSENSUS_ATTEMPTS > 1 and self._mini_ai and self._mini_ai.is_loaded:
-            return self._multi_attempt_consensus(
-                input_data, prompt, start_time
-            )
+            return self._multi_attempt_consensus(input_data, prompt, start_time)
 
         # Fallback to single-attempt with retry
-        return self._single_attempt_with_retry(
-            input_data, prompt, start_time
-        )
+        return self._single_attempt_with_retry(input_data, prompt, start_time)
 
-    def _multi_attempt_consensus(self, input_data: VerdictInput,
-                                  prompt: str,
-                                  start_time: float) -> VerdictOutput:
+    def _multi_attempt_consensus(self, input_data: VerdictInput, prompt: str, start_time: float) -> VerdictOutput:
         """
         Multi-attempt consensus: Pregunta al LLM N veces y la mayoría decide.
 
@@ -113,9 +118,7 @@ class VerdictLLMMixin:
             try:
                 if self._executor is None:
                     raise RuntimeError("Executor not initialized — VerdictEngine may have been shut down")
-                future = self._executor.submit(
-                    self._call_llm_safe, prompt, VERDICT_MAX_TOKENS
-                )
+                future = self._executor.submit(self._call_llm_safe, prompt, VERDICT_MAX_TOKENS)
                 raw_response = future.result(timeout=VERDICT_TIMEOUT_S)
                 total_attempts += 1
 
@@ -137,15 +140,11 @@ class VerdictLLMMixin:
                 total_attempts += 1
                 no_count += 1
                 any_timeout = True
-                logger.warning(
-                    f"VerdictEngine: Consensus attempt {i + 1} timed out"
-                )
+                logger.warning(f"VerdictEngine: Consensus attempt {i + 1} timed out")
             except Exception as e:
                 total_attempts += 1
                 no_count += 1
-                logger.warning(
-                    f"VerdictEngine: Consensus attempt {i + 1} failed: {e}"
-                )
+                logger.warning(f"VerdictEngine: Consensus attempt {i + 1} failed: {e}")
 
             # Early exit: Clear majority
             if yes_count >= VERDICT_CONSENSUS_THRESHOLD:
@@ -169,11 +168,17 @@ class VerdictLLMMixin:
             confidence = min(yes_count / max(total_attempts, 1) + 0.1, 1.0)
 
             self._audit_result(
-                input_data.question, "YES", "llm_consensus",
-                True, confidence, int(elapsed * 1000), 0,
-                len(input_data.evidence_for), len(input_data.evidence_against),
+                input_data.question,
+                "YES",
+                "llm_consensus",
+                True,
+                confidence,
+                int(elapsed * 1000),
+                0,
+                len(input_data.evidence_for),
+                len(input_data.evidence_against),
                 input_data.consensus_score,
-                raw_response="; ".join(raw_responses[:3])
+                raw_response="; ".join(raw_responses[:3]),
             )
 
             return VerdictOutput(
@@ -197,17 +202,22 @@ class VerdictLLMMixin:
             else:
                 source = "llm_consensus"
 
-            self._record_failure(
-                elapsed, was_timeout=any_timeout, was_ambiguous=any_ambiguous
-            )
+            self._record_failure(elapsed, was_timeout=any_timeout, was_ambiguous=any_ambiguous)
 
             self._audit_result(
-                input_data.question, "NO", source,
-                yes_count > 0, 0.0, int(elapsed * 1000), 0,
-                len(input_data.evidence_for), len(input_data.evidence_against),
+                input_data.question,
+                "NO",
+                source,
+                yes_count > 0,
+                0.0,
+                int(elapsed * 1000),
+                0,
+                len(input_data.evidence_for),
+                len(input_data.evidence_against),
                 input_data.consensus_score,
-                was_timeout=any_timeout, was_ambiguous=any_ambiguous,
-                raw_response="; ".join(raw_responses[:3])
+                was_timeout=any_timeout,
+                was_ambiguous=any_ambiguous,
+                raw_response="; ".join(raw_responses[:3]),
             )
 
             confidence = 0.0 if all_failed else min(no_count / max(total_attempts, 1), 1.0)
@@ -216,18 +226,14 @@ class VerdictLLMMixin:
                 verdict=Verdict.NO,
                 confidence=confidence,
                 source=source,
-                evidence_summary=evidence_summary + (
-                    " [FALLBACK: LLM unavailable]" if all_failed
-                    else " [CONSENSUS: Majority NO]"
-                ),
+                evidence_summary=evidence_summary
+                + (" [FALLBACK: LLM unavailable]" if all_failed else " [CONSENSUS: Majority NO]"),
                 llm_used=yes_count > 0 or no_count > 0,
                 llm_raw_response="; ".join(raw_responses[:3]),
                 retry_count=0,
             )
 
-    def _single_attempt_with_retry(self, input_data: VerdictInput,
-                                    prompt: str,
-                                    start_time: float) -> VerdictOutput:
+    def _single_attempt_with_retry(self, input_data: VerdictInput, prompt: str, start_time: float) -> VerdictOutput:
         """
         Single-attempt verdict with retry and exponential backoff.
         Used when multi-attempt consensus is disabled.
@@ -248,17 +254,13 @@ class VerdictLLMMixin:
                 # Delay between retries
                 if attempt > 0:
                     delay = self._compute_retry_delay(attempt)
-                    logger.info(
-                        f"VerdictEngine: Retry {attempt}/{max_retries} after {delay:.1f}s"
-                    )
+                    logger.info(f"VerdictEngine: Retry {attempt}/{max_retries} after {delay:.1f}s")
                     time.sleep(delay)
 
                 try:
                     if self._executor is None:
                         raise RuntimeError("Executor not initialized — VerdictEngine may have been shut down")
-                    future = self._executor.submit(
-                        self._call_llm_safe, prompt, VERDICT_MAX_TOKENS
-                    )
+                    future = self._executor.submit(self._call_llm_safe, prompt, VERDICT_MAX_TOKENS)
                     raw_response = future.result(timeout=VERDICT_TIMEOUT_S)
                     if raw_response:
                         parsed = self._parse_verdict(raw_response)
@@ -267,9 +269,7 @@ class VerdictLLMMixin:
                             with self._stats_lock:
                                 self._total_time += elapsed
 
-                            self._record_success(
-                                elapsed, was_ambiguous=False
-                            )
+                            self._record_success(elapsed, was_ambiguous=False)
 
                             with self._stats_lock:
                                 if parsed == Verdict.YES:
@@ -280,17 +280,24 @@ class VerdictLLMMixin:
                             evidence_summary = self._build_evidence_summary_from_input(input_data)
 
                             self._audit_result(
-                                input_data.question, parsed.value, "llm",
-                                True, min(abs(input_data.consensus_score) + 0.3, 1.0),  # SECURITY (A2 fix): clamp to 1.0
-                                int(elapsed * 1000), retry_count,
-                                len(input_data.evidence_for), len(input_data.evidence_against),
+                                input_data.question,
+                                parsed.value,
+                                "llm",
+                                True,
+                                min(abs(input_data.consensus_score) + 0.3, 1.0),  # SECURITY (A2 fix): clamp to 1.0
+                                int(elapsed * 1000),
+                                retry_count,
+                                len(input_data.evidence_for),
+                                len(input_data.evidence_against),
                                 input_data.consensus_score,
-                                raw_response=raw_response
+                                raw_response=raw_response,
                             )
 
                             return VerdictOutput(
                                 verdict=parsed,
-                                confidence=min(abs(input_data.consensus_score) + 0.3, 1.0),  # SECURITY (A2 fix): clamp to 1.0
+                                confidence=min(
+                                    abs(input_data.consensus_score) + 0.3, 1.0
+                                ),  # SECURITY (A2 fix): clamp to 1.0
                                 source="llm",
                                 evidence_summary=evidence_summary,
                                 llm_used=True,
@@ -302,8 +309,7 @@ class VerdictLLMMixin:
                 except concurrent.futures.TimeoutError:
                     any_timeout = True
                     logger.warning(
-                        f"VerdictEngine: LLM timed out after {VERDICT_TIMEOUT_S}s "
-                        f"(attempt {attempt + 1})"
+                        f"VerdictEngine: LLM timed out after {VERDICT_TIMEOUT_S}s " f"(attempt {attempt + 1})"
                     )
                 except Exception as e:
                     logger.warning(f"VerdictEngine: LLM call failed: {e}")
@@ -315,19 +321,24 @@ class VerdictLLMMixin:
             self._fallback_verdicts += 1
             self._no_count += 1
 
-        self._record_failure(
-            elapsed, was_timeout=any_timeout, was_ambiguous=any_ambiguous
-        )
+        self._record_failure(elapsed, was_timeout=any_timeout, was_ambiguous=any_ambiguous)
 
         evidence_summary = self._build_evidence_summary_from_input(input_data)
 
         self._audit_result(
-            input_data.question, "NO", "fallback",
-            raw_response is not None, 0.0, int(elapsed * 1000), retry_count,
-            len(input_data.evidence_for), len(input_data.evidence_against),
+            input_data.question,
+            "NO",
+            "fallback",
+            raw_response is not None,
+            0.0,
+            int(elapsed * 1000),
+            retry_count,
+            len(input_data.evidence_for),
+            len(input_data.evidence_against),
             input_data.consensus_score,
-            was_timeout=any_timeout, was_ambiguous=any_ambiguous,
-            raw_response=raw_response or ""
+            was_timeout=any_timeout,
+            was_ambiguous=any_ambiguous,
+            raw_response=raw_response or "",
         )
 
         return VerdictOutput(

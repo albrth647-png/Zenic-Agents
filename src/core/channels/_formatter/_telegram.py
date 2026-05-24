@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List
+from typing import Any
 
+from .._types import ChannelMessage, ConfirmationRequest
 from ._helpers import _store_and_replace
 from ._limits import LIMITS
-from ._text import truncate, sanitize_plain_text, sanitize_html
-from .._types import ChannelMessage, ConfirmationRequest
+from ._text import sanitize_html, sanitize_plain_text, truncate
 
 # Characters that need escaping in Telegram MarkdownV2
 _TELEGRAM_ESCAPE_CHARS = set("_*[]()~`>#+-=|{}.!")
@@ -23,7 +23,7 @@ def escape_telegram_markdown_v2(text: str) -> str:
         return ""
 
     # Protect code blocks
-    code_blocks: List[str] = []
+    code_blocks: list[str] = []
     protected = text
 
     # Protect triple backtick blocks
@@ -56,7 +56,7 @@ def escape_telegram_markdown_v2(text: str) -> str:
     return result
 
 
-def format_telegram_message(message: ChannelMessage) -> Dict[str, Any]:
+def format_telegram_message(message: ChannelMessage) -> dict[str, Any]:
     """Format a ChannelMessage into a Telegram Bot API payload.
 
     Returns:
@@ -65,7 +65,7 @@ def format_telegram_message(message: ChannelMessage) -> Dict[str, Any]:
     text = message.text or message.html
     text = sanitize_plain_text(text) if message.text else sanitize_html(text)
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "chat_id": message.recipient,
         "parse_mode": "MarkdownV2",
         "text": escape_telegram_markdown_v2(truncate(text, LIMITS.telegram_text)),
@@ -83,7 +83,7 @@ def format_telegram_message(message: ChannelMessage) -> Dict[str, Any]:
 def build_telegram_inline_keyboard(
     request: ConfirmationRequest,
     callback_prefix: str = "confirm",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a Telegram InlineKeyboardMarkup for confirmation requests.
 
     Args:
@@ -93,12 +93,14 @@ def build_telegram_inline_keyboard(
     Returns:
         Dict with inline_keyboard structure for Telegram Bot API.
     """
-    buttons: List[Dict[str, str]] = []
+    buttons: list[dict[str, str]] = []
     for option in request.options:
         label = option.replace("_", " ").title()
-        buttons.append({
-            "text": label,
-            "callback_data": f"{callback_prefix}:{request.action_id}:{option}",
-        })
+        buttons.append(
+            {
+                "text": label,
+                "callback_data": f"{callback_prefix}:{request.action_id}:{option}",
+            }
+        )
 
     return {"inline_keyboard": [buttons]}

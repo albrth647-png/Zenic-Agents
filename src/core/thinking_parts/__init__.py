@@ -5,11 +5,16 @@ Backward-compatible: ``from src.core.thinking_engine import ThinkingEngine, Gene
 still works exactly as before.
 """
 
-from ._imports import (
-    logger, APP_TEMPLATES, AUTOMATION_TEMPLATES,
-    GenerationPlan, ThinkingResult, Optional, Any,
-)
 from ._context_mixin import ContextMixin
+from ._imports import (
+    APP_TEMPLATES,
+    AUTOMATION_TEMPLATES,
+    Any,
+    GenerationPlan,
+    Optional,
+    ThinkingResult,
+    logger,
+)
 from ._planning_mixin import PlanningMixin
 from ._reasoning_mixin import ReasoningMixin
 
@@ -32,4 +37,13 @@ class ThinkingEngine(ContextMixin, PlanningMixin, ReasoningMixin):
         self._thinking_time = 0.0
 
 
-__all__ = ["ThinkingEngine", "GenerationPlan", "ThinkingResult", "APP_TEMPLATES", "AUTOMATION_TEMPLATES", "logger", "Optional", "Any"]
+__all__ = [
+    "APP_TEMPLATES",
+    "AUTOMATION_TEMPLATES",
+    "Any",
+    "GenerationPlan",
+    "Optional",
+    "ThinkingEngine",
+    "ThinkingResult",
+    "logger",
+]

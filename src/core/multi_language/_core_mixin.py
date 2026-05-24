@@ -1,7 +1,6 @@
 """MultiLanguage - Core methods."""
 
 import logging
-from typing import Dict, List
 
 from ._types import TYPE_MAP
 
@@ -13,8 +12,9 @@ class MultiLanguageCoreMixin:
 
     """Generate API projects in TypeScript, Go, and Kotlin."""
 
-    def generate_project(self, entities: List[Dict], project_name: str,
-                          language: str, description: str = "") -> Dict[str, str]:
+    def generate_project(
+        self, entities: list[dict], project_name: str, language: str, description: str = ""
+    ) -> dict[str, str]:
         """Generate a complete API project in the target language.
 
         Args:
@@ -36,7 +36,7 @@ class MultiLanguageCoreMixin:
             logger.warning(f"MultiLanguage: Unsupported language '{language}', falling back to TypeScript")
             return self._generate_typescript(entities, project_name, description)
 
-    def _parse_fields(self, fields: list, language: str) -> List[Dict]:
+    def _parse_fields(self, fields: list, language: str) -> list[dict]:
         """Parse entity fields from YAML format.
 
         YAML fields are strings like "name:str", "price:decimal", "id:uuid"
@@ -63,8 +63,7 @@ class MultiLanguageCoreMixin:
     #  TYPESCRIPT (Express + TypeORM + Swagger)
     # ================================================================
 
-    def _generate_typescript(self, entities: List[Dict], project_name: str,
-                              description: str) -> Dict[str, str]:
+    def _generate_typescript(self, entities: list[dict], project_name: str, description: str) -> dict[str, str]:
         """Generate TypeScript Express project."""
         files = {}
 
@@ -94,7 +93,7 @@ class MultiLanguageCoreMixin:
         return files
 
     def _ts_package(self, name: str, desc: str) -> str:
-        return f'''{{
+        return f"""{{
   "name": "{name}",
   "version": "1.0.0",
   "description": "{desc or name}",
@@ -121,10 +120,10 @@ class MultiLanguageCoreMixin:
     "ts-node-dev": "^2.0.0"
   }}
 }}
-'''
+"""
 
     def _ts_tsconfig(self) -> str:
-        return '''{
+        return """{
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
@@ -143,22 +142,20 @@ class MultiLanguageCoreMixin:
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-'''
+"""
 
-    def _ts_model(self, name: str, fields: List[Dict]) -> str:
-        props = "\n".join(
-            f"  {f['name']}: {f['type']};" for f in fields
-        )
-        return f'''import {{ Entity, PrimaryGeneratedColumn, Column }} from "typeorm";
+    def _ts_model(self, name: str, fields: list[dict]) -> str:
+        props = "\n".join(f"  {f['name']}: {f['type']};" for f in fields)
+        return f"""import {{ Entity, PrimaryGeneratedColumn, Column }} from "typeorm";
 
 @Entity("{name.lower()}s")
 export class {name} {{
 {props}
 }}
-'''
+"""
 
-    def _ts_service(self, name: str, fields: List[Dict]) -> str:
-        return f'''import {{ AppDataSource }} from "../config/database";
+    def _ts_service(self, name: str, fields: list[dict]) -> str:
+        return f"""import {{ AppDataSource }} from "../config/database";
 import {{ {name} }} from "../models/{name.lower()}.model";
 
 export class {name}Service {{
@@ -187,10 +184,10 @@ export class {name}Service {{
     return (result.affected ?? 0) > 0;
   }}
 }}
-'''
+"""
 
     def _ts_routes(self, name: str) -> str:
-        return f'''import {{ Router, Request, Response }} from "express";
+        return f"""import {{ Router, Request, Response }} from "express";
 import {{ {name}Service }} from "../services/{name.lower()}.service";
 
 const router = Router();
@@ -247,14 +244,12 @@ router.delete("/:id", async (req: Request, res: Response) => {{
 }});
 
 export default router;
-'''
+"""
 
-    def _ts_app(self, project_name: str, entities: List[Dict]) -> str:
-        imports = [f'import {e["name"].lower()}Routes from "./routes/{e["name"].lower()}.routes";'
-                   for e in entities]
-        uses = [f'app.use("/v1/{e["name"].lower()}s", {e["name"].lower()}Routes);'
-                for e in entities]
-        return f'''import express from "express";
+    def _ts_app(self, project_name: str, entities: list[dict]) -> str:
+        imports = [f'import {e["name"].lower()}Routes from "./routes/{e["name"].lower()}.routes";' for e in entities]
+        uses = [f'app.use("/v1/{e["name"].lower()}s", {e["name"].lower()}Routes);' for e in entities]
+        return f"""import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import {{ AppDataSource }} from "./config/database";
@@ -285,10 +280,10 @@ AppDataSource.initialize()
   }});
 
 export default app;
-'''
+"""
 
     def _ts_database_config(self) -> str:
-        return '''import { DataSource } from "typeorm";
+        return """import { DataSource } from "typeorm";
 
 export const AppDataSource = new DataSource({
   type: "better-sqlite3",
@@ -297,19 +292,18 @@ export const AppDataSource = new DataSource({
   logging: false,
   entities: ["src/models/**/*.model.ts"],
 });
-'''
+"""
 
     def _ts_dockerfile(self, name: str) -> str:
-        return '''FROM node:20-alpine
+        return """FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 COPY dist ./dist
 EXPOSE 3000
 CMD ["node", "dist/app.js"]
-'''
+"""
 
     # ================================================================
     #  GO (Gin + GORM + Swagger)
     # ================================================================
-

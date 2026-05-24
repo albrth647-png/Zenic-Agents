@@ -1,17 +1,20 @@
 """Types and constants for feedback."""
 
 from __future__ import annotations
+
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class FeedbackAction(str, Enum):
     """Action to take based on feedback evaluation."""
+
     CONTINUE = "continue"
     ADJUST_STRATEGY = "adjust_strategy"
     ESCALATE_TO_HUMAN = "escalate_to_human"
@@ -31,12 +34,13 @@ class FeedbackCycle:
     Records KPI values before and after an autopilot cycle, along with
     the determined action and analysis.
     """
+
     cycle_id: str = ""
     objective_id: str = ""
     plan_id: str = ""
     cycle_number: int = 0
-    kpi_before: Dict[str, float] = field(default_factory=dict)
-    kpi_after: Dict[str, float] = field(default_factory=dict)
+    kpi_before: dict[str, float] = field(default_factory=dict)
+    kpi_after: dict[str, float] = field(default_factory=dict)
     action_taken: FeedbackAction = FeedbackAction.CONTINUE
     analysis: str = ""
     timestamp: str = ""
@@ -61,7 +65,7 @@ class FeedbackCycle:
         if not self.kpi_before or not self.kpi_after:
             return 0.0
 
-        improvements: List[float] = []
+        improvements: list[float] = []
         for metric, after_val in self.kpi_after.items():
             before_val = self.kpi_before.get(metric, after_val)
             # Positive delta means value increased
@@ -72,7 +76,7 @@ class FeedbackCycle:
             return 0.0
         return round(sum(improvements) / len(improvements), 6)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "cycle_id": self.cycle_id,
@@ -85,4 +89,6 @@ class FeedbackCycle:
             "analysis": self.analysis,
             "timestamp": self.timestamp,
         }
+
+
 __all__ = ["FeedbackAction", "FeedbackCycle", "logger"]

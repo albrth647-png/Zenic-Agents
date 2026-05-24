@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..._types import (
     ChannelMessage,
@@ -29,7 +29,7 @@ logger = logging.getLogger("zenic_agents.channels.whatsapp")
 # ──────────────────────────────────────────────────────────────
 
 # WhatsApp audio.mime_type → normalized voice_format
-_WHATSAPP_MIME_TO_FORMAT: Dict[str, str] = {
+_WHATSAPP_MIME_TO_FORMAT: dict[str, str] = {
     "audio/ogg": "ogg",
     "audio/ogg; codecs=opus": "ogg",
     "audio/mp4": "m4a",
@@ -50,12 +50,12 @@ class WhatsAppWebhookMixin:
 
     def set_message_handler(self, handler: MessageHandler) -> None:
         """Register a handler for incoming WhatsApp messages."""
-        self._message_handler: Optional[MessageHandler] = handler  # type: ignore[attr-defined]
+        self._message_handler: MessageHandler | None = handler  # type: ignore[attr-defined]
         logger.debug("WhatsAppChannelProvider: message handler registered")
 
     def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:
         """Register a handler for button callback responses."""
-        self._confirmation_handler: Optional[ConfirmationHandler] = handler  # type: ignore[attr-defined]
+        self._confirmation_handler: ConfirmationHandler | None = handler  # type: ignore[attr-defined]
         logger.debug("WhatsAppChannelProvider: confirmation handler registered")
 
     @property
@@ -108,7 +108,7 @@ class WhatsAppWebhookMixin:
 
         return hmac.compare(expected, signature[7:])
 
-    def parse_inbound_message(self, payload: Dict[str, Any]) -> Optional[ChannelMessage]:
+    def parse_inbound_message(self, payload: dict[str, Any]) -> ChannelMessage | None:
         """Parse a WhatsApp webhook payload into a ChannelMessage.
 
         Supports:
@@ -171,7 +171,8 @@ class WhatsAppWebhookMixin:
                 voice_duration = float(voice_data.get("duration", 0))
                 voice_mime_type = voice_data.get("mime_type", "audio/ogg; codecs=opus")
                 voice_format = _WHATSAPP_MIME_TO_FORMAT.get(
-                    voice_mime_type, "ogg",
+                    voice_mime_type,
+                    "ogg",
                 )
                 text = voice_data.get("transcript", "")
 
@@ -194,7 +195,7 @@ class WhatsAppWebhookMixin:
                 text = img_data.get("caption", "")
 
             # ── Build metadata ──
-            metadata: Dict[str, Any] = {
+            metadata: dict[str, Any] = {
                 "whatsapp_message_id": msg_id,
                 "whatsapp_type": msg_type,
                 "from_phone": phone_number,

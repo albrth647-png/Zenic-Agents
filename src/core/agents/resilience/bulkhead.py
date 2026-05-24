@@ -7,13 +7,13 @@ Prevents one slow agent from consuming all system resources.
 from __future__ import annotations
 
 import threading
-from typing import Optional
 
 # Self not needed — using string annotation for __enter__
 
 
 class BulkheadFullError(Exception):
     """Raised when bulkhead is at capacity."""
+
     pass
 
 
@@ -42,7 +42,7 @@ class AgentBulkhead:
         self._total_executed = 0
         self._total_timed_out = 0
 
-    def acquire(self, timeout: Optional[float] = None) -> bool:
+    def acquire(self, timeout: float | None = None) -> bool:
         """Acquire a execution slot. Returns True if acquired, False if timed out."""
         if timeout is None:
             timeout = self.timeout
@@ -84,7 +84,7 @@ class AgentBulkhead:
         }
 
     # Context manager support
-    def __enter__(self) -> "AgentBulkhead":
+    def __enter__(self) -> AgentBulkhead:
         if not self.acquire():
             raise BulkheadFullError(f"Bulkhead {self.name} is at capacity")
         return self
@@ -119,9 +119,7 @@ class BulkheadManager:
             if agent_name not in self._bulkheads:
                 group = self._classify_agent(agent_name)
                 config = BULKHEAD_CONFIGS.get(group, {"max_concurrent": 4})
-                self._bulkheads[agent_name] = AgentBulkhead(
-                    name=agent_name, **config
-                )
+                self._bulkheads[agent_name] = AgentBulkhead(name=agent_name, **config)
             return self._bulkheads[agent_name]
 
     def all_stats(self) -> dict[str, dict]:
@@ -134,7 +132,10 @@ class BulkheadManager:
             return "understanding"
         elif any(k in name_lower for k in ["memory", "relevance", "compressor", "prefetch"]):
             return "memory"
-        elif any(k in name_lower for k in ["invoice", "inventory", "crm", "task", "report", "notification", "analytics", "router"]):
+        elif any(
+            k in name_lower
+            for k in ["invoice", "inventory", "crm", "task", "report", "notification", "analytics", "router"]
+        ):
             return "business"
         elif any(k in name_lower for k in ["code_gen", "refactor", "optim", "fixer", "scaffold", "defensive"]):
             return "code"

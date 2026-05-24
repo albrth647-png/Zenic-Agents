@@ -6,15 +6,17 @@ embedding serialization, and stats methods for SmartMemory.
 Phase 2: Fully tenant-aware — all queries scoped by tenant_id.
 """
 
-import time
 import json
 import sqlite3
-from typing import Optional, Dict, Any, List
+import time
+from typing import Any
 
 from .types import (
-    DB_PATH, MAX_LONG_TERM_ENTRIES,
+    DB_PATH,
+    HAS_NUMPY,
+    MAX_LONG_TERM_ENTRIES,
 )
-from .types import HAS_NUMPY
+
 if HAS_NUMPY:
     import numpy as np
 
@@ -30,9 +32,16 @@ class LongTermMixin:
     #  3. LONG-TERM MEMORY (learning, tenant-aware)
     # ================================================================
 
-    def save_to_long_term(self, query: str, solution: str, operation: str = "",
-                           goal: str = "", importance: float = 0.5, 
-                           success: bool = True, tags: Optional[List[str]] = None):
+    def save_to_long_term(
+        self,
+        query: str,
+        solution: str,
+        operation: str = "",
+        goal: str = "",
+        importance: float = 0.5,
+        success: bool = True,
+        tags: list[str] | None = None,
+    ):
         """Guarda una solución exitosa en la memoria a largo plazo (tenant-aware)."""
         tags = tags or []
         emb_blob = None
@@ -45,19 +54,29 @@ class LongTermMixin:
 
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                """INSERT INTO long_term_memory 
+                """INSERT INTO long_term_memory
                    (query_text, solution_summary, operation, goal, importance,
                     success, embedding, created_at, tags, client_id, tenant_id)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (query[:500], solution[:2000], operation, goal, importance,
-                 success, emb_blob, time.time(), tags_json,
-                 self._client_id, self._tenant_id)
+                (
+                    query[:500],
+                    solution[:2000],
+                    operation,
+                    goal,
+                    importance,
+                    success,
+                    emb_blob,
+                    time.time(),
+                    tags_json,
+                    self._client_id,
+                    self._tenant_id,
+                ),
             )
 
         # Evict if over limit
         self._evict_long_term()
 
-    def find_similar_solutions(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+    def find_similar_solutions(self, query: str, top_k: int = 3) -> list[dict[str, Any]]:
         """
         Busca soluciones previas semánticamente similares (tenant-scoped).
         "La última vez que hicimos algo parecido, funcionó esto."
@@ -76,7 +95,7 @@ class LongTermMixin:
                    FROM long_term_memory
                    WHERE success=1 AND tenant_id=?
                    ORDER BY importance DESC LIMIT 100""",
-                (self._tenant_id,)
+                (self._tenant_id,),
             ).fetchall()
 
         results = []
@@ -85,15 +104,17 @@ class LongTermMixin:
             if cache_emb is not None:
                 sim = self._semantic.similarity(query_emb, cache_emb)
                 if sim >= 0.5:
-                    results.append({
-                        "query": row[1],
-                        "solution": row[2],
-                        "operation": row[3],
-                        "goal": row[4],
-                        "importance": row[5],
-                        "similarity": sim,
-                        "tags": json.loads(row[8] or "[]"),
-                    })
+                    results.append(
+                        {
+                            "query": row[1],
+                            "solution": row[2],
+                            "operation": row[3],
+                            "goal": row[4],
+                            "importance": row[5],
+                            "similarity": sim,
+                            "tags": json.loads(row[8] or "[]"),
+                        }
+                    )
 
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
@@ -102,8 +123,7 @@ class LongTermMixin:
         """Evict least important entries if over limit (tenant-scoped)."""
         with sqlite3.connect(DB_PATH) as conn:
             count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT COUNT(*) FROM long_term_memory WHERE tenant_id=?",
-                (self._tenant_id,)
+                "SELECT COUNT(*) FROM long_term_memory WHERE tenant_id=?", (self._tenant_id,)
             ).fetchone()[0]
             if count > MAX_LONG_TERM_ENTRIES:
                 # Delete lowest importance entries for this tenant
@@ -115,7 +135,10 @@ class LongTermMixin:
                            ORDER BY importance ASC, access_count ASC
                            LIMIT ?
                        )""",
-                    (self._tenant_id, count - MAX_LONG_TERM_ENTRIES + 50,)  # Delete extra 50 to avoid frequent eviction
+                    (
+                        self._tenant_id,
+                        count - MAX_LONG_TERM_ENTRIES + 50,
+                    ),  # Delete extra 50 to avoid frequent eviction
                 )
 
     # ================================================================
@@ -123,11 +146,10 @@ class LongTermMixin:
     # ================================================================
 
     @staticmethod
-    def compute_importance(query: str, operation: str, goal: str, 
-                            success: bool, response_length: int) -> float:
+    def compute_importance(query: str, operation: str, goal: str, success: bool, response_length: int) -> float:
         """
         Calcula la importancia de una interacción.
-        
+
         Factores:
         - Operaciones críticas (DELETE, DEBUG) → más importantes
         - Goals de seguridad → más importantes
@@ -138,17 +160,25 @@ class LongTermMixin:
 
         # Operation importance
         op_weights = {
-            "DELETE": 0.2, "DEBUG": 0.15, "REFACTOR": 0.1,
-            "CREATE": 0.05, "OPTIMIZE": 0.1, "ANALYZE": 0.05,
-            "SEARCH": -0.1, "EXPLAIN": 0.0,
+            "DELETE": 0.2,
+            "DEBUG": 0.15,
+            "REFACTOR": 0.1,
+            "CREATE": 0.05,
+            "OPTIMIZE": 0.1,
+            "ANALYZE": 0.05,
+            "SEARCH": -0.1,
+            "EXPLAIN": 0.0,
         }
         score += op_weights.get(operation, 0.0)
 
         # Goal importance
         goal_weights = {
-            "SECURITY_HARDEN": 0.2, "BUG_FIX": 0.15,
-            "PERFORMANCE": 0.1, "FEATURE_ADD": 0.05,
-            "COMPLEXITY_REDUCTION": 0.05, "MODERN_PATTERN": 0.0,
+            "SECURITY_HARDEN": 0.2,
+            "BUG_FIX": 0.15,
+            "PERFORMANCE": 0.1,
+            "FEATURE_ADD": 0.05,
+            "COMPLEXITY_REDUCTION": 0.05,
+            "MODERN_PATTERN": 0.0,
             "READABILITY": 0.0,
         }
         score += goal_weights.get(goal, 0.0)
@@ -173,7 +203,7 @@ class LongTermMixin:
     def _serialize_embedding(emb) -> bytes:
         """Serialize embedding to bytes for SQLite storage."""
         if not HAS_NUMPY:
-            return b''
+            return b""
         return emb.astype(np.float32).tobytes()
 
     @staticmethod
@@ -196,23 +226,23 @@ class LongTermMixin:
     # ================================================================
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas de uso de la memoria (tenant-scoped)."""
         with sqlite3.connect(DB_PATH) as conn:
             cache_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT COUNT(*) FROM semantic_cache WHERE tenant_id=?",
-                (self._tenant_id,)
+                "SELECT COUNT(*) FROM semantic_cache WHERE tenant_id=?", (self._tenant_id,)
             ).fetchone()[0]
             ltm_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT COUNT(*) FROM long_term_memory WHERE tenant_id=?",
-                (self._tenant_id,)
+                "SELECT COUNT(*) FROM long_term_memory WHERE tenant_id=?", (self._tenant_id,)
             ).fetchone()[0]
 
         return {
             "session_id": self._session_id,
             "client_id": self._client_id,
             "tenant_id": self._tenant_id,
-            "working_memory_size": len(self._working_memory) if hasattr(self, '_working_lock') and self._working_lock else 0,
+            "working_memory_size": len(self._working_memory)
+            if hasattr(self, "_working_lock") and self._working_lock
+            else 0,
             "semantic_cache_size": cache_count,
             "long_term_memory_size": ltm_count,
             "semantic_engine_available": self._semantic is not None and self._semantic.is_loaded,

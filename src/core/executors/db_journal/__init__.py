@@ -24,27 +24,40 @@ import logging
 import threading
 from typing import Optional
 
-# Re-export data models
-from ._types import JournalEntry, RollbackResult
+from ._reader import _ReaderMixin
+from ._rollback import _RollbackMixin
 
 # Re-export SQL helpers (used internally but keep accessible)
 from ._sql_helpers import (
     _classify_operation,
-    _extract_table_from_insert,
-    _extract_table_and_where_from_update,
-    _extract_set_clause_from_update,
     _count_placeholders,
+    _extract_set_clause_from_update,
     _extract_table_and_where_from_delete,
+    _extract_table_and_where_from_update,
+    _extract_table_from_insert,
 )
+
+# Re-export data models
+from ._types import JournalEntry, RollbackResult
 
 # Import mixins
 from ._writer import _WriterMixin
-from ._reader import _ReaderMixin
-from ._rollback import _RollbackMixin
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["JournalEntry", "RollbackResult", "DBTransactionJournal", "get_db_journal", "reset_db_journal", "_classify_operation", "_extract_table_from_insert", "_extract_table_and_where_from_update", "_extract_set_clause_from_update", "_count_placeholders", "_extract_table_and_where_from_delete"]
+__all__ = [
+    "DBTransactionJournal",
+    "JournalEntry",
+    "RollbackResult",
+    "_classify_operation",
+    "_count_placeholders",
+    "_extract_set_clause_from_update",
+    "_extract_table_and_where_from_delete",
+    "_extract_table_and_where_from_update",
+    "_extract_table_from_insert",
+    "get_db_journal",
+    "reset_db_journal",
+]
 
 
 class DBTransactionJournal(_WriterMixin, _ReaderMixin, _RollbackMixin):
@@ -62,7 +75,7 @@ class DBTransactionJournal(_WriterMixin, _ReaderMixin, _RollbackMixin):
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[DBTransactionJournal] = None
+_instance: DBTransactionJournal | None = None
 _instance_lock = threading.Lock()
 
 

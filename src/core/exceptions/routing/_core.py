@@ -6,12 +6,12 @@ import json
 import logging
 import sqlite3
 import threading
-from typing import Any, Callable, List, Optional
+from collections.abc import Callable
+from typing import Any
 
-from ._types import RoutingAction, RoutingRule
 from ._helpers import RoutingActionHelpers
+from ._types import RoutingAction, RoutingRule
 
-from typing import Dict
 logger = logging.getLogger("zenic_agents.exceptions.routing")
 
 
@@ -30,7 +30,7 @@ class ExceptionRouter(RoutingActionHelpers):
     def __init__(self, db_path: str = "exception_routing.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._rules: List[RoutingRule] = []  # noqa: F821
+        self._rules: list[RoutingRule] = []
         self._init_db()
         self._load_rules_from_db()
 
@@ -40,6 +40,7 @@ class ExceptionRouter(RoutingActionHelpers):
         def _exec(conn: sqlite3.Connection) -> None:
             conn.executescript(_CREATE_TABLE_SQL)  # noqa: F821
             conn.commit()
+
         _retry_db(self._with_conn, _exec)  # noqa: F821
 
     def _with_conn(self, fn: Callable[[sqlite3.Connection], Any]) -> Any:
@@ -53,13 +54,14 @@ class ExceptionRouter(RoutingActionHelpers):
 
     def _load_rules_from_db(self) -> None:
         """Load persisted rules into the in-memory list."""
-        def _query(conn: sqlite3.Connection) -> List[RoutingRule]:  # noqa: F821
+
+        def _query(conn: sqlite3.Connection) -> list[RoutingRule]:
             rows = conn.execute(
                 "SELECT rule_id, category, min_severity, max_severity, "
                 "action, conditions_json, priority, enabled "
                 "FROM _zenic_routing_rules ORDER BY priority DESC"
             ).fetchall()
-            rules: List[RoutingRule] = []
+            rules: list[RoutingRule] = []
             for row in rows:
                 try:
                     rule = RoutingRule(
@@ -67,7 +69,7 @@ class ExceptionRouter(RoutingActionHelpers):
                         category=ExceptionCategory(row[1]),  # noqa: F821
                         min_severity=ExceptionSeverity(row[2]),  # noqa: F821
                         max_severity=ExceptionSeverity(row[3]),  # noqa: F821
-                        action=RoutingAction(row[4]),  # noqa: F821
+                        action=RoutingAction(row[4]),
                         conditions=json.loads(row[5]) if row[5] else {},
                         priority=row[6],
                         enabled=bool(row[7]),
@@ -82,8 +84,9 @@ class ExceptionRouter(RoutingActionHelpers):
 
     # ── Rule management ───────────────────────────────────
 
-    def add_rule(self, rule: RoutingRule) -> None:  # noqa: F821
+    def add_rule(self, rule: RoutingRule) -> None:
         """Persist a routing rule."""
+
         def _insert(conn: sqlite3.Connection) -> None:
             conn.execute(
                 """INSERT OR REPLACE INTO _zenic_routing_rules
@@ -91,11 +94,14 @@ class ExceptionRouter(RoutingActionHelpers):
                      action, conditions_json, priority, enabled)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    rule.rule_id, rule.category.value,
-                    rule.min_severity.value, rule.max_severity.value,
+                    rule.rule_id,
+                    rule.category.value,
+                    rule.min_severity.value,
+                    rule.max_severity.value,
                     rule.action.value,
                     json.dumps(rule.conditions, default=str),
-                    rule.priority, int(rule.enabled),
+                    rule.priority,
+                    int(rule.enabled),
                 ),
             )
             conn.commit()
@@ -107,6 +113,7 @@ class ExceptionRouter(RoutingActionHelpers):
 
     def remove_rule(self, rule_id: str) -> bool:
         """Remove a rule by ID.  Returns ``True`` if found and deleted."""
+
         def _delete(conn: sqlite3.Connection) -> bool:
             cursor = conn.execute(
                 "DELETE FROM _zenic_routing_rules WHERE rule_id = ?",
@@ -121,7 +128,7 @@ class ExceptionRouter(RoutingActionHelpers):
                 self._rules = [r for r in self._rules if r.rule_id != rule_id]
             return found
 
-    def get_rules(self) -> List[RoutingRule]:  # noqa: F821
+    def get_rules(self) -> list[RoutingRule]:
         """Return all currently loaded rules (highest priority first)."""
         with self._lock:
             return list(self._rules)
@@ -135,7 +142,9 @@ class ExceptionRouter(RoutingActionHelpers):
                 if rule.matches(signal):
                     logger.info(
                         "ExceptionRouter: signal %s matched rule %s → %s",
-                        signal.signal_id, rule.rule_id, rule.action.value,
+                        signal.signal_id,
+                        rule.rule_id,
+                        rule.action.value,
                     )
                     return rule.action
 
@@ -143,18 +152,18 @@ class ExceptionRouter(RoutingActionHelpers):
             "ExceptionRouter: no rule matched signal %s, defaulting to LOG_AND_CONTINUE",
             signal.signal_id,
         )
-        return RoutingAction.LOG_AND_CONTINUE  # noqa: F821
+        return RoutingAction.LOG_AND_CONTINUE
 
     # ── Action execution ──────────────────────────────────
 
     def execute_action(
         self,
-        action: RoutingAction,  # noqa: F821
+        action: RoutingAction,
         signal: ExceptionSignal,  # noqa: F821
-        engine: Optional[ExceptionEngine] = None,  # noqa: F821
-    ) -> Dict[str, Any]:
+        engine: ExceptionEngine | None = None,  # noqa: F821
+    ) -> dict[str, Any]:
         """Perform the routing action for the given signal."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "action": action.value,
             "signal_id": signal.signal_id,
             "status": "executed",
@@ -162,21 +171,21 @@ class ExceptionRouter(RoutingActionHelpers):
         }
 
         try:
-            if action == RoutingAction.ESCALATE_HUMAN:  # noqa: F821
+            if action == RoutingAction.ESCALATE_HUMAN:
                 result.update(self._action_escalate_human(signal))
-            elif action == RoutingAction.PAUSE_AUTOMATION:  # noqa: F821
+            elif action == RoutingAction.PAUSE_AUTOMATION:
                 result.update(self._action_pause_automation(signal))
-            elif action == RoutingAction.DEGRADE_SYSTEM:  # noqa: F821
+            elif action == RoutingAction.DEGRADE_SYSTEM:
                 result.update(self._action_degrade_system(signal))
-            elif action == RoutingAction.RETRY_WITH_BACKOFF:  # noqa: F821
+            elif action == RoutingAction.RETRY_WITH_BACKOFF:
                 result.update(self._action_retry_with_backoff(signal))
-            elif action == RoutingAction.NOTIFY_ADMIN:  # noqa: F821
+            elif action == RoutingAction.NOTIFY_ADMIN:
                 result.update(self._action_notify_admin(signal))
-            elif action == RoutingAction.ABORT_ACTION:  # noqa: F821
+            elif action == RoutingAction.ABORT_ACTION:
                 result.update(self._action_abort(signal))
-            elif action == RoutingAction.LOG_AND_CONTINUE:  # noqa: F821
+            elif action == RoutingAction.LOG_AND_CONTINUE:
                 result.update(self._action_log_and_continue(signal))
-            elif action == RoutingAction.REROUTE:  # noqa: F821
+            elif action == RoutingAction.REROUTE:
                 result.update(self._action_reroute(signal))
             else:
                 result["status"] = "unknown_action"
@@ -186,7 +195,9 @@ class ExceptionRouter(RoutingActionHelpers):
             result["detail"] = str(exc)
             logger.error(
                 "ExceptionRouter: error executing action %s for signal %s: %s",
-                action.value, signal.signal_id, exc,
+                action.value,
+                signal.signal_id,
+                exc,
             )
 
         return result
@@ -195,48 +206,62 @@ class ExceptionRouter(RoutingActionHelpers):
 
     def load_default_rules(self) -> None:
         """Pre-populate with sensible default routing rules."""
-        defaults: List[RoutingRule] = [  # noqa: F821
+        defaults: list[RoutingRule] = [
             RoutingRule(
                 rule_id="default-low-confidence-warning",
                 category=ExceptionCategory.LOW_CONFIDENCE,  # noqa: F821
-                min_severity=ExceptionSeverity.WARNING, max_severity=ExceptionSeverity.WARNING,  # noqa: F821
-                action=RoutingAction.LOG_AND_CONTINUE, priority=10,  # noqa: F821
+                min_severity=ExceptionSeverity.WARNING,
+                max_severity=ExceptionSeverity.WARNING,  # noqa: F821
+                action=RoutingAction.LOG_AND_CONTINUE,
+                priority=10,
             ),
             RoutingRule(
                 rule_id="default-low-confidence-critical",
                 category=ExceptionCategory.LOW_CONFIDENCE,  # noqa: F821
-                min_severity=ExceptionSeverity.CRITICAL, max_severity=ExceptionSeverity.FATAL,  # noqa: F821
-                action=RoutingAction.ESCALATE_HUMAN, priority=20,  # noqa: F821
+                min_severity=ExceptionSeverity.CRITICAL,
+                max_severity=ExceptionSeverity.FATAL,  # noqa: F821
+                action=RoutingAction.ESCALATE_HUMAN,
+                priority=20,
             ),
             RoutingRule(
                 rule_id="default-data-conflict-error",
                 category=ExceptionCategory.DATA_CONFLICT,  # noqa: F821
-                min_severity=ExceptionSeverity.ERROR, max_severity=ExceptionSeverity.ERROR,  # noqa: F821
-                action=RoutingAction.RETRY_WITH_BACKOFF, priority=10,  # noqa: F821
+                min_severity=ExceptionSeverity.ERROR,
+                max_severity=ExceptionSeverity.ERROR,  # noqa: F821
+                action=RoutingAction.RETRY_WITH_BACKOFF,
+                priority=10,
             ),
             RoutingRule(
                 rule_id="default-permission-denied-error",
                 category=ExceptionCategory.PERMISSION_DENIED,  # noqa: F821
-                min_severity=ExceptionSeverity.ERROR, max_severity=ExceptionSeverity.FATAL,  # noqa: F821
-                action=RoutingAction.ABORT_ACTION, priority=30,  # noqa: F821
+                min_severity=ExceptionSeverity.ERROR,
+                max_severity=ExceptionSeverity.FATAL,  # noqa: F821
+                action=RoutingAction.ABORT_ACTION,
+                priority=30,
             ),
             RoutingRule(
                 rule_id="default-anomaly-critical",
                 category=ExceptionCategory.ANOMALY_DETECTED,  # noqa: F821
-                min_severity=ExceptionSeverity.CRITICAL, max_severity=ExceptionSeverity.FATAL,  # noqa: F821
-                action=RoutingAction.PAUSE_AUTOMATION, priority=20,  # noqa: F821
+                min_severity=ExceptionSeverity.CRITICAL,
+                max_severity=ExceptionSeverity.FATAL,  # noqa: F821
+                action=RoutingAction.PAUSE_AUTOMATION,
+                priority=20,
             ),
             RoutingRule(
                 rule_id="default-security-violation-critical",
                 category=ExceptionCategory.SECURITY_VIOLATION,  # noqa: F821
-                min_severity=ExceptionSeverity.CRITICAL, max_severity=ExceptionSeverity.FATAL,  # noqa: F821
-                action=RoutingAction.DEGRADE_SYSTEM, priority=40,  # noqa: F821
+                min_severity=ExceptionSeverity.CRITICAL,
+                max_severity=ExceptionSeverity.FATAL,  # noqa: F821
+                action=RoutingAction.DEGRADE_SYSTEM,
+                priority=40,
             ),
             RoutingRule(
                 rule_id="default-system-error-fatal",
                 category=ExceptionCategory.SYSTEM_ERROR,  # noqa: F821
-                min_severity=ExceptionSeverity.FATAL, max_severity=ExceptionSeverity.FATAL,  # noqa: F821
-                action=RoutingAction.DEGRADE_SYSTEM, priority=30,  # noqa: F821
+                min_severity=ExceptionSeverity.FATAL,
+                max_severity=ExceptionSeverity.FATAL,  # noqa: F821
+                action=RoutingAction.DEGRADE_SYSTEM,
+                priority=30,
             ),
         ]
 
@@ -250,7 +275,7 @@ class ExceptionRouter(RoutingActionHelpers):
 
 # ── Singleton ─────────────────────────────────────────────────
 
-_router_instance: Optional[ExceptionRouter] = None
+_router_instance: ExceptionRouter | None = None
 _router_lock = threading.Lock()
 
 

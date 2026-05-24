@@ -17,21 +17,22 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from ..types.base import Result, Ok
-from ..types.intent import AssistantIntent, IntentCategory, ConversationMode
-from ..types.session import Session
-from ..input.parser import ParsedInput
 from ..input.enricher import EnrichedInput
-
+from ..input.parser import ParsedInput
+from ..types.base import Ok, Result
+from ..types.intent import AssistantIntent, ConversationMode, IntentCategory
+from ..types.session import Session
 
 # ─── Score por capa ──────────────────────────────────────────
+
 
 @dataclass
 class IntentScore:
     """Score de una categoria en una capa especifica."""
+
     category: IntentCategory = IntentCategory.UNKNOWN
     score: float = 0.0
-    layer: int = 0              # 1=keyword, 2=pattern, 3=context
+    layer: int = 0  # 1=keyword, 2=pattern, 3=context
     evidence: list[str] = field(default_factory=list)
 
 
@@ -39,74 +40,104 @@ class IntentScore:
 
 _KEYWORD_MAP: dict[IntentCategory, tuple[list[str], float]] = {
     IntentCategory.CHAT: (
-        ["hola", "hey", "hi", "hello", "buenos", "buenas",
-         "gracias", "thanks", "ok", "bien", "perfecto"],
+        ["hola", "hey", "hi", "hello", "buenos", "buenas", "gracias", "thanks", "ok", "bien", "perfecto"],
         2.0,
     ),
     IntentCategory.QUESTION: (
-        ["que es", "que significa", "como se", "por que",
-         "what is", "how does", "why", "explain", "explica",
-         "cual es la diferencia", "difference between",
-         "definicion", "definition"],
+        [
+            "que es",
+            "que significa",
+            "como se",
+            "por que",
+            "what is",
+            "how does",
+            "why",
+            "explain",
+            "explica",
+            "cual es la diferencia",
+            "difference between",
+            "definicion",
+            "definition",
+        ],
         2.5,
     ),
     IntentCategory.COMMAND: (
-        ["limpiar", "reset", "borrar", "clear",
-         "ayuda", "help", "comandos", "estado", "status",
-         "salir", "exit", "stop"],
+        [
+            "limpiar",
+            "reset",
+            "borrar",
+            "clear",
+            "ayuda",
+            "help",
+            "comandos",
+            "estado",
+            "status",
+            "salir",
+            "exit",
+            "stop",
+        ],
         2.0,
     ),
     IntentCategory.CONFIG: (
-        ["configura", "ajusta", "cambia la personalidad",
-         "configure", "adjust", "change personality",
-         "modo tecnico", "modo casual",
-         "cambiar idioma", "cambiar tono"],
+        [
+            "configura",
+            "ajusta",
+            "cambia la personalidad",
+            "configure",
+            "adjust",
+            "change personality",
+            "modo tecnico",
+            "modo casual",
+            "cambiar idioma",
+            "cambiar tono",
+        ],
         2.5,
     ),
     IntentCategory.FEEDBACK: (
-        ["no me gusta", "mal", "incorrecto", "wrong",
-         "me gusta", "bien", "correcto", "good",
-         "intenta de nuevo", "try again"],
+        [
+            "no me gusta",
+            "mal",
+            "incorrecto",
+            "wrong",
+            "me gusta",
+            "bien",
+            "correcto",
+            "good",
+            "intenta de nuevo",
+            "try again",
+        ],
         2.0,
     ),
     IntentCategory.CODE_CREATE: (
-        ["crear", "generar", "create", "build", "make",
-         "nuevo modulo", "nueva funcion", "escribir"],
+        ["crear", "generar", "create", "build", "make", "nuevo modulo", "nueva funcion", "escribir"],
         3.0,
     ),
     IntentCategory.CODE_DEBUG: (
-        ["debug", "fix", "corregir", "error", "bug",
-         "arreglar", "no funciona", "broken"],
+        ["debug", "fix", "corregir", "error", "bug", "arreglar", "no funciona", "broken"],
         3.0,
     ),
     IntentCategory.CODE_REFACTOR: (
-        ["refactor", "limpiar codigo", "reestructurar",
-         "mejorar estructura", "simplify"],
+        ["refactor", "limpiar codigo", "reestructurar", "mejorar estructura", "simplify"],
         3.0,
     ),
     IntentCategory.CODE_OPTIMIZE: (
-        ["optimizar", "optimize", "mejorar rendimiento",
-         "speed up", "mas rapido", "efficient"],
+        ["optimizar", "optimize", "mejorar rendimiento", "speed up", "mas rapido", "efficient"],
         3.0,
     ),
     IntentCategory.CODE_ANALYZE: (
-        ["analizar", "analyze", "revisar", "review",
-         "auditar", "audit", "chequear", "check"],
+        ["analizar", "analyze", "revisar", "review", "auditar", "audit", "chequear", "check"],
         2.5,
     ),
     IntentCategory.CODE_EXPLAIN: (
-        ["explica este codigo", "explain code", "que hace",
-         "how does this work", "entender", "understand"],
+        ["explica este codigo", "explain code", "que hace", "how does this work", "entender", "understand"],
         2.5,
     ),
     IntentCategory.AUTOMATION: (
-        ["automatizar", "automate", "workflow", "trigger",
-         "cron", "schedule", "programar tarea"],
+        ["automatizar", "automate", "workflow", "trigger", "cron", "schedule", "programar tarea"],
         3.0,
     ),
     IntentCategory.BUSINESS: (
-        ["negocio", "business", "invoice", "factura",
-         "reporte", "report", "metrica", "kpi"],
+        ["negocio", "business", "invoice", "factura", "reporte", "report", "metrica", "kpi"],
         2.5,
     ),
 }
@@ -125,12 +156,14 @@ def _layer1_keywords(normalized: str) -> list[IntentScore]:
                 evidence.append(pattern)
 
         if score > 0:
-            scores.append(IntentScore(
-                category=category,
-                score=score,
-                layer=1,
-                evidence=evidence,
-            ))
+            scores.append(
+                IntentScore(
+                    category=category,
+                    score=score,
+                    layer=1,
+                    evidence=evidence,
+                )
+            )
 
     return scores
 
@@ -170,10 +203,14 @@ def _layer2_patterns(text: str, parsed: ParsedInput) -> list[IntentScore]:
         q_score += 2.0
         q_evidence.append("parsed:is_question")
     if q_score > 0:
-        scores.append(IntentScore(
-            category=IntentCategory.QUESTION,
-            score=q_score, layer=2, evidence=q_evidence,
-        ))
+        scores.append(
+            IntentScore(
+                category=IntentCategory.QUESTION,
+                score=q_score,
+                layer=2,
+                evidence=q_evidence,
+            )
+        )
 
     # Codigo
     if parsed.is_code_request or parsed.has_code:
@@ -182,22 +219,31 @@ def _layer2_patterns(text: str, parsed: ParsedInput) -> list[IntentScore]:
         if parsed.has_code:
             c_score += 2.0
             c_evidence.append("parsed:has_code")
-        scores.append(IntentScore(
-            category=IntentCategory.CODE_CREATE,
-            score=c_score, layer=2, evidence=c_evidence,
-        ))
+        scores.append(
+            IntentScore(
+                category=IntentCategory.CODE_CREATE,
+                score=c_score,
+                layer=2,
+                evidence=c_evidence,
+            )
+        )
 
     # Comandos
     if parsed.is_command:
-        scores.append(IntentScore(
-            category=IntentCategory.COMMAND,
-            score=5.0, layer=2, evidence=["parsed:is_command"],
-        ))
+        scores.append(
+            IntentScore(
+                category=IntentCategory.COMMAND,
+                score=5.0,
+                layer=2,
+                evidence=["parsed:is_command"],
+            )
+        )
 
     return scores
 
 
 # ─── Layer 3: Context-Aware ──────────────────────────────────
+
 
 def _layer3_context(
     enriched: EnrichedInput,
@@ -210,8 +256,14 @@ def _layer3_context(
     if enriched.is_continuation:
         recent = " ".join(enriched.recent_topics)
         code_words = [
-            "codigo", "code", "funcion", "function",
-            "clase", "class", "modulo", "module",
+            "codigo",
+            "code",
+            "funcion",
+            "function",
+            "clase",
+            "class",
+            "modulo",
+            "module",
         ]
         if any(w in recent for w in code_words):
             for cat in (
@@ -220,30 +272,35 @@ def _layer3_context(
                 IntentCategory.CODE_REFACTOR,
             ):
                 if cat in base_scores:
-                    adjustments.append(IntentScore(
-                        category=cat,
-                        score=2.0,
-                        layer=3,
-                        evidence=["continuation:code_context"],
-                    ))
+                    adjustments.append(
+                        IntentScore(
+                            category=cat,
+                            score=2.0,
+                            layer=3,
+                            evidence=["continuation:code_context"],
+                        )
+                    )
 
     # Si hay memoria relevante sobre codigo
     for entry in enriched.memory_context[:3]:
         source = entry.get("source", "")
         cat_str = entry.get("category", "")
         if source == "code" or cat_str in ("skill", "fact"):
-            adjustments.append(IntentScore(
-                category=IntentCategory.CODE_CREATE,
-                score=1.0,
-                layer=3,
-                evidence=["memory:code_relevant"],
-            ))
+            adjustments.append(
+                IntentScore(
+                    category=IntentCategory.CODE_CREATE,
+                    score=1.0,
+                    layer=3,
+                    evidence=["memory:code_relevant"],
+                )
+            )
             break
 
     return adjustments
 
 
 # ─── Intent Engine ────────────────────────────────────────────
+
 
 class IntentEngine:
     """

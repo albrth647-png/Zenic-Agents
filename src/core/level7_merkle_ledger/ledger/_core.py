@@ -4,15 +4,17 @@ Snapshot, commit, rollback, and purge operations for the Merkle Ledger.
 """
 
 import hashlib
+import logging
 import shutil
 import sqlite3
 import time
-import logging
 from pathlib import Path
+
 from src.core.shared.contracts import MerkleNode
-from src.core.shared.db_initializer import get_data_dir, get_connection
+from src.core.shared.db_initializer import get_connection, get_data_dir
 from src.core.shared.db_utils import purge_tenant_rows
 from src.core.shared.tenant_utils import resolve_tenant_id
+
 from ._hash_helpers import MerkleLedgerHelpersMixin
 
 _BACKUP_HASH_LENGTH = 16
@@ -46,18 +48,26 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
             if content:
                 workspace.snapshot_project_file(rel_path, content)
                 content_hash = self._hash_content(content)
-                parent_hash = self._get_last_hash(rel_path, workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid)
+                parent_hash = self._get_last_hash(
+                    rel_path, workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
+                )
                 self._ensure_sandbox_db(workspace)
                 self._record_operation(
-                    rel_path, content_hash, parent_hash, "SNAPSHOT",
-                    workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
+                    rel_path,
+                    content_hash,
+                    parent_hash,
+                    "SNAPSHOT",
+                    workspace.get_db_path("merkle_ledger.sqlite"),
+                    tenant_id=tid,
                 )
                 logger.debug("Snapshot (sandbox): %s in workspace %s [tenant=%s]", rel_path, workspace.sandbox_id, tid)
             else:
                 logger.debug(
                     "Snapshot (sandbox): %s does not exist in workspace %s — "
                     "no backup needed (new file) [tenant=%s]",
-                    rel_path, workspace.sandbox_id, tid,
+                    rel_path,
+                    workspace.sandbox_id,
+                    tid,
                 )
         else:
             # MODO LEGACY: operar en el filesystem del sistema
@@ -76,7 +86,7 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
                 parent_hash = self._get_last_hash(rel_path, tenant_id=tid)
                 self._record_operation(rel_path, content_hash, parent_hash, "SNAPSHOT", tenant_id=tid)
 
-    def commit(self, rel_path: str, content: str, project_dir, workspace=None) -> 'MerkleNode':
+    def commit(self, rel_path: str, content: str, project_dir, workspace=None) -> "MerkleNode":
         """
         Escribe contenido y registra el commit en el ledger.
 
@@ -92,18 +102,23 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
             self._ensure_sandbox_db(workspace)
             parent_hash = self._get_last_hash(rel_path, workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid)
 
-            all_hashes = list(self._get_all_file_hashes(
-                workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid).values())
+            all_hashes = list(
+                self._get_all_file_hashes(workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid).values()
+            )
             all_hashes.append(content_hash)
 
             root_hash = self._merkle_root(all_hashes) if len(all_hashes) >= 2 else content_hash
 
             self._record_operation(
-                rel_path, root_hash, parent_hash, "COMMIT",
-                workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
+                rel_path, root_hash, parent_hash, "COMMIT", workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
             )
-            logger.info("Commit (sandbox): %s -> %s in workspace %s [tenant=%s]",
-                        rel_path, root_hash[:12], workspace.sandbox_id, tid)
+            logger.info(
+                "Commit (sandbox): %s -> %s in workspace %s [tenant=%s]",
+                rel_path,
+                root_hash[:12],
+                workspace.sandbox_id,
+                tid,
+            )
         else:
             try:
                 project_path = Path(project_dir).resolve()
@@ -111,8 +126,11 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
             except ValueError as e:
                 logger.warning("Commit rejected (path traversal): %s", e)
                 return MerkleNode(
-                    file_path=rel_path, hash_sha256="REJECTED",
-                    parent_hash="N/A", timestamp=int(time.time()), operation="REJECTED"
+                    file_path=rel_path,
+                    hash_sha256="REJECTED",
+                    parent_hash="N/A",
+                    timestamp=int(time.time()),
+                    operation="REJECTED",
                 )
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content, encoding="utf-8")
@@ -127,8 +145,11 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
             self._record_operation(rel_path, root_hash, parent_hash, "COMMIT", tenant_id=tid)
 
         return MerkleNode(
-            file_path=rel_path, hash_sha256=root_hash,
-            parent_hash=parent_hash, timestamp=int(time.time()), operation="COMMIT"
+            file_path=rel_path,
+            hash_sha256=root_hash,
+            parent_hash=parent_hash,
+            timestamp=int(time.time()),
+            operation="COMMIT",
         )
 
     def rollback(self, rel_path: str, project_dir, workspace=None) -> bool:
@@ -145,15 +166,25 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
                 content = workspace.read_project_file(rel_path)
                 content_hash = self._hash_content(content)
                 self._ensure_sandbox_db(workspace)
-                parent_hash = self._get_last_hash(rel_path, workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid)
+                parent_hash = self._get_last_hash(
+                    rel_path, workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
+                )
                 self._record_operation(
-                    rel_path, content_hash, parent_hash, "ROLLBACK",
-                    workspace.get_db_path("merkle_ledger.sqlite"), tenant_id=tid
+                    rel_path,
+                    content_hash,
+                    parent_hash,
+                    "ROLLBACK",
+                    workspace.get_db_path("merkle_ledger.sqlite"),
+                    tenant_id=tid,
                 )
                 logger.info("Rollback (sandbox): %s in workspace %s [tenant=%s]", rel_path, workspace.sandbox_id, tid)
             else:
-                logger.warning("Rollback (sandbox): no backup for %s in workspace %s [tenant=%s]",
-                               rel_path, workspace.sandbox_id, tid)
+                logger.warning(
+                    "Rollback (sandbox): no backup for %s in workspace %s [tenant=%s]",
+                    rel_path,
+                    workspace.sandbox_id,
+                    tid,
+                )
             return success
         else:
             try:
@@ -192,8 +223,12 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
                     operation TEXT NOT NULL,
                     timestamp REAL NOT NULL,
                     tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""")
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
-                conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)"
+                )  # nosemgrep: sqlalchemy-execute-raw-query
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)"
+                )  # nosemgrep: sqlalchemy-execute-raw-query
 
     def purge_tenant_ledger(self, tenant_id: str) -> int:
         """Delete all ledger entries for a specific tenant (GDPR / deprovisioning)."""

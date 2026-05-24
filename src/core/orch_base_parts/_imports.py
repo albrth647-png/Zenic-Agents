@@ -4,11 +4,10 @@ Shared imports and constants for orch_base_parts sub-modules.
 
 import logging
 
-
 # Level 5 & 6 modules removed in v3.0.0 integrity sweep
 try:
-    from src.core.level5_structural_swarm.scrap_agent import GitHubScrapAgent  # type: ignore[import-unresolved]
     from src.core.level5_structural_swarm.ast_surgeon import ASTSurgeon  # type: ignore[import-unresolved]
+    from src.core.level5_structural_swarm.scrap_agent import GitHubScrapAgent  # type: ignore[import-unresolved]
 except ImportError:
     GitHubScrapAgent = None  # type: ignore[misc,assignment]
     ASTSurgeon = None  # type: ignore[misc,assignment]

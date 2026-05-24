@@ -18,9 +18,9 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from ..types.base import Result, Ok, Err
-from ..types.tool_use import ToolCall, ToolResult
 from ..config.constants import TOOL_EXECUTION_TIMEOUT, TOOL_MAX_CONCURRENT
+from ..types.base import Err, Ok, Result
+from ..types.tool_use import ToolCall, ToolResult
 from .registry import ToolRegistry
 
 logger = logging.getLogger("zenic_agents.conversational.tools.executor")
@@ -28,15 +28,18 @@ logger = logging.getLogger("zenic_agents.conversational.tools.executor")
 
 # ─── Config ──────────────────────────────────────────────────
 
+
 @dataclass
 class ExecutorConfig:
     """Configuracion del ejecutor."""
+
     default_timeout: float = TOOL_EXECUTION_TIMEOUT
     max_concurrent: int = TOOL_MAX_CONCURRENT
     allow_dangerous: bool = False
 
 
 # ─── Ejecutor ────────────────────────────────────────────────
+
 
 class ToolExecutor:
     """
@@ -80,33 +83,39 @@ class ToolExecutor:
         # 2. Verificar permisos
         if not spec.enabled:
             self._stats["total_denied"] += 1
-            return Ok(ToolResult(
-                call_id=call.call_id,
-                tool_name=call.tool_name,
-                success=False,
-                error=f"Tool deshabilitada: {call.tool_name}",
-                duration_ms=(time.time() - start_time) * 1000,
-            ))
+            return Ok(
+                ToolResult(
+                    call_id=call.call_id,
+                    tool_name=call.tool_name,
+                    success=False,
+                    error=f"Tool deshabilitada: {call.tool_name}",
+                    duration_ms=(time.time() - start_time) * 1000,
+                )
+            )
 
         if spec.is_dangerous and not self._config.allow_dangerous:
             self._stats["total_denied"] += 1
-            return Ok(ToolResult(
-                call_id=call.call_id,
-                tool_name=call.tool_name,
-                success=False,
-                error=f"Tool requiere permisos especiales: {call.tool_name}",
-                duration_ms=(time.time() - start_time) * 1000,
-            ))
+            return Ok(
+                ToolResult(
+                    call_id=call.call_id,
+                    tool_name=call.tool_name,
+                    success=False,
+                    error=f"Tool requiere permisos especiales: {call.tool_name}",
+                    duration_ms=(time.time() - start_time) * 1000,
+                )
+            )
 
         # 3. Control de concurrencia
         if self._running_count >= self._config.max_concurrent:
-            return Ok(ToolResult(
-                call_id=call.call_id,
-                tool_name=call.tool_name,
-                success=False,
-                error="Maximo de ejecuciones concurrentes alcanzado",
-                duration_ms=(time.time() - start_time) * 1000,
-            ))
+            return Ok(
+                ToolResult(
+                    call_id=call.call_id,
+                    tool_name=call.tool_name,
+                    success=False,
+                    error="Maximo de ejecuciones concurrentes alcanzado",
+                    duration_ms=(time.time() - start_time) * 1000,
+                )
+            )
 
         # 4. Ejecutar con timeout
         self._running_count += 1
@@ -123,7 +132,8 @@ class ToolExecutor:
 
             # Registrar en registry stats
             self._registry.record_call(
-                call.tool_name, duration,
+                call.tool_name,
+                duration,
                 error=not result.success,
             )
 
@@ -132,28 +142,26 @@ class ToolExecutor:
         except asyncio.TimeoutError:
             self._stats["total_timeout"] += 1
             duration = (time.time() - start_time) * 1000
-            return Ok(ToolResult(
-                call_id=call.call_id,
-                tool_name=call.tool_name,
-                success=False,
-                error=f"Timeout tras {spec.timeout_seconds}s",
-                duration_ms=duration,
-            ))
+            return Ok(
+                ToolResult(
+                    call_id=call.call_id,
+                    tool_name=call.tool_name,
+                    success=False,
+                    error=f"Timeout tras {spec.timeout_seconds}s",
+                    duration_ms=duration,
+                )
+            )
         finally:
             self._running_count -= 1
 
-    async def execute_batch(
-        self, calls: list[ToolCall]
-    ) -> list[Result[ToolResult, Exception]]:
+    async def execute_batch(self, calls: list[ToolCall]) -> list[Result[ToolResult, Exception]]:
         """Ejecuta multiples tools en paralelo (respetando concurrencia)."""
         tasks = [self.execute(call) for call in calls]
         return await asyncio.gather(*tasks)
 
     # ─── Privados ─────────────────────────────────────────────
 
-    async def _execute_with_timeout(
-        self, call: ToolCall, spec: Any
-    ) -> ToolResult:
+    async def _execute_with_timeout(self, call: ToolCall, spec: Any) -> ToolResult:
         """Ejecuta una tool con timeout enforcement."""
         handler = self._registry.get_handler(call.tool_name)
 
@@ -207,9 +215,7 @@ class ToolExecutor:
             "max_concurrent": self._config.max_concurrent,
         }
 
-    def create_call(
-        self, tool_name: str, arguments: dict[str, Any]
-    ) -> ToolCall:
+    def create_call(self, tool_name: str, arguments: dict[str, Any]) -> ToolCall:
         """Factory para crear un ToolCall con ID generado."""
         return ToolCall(
             call_id=str(uuid.uuid4()),

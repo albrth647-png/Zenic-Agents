@@ -21,19 +21,18 @@ Use Cases:
 """
 
 import logging
+
 from ._core import DistributedLockManager  # type: ignore[import-unresolved]
 from ._lock import DistributedLock  # type: ignore[import-unresolved]
-
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "DistributedLockManager",
     "DistributedLock",
+    "DistributedLockManager",
 ]
 
 
 # ============================================================
 #  DISTRIBUTED LOCK (Context Manager)
 # ============================================================
-

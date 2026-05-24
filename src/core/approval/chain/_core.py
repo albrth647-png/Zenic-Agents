@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import threading
+from collections.abc import Callable
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
 from ._types import (
     ApprovalPriority,
     ApprovalRequest,
@@ -10,9 +15,7 @@ from ._types import (
     MemoryApprovalPayload,
     logger,
 )
-import threading
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List, Optional
+
 
 class ApprovalChain:
     """Chain-of-approval system for critical actions.
@@ -32,10 +35,11 @@ class ApprovalChain:
         self._default_timeout_hours = default_timeout_hours
         self._escalation_timeout_hours = escalation_timeout_hours
         self._lock = threading.RLock()
-        self._callbacks: List[Callable[[ApprovalRequest], None]] = []
+        self._callbacks: list[Callable[[ApprovalRequest], None]] = []
 
         # Use the extracted persistence module
         from .chain_parts.persistence import ApprovalChainDB
+
         self._db = ApprovalChainDB(db_path)
 
     # ── Core Operations ────────────────────────────────────
@@ -43,13 +47,13 @@ class ApprovalChain:
     def create_request(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         requested_by: int,
         required_role: str = "gerente",
         priority: ApprovalPriority = ApprovalPriority.NORMAL,
-        timeout_hours: Optional[int] = None,
+        timeout_hours: int | None = None,
         tenant_id: str = "__anonymous__",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ApprovalRequest:
         """Create a new approval request for a pending action."""
         timeout = timeout_hours or self._default_timeout_hours
@@ -59,7 +63,9 @@ class ApprovalChain:
         # Phase C3: Risk-based role routing
         if required_role == "gerente":
             risk_role = self.check_risk_routing(
-                action_type, action_config, metadata or {},
+                action_type,
+                action_config,
+                metadata or {},
             )
             if risk_role:
                 required_role = risk_role
@@ -81,12 +87,17 @@ class ApprovalChain:
         self._notify_callbacks(request)
         logger.info(
             "ApprovalChain: Request %s created for action '%s' (role=%s)",
-            request.request_id, action_type, required_role,
+            request.request_id,
+            action_type,
+            required_role,
         )
         return request
 
     def approve(
-        self, request_id: str, approver_id: int, approver_role: str,
+        self,
+        request_id: str,
+        approver_id: int,
+        approver_role: str,
     ) -> ApprovalResult:
         """Approve a pending request."""
         request = self._db.get_request(request_id)
@@ -94,18 +105,16 @@ class ApprovalChain:
             return ApprovalResult(False, request_id, ApprovalStatus.PENDING, "Request not found")
 
         if request.status != ApprovalStatus.PENDING:
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Request is already {request.status.value}")
+            return ApprovalResult(False, request_id, request.status, f"Request is already {request.status.value}")
 
         # auth_parts removed — use fallback ROLE_HIERARCHY from auth_service stub
         from src.core.auth_service import ROLE_HIERARCHY
+
         if ROLE_HIERARCHY.get(approver_role, -1) < ROLE_HIERARCHY.get(request.required_role, -1):
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Approver role '{approver_role}' insufficient")
+            return ApprovalResult(False, request_id, request.status, f"Approver role '{approver_role}' insufficient")
 
         if approver_id == request.requested_by:
-            return ApprovalResult(False, request_id, request.status,
-                                  "Cannot approve your own request")
+            return ApprovalResult(False, request_id, request.status, "Cannot approve your own request")
 
         now = datetime.now(timezone.utc).isoformat()
         request.status = ApprovalStatus.APPROVED
@@ -120,7 +129,10 @@ class ApprovalChain:
         return ApprovalResult(True, request_id, ApprovalStatus.APPROVED, "Request approved")
 
     def reject(
-        self, request_id: str, approver_id: int, reason: str = "",
+        self,
+        request_id: str,
+        approver_id: int,
+        reason: str = "",
     ) -> ApprovalResult:
         """Reject a pending request."""
         request = self._db.get_request(request_id)
@@ -128,8 +140,7 @@ class ApprovalChain:
             return ApprovalResult(False, request_id, ApprovalStatus.PENDING, "Request not found")
 
         if request.status != ApprovalStatus.PENDING:
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Request is already {request.status.value}")
+            return ApprovalResult(False, request_id, request.status, f"Request is already {request.status.value}")
 
         request.status = ApprovalStatus.REJECTED
         request.approved_by = approver_id
@@ -159,37 +170,41 @@ class ApprovalChain:
 
     # ── Query methods ──────────────────────────────────────
 
-    def get_request(self, request_id: str) -> Optional[ApprovalRequest]:
+    def get_request(self, request_id: str) -> ApprovalRequest | None:
         """Get a single approval request by ID."""
         return self._db.get_request(request_id)
 
     def list_pending(
-        self, required_role: Optional[str] = None, tenant_id: Optional[str] = None,
-    ) -> List[ApprovalRequest]:
+        self,
+        required_role: str | None = None,
+        tenant_id: str | None = None,
+    ) -> list[ApprovalRequest]:
         """List all pending approval requests."""
         return self._db.query_requests(
-            status=ApprovalStatus.PENDING, required_role=required_role, tenant_id=tenant_id,
+            status=ApprovalStatus.PENDING,
+            required_role=required_role,
+            tenant_id=tenant_id,
         )
 
-    def list_by_requester(self, requested_by: int) -> List[ApprovalRequest]:
+    def list_by_requester(self, requested_by: int) -> list[ApprovalRequest]:
         """List all requests by a specific user."""
         return self._db.query_requests(requested_by=requested_by)
 
-    def list_expired(self) -> List[ApprovalRequest]:
+    def list_expired(self) -> list[ApprovalRequest]:
         """Find all pending requests that have expired."""
         pending = self.list_pending()
         return [r for r in pending if r.is_expired()]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get approval chain statistics."""
         return self._db.get_stats()
 
     # ── Escalation ─────────────────────────────────────────
 
-    def check_escalations(self) -> List[ApprovalRequest]:
+    def check_escalations(self) -> list[ApprovalRequest]:
         """Check for expired requests and escalate them."""
         expired = self.list_expired()
-        escalated: List[ApprovalRequest] = []
+        escalated: list[ApprovalRequest] = []
 
         role_escalation = {"viewer": "operador", "operador": "gerente", "gerente": "admin"}
 
@@ -219,11 +234,11 @@ class ApprovalChain:
         self,
         user_id: int,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         priority: ApprovalPriority = ApprovalPriority.NORMAL,
-    ) -> Optional[ApprovalResult]:
+    ) -> ApprovalResult | None:
         """Check if this request can be auto-approved based on adaptive history.
-        
+
         Phase C3: Integration with AdaptiveApprovalEngine.
         Never auto-approve CRITICAL or financial actions.
         """
@@ -231,12 +246,15 @@ class ApprovalChain:
             return None
         if any(kw in action_type.lower() for kw in ("payment", "financial", "transfer")):
             return None
-        
+
         try:
             from .adaptive import get_adaptive_approval
+
             adaptive = get_adaptive_approval()
             should_approve, reason = adaptive.check_auto_approve(
-                user_id, action_type, action_config,
+                user_id,
+                action_type,
+                action_config,
             )
             if should_approve:
                 # Create and immediately approve the request
@@ -250,28 +268,29 @@ class ApprovalChain:
                 return self.approve(request.request_id, user_id, "adaptive_auto")
         except Exception as exc:
             logger.debug("ApprovalChain: adaptive check failed: %s", exc)
-        
+
         return None
 
     def check_risk_routing(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Optional[str]:
+        action_config: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> str | None:
         """Determine required role based on risk assessment.
-        
+
         Phase C3: Integration with RiskBasedApprovalRouter.
         Returns recommended role or None for default behavior.
         """
         try:
             from .risk_routing import get_risk_router
+
             router = get_risk_router()
             assessment = router.assess_risk(action_type, action_config, context or {})
             return assessment.recommended_role
         except Exception as exc:
             logger.debug("ApprovalChain: risk routing failed: %s", exc)
-        
+
         return None
 
     # ── Memory Chip HITL Integration (Phase 4) ────────────
@@ -340,19 +359,22 @@ class ApprovalChain:
                 merkle_hash = memory_chip.seal_mapping(payload.mapping_id)
                 logger.info(
                     "Memory HITL: Mapping %s sealed with Merkle hash %s",
-                    payload.mapping_id, merkle_hash,
+                    payload.mapping_id,
+                    merkle_hash,
                 )
 
                 # Render YAML for hot-reload
                 yaml_content = memory_chip.render_yaml(payload.mapping_id)
                 logger.info(
                     "Memory HITL: YAML rendered for mapping %s (%d chars)",
-                    payload.mapping_id, len(yaml_content),
+                    payload.mapping_id,
+                    len(yaml_content),
                 )
             except Exception as exc:
                 logger.error(
                     "Memory HITL: Post-approval sealing failed for %s: %s",
-                    payload.mapping_id, exc,
+                    payload.mapping_id,
+                    exc,
                 )
 
         return result
@@ -362,8 +384,8 @@ class ApprovalChain:
         mapping_id: str,
         ia_question: str,
         ia_response: bool,
-        evidence_for: List[str],
-        evidence_against: List[str],
+        evidence_for: list[str],
+        evidence_against: list[str],
         consensus_score: float,
     ) -> MemoryApprovalPayload:
         """Create a MemoryApprovalPayload from a VerdictEngine result.
@@ -393,6 +415,3 @@ class ApprovalChain:
                 cb(request)
             except Exception as exc:
                 logger.warning("ApprovalChain: callback error: %s", exc)
-
-
-

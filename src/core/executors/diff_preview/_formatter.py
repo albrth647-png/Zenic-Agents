@@ -7,26 +7,27 @@ Formatting utilities for rendering DiffResult objects as text or JSON.
 from __future__ import annotations
 
 import json
-from typing import Any, List
+from typing import Any
 
 from ._types import DiffResult
-
 
 # ──────────────────────────────────────────────────────────────
 #  HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 def truncate(value: Any, max_len: int = 50) -> str:
     """Truncate a value representation for display."""
     s = str(value)
     if len(s) > max_len:
-        return s[:max_len - 3] + "..."
+        return s[: max_len - 3] + "..."
     return s
 
 
 # ──────────────────────────────────────────────────────────────
 #  FORMATTING
 # ──────────────────────────────────────────────────────────────
+
 
 def format_diff(
     diff_result: DiffResult,
@@ -45,7 +46,7 @@ def format_diff(
         return json.dumps(diff_result.to_dict(), indent=2, default=str)
 
     # Text format
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append(f"Diff Preview: {diff_result.action_type}")
     lines.append(f"Risk: {diff_result.estimated_risk}")
     lines.append(f"Summary: {diff_result.summary}")
@@ -65,9 +66,6 @@ def format_diff(
                 "modified": "~",
                 "removed": "-",
             }.get(d.change_type, "?")
-            lines.append(
-                f"  [{change_symbol}] {d.field_path}: "
-                f"{truncate(d.old_value)} → {truncate(d.new_value)}"
-            )
+            lines.append(f"  [{change_symbol}] {d.field_path}: " f"{truncate(d.old_value)} → {truncate(d.new_value)}")
 
     return "\n".join(lines)

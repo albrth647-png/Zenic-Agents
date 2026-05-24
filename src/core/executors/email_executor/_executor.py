@@ -32,20 +32,19 @@ import os
 import smtplib
 import ssl
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base import ActionExecutor, ActionResult, _validate_email, _HAS_AIOHTTP
-from ..email_parts import EmailTemplateEngine, EmailRateLimiter
+from ..base import _HAS_AIOHTTP, ActionExecutor, ActionResult, _validate_email
+from ..email_parts import EmailRateLimiter, EmailTemplateEngine
 from ..email_parts.graph_api import GraphAPIEmailProvider
 from ..email_parts.oauth2 import OAuth2TokenManager
-
 from ._composer import (
+    _HAS_AIOSMTPLIB_LOCAL,
+    _SMTP_TIMEOUT,
+    _VALID_MODES,
+    build_dry_run_result,
     build_mime_message,
     resolve_recipients,
-    build_dry_run_result,
-    _HAS_AIOSMTPLIB_LOCAL,
-    _VALID_MODES,
-    _SMTP_TIMEOUT,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +83,7 @@ class EmailExecutor(ActionExecutor):
         self._lock = threading.Lock()
         self._template_engine = EmailTemplateEngine()
         self._rate_limiter = EmailRateLimiter()
-        self._graph_provider: Optional[GraphAPIEmailProvider] = None
+        self._graph_provider: GraphAPIEmailProvider | None = None
         self._smtp_send_count: int = 0
         self._graph_send_count: int = 0
         self._dry_run_count: int = 0
@@ -95,8 +94,8 @@ class EmailExecutor(ActionExecutor):
 
     async def execute(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> ActionResult:
         """Execute an email send operation.  # noqa: F821  # TODO: verify import
 
@@ -124,13 +123,13 @@ class EmailExecutor(ActionExecutor):
                 self._elapsed_ms(start),
             )
 
-        # Validate email addresses  # noqa: F821  # TODO: verify import
+        # Validate email addresses  # TODO: verify import
         invalid = [r for r in recipients if not _validate_email(r)]
         if invalid:
             return ActionResult(
                 False,
                 {"invalid_recipients": invalid},
-                f"Invalid email addresses: {invalid}",  # noqa: F821  # TODO: verify import
+                f"Invalid email addresses: {invalid}",  # TODO: verify import
                 self._elapsed_ms(start),
             )
 
@@ -145,10 +144,7 @@ class EmailExecutor(ActionExecutor):
                 False,
                 {
                     "rate_limited": True,
-                    "denied_recipients": [
-                        {"recipient": r.recipient, "reason": r.reason}
-                        for r in denied
-                    ],
+                    "denied_recipients": [{"recipient": r.recipient, "reason": r.reason} for r in denied],
                 },
                 f"Rate limited: {reasons}",
                 self._elapsed_ms(start),
@@ -176,15 +172,25 @@ class EmailExecutor(ActionExecutor):
                 result = await self._execute_smtp(config, recipients, subject, body, html)
             elif mode == "graph_api":
                 result = await self._execute_graph_api(
-                    config, recipients, subject, body, html,
+                    config,
+                    recipients,
+                    subject,
+                    body,
+                    html,
                 )
             else:  # auto
                 result = await self._execute_auto(
-                    config, recipients, subject, body, html,
+                    config,
+                    recipients,
+                    subject,
+                    body,
+                    html,
                 )
         except Exception as exc:
             logger.error(
-                "EmailExecutor: unhandled exception: %s", exc, exc_info=True,
+                "EmailExecutor: unhandled exception: %s",
+                exc,
+                exc_info=True,
             )
             with self._lock:
                 self._failure_count += 1
@@ -215,13 +221,13 @@ class EmailExecutor(ActionExecutor):
 
     async def _execute_smtp(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
     ) -> ActionResult:
-        """Send email via SMTP (aiosmtplib preferred, smtplib fallback)."""  # noqa: F821  # TODO: verify import
+        """Send email via SMTP (aiosmtplib preferred, smtplib fallback)."""  # TODO: verify import
         host = config.get("host", "") or os.environ.get("SMTP_HOST", "")
         port = config.get("port") or int(os.environ.get("SMTP_PORT", "587"))
         user = config.get("user", "") or os.environ.get("SMTP_USER", "")
@@ -252,11 +258,25 @@ class EmailExecutor(ActionExecutor):
         # Send via aiosmtplib or smtplib
         if _HAS_AIOSMTPLIB_LOCAL:
             success, error = await self._send_aiosmtplib(
-                host, port, user, password, use_tls, from_email, recipients, msg,
+                host,
+                port,
+                user,
+                password,
+                use_tls,
+                from_email,
+                recipients,
+                msg,
             )
         else:
             success, error = await self._send_smtplib_sync(
-                host, port, user, password, use_tls, from_email, recipients, msg,
+                host,
+                port,
+                user,
+                password,
+                use_tls,
+                from_email,
+                recipients,
+                msg,
             )
 
         if success:
@@ -264,7 +284,8 @@ class EmailExecutor(ActionExecutor):
                 self._smtp_send_count += 1
             logger.info(
                 "EmailExecutor: SMTP send success to %s (subject='%s')",
-                recipients, subject[:50],
+                recipients,
+                subject[:50],
             )
             return ActionResult(
                 True,
@@ -288,13 +309,13 @@ class EmailExecutor(ActionExecutor):
 
     async def _execute_graph_api(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
     ) -> ActionResult:
-        """Send email via Microsoft Graph API."""  # noqa: F821  # TODO: verify import
+        """Send email via Microsoft Graph API."""  # TODO: verify import
         provider = self._get_or_create_graph_provider(config)
         from_email = config.get("from_email", "") or os.environ.get("MSGRAPH_FROM_EMAIL", "")
 
@@ -321,7 +342,8 @@ class EmailExecutor(ActionExecutor):
             logger.info(
                 "EmailExecutor: Graph API send %s to %s (subject='%s')",
                 "dry-run" if is_dry_run else "success",
-                recipients, subject[:50],
+                recipients,
+                subject[:50],
             )
             return ActionResult(
                 True,
@@ -346,8 +368,8 @@ class EmailExecutor(ActionExecutor):
 
     async def _execute_auto(
         self,
-        config: Dict[str, Any],
-        recipients: List[str],
+        config: dict[str, Any],
+        recipients: list[str],
         subject: str,
         body: str,
         html: str,
@@ -357,7 +379,11 @@ class EmailExecutor(ActionExecutor):
         provider = self._get_or_create_graph_provider(config)
         if provider.is_configured and _HAS_AIOHTTP:
             graph_result = await self._execute_graph_api(
-                config, recipients, subject, body, html,
+                config,
+                recipients,
+                subject,
+                body,
+                html,
             )
             if graph_result.success:
                 graph_result.data["mode"] = "auto (graph_api)"
@@ -370,7 +396,11 @@ class EmailExecutor(ActionExecutor):
         # Fall back to SMTP
         smtp_config = {**config, "mode": "smtp"}
         smtp_result = await self._execute_smtp(
-            smtp_config, recipients, subject, body, html,
+            smtp_config,
+            recipients,
+            subject,
+            body,
+            html,
         )
         if smtp_result.success:
             smtp_result.data["mode"] = "auto (smtp)"
@@ -386,11 +416,12 @@ class EmailExecutor(ActionExecutor):
         password: str,
         use_tls: bool,
         from_email: str,
-        recipients: List[str],
+        recipients: list[str],
         msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: verify import
     ) -> tuple[bool, str]:
         """Send via aiosmtplib (async). Returns (success, error_message)."""
         import aiosmtplib  # type: ignore[import-unresolved]
+
         try:
             if use_tls:
                 await aiosmtplib.send(
@@ -424,7 +455,7 @@ class EmailExecutor(ActionExecutor):
         password: str,
         use_tls: bool,
         from_email: str,
-        recipients: List[str],
+        recipients: list[str],
         msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: Phase3 - verify import
     ) -> tuple[bool, str]:
         """Send via smtplib (sync, wrapped in asyncio.to_thread)."""
@@ -455,7 +486,8 @@ class EmailExecutor(ActionExecutor):
     # ── Graph API Helpers ──────────────────────────────────────────
 
     def _get_or_create_graph_provider(
-        self, config: Dict[str, Any],
+        self,
+        config: dict[str, Any],
     ) -> GraphAPIEmailProvider:
         """Get or create the GraphAPIEmailProvider instance."""
         with self._lock:
@@ -472,7 +504,7 @@ class EmailExecutor(ActionExecutor):
     # ── Statistics ─────────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get executor statistics."""
         with self._lock:
             return {

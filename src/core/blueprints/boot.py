@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def init_blueprint_registry(
     project_root: str,
     sna_engine: Any = None,
-) -> Optional[Any]:
+) -> Any | None:
     """Initialize the Blueprint Registry at application startup.
 
     Loads Blueprints from:
@@ -39,6 +39,7 @@ def init_blueprint_registry(
     """
     try:
         from src.core.blueprints import get_blueprint_registry
+
         registry = get_blueprint_registry()
 
         # Load from niches directory
@@ -46,7 +47,8 @@ def init_blueprint_registry(
         if os.path.isdir(niches_dir):
             niche_count = registry.load_from_niches(niches_dir)
             logger.info(
-                "Blueprints: Loaded %d Blueprints from niches", niche_count,
+                "Blueprints: Loaded %d Blueprints from niches",
+                niche_count,
             )
 
         # Load from dedicated blueprints directory (if exists)
@@ -54,7 +56,8 @@ def init_blueprint_registry(
         if os.path.isdir(bp_dir):
             bp_count = registry.load_from_directory(bp_dir)
             logger.info(
-                "Blueprints: Loaded %d certified Blueprints", bp_count,
+                "Blueprints: Loaded %d certified Blueprints",
+                bp_count,
             )
 
         # Wire Blueprint into ActionDispatcher
@@ -81,6 +84,7 @@ def _wire_dispatcher(registry: Any) -> None:
     """Wire Blueprint Registry into ActionDispatcher."""
     try:
         from src.core.executors.dispatch_action import get_default_dispatcher
+
         get_default_dispatcher()
         # ActionDispatcher already uses Blueprint for validation
         # set_blueprint_from_registry is called per-request
@@ -95,10 +99,12 @@ def _wire_sna_monitors(registry: Any, sna_engine: Any) -> None:
         if bp and bp.monitor_hooks:
             hooks_dict = bp.get_monitor_hooks_dict()
             loaded_thresholds = sna_engine.load_blueprint_thresholds(
-                hooks_dict, blueprint_name=bp_name,
+                hooks_dict,
+                blueprint_name=bp_name,
             )
             if loaded_thresholds:
                 logger.info(
                     "Blueprints: %s → %d SNA thresholds loaded",
-                    bp_name, loaded_thresholds,
+                    bp_name,
+                    loaded_thresholds,
                 )

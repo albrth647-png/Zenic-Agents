@@ -19,7 +19,7 @@ import hmac
 import logging
 import os
 import time
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .schema import CertifiedBlueprint
@@ -30,12 +30,14 @@ logger = logging.getLogger(__name__)
 
 # Try to import cryptography for ECDSA
 try:
+    from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec, utils  # noqa: F401
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        EllipticCurvePrivateKey, EllipticCurvePublicKey,  # noqa: F401
+        EllipticCurvePrivateKey,  # noqa: F401
+        EllipticCurvePublicKey,
     )
-    from cryptography.exceptions import InvalidSignature
+
     _HAS_CRYPTO = True
 except ImportError:
     _HAS_CRYPTO = False
@@ -45,6 +47,7 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 #  KEY MANAGEMENT
 # ──────────────────────────────────────────────────────────────
+
 
 class CertifierKeyPair:
     """Manages ECDSA key pair for Blueprint certification.
@@ -70,9 +73,7 @@ class CertifierKeyPair:
         else:
             # HMAC fallback
             self._hmac_secret = os.urandom(32)
-            self._public_key_hex = hashlib.sha256(
-                self._hmac_secret
-            ).hexdigest()
+            self._public_key_hex = hashlib.sha256(self._hmac_secret).hexdigest()
 
     def _generate_key_pair(self) -> None:
         """Generate a new ECDSA P-256 key pair."""
@@ -91,7 +92,8 @@ class CertifierKeyPair:
         if not _HAS_CRYPTO:
             return
         self._private_key = serialization.load_pem_private_key(
-            pem.encode(), password=None,
+            pem.encode(),
+            password=None,
         )
         self._public_key = self._private_key.public_key()
         pub_bytes = self._public_key.public_bytes(
@@ -151,6 +153,7 @@ class CertifierKeyPair:
 #  CERTIFIER
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintCertifier:
     """Signs and verifies Blueprint certificates using ECDSA.
 
@@ -160,7 +163,7 @@ class BlueprintCertifier:
         is_valid = certifier.verify(blueprint, signature)
     """
 
-    def __init__(self, key_pair: Optional[CertifierKeyPair] = None) -> None:
+    def __init__(self, key_pair: CertifierKeyPair | None = None) -> None:
         self._key_pair = key_pair or CertifierKeyPair()
 
     def sign(self, content_hash: str, signer_id: str = "") -> BlueprintSignature:
@@ -228,7 +231,9 @@ class BlueprintCertifier:
             return self._verify_hmac(content_hash, signature)
 
     def _verify_ecdsa(
-        self, content_hash: str, signature: BlueprintSignature,
+        self,
+        content_hash: str,
+        signature: BlueprintSignature,
     ) -> bool:
         """Verify an ECDSA signature."""
         if not _HAS_CRYPTO:
@@ -239,7 +244,8 @@ class BlueprintCertifier:
             # Reconstruct public key from hex
             pub_bytes = bytes.fromhex(signature.public_key_hex)
             public_key = EllipticCurvePublicKey.from_encoded_point(
-                ec.SECP256R1(), pub_bytes,
+                ec.SECP256R1(),
+                pub_bytes,
             )
             sig_bytes = bytes.fromhex(signature.signature_hex)
             public_key.verify(
@@ -253,7 +259,9 @@ class BlueprintCertifier:
             return False
 
     def _verify_hmac(
-        self, content_hash: str, signature: BlueprintSignature,
+        self,
+        content_hash: str,
+        signature: BlueprintSignature,
     ) -> bool:
         """Verify an HMAC signature (requires same secret)."""
         if not self._key_pair._hmac_secret:
@@ -278,7 +286,7 @@ class BlueprintCertifier:
 #  CONVENIENCE FUNCTIONS
 # ──────────────────────────────────────────────────────────────
 
-_default_certifier: Optional[BlueprintCertifier] = None
+_default_certifier: BlueprintCertifier | None = None
 
 
 def get_default_certifier() -> BlueprintCertifier:
@@ -289,7 +297,7 @@ def get_default_certifier() -> BlueprintCertifier:
     return _default_certifier
 
 
-def certify_blueprint(blueprint: "CertifiedBlueprint") -> BlueprintSignature:
+def certify_blueprint(blueprint: CertifiedBlueprint) -> BlueprintSignature:
     """Certify a Blueprint with the default certifier.
 
     Signs the Blueprint's content hash and updates its metadata.
@@ -302,7 +310,7 @@ def certify_blueprint(blueprint: "CertifiedBlueprint") -> BlueprintSignature:
     return signature
 
 
-def verify_blueprint(blueprint: "CertifiedBlueprint") -> bool:
+def verify_blueprint(blueprint: CertifiedBlueprint) -> bool:
     """Verify a Blueprint's certification signature."""
     if not blueprint.metadata.signature:
         return False

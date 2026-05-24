@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .types.session import (
     Message,
@@ -60,7 +60,7 @@ class RedisSessionStore:
         self._redis_available: bool = False
 
         # In-memory fallback
-        self._memory_store: Dict[SessionId, Dict[str, Any]] = {}
+        self._memory_store: dict[SessionId, dict[str, Any]] = {}
 
         # Asyncio lock for thread-safe access
         self._lock = asyncio.Lock()
@@ -85,20 +85,14 @@ class RedisSessionStore:
             )
             await self._redis.ping()
             self._redis_available = True
-            logger.info(
-                f"RedisSessionStore connected to {self._redis_url}"
-            )
+            logger.info(f"RedisSessionStore connected to {self._redis_url}")
             return True
         except ImportError:
-            logger.warning(
-                "redis.asyncio not available — using in-memory fallback"
-            )
+            logger.warning("redis.asyncio not available — using in-memory fallback")
             self._redis_available = False
             return False
         except Exception as exc:
-            logger.warning(
-                f"Redis connection failed ({exc}) — using in-memory fallback"
-            )
+            logger.warning(f"Redis connection failed ({exc}) — using in-memory fallback")
             self._redis_available = False
             return False
 
@@ -143,18 +137,14 @@ class RedisSessionStore:
                     key = f"{self._key_prefix}:{session.session_id}"
                     await self._redis.hset(key, mapping=data)  # type: ignore[union-attr]
                     await self._redis.expire(key, ttl)  # type: ignore[union-attr]
-                    logger.debug(
-                        f"Session stored in Redis: {session.session_id[:8]}... "
-                        f"(TTL={ttl}s)"
-                    )
+                    logger.debug(f"Session stored in Redis: {session.session_id[:8]}... " f"(TTL={ttl}s)")
                 except Exception as exc:
                     logger.warning(
-                        f"Redis store failed for session {session.session_id[:8]}... "
-                        f"({exc}) — data in memory only"
+                        f"Redis store failed for session {session.session_id[:8]}... " f"({exc}) — data in memory only"
                     )
                     self._redis_available = False
 
-    async def get(self, session_id: SessionId) -> Optional[Session]:
+    async def get(self, session_id: SessionId) -> Session | None:
         """
         Retrieve a session by ID.
 
@@ -182,10 +172,7 @@ class RedisSessionStore:
                         self._memory_store[session_id] = self._serialize_session(session)
                         return session
                 except Exception as exc:
-                    logger.debug(
-                        f"Redis get failed for session {session_id[:8]}... "
-                        f"({exc}) — trying in-memory"
-                    )
+                    logger.debug(f"Redis get failed for session {session_id[:8]}... " f"({exc}) — trying in-memory")
                     self._redis_available = False
 
             # Fall back to in-memory
@@ -225,15 +212,12 @@ class RedisSessionStore:
                     if deleted:
                         found = True
                 except Exception as exc:
-                    logger.debug(
-                        f"Redis delete failed for session {session_id[:8]}... "
-                        f"({exc})"
-                    )
+                    logger.debug(f"Redis delete failed for session {session_id[:8]}... " f"({exc})")
                     self._redis_available = False
 
         return found
 
-    async def get_all_active(self) -> List[Session]:
+    async def get_all_active(self) -> list[Session]:
         """
         Get all active (non-expired) sessions.
 
@@ -243,7 +227,7 @@ class RedisSessionStore:
         Returns:
             List of active Session objects.
         """
-        sessions: List[Session] = []
+        sessions: list[Session] = []
 
         async with self._lock:
             if self.is_redis_available:
@@ -267,13 +251,11 @@ class RedisSessionStore:
                             break
                     return sessions
                 except Exception as exc:
-                    logger.debug(
-                        f"Redis scan failed ({exc}) — using in-memory"
-                    )
+                    logger.debug(f"Redis scan failed ({exc}) — using in-memory")
                     self._redis_available = False
 
             # Fallback: scan in-memory store
-            expired_ids: List[SessionId] = []
+            expired_ids: list[SessionId] = []
             for sid, data in self._memory_store.items():
                 try:
                     session = self._deserialize_session(data)
@@ -302,7 +284,7 @@ class RedisSessionStore:
         """
         cleaned = 0
         async with self._lock:
-            expired_ids: List[SessionId] = []
+            expired_ids: list[SessionId] = []
             for sid, data in self._memory_store.items():
                 try:
                     session = self._deserialize_session(data)
@@ -330,7 +312,7 @@ class RedisSessionStore:
 
     # ─── Stats ───────────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return store statistics."""
         return {
             "backend": "redis" if self.is_redis_available else "memory",
@@ -343,7 +325,7 @@ class RedisSessionStore:
     # ─── Serialization ───────────────────────────────────────
 
     @staticmethod
-    def _serialize_session(session: Session) -> Dict[str, Any]:
+    def _serialize_session(session: Session) -> dict[str, Any]:
         """Serialize a Session dataclass to a flat dict for Redis HASH."""
         return {
             "session_id": session.session_id,
@@ -351,26 +333,25 @@ class RedisSessionStore:
             "state": session.state.value,
             "created_at": str(session.created_at),
             "last_activity": str(session.last_activity),
-            "config": json.dumps({
-                "max_history_messages": session.config.max_history_messages,
-                "max_context_tokens": session.config.max_context_tokens,
-                "idle_timeout_seconds": session.config.idle_timeout_seconds,
-                "language": session.config.language,
-                "tone": session.config.tone,
-                "streaming_enabled": session.config.streaming_enabled,
-                "tools_enabled": session.config.tools_enabled,
-                "memory_enabled": session.config.memory_enabled,
-                "personality_name": session.config.personality_name,
-            }),
-            "messages": json.dumps([
-                RedisSessionStore._serialize_message(m)
-                for m in session.messages
-            ]),
+            "config": json.dumps(
+                {
+                    "max_history_messages": session.config.max_history_messages,
+                    "max_context_tokens": session.config.max_context_tokens,
+                    "idle_timeout_seconds": session.config.idle_timeout_seconds,
+                    "language": session.config.language,
+                    "tone": session.config.tone,
+                    "streaming_enabled": session.config.streaming_enabled,
+                    "tools_enabled": session.config.tools_enabled,
+                    "memory_enabled": session.config.memory_enabled,
+                    "personality_name": session.config.personality_name,
+                }
+            ),
+            "messages": json.dumps([RedisSessionStore._serialize_message(m) for m in session.messages]),
             "metadata": json.dumps(session.metadata),
         }
 
     @staticmethod
-    def _serialize_message(msg: Message) -> Dict[str, Any]:
+    def _serialize_message(msg: Message) -> dict[str, Any]:
         """Serialize a Message to a JSON-compatible dict."""
         return {
             "role": msg.role.value,
@@ -389,7 +370,7 @@ class RedisSessionStore:
         }
 
     @staticmethod
-    def _deserialize_session(data: Dict[str, Any]) -> Session:
+    def _deserialize_session(data: dict[str, Any]) -> Session:
         """Deserialize a flat dict from Redis HASH back to a Session."""
         config_data = json.loads(data.get("config", "{}"))
         config = SessionConfig(
@@ -405,10 +386,7 @@ class RedisSessionStore:
         )
 
         messages_data = json.loads(data.get("messages", "[]"))
-        messages = [
-            RedisSessionStore._deserialize_message(m)
-            for m in messages_data
-        ]
+        messages = [RedisSessionStore._deserialize_message(m) for m in messages_data]
 
         metadata = json.loads(data.get("metadata", "{}"))
 
@@ -424,7 +402,7 @@ class RedisSessionStore:
         )
 
     @staticmethod
-    def _deserialize_message(data: Dict[str, Any]) -> Message:
+    def _deserialize_message(data: dict[str, Any]) -> Message:
         """Deserialize a dict back to a Message."""
         meta_data = data.get("metadata", {})
         metadata = MessageMetadata(

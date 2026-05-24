@@ -22,11 +22,11 @@ from typing import Any, Dict, List, Optional  # noqa: E402
 
 logger = logging.getLogger("zenic_agents.multi_language")
 
-from ._types import TYPE_MAP  # noqa: E402
 from ._core_mixin import MultiLanguageCoreMixin  # noqa: E402
 from ._extra_mixin import MultiLanguageExtraMixin  # noqa: E402
+from ._types import TYPE_MAP  # noqa: E402
 
-__all__ = ["MultiLanguage", "TYPE_MAP", "Any", "Dict", "List", "Optional"]
+__all__ = ["TYPE_MAP", "Any", "Dict", "List", "MultiLanguage", "Optional"]
 
 
 class MultiLanguage(MultiLanguageCoreMixin, MultiLanguageExtraMixin):

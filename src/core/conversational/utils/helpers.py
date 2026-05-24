@@ -19,7 +19,7 @@ def truncate_text(text: str, max_length: int = 500, suffix: str = "...") -> str:
     """Trunca texto a una longitud maxima con sufijo."""
     if len(text) <= max_length:
         return text
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix
 
 
 def count_tokens_approx(text: str) -> int:

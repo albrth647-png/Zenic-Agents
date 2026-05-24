@@ -12,10 +12,12 @@
 //! - Pre-allocated ring buffer avoids allocation on the fast path
 
 pub mod publisher;
+pub mod ring_buffer;
 pub mod routing;
+pub mod shared_state;
 pub mod subscriber;
 pub mod types;
 
 pub use publisher::SharedMemoryBus;
-pub use routing::RingBuffer;
-pub use subscriber::SharedState;
+pub use ring_buffer::RingBuffer;
+pub use shared_state::SharedState;

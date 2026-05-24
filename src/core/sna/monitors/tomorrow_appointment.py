@@ -9,6 +9,7 @@ NO espera a que el usuario pregunte "¿tengo algo mañana?".
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 
 logger = logging.getLogger(__name__)
@@ -39,13 +40,15 @@ class TomorrowAppointmentMonitor(BaseMonitor):
             client = apt.get("cliente", apt.get("paciente", apt.get("nombre", "?")))
             date = apt.get("fecha", apt.get("date", "?"))
             time_val = apt.get("hora", apt.get("time", ""))
-            findings.append({
-                "type": "tomorrow_appointment",
-                "client": client,
-                "date": date,
-                "time": time_val,
-                "message": f"Cita mañana: {client} a las {time_val}" if time_val else f"Cita mañana: {client}",
-            })
+            findings.append(
+                {
+                    "type": "tomorrow_appointment",
+                    "client": client,
+                    "date": date,
+                    "time": time_val,
+                    "message": f"Cita mañana: {client} a las {time_val}" if time_val else f"Cita mañana: {client}",
+                }
+            )
 
         return MonitorResult(
             monitor_name=self.name,

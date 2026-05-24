@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from ..engine import ExceptionSignal
 
@@ -23,10 +23,11 @@ class ExceptionRouterHandlersMixin:
     the complete ExceptionRouter.
     """
 
-    def _action_escalate_human(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_escalate_human(self, signal: ExceptionSignal) -> dict[str, Any]:
         """ESCALATE_HUMAN: create an approval request."""
         try:
             from src.core.approval.chain import get_approval_chain
+
             chain = get_approval_chain()
             req = chain.create_request(
                 action_type="exception_escalation",
@@ -48,15 +49,14 @@ class ExceptionRouterHandlersMixin:
                 "approval_request_id": req.request_id,
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: approval.chain not available, logging escalation"
-            )
+            logger.warning("ExceptionRouter: approval.chain not available, logging escalation")
             return {"status": "escalated_log_only", "detail": "ApprovalChain unavailable"}
 
-    def _action_pause_automation(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_pause_automation(self, signal: ExceptionSignal) -> dict[str, Any]:
         """PAUSE_AUTOMATION: toggle off automation."""
         try:
             from src.core.automation_engine import AutomationEngine  # noqa: F401
+
             # Lazy: we don't store a reference; just signal the intent.
             logger.warning(
                 "ExceptionRouter: PAUSE_AUTOMATION requested for signal %s",
@@ -67,15 +67,14 @@ class ExceptionRouterHandlersMixin:
                 "detail": "Automation pause requested (AutomationEngine integration)",
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: automation_engine not available, logging pause request"
-            )
+            logger.warning("ExceptionRouter: automation_engine not available, logging pause request")
             return {"status": "paused_log_only", "detail": "AutomationEngine unavailable"}
 
-    def _action_degrade_system(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_degrade_system(self, signal: ExceptionSignal) -> dict[str, Any]:
         """DEGRADE_SYSTEM: enter degraded mode."""
         try:
             from src.core.degraded_mode.manager import get_degraded_mode_manager
+
             mgr = get_degraded_mode_manager()
             mgr.enter_degraded(
                 reason="exception_triggered",
@@ -87,12 +86,10 @@ class ExceptionRouterHandlersMixin:
                 "detail": "System entered degraded mode",
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: degraded_mode.manager not available, logging degrade request"
-            )
+            logger.warning("ExceptionRouter: degraded_mode.manager not available, logging degrade request")
             return {"status": "degraded_log_only", "detail": "DegradedModeManager unavailable"}
 
-    def _action_retry_with_backoff(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_retry_with_backoff(self, signal: ExceptionSignal) -> dict[str, Any]:
         """RETRY_WITH_BACKOFF: return retry configuration."""
         config = {
             "max_retries": 3,
@@ -107,7 +104,7 @@ class ExceptionRouterHandlersMixin:
             "retry_config": config,
         }
 
-    def _action_notify_admin(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_notify_admin(self, signal: ExceptionSignal) -> dict[str, Any]:
         """NOTIFY_ADMIN: create a notification record."""
         notification = {
             "type": "admin_notification",
@@ -128,23 +125,25 @@ class ExceptionRouterHandlersMixin:
             "notification": notification,
         }
 
-    def _action_abort(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_abort(self, signal: ExceptionSignal) -> dict[str, Any]:
         """ABORT_ACTION: return an abort signal."""
         return {
             "status": "aborted",
             "detail": f"Action aborted due to {signal.category.value}",
         }
 
-    def _action_log_and_continue(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_log_and_continue(self, signal: ExceptionSignal) -> dict[str, Any]:
         """LOG_AND_CONTINUE: just log."""
         logger.info(
             "ExceptionRouter: LOG_AND_CONTINUE for signal %s [%s:%s] – %s",
-            signal.signal_id, signal.category.value, signal.severity.value,
+            signal.signal_id,
+            signal.category.value,
+            signal.severity.value,
             signal.message[:120],
         )
         return {"status": "logged", "detail": "Logged and continued"}
 
-    def _action_reroute(self, signal: ExceptionSignal) -> Dict[str, Any]:
+    def _action_reroute(self, signal: ExceptionSignal) -> dict[str, Any]:
         """REROUTE: find the next matching rule (skip current match)."""
         with self._lock:  # type: ignore[attr-defined]
             matched = False
@@ -154,7 +153,9 @@ class ExceptionRouterHandlersMixin:
                         # This is the second match → use it
                         logger.info(
                             "ExceptionRouter: rerouted signal %s to rule %s → %s",
-                            signal.signal_id, rule.rule_id, rule.action.value,
+                            signal.signal_id,
+                            rule.rule_id,
+                            rule.action.value,
                         )
                         return {
                             "status": "rerouted",

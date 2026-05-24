@@ -10,7 +10,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import copy
 import logging
 import threading
-from typing import Any, Dict
+from typing import Any
 
 from src.core.agents.resilience import BaseAgent
 
@@ -30,6 +30,7 @@ def _is_unpicklable(value: Any) -> bool:
         return True
     # Compiled regex patterns (have .pattern attribute but can't always deepcopy)
     import re
+
     if isinstance(value, re.Pattern):
         return True
     return False
@@ -68,10 +69,10 @@ def _safe_deepcopy_agent(agent: BaseAgent) -> BaseAgent:
     import re as re_mod
 
     # Identify threading primitives in the agent's __dict__
-    thread_attrs: Dict[str, Any] = {}
-    clean_dict: Dict[str, Any] = {}
+    thread_attrs: dict[str, Any] = {}
+    clean_dict: dict[str, Any] = {}
     # Track objects that should be reconstructed rather than deep-copied
-    reconstruct_attrs: Dict[str, type] = {}
+    reconstruct_attrs: dict[str, type] = {}
 
     for key, value in agent.__dict__.items():
         if _is_thread_primitive(value):
@@ -81,7 +82,7 @@ def _safe_deepcopy_agent(agent: BaseAgent) -> BaseAgent:
             # Compiled regex etc — store type info for reconstruction
             thread_attrs[key] = value
             clean_dict[key] = None
-        elif hasattr(value, '__dict__') and _has_internal_locks(value):
+        elif hasattr(value, "__dict__") and _has_internal_locks(value):
             # Objects with internal locks (CircuitBreakerManager, etc.)
             # Store the type so we can reconstruct a fresh instance
             reconstruct_attrs[key] = type(value)
@@ -127,7 +128,7 @@ def _safe_deepcopy_agent(agent: BaseAgent) -> BaseAgent:
 
 def _has_internal_locks(obj: Any) -> bool:
     """Check if an object has threading locks in its __dict__ (recursively, depth=1)."""
-    if not hasattr(obj, '__dict__'):
+    if not hasattr(obj, "__dict__"):
         return False
     for value in obj.__dict__.values():
         if _is_thread_primitive(value):
@@ -162,9 +163,7 @@ class AgentPrototype:
             ValueError: If *agent_instance* is not a BaseAgent.
         """
         if not isinstance(agent_instance, BaseAgent):
-            raise ValueError(
-                "AgentPrototype: agent_instance must be a BaseAgent instance"
-            )
+            raise ValueError("AgentPrototype: agent_instance must be a BaseAgent instance")
         self._prototype: BaseAgent = agent_instance
         logger.debug(
             "AgentPrototype: stored prototype for agent '%s'",
@@ -199,7 +198,7 @@ class AgentPrototype:
         )
         return cloned
 
-    def clone_with_config(self, config: Dict[str, Any]) -> BaseAgent:
+    def clone_with_config(self, config: dict[str, Any]) -> BaseAgent:
         """
         Deep-copy the prototype and apply a configuration dict.
 

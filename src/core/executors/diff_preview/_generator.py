@@ -10,7 +10,7 @@ import logging
 import os
 import sqlite3
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._comparator import (
     build_db_summary,
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 #  DIFF PREVIEW ENGINE
 # ──────────────────────────────────────────────────────────────
 
+
 class DiffPreviewEngine:
     """Shows before/after diffs of what changes would occur if an action
     were executed.  Routes DB, file, and email operations to specialised
@@ -39,7 +40,7 @@ class DiffPreviewEngine:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._db_journal: Optional[Any] = None  # lazy
+        self._db_journal: Any | None = None  # lazy
         self._preview_count: int = 0
 
     # ── Lazy dependencies ──────────────────────────────────────
@@ -49,6 +50,7 @@ class DiffPreviewEngine:
         """Lazy-load the DBTransactionJournal singleton."""
         if self._db_journal is None:
             from ..db_journal import get_db_journal
+
             self._db_journal = get_db_journal()
         return self._db_journal
 
@@ -57,8 +59,8 @@ class DiffPreviewEngine:
     def preview_diff(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> DiffResult:
         """Compute a before/after diff for the given action.
 
@@ -83,12 +85,12 @@ class DiffPreviewEngine:
 
     def _diff_db(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for a database operation."""
-        diffs: List[DiffEntry] = []
-        affected_tables: List[str] = []
+        diffs: list[DiffEntry] = []
+        affected_tables: list[str] = []
 
         db_path = config.get("db_path", ":memory:")
         operation = str(config.get("operation", "query")).upper()
@@ -103,28 +105,35 @@ class DiffPreviewEngine:
             affected_tables.append(table)
 
         # ── Get current snapshot via journal ──────────────────
-        current_rows: List[Dict[str, Any]] = []
+        current_rows: list[dict[str, Any]] = []
         if table and db_path != ":memory:" and operation in ("DELETE", "UPDATE"):
             try:
                 current_rows = self._fetch_current_rows(
-                    db_path, operation, query, list(params), table,
+                    db_path,
+                    operation,
+                    query,
+                    list(params),
+                    table,
                 )
             except Exception as exc:
                 logger.debug(
                     "DiffPreviewEngine: could not fetch current rows for %s: %s",
-                    operation, exc,
+                    operation,
+                    exc,
                 )
 
         # ── Compute diffs based on operation ──────────────────
         if operation == "DELETE":
             for row_idx, row in enumerate(current_rows):
                 for col_name, col_value in row.items():
-                    diffs.append(DiffEntry(
-                        field_path=f"{table}.{col_name}[row{row_idx}]",
-                        old_value=col_value,
-                        new_value=None,
-                        change_type="removed",
-                    ))
+                    diffs.append(
+                        DiffEntry(
+                            field_path=f"{table}.{col_name}[row{row_idx}]",
+                            old_value=col_value,
+                            new_value=None,
+                            change_type="removed",
+                        )
+                    )
 
         elif operation == "UPDATE":
             # Parse SET clause to find proposed values
@@ -138,24 +147,28 @@ class DiffPreviewEngine:
                         current_value = row.get(field_name)
                         changed = current_value != proposed_value
                         change_type = "modified" if current_value is not None else "added"
-                        diffs.append(DiffEntry(
-                            field_path=f"{table}.{field_name}[row{row_idx}]",
-                            old_value=current_value,
-                            new_value=proposed_value,
-                            change_type=change_type if changed else "modified",
-                        ))
+                        diffs.append(
+                            DiffEntry(
+                                field_path=f"{table}.{field_name}[row{row_idx}]",
+                                old_value=current_value,
+                                new_value=proposed_value,
+                                change_type=change_type if changed else "modified",
+                            )
+                        )
 
         elif operation == "INSERT":
             # INSERT adds new data — all fields are "added"
             insert_cols = parse_insert_columns(query)
             for idx, col_name in enumerate(insert_cols):
                 value = params[idx] if idx < len(params) else None
-                diffs.append(DiffEntry(
-                    field_path=f"{table}.{col_name}",
-                    old_value=None,
-                    new_value=value,
-                    change_type="added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=f"{table}.{col_name}",
+                        old_value=None,
+                        new_value=value,
+                        change_type="added",
+                    )
+                )
 
         # Compute risk and summary
         risk = estimate_risk_from_diffs(diffs, operation)
@@ -175,18 +188,19 @@ class DiffPreviewEngine:
         db_path: str,
         operation: str,
         query: str,
-        params: List[Any],
+        params: list[Any],
         table: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Fetch current rows that would be affected (wrapped in retry)."""
-        def _do_fetch() -> List[Dict[str, Any]]:
+
+        def _do_fetch() -> list[dict[str, Any]]:
             if db_path == ":memory:":
                 return []
 
             # Build a SELECT query
             where_clause = extract_where_clause(query, operation)
             select_query = f"SELECT * FROM {table}"
-            select_params: List[Any] = []
+            select_params: list[Any] = []
 
             if where_clause:
                 select_query += f" WHERE {where_clause}"
@@ -217,12 +231,12 @@ class DiffPreviewEngine:
 
     def _diff_file(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for a file operation."""
-        diffs: List[DiffEntry] = []
-        affected_files: List[str] = []
+        diffs: list[DiffEntry] = []
+        affected_files: list[str] = []
 
         operation = str(config.get("operation", "read")).lower()
         source = str(config.get("source", ""))
@@ -238,73 +252,89 @@ class DiffPreviewEngine:
             # File would be created or overwritten
             exists = os.path.exists(os.path.join(base_dir, target_path)) if target_path else False
             if exists:
-                diffs.append(DiffEntry(
-                    field_path=target_path,
-                    old_value="<existing_file>",
-                    new_value=content if content is not None else "<new_content>",
-                    change_type="modified",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=target_path,
+                        old_value="<existing_file>",
+                        new_value=content if content is not None else "<new_content>",
+                        change_type="modified",
+                    )
+                )
             else:
-                diffs.append(DiffEntry(
-                    field_path=target_path,
-                    old_value=None,
-                    new_value=content if content is not None else "<new_content>",
-                    change_type="added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=target_path,
+                        old_value=None,
+                        new_value=content if content is not None else "<new_content>",
+                        change_type="added",
+                    )
+                )
 
         elif operation == "delete":
             exists = os.path.exists(os.path.join(base_dir, source)) if source else False
             if exists:
-                diffs.append(DiffEntry(
-                    field_path=source,
-                    old_value="<existing_file>",
-                    new_value=None,
-                    change_type="removed",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=source,
+                        old_value="<existing_file>",
+                        new_value=None,
+                        change_type="removed",
+                    )
+                )
 
         elif operation == "append":
-            diffs.append(DiffEntry(
-                field_path=target_path,
-                old_value="<current_content>",
-                new_value="<current_content + appended_data>",
-                change_type="modified",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=target_path,
+                    old_value="<current_content>",
+                    new_value="<current_content + appended_data>",
+                    change_type="modified",
+                )
+            )
 
         elif operation == "move":
             if source:
-                diffs.append(DiffEntry(
-                    field_path=source,
-                    old_value="<existing_file>",
-                    new_value=None,
-                    change_type="removed",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=source,
+                        old_value="<existing_file>",
+                        new_value=None,
+                        change_type="removed",
+                    )
+                )
             if destination:
                 dest_exists = os.path.exists(os.path.join(base_dir, destination)) if destination else False
-                diffs.append(DiffEntry(
-                    field_path=destination,
-                    old_value="<existing_file>" if dest_exists else None,
-                    new_value="<moved_file>",
-                    change_type="modified" if dest_exists else "added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=destination,
+                        old_value="<existing_file>" if dest_exists else None,
+                        new_value="<moved_file>",
+                        change_type="modified" if dest_exists else "added",
+                    )
+                )
 
         elif operation == "copy":
             if destination:
                 dest_exists = os.path.exists(os.path.join(base_dir, destination)) if destination else False
-                diffs.append(DiffEntry(
-                    field_path=destination,
-                    old_value="<existing_file>" if dest_exists else None,
-                    new_value="<copied_file>",
-                    change_type="modified" if dest_exists else "added",
-                ))
+                diffs.append(
+                    DiffEntry(
+                        field_path=destination,
+                        old_value="<existing_file>" if dest_exists else None,
+                        new_value="<copied_file>",
+                        change_type="modified" if dest_exists else "added",
+                    )
+                )
 
         else:
             # read or unknown — no changes
-            diffs.append(DiffEntry(
-                field_path=target_path,
-                old_value="<current>",
-                new_value="<current>",
-                change_type="modified",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=target_path,
+                    old_value="<current>",
+                    new_value="<current>",
+                    change_type="modified",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, operation)
         summary = f"File {operation}: {target_path}" if target_path else f"File {operation}"
@@ -322,11 +352,11 @@ class DiffPreviewEngine:
 
     def _diff_email(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a diff for an email operation."""
-        diffs: List[DiffEntry] = []
+        diffs: list[DiffEntry] = []
 
         to_emails = config.get("to", [])
         if isinstance(to_emails, str):
@@ -336,44 +366,51 @@ class DiffPreviewEngine:
         cc = config.get("cc", [])
         bcc = config.get("bcc", [])
 
-        diffs.append(DiffEntry(
-            field_path="email.from",
-            old_value=None,
-            new_value=from_email,
-            change_type="added",
-        ))
-        diffs.append(DiffEntry(
-            field_path="email.to",
-            old_value=None,
-            new_value=[str(r) for r in to_emails],
-            change_type="added",
-        ))
-        diffs.append(DiffEntry(
-            field_path="email.subject",
-            old_value=None,
-            new_value=subject,
-            change_type="added",
-        ))
+        diffs.append(
+            DiffEntry(
+                field_path="email.from",
+                old_value=None,
+                new_value=from_email,
+                change_type="added",
+            )
+        )
+        diffs.append(
+            DiffEntry(
+                field_path="email.to",
+                old_value=None,
+                new_value=[str(r) for r in to_emails],
+                change_type="added",
+            )
+        )
+        diffs.append(
+            DiffEntry(
+                field_path="email.subject",
+                old_value=None,
+                new_value=subject,
+                change_type="added",
+            )
+        )
         if cc:
-            diffs.append(DiffEntry(
-                field_path="email.cc",
-                old_value=None,
-                new_value=[str(c) for c in cc] if isinstance(cc, list) else [str(cc)],
-                change_type="added",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path="email.cc",
+                    old_value=None,
+                    new_value=[str(c) for c in cc] if isinstance(cc, list) else [str(cc)],
+                    change_type="added",
+                )
+            )
         if bcc:
-            diffs.append(DiffEntry(
-                field_path="email.bcc",
-                old_value=None,
-                new_value=[str(b) for b in bcc] if isinstance(bcc, list) else [str(bcc)],
-                change_type="added",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path="email.bcc",
+                    old_value=None,
+                    new_value=[str(b) for b in bcc] if isinstance(bcc, list) else [str(bcc)],
+                    change_type="added",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, "send_email")
-        summary = (
-            f"Would send email from '{from_email}' to "
-            f"{len(to_emails)} recipient(s) with subject '{subject}'"
-        )
+        summary = f"Would send email from '{from_email}' to " f"{len(to_emails)} recipient(s) with subject '{subject}'"
 
         return DiffResult(
             action_type="email",
@@ -389,19 +426,21 @@ class DiffPreviewEngine:
     def _diff_generic(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> DiffResult:
         """Compute a generic diff for any action type."""
-        diffs: List[DiffEntry] = []
+        diffs: list[DiffEntry] = []
 
         for key, value in config.items():
-            diffs.append(DiffEntry(
-                field_path=f"{action_type}.{key}",
-                old_value=None,
-                new_value=value,
-                change_type="added",
-            ))
+            diffs.append(
+                DiffEntry(
+                    field_path=f"{action_type}.{key}",
+                    old_value=None,
+                    new_value=value,
+                    change_type="added",
+                )
+            )
 
         risk = estimate_risk_from_diffs(diffs, action_type)
         summary = f"Generic diff for {action_type}: {len(diffs)} field(s) would change"
@@ -435,12 +474,13 @@ class DiffPreviewEngine:
         """Estimate risk level based on the number and type of diffs."""
         with self._lock:
             return estimate_risk_from_diffs(
-                diff_result.diffs, diff_result.action_type,
+                diff_result.diffs,
+                diff_result.action_type,
             )
 
     @staticmethod
     def estimate_risk_from_diffs(
-        diffs: List[DiffEntry],
+        diffs: list[DiffEntry],
         operation: str = "",
     ) -> str:
         """Estimate risk from a list of DiffEntry objects.
@@ -467,7 +507,7 @@ class DiffPreviewEngine:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[DiffPreviewEngine] = None
+_instance: DiffPreviewEngine | None = None
 _instance_lock = threading.Lock()
 
 

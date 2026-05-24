@@ -1,9 +1,8 @@
 """Mixin: RAM budget management for ModelManager."""
 
-import time
 import gc
 import platform
-
+import time
 
 
 class RAMMixin:
@@ -40,16 +39,17 @@ class RAMMixin:
     def _get_current_ram_mb() -> float:
         """Obtiene el uso actual de RAM del proceso en MB."""
         try:
-            with open('/proc/self/status', 'r') as f:
+            with open("/proc/self/status") as f:
                 for line in f:
-                    if line.startswith('VmRSS:'):
+                    if line.startswith("VmRSS:"):
                         return int(line.split()[1]) / 1024
         except (FileNotFoundError, PermissionError):
             pass
         try:
             import resource
+
             usage = resource.getrusage(resource.RUSAGE_SELF)
-            if platform.system() == 'Darwin':
+            if platform.system() == "Darwin":
                 return usage.ru_maxrss / 1024 / 1024  # macOS: bytes -> MB
             return usage.ru_maxrss / 1024  # Linux: KB -> MB
         except Exception:

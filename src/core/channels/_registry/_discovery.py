@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from .._types import (
     ChannelMessage,
@@ -20,7 +20,7 @@ from .._types import (
     DeliveryStatus,
 )
 from ._registry_core import AdapterRegistry
-from ._types import _PRIORITY_CHANNEL_MAP, _DEFAULT_FALLBACKS
+from ._types import _DEFAULT_FALLBACKS, _PRIORITY_CHANNEL_MAP
 
 logger = logging.getLogger("zenic_agents.channels.router")
 
@@ -37,8 +37,8 @@ class ChannelRouter:
 
     def __init__(self, registry: AdapterRegistry) -> None:
         self._registry = registry
-        self._user_preferences: Dict[str, List[str]] = {}
-        self._priority_overrides: Dict[str, ChannelPriority] = {}
+        self._user_preferences: dict[str, list[str]] = {}
+        self._priority_overrides: dict[str, ChannelPriority] = {}
 
         # Register default fallback chains
         for channel, fallbacks in _DEFAULT_FALLBACKS.items():
@@ -51,8 +51,8 @@ class ChannelRouter:
         priority: ChannelPriority = ChannelPriority.NORMAL,
         alert_type: str = "",
         user_id: str = "",
-        exclude_channels: Optional[Set[str]] = None,
-    ) -> List[str]:
+        exclude_channels: set[str] | None = None,
+    ) -> list[str]:
         """Route a message to the best channel(s) based on priority.
 
         Args:
@@ -67,9 +67,12 @@ class ChannelRouter:
         exclude = exclude_channels or set()
 
         # Get candidate channels for this priority
-        candidates = list(_PRIORITY_CHANNEL_MAP.get(
-            priority, _PRIORITY_CHANNEL_MAP[ChannelPriority.NORMAL],
-        ))
+        candidates = list(
+            _PRIORITY_CHANNEL_MAP.get(
+                priority,
+                _PRIORITY_CHANNEL_MAP[ChannelPriority.NORMAL],
+            )
+        )
 
         # Apply user preferences if available
         if user_id and user_id in self._user_preferences:
@@ -80,7 +83,7 @@ class ChannelRouter:
             candidates = preferred + remaining
 
         # Filter out excluded and unavailable channels
-        available: List[str] = []
+        available: list[str] = []
         for ch in candidates:
             if ch in exclude:
                 continue
@@ -138,7 +141,7 @@ class ChannelRouter:
     def set_user_preferences(
         self,
         user_id: str,
-        channels: List[str],
+        channels: list[str],
     ) -> None:
         """Set channel preference order for a user.
 
@@ -149,10 +152,11 @@ class ChannelRouter:
         self._user_preferences[user_id] = channels
         logger.debug(
             "ChannelRouter: set preferences for '%s' → %s",
-            user_id, channels,
+            user_id,
+            channels,
         )
 
-    def get_user_preferences(self, user_id: str) -> List[str]:
+    def get_user_preferences(self, user_id: str) -> list[str]:
         """Get channel preference order for a user."""
         return list(self._user_preferences.get(user_id, []))
 
@@ -183,7 +187,7 @@ class ChannelRouter:
     # ── Properties ──────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Router statistics."""
         return {
             "user_preferences_count": len(self._user_preferences),

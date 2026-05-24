@@ -11,30 +11,38 @@ en memoria basado en heurísticas:
 
 from __future__ import annotations
 
-
-from ..types.memory import MemoryEntry, MemoryCategory
-
+from ..types.memory import MemoryCategory, MemoryEntry
 
 # ─── Pesos por categoria ─────────────────────────────────────
 
 _CATEGORY_WEIGHTS: dict[MemoryCategory, float] = {
-    MemoryCategory.PREFERENCE: 0.9,    # Preferencias son muy importantes
-    MemoryCategory.CORRECTION: 0.85,   # Correcciones del usuario
-    MemoryCategory.FACT: 0.6,          # Hechos normales
-    MemoryCategory.SKILL: 0.7,         # Habilidades
-    MemoryCategory.CONTEXT: 0.3,       # Contexto temporal
-    MemoryCategory.TOPIC: 0.4,         # Temas de conversacion
-    MemoryCategory.EMOTION: 0.5,       # Estado emocional
+    MemoryCategory.PREFERENCE: 0.9,  # Preferencias son muy importantes
+    MemoryCategory.CORRECTION: 0.85,  # Correcciones del usuario
+    MemoryCategory.FACT: 0.6,  # Hechos normales
+    MemoryCategory.SKILL: 0.7,  # Habilidades
+    MemoryCategory.CONTEXT: 0.3,  # Contexto temporal
+    MemoryCategory.TOPIC: 0.4,  # Temas de conversacion
+    MemoryCategory.EMOTION: 0.5,  # Estado emocional
 }
 
 # ─── Patrones de explicitud ──────────────────────────────────
 
 _EXPLICIT_PATTERNS: list[str] = [
-    "recuerda", "remember", "guarda", "save",
-    "ten en cuenta", "keep in mind", "nota",
-    "mi preferencia", "my preference",
-    "siempre", "always", "nunca", "never",
-    "prefiero", "i prefer",
+    "recuerda",
+    "remember",
+    "guarda",
+    "save",
+    "ten en cuenta",
+    "keep in mind",
+    "nota",
+    "mi preferencia",
+    "my preference",
+    "siempre",
+    "always",
+    "nunca",
+    "never",
+    "prefiero",
+    "i prefer",
 ]
 
 
@@ -74,12 +82,7 @@ class MemoryScorer:
         repetition = self._compute_repetition(content, existing_entries or [])
 
         # Formula ponderada
-        total = (
-            cat_score * 0.4
-            + explicit * 0.3
-            + novelty * 0.2
-            + repetition * 0.1
-        )
+        total = cat_score * 0.4 + explicit * 0.3 + novelty * 0.2 + repetition * 0.1
 
         return min(total, 1.0)
 
@@ -103,12 +106,12 @@ class MemoryScorer:
         importance < 0.3  → 1 hora
         """
         if importance >= 0.8:
-            return 0.0       # Sin expiracion
+            return 0.0  # Sin expiracion
         if importance >= 0.5:
-            return 86400.0   # 24h
+            return 86400.0  # 24h
         if importance >= 0.3:
-            return 14400.0   # 4h
-        return 3600.0        # 1h
+            return 14400.0  # 4h
+        return 3600.0  # 1h
 
     # ─── Privados ─────────────────────────────────────────────
 
@@ -150,10 +153,7 @@ class MemoryScorer:
             return 0.0
 
         content_lower = content.lower()
-        mentions = sum(
-            1 for e in existing
-            if content_lower in e.content.lower()
-        )
+        mentions = sum(1 for e in existing if content_lower in e.content.lower())
 
         if mentions >= 3:
             return 1.0

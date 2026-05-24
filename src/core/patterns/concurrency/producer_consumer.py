@@ -11,7 +11,8 @@ import asyncio
 import logging
 import queue
 import threading
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class ProducerConsumer:
         """
         self._buffer: queue.Queue = queue.Queue(maxsize=buffer_size)
         self._num_consumers = num_consumers
-        self._consumer_fn: Optional[Callable[..., Any]] = None
+        self._consumer_fn: Callable[..., Any] | None = None
         self._consumers: list = []
         self._running = False
         self._lock = threading.Lock()
@@ -141,9 +142,7 @@ class ProducerConsumer:
             self._consumers.append(t)
             t.start()
 
-        logger.debug(
-            "ProducerConsumer: started %d consumers", self._num_consumers
-        )
+        logger.debug("ProducerConsumer: started %d consumers", self._num_consumers)
 
     def stop(self) -> None:
         """
@@ -182,7 +181,7 @@ class ProducerConsumer:
     # ------------------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return operational statistics."""
         with self._stats_lock:
             return {
@@ -219,6 +218,7 @@ class ProducerConsumer:
                         if loop.is_running():
                             # We're inside an existing loop — use nest_asyncio fallback
                             import concurrent.futures
+
                             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                                 pool.submit(asyncio.run, result).result()
                         else:

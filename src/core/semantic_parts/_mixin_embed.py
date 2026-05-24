@@ -60,6 +60,7 @@ class EmbedMixin:
                 # Limit cache size — evict oldest entries when over limit
                 # FIX (Phase 3): Use consistent _MAX_EMBED_CACHE_ENTRIES from lifecycle
                 from ._mixin_lifecycle import _MAX_EMBED_CACHE_ENTRIES
+
                 if len(self._embed_cache) > _MAX_EMBED_CACHE_ENTRIES:
                     # Evict 20% of entries (oldest first) — more efficient than
                     # evicting a fixed 100 entries when cache is large

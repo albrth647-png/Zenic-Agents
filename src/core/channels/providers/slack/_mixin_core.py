@@ -14,7 +14,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, FrozenSet, Optional
+from typing import Any
 
 from ..._formatter import (
     build_slack_blocks,
@@ -33,13 +33,13 @@ from ..._types import (
     RateLimitInfo,
 )
 from ._helpers import (
-    _validate_url,
     _HAS_AIOHTTP,
     _HAS_URLLIB,
-    _SLACK_API_BASE,
+    _HTTP_TIMEOUT,
     _MAX_RETRIES,
     _RETRY_BASE_DELAY,
-    _HTTP_TIMEOUT,
+    _SLACK_API_BASE,
+    _validate_url,
 )
 
 logger = logging.getLogger("zenic_agents.channels.slack")
@@ -50,10 +50,10 @@ class SlackChannelProvider:
 
     def __init__(
         self,
-        bot_token: Optional[str] = None,
-        app_token: Optional[str] = None,
-        signing_secret: Optional[str] = None,
-        api_base: Optional[str] = None,
+        bot_token: str | None = None,
+        app_token: str | None = None,
+        signing_secret: str | None = None,
+        api_base: str | None = None,
     ) -> None:
         self._bot_token = bot_token or os.environ.get("SLACK_BOT_TOKEN", "")
         self._app_token = app_token or os.environ.get("SLACK_APP_TOKEN", "")
@@ -65,17 +65,17 @@ class SlackChannelProvider:
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()
-        self._message_handler: Optional[MessageHandler] = None
-        self._confirmation_handler: Optional[ConfirmationHandler] = None
-        self._session: Optional[Any] = None
-        self._ws_session: Optional[Any] = None
+        self._message_handler: MessageHandler | None = None
+        self._confirmation_handler: ConfirmationHandler | None = None
+        self._session: Any | None = None
+        self._ws_session: Any | None = None
 
     @property
     def name(self) -> str:
         return "slack"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
+    def capabilities(self) -> frozenset[ChannelCapability]:
         caps = {
             ChannelCapability.SEND_TEXT,
             ChannelCapability.SEND_RICH,
@@ -114,7 +114,8 @@ class SlackChannelProvider:
         return response
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Send an interactive confirmation via Slack Block Kit buttons."""
         if not self._bot_token:
@@ -122,7 +123,7 @@ class SlackChannelProvider:
 
         blocks = build_slack_confirmation_blocks(request)
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "channel": request.recipient,
             "blocks": blocks,
             "text": truncate(request.title or request.message, 150),
@@ -152,7 +153,8 @@ class SlackChannelProvider:
         self._started = True
         logger.info(
             "SlackChannelProvider: started (token=%s, socket_mode=%s)",
-            bool(self._bot_token), bool(self._app_token),
+            bool(self._bot_token),
+            bool(self._app_token),
         )
 
     async def stop(self) -> None:
@@ -164,7 +166,7 @@ class SlackChannelProvider:
         logger.info("SlackChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "name": "slack",
@@ -194,7 +196,10 @@ class SlackChannelProvider:
         return self._started and bool(self._bot_token)
 
     def verify_signature(
-        self, timestamp: str, body: str, signature: str,
+        self,
+        timestamp: str,
+        body: str,
+        signature: str,
     ) -> bool:
         """Verify Slack request signature (HMAC-SHA256)."""
         if not self._signing_secret:
@@ -207,17 +212,22 @@ class SlackChannelProvider:
             return False
 
         sig_basestring = f"v0:{timestamp}:{body}"
-        computed = "v0=" + hmac.new(
-            self._signing_secret.encode("utf-8"),
-            sig_basestring.encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
+        computed = (
+            "v0="
+            + hmac.new(
+                self._signing_secret.encode("utf-8"),
+                sig_basestring.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+        )
         return hmac.compare(computed, signature)
 
     # ── Internal: Slack API ────────────────────────────────────
 
     async def _post_api(
-        self, endpoint: str, payload: Dict[str, Any],
+        self,
+        endpoint: str,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """POST to a Slack Web API endpoint with retry."""
         url = f"{self._api_base}/{endpoint}"
@@ -230,7 +240,8 @@ class SlackChannelProvider:
                     return await self._post_api_urllib(url, payload)
                 else:
                     return ChannelResponse(
-                        success=False, channel="slack",
+                        success=False,
+                        channel="slack",
                         status=DeliveryStatus.FAILED,
                         error="No HTTP library available",
                         timestamp=time.time(),
@@ -240,29 +251,36 @@ class SlackChannelProvider:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
                         "SlackChannelProvider: attempt %d/%d failed: %s",
-                        attempt, _MAX_RETRIES, e,
+                        attempt,
+                        _MAX_RETRIES,
+                        e,
                     )
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     return ChannelResponse(
-                        success=False, channel="slack",
+                        success=False,
+                        channel="slack",
                         status=DeliveryStatus.FAILED,
                         error=f"HTTP error after {_MAX_RETRIES} attempts: {e}",
                         timestamp=time.time(),
                     )
 
         return ChannelResponse(
-            success=False, channel="slack",
+            success=False,
+            channel="slack",
             status=DeliveryStatus.FAILED,
             error="Unexpected retry loop exit",
             timestamp=time.time(),
         )
 
     async def _post_api_aiohttp(
-        self, url: str, payload: Dict[str, Any],
+        self,
+        url: str,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
-        """Send via aiohttp."""  # noqa: F821  # TODO: verify import
+        """Send via aiohttp."""  # TODO: verify import
         assert self._session is not None
         async with self._session.post(url, json=payload) as resp:
             body = await resp.json()
@@ -279,7 +297,8 @@ class SlackChannelProvider:
                 retry_after = float(resp.headers.get("Retry-After", "5"))
                 self._rate_limit_info = RateLimitInfo(remaining=0, reset_at=time.time() + retry_after)
                 return ChannelResponse(
-                    success=False, channel="slack",
+                    success=False,
+                    channel="slack",
                     status=DeliveryStatus.RATE_LIMITED,
                     error=f"Rate limited. Retry after {retry_after}s",
                     timestamp=time.time(),
@@ -288,7 +307,8 @@ class SlackChannelProvider:
             if body.get("ok"):
                 message_ts = body.get("ts", "")
                 return ChannelResponse(
-                    success=True, channel="slack",
+                    success=True,
+                    channel="slack",
                     message_id=message_ts,
                     status=DeliveryStatus.SENT,
                     metadata={"ts": message_ts, "channel": body.get("channel", "")},
@@ -296,23 +316,28 @@ class SlackChannelProvider:
                 )
             else:
                 return ChannelResponse(
-                    success=False, channel="slack",
+                    success=False,
+                    channel="slack",
                     status=DeliveryStatus.FAILED,
                     error=f"Slack API error: {body.get('error', 'unknown_error')}",
                     timestamp=time.time(),
                 )
 
     async def _post_api_urllib(
-        self, url: str, payload: Dict[str, Any],
+        self,
+        url: str,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
-        """Send via urllib (sync, wrapped in asyncio.to_thread)."""  # noqa: F821  # TODO: verify import
+        """Send via urllib (sync, wrapped in asyncio.to_thread)."""  # TODO: verify import
         import asyncio
+
         validated_url = _validate_url(url)
 
         def _sync_post() -> ChannelResponse:
             data = json.dumps(payload).encode("utf-8")
             req = urllib.request.Request(  # noqa: F821  # TODO: verify import
-                validated_url, data=data,
+                validated_url,
+                data=data,
                 headers={
                     "Authorization": f"Bearer {self._bot_token}",
                     "Content-Type": "application/json",
@@ -324,7 +349,8 @@ class SlackChannelProvider:
                     body = json.loads(resp.read().decode("utf-8"))
                     if body.get("ok"):
                         return ChannelResponse(
-                            success=True, channel="slack",
+                            success=True,
+                            channel="slack",
                             message_id=body.get("ts", ""),
                             status=DeliveryStatus.SENT,
                             metadata={"ts": body.get("ts", "")},
@@ -332,7 +358,8 @@ class SlackChannelProvider:
                         )
                     else:
                         return ChannelResponse(
-                            success=False, channel="slack",
+                            success=False,
+                            channel="slack",
                             status=DeliveryStatus.FAILED,
                             error=f"Slack API error: {body.get('error', 'unknown')}",
                             timestamp=time.time(),
@@ -341,22 +368,25 @@ class SlackChannelProvider:
                 if e.code == 429:
                     retry_after = float(e.headers.get("Retry-After", "5"))
                     return ChannelResponse(
-                        success=False, channel="slack",
+                        success=False,
+                        channel="slack",
                         status=DeliveryStatus.RATE_LIMITED,
                         error=f"Rate limited. Retry after {retry_after}s",
                         timestamp=time.time(),
                     )
                 return ChannelResponse(
-                    success=False, channel="slack",
+                    success=False,
+                    channel="slack",
                     status=DeliveryStatus.FAILED,
                     error=f"HTTP {e.code}: {e.read().decode()[:200]}",
                     timestamp=time.time(),
                 )
             except Exception as e:
                 return ChannelResponse(
-                    success=False, channel="slack",
+                    success=False,
+                    channel="slack",
                     status=DeliveryStatus.FAILED,
-                    error=f"urllib error: {e}",  # noqa: F821  # TODO: verify import
+                    error=f"urllib error: {e}",  # TODO: verify import
                     timestamp=time.time(),
                 )
 
@@ -373,23 +403,27 @@ class SlackChannelProvider:
             (message.text or "")[:200],
         )
         return ChannelResponse(
-            success=True, channel="slack",
+            success=True,
+            channel="slack",
             status=DeliveryStatus.DRY_RUN,
             metadata={"mode": "dry_run"},
             timestamp=time.time(),
         )
 
     def _dry_run_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         with self._lock:
             self._confirmation_count += 1
         logger.info(
             "[SLACK DRY-RUN] Confirmation: %s | Options: %s",
-            request.title, list(request.options),
+            request.title,
+            list(request.options),
         )
         return ChannelResponse(
-            success=True, channel="slack",
+            success=True,
+            channel="slack",
             status=DeliveryStatus.DRY_RUN,
             metadata={"mode": "dry_run", "action_id": request.action_id},
             timestamp=time.time(),

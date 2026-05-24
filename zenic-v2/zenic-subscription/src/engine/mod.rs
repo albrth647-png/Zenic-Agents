@@ -10,6 +10,7 @@
 //!
 //! All operations use the Saga pattern for reliability.
 
+pub mod engine_impl;
 pub mod lifecycle;
 pub mod queries;
 pub mod types;

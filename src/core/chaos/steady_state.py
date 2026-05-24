@@ -4,7 +4,7 @@ import logging
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.core.chaos.steady_state")
 
@@ -14,14 +14,14 @@ class SteadyStateVerifier:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._probes: Dict[str, Dict[str, Any]] = {}
+        self._probes: dict[str, dict[str, Any]] = {}
 
     def define_probe(
         self,
         name: str,
         probe_type: str,
         target: str,
-        threshold: Dict[str, Any],
+        threshold: dict[str, Any],
     ) -> str:
         """Define a health probe and return its ID."""
         with self._lock:
@@ -36,9 +36,7 @@ class SteadyStateVerifier:
             }
             return probe_id
 
-    def verify(
-        self, probe_ids: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+    def verify(self, probe_ids: list[str] | None = None) -> dict[str, Any]:
         """Verify steady state for specified probes or all."""
         with self._lock:
             targets = (
@@ -47,17 +45,19 @@ class SteadyStateVerifier:
                 else dict(self._probes)
             )
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         all_ok = True
         for pid, probe in targets.items():
             ok = self._check_probe(probe)
-            results.append({
-                "probe_id": pid,
-                "name": probe["name"],
-                "probe_type": probe["probe_type"],
-                "target": probe["target"],
-                "ok": ok,
-            })
+            results.append(
+                {
+                    "probe_id": pid,
+                    "name": probe["name"],
+                    "probe_type": probe["probe_type"],
+                    "target": probe["target"],
+                    "ok": ok,
+                }
+            )
             if not ok:
                 all_ok = False
 
@@ -70,11 +70,11 @@ class SteadyStateVerifier:
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
 
-    def get_probes(self) -> List[Dict[str, Any]]:
+    def get_probes(self) -> list[dict[str, Any]]:
         with self._lock:
             return list(self._probes.values())
 
-    def check_system_health(self) -> Dict[str, Any]:
+    def check_system_health(self) -> dict[str, Any]:
         """Aggregate health check using observability HealthAggregator."""
         try:
             from src.core.observability.health import (
@@ -82,6 +82,7 @@ class SteadyStateVerifier:
                 HealthStatus,  # noqa: F401
                 get_health_aggregator,
             )
+
             get_health_aggregator()
             # Run sync wrapper — the real aggregator is async, so we do a lightweight check
             return {
@@ -97,7 +98,7 @@ class SteadyStateVerifier:
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             }
 
-    def _check_probe(self, probe: Dict[str, Any]) -> bool:
+    def _check_probe(self, probe: dict[str, Any]) -> bool:
         """Check a single probe against its threshold."""
         probe_type = probe.get("probe_type", "")
         threshold = probe.get("threshold", {})
@@ -128,7 +129,7 @@ class SteadyStateVerifier:
             return False
 
 
-_verifier_instance: Optional[SteadyStateVerifier] = None
+_verifier_instance: SteadyStateVerifier | None = None
 _verifier_lock = threading.Lock()
 
 

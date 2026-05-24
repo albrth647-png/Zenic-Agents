@@ -1,19 +1,22 @@
 """Core logic for manager."""
 
 from __future__ import annotations
+
 import ast
 import logging
 import math
 import threading
 from typing import Any
-from ..types.base import Result, Ok, Err
-from ..types.tool_use import ToolPermission, ToolSpec, ToolResult
+
+from ..types.base import Err, Ok, Result
 from ..types.intent import IntentCategory
-from .registry import ToolRegistry, ToolHandler
-from .executor import ToolExecutor, ExecutorConfig
+from ..types.tool_use import ToolPermission, ToolResult, ToolSpec
+from .executor import ExecutorConfig, ToolExecutor
 from .permissions import PermissionManager
+from .registry import ToolHandler, ToolRegistry
 
 logger = logging.getLogger("zenic_agents.conversational.tools.manager")
+
 
 class ToolManager:
     """
@@ -83,12 +86,14 @@ class ToolManager:
             permission = spec.permission
 
         if permission == ToolPermission.DENIED:
-            return Ok(ToolResult(
-                call_id="",
-                tool_name=tool_name,
-                success=False,
-                error=f"Tool denegada: {tool_name}",
-            ))
+            return Ok(
+                ToolResult(
+                    call_id="",
+                    tool_name=tool_name,
+                    success=False,
+                    error=f"Tool denegada: {tool_name}",
+                )
+            )
 
         # 3. Crear ToolCall
         call = self._executor.create_call(tool_name, arguments)
@@ -106,10 +111,7 @@ class ToolManager:
         session_id: str = "",
     ) -> list[Result[ToolResult, Exception]]:
         """Ejecuta multiples tools en paralelo."""
-        tool_calls = [
-            self._executor.create_call(name, args)
-            for name, args in calls
-        ]
+        tool_calls = [self._executor.create_call(name, args) for name, args in calls]
         return await self._executor.execute_batch(tool_calls)
 
     # ─── Resolucion desde pipeline ─────────────────────────────
@@ -176,11 +178,12 @@ class ToolManager:
         return self._registry.is_enabled(name)
 
     def get_tools_for_intent(
-        self, intent: IntentCategory | Any,
+        self,
+        intent: IntentCategory | Any,
     ) -> list[ToolSpec]:
         """Obtiene tools relevantes para una intencion."""
         # Aceptar IntentCategory o AssistantIntent
-        category = intent.category if hasattr(intent, 'category') else intent
+        category = intent.category if hasattr(intent, "category") else intent
         intent_tool_map: dict[IntentCategory, list[str]] = {
             IntentCategory.CODE_CREATE: ["code_execute", "file_read"],
             IntentCategory.CODE_DEBUG: ["code_execute", "file_read"],
@@ -188,11 +191,7 @@ class ToolManager:
             IntentCategory.AUTOMATION: ["code_execute"],
         }
         tool_names = intent_tool_map.get(category, ["web_search", "calculator", "memory_recall"])
-        return [
-            self._registry.get(name)
-            for name in tool_names
-            if self._registry.get(name) is not None
-        ]
+        return [self._registry.get(name) for name in tool_names if self._registry.get(name) is not None]
 
     # ─── Stats ─────────────────────────────────────────────────
 
@@ -209,6 +208,7 @@ class ToolManager:
 
     def _register_builtin_handlers(self) -> None:
         """Registra handlers funcionales para las tools built-in."""
+
         # Calculator - handler real
         async def calculator_handler(args: dict[str, Any]) -> str:
             expression = args.get("expression", "")
@@ -345,22 +345,40 @@ class ToolManager:
             safe_expr = expression.replace("^", "**")
 
             # Parse the expression as AST and validate it contains only safe nodes
-            tree = ast.parse(safe_expr, mode='eval')
+            tree = ast.parse(safe_expr, mode="eval")
             _SAFE_AST_NODES = (
-                ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant,
-                ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Mod, ast.Pow,
-                ast.UAdd, ast.USub, ast.FloorDiv,
+                ast.Expression,
+                ast.BinOp,
+                ast.UnaryOp,
+                ast.Constant,
+                ast.Add,
+                ast.Sub,
+                ast.Mult,
+                ast.Div,
+                ast.Mod,
+                ast.Pow,
+                ast.UAdd,
+                ast.USub,
+                ast.FloorDiv,
             )
             for node in ast.walk(tree):
                 if not isinstance(node, _SAFE_AST_NODES):
                     return f"Error: Expresion contiene operadores no permitidos: {expression}"
 
             # Evaluate the validated AST safely
-            result = eval(  # noqa: S307  -- AST-validated safe math expression
-                compile(tree, '<math>', 'eval'),
+            result = eval(
+                compile(tree, "<math>", "eval"),
                 {"__builtins__": {}},
-                {"abs": abs, "round": round, "min": min, "max": max,
-                 "pow": pow, "sqrt": math.sqrt, "pi": math.pi, "e": math.e},
+                {
+                    "abs": abs,
+                    "round": round,
+                    "min": min,
+                    "max": max,
+                    "pow": pow,
+                    "sqrt": math.sqrt,
+                    "pi": math.pi,
+                    "e": math.e,
+                },
             )
             return f"Resultado: {result}"
         except Exception as e:

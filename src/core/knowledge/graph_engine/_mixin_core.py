@@ -1,24 +1,26 @@
 """Core logic for graph_engine."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import threading
 from collections import deque
-from typing import Any, Optional, Set
+from typing import Any
 
-from .types import KnowledgeEdge, KnowledgeNode
-from ._types import DB_PATH
-from ._helpers import _retry, _new_id, _now_iso
+from ._helpers import _new_id, _now_iso, _retry
 from ._mixin_queries import KnowledgeGraphQueriesMixin
+from ._types import DB_PATH
+from .types import KnowledgeEdge, KnowledgeNode
 
 logger = logging.getLogger(__name__)
+
 
 class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
     """Thread-safe knowledge graph with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
         self._db_path = db_path or str(DB_PATH)
         self._init_db()
@@ -77,6 +79,7 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
             node.updated_at = now
 
         with self._lock:
+
             def _upsert() -> None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -93,9 +96,16 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
                            updated_at=excluded.updated_at,
                            embedding_hash=excluded.embedding_hash""",
                         (
-                            node.id, node.domain, node.concept, node.content,
-                            json.dumps(sorted(node.tags)), node.confidence, node.source,
-                            node.created_at, node.updated_at, node.access_count,
+                            node.id,
+                            node.domain,
+                            node.concept,
+                            node.content,
+                            json.dumps(sorted(node.tags)),
+                            node.confidence,
+                            node.source,
+                            node.created_at,
+                            node.updated_at,
+                            node.access_count,
                             node.embedding_hash,
                         ),
                     )
@@ -127,8 +137,7 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
                         """INSERT OR IGNORE INTO kg_edges
                            (id, source_id, target_id, relation_type, weight, created_at)
                            VALUES (?, ?, ?, ?, ?, ?)""",
-                        (edge.id, edge.source_id, edge.target_id, edge.relation_type,
-                         edge.weight, edge.created_at),
+                        (edge.id, edge.source_id, edge.target_id, edge.relation_type, edge.weight, edge.created_at),
                     )
                     conn.commit()
                 finally:
@@ -139,8 +148,10 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
 
     def prune_stale(self, max_age_days: int = 90) -> int:
         from datetime import datetime, timedelta
+
         cutoff = (datetime.utcnow() - timedelta(days=max_age_days)).isoformat()
         with self._lock:
+
             def _prune() -> int:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -165,7 +176,9 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
     def _node_exists(self, node_id: str) -> bool:
         conn = sqlite3.connect(self._db_path)
         try:
-            cursor = conn.execute("SELECT 1 FROM kg_nodes WHERE id = ?", (node_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            cursor = conn.execute(
+                "SELECT 1 FROM kg_nodes WHERE id = ?", (node_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             return cursor.fetchone() is not None
         finally:
             conn.close()
@@ -175,7 +188,7 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
             return True
         conn = sqlite3.connect(self._db_path)
         try:
-            visited: Set[str] = set()
+            visited: set[str] = set()
             queue: deque[str] = deque([target_id])
             while queue:
                 current = queue.popleft()
@@ -197,18 +210,28 @@ class KnowledgeGraphEngine(KnowledgeGraphQueriesMixin):
     @staticmethod
     def _node_from_row(row: Any) -> KnowledgeNode:
         return KnowledgeNode(
-            id=row[0], domain=row[1], concept=row[2], content=row[3],
+            id=row[0],
+            domain=row[1],
+            concept=row[2],
+            content=row[3],
             tags=set(json.loads(row[4])) if row[4] else set(),
-            confidence=row[5], source=row[6],
-            created_at=row[7], updated_at=row[8],
-            access_count=row[9], embedding_hash=row[10],
+            confidence=row[5],
+            source=row[6],
+            created_at=row[7],
+            updated_at=row[8],
+            access_count=row[9],
+            embedding_hash=row[10],
         )
 
     @staticmethod
     def _edge_from_row(row: Any) -> KnowledgeEdge:
         return KnowledgeEdge(
-            id=row[0], source_id=row[1], target_id=row[2],
-            relation_type=row[3], weight=row[4], created_at=row[5],
+            id=row[0],
+            source_id=row[1],
+            target_id=row[2],
+            relation_type=row[3],
+            weight=row[4],
+            created_at=row[5],
         )
 
 

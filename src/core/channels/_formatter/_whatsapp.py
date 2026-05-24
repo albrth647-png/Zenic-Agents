@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
-from ._limits import LIMITS
-from ._text import truncate, sanitize_plain_text
 from .._types import ChannelMessage, ConfirmationRequest
+from ._limits import LIMITS
+from ._text import sanitize_plain_text, truncate
 
 
-def format_whatsapp_text(message: ChannelMessage) -> Dict[str, Any]:
+def format_whatsapp_text(message: ChannelMessage) -> dict[str, Any]:
     """Format a ChannelMessage into a WhatsApp Cloud API text payload."""
     text = sanitize_plain_text(message.text)
     return {
@@ -23,7 +23,7 @@ def format_whatsapp_text(message: ChannelMessage) -> Dict[str, Any]:
 
 def build_whatsapp_interactive_buttons(
     request: ConfirmationRequest,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a WhatsApp interactive button message for confirmation.
 
     Args:
@@ -35,10 +35,12 @@ def build_whatsapp_interactive_buttons(
     buttons = []
     for i, option in enumerate(request.options[:3]):  # WhatsApp allows max 3 buttons
         label = option.replace("_", " ").title()
-        buttons.append({
-            "type": "reply",
-            "reply": {"id": f"{request.action_id}:{option}", "title": label},
-        })
+        buttons.append(
+            {
+                "type": "reply",
+                "reply": {"id": f"{request.action_id}:{option}", "title": label},
+            }
+        )
 
     body_text = request.message or request.title or "Please confirm"
 

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from ._types import CompensationAction, RollbackRecord, RollbackStatus, RollbackTrigger, logger
-
+import sqlite3
 import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-import sqlite3
+from typing import Any
+
+from ._types import CompensationAction, RollbackRecord, RollbackStatus, RollbackTrigger, logger
+
+
 class RollbackManager:
     """Manages compensation actions and rollback execution.
 
@@ -26,7 +28,7 @@ class RollbackManager:
         self,
         request_id: str,
         action_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         description: str = "",
     ) -> CompensationAction:
         """Register a compensation action for a request.
@@ -57,9 +59,10 @@ class RollbackManager:
             self._persist_compensation(request_id, action, insert=True)
 
         logger.info(
-            "RollbackManager: Registered compensation %s for request %s "
-            "(type=%s)",
-            action.action_id, request_id, action_type,
+            "RollbackManager: Registered compensation %s for request %s " "(type=%s)",
+            action.action_id,
+            request_id,
+            action_type,
         )
         return action
 
@@ -97,33 +100,39 @@ class RollbackManager:
             self._persist_rollback_record(record, insert=True)
 
         # Execute compensation actions in reverse order (SAGA pattern)
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         all_succeeded = True
 
         for action in reversed(actions):
             try:
                 result = self._execute_compensation_action(action)
-                results.append({
-                    "action_id": action.action_id,
-                    "action_type": action.action_type,
-                    "success": True,
-                    "result": result,
-                })
+                results.append(
+                    {
+                        "action_id": action.action_id,
+                        "action_type": action.action_type,
+                        "success": True,
+                        "result": result,
+                    }
+                )
                 logger.info(
                     "RollbackManager: Executed compensation %s (%s)",
-                    action.action_id, action.action_type,
+                    action.action_id,
+                    action.action_type,
                 )
             except Exception as exc:
                 all_succeeded = False
-                results.append({
-                    "action_id": action.action_id,
-                    "action_type": action.action_type,
-                    "success": False,
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "action_id": action.action_id,
+                        "action_type": action.action_type,
+                        "success": False,
+                        "error": str(exc),
+                    }
+                )
                 logger.warning(
                     "RollbackManager: Compensation %s failed — %s",
-                    action.action_id, exc,
+                    action.action_id,
+                    exc,
                 )
                 # Continue executing remaining compensations even on failure
 
@@ -145,17 +154,19 @@ class RollbackManager:
         self._record_audit_event(request_id, record)
 
         logger.info(
-            "RollbackManager: Rollback %s for request %s — status=%s "
-            "(%d/%d actions succeeded)",
-            record.rollback_id, request_id, record.status.value,
+            "RollbackManager: Rollback %s for request %s — status=%s " "(%d/%d actions succeeded)",
+            record.rollback_id,
+            request_id,
+            record.status.value,
             sum(1 for r in results if r.get("success")),
             len(results),
         )
         return record
 
-    def get_rollback_record(self, rollback_id: str) -> Optional[RollbackRecord]:
+    def get_rollback_record(self, rollback_id: str) -> RollbackRecord | None:
         """Get a rollback record by ID."""
-        def _do_find() -> Optional[RollbackRecord]:
+
+        def _do_find() -> RollbackRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -169,9 +180,10 @@ class RollbackManager:
 
         return self._with_retry(_do_find, fallback=None)
 
-    def get_rollback_history(self, request_id: str) -> List[RollbackRecord]:
+    def get_rollback_history(self, request_id: str) -> list[RollbackRecord]:
         """Get all rollback records for a request."""
-        def _do_query() -> List[RollbackRecord]:
+
+        def _do_query() -> list[RollbackRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -197,4 +209,3 @@ class RollbackManager:
 
         recomputed = record._compute_hash()
         return recomputed == record.merkle_hash
-

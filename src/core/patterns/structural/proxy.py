@@ -12,7 +12,8 @@ Designed for Android/Termux (500MB RAM).
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, Optional, Tuple
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ class CacheProxy:
         self._real_object = real_object
         self._ttl = ttl
         # _cache: method_name -> (args_key, result, timestamp)
-        self._cache: Dict[str, Tuple[str, Any, float]] = {}
+        self._cache: dict[str, tuple[str, Any, float]] = {}
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
@@ -174,7 +175,7 @@ class CacheProxy:
     # Cache management
     # ------------------------------------------------------------------
 
-    def invalidate(self, method_name: Optional[str] = None) -> None:
+    def invalidate(self, method_name: str | None = None) -> None:
         """
         Clear cached results.
 
@@ -195,7 +196,7 @@ class CacheProxy:
     # ------------------------------------------------------------------
 
     @property
-    def cache_stats(self) -> Dict[str, Any]:
+    def cache_stats(self) -> dict[str, Any]:
         """Return cache hit/miss statistics and entry count."""
         with self._lock:
             total = self._hits + self._misses

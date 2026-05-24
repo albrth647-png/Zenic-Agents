@@ -1,132 +1,7 @@
-//! Policy engine management methods: role, rule, veto, gate, and audit operations.
-
-use zenic_proto::{NodeCriticality, SessionId, TenantId};
-
-use crate::errors::PolicyError;
-use crate::gate::{CriticalityGate, SafetyVeto};
-use crate::role::{CriticalityClearance, Role, RoleAssignment, RoleId};
-
-use super::evaluator::PolicyEngine;
-
-// ---------------------------------------------------------------------------
-// PolicyEngine management methods
-// ---------------------------------------------------------------------------
-
-impl PolicyEngine {
-    // -----------------------------------------------------------------------
-    // Role management
-    // -----------------------------------------------------------------------
-
-    /// Registers a role in the engine.
-    pub fn register_role(&mut self, role: Role) -> Result<(), PolicyError> {
-        self.role_registry.register(role)
-    }
-
-    /// Assigns a role to a session within a tenant.
-    pub fn assign_role(
-        &mut self,
-        role_id: RoleId,
-        session_id: SessionId,
-        tenant_id: TenantId,
-    ) -> Result<(), PolicyError> {
-        if !self.role_registry.contains(&role_id) {
-            return Err(PolicyError::RoleNotFound(role_id));
-        }
-        let assignment = RoleAssignment::new(role_id, session_id, tenant_id);
-        self.role_assignments.push(assignment);
-        Ok(())
-    }
-
-    /// Returns the number of registered roles.
-    pub fn role_count(&self) -> usize {
-        self.role_registry.len()
-    }
-
-    /// Returns the number of role assignments.
-    pub fn assignment_count(&self) -> usize {
-        self.role_assignments.len()
-    }
-
-    // -----------------------------------------------------------------------
-    // Rule management
-    // -----------------------------------------------------------------------
-
-    /// Adds a policy rule to the engine.
-    pub fn add_rule(
-        &mut self,
-        rule: crate::rule::PolicyRule,
-    ) -> Result<(), PolicyError> {
-        self.rule_set.add(rule)
-    }
-
-    /// Returns the number of policy rules.
-    pub fn rule_count(&self) -> usize {
-        self.rule_set.len()
-    }
-
-    // -----------------------------------------------------------------------
-    // Safety veto management
-    // -----------------------------------------------------------------------
-
-    /// Registers a safety veto (immutable once added).
-    pub fn register_veto(&mut self, veto: SafetyVeto) -> Result<(), PolicyError> {
-        self.veto_registry.register(veto)
-    }
-
-    /// Returns the number of safety vetoes.
-    pub fn veto_count(&self) -> usize {
-        self.veto_registry.len()
-    }
-
-    // -----------------------------------------------------------------------
-    // Criticality gate management
-    // -----------------------------------------------------------------------
-
-    /// Replaces the criticality gate with a new one built from the provided
-    /// thresholds.
-    ///
-    /// E-12 FIX: The gate is now **immutable** after construction. To change
-    /// thresholds, call this method with a fully-configured gate. This replaces
-    /// the old `set_criticality_threshold()` which called a non-existent
-    /// `CriticalityGate::set_threshold()` method — a compile error.
-    ///
-    /// The typical pattern is:
-    /// ```ignore
-    /// let gate = CriticalityGateBuilder::new()
-    ///     .threshold(NodeCriticality::Low, CriticalityClearance::Critical)
-    ///     .build();
-    /// engine.replace_criticality_gate(gate);
-    /// ```
-    pub fn replace_criticality_gate(&mut self, gate: CriticalityGate) {
-        self.criticality_gate = gate;
-    }
-
-    /// Returns the clearance required for a given criticality level.
-    ///
-    /// Useful for diagnostics and audit logging.
-    pub fn required_clearance(&self, criticality: NodeCriticality) -> CriticalityClearance {
-        self.criticality_gate.required_clearance(criticality)
-    }
-
-    // -----------------------------------------------------------------------
-    // Audit log queries
-    // -----------------------------------------------------------------------
-
-    /// Returns the number of audit log entries.
-    pub fn audit_count(&self) -> usize {
-        self.audit_log.len()
-    }
-
-    /// Returns all audit log entries.
-    pub fn audit_entries(&self) -> &[crate::audit::PolicyAuditEntry] {
-        self.audit_log.entries()
-    }
-
-    /// Returns denial entries from the audit log.
-    pub fn audit_denials(&self) -> Vec<&crate::audit::PolicyAuditEntry> {
-        self.audit_log.denials()
-    }
-}
+//! Policy engine management tests: role, rule, veto, gate, and audit operations.
+//!
+//! The `impl PolicyEngine` methods that were previously here are now
+//! consolidated in `engine_impl.rs`.
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -141,7 +16,7 @@ mod tests {
     use crate::role::{CriticalityClearance, Role, RoleId};
     use crate::rule::PolicyRule;
 
-    use super::PolicyEngine;
+    use super::super::engine_impl::PolicyEngine;
     use super::super::types::PolicyContext;
 
     // -----------------------------------------------------------------------

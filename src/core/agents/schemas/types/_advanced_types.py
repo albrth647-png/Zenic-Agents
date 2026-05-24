@@ -22,12 +22,13 @@ from src.core.shared.agent_schemas import (
     ValidationIssue,
 )
 
-
 # ────────────────────────────── Layer 4: Code ──────────────────────────────
+
 
 @dataclass
 class CodeRequest:
     """Input for code operation agents."""
+
     task: str = "generate"  # generate|refactor|optimize|fix|scaffold
     requirements: str = ""
     language: str = "python"
@@ -38,6 +39,7 @@ class CodeRequest:
 @dataclass
 class CodeResult:
     """A17-A22 code agents output."""
+
     code: str = ""
     language: str = "python"
     files: list[dict[str, str]] = field(default_factory=list)  # [{path, content}]
@@ -52,6 +54,7 @@ class CodeResult:
 @dataclass
 class ScaffoldResult:
     """A21 ProjectScaffolder output."""
+
     files: list[dict[str, str]] = field(default_factory=list)
     structure: dict[str, Any] = field(default_factory=dict)
     config: dict[str, Any] = field(default_factory=dict)
@@ -66,6 +69,7 @@ class ScaffoldResult:
 @dataclass
 class SecurityResult:
     """A23 SecurityScanner output."""
+
     safe: bool = True
     threats: list[ValidationIssue] = field(default_factory=list)
     risk_score: float = 0.0
@@ -75,6 +79,7 @@ class SecurityResult:
 @dataclass
 class SyntaxResult:
     """A24 SyntaxValidator output."""
+
     valid: bool = True
     errors: list[ValidationIssue] = field(default_factory=list)
     line_numbers: list[int] = field(default_factory=list)
@@ -84,6 +89,7 @@ class SyntaxResult:
 @dataclass
 class ChainResult:
     """A25 ChainValidator output."""
+
     valid: bool = True
     incompatibilities: list[str] = field(default_factory=list)
     missing: list[str] = field(default_factory=list)
@@ -93,6 +99,7 @@ class ChainResult:
 @dataclass
 class ConfigResult:
     """A26 ConfigValidator output."""
+
     valid: bool = True
     issues: list[ValidationIssue] = field(default_factory=list)
     defaults_applied: list[str] = field(default_factory=list)
@@ -102,6 +109,7 @@ class ConfigResult:
 @dataclass
 class RiskResult:
     """A27 RiskCalculator output."""
+
     score: float = 0.0
     level: str = "low"  # low|medium|high|critical
     recommendations: list[str] = field(default_factory=list)
@@ -111,6 +119,7 @@ class RiskResult:
 @dataclass
 class FixSuggestions:
     """A28 FixSuggester output."""
+
     suggestions: list[str] = field(default_factory=list)
     priorities: list[str] = field(default_factory=list)
     auto_fixable: list[str] = field(default_factory=list)
@@ -119,9 +128,11 @@ class FixSuggestions:
 
 # ────────────────────────────── Layer 6: Automation ──────────────────────────────
 
+
 @dataclass
 class AutoDescription:
     """Input for automation agents."""
+
     description: str = ""
     context: dict[str, Any] = field(default_factory=dict)
 
@@ -134,6 +145,7 @@ class AutoDescription:
 @dataclass
 class ConditionResult:
     """A32 ConditionExtractor output."""
+
     conditions: list[str] = field(default_factory=list)
     logic_tree: dict[str, Any] = field(default_factory=dict)
     source: str = "deterministic"
@@ -142,6 +154,7 @@ class ConditionResult:
 @dataclass
 class NameResult:
     """A33 AutomationNamer output."""
+
     name: str = ""
     slug: str = ""
     source: str = "deterministic"
@@ -150,6 +163,7 @@ class NameResult:
 @dataclass
 class WorkflowSpec:
     """A34 WorkflowSerializer output."""
+
     yaml: str = ""
     json_spec: str = ""
     executable: dict[str, Any] = field(default_factory=dict)
@@ -158,9 +172,11 @@ class WorkflowSpec:
 
 # ────────────────────────────── Layer 7: Reasoning ──────────────────────────────
 
+
 @dataclass
 class ProblemType:
     """A35 ProblemDetector output."""
+
     type: str = "general"  # api|auth|database|invoice|inventory|crm|automation|general
     subtype: str = ""
     complexity: float = 0.5  # 0.0-1.0
@@ -170,6 +186,7 @@ class ProblemType:
 @dataclass
 class ReasoningStep:
     """A single reasoning step."""
+
     step_number: int = 0
     description: str = ""
     conclusion: str = ""
@@ -179,6 +196,7 @@ class ReasoningStep:
 @dataclass
 class ReasoningResult:
     """A37 TemplateReasoner output."""
+
     answer: str = ""
     template_used: str = ""
     confidence: float = 0.0
@@ -189,6 +207,7 @@ class ReasoningResult:
 @dataclass
 class ConfidenceResult:
     """A38 ConfidenceEstimator output."""
+
     score: float = 0.0
     factors: list[str] = field(default_factory=list)
     recommendation: str = "proceed"  # proceed|caution|reject
@@ -198,6 +217,7 @@ class ConfidenceResult:
 @dataclass
 class DecomposedSteps:
     """A36 StepDecomposer output."""
+
     steps: list[ReasoningStep] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
     order: list[int] = field(default_factory=list)
@@ -207,6 +227,7 @@ class DecomposedSteps:
 @dataclass
 class Conclusion:
     """A39 ConclusionExtractor output."""
+
     text: str = ""
     supported_by: list[str] = field(default_factory=list)
     strength: float = 0.0  # 0.0-1.0
@@ -215,14 +236,17 @@ class Conclusion:
 
 # ────────────────────────────── Layer 8: Verdict ──────────────────────────────
 
+
 class Verdict(str, Enum):
     """The only things the AI can output."""
+
     YES = "YES"
     NO = "NO"
 
 
 class EvidenceType(str, Enum):
     """Types of evidence."""
+
     AST_VALIDATION = "AST_VALIDATION"
     PATTERN_MATCH = "PATTERN_MATCH"
     SECURITY_CHECK = "SECURITY_CHECK"
@@ -240,6 +264,7 @@ class EvidenceType(str, Enum):
 @dataclass
 class Evidence:
     """A piece of evidence for or against a decision."""
+
     evidence_type: EvidenceType = EvidenceType.KEYWORD_CLASSIFY
     favors: str = "YES"  # "YES" or "NO"
     weight: float = 0.5
@@ -251,6 +276,7 @@ class Evidence:
 @dataclass
 class ConsensusResult:
     """A42 ConsensusResolver output."""
+
     verdict: Verdict = Verdict.NO
     confidence: float = 0.0
     score: float = 0.0
@@ -265,6 +291,7 @@ class ConsensusResult:
 @dataclass
 class VerdictInput:
     """A43 VerdictEngine input."""
+
     question: str = ""
     evidence_for: list[Evidence] = field(default_factory=list)
     evidence_against: list[Evidence] = field(default_factory=list)
@@ -276,6 +303,7 @@ class VerdictInput:
 @dataclass
 class VerdictOutput:
     """A43 VerdictEngine output."""
+
     verdict: Verdict = Verdict.NO
     confidence: float = 0.0
     source: str = "deterministic"  # "deterministic", "llm_consensus", "fallback_no_model", "fallback_circuit_open"
@@ -289,6 +317,7 @@ class VerdictOutput:
 @dataclass
 class PipelineResult:
     """A40 DeterministicPipeline output."""
+
     classify: Any = None
     extract: Any = None
     pattern: Any = None
@@ -308,6 +337,7 @@ class PipelineResult:
 @dataclass
 class HealthSnapshot:
     """A45 HealthMonitor output."""
+
     healthy: bool = True
     success_rates: dict[str, float] = field(default_factory=dict)
     latencies: dict[str, float] = field(default_factory=dict)

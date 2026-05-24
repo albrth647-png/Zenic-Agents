@@ -7,7 +7,7 @@ Join, leave, and heartbeat methods for ClusterTopology.
 import asyncio
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ._types import NodeState
 
@@ -25,15 +25,12 @@ class LifecycleMixin:
             True if registration succeeded.
         """
         self._node_info.state = NodeState.ACTIVE
-        success = await self._backend.register_node(
-            self._node_info.to_dict()
-        )
+        success = await self._backend.register_node(self._node_info.to_dict())
 
         if success:
             self._joined = True
             logger.info(
-                "ClusterTopology: Node %s joined cluster "
-                "(hostname=%s, ip=%s)",
+                "ClusterTopology: Node %s joined cluster " "(hostname=%s, ip=%s)",
                 self._node_info.node_id,
                 self._node_info.hostname,
                 self._node_info.ip_address,
@@ -50,9 +47,7 @@ class LifecycleMixin:
         """
         self.stop_heartbeat()
 
-        success = await self._backend.deregister_node(
-            self._node_info.node_id
-        )
+        success = await self._backend.deregister_node(self._node_info.node_id)
 
         if success:
             self._joined = False
@@ -63,7 +58,7 @@ class LifecycleMixin:
 
         return success
 
-    async def send_heartbeat(self: Any, status: Optional[Dict[str, Any]] = None) -> bool:
+    async def send_heartbeat(self: Any, status: dict[str, Any] | None = None) -> bool:
         """
         Send a heartbeat for this node.
 
@@ -74,7 +69,8 @@ class LifecycleMixin:
             True if the heartbeat was recorded.
         """
         return await self._backend.heartbeat(
-            self._node_info.node_id, status,
+            self._node_info.node_id,
+            status,
         )
 
     def start_heartbeat(self: Any) -> None:
@@ -90,9 +86,9 @@ class LifecycleMixin:
         )
         self._heartbeat_thread.start()
         logger.debug(
-            "ClusterTopology: Heartbeat started for %s "
-            "(interval=%.1fs)",
-            self._node_info.node_id, self._heartbeat_interval,
+            "ClusterTopology: Heartbeat started for %s " "(interval=%.1fs)",
+            self._node_info.node_id,
+            self._heartbeat_interval,
         )
 
     def stop_heartbeat(self: Any) -> None:
@@ -108,16 +104,19 @@ class LifecycleMixin:
                 loop = asyncio.new_event_loop()
                 try:
                     loop.run_until_complete(
-                        self.send_heartbeat({
-                            "state": self._node_info.state.value,
-                        })
+                        self.send_heartbeat(
+                            {
+                                "state": self._node_info.state.value,
+                            }
+                        )
                     )
                 finally:
                     loop.close()
             except Exception as exc:
                 logger.debug(
                     "ClusterTopology: Heartbeat error for %s: %s",
-                    self._node_info.node_id, exc,
+                    self._node_info.node_id,
+                    exc,
                 )
 
             self._stop_event.wait(timeout=self._heartbeat_interval)

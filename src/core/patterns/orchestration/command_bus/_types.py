@@ -3,13 +3,14 @@
 import time
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Dict, Optional
-
+from typing import Any
 
 # ============================================================
 #  DATA CONTRACTS
 # ============================================================
+
 
 @dataclass
 class Command:
@@ -22,8 +23,9 @@ class Command:
         timestamp: Unix timestamp of command creation (auto-set).
         command_id: Unique identifier for this command (auto-generated).
     """
+
     command_type: str
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     command_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
@@ -43,15 +45,17 @@ class CommandResult:
         error: Error message if success is False.
         command_id: The ID of the command that produced this result.
     """
+
     success: bool
-    data: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[str] = None
+    data: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
     command_id: str = ""
 
 
 # ============================================================
 #  HANDLER INTERFACE
 # ============================================================
+
 
 class CommandHandler(ABC):
     """
@@ -97,4 +101,11 @@ AsyncCommandMiddleware = Callable[
 # Validator: validates a command before dispatch.
 # Returns True if valid, False (or raises) if invalid.
 CommandValidator = Callable[[Command], bool]
-__all__ = ["AsyncCommandMiddleware", "Command", "CommandHandler", "CommandMiddleware", "CommandResult", "CommandValidator"]
+__all__ = [
+    "AsyncCommandMiddleware",
+    "Command",
+    "CommandHandler",
+    "CommandMiddleware",
+    "CommandResult",
+    "CommandValidator",
+]

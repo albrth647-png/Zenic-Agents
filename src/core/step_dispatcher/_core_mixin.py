@@ -1,7 +1,6 @@
 """StepDispatcher - Core methods."""
 
 import logging
-from typing import Dict, List, Tuple
 
 logger = logging.getLogger("zenic_agents.step_dispatcher")
 
@@ -61,11 +60,11 @@ class StepDispatcherCoreMixin:
         intent,
         code: str,
         result_code: str,
-        explanations: List[str],
+        explanations: list[str],
         lang: str,
-        ast_analysis: Dict,
+        ast_analysis: dict,
         plan,
-    ) -> Tuple[str, str, List[str]]:
+    ) -> tuple[str, str, list[str]]:
         """
         Execute a single step of the plan using the Strategy Registry.
 
@@ -87,11 +86,14 @@ class StepDispatcherCoreMixin:
         # Publish step-started event
         if self._event_bus:
             from src.core.patterns.orchestration import Event
-            self._event_bus.publish(Event(
-                name="step.started",
-                data={"action": action, "target": getattr(step, 'target_node_name', None)},
-                source="StepDispatcher"
-            ))
+
+            self._event_bus.publish(
+                Event(
+                    name="step.started",
+                    data={"action": action, "target": getattr(step, "target_node_name", None)},
+                    source="StepDispatcher",
+                )
+            )
 
         # Execute via strategy registry with retry
         try:
@@ -113,11 +115,14 @@ class StepDispatcherCoreMixin:
         # Publish step-completed event
         if self._event_bus:
             from src.core.patterns.orchestration import Event
-            self._event_bus.publish(Event(
-                name="step.completed",
-                data={"action": action, "has_code": bool(result_code or code)},
-                source="StepDispatcher"
-            ))
+
+            self._event_bus.publish(
+                Event(
+                    name="step.completed",
+                    data={"action": action, "has_code": bool(result_code or code)},
+                    source="StepDispatcher",
+                )
+            )
 
         return result_code, code, explanations
 
@@ -125,9 +130,7 @@ class StepDispatcherCoreMixin:
     #  INDIVIDUAL HANDLER METHODS
     # ------------------------------------------------------------------
 
-    async def _handle_analyze_structure(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_analyze_structure(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle ANALYZE_STRUCTURE action."""
         if code:
             analysis = self._orch.ast_engine.analyze_structure(code, lang)
@@ -140,9 +143,7 @@ class StepDispatcherCoreMixin:
             explanations.append("No code provided for analysis.")
         return result_code, code, explanations
 
-    async def _handle_scrape_patterns(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_scrape_patterns(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle SCRAPE_PATTERNS action."""
         if self._orch.scrap is None:
             explanations.append("SmartScraper: Skipped — GitHubScrapAgent not available")
@@ -153,9 +154,7 @@ class StepDispatcherCoreMixin:
         smart_result = await self._orch.scrap.smart_fetch(query, lang)
         if smart_result.get("success") and smart_result.get("content"):
             source_name = smart_result.get("source", "github")
-            explanations.append(
-                f"SmartScraper: Found content via {source_name}"
-            )
+            explanations.append(f"SmartScraper: Found content via {source_name}")
             content = smart_result["content"]
             if not code:
                 code = content
@@ -165,26 +164,19 @@ class StepDispatcherCoreMixin:
             best_content = ""
             best_source = ""
             for src in ["github", "devdocs", "iconstack", "picsum"]:
-                if src in all_results and all_results[src]:
+                if all_results.get(src):
                     best_content = all_results[src]
                     best_source = src
                     break
             if best_content:
-                explanations.append(
-                    f"SmartScraper: Found content via {best_source} "
-                    f"(fallback)"
-                )
+                explanations.append(f"SmartScraper: Found content via {best_source} " f"(fallback)")
                 if not code:
                     code = best_content
             else:
-                explanations.append(
-                    "SmartScraper: No results. Using local generation."
-                )
+                explanations.append("SmartScraper: No results. Using local generation.")
         return result_code, code, explanations
 
-    async def _handle_generate_code(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_generate_code(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle GENERATE_CODE action.
 
         Generation strategy (ordered by quality):
@@ -197,13 +189,18 @@ class StepDispatcherCoreMixin:
         source = "template"
 
         # ── Strategy 1: M1 CodeAssembler (real code from templates) ──
-        if hasattr(self._orch, '_code_gen') and self._orch._code_gen is not None and hasattr(self._orch._code_gen, 'generate_real_code'):
+        if (
+            hasattr(self._orch, "_code_gen")
+            and self._orch._code_gen is not None
+            and hasattr(self._orch._code_gen, "generate_real_code")
+        ):
             try:
                 description = str(intent) if intent else ""
                 entity_info = None
                 # Extract entities from intent if available
-                if hasattr(intent, 'raw_code') and intent.raw_code:
+                if hasattr(intent, "raw_code") and intent.raw_code:
                     import ast as _ast
+
                     try:
                         tree = _ast.parse(intent.raw_code)
                         for node in _ast.walk(tree):
@@ -221,7 +218,7 @@ class StepDispatcherCoreMixin:
                     description=description,
                     niche_plan=None,
                     entities=entity_info,
-                    project_name=intent.target if hasattr(intent, 'target') else "module",
+                    project_name=intent.target if hasattr(intent, "target") else "module",
                 )
                 if real_result and real_result.get("files"):
                     files = real_result["files"]
@@ -245,13 +242,17 @@ class StepDispatcherCoreMixin:
                                 break
             except Exception as e:
                 import logging as _log
+
                 _log.getLogger(__name__).debug("CodeAssembler generation failed: %s", e)
 
         # ── Strategy 2: LLM-augmented via CodeAgent ──
         if not generated_code and (
-            hasattr(self._orch, '_code_agent') and self._orch._code_agent is not None
-            and hasattr(self._orch, '_agent_runner') and self._orch._agent_runner is not None
-            and hasattr(self._orch, '_ai') and self._orch._ai.is_loaded
+            hasattr(self._orch, "_code_agent")
+            and self._orch._code_agent is not None
+            and hasattr(self._orch, "_agent_runner")
+            and self._orch._agent_runner is not None
+            and hasattr(self._orch, "_ai")
+            and self._orch._ai.is_loaded
         ):
             try:
                 code_result = self._orch._code_agent.generate_with_runner(
@@ -261,15 +262,16 @@ class StepDispatcherCoreMixin:
                 )
                 if code_result and code_result.code:
                     generated_code = code_result.code
-                    source = getattr(code_result, 'source', 'llm')
+                    source = getattr(code_result, "source", "llm")
                     explanations.append(f"Code generated for {intent.op} via {source}")
             except Exception as e:
                 import logging as _log
+
                 _log.getLogger(__name__).debug("CodeAgent LLM generation failed: %s", e)
 
         # ── Strategy 3: M2 SmartPromptChain (fragmented for small LLMs) ──
-        if not generated_code and hasattr(self._orch, '_code_gen') and self._orch._code_gen is not None:
-            smart_chain = getattr(self._orch._code_gen, '_smart_chain', None)
+        if not generated_code and hasattr(self._orch, "_code_gen") and self._orch._code_gen is not None:
+            smart_chain = getattr(self._orch._code_gen, "_smart_chain", None)
             if smart_chain:
                 try:
                     entity_info = None
@@ -288,14 +290,13 @@ class StepDispatcherCoreMixin:
                         )
                 except Exception as e:
                     import logging as _log
+
                     _log.getLogger(__name__).debug("SmartPromptChain generation failed: %s", e)
 
         # ── Strategy 4: Deterministic template fallback ──
         if not generated_code:
             if self._orch._code_gen is not None:
-                result_code = self._orch._code_gen.generate_contextual_code(
-                    intent, ast_analysis, plan, lang
-                )
+                result_code = self._orch._code_gen.generate_contextual_code(intent, ast_analysis, plan, lang)
                 explanations.append(f"Code generated for {intent.op} (template fallback)")
             else:
                 explanations.append("Code generation skipped — CodeGenerator not available in v3.0.0")
@@ -304,9 +305,7 @@ class StepDispatcherCoreMixin:
 
         return result_code, code, explanations
 
-    async def _handle_replace_ast_node(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_replace_ast_node(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle REPLACE_AST_NODE action."""
         if code and step.target_node_name:
             solver_insights = None
@@ -314,79 +313,53 @@ class StepDispatcherCoreMixin:
                 solver_insights = self._orch._code_gen.extract_solver_insights(plan.solver_proof)
             # MiniAI: sugerir patron de reemplazo
             if self._orch._ai and self._orch._ai.is_loaded:
-                pattern = self._orch._ai.suggest_pattern(
-                    step.target_node_name, str(intent)
-                )
+                pattern = self._orch._ai.suggest_pattern(step.target_node_name, str(intent))
                 explanations.append(f"MiniAI suggests pattern: {pattern}")
             # CodeTransformer + ASTSurgeon may not be available
             if self._orch._code_transform is not None:
-                raw_code = code or getattr(intent, 'raw_code', None) or ""
+                raw_code = code or getattr(intent, "raw_code", None) or ""
                 new_snippet = self._orch._code_transform.optimize_function(
-                    step.target_node_name, lang, ast_analysis, solver_insights,
-                    raw_code=raw_code
+                    step.target_node_name, lang, ast_analysis, solver_insights, raw_code=raw_code
                 )
             else:
                 new_snippet = code
                 explanations.append("CodeTransformer not available — using raw code as snippet")
             if self._orch.surgeon is not None:
-                result_code = self._orch.surgeon.mutate_node(
-                    code, step.target_node_name, new_snippet, lang
-                )
+                result_code = self._orch.surgeon.mutate_node(code, step.target_node_name, new_snippet, lang)
                 explanations.append(
-                    f"Function '{step.target_node_name}' replaced "
-                    f"via AST surgery (optimizer received raw_code)"
+                    f"Function '{step.target_node_name}' replaced " f"via AST surgery (optimizer received raw_code)"
                 )
             else:
-                explanations.append(
-                    f"ASTSurgeon not available — cannot replace '{step.target_node_name}'"
-                )
+                explanations.append(f"ASTSurgeon not available — cannot replace '{step.target_node_name}'")
         else:
             if self._orch._code_gen is not None:
-                result_code = self._orch._code_gen.generate_contextual_code(
-                    intent, ast_analysis, plan, lang
-                )
+                result_code = self._orch._code_gen.generate_contextual_code(intent, ast_analysis, plan, lang)
                 explanations.append("Optimized code generated")
             else:
                 explanations.append("Code generation not available in v3.0.0")
         return result_code, code, explanations
 
-    async def _handle_delete_ast_node(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_delete_ast_node(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle DELETE_AST_NODE action."""
         if code and step.target_node_name:
             if self._orch.surgeon is not None:
-                result_code = self._orch.surgeon.delete_function(
-                    code, step.target_node_name, lang
-                )
-                explanations.append(
-                    f"Function '{step.target_node_name}' deleted "
-                    f"via AST surgery"
-                )
+                result_code = self._orch.surgeon.delete_function(code, step.target_node_name, lang)
+                explanations.append(f"Function '{step.target_node_name}' deleted " f"via AST surgery")
             else:
-                explanations.append(
-                    f"ASTSurgeon not available — cannot delete '{step.target_node_name}'"
-                )
+                explanations.append(f"ASTSurgeon not available — cannot delete '{step.target_node_name}'")
         return result_code, code, explanations
 
-    async def _handle_trace_execution(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_trace_execution(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle TRACE_EXECUTION action."""
-        explanations.append(
-            "Symbolic execution trace performed (K-Path limited)"
-        )
+        explanations.append("Symbolic execution trace performed (K-Path limited)")
         if code:
             analysis = self._orch.ast_engine.analyze_structure(code, lang)
             for fn_name in analysis.get("function_names", []):
                 explanations.append(f"  - Traced: {fn_name}")
         return result_code, code, explanations
 
-    async def _handle_patch_fix(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_patch_fix(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle PATCH_FIX action."""
         result_code = self._orch._analysis.apply_fix(code, intent, lang)
         explanations.append("Fix patch applied")
         return result_code, code, explanations
-

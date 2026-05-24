@@ -13,16 +13,21 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 from urllib.parse import urlparse
 
-from .types import (
-    LicenseInfo, LicenseStatus, LicenseTier,
-    LicenseVerificationResult, HardwareBindingStrength, KillSwitchStatus,
-)
-from .signer import get_signer
-from .license_parts.hw_binding import get_hardware_fingerprint, check_hardware_match
+from .license_parts.hw_binding import check_hardware_match, get_hardware_fingerprint
 from .license_parts.persistence import LicenseDB
+from .signer import get_signer
+from .types import (
+    HardwareBindingStrength,
+    KillSwitchStatus,
+    LicenseInfo,
+    LicenseStatus,
+    LicenseTier,
+    LicenseVerificationResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,20 +57,23 @@ class LicenseManager:
     """
 
     def __init__(
-        self, db_path: str = "license_store.sqlite", grace_period_hours: int = 72,
-        heartbeat_interval_hours: int = 6, ntp_check: bool = True,
+        self,
+        db_path: str = "license_store.sqlite",
+        grace_period_hours: int = 72,
+        heartbeat_interval_hours: int = 6,
+        ntp_check: bool = True,
     ) -> None:
         self._grace_period_hours = grace_period_hours
         self._heartbeat_interval = heartbeat_interval_hours
         self._ntp_check = ntp_check
         self._signer = get_signer()
-        self._current_license: Optional[LicenseInfo] = None
+        self._current_license: LicenseInfo | None = None
         self._kill_switch = KillSwitchStatus(active=False)
         self._last_heartbeat: float = 0.0
         self._ntp_offset: float = 0.0
         self._lock = threading.RLock()
-        self._callbacks: List[Callable[[str, Dict[str, Any]], None]] = []
-        self._heartbeat_thread: Optional[threading.Thread] = None
+        self._callbacks: list[Callable[[str, dict[str, Any]], None]] = []
+        self._heartbeat_thread: threading.Thread | None = None
         self._running = False
         self._db = LicenseDB(db_path)
         self._current_license = self._db.load_cached_license()
@@ -73,12 +81,17 @@ class LicenseManager:
     # ── License Creation ───────────────────────────────────
 
     def create_license(
-        self, tier: LicenseTier, issued_to: str, features: Optional[List[str]] = None,
-        max_users: int = 1, expires_days: int = 0,
+        self,
+        tier: LicenseTier,
+        issued_to: str,
+        features: list[str] | None = None,
+        max_users: int = 1,
+        expires_days: int = 0,
         hardware_binding: HardwareBindingStrength = HardwareBindingStrength.SOFT,
     ) -> LicenseInfo:
         """Create and sign a new license."""
         import secrets
+
         license_id = f"zl-{secrets.token_hex(8)}"
         now = time.time()
         expires_at = now + (expires_days * 86400) if expires_days > 0 else 0.0
@@ -87,40 +100,71 @@ class LicenseManager:
         if features is None:
             tier_features = {
                 LicenseTier.STARTER: [
-                    "basic_pipeline", "chat_completions",
-                    "memory_schema_drift", "executor_basic",
-                    "verdict_deterministic", "dag_basic",
-                    "community_support", "sla_standard", "api_rate_30",
+                    "basic_pipeline",
+                    "chat_completions",
+                    "memory_schema_drift",
+                    "executor_basic",
+                    "verdict_deterministic",
+                    "dag_basic",
+                    "community_support",
+                    "sla_standard",
+                    "api_rate_30",
                 ],
                 LicenseTier.TRIAL: [
-                    "basic_pipeline", "chat_completions", "app_generation",
-                    "automation_generation", "schema_design",
-                    "thinking_engine", "reasoning_engine", "logic_chains",
+                    "basic_pipeline",
+                    "chat_completions",
+                    "app_generation",
+                    "automation_generation",
+                    "schema_design",
+                    "thinking_engine",
+                    "reasoning_engine",
+                    "logic_chains",
                     "full_pipeline",
-                    "memory_schema_drift", "memory_intent_routing",
-                    "executor_basic", "executor_advanced",
-                    "verdict_deterministic", "verdict_evidence", "verdict_consensus",
-                    "dag_basic", "dag_adapt_middleware",
+                    "memory_schema_drift",
+                    "memory_intent_routing",
+                    "executor_basic",
+                    "executor_advanced",
+                    "verdict_deterministic",
+                    "verdict_evidence",
+                    "verdict_consensus",
+                    "dag_basic",
+                    "dag_adapt_middleware",
                     "rbac_basic",
                     "observability_basic",
-                    "playbook_library", "playbook_roi",
-                    "policy_engine_basic", "hitl_approvals",
-                    "priority_support", "api_rate_100",
+                    "playbook_library",
+                    "playbook_roi",
+                    "policy_engine_basic",
+                    "hitl_approvals",
+                    "priority_support",
+                    "api_rate_100",
                 ],
                 LicenseTier.BUSINESS: [
-                    "basic_pipeline", "chat_completions", "app_generation",
-                    "automation_generation", "schema_design",
-                    "thinking_engine", "reasoning_engine", "logic_chains",
+                    "basic_pipeline",
+                    "chat_completions",
+                    "app_generation",
+                    "automation_generation",
+                    "schema_design",
+                    "thinking_engine",
+                    "reasoning_engine",
+                    "logic_chains",
                     "full_pipeline",
-                    "memory_schema_drift", "memory_intent_routing",
-                    "executor_basic", "executor_advanced",
-                    "verdict_deterministic", "verdict_evidence", "verdict_consensus",
-                    "dag_basic", "dag_adapt_middleware",
+                    "memory_schema_drift",
+                    "memory_intent_routing",
+                    "executor_basic",
+                    "executor_advanced",
+                    "verdict_deterministic",
+                    "verdict_evidence",
+                    "verdict_consensus",
+                    "dag_basic",
+                    "dag_adapt_middleware",
                     "rbac_basic",
                     "observability_basic",
-                    "playbook_library", "playbook_roi",
-                    "policy_engine_basic", "hitl_approvals",
-                    "priority_support", "api_rate_100",
+                    "playbook_library",
+                    "playbook_roi",
+                    "policy_engine_basic",
+                    "hitl_approvals",
+                    "priority_support",
+                    "api_rate_100",
                 ],
                 LicenseTier.ENTERPRISE: ["all"],
                 LicenseTier.ON_PREMISE_ENTERPRISE: ["all"],
@@ -128,9 +172,15 @@ class LicenseManager:
             features = tier_features.get(tier, ["basic_pipeline"])
 
         info = LicenseInfo(
-            license_id=license_id, tier=tier, status=LicenseStatus.ACTIVE,
-            issued_to=issued_to, issued_at=now, expires_at=expires_at,
-            features=features, max_users=max_users, hardware_id=hw_id,
+            license_id=license_id,
+            tier=tier,
+            status=LicenseStatus.ACTIVE,
+            issued_to=issued_to,
+            issued_at=now,
+            expires_at=expires_at,
+            features=features,
+            max_users=max_users,
+            hardware_id=hw_id,
             binding_strength=hardware_binding,
         )
         info.signature = self._signer.sign(info.to_signable_data())
@@ -141,14 +191,15 @@ class LicenseManager:
 
     # ── Verification ───────────────────────────────────────
 
-    def verify(self, license_info: Optional[LicenseInfo] = None) -> LicenseVerificationResult:
+    def verify(self, license_info: LicenseInfo | None = None) -> LicenseVerificationResult:
         """Verify a license comprehensively."""
         info = license_info or self._current_license
         if not info:
-            return LicenseVerificationResult(False, LicenseStatus.INVALID, reason="No license loaded",
-                                             checks_performed=["no_license"])
+            return LicenseVerificationResult(
+                False, LicenseStatus.INVALID, reason="No license loaded", checks_performed=["no_license"]
+            )
 
-        checks: List[str] = []
+        checks: list[str] = []
 
         # 1. Signature
         sig_valid = self._signer.verify(info.to_signable_data(), info.signature)
@@ -161,8 +212,9 @@ class LicenseManager:
         if self._kill_switch.active:
             checks.append("kill_switch:ACTIVE")
             info.status = LicenseStatus.REVOKED
-            return LicenseVerificationResult(False, LicenseStatus.REVOKED, info,
-                                             f"Kill switch: {self._kill_switch.reason}", checks)
+            return LicenseVerificationResult(
+                False, LicenseStatus.REVOKED, info, f"Kill switch: {self._kill_switch.reason}", checks
+            )
 
         # 3. Expiration (with NTP)
         ntp_time = time.time() + self._ntp_offset
@@ -172,8 +224,7 @@ class LicenseManager:
             hours_expired = (ntp_time - info.expires_at) / 3600
             if hours_expired <= self._grace_period_hours:
                 info.status = LicenseStatus.GRACE_PERIOD
-                return LicenseVerificationResult(True, LicenseStatus.GRACE_PERIOD, info,
-                                                 "Within grace period", checks)
+                return LicenseVerificationResult(True, LicenseStatus.GRACE_PERIOD, info, "Within grace period", checks)
             info.status = LicenseStatus.EXPIRED
             return LicenseVerificationResult(False, LicenseStatus.EXPIRED, info, "License expired", checks)
 
@@ -184,13 +235,12 @@ class LicenseManager:
             checks.append(f"hardware:{'ok' if hw_match else 'MISMATCH'}")
             if not hw_match:
                 info.status = LicenseStatus.INVALID
-                return LicenseVerificationResult(False, LicenseStatus.INVALID, info,
-                                                 "Hardware mismatch", checks)
+                return LicenseVerificationResult(False, LicenseStatus.INVALID, info, "Hardware mismatch", checks)
 
         info.status = LicenseStatus.ACTIVE
         return LicenseVerificationResult(True, LicenseStatus.ACTIVE, info, "License valid", checks)
 
-    def get_current_license(self) -> Optional[LicenseInfo]:
+    def get_current_license(self) -> LicenseInfo | None:
         return self._current_license
 
     def is_licensed(self) -> bool:
@@ -204,10 +254,10 @@ class LicenseManager:
     # ── Kill Switch ────────────────────────────────────────
 
     def activate_kill_switch(self, reason: str = "", source: str = "config") -> None:
-        self._kill_switch = KillSwitchStatus(active=True, reason=reason,
-                                              activated_at=time.time(), source=source)
-        self._db.persist_kill_switch(self._kill_switch.active, reason,
-                                      self._kill_switch.activated_at or time.time(), source)
+        self._kill_switch = KillSwitchStatus(active=True, reason=reason, activated_at=time.time(), source=source)
+        self._db.persist_kill_switch(
+            self._kill_switch.active, reason, self._kill_switch.activated_at or time.time(), source
+        )
         logger.critical("LicenseManager: KILL SWITCH ACTIVATED - %s", reason)
         self._notify_callbacks("kill_switch_activated", {"reason": reason})
 
@@ -221,6 +271,7 @@ class LicenseManager:
             return False
         try:
             import urllib.request
+
             validated_url = _validate_url(f"{server_url}/api/v1/kill-switch")
             req = urllib.request.Request(validated_url, method="GET")
             with urllib.request.urlopen(req, timeout=5) as resp:
@@ -240,6 +291,7 @@ class LicenseManager:
         try:
             import socket
             import struct
+
             client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             client.settimeout(5)
             ntp_server = os.environ.get("ZENIC_NTP_SERVER", "pool.ntp.org")
@@ -261,7 +313,9 @@ class LicenseManager:
             return
         self._running = True
         self._heartbeat_thread = threading.Thread(
-            target=self._heartbeat_loop, daemon=True, name="license-heartbeat",
+            target=self._heartbeat_loop,
+            daemon=True,
+            name="license-heartbeat",
         )
         self._heartbeat_thread.start()
 
@@ -282,14 +336,20 @@ class LicenseManager:
             return False
         try:
             import urllib.request
-            payload = json.dumps({
-                "license_id": self._current_license.license_id,
-                "hardware_id": get_hardware_fingerprint(), "timestamp": time.time(),
-            }).encode()
+
+            payload = json.dumps(
+                {
+                    "license_id": self._current_license.license_id,
+                    "hardware_id": get_hardware_fingerprint(),
+                    "timestamp": time.time(),
+                }
+            ).encode()
             validated_url = _validate_url(f"{server_url}/api/v1/heartbeat")
             req = urllib.request.Request(
-                validated_url, data=payload,
-                headers={"Content-Type": "application/json"}, method="POST",
+                validated_url,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
             )
             with urllib.request.urlopen(req, timeout=10) as resp:
                 body = json.loads(resp.read().decode())
@@ -303,10 +363,10 @@ class LicenseManager:
 
     # ── Callbacks ──────────────────────────────────────────
 
-    def on_license_event(self, callback: Callable[[str, Dict[str, Any]], None]) -> None:
+    def on_license_event(self, callback: Callable[[str, dict[str, Any]], None]) -> None:
         self._callbacks.append(callback)
 
-    def _notify_callbacks(self, event_type: str, data: Dict[str, Any]) -> None:
+    def _notify_callbacks(self, event_type: str, data: dict[str, Any]) -> None:
         for cb in self._callbacks:
             try:
                 cb(event_type, data)
@@ -315,7 +375,7 @@ class LicenseManager:
 
     # ── Status ─────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         info = self._current_license
         return {
             "license_valid": info is not None and info.status == LicenseStatus.ACTIVE,
@@ -337,7 +397,7 @@ class LicenseManager:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_license_manager: Optional[LicenseManager] = None
+_license_manager: LicenseManager | None = None
 _lock = threading.Lock()
 
 

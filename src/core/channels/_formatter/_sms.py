@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 def format_sms_text(message: ChannelMessage) -> str:  # noqa: F821  # TODO: verify import
     """Format a ChannelMessage into a plain SMS string.  # noqa: F821  # TODO: verify import
 

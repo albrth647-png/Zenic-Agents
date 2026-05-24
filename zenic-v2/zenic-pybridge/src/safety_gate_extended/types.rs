@@ -79,6 +79,11 @@ impl ComplianceStandard {
             ComplianceStandard::PciDss12,
         ]
     }
+
+    /// Delegate from_str_lossy() to zenic-safety canonical implementation.
+    pub fn from_str_lossy(s: &str) -> Option<Self> {
+        zenic_safety::ComplianceStandard::from_str_lossy(s).map(|c| c.into())
+    }
 }
 
 #[pymethods]

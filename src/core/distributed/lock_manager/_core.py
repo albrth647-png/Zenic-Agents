@@ -3,10 +3,13 @@
 import logging
 import threading
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any
+
 from ..backend import CoordinationBackend
 from ._lock import DistributedLock
+
 logger = logging.getLogger("core.distributed.lock_manager._core")
+
 
 class DistributedLockManager:
     """
@@ -44,7 +47,7 @@ class DistributedLockManager:
     def __init__(
         self,
         backend: CoordinationBackend,
-        holder_id: Optional[str] = None,
+        holder_id: str | None = None,
         default_ttl: float = 60.0,
     ) -> None:
         """
@@ -60,7 +63,7 @@ class DistributedLockManager:
         self._default_ttl = default_ttl
 
         # Track held locks for cleanup
-        self._held_locks: Dict[str, DistributedLock] = {}
+        self._held_locks: dict[str, DistributedLock] = {}
         self._lock = threading.Lock()
 
     @property
@@ -75,10 +78,10 @@ class DistributedLockManager:
     async def acquire(
         self,
         lock_name: str,
-        ttl_seconds: Optional[float] = None,
+        ttl_seconds: float | None = None,
         timeout_seconds: float = 0.0,
-        holder_id: Optional[str] = None,
-    ) -> Optional[DistributedLock]:
+        holder_id: str | None = None,
+    ) -> DistributedLock | None:
         """
         Acquire a distributed lock.
 
@@ -117,23 +120,24 @@ class DistributedLockManager:
 
         logger.debug(
             "LockManager: Acquired '%s' (holder=%s, ttl=%.0fs)",
-            lock_name, holder, ttl,
+            lock_name,
+            holder,
+            ttl,
         )
         return lock
 
     def acquire_sync(
         self,
         lock_name: str,
-        ttl_seconds: Optional[float] = None,
+        ttl_seconds: float | None = None,
         timeout_seconds: float = 0.0,
-    ) -> Optional[DistributedLock]:
+    ) -> DistributedLock | None:
         """Synchronous acquire wrapper."""
         import asyncio
+
         loop = asyncio.new_event_loop()
         try:
-            return loop.run_until_complete(
-                self.acquire(lock_name, ttl_seconds, timeout_seconds)
-            )
+            return loop.run_until_complete(self.acquire(lock_name, ttl_seconds, timeout_seconds))
         finally:
             loop.close()
 
@@ -144,10 +148,10 @@ class DistributedLockManager:
     class _AsyncLockContext:
         """Async context manager for distributed locks."""
 
-        def __init__(self, lock: Optional[DistributedLock]) -> None:
+        def __init__(self, lock: DistributedLock | None) -> None:
             self._lock = lock
 
-        async def __aenter__(self) -> Optional[DistributedLock]:
+        async def __aenter__(self) -> DistributedLock | None:
             return self._lock
 
         async def __aexit__(self, *args: Any) -> None:
@@ -157,7 +161,7 @@ class DistributedLockManager:
     async def acquire_context(
         self,
         lock_name: str,
-        ttl_seconds: Optional[float] = None,
+        ttl_seconds: float | None = None,
         timeout_seconds: float = 0.0,
     ) -> "_AsyncLockContext":
         """
@@ -202,7 +206,7 @@ class DistributedLockManager:
         return released
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Lock manager statistics."""
         with self._lock:
             return {

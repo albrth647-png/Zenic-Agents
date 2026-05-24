@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 def format_push_payload(message: ChannelMessage) -> Dict[str, Any]:  # noqa: F821  # TODO: verify import
     """Format a ChannelMessage into a push notification payload.  # noqa: F821  # TODO: verify import
 
@@ -30,6 +31,7 @@ def format_push_payload(message: ChannelMessage) -> Dict[str, Any]:  # noqa: F82
 
     # Priority
     from ._types import ChannelPriority
+
     priority_map = {
         ChannelPriority.LOW: "normal",
         ChannelPriority.NORMAL: "normal",

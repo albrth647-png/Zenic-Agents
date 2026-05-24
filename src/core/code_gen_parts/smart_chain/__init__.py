@@ -8,15 +8,15 @@ carry-forward between steps. Each step is manageable for the model.
 import logging
 from typing import Any, Dict, List, Optional
 
-from ._types import GenerationStep, ChainResult, MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS
-from ._planners_mixin import SmartChainPlannersMixin
 from ._execution_mixin import SmartChainExecutionMixin
+from ._planners_mixin import SmartChainPlannersMixin
 from ._templates_mixin import SmartChainTemplatesMixin
+from ._types import MAX_LINES_PER_STEP, MAX_REPAIR_ATTEMPTS, ChainResult, GenerationStep
 from ._utils_mixin import SmartChainUtilsMixin
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
-__all__ = ["SmartPromptChain", "GenerationStep", "ChainResult", "Any", "MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS"]
+__all__ = ["MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS", "Any", "ChainResult", "GenerationStep", "SmartPromptChain"]
 
 
 class SmartPromptChain(
@@ -36,16 +36,16 @@ class SmartPromptChain(
         self._llm = llm_engine
         self._sandbox = sandbox
 
-    def generate_code(self, task_description: str, language: str = "python",
-                      entity_info: Optional[Dict] = None,
-                      max_lines: int = 200) -> ChainResult:
+    def generate_code(
+        self, task_description: str, language: str = "python", entity_info: dict | None = None, max_lines: int = 200
+    ) -> ChainResult:
         """Generate code using step-by-step fragmented approach."""
         steps = self.plan_steps(task_description, language, entity_info, max_lines)
         return self.execute_chain(steps, language)
 
-    def plan_steps(self, task_description: str, language: str = "python",
-                   entity_info: Optional[Dict] = None,
-                   max_lines: int = 200) -> List[GenerationStep]:
+    def plan_steps(
+        self, task_description: str, language: str = "python", entity_info: dict | None = None, max_lines: int = 200
+    ) -> list[GenerationStep]:
         """Decompose a generation task into atomic steps."""
         entity_name = (entity_info or {}).get("name", "Module")
         fields = (entity_info or {}).get("fields", [])
@@ -62,8 +62,7 @@ class SmartPromptChain(
         else:
             return self._plan_generic_steps(entity_name, task_description, language)
 
-    def execute_chain(self, steps: List[GenerationStep],
-                      language: str = "python") -> ChainResult:
+    def execute_chain(self, steps: list[GenerationStep], language: str = "python") -> ChainResult:
         """Execute a chain of generation steps."""
         result = ChainResult(success=False, steps_total=len(steps))
         accumulated_context = ""
@@ -95,7 +94,9 @@ class SmartPromptChain(
                         failed += 1
                         logger.warning(
                             "SmartPromptChain: Step %d (%s) failed after %d repairs",
-                            step.step_id, step.step_type, repair_count,
+                            step.step_id,
+                            step.step_type,
+                            repair_count,
                         )
                         result.fragments.append(generated)
                         accumulated_context += "\n" + generated

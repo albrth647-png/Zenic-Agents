@@ -15,25 +15,29 @@ Este entry point ahora solo ejecuta el motor localmente via TUI,
 sin servidor HTTP. Para pruebas locales, usa el campo de texto.
 """
 
-import os
-import logging
-import threading
 import atexit
+import logging
+import os
+import threading
 
 # Cargar .env ANTES de cualquier otro import (variables de entorno)
 from src.core.env_loader import load_env
-load_env()
 
-from src.core.shared.contracts import HAS_Z3  # noqa: E402
-from src.core.shared.db_initializer import initialize_databases  # noqa: E402
-from src.core.shared._version import ZENIC_VERSION_STR, ZENIC_FULL_NAME  # noqa: E402
+load_env()
 
 # R3: Support ZENIC_USE_UNIFIED_DAG=1 for v18 experimental pipeline
 # dag_orchestrator migrated to Rust — fallback chain skips it entirely
 import os as _os  # noqa: E402
+
+from src.core.shared._version import ZENIC_FULL_NAME, ZENIC_VERSION_STR  # noqa: E402
+from src.core.shared.contracts import HAS_Z3  # noqa: E402
+from src.core.shared.db_initializer import initialize_databases  # noqa: E402
+
 if _os.environ.get("ZENIC_USE_UNIFIED_DAG", "0") == "1":
     try:
-        from src.core.dag_parts.unified_orchestrator import UnifiedDAGOrchestrator as _Orchestrator  # type: ignore[import-unresolved]
+        from src.core.dag_parts.unified_orchestrator import (
+            UnifiedDAGOrchestrator as _Orchestrator,  # type: ignore[import-unresolved]
+        )
     except ImportError:
         from src.core.orchestrator import ZenicOrchestrator as _Orchestrator
 else:
@@ -44,18 +48,19 @@ else:
 
 from textual.app import App, ComposeResult  # type: ignore[import-unresolved]  # noqa: E402
 from textual.containers import VerticalScroll  # type: ignore[import-unresolved]  # noqa: E402
-from textual.widgets import Button, Input, Label, Static  # type: ignore[import-unresolved]  # noqa: E402
 from textual.reactive import reactive  # type: ignore[import-unresolved]  # noqa: E402
+from textual.widgets import Button, Input, Label, Static  # type: ignore[import-unresolved]  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ZENIC")
 
-IS_ANDROID = 'ANDROID_ARGUMENT' in os.environ
+IS_ANDROID = "ANDROID_ARGUMENT" in os.environ
 
 
 # ============================================================
 #  INTERFAZ TEXTUAL (TUI)
 # ============================================================
+
 
 class ZenicTUIApp(App):
     """ZENIC-AGENTS Motor de IA Quirurgico Local — Interfaz TUI.
@@ -143,15 +148,13 @@ class ZenicTUIApp(App):
 
         # Title
         yield Label(
-            f"ZENIC-AGENTS {ZENIC_VERSION_STR}\n"
-            f"Motor de IA Quirurgico Local ({solver_name})",
+            f"ZENIC-AGENTS {ZENIC_VERSION_STR}\n" f"Motor de IA Quirurgico Local ({solver_name})",
             id="title-label",
         )
 
         # Info
         yield Label(
-            "Modo local (sin servidor HTTP)\n"
-            "Usa el campo de texto para probar el motor",
+            "Modo local (sin servidor HTTP)\n" "Usa el campo de texto para probar el motor",
             id="ip-label",
         )
 
@@ -215,6 +218,7 @@ class ZenicTUIApp(App):
     def _run_local_test(self, msg: str) -> None:
         try:
             import asyncio
+
             loop = asyncio.new_event_loop()
             result = loop.run_until_complete(self.engine.execute(msg))
             loop.close()
@@ -223,19 +227,19 @@ class ZenicTUIApp(App):
             output += f"Route: {result.get('route', 'N/A')} | Crit: {result.get('criticality', 'N/A')}\n"
             output += f"Time: {result.get('processing_time_ms', 0)}ms | Hash: {result.get('hash', 'N/A')}\n"
             output += f"Solver({solver_name}): {result.get('solver_status', 'N/A')} | MCTS: {result.get('mcts_simulations', 0)} sims\n"
-            if result.get('paths_explored'):
+            if result.get("paths_explored"):
                 output += f"Paths: {result.get('paths_explored', 0)} explored, {result.get('paths_pruned', 0)} pruned\n"
-            if result.get('partial_reasoning'):
+            if result.get("partial_reasoning"):
                 output += "PROTOCOL: Razonamiento Parcial - subdividiendo tarea\n"
-            if result.get('explanations'):
-                for exp in result['explanations']:
+            if result.get("explanations"):
+                for exp in result["explanations"]:
                     output += f"  {exp}\n"
-            if result.get('code'):
+            if result.get("code"):
                 output += f"\nCode:\n{result['code']}\n"
-            if result.get('error'):
+            if result.get("error"):
                 output += f"\nError: {result['error']}\n"
         except Exception as e:
-            output = f"Error: {str(e)}"
+            output = f"Error: {e!s}"
         self.call_from_thread(self._update_test_result, output)
 
     def _update_test_result(self, text: str) -> None:
@@ -269,9 +273,10 @@ def _cleanup():
     global _zenic_app
     # Server module removed — no more HTTP server cleanup needed
 
+
 atexit.register(_cleanup)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     initialize_databases()
     solver_name = "Z3" if HAS_Z3 else "AC-3"
     logger.info(f"{ZENIC_FULL_NAME} - Local Surgical AI Engine (TUI)")

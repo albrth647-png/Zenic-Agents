@@ -9,25 +9,28 @@ import logging
 import sqlite3
 import time
 import uuid
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from src.core.workflows.chain_templates._builtins import builtin_definitions
+from src.core.workflows.chain_templates._helpers import substitute_value
 from src.core.workflows.chain_templates._types import (
     ChainTemplate,
     TemplateStep,
     TemplateVariable,
 )
-from src.core.workflows.chain_templates._helpers import substitute_value
-from src.core.workflows.chain_templates._builtins import builtin_definitions
 
 if TYPE_CHECKING:
     from src.core.workflows.chain_composer import ComposedChain
 
 logger = logging.getLogger(__name__)
 
-_DB_DIR = "/".join([
-    __import__("os").path.expanduser("~"),
-    ".zenic_agents", "db",
-])
+_DB_DIR = "/".join(
+    [
+        __import__("os").path.expanduser("~"),
+        ".zenic_agents",
+        "db",
+    ]
+)
 _DB_PATH = "/".join([_DB_DIR, "chain_templates.sqlite"])
 
 
@@ -78,13 +81,16 @@ class CoreMixin:
             template_id = row[0]
             try:
                 template = ChainTemplate(
-                    template_id=template_id, name=row[1], description=row[2],
+                    template_id=template_id,
+                    name=row[1],
+                    description=row[2],
                     category=row[3],
                     event_patterns=json.loads(row[4]) if row[4] else [],
                     intent_keywords=json.loads(row[5]) if row[5] else [],
                     steps=self._deserialize_steps(json.loads(row[6]) if row[6] else []),
                     variables=self._deserialize_variables(json.loads(row[7]) if row[7] else []),
-                    version=row[8], created_at=row[9],
+                    version=row[8],
+                    created_at=row[9],
                 )
                 self._templates[template_id] = template
             except (json.JSONDecodeError, TypeError, KeyError) as exc:
@@ -92,12 +98,18 @@ class CoreMixin:
 
     @staticmethod
     def _serialize_steps(steps: list[TemplateStep]) -> str:
-        return json.dumps([
-            {"step_type": s.step_type, "config_template": s.config_template,
-             "next_step_id": s.next_step_id, "condition_expr": s.condition_expr,
-             "timeout_ms": s.timeout_ms}
-            for s in steps
-        ])
+        return json.dumps(
+            [
+                {
+                    "step_type": s.step_type,
+                    "config_template": s.config_template,
+                    "next_step_id": s.next_step_id,
+                    "condition_expr": s.condition_expr,
+                    "timeout_ms": s.timeout_ms,
+                }
+                for s in steps
+            ]
+        )
 
     @staticmethod
     def _deserialize_steps(raw: list[dict[str, Any]]) -> list[TemplateStep]:
@@ -108,27 +120,36 @@ class CoreMixin:
                 next_step_id=s.get("next_step_id", ""),
                 condition_expr=s.get("condition_expr", ""),
                 timeout_ms=s.get("timeout_ms", 30000),
-            ) for s in raw
+            )
+            for s in raw
         ]
 
     @staticmethod
     def _serialize_variables(variables: list[TemplateVariable]) -> str:
-        return json.dumps([
-            {"name": v.name, "var_type": v.var_type,
-             "default_value": v.default_value, "required": v.required,
-             "description": v.description}
-            for v in variables
-        ])
+        return json.dumps(
+            [
+                {
+                    "name": v.name,
+                    "var_type": v.var_type,
+                    "default_value": v.default_value,
+                    "required": v.required,
+                    "description": v.description,
+                }
+                for v in variables
+            ]
+        )
 
     @staticmethod
     def _deserialize_variables(raw: list[dict[str, Any]]) -> list[TemplateVariable]:
         return [
             TemplateVariable(
-                name=v.get("name", ""), var_type=v.get("var_type", "str"),
+                name=v.get("name", ""),
+                var_type=v.get("var_type", "str"),
                 default_value=v.get("default_value"),
                 required=v.get("required", True),
                 description=v.get("description", ""),
-            ) for v in raw
+            )
+            for v in raw
         ]
 
     def _save_template(self, template: ChainTemplate, is_builtin: bool = False) -> None:
@@ -141,12 +162,16 @@ class CoreMixin:
                 "version, created_at, is_builtin) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    template.template_id, template.name, template.description,
-                    template.category, json.dumps(template.event_patterns),
+                    template.template_id,
+                    template.name,
+                    template.description,
+                    template.category,
+                    json.dumps(template.event_patterns),
                     json.dumps(template.intent_keywords),
                     self._serialize_steps(template.steps),
                     self._serialize_variables(template.variables),
-                    template.version, template.created_at,
+                    template.version,
+                    template.created_at,
                     1 if is_builtin else 0,
                 ),
             )
@@ -224,10 +249,13 @@ class CoreMixin:
     #  Instantiation
     # ------------------------------------------------------------------
 
-    def instantiate(self, template_id: str, variables: dict[str, Any]) -> "ComposedChain":
+    def instantiate(self, template_id: str, variables: dict[str, Any]) -> ComposedChain:
         """Create a concrete ComposedChain from a template with variable substitution."""
         from src.core.workflows.chain_composer import (
-            ChainStep, ChainStepType, ChainStatus, ComposedChain,
+            ChainStatus,
+            ChainStep,
+            ChainStepType,
+            ComposedChain,
         )
 
         with self._lock:
@@ -243,9 +271,7 @@ class CoreMixin:
             elif var.default_value is not None:
                 resolved_vars[var.name] = var.default_value
             elif var.required:
-                raise ValueError(
-                    f"Required variable '{var.name}' not provided for template '{template_id}'"
-                )
+                raise ValueError(f"Required variable '{var.name}' not provided for template '{template_id}'")
 
         chain_steps: list[ChainStep] = []
         for idx, tpl_step in enumerate(template.steps):
@@ -271,20 +297,22 @@ class CoreMixin:
 
         chain_id = f"chain_{uuid.uuid4().hex[:12]}"
         composed = ComposedChain(
-            chain_id=chain_id, name=template.name,
-            description=template.description, steps=chain_steps,
+            chain_id=chain_id,
+            name=template.name,
+            description=template.description,
+            steps=chain_steps,
             metadata={
                 "source_template": template_id,
                 "template_version": template.version,
                 "category": template.category,
                 "resolved_variables": list(resolved_vars.keys()),
             },
-            tenant_id="", created_at=time.time(),
+            tenant_id="",
+            created_at=time.time(),
             status=ChainStatus.READY,
         )
 
-        logger.info("Instantiated chain %s from template %s with %d steps",
-                     chain_id, template_id, len(chain_steps))
+        logger.info("Instantiated chain %s from template %s with %d steps", chain_id, template_id, len(chain_steps))
         return composed
 
     # ------------------------------------------------------------------

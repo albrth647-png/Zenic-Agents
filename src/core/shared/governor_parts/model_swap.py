@@ -1,6 +1,6 @@
 """Mixin: Model swap integration for ResourceGovernor."""
 
-from typing import Dict, Any
+from typing import Any
 
 from ._imports import logger
 
@@ -36,7 +36,7 @@ class ModelSwapMixin:
             return "semantic"
         return "none"
 
-    def get_model_ram_status(self) -> Dict:
+    def get_model_ram_status(self) -> dict:
         """
         Retorna estado de RAM para que el ModelManager tome decisiones.
 
@@ -52,7 +52,7 @@ class ModelSwapMixin:
             "recommendation": self.should_unload_models(),
         }
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Retorna el estado actual del governor para el endpoint /health."""
         return {
             "cpu_usage_pct": round(self._get_cpu_usage() * 100, 1),

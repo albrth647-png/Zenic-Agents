@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -18,6 +18,7 @@ GENESIS_HASH = "0" * 64
 
 class AuditEventType(str, Enum):
     """Types of audit events in the HITL system."""
+
     EVIDENCE_ATTACHED = "EVIDENCE_ATTACHED"
     JUSTIFICATION_PROVIDED = "JUSTIFICATION_PROVIDED"
     APPROVAL_REQUESTED = "APPROVAL_REQUESTED"
@@ -39,9 +40,9 @@ class AuditRecord:
     event_type: AuditEventType = AuditEventType.APPROVAL_REQUESTED
     actor_id: str = ""
     actor_name: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     content_hash: str = ""
-    previous_hash: Optional[str] = None
+    previous_hash: str | None = None
     timestamp: str = ""
 
     def __post_init__(self) -> None:
@@ -50,7 +51,7 @@ class AuditRecord:
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "record_id": self.record_id,
@@ -71,10 +72,10 @@ class MerkleProof:
 
     record_id: str = ""
     root_hash: str = ""
-    sibling_hashes: List[str] = field(default_factory=list)
-    direction: List[str] = field(default_factory=list)
+    sibling_hashes: list[str] = field(default_factory=list)
+    direction: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "record_id": self.record_id,
@@ -82,4 +83,6 @@ class MerkleProof:
             "sibling_hashes": self.sibling_hashes,
             "direction": self.direction,
         }
-__all__ = ["AuditEventType", "AuditRecord", "GENESIS_HASH", "MerkleProof", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["GENESIS_HASH", "_MAX_RETRIES", "_RETRY_DELAY", "AuditEventType", "AuditRecord", "MerkleProof"]

@@ -15,18 +15,18 @@ Single source of truth for:
 - Criticality inference
 """
 
-import re
 import logging
+import re
 from typing import Any
 
 # Import canonical constants (single source of truth)
 from src.core.shared.constants import (
-    VALID_INTENT_OPERATIONS,
-    VALID_INTENT_GOALS,
-    VALID_INVENTORY_OPERATIONS,  # noqa: F401 — re-export for backward compat
-    VALID_LANGUAGES,
     EXT_LANG_MAP,
     FENCE_LANG_MAP,
+    VALID_INTENT_GOALS,
+    VALID_INTENT_OPERATIONS,
+    VALID_INVENTORY_OPERATIONS,  # noqa: F401 — re-export for backward compat
+    VALID_LANGUAGES,
 )
 
 # Backward-compatible aliases (consumers may import these names)
@@ -42,76 +42,211 @@ logger = logging.getLogger(__name__)
 
 OP_KEYWORDS: dict[str, list[str]] = {
     "CREATE": [
-        "crear", "create", "generar", "generate", "hacer", "make",
-        "construir", "build", "nuevo", "new", "agregar", "add",
-        "implementar", "implement", "desarrollar", "develop",
-        "escribir", "write", "definir", "define", "scaffold",
+        "crear",
+        "create",
+        "generar",
+        "generate",
+        "hacer",
+        "make",
+        "construir",
+        "build",
+        "nuevo",
+        "new",
+        "agregar",
+        "add",
+        "implementar",
+        "implement",
+        "desarrollar",
+        "develop",
+        "escribir",
+        "write",
+        "definir",
+        "define",
+        "scaffold",
     ],
     "REFACTOR": [
-        "refactor", "refactorizar", "reestructurar", "restructure",
-        "reorganizar", "reorganize", "mejorar", "improve",
-        "limpiar", "clean", "simplificar", "simplify",
-        "rediseñar", "redesign", "migrar", "migrate",
+        "refactor",
+        "refactorizar",
+        "reestructurar",
+        "restructure",
+        "reorganizar",
+        "reorganize",
+        "mejorar",
+        "improve",
+        "limpiar",
+        "clean",
+        "simplificar",
+        "simplify",
+        "rediseñar",
+        "redesign",
+        "migrar",
+        "migrate",
     ],
     "DELETE": [
-        "eliminar", "delete", "remove", "remover", "borrar",
-        "quitar", "drop", "descartar", "discard", "limpiar",
+        "eliminar",
+        "delete",
+        "remove",
+        "remover",
+        "borrar",
+        "quitar",
+        "drop",
+        "descartar",
+        "discard",
+        "limpiar",
     ],
     "SEARCH": [
-        "buscar", "search", "find", "encontrar", "buscar",
-        "localizar", "locate", "filtrar", "filter", "query",
+        "buscar",
+        "search",
+        "find",
+        "encontrar",
+        "buscar",
+        "localizar",
+        "locate",
+        "filtrar",
+        "filter",
+        "query",
     ],
     "ANALYZE": [
-        "analizar", "analyze", "examinar", "examine", "revisar",
-        "review", "inspeccionar", "inspect", "auditar", "audit",
-        "evaluar", "evaluate", "diagnosticar", "diagnose",
+        "analizar",
+        "analyze",
+        "examinar",
+        "examine",
+        "revisar",
+        "review",
+        "inspeccionar",
+        "inspect",
+        "auditar",
+        "audit",
+        "evaluar",
+        "evaluate",
+        "diagnosticar",
+        "diagnose",
     ],
     "EXPLAIN": [
-        "explicar", "explain", "describir", "describe",
-        "documentar", "document", "comentar", "comment",
-        "detallar", "detail", "clarificar", "clarify",
+        "explicar",
+        "explain",
+        "describir",
+        "describe",
+        "documentar",
+        "document",
+        "comentar",
+        "comment",
+        "detallar",
+        "detail",
+        "clarificar",
+        "clarify",
     ],
     "DEBUG": [
-        "debug", "depurar", "fix", "arreglar", "corregir",
-        "corregir", "reparar", "repair", "resolver", "resolve",
-        "error", "bug", "fallo", "failure", "traceback",
+        "debug",
+        "depurar",
+        "fix",
+        "arreglar",
+        "corregir",
+        "corregir",
+        "reparar",
+        "repair",
+        "resolver",
+        "resolve",
+        "error",
+        "bug",
+        "fallo",
+        "failure",
+        "traceback",
     ],
     "OPTIMIZE": [
-        "optimizar", "optimize", "mejorar rendimiento", "speed up",
-        "acelerar", "accelerate", "reducir", "reduce",
-        "eficiente", "efficient", "performance", "rendimiento",
-        "rapido", "fast", "cache", "cachear",
+        "optimizar",
+        "optimize",
+        "mejorar rendimiento",
+        "speed up",
+        "acelerar",
+        "accelerate",
+        "reducir",
+        "reduce",
+        "eficiente",
+        "efficient",
+        "performance",
+        "rendimiento",
+        "rapido",
+        "fast",
+        "cache",
+        "cachear",
     ],
 }
 
 GOAL_KEYWORDS: dict[str, list[str]] = {
     "COMPLEXITY_REDUCTION": [
-        "simplificar", "simplify", "reducir complejidad",
-        "less complex", "mas simple", "clean code",
+        "simplificar",
+        "simplify",
+        "reducir complejidad",
+        "less complex",
+        "mas simple",
+        "clean code",
     ],
     "MODERN_PATTERN": [
-        "moderno", "modern", "patron", "pattern", "best practice",
-        "mejor practica", "actualizar", "update",
+        "moderno",
+        "modern",
+        "patron",
+        "pattern",
+        "best practice",
+        "mejor practica",
+        "actualizar",
+        "update",
     ],
     "BUG_FIX": [
-        "bug", "error", "fallo", "fix", "corregir", "reparar",
-        "arreglar", "parche", "patch", "hotfix",
+        "bug",
+        "error",
+        "fallo",
+        "fix",
+        "corregir",
+        "reparar",
+        "arreglar",
+        "parche",
+        "patch",
+        "hotfix",
     ],
     "FEATURE_ADD": [
-        "nueva funcionalidad", "new feature", "agregar", "add",
-        "implementar", "implement", "extender", "extend",
+        "nueva funcionalidad",
+        "new feature",
+        "agregar",
+        "add",
+        "implementar",
+        "implement",
+        "extender",
+        "extend",
     ],
     "SECURITY_HARDEN": [
-        "seguridad", "security", "auth", "jwt", "token",
-        "cifrado", "encrypt", "hash", "sanitize", "validar",
+        "seguridad",
+        "security",
+        "auth",
+        "jwt",
+        "token",
+        "cifrado",
+        "encrypt",
+        "hash",
+        "sanitize",
+        "validar",
     ],
     "PERFORMANCE": [
-        "rendimiento", "performance", "velocidad", "speed",
-        "optimizar", "optimize", "cache", "async", "paralelo",
+        "rendimiento",
+        "performance",
+        "velocidad",
+        "speed",
+        "optimizar",
+        "optimize",
+        "cache",
+        "async",
+        "paralelo",
     ],
     "READABILITY": [
-        "legibilidad", "readability", "documentar", "document",
-        "comentar", "comment", "claro", "clear", "nombrar",
+        "legibilidad",
+        "readability",
+        "documentar",
+        "document",
+        "comentar",
+        "comment",
+        "claro",
+        "clear",
+        "nombrar",
     ],
 }
 
@@ -119,6 +254,7 @@ GOAL_KEYWORDS: dict[str, list[str]] = {
 # ============================================================
 #  SHARED UTILITY FUNCTIONS
 # ============================================================
+
 
 def extract_target_and_language(message: str) -> tuple[str, str]:
     """
@@ -132,28 +268,27 @@ def extract_target_and_language(message: str) -> tuple[str, str]:
 
     # Pattern: "crear modulo auth.py" / "create file auth.py"
     m = re.search(
-        r'(?:modulo|module|archivo|file|clase|class|funcion|function)\s+'
-        r'([a-zA-Z_][\w./]*(?:\.\w+)?)',
-        message, re.IGNORECASE
+        r"(?:modulo|module|archivo|file|clase|class|funcion|function)\s+" r"([a-zA-Z_][\w./]*(?:\.\w+)?)",
+        message,
+        re.IGNORECASE,
     )
     if m:
         target = m.group(1)
 
     # Pattern: "auth.py" / "user_service.kt" (direct file references)
     if not target:
-        m = re.search(r'\b([a-zA-Z_]\w*\.\w+)\b', message)
+        m = re.search(r"\b([a-zA-Z_]\w*\.\w+)\b", message)
         if m:
             target = m.group(1)
 
     # Infer language from extension
-    if target and '.' in target:
-        ext = '.' + target.rsplit('.', 1)[-1]
+    if target and "." in target:
+        ext = "." + target.rsplit(".", 1)[-1]
         language = EXT_LANG_MAP.get(ext, "python")
 
     # Pattern: "en Kotlin" / "in Go" / "python"
     lang_match = re.search(
-        r'(?:en|in|lenguaje|language)\s+(' + '|'.join(VALID_LANGUAGES) + r')',
-        message, re.IGNORECASE
+        r"(?:en|in|lenguaje|language)\s+(" + "|".join(VALID_LANGUAGES) + r")", message, re.IGNORECASE
     )
     if lang_match:
         language = lang_match.group(1).lower()
@@ -169,7 +304,7 @@ def extract_code_block(message: str) -> tuple[str, str]:
         (language, code) tuple
     """
     # Match fenced code blocks
-    m = re.search(r'```(\w+)?\s*\n(.*?)```', message, re.DOTALL)
+    m = re.search(r"```(\w+)?\s*\n(.*?)```", message, re.DOTALL)
     if m:
         fence_lang = m.group(1) or ""
         code = m.group(2).strip()
@@ -177,10 +312,10 @@ def extract_code_block(message: str) -> tuple[str, str]:
         return language, code
 
     # Match inline code
-    m = re.search(r'`([^`]+)`', message)
+    m = re.search(r"`([^`]+)`", message)
     if m:
         code = m.group(1).strip()
-        if len(code) > 20 and any(kw in code for kw in ['def ', 'class ', 'import ', 'function ', 'func ']):
+        if len(code) > 20 and any(kw in code for kw in ["def ", "class ", "import ", "function ", "func "]):
             return "python", code
 
     return "", ""
@@ -191,21 +326,21 @@ def extract_entities(message: str) -> dict[str, Any]:
     entities: dict[str, Any] = {}
 
     # File references: "auth.py", "user_service.kt"
-    files = re.findall(r'\b([a-zA-Z_]\w*\.\w+)\b', message)
+    files = re.findall(r"\b([a-zA-Z_]\w*\.\w+)\b", message)
     if files:
         entities["files"] = files
 
     # Class/function names: "class UserService", "def process_order"
-    class_names = re.findall(r'\b(?:class|clase)\s+(\w+)', message)
+    class_names = re.findall(r"\b(?:class|clase)\s+(\w+)", message)
     if class_names:
         entities["classes"] = class_names
 
-    func_names = re.findall(r'\b(?:def|function|func)\s+(\w+)', message)
+    func_names = re.findall(r"\b(?:def|function|func)\s+(\w+)", message)
     if func_names:
         entities["functions"] = func_names
 
     # Numbers: "16%", "0.5", "100"
-    numbers = re.findall(r'\b\d+(?:\.\d+)?%?\b', message)
+    numbers = re.findall(r"\b\d+(?:\.\d+)?%?\b", message)
     if numbers:
         entities["numbers"] = numbers
 
@@ -223,9 +358,18 @@ def infer_criticality(operation: str, goal: str, target: str = "") -> str:
     critical_ops = {"DELETE", "REFACTOR"}
     critical_goals = {"SECURITY_HARDEN", "BUG_FIX"}
     critical_targets = {
-        "auth", "login", "password", "token", "jwt",
-        "payment", "stripe", "billing", "checkout",
-        "permission", "rbac", "admin",
+        "auth",
+        "login",
+        "password",
+        "token",
+        "jwt",
+        "payment",
+        "stripe",
+        "billing",
+        "checkout",
+        "permission",
+        "rbac",
+        "admin",
     }
 
     # Check for critical conditions

@@ -6,13 +6,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
 
 # Category → base risk score
-_ACTION_CATEGORY_SCORES: Dict[str, float] = {
+_ACTION_CATEGORY_SCORES: dict[str, float] = {
     "financial": 0.8,
     "payment": 0.8,
     "destructive": 0.9,
@@ -28,7 +28,7 @@ _ACTION_CATEGORY_SCORES: Dict[str, float] = {
 }
 
 # Role hierarchy level (mirrors auth_parts._imports.ROLE_HIERARCHY)
-_ROLE_LEVELS: Dict[str, int] = {
+_ROLE_LEVELS: dict[str, int] = {
     "viewer": 0,
     "operador": 1,
     "gerente": 2,
@@ -38,6 +38,7 @@ _ROLE_LEVELS: Dict[str, int] = {
 
 class RiskLevel(str, Enum):
     """Qualitative risk level."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -72,12 +73,12 @@ class RiskAssessment:
 
     risk_score: float = 0.0
     risk_level: RiskLevel = RiskLevel.LOW
-    factors: List[str] = field(default_factory=list)
+    factors: list[str] = field(default_factory=list)
     recommended_role: str = "auto_approve"
     auto_approvable: bool = True
     explanation: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "risk_score": round(self.risk_score, 4),
@@ -87,4 +88,15 @@ class RiskAssessment:
             "auto_approvable": self.auto_approvable,
             "explanation": self.explanation,
         }
-__all__ = ["RiskAssessment", "RiskLevel", "_ACTION_CATEGORY_SCORES", "_MAX_RETRIES", "_RETRY_DELAY", "_ROLE_LEVELS", "_score_to_risk_level", "_score_to_role"]
+
+
+__all__ = [
+    "_ACTION_CATEGORY_SCORES",
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "_ROLE_LEVELS",
+    "RiskAssessment",
+    "RiskLevel",
+    "_score_to_risk_level",
+    "_score_to_role",
+]

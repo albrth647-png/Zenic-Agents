@@ -7,10 +7,10 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 from ..chain import ApprovalPriority
-from ._types import JustificationRequirement, ApprovalJustification, _MAX_RETRIES, _RETRY_DELAY
+from ._types import _MAX_RETRIES, _RETRY_DELAY, ApprovalJustification, JustificationRequirement
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class JustificationManager:
     def __init__(self, db_path: str = "justification.sqlite") -> None:
         self._db_path = db_path
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -32,6 +33,7 @@ class JustificationManager:
 
     def _init_db(self) -> None:
         """Create the justifications table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -60,19 +62,16 @@ class JustificationManager:
 
     def validate_justification(
         self,
-        justification: Union[ApprovalJustification, str],
+        justification: ApprovalJustification | str,
         requirement: JustificationRequirement,
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """Validate a justification against requirements."""
-        errors: List[str] = []
+        errors: list[str] = []
 
         if isinstance(justification, str):
             reason = justification.strip()
             if len(reason) < requirement.min_length:
-                errors.append(
-                    f"Reason must be at least {requirement.min_length} characters "
-                    f"(got {len(reason)})"
-                )
+                errors.append(f"Reason must be at least {requirement.min_length} characters " f"(got {len(reason)})")
             if requirement.require_risk_acknowledgment:
                 errors.append("Risk acknowledgment is required")
             if requirement.require_compliance_check:
@@ -106,7 +105,7 @@ class JustificationManager:
         compliance_check: bool = False,
         business_justification: str = "",
         created_by: str = "",
-        requirement: Optional[JustificationRequirement] = None,
+        requirement: JustificationRequirement | None = None,
     ) -> ApprovalJustification:
         """Create a new justification for a request."""
         if not request_id:
@@ -128,9 +127,7 @@ class JustificationManager:
 
         is_valid, errors = self.validate_justification(justification, requirement)
         if not is_valid:
-            raise ValueError(
-                "Justification validation failed: " + "; ".join(errors)
-            )
+            raise ValueError("Justification validation failed: " + "; ".join(errors))
 
         with self._lock:
             self._persist_justification(justification, insert=True)
@@ -139,13 +136,15 @@ class JustificationManager:
 
         logger.info(
             "JustificationManager: Created justification %s for request %s",
-            justification.justification_id, request_id,
+            justification.justification_id,
+            request_id,
         )
         return justification
 
-    def get_justification(self, request_id: str) -> Optional[ApprovalJustification]:
+    def get_justification(self, request_id: str) -> ApprovalJustification | None:
         """Get the justification for a request (one per request)."""
-        def _do_find() -> Optional[ApprovalJustification]:
+
+        def _do_find() -> ApprovalJustification | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -160,7 +159,8 @@ class JustificationManager:
         return self._with_retry(_do_find, fallback=None)
 
     def get_justification_requirement(
-        self, request_id: str,
+        self,
+        request_id: str,
     ) -> JustificationRequirement:
         """Return the justification requirements based on request priority."""
         priority = self._get_request_priority(request_id)
@@ -212,6 +212,7 @@ class JustificationManager:
         """Look up the priority of a request from the approval chain."""
         try:
             from ..chain import get_approval_chain
+
             chain = get_approval_chain()
             request = chain.get_request(request_id)
             if request is not None:
@@ -220,9 +221,10 @@ class JustificationManager:
             logger.debug("JustificationManager: could not get request priority: %s", exc)
         return ApprovalPriority.NORMAL
 
-    def _find_by_id(self, justification_id: str) -> Optional[ApprovalJustification]:
+    def _find_by_id(self, justification_id: str) -> ApprovalJustification | None:
         """Find a justification by its ID."""
-        def _do_find() -> Optional[ApprovalJustification]:
+
+        def _do_find() -> ApprovalJustification | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -237,9 +239,13 @@ class JustificationManager:
         return self._with_retry(_do_find, fallback=None)
 
     def _persist_justification(
-        self, justification: ApprovalJustification, *, insert: bool,
+        self,
+        justification: ApprovalJustification,
+        *,
+        insert: bool,
     ) -> None:
         """Insert or update a justification in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -299,11 +305,14 @@ class JustificationManager:
         )
 
     def _record_audit_event(
-        self, request_id: str, justification: ApprovalJustification,
+        self,
+        request_id: str,
+        justification: ApprovalJustification,
     ) -> None:
         """Record a JUSTIFICATION_PROVIDED event in the audit merkle trail."""
         try:
             from ..audit_merkle import get_approval_audit_merkle
+
             audit = get_approval_audit_merkle()
             audit.record_event(
                 request_id=request_id,
@@ -325,7 +334,7 @@ class JustificationManager:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
@@ -333,7 +342,9 @@ class JustificationManager:
                 last_exc = exc
                 logger.warning(
                     "JustificationManager: DB retry %d/%d — %s",
-                    attempt, max_retries, exc,
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

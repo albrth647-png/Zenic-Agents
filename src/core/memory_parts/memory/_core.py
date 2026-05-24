@@ -6,11 +6,11 @@ Now fully tenant-aware via TenantContext (Phase 2: Real Multitenancy).
 """
 
 import os
-from typing import List
-from ..types import DB_DIR, MemoryEntry, logger
 
 # Phase 5 — Deterministic UUID for session IDs
 from src.core.shared.deterministic import DeterministicUUID
+
+from ..types import DB_DIR, MemoryEntry, logger
 
 
 def _sanitize_client(value: str, visible: int = 4) -> str:
@@ -19,18 +19,20 @@ def _sanitize_client(value: str, visible: int = 4) -> str:
         return "***"
     return f"***{value[-visible:]}"
 
-from ..database import DatabaseMixin  # noqa: E402
-from ..cache import CacheMixin  # noqa: E402
-from ..longterm import LongTermMixin  # noqa: E402
-from ..episodes import EpisodesMixin  # noqa: E402
-from ._tenant_mixin import TenantMixin  # noqa: E402
-from ._session_mixin import SessionMixin  # noqa: E402
+
 # Tenant module removed — use tenant_utils for multi-tenant context
 # from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext
 from src.core.shared.tenant_utils import (  # noqa: E402
     resolve_tenant_id,
     set_tenant_context,
 )
+
+from ..cache import CacheMixin  # noqa: E402
+from ..database import DatabaseMixin  # noqa: E402
+from ..episodes import EpisodesMixin  # noqa: E402
+from ..longterm import LongTermMixin  # noqa: E402
+from ._session_mixin import SessionMixin  # noqa: E402
+from ._tenant_mixin import TenantMixin  # noqa: E402
 
 
 class _FallbackTenantContext:
@@ -43,6 +45,7 @@ class _FallbackTenantContext:
     raises RuntimeError instead of silently using ANONYMOUS_TENANT.
     This enforces the fail-closed multi-tenant invariant.
     """
+
     def __init__(self):
         # H-78: resolve_tenant_id() raises RuntimeError in production
         # if no tenant is set. We do NOT silently fall back to
@@ -76,10 +79,11 @@ def set_current_tenant(ctx):
     """
     set_tenant_context(ctx.tenant_id)
 
+
 class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, TenantMixin, SessionMixin):
     """
     Memoria inteligente para compensar las limitaciones de Qwen3-0.6B.
-    
+
     3 tipos de memoria:
     1. Semantic Cache: "Ya respondí esto antes" → bypass total
     2. Working Memory: "Estamos hablando de X" → contexto para Qwen
@@ -94,9 +98,9 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
         # Phase 5: Deterministic session ID instead of time.time()
         self._session_uuid_gen = DeterministicUUID("smart_memory_session")
         self._session_id = self._session_uuid_gen.next()[:8]
-        self._working_memory: List[MemoryEntry] = []
+        self._working_memory: list[MemoryEntry] = []
         self._working_lock = threading.Lock()
-        self._client_id = 'default'  # Brecha B: Multi-client isolation
+        self._client_id = "default"  # Brecha B: Multi-client isolation
         self._last_vacuum_time = 0.0  # Instance variable (was class var)
 
         # Phase 2: Tenant-aware initialization (H-78 fail-closed)
@@ -117,7 +121,7 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
 
     def set_client_id(self, client_id: str):
         """Brecha B: Set the client_id for multi-client isolation.
-        
+
         All subsequent DB operations will be scoped to this client.
         Validates that client_id is a non-empty string.
         """
@@ -161,9 +165,15 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
             cursor = conn.cursor()
             # Drop all tables
             for table in [
-                "semantic_cache", "working_memory", "long_term_memory",
-                "episodes", "patterns", "projects", "memory_episodes",
-                "memory_patterns", "memory_projects"
+                "semantic_cache",
+                "working_memory",
+                "long_term_memory",
+                "episodes",
+                "patterns",
+                "projects",
+                "memory_episodes",
+                "memory_patterns",
+                "memory_projects",
             ]:
                 try:
                     cursor.execute(f"DROP TABLE IF EXISTS {table}")
@@ -177,6 +187,7 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
             logger.info("SmartMemory: Database fully reset (all tables dropped and recreated)")
         except Exception as e:
             logger.warning("SmartMemory: Database reset failed: %s", e)
+
 
 # Re-export threading for the class
 import threading  # noqa: E402

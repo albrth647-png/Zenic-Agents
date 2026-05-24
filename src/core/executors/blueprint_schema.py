@@ -18,13 +18,14 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Optional YAML support
 try:
     import yaml as _yaml
+
     _HAS_YAML = True
 except ImportError:
     _HAS_YAML = False
@@ -34,40 +35,44 @@ except ImportError:
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ExecutorSchema:
     """Schema definition for a specific executor type within a Blueprint."""
-    executor_type: str                          # e.g., "email", "database", "notification"
-    required_fields: List[str] = field(default_factory=list)
-    optional_fields: List[str] = field(default_factory=list)
-    field_types: Dict[str, str] = field(default_factory=dict)   # field_name → type
-    field_defaults: Dict[str, Any] = field(default_factory=dict)
-    field_validators: Dict[str, str] = field(default_factory=dict)  # field_name → regex pattern
-    max_records: int = 0                        # 0 = unlimited
-    allowed_operations: List[str] = field(default_factory=list)
-    denied_operations: List[str] = field(default_factory=list)
-    rate_limits: Dict[str, int] = field(default_factory=dict)   # operation → max/hour
+
+    executor_type: str  # e.g., "email", "database", "notification"
+    required_fields: list[str] = field(default_factory=list)
+    optional_fields: list[str] = field(default_factory=list)
+    field_types: dict[str, str] = field(default_factory=dict)  # field_name → type
+    field_defaults: dict[str, Any] = field(default_factory=dict)
+    field_validators: dict[str, str] = field(default_factory=dict)  # field_name → regex pattern
+    max_records: int = 0  # 0 = unlimited
+    allowed_operations: list[str] = field(default_factory=list)
+    denied_operations: list[str] = field(default_factory=list)
+    rate_limits: dict[str, int] = field(default_factory=dict)  # operation → max/hour
 
 
 @dataclass
 class BusinessRule:
     """A domain-specific business rule enforced by the Blueprint."""
+
     name: str
     description: str
-    executor_type: str                          # Which executor this applies to
-    condition: str                              # Condition expression
-    action: str                                 # What to do when condition met
-    severity: str = "warning"                   # warning, error, block
+    executor_type: str  # Which executor this applies to
+    condition: str  # Condition expression
+    action: str  # What to do when condition met
+    severity: str = "warning"  # warning, error, block
 
 
 @dataclass
 class ActionTemplate:
     """A predefined action template within a Blueprint."""
+
     name: str
     description: str
     executor_type: str
-    config_template: Dict[str, Any] = field(default_factory=dict)
-    safety_category: str = "moderate"           # safe, moderate, destructive, financial
+    config_template: dict[str, Any] = field(default_factory=dict)
+    safety_category: str = "moderate"  # safe, moderate, destructive, financial
     requires_confirmation: bool = False
     requires_approval: bool = False
 
@@ -75,12 +80,13 @@ class ActionTemplate:
 @dataclass
 class BlueprintMetadata:
     """Metadata about a Blueprint."""
+
     name: str
     version: str = "1.0.0"
-    domain: str = ""                            # e.g., "retail", "manufacturing"
+    domain: str = ""  # e.g., "retail", "manufacturing"
     description: str = ""
     author: str = ""
-    signature: str = ""                         # ECDSA signature (future)
+    signature: str = ""  # ECDSA signature (future)
     created_at: float = 0.0
     updated_at: float = 0.0
 
@@ -92,31 +98,33 @@ class Blueprint:
     Defines schemas, rules, and templates for a specific domain.
     Executors consult their Blueprint before executing actions.
     """
+
     metadata: BlueprintMetadata
-    executor_schemas: Dict[str, ExecutorSchema] = field(default_factory=dict)
-    business_rules: List[BusinessRule] = field(default_factory=list)
-    action_templates: Dict[str, ActionTemplate] = field(default_factory=dict)
-    monitor_hooks: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    compatible_with: List[str] = field(default_factory=list)  # Other Blueprint names
+    executor_schemas: dict[str, ExecutorSchema] = field(default_factory=dict)
+    business_rules: list[BusinessRule] = field(default_factory=list)
+    action_templates: dict[str, ActionTemplate] = field(default_factory=dict)
+    monitor_hooks: dict[str, dict[str, Any]] = field(default_factory=dict)
+    compatible_with: list[str] = field(default_factory=list)  # Other Blueprint names
 
 
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT VALIDATOR
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintValidator:
     """Validates executor config against a Blueprint's schema."""
 
     @staticmethod
     def validate_config(
-        config: Dict[str, Any],
+        config: dict[str, Any],
         schema: ExecutorSchema,
-    ) -> List[str]:
+    ) -> list[str]:
         """Validate an executor config against a schema.
 
         Returns a list of validation errors (empty = valid).
         """
-        errors: List[str] = []
+        errors: list[str] = []
 
         # Check required fields
         for req_field in schema.required_fields:
@@ -131,8 +139,7 @@ class BlueprintValidator:
             type_valid = BlueprintValidator._check_type(value, expected_type)
             if not type_valid:
                 errors.append(
-                    f"Field '{field_name}' has wrong type: "
-                    f"expected {expected_type}, got {type(value).__name__}"
+                    f"Field '{field_name}' has wrong type: " f"expected {expected_type}, got {type(value).__name__}"
                 )
 
         # Check field validators (regex patterns)
@@ -141,25 +148,19 @@ class BlueprintValidator:
                 continue
             value = str(config[field_name])
             if not re.match(pattern, value):
-                errors.append(
-                    f"Field '{field_name}' failed validation pattern: {pattern}"
-                )
+                errors.append(f"Field '{field_name}' failed validation pattern: {pattern}")
 
         # Check denied operations
         operation = str(config.get("operation", "")).lower()
         if operation and schema.denied_operations:
             if operation in schema.denied_operations:
-                errors.append(
-                    f"Operation '{operation}' is denied by Blueprint schema"
-                )
+                errors.append(f"Operation '{operation}' is denied by Blueprint schema")
 
         # Check max records
         if schema.max_records > 0:
             params = config.get("params", [])
             if isinstance(params, (list, tuple)) and len(params) > schema.max_records:
-                errors.append(
-                    f"Too many records: {len(params)} > max {schema.max_records}"
-                )
+                errors.append(f"Too many records: {len(params)} > max {schema.max_records}")
 
         return errors
 
@@ -167,12 +168,18 @@ class BlueprintValidator:
     def _check_type(value: Any, expected: str) -> bool:
         """Check if a value matches an expected type string."""
         type_map = {
-            "str": str, "string": str,
-            "int": int, "integer": int,
-            "float": float, "number": (int, float),
-            "bool": bool, "boolean": bool,
-            "list": list, "array": list,
-            "dict": dict, "object": dict,
+            "str": str,
+            "string": str,
+            "int": int,
+            "integer": int,
+            "float": float,
+            "number": (int, float),
+            "bool": bool,
+            "boolean": bool,
+            "list": list,
+            "array": list,
+            "dict": dict,
+            "object": dict,
         }
         expected_type = type_map.get(expected.lower())
         if expected_type is None:
@@ -184,11 +191,12 @@ class BlueprintValidator:
 #  BLUEPRINT LOADER
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintLoader:
     """Loads and composes Blueprints from YAML/JSON files or dicts."""
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> Blueprint:
+    def from_dict(data: dict[str, Any]) -> Blueprint:
         """Create a Blueprint from a dictionary."""
         meta_data = data.get("metadata", {})
         metadata = BlueprintMetadata(
@@ -200,7 +208,7 @@ class BlueprintLoader:
         )
 
         # Parse executor schemas
-        executor_schemas: Dict[str, ExecutorSchema] = {}
+        executor_schemas: dict[str, ExecutorSchema] = {}
         for exec_type, schema_data in data.get("executors", {}).items():
             executor_schemas[exec_type] = ExecutorSchema(
                 executor_type=exec_type,
@@ -216,19 +224,21 @@ class BlueprintLoader:
             )
 
         # Parse business rules
-        business_rules: List[BusinessRule] = []
+        business_rules: list[BusinessRule] = []
         for rule_data in data.get("rules", []):
-            business_rules.append(BusinessRule(
-                name=rule_data.get("name", ""),
-                description=rule_data.get("description", ""),
-                executor_type=rule_data.get("executor_type", ""),
-                condition=rule_data.get("condition", ""),
-                action=rule_data.get("action", ""),
-                severity=rule_data.get("severity", "warning"),
-            ))
+            business_rules.append(
+                BusinessRule(
+                    name=rule_data.get("name", ""),
+                    description=rule_data.get("description", ""),
+                    executor_type=rule_data.get("executor_type", ""),
+                    condition=rule_data.get("condition", ""),
+                    action=rule_data.get("action", ""),
+                    severity=rule_data.get("severity", "warning"),
+                )
+            )
 
         # Parse action templates
-        action_templates: Dict[str, ActionTemplate] = {}
+        action_templates: dict[str, ActionTemplate] = {}
         for tmpl_name, tmpl_data in data.get("actions", {}).items():
             action_templates[tmpl_name] = ActionTemplate(
                 name=tmpl_name,
@@ -260,14 +270,14 @@ class BlueprintLoader:
     @staticmethod
     def from_file(filepath: str) -> Blueprint:
         """Load a Blueprint from a YAML or JSON file."""
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
         if filepath.endswith((".yaml", ".yml")):
             return BlueprintLoader.from_yaml(content)
         return BlueprintLoader.from_dict(json.loads(content))
 
     @staticmethod
-    def compose(blueprints: List[Blueprint]) -> Blueprint:
+    def compose(blueprints: list[Blueprint]) -> Blueprint:
         """Compose multiple Blueprints into one.
 
         Merges schemas, rules, and templates.
@@ -307,71 +317,74 @@ class BlueprintLoader:
 #  BUILT-IN BLUEPRINTS
 # ──────────────────────────────────────────────────────────────
 
+
 def get_default_blueprint() -> Blueprint:
     """Get the default (minimal safety) Blueprint."""
-    return BlueprintLoader.from_dict({
-        "metadata": {"name": "default", "domain": "general", "version": "1.0.0"},
-        "executors": {
-            "database": {
-                "required": ["operation"],
-                "denied_operations": ["drop", "truncate"],
-                "rate_limits": {"delete": 20, "update": 50, "insert": 100},
-            },
-            "email": {
-                "required": ["to", "subject", "body"],
-                "validators": {"to": r"^[^@]+@[^@]+\.[^@]+$"},
-                "rate_limits": {"send": 30},
-            },
-            "notification": {
-                "rate_limits": {"send": 60},
-            },
-            "file": {
-                "denied_operations": [],
-                "rate_limits": {"delete": 10, "write": 100},
-            },
-            "http": {
-                "rate_limits": {"POST": 50, "DELETE": 10},
-            },
-            "webhook": {
-                "required": ["url"],
-                "rate_limits": {"send": 30},
-            },
-            "discord": {
-                "rate_limits": {"send": 30},
-            },
-            "schedule": {
-                "rate_limits": {"add": 10},
-            },
-            "transform": {},
-        },
-        "rules": [
-            {
-                "name": "no_bulk_delete_without_confirm",
-                "description": "Bulk DELETE operations require confirmation",
-                "executor_type": "database",
-                "condition": "operation == 'delete' and record_count > 1",
-                "action": "require_confirmation",
-                "severity": "block",
-            },
-            {
-                "name": "financial_email_requires_approval",
-                "description": "Financial emails require approval",
-                "executor_type": "email",
-                "condition": "subject contains 'invoice' or 'payment'",
-                "action": "require_approval",
-                "severity": "block",
-            },
-        ],
-        "actions": {
-            "send_invoice": {
-                "description": "Send an invoice email",
-                "executor_type": "email",
-                "config": {
-                    "subject": "Invoice #{invoice_number}",
-                    "html": "<h1>Invoice</h1><p>Amount: {amount}</p>",
+    return BlueprintLoader.from_dict(
+        {
+            "metadata": {"name": "default", "domain": "general", "version": "1.0.0"},
+            "executors": {
+                "database": {
+                    "required": ["operation"],
+                    "denied_operations": ["drop", "truncate"],
+                    "rate_limits": {"delete": 20, "update": 50, "insert": 100},
                 },
-                "safety_category": "financial",
-                "requires_approval": True,
+                "email": {
+                    "required": ["to", "subject", "body"],
+                    "validators": {"to": r"^[^@]+@[^@]+\.[^@]+$"},
+                    "rate_limits": {"send": 30},
+                },
+                "notification": {
+                    "rate_limits": {"send": 60},
+                },
+                "file": {
+                    "denied_operations": [],
+                    "rate_limits": {"delete": 10, "write": 100},
+                },
+                "http": {
+                    "rate_limits": {"POST": 50, "DELETE": 10},
+                },
+                "webhook": {
+                    "required": ["url"],
+                    "rate_limits": {"send": 30},
+                },
+                "discord": {
+                    "rate_limits": {"send": 30},
+                },
+                "schedule": {
+                    "rate_limits": {"add": 10},
+                },
+                "transform": {},
             },
-        },
-    })
+            "rules": [
+                {
+                    "name": "no_bulk_delete_without_confirm",
+                    "description": "Bulk DELETE operations require confirmation",
+                    "executor_type": "database",
+                    "condition": "operation == 'delete' and record_count > 1",
+                    "action": "require_confirmation",
+                    "severity": "block",
+                },
+                {
+                    "name": "financial_email_requires_approval",
+                    "description": "Financial emails require approval",
+                    "executor_type": "email",
+                    "condition": "subject contains 'invoice' or 'payment'",
+                    "action": "require_approval",
+                    "severity": "block",
+                },
+            ],
+            "actions": {
+                "send_invoice": {
+                    "description": "Send an invoice email",
+                    "executor_type": "email",
+                    "config": {
+                        "subject": "Invoice #{invoice_number}",
+                        "html": "<h1>Invoice</h1><p>Amount: {amount}</p>",
+                    },
+                    "safety_category": "financial",
+                    "requires_approval": True,
+                },
+            },
+        }
+    )

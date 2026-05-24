@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from ..taxonomy import ExceptionCategory
 
@@ -28,13 +28,13 @@ class ExceptionPattern:
     first_seen: str = ""
     last_seen: str = ""
     trend: str = "stable"  # "increasing" | "stable" | "decreasing"
-    sample_messages: List[str] = field(default_factory=list)
+    sample_messages: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.pattern_id:
             self.pattern_id = f"pat-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "pattern_id": self.pattern_id,
@@ -54,15 +54,15 @@ class AnalyticsSnapshot:
     """Point-in-time aggregate view of exception analytics."""
 
     total_exceptions: int = 0
-    by_category: Dict[str, int] = field(default_factory=dict)
-    by_severity: Dict[str, int] = field(default_factory=dict)
-    by_source: Dict[str, int] = field(default_factory=dict)
-    top_patterns: List[ExceptionPattern] = field(default_factory=list)
+    by_category: dict[str, int] = field(default_factory=dict)
+    by_severity: dict[str, int] = field(default_factory=dict)
+    by_source: dict[str, int] = field(default_factory=dict)
+    top_patterns: list[ExceptionPattern] = field(default_factory=list)
     period_start: str = ""
     period_end: str = ""
     exception_rate_per_hour: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "total_exceptions": self.total_exceptions,
@@ -102,4 +102,12 @@ ON _zenic_analytics_signals(timestamp);
 CREATE INDEX IF NOT EXISTS idx_zenic_analytics_tenant
 ON _zenic_analytics_signals(tenant_id);
 """
-__all__ = ["AnalyticsSnapshot", "ExceptionPattern", "_BASE_DELAY", "_CREATE_INDEX_SQL", "_CREATE_TABLE_SQL", "_MAX_RETRIES", "logger"]
+__all__ = [
+    "_BASE_DELAY",
+    "_CREATE_INDEX_SQL",
+    "_CREATE_TABLE_SQL",
+    "_MAX_RETRIES",
+    "AnalyticsSnapshot",
+    "ExceptionPattern",
+    "logger",
+]

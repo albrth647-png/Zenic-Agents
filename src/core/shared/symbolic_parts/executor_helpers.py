@@ -69,20 +69,22 @@ class ExecutorHelpersMixin:
         elif isinstance(value_node, ast.Call):
             func_name = self._get_call_name(value_node)
             type_inference = {
-                "int": "int", "float": "float", "str": "str",
-                "bool": "bool", "list": "list", "dict": "dict",
-                "len": "int", "range": "list", "type": "type",
+                "int": "int",
+                "float": "float",
+                "str": "str",
+                "bool": "bool",
+                "list": "list",
+                "dict": "dict",
+                "len": "int",
+                "range": "list",
+                "type": "type",
             }
             var_type = type_inference.get(func_name, "any")
             # Check if calling a known function in our func_map
-            if func_name in getattr(self, '_func_map', {}):
+            if func_name in getattr(self, "_func_map", {}):
                 var_type = "return_type_of_func"
 
-        return SymbolicValue(
-            name=var_name,
-            var_type=var_type,
-            concrete=concrete
-        )
+        return SymbolicValue(name=var_name, var_type=var_type, concrete=concrete)
 
     def _try_eval_concrete(self, node, path):
         """Try to evaluate an AST node to a concrete Python value."""
@@ -123,7 +125,7 @@ class ExecutorHelpersMixin:
             func_name = self._get_call_name(node)
             if func_name == "len" and node.args:
                 inner = self._try_eval_concrete(node.args[0], path)
-                if inner is not None and hasattr(inner, '__len__'):
+                if inner is not None and hasattr(inner, "__len__"):
                     try:
                         return len(inner)
                     except TypeError:
@@ -149,13 +151,17 @@ class ExecutorHelpersMixin:
         if isinstance(test_node, ast.Compare):
             left = self._symbolize_expr(test_node.left, current_path)
             ops = {
-                ast.Eq: "==", ast.NotEq: "!=",
-                ast.Lt: "<", ast.LtE: "<=",
-                ast.Gt: ">", ast.GtE: ">=",
-                ast.Is: "is", ast.IsNot: "is_not",
+                ast.Eq: "==",
+                ast.NotEq: "!=",
+                ast.Lt: "<",
+                ast.LtE: "<=",
+                ast.Gt: ">",
+                ast.GtE: ">=",
+                ast.Is: "is",
+                ast.IsNot: "is_not",
             }
             right_parts = []
-            for op, comp in zip(test_node.ops, test_node.comparators):
+            for op, comp in zip(test_node.ops, test_node.comparators, strict=False):
                 op_str = ops.get(type(op), "?")
                 right = self._symbolize_expr(comp, current_path)
                 right_parts.append(f"{left}{op_str}{right}")
@@ -200,8 +206,12 @@ class ExecutorHelpersMixin:
             left = self._symbolize_expr(node.left, current_path)
             right = self._symbolize_expr(node.right, current_path)
             op_map = {
-                ast.Add: "+", ast.Sub: "-", ast.Mult: "*", ast.Div: "/",
-                ast.Mod: "%", ast.FloorDiv: "//",
+                ast.Add: "+",
+                ast.Sub: "-",
+                ast.Mult: "*",
+                ast.Div: "/",
+                ast.Mod: "%",
+                ast.FloorDiv: "//",
             }
             op_str = op_map.get(type(node.op), "?")
             return f"({left}{op_str}{right})"
@@ -236,14 +246,14 @@ class ExecutorHelpersMixin:
         for node in ast.walk(ast.Module(body=body, type_ignores=[])):
             if isinstance(node, ast.Call):
                 call_name = self._get_call_name(node)
-                base_name = call_name.split('.')[-1] if '.' in call_name else call_name
+                base_name = call_name.split(".")[-1] if "." in call_name else call_name
                 if base_name in self.IO_OPERATIONS:
                     path.is_pruned = True
                     # Mockear I/O: agregar variable simbolica
                     path.variables[f"_mocked_{call_name}"] = SymbolicValue(
                         name=f"_mocked_{call_name}",
                         var_type="mocked_io",
-                        constraint=lambda x: True  # Asumimos resultado valido
+                        constraint=lambda x: True,  # Asumimos resultado valido
                     )
                     break
         return path

@@ -24,11 +24,10 @@ Con resiliencia:
   - Auditoría de todas las decisiones
 """
 
+from ._fallbacks import FallbackMethodsMixin
 from ._lifecycle import ModelLifecycleMixin
 from ._tasks import BoundedTasksMixin
-from ._fallbacks import FallbackMethodsMixin
 from ._verdict_mixin import VerdictMixin
-from typing import Optional
 
 
 class MiniAIEngine(ModelLifecycleMixin, BoundedTasksMixin, FallbackMethodsMixin, VerdictMixin):
@@ -54,6 +53,6 @@ class MiniAIEngine(ModelLifecycleMixin, BoundedTasksMixin, FallbackMethodsMixin,
     - Los agentes que usaban _call_llm() siguen funcionando
     """
 
-    def __init__(self, model_path: Optional[str] = None, auto_load: bool = True):
+    def __init__(self, model_path: str | None = None, auto_load: bool = True):
         self._init_lifecycle(model_path=model_path, auto_load=auto_load)
         self._init_verdict()

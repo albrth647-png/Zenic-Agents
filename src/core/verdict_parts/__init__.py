@@ -21,33 +21,67 @@ Principio: La IA nunca genera, nunca clasifica, nunca valida.
 La IA solo responde una pregunta binaria cuando el sistema determinístico no puede.
 """
 
-from .types import (
-    Verdict, Evidence, EvidenceType, VerdictInput, VerdictOutput,
-    ConsensusResult, DeterministicResult, VerdictConfidence,
-)
-from .evidence_collector import EvidenceCollector
 from .consensus_resolver import ConsensusResolver
 from .deterministic_pipeline import DeterministicPipeline
+from .evidence_collector import EvidenceCollector
+from .types import (
+    ConsensusResult,
+    DeterministicResult,
+    Evidence,
+    EvidenceType,
+    Verdict,
+    VerdictConfidence,
+    VerdictInput,
+    VerdictOutput,
+)
 from .verdict_engine import VerdictEngine
 
 # v17.1: Resilience patterns
 try:
     from .resilience import (
-        VerdictCircuitBreaker, VerdictCircuitState,
-        VerdictRetryConfig,
-        VerdictHealthMonitor, VerdictHealthSnapshot,
-        VerdictAuditor, VerdictAuditEntry,
+        VerdictAuditEntry,
+        VerdictAuditor,
+        VerdictCircuitBreaker,
+        VerdictCircuitState,
+        VerdictHealthMonitor,
+        VerdictHealthSnapshot,
         VerdictResilienceOrchestrator,
+        VerdictRetryConfig,
     )
+
     _RESILIENCE_EXPORTS = [
-        "VerdictCircuitBreaker", "VerdictCircuitState",
+        "VerdictCircuitBreaker",
+        "VerdictCircuitState",
         "VerdictRetryConfig",
-        "VerdictHealthMonitor", "VerdictHealthSnapshot",
-        "VerdictAuditor", "VerdictAuditEntry",
+        "VerdictHealthMonitor",
+        "VerdictHealthSnapshot",
+        "VerdictAuditor",
+        "VerdictAuditEntry",
         "VerdictResilienceOrchestrator",
     ]
 except ImportError:
     _RESILIENCE_EXPORTS = []
 
-__all__ = ["Verdict", "Evidence", "EvidenceType", "VerdictInput", "VerdictOutput", "ConsensusResult", "DeterministicResult", "VerdictConfidence", "EvidenceCollector", "ConsensusResolver", "DeterministicPipeline", "VerdictEngine", "VerdictCircuitBreaker", "VerdictCircuitState", "VerdictRetryConfig", "VerdictHealthMonitor", "VerdictHealthSnapshot", "VerdictAuditor", "VerdictAuditEntry", "VerdictResilienceOrchestrator"]
+__all__ = [
+    "ConsensusResolver",
+    "ConsensusResult",
+    "DeterministicPipeline",
+    "DeterministicResult",
+    "Evidence",
+    "EvidenceCollector",
+    "EvidenceType",
+    "Verdict",
+    "VerdictAuditEntry",
+    "VerdictAuditor",
+    "VerdictCircuitBreaker",
+    "VerdictCircuitState",
+    "VerdictConfidence",
+    "VerdictEngine",
+    "VerdictHealthMonitor",
+    "VerdictHealthSnapshot",
+    "VerdictInput",
+    "VerdictOutput",
+    "VerdictResilienceOrchestrator",
+    "VerdictRetryConfig",
+]
 __all__.extend(_RESILIENCE_EXPORTS)  # type: ignore[misc]

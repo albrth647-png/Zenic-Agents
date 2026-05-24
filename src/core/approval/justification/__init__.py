@@ -5,15 +5,14 @@ Ensures that every approval or rejection is accompanied by a mandatory
 justification. The justification requirements vary by priority level.
 """
 
-from ._types import JustificationRequirement, ApprovalJustification, _MAX_RETRIES, _RETRY_DELAY
-from ._mixin_core import JustificationManager
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_justification_instance: Optional[JustificationManager] = None
+from ._mixin_core import JustificationManager
+from ._types import _MAX_RETRIES, _RETRY_DELAY, ApprovalJustification, JustificationRequirement
+
+_justification_instance: JustificationManager | None = None
 _justification_lock = threading.Lock()
 
 
@@ -34,4 +33,12 @@ def reset_justification_manager() -> None:
     _justification_instance = None
 
 
-__all__ = ["JustificationRequirement", "ApprovalJustification", "JustificationManager", "get_justification_manager", "reset_justification_manager", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = [
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "ApprovalJustification",
+    "JustificationManager",
+    "JustificationRequirement",
+    "get_justification_manager",
+    "reset_justification_manager",
+]

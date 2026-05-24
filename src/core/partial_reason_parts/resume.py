@@ -3,7 +3,7 @@
 import gc
 import time
 
-from ._imports import get_projects_dir, SubtaskDescriptor, OperationType, GoalType
+from ._imports import GoalType, OperationType, SubtaskDescriptor, get_projects_dir
 
 
 class ResumeMixin:
@@ -55,17 +55,19 @@ class ResumeMixin:
                 subtasks.append(st)
             elif isinstance(st, dict):
                 # Deserialize from dict (e.g., from JSON)
-                subtasks.append(SubtaskDescriptor(
-                    message=st.get("message", ""),
-                    target=st.get("target", ""),
-                    operation=st.get("operation", ""),
-                    goal=st.get("goal", ""),
-                    solver_insights=st.get("solver_insights", {}),
-                    mcts_hints=st.get("mcts_hints", []),
-                    parent_violations=st.get("parent_violations", []),
-                    parent_context=st.get("parent_context", {}),
-                    depth=st.get("depth", 0),
-                ))
+                subtasks.append(
+                    SubtaskDescriptor(
+                        message=st.get("message", ""),
+                        target=st.get("target", ""),
+                        operation=st.get("operation", ""),
+                        goal=st.get("goal", ""),
+                        solver_insights=st.get("solver_insights", {}),
+                        mcts_hints=st.get("mcts_hints", []),
+                        parent_violations=st.get("parent_violations", []),
+                        parent_context=st.get("parent_context", {}),
+                        depth=st.get("depth", 0),
+                    )
+                )
             elif isinstance(st, str):
                 # Legacy string subtask
                 subtasks.append(SubtaskDescriptor(message=st))
@@ -74,6 +76,7 @@ class ResumeMixin:
 
         # Reconstruct intent
         from src.core.shared.contracts import IntentPayload
+
         intent = IntentPayload(
             op=original_intent_data.get("op", OperationType.SEARCH),
             target=original_intent_data.get("target", "unknown"),
@@ -101,8 +104,7 @@ class ResumeMixin:
         if not indices_to_run:
             # All subtasks already succeeded; just combine and validate
             return await self._resume_all_succeeded(
-                orch, resumption_token, partial_code, previous_results,
-                intent, start_time
+                orch, resumption_token, partial_code, previous_results, intent, start_time
             )
 
         # Execute remaining subtasks with enriched context
@@ -132,8 +134,7 @@ class ResumeMixin:
 
         if combined_code:
             return await self._resume_with_code(
-                orch, resumption_token, intent, combined_code, new_results,
-                indices_to_run, resume_workspace, start_time
+                orch, resumption_token, intent, combined_code, new_results, indices_to_run, resume_workspace, start_time
             )
 
         elapsed = int((time.time() - start_time) * 1000)
@@ -148,18 +149,16 @@ class ResumeMixin:
             "resumption": {
                 "token": resumption_token,
                 "completed_subtasks": sum(
-                    1 for r in new_results
-                    if isinstance(r, dict) and r.get("status") in ("SUCCESS", "CACHED")
+                    1 for r in new_results if isinstance(r, dict) and r.get("status") in ("SUCCESS", "CACHED")
                 ),
                 "total_subtasks": len(new_results),
             },
         }
 
-    async def _resume_all_succeeded(self, orch, resumption_token, partial_code,
-                                     previous_results, intent, start_time):
+    async def _resume_all_succeeded(self, orch, resumption_token, partial_code, previous_results, intent, start_time):
         """Handle resume when all subtasks already succeeded."""
-        combined_code = partial_code if partial_code else orch._abortive.merge_subtask_results(
-            previous_results, intent.language
+        combined_code = (
+            partial_code if partial_code else orch._abortive.merge_subtask_results(previous_results, intent.language)
         )
         if combined_code:
             resume_workspace = orch._isolation_manager.create_workspace(ttl_seconds=120)
@@ -173,8 +172,10 @@ class ResumeMixin:
                     orch._pending_resumptions.pop(resumption_token, None)
                 elapsed = int((time.time() - start_time) * 1000)
                 return {
-                    "status": "SUCCESS", "code": combined_code,
-                    "hash": node.hash_sha256[:12], "error": "",
+                    "status": "SUCCESS",
+                    "code": combined_code,
+                    "hash": node.hash_sha256[:12],
+                    "error": "",
                     "processing_time_ms": elapsed,
                     "explanations": ["Resumed partial reasoning: all subtasks completed successfully."],
                 }
@@ -190,8 +191,9 @@ class ResumeMixin:
             "processing_time_ms": elapsed,
         }
 
-    async def _resume_with_code(self, orch, resumption_token, intent, combined_code,
-                                 new_results, indices_to_run, resume_workspace, start_time):
+    async def _resume_with_code(
+        self, orch, resumption_token, intent, combined_code, new_results, indices_to_run, resume_workspace, start_time
+    ):
         """Handle resume when combined code is available."""
         p_dir = str(get_projects_dir())
         orch.ledger.snapshot(intent.target, p_dir, workspace=resume_workspace)
@@ -199,9 +201,9 @@ class ResumeMixin:
 
         if trial.status == "PASS" and combined_code:
             node = orch.ledger.commit(intent.target, combined_code, p_dir, workspace=resume_workspace)
-            orch.cache.save(intent, "PROVEN",
-                          {"h": node.hash_sha256[:8], "code": combined_code},
-                          combined_code, intent.language)
+            orch.cache.save(
+                intent, "PROVEN", {"h": node.hash_sha256[:8], "code": combined_code}, combined_code, intent.language
+            )
             elapsed = int((time.time() - start_time) * 1000)
 
             # Remove resumption state since we succeeded
@@ -237,14 +239,15 @@ class ResumeMixin:
                 "status": "PARTIAL_REASONING",
                 "code": combined_code,
                 "hash": "N/A",
-                "error": trial.error_message if hasattr(trial, 'error_message') else "Sandbox validation failed after resume",
+                "error": trial.error_message
+                if hasattr(trial, "error_message")
+                else "Sandbox validation failed after resume",
                 "processing_time_ms": elapsed,
                 "subtasks": new_results,
                 "resumption": {
                     "token": resumption_token,
                     "completed_subtasks": sum(
-                        1 for r in new_results
-                        if isinstance(r, dict) and r.get("status") in ("SUCCESS", "CACHED")
+                        1 for r in new_results if isinstance(r, dict) and r.get("status") in ("SUCCESS", "CACHED")
                     ),
                     "total_subtasks": len(new_results),
                 },
@@ -252,5 +255,5 @@ class ResumeMixin:
                     f"Resumed partial reasoning: {len(indices_to_run)} subtasks re-executed.",
                     "Combined result still fails sandbox validation.",
                 ],
-                "warnings": trial.warnings if hasattr(trial, 'warnings') else [],
+                "warnings": trial.warnings if hasattr(trial, "warnings") else [],
             }

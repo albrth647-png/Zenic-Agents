@@ -1,21 +1,24 @@
 """Core logic for engine."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from .types import ContextWindow, MemoryRecord, MemoryTier, MemoryType
+from typing import Any
+
 from ._mixin_query import MemoryQueryMixin
+from .types import ContextWindow, MemoryRecord, MemoryTier, MemoryType
 
 logger = logging.getLogger(__name__)
+
 
 class MemoryEngineV2(MemoryQueryMixin):
     """Thread-safe hierarchical memory engine with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
         self._db_path = db_path or str(DB_PATH)  # noqa: F821
         self._init_db()
@@ -57,9 +60,9 @@ class MemoryEngineV2(MemoryQueryMixin):
         tier: MemoryTier = MemoryTier.SHORT_TERM,
         mem_type: MemoryType = MemoryType.CONVERSATION,
         session_id: str = "",
-        user_id: Optional[int] = None,
+        user_id: int | None = None,
         importance: float = 0.5,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         if not content.strip():
             return ""
@@ -75,6 +78,7 @@ class MemoryEngineV2(MemoryQueryMixin):
             expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
 
         with self._lock:
+
             def _insert() -> None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -85,9 +89,18 @@ class MemoryEngineV2(MemoryQueryMixin):
                             last_accessed, expires_at, metadata, embedding_hash)
                            VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1.0, ?, ?, ?, ?, ?)""",
                         (
-                            record_id, tier.value, mem_type.value, content,
-                            session_id, user_id, importance, now, now,
-                            expires, meta_json, ehash,
+                            record_id,
+                            tier.value,
+                            mem_type.value,
+                            content,
+                            session_id,
+                            user_id,
+                            importance,
+                            now,
+                            now,
+                            expires,
+                            meta_json,
+                            ehash,
                         ),
                     )
                     conn.commit()
@@ -97,9 +110,10 @@ class MemoryEngineV2(MemoryQueryMixin):
             _retry(_insert)  # noqa: F821
         return record_id
 
-    def retrieve(self, record_id: str) -> Optional[MemoryRecord]:
+    def retrieve(self, record_id: str) -> MemoryRecord | None:
         with self._lock:
-            def _fetch() -> Optional[MemoryRecord]:
+
+            def _fetch() -> MemoryRecord | None:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -122,6 +136,7 @@ class MemoryEngineV2(MemoryQueryMixin):
 
     def promote(self, record_id: str, target_tier: MemoryTier) -> bool:
         with self._lock:
+
             def _promote() -> bool:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -140,9 +155,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                     expires = None
                     if target_tier == MemoryTier.SHORT_TERM:
                         expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
-                    elif target_tier == MemoryTier.LONG_TERM:
-                        expires = None
-                    elif target_tier == MemoryTier.PERMANENT:
+                    elif target_tier == MemoryTier.LONG_TERM or target_tier == MemoryTier.PERMANENT:
                         expires = None
 
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -161,6 +174,7 @@ class MemoryEngineV2(MemoryQueryMixin):
         demoted = 0
 
         with self._lock:
+
             def _apply_decay() -> int:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -189,10 +203,9 @@ class MemoryEngineV2(MemoryQueryMixin):
             demoted = _retry(_apply_decay)  # noqa: F821
         return demoted
 
-    def build_context_window(
-        self, session_id: str, max_tokens: int = 4096
-    ) -> ContextWindow:
+    def build_context_window(self, session_id: str, max_tokens: int = 4096) -> ContextWindow:
         with self._lock:
+
             def _build() -> ContextWindow:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -205,7 +218,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 finally:
                     conn.close()
 
-                selected: List[MemoryRecord] = []
+                selected: list[MemoryRecord] = []
                 token_count = 0
                 for rec in all_records:
                     est_tokens = len(rec.content.split()) * 1.3
@@ -228,11 +241,12 @@ class MemoryEngineV2(MemoryQueryMixin):
 
             return _retry(_build)  # noqa: F821  # TODO: Phase3 - verify import
 
-    def consolidate(self, session_id: str) -> Dict[str, int]:
-        stats: Dict[str, int] = {"merged": 0, "promoted": 0, "removed": 0}
+    def consolidate(self, session_id: str) -> dict[str, int]:
+        stats: dict[str, int] = {"merged": 0, "promoted": 0, "removed": 0}
 
         with self._lock:
-            def _consolidate() -> Dict[str, int]:
+
+            def _consolidate() -> dict[str, int]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -244,7 +258,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 finally:
                     conn.close()
 
-                hash_groups: Dict[str, List[MemoryRecord]] = {}
+                hash_groups: dict[str, list[MemoryRecord]] = {}
                 for rec in records:
                     hash_groups.setdefault(rec.embedding_hash, []).append(rec)
 
@@ -274,7 +288,7 @@ class MemoryEngineV2(MemoryQueryMixin):
         with self._lock:
             return self._delete_record(conn=None, record_id=record_id)
 
-    def _delete_record(self, conn: Optional[sqlite3.Connection], record_id: str) -> bool:
+    def _delete_record(self, conn: sqlite3.Connection | None, record_id: str) -> bool:
         own_conn = conn is None
         if own_conn:
             conn = sqlite3.connect(self._db_path)

@@ -25,21 +25,23 @@ No external dependencies beyond Python stdlib.
 
 import enum
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
 __all__ = [
+    "SagaContext",
     "SagaStatus",
     "SagaStep",
-    "SagaContext",
 ]
 
 
 # ============================================================
 #  SAGA STATUS
 # ============================================================
+
 
 class SagaStatus(str, enum.Enum):
     """
@@ -50,6 +52,7 @@ class SagaStatus(str, enum.Enum):
                           |-> COMPENSATING -> COMPENSATED
                                             |-> FAILED
     """
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -61,6 +64,7 @@ class SagaStatus(str, enum.Enum):
 # ============================================================
 #  SAGA STEP
 # ============================================================
+
 
 @dataclass
 class SagaStep:
@@ -79,10 +83,11 @@ class SagaStep:
                 compensation) exceeds this duration, it is considered
                 failed.
     """
+
     name: str
     action: Callable[[Any], Any]
-    compensation: Optional[Callable[[Any], Any]] = None
-    timeout: Optional[float] = None
+    compensation: Callable[[Any], Any] | None = None
+    timeout: float | None = None
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -94,6 +99,7 @@ class SagaStep:
 # ============================================================
 #  SAGA CONTEXT
 # ============================================================
+
 
 class SagaContext:
     """
@@ -115,16 +121,16 @@ class SagaContext:
         ctx.has("user_id")  # True
     """
 
-    def __init__(self, saga_id: str, steps: Optional[List[SagaStep]] = None) -> None:
+    def __init__(self, saga_id: str, steps: list[SagaStep] | None = None) -> None:
         if not saga_id:
             raise ValueError("saga_id must not be empty")
 
         self.saga_id: str = saga_id
-        self._state: Dict[str, Any] = {}
-        self.results: Dict[str, Any] = {}
-        self.errors: List[str] = []
-        self._steps: List[SagaStep] = steps or []
-        self._completed_steps: List[SagaStep] = []
+        self._state: dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
+        self.errors: list[str] = []
+        self._steps: list[SagaStep] = steps or []
+        self._completed_steps: list[SagaStep] = []
 
     def set(self, key: str, value: Any) -> None:
         """
@@ -162,7 +168,7 @@ class SagaContext:
         return key in self._state
 
     @property
-    def state(self) -> Dict[str, Any]:
+    def state(self) -> dict[str, Any]:
         """Read-only snapshot of the current context state."""
         return dict(self._state)
 
@@ -178,7 +184,7 @@ class SagaContext:
         self._completed_steps.append(step)
 
     @property
-    def completed_steps(self) -> List[SagaStep]:
+    def completed_steps(self) -> list[SagaStep]:
         """
         Steps that completed successfully, in execution order.
 
@@ -194,4 +200,3 @@ class SagaContext:
             error: Error message string.
         """
         self.errors.append(error)
-

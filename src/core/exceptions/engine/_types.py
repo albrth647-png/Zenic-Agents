@@ -6,7 +6,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..taxonomy import ExceptionCategory, ExceptionSeverity
 
@@ -26,7 +26,7 @@ class ExceptionSignal:
     category: ExceptionCategory = ExceptionCategory.SYSTEM_ERROR
     severity: ExceptionSeverity = ExceptionSeverity.ERROR
     message: str = ""
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     timestamp: str = ""
 
     def __post_init__(self) -> None:
@@ -35,7 +35,7 @@ class ExceptionSignal:
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "signal_id": self.signal_id,
@@ -53,7 +53,7 @@ class ExceptionRecord:
     """A persisted record linking a signal to its routing outcome."""
 
     record_id: str = ""
-    signal: Optional[ExceptionSignal] = None
+    signal: ExceptionSignal | None = None
     routing_action: str = ""
     resolved: bool = False
     resolved_at: str = ""
@@ -63,7 +63,7 @@ class ExceptionRecord:
         if not self.record_id:
             self.record_id = f"rec-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "record_id": self.record_id,
@@ -109,4 +109,12 @@ ON _zenic_exceptions(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_zenic_exc_resolved
 ON _zenic_exceptions(resolved);
 """
-__all__ = ["ExceptionRecord", "ExceptionSignal", "_BASE_DELAY", "_CREATE_INDEX_SQL", "_CREATE_TABLE_SQL", "_MAX_RETRIES", "logger"]
+__all__ = [
+    "_BASE_DELAY",
+    "_CREATE_INDEX_SQL",
+    "_CREATE_TABLE_SQL",
+    "_MAX_RETRIES",
+    "ExceptionRecord",
+    "ExceptionSignal",
+    "logger",
+]

@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class VoiceFormat(str, Enum):
 @dataclass
 class VoiceMessage:
     """Mensaje de voz entrante."""
+
     channel: str  # "whatsapp", "telegram"
     sender: str
     file_url: str
@@ -39,6 +40,7 @@ class VoiceMessage:
 @dataclass
 class VoiceResult:
     """Resultado del pipeline de voz."""
+
     success: bool
     text: str = ""
     language: str = ""

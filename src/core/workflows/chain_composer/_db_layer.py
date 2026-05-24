@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # ── Schema creation ───────────────────────────────────────
 
+
 def init_db(db_path: str = _DB_PATH) -> None:
     """Create the chains tables if they do not exist."""
     with sqlite3.connect(db_path) as conn:
@@ -63,22 +64,25 @@ def init_db(db_path: str = _DB_PATH) -> None:
 
 # ── Serialization helpers ─────────────────────────────────
 
+
 def serialize_steps(steps: list[ChainStep]) -> str:
     """Serialize a list of ChainStep to JSON string."""
     from ._types import ChainStepType as _CST
 
-    return json.dumps([
-        {
-            "step_id": s.step_id,
-            "step_type": s.step_type.value if isinstance(s.step_type, _CST) else s.step_type,
-            "config": s.config,
-            "next_step_id": s.next_step_id,
-            "condition_expr": s.condition_expr,
-            "timeout_ms": s.timeout_ms,
-            "retry_count": s.retry_count,
-        }
-        for s in steps
-    ])
+    return json.dumps(
+        [
+            {
+                "step_id": s.step_id,
+                "step_type": s.step_type.value if isinstance(s.step_type, _CST) else s.step_type,
+                "config": s.config,
+                "next_step_id": s.next_step_id,
+                "condition_expr": s.condition_expr,
+                "timeout_ms": s.timeout_ms,
+                "retry_count": s.retry_count,
+            }
+            for s in steps
+        ]
+    )
 
 
 def deserialize_steps(raw: list[dict[str, Any]]) -> list[ChainStep]:
@@ -92,19 +96,22 @@ def deserialize_steps(raw: list[dict[str, Any]]) -> list[ChainStep]:
             step_type = _CST(step_type_raw)
         except ValueError:
             step_type = _CST.ACTION
-        result.append(ChainStep(
-            step_id=s.get("step_id", ""),
-            step_type=step_type,
-            config=s.get("config", {}),
-            next_step_id=s.get("next_step_id", ""),
-            condition_expr=s.get("condition_expr", ""),
-            timeout_ms=s.get("timeout_ms", 30000),
-            retry_count=s.get("retry_count", 3),
-        ))
+        result.append(
+            ChainStep(
+                step_id=s.get("step_id", ""),
+                step_type=step_type,
+                config=s.get("config", {}),
+                next_step_id=s.get("next_step_id", ""),
+                condition_expr=s.get("condition_expr", ""),
+                timeout_ms=s.get("timeout_ms", 30000),
+                retry_count=s.get("retry_count", 3),
+            )
+        )
     return result
 
 
 # ── Load chains from DB ───────────────────────────────────
+
 
 def load_chains(db_path: str = _DB_PATH) -> dict[str, ComposedChain]:
     """Load persisted chains from SQLite and return as a dict."""
@@ -112,8 +119,7 @@ def load_chains(db_path: str = _DB_PATH) -> dict[str, ComposedChain]:
 
     with sqlite3.connect(db_path) as conn:
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            "SELECT chain_id, name, description, steps, metadata, "
-            "tenant_id, created_at, status FROM composed_chains"
+            "SELECT chain_id, name, description, steps, metadata, " "tenant_id, created_at, status FROM composed_chains"
         ).fetchall()
 
     for row in rows:
@@ -137,6 +143,7 @@ def load_chains(db_path: str = _DB_PATH) -> dict[str, ComposedChain]:
 
 
 # ── Save chain to DB ──────────────────────────────────────
+
 
 def save_chain(chain: ComposedChain, db_path: str = _DB_PATH) -> None:
     """Persist a single chain to SQLite."""
@@ -164,6 +171,7 @@ def save_chain(chain: ComposedChain, db_path: str = _DB_PATH) -> None:
 
 # ── Log execution ─────────────────────────────────────────
 
+
 def log_execution(result: ChainExecutionResult, db_path: str = _DB_PATH) -> None:
     """Record execution result to DB."""
     execution_id = f"exec_{uuid.uuid4().hex[:12]}"
@@ -179,17 +187,19 @@ def log_execution(result: ChainExecutionResult, db_path: str = _DB_PATH) -> None
                 execution_id,
                 result.chain_id,
                 1 if result.success else 0,
-                json.dumps([
-                    {
-                        "step_id": sr.step_id,
-                        "success": sr.success,
-                        "output": sr.output,
-                        "duration_ms": sr.duration_ms,
-                        "retry_count": sr.retry_count,
-                        "error": sr.error,
-                    }
-                    for sr in result.step_results
-                ]),
+                json.dumps(
+                    [
+                        {
+                            "step_id": sr.step_id,
+                            "success": sr.success,
+                            "output": sr.output,
+                            "duration_ms": sr.duration_ms,
+                            "retry_count": sr.retry_count,
+                            "error": sr.error,
+                        }
+                        for sr in result.step_results
+                    ]
+                ),
                 result.total_duration_ms,
                 result.failed_step,
                 result.error,

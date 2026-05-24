@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from ..base import ActionResult
 from ._incident_mixin import _IncidentOpsMixin
@@ -20,8 +20,8 @@ class _OperationsMixin(_IncidentOpsMixin):
 
     async def _add_comment(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Add a comment (journal entry) to a ServiceNow incident.
@@ -49,7 +49,7 @@ class _OperationsMixin(_IncidentOpsMixin):
             )
 
         # ServiceNow: comments are added via the `comments` field on the incident
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "comments": comment,
         }
 
@@ -85,7 +85,8 @@ class _OperationsMixin(_IncidentOpsMixin):
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
             "ServiceNowExecutor: add_comment failed for %s — %s",
-            incident_id, error_msg,
+            incident_id,
+            error_msg,
         )
         return ActionResult(
             success=False,
@@ -96,8 +97,8 @@ class _OperationsMixin(_IncidentOpsMixin):
 
     async def _create_change_request(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Create a new ServiceNow change request.
@@ -117,7 +118,7 @@ class _OperationsMixin(_IncidentOpsMixin):
                 duration_ms=self._elapsed_ms(start),
             )
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "short_description": short_desc,
         }
 
@@ -143,7 +144,8 @@ class _OperationsMixin(_IncidentOpsMixin):
             change_number = result_data.get("number", "unknown")
             logger.info(
                 "ServiceNowExecutor: created change request %s (sys_id=%s)",
-                change_number, result_data.get("sys_id", ""),
+                change_number,
+                result_data.get("sys_id", ""),
             )
             return ActionResult(
                 success=True,
@@ -158,7 +160,8 @@ class _OperationsMixin(_IncidentOpsMixin):
 
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
-            "ServiceNowExecutor: create_change_request failed — %s", error_msg,
+            "ServiceNowExecutor: create_change_request failed — %s",
+            error_msg,
         )
         return ActionResult(
             success=False,

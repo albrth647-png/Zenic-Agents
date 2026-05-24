@@ -20,7 +20,7 @@ Usage::
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # ============================================================
 #  MIDDLEWARE CONTEXT
 # ============================================================
-
 
 
 class _MiddlewareContext:
@@ -47,23 +46,29 @@ class _MiddlewareContext:
     """
 
     __slots__ = (
-        "action_name", "args", "kwargs", "result", "error",
-        "metadata", "start_time", "end_time",
+        "action_name",
+        "args",
+        "end_time",
+        "error",
+        "kwargs",
+        "metadata",
+        "result",
+        "start_time",
     )
 
     def __init__(
         self,
         action_name: str,
         args: tuple = (),
-        kwargs: Optional[dict] = None,
-        metadata: Optional[dict] = None,
+        kwargs: dict | None = None,
+        metadata: dict | None = None,
     ) -> None:
         self.action_name = action_name
         self.args = args
         self.kwargs = kwargs or {}
         self.result: Any = None
-        self.error: Optional[Exception] = None
-        self.metadata: Dict[str, Any] = dict(metadata or {})
+        self.error: Exception | None = None
+        self.metadata: dict[str, Any] = dict(metadata or {})
         self.start_time: float = 0.0
         self.end_time: float = 0.0
 

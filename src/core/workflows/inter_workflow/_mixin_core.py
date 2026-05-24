@@ -1,6 +1,7 @@
 """Core logic for inter_workflow."""
 
 from __future__ import annotations
+
 import json
 import logging
 import os
@@ -11,6 +12,7 @@ import uuid
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class InterWorkflowHandoff:
     """Manages handoff rules and execution between workflow chains.
@@ -157,7 +159,9 @@ class InterWorkflowHandoff:
             self._save_rule(rule)
             logger.info(
                 "Registered handoff %s: %s → %s",
-                handoff_id, source_chain_id, target_chain_id,
+                handoff_id,
+                source_chain_id,
+                target_chain_id,
             )
             return handoff_id
 
@@ -169,7 +173,9 @@ class InterWorkflowHandoff:
                 return False
             del self._rules[handoff_id]
             with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
-                conn.execute("DELETE FROM handoff_rules WHERE handoff_id=?", (handoff_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+                conn.execute(
+                    "DELETE FROM handoff_rules WHERE handoff_id=?", (handoff_id,)
+                )  # nosemgrep: sqlalchemy-execute-raw-query
                 conn.commit()
             logger.info("Unregistered handoff %s", handoff_id)
             return True
@@ -205,10 +211,7 @@ class InterWorkflowHandoff:
         results: list[HandoffResult] = []  # noqa: F821
 
         with self._lock:
-            matching_rules = [
-                r for r in self._rules.values()
-                if r.source_chain_id == source_chain_id and r.enabled
-            ]
+            matching_rules = [r for r in self._rules.values() if r.source_chain_id == source_chain_id and r.enabled]
 
         if not matching_rules:
             logger.debug("No enabled handoff rules for source chain %s", source_chain_id)
@@ -218,7 +221,9 @@ class InterWorkflowHandoff:
             # Evaluate condition
             if rule.condition and not _safe_eval_condition(rule.condition, source_output):  # noqa: F821
                 logger.debug(
-                    "Handoff %s condition not met: %s", rule.handoff_id, rule.condition,
+                    "Handoff %s condition not met: %s",
+                    rule.handoff_id,
+                    rule.condition,
                 )
                 continue
 
@@ -236,7 +241,9 @@ class InterWorkflowHandoff:
 
             if mapping_errors:
                 logger.warning(
-                    "Handoff %s mapping issues: %s", rule.handoff_id, "; ".join(mapping_errors),
+                    "Handoff %s mapping issues: %s",
+                    rule.handoff_id,
+                    "; ".join(mapping_errors),
                 )
 
             # Execute target chain with retry
@@ -288,7 +295,8 @@ class InterWorkflowHandoff:
                     # Chain not found in composer — try to instantiate from template
                     try:
                         template_chain = composer.template_library.instantiate(
-                            rule.target_chain_id, mapped_data,
+                            rule.target_chain_id,
+                            mapped_data,
                         )
                         template_chain.tenant_id = tenant_id
                         exec_result = composer.execute_chain(template_chain)
@@ -311,13 +319,20 @@ class InterWorkflowHandoff:
                 delay = base_delay * (2 ** (attempt - 1))
                 logger.debug(
                     "Handoff %s target execution failed (attempt %d/%d): %s — retrying in %.1fs",
-                    rule.handoff_id, attempt, max_retries, last_error, delay,
+                    rule.handoff_id,
+                    attempt,
+                    max_retries,
+                    last_error,
+                    delay,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
                     "Handoff %s to %s failed after %d attempts: %s",
-                    rule.handoff_id, rule.target_chain_id, max_retries, last_error,
+                    rule.handoff_id,
+                    rule.target_chain_id,
+                    max_retries,
+                    last_error,
                 )
 
         return HandoffResult(  # noqa: F821  # TODO: Phase3 - verify import
@@ -332,5 +347,3 @@ class InterWorkflowHandoff:
 # ---------------------------------------------------------------------------
 #  Helpers
 # ---------------------------------------------------------------------------
-
-

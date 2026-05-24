@@ -10,7 +10,7 @@ Ported from:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent, CircuitBreakerManager
 from ..schemas import AgentResult
@@ -27,7 +27,7 @@ class CircuitBreakerManagerAgent(BaseAgent[AgentResult]):
 
     def __init__(
         self,
-        circuit_breaker_manager: Optional[CircuitBreakerManager] = None,
+        circuit_breaker_manager: CircuitBreakerManager | None = None,
         **kwargs,
     ) -> None:
         super().__init__(

@@ -3,9 +3,10 @@
 import asyncio
 import logging
 import threading
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
 
-from ._types import SagaStatus, SagaStep, SagaContext
+from ._types import SagaContext, SagaStatus, SagaStep
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
@@ -13,14 +14,11 @@ logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 class SagaAsyncMixin:
     """Mixin providing asynchronous saga execution."""
 
-
     # ----------------------------------------------------------
     #  STEP EXECUTION (ASYNC)
     # ----------------------------------------------------------
 
-    async def _execute_step_async(
-        self, step: SagaStep, context: SagaContext
-    ) -> None:
+    async def _execute_step_async(self, step: SagaStep, context: SagaContext) -> None:
         """
         Asynchronously execute a single saga step with optional timeout.
 
@@ -33,7 +31,8 @@ class SagaAsyncMixin:
         """
         logger.info(
             "Saga[%s][async]: Executing step '%s'",
-            self._name, step.name,
+            self._name,
+            step.name,
         )
 
         try:
@@ -49,19 +48,15 @@ class SagaAsyncMixin:
             context.mark_step_completed(step)
 
         except asyncio.TimeoutError:
-            raise TimeoutError(
-                f"Saga step '{step.name}' exceeded timeout of "
-                f"{step.timeout}s"
-            )
+            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of " f"{step.timeout}s")
 
         logger.info(
             "Saga[%s][async]: Step '%s' completed successfully",
-            self._name, step.name,
+            self._name,
+            step.name,
         )
 
-    async def _call_action_async(
-        self, action: Callable[[Any], Any], context: SagaContext
-    ) -> Any:
+    async def _call_action_async(self, action: Callable[[Any], Any], context: SagaContext) -> Any:
         """
         Call an action, handling both sync and async callables.
 
@@ -95,7 +90,8 @@ class SagaAsyncMixin:
         completed = context.completed_steps
         if not completed:
             logger.info(
-                "Saga[%s]: No steps to compensate", self._name,
+                "Saga[%s]: No steps to compensate",
+                self._name,
             )
             with self._lock:
                 self._status = SagaStatus.FAILED
@@ -103,17 +99,19 @@ class SagaAsyncMixin:
 
         logger.info(
             "Saga[%s]: Compensating %d steps in reverse order",
-            self._name, len(completed),
+            self._name,
+            len(completed),
         )
 
-        compensation_errors: List[str] = []
+        compensation_errors: list[str] = []
 
         # Reverse order compensation
         for step in reversed(completed):
             if step.compensation is not None:
                 logger.info(
                     "Saga[%s]: Compensating step '%s'",
-                    self._name, step.name,
+                    self._name,
+                    step.name,
                 )
                 try:
                     if step.timeout is not None:
@@ -126,24 +124,26 @@ class SagaAsyncMixin:
 
                     logger.info(
                         "Saga[%s]: Step '%s' compensated successfully",
-                        self._name, step.name,
+                        self._name,
+                        step.name,
                     )
                 except Exception as exc:
-                    error_msg = (
-                        f"Compensation failed for step '{step.name}': {exc}"
-                    )
+                    error_msg = f"Compensation failed for step '{step.name}': {exc}"
                     compensation_errors.append(error_msg)
                     context.add_error(error_msg)
                     with self._lock:
                         self._error_count += 1
                     logger.error(
-                        "Saga[%s]: %s", self._name, error_msg,
+                        "Saga[%s]: %s",
+                        self._name,
+                        error_msg,
                         exc_info=True,
                     )
             else:
                 logger.warning(
                     "Saga[%s]: Step '%s' has no compensation defined",
-                    self._name, step.name,
+                    self._name,
+                    step.name,
                 )
 
         # Determine final status
@@ -156,12 +156,12 @@ class SagaAsyncMixin:
         final_status = self._status
         logger.info(
             "Saga[%s]: Compensation complete (status=%s, errors=%d)",
-            self._name, final_status.value, len(compensation_errors),
+            self._name,
+            final_status.value,
+            len(compensation_errors),
         )
 
-    def _compensate_step_with_timeout(
-        self, step: SagaStep, context: SagaContext
-    ) -> None:
+    def _compensate_step_with_timeout(self, step: SagaStep, context: SagaContext) -> None:
         """
         Run a step's compensation with timeout enforcement.
 
@@ -175,7 +175,7 @@ class SagaAsyncMixin:
         if step.compensation is None:
             return
 
-        error_holder: Dict[str, Any] = {"error": None}
+        error_holder: dict[str, Any] = {"error": None}
 
         def _target() -> None:
             try:
@@ -188,10 +188,7 @@ class SagaAsyncMixin:
         worker.join(timeout=step.timeout)
 
         if worker.is_alive():
-            raise TimeoutError(
-                f"Compensation for step '{step.name}' exceeded timeout "
-                f"of {step.timeout}s"
-            )
+            raise TimeoutError(f"Compensation for step '{step.name}' exceeded timeout " f"of {step.timeout}s")
 
         if error_holder["error"] is not None:
             raise error_holder["error"]
@@ -218,57 +215,54 @@ class SagaAsyncMixin:
 
         logger.info(
             "Saga[%s][async]: Compensating %d steps in reverse order",
-            self._name, len(completed),
+            self._name,
+            len(completed),
         )
 
-        compensation_errors: List[str] = []
+        compensation_errors: list[str] = []
 
         for step in reversed(completed):
             if step.compensation is not None:
                 logger.info(
                     "Saga[%s][async]: Compensating step '%s'",
-                    self._name, step.name,
+                    self._name,
+                    step.name,
                 )
                 try:
                     if step.timeout is not None:
                         await asyncio.wait_for(
-                            self._call_action_async(
-                                step.compensation, context
-                            ),
+                            self._call_action_async(step.compensation, context),
                             timeout=step.timeout,
                         )
                     else:
-                        await self._call_action_async(
-                            step.compensation, context
-                        )
+                        await self._call_action_async(step.compensation, context)
 
                     with self._lock:
                         self._compensation_count += 1
 
                 except asyncio.TimeoutError:
-                    error_msg = (
-                        f"Compensation timeout for step '{step.name}'"
-                    )
+                    error_msg = f"Compensation timeout for step '{step.name}'"
                     compensation_errors.append(error_msg)
                     context.add_error(error_msg)
                     with self._lock:
                         self._error_count += 1
 
                 except Exception as exc:
-                    error_msg = (
-                        f"Compensation failed for step '{step.name}': {exc}"
-                    )
+                    error_msg = f"Compensation failed for step '{step.name}': {exc}"
                     compensation_errors.append(error_msg)
                     context.add_error(error_msg)
                     with self._lock:
                         self._error_count += 1
                     logger.error(
-                        "Saga[%s][async]: %s", self._name, error_msg,
+                        "Saga[%s][async]: %s",
+                        self._name,
+                        error_msg,
                     )
             else:
                 logger.warning(
                     "Saga[%s][async]: Step '%s' has no compensation",
-                    self._name, step.name,
+                    self._name,
+                    step.name,
                 )
 
         with self._lock:
@@ -279,5 +273,6 @@ class SagaAsyncMixin:
 
         logger.info(
             "Saga[%s][async]: Compensation complete (status=%s)",
-            self._name, self._status.value,
+            self._name,
+            self._status.value,
         )

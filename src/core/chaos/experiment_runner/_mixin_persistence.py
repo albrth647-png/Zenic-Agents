@@ -1,15 +1,16 @@
 """Persistence mixin for ChaosExperimentRunner."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..types import ChaosExperiment, FaultInjection, FaultType, ChaosExperimentState
-from ._types import DB_DIR
+from ..types import ChaosExperiment, ChaosExperimentState, FaultInjection, FaultType
 from ._helpers import _retry
+from ._types import DB_DIR
 
 logger = logging.getLogger("zenic_agents.core.chaos.experiment_runner")
 
@@ -91,7 +92,7 @@ class ChaosPersistenceMixin:
         }
         return json.dumps(data)
 
-    def _json_to_experiment(self, raw: str) -> Optional[ChaosExperiment]:
+    def _json_to_experiment(self, raw: str) -> ChaosExperiment | None:
         try:
             data = json.loads(raw)
             injections = [
@@ -143,15 +144,15 @@ class ChaosPersistenceMixin:
     def _delete_from_db(self, experiment_id: str) -> None:
         def _del() -> None:
             conn = sqlite3.connect(self._db_path)
-            conn.execute("DELETE FROM chaos_experiments WHERE experiment_id = ?", (experiment_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            conn.execute(
+                "DELETE FROM chaos_experiments WHERE experiment_id = ?", (experiment_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             conn.commit()
             conn.close()
 
         _retry(_del)
 
-    def _record_history(
-        self, experiment_id: str, event_type: str, event_data: Dict[str, Any]
-    ) -> None:
+    def _record_history(self, experiment_id: str, event_type: str, event_data: dict[str, Any]) -> None:
         def _insert() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -167,7 +168,7 @@ class ChaosPersistenceMixin:
         except Exception as exc:
             logger.error("Failed to record history: %s", exc)
 
-    def get_experiment_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_experiment_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get experiment history from DB."""
         try:
             conn = sqlite3.connect(self._db_path)

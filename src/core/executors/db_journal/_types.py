@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -38,11 +38,11 @@ class JournalEntry:
     db_path: str = ""
     operation: str = ""
     query: str = ""
-    params: List[Any] = field(default_factory=list)
+    params: list[Any] = field(default_factory=list)
     before_data: str = "[]"
     after_data: str = "[]"
     affected_rows: int = 0
-    lastrowid: Optional[int] = None
+    lastrowid: int | None = None
     tenant_id: str = ""
     created_at: float = 0.0
     rolled_back: bool = False
@@ -70,5 +70,7 @@ class RollbackResult:
     journal_id: str = ""
     operation: str = ""
     rows_restored: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+
 __all__ = ["JournalEntry", "RollbackResult"]

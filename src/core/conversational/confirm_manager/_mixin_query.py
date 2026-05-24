@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from ._types import (
-    STATUS_PENDING,
     STATUS_APPROVED,
-    STATUS_DENIED,
     STATUS_CANCELLED,
+    STATUS_DENIED,
     STATUS_EXPIRED,
+    STATUS_PENDING,
 )
 
 
@@ -26,7 +26,7 @@ class ConfirmManagerQueryMixin:
         approver_id: str,
         approved: bool,
         reason: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Handle approval response from a role-bearing approver."""
         with self._lock:
             self._expire_entries()
@@ -78,7 +78,8 @@ class ConfirmManagerQueryMixin:
                 return {
                     "status": STATUS_APPROVED,
                     "message": "Action approved. Proceeding with execution.",
-                    "action_id": action_id, "approver_id": approver_id,
+                    "action_id": action_id,
+                    "approver_id": approver_id,
                 }
             else:
                 self._update_status(action_id, STATUS_DENIED, responder_id=approver_id, reason=reason)
@@ -89,12 +90,13 @@ class ConfirmManagerQueryMixin:
                 return {
                     "status": STATUS_DENIED,
                     "message": f"Action denied by {approver_id}. Reason: {reason}",
-                    "action_id": action_id, "approver_id": approver_id,
+                    "action_id": action_id,
+                    "approver_id": approver_id,
                 }
 
     # ─── Public API: Query ─────────────────────────────────────
 
-    def get_pending(self, session_id: str = "") -> List[Dict]:
+    def get_pending(self, session_id: str = "") -> list[dict]:
         """Return pending confirmations for a session.
 
         Args:
@@ -121,22 +123,24 @@ class ConfirmManagerQueryMixin:
             finally:
                 conn.close()
 
-            results: List[Dict] = []
+            results: list[dict] = []
             for row in rows:
                 config = json.loads(row["config"]) if row["config"] else {}
-                results.append({
-                    "action_id": row["action_id"],
-                    "action_type": row["action_type"],
-                    "config": config,
-                    "verdict": row["verdict"],
-                    "status": row["status"],
-                    "channel": row["channel"],
-                    "session_id": row["session_id"],
-                    "required_role": row["required_role"],
-                    "created_at": row["created_at"],
-                    "expires_at": row["expires_at"],
-                    "ttl_remaining": max(0, row["expires_at"] - time.time()),
-                })
+                results.append(
+                    {
+                        "action_id": row["action_id"],
+                        "action_type": row["action_type"],
+                        "config": config,
+                        "verdict": row["verdict"],
+                        "status": row["status"],
+                        "channel": row["channel"],
+                        "session_id": row["session_id"],
+                        "required_role": row["required_role"],
+                        "created_at": row["created_at"],
+                        "expires_at": row["expires_at"],
+                        "ttl_remaining": max(0, row["expires_at"] - time.time()),
+                    }
+                )
 
             return results
 
@@ -173,7 +177,7 @@ class ConfirmManagerQueryMixin:
     # ─── Formatting ────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Manager statistics."""
         with self._lock:
             return {**self._stats}

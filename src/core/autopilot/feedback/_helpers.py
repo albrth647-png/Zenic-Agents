@@ -34,7 +34,7 @@ def _retry_db_operation(
         except Exception as exc:
             last_exc = exc
             if attempt < max_retries:
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 logger.warning(
                     "DB operation failed (attempt %d/%d), retrying in %.1fs: %s",
                     attempt + 1,
@@ -44,4 +44,6 @@ def _retry_db_operation(
                 )
                 time.sleep(delay)
     raise last_exc  # type: ignore[misc]
+
+
 __all__ = ["_retry_db_operation", "logger"]

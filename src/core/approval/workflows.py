@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .chain import get_approval_chain
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class WorkflowStepType(str, Enum):
     """Type of workflow step."""
+
     APPROVAL = "approval"
     NOTIFICATION = "notification"
     CONDITION = "condition"
@@ -31,6 +32,7 @@ class WorkflowStepType(str, Enum):
 @dataclass
 class WorkflowStep:
     """A single step in an approval workflow."""
+
     step_id: str = ""
     step_type: WorkflowStepType = WorkflowStepType.APPROVAL
     required_role: str = "gerente"
@@ -45,22 +47,27 @@ class WorkflowStep:
         if not self.step_id:
             self.step_id = f"step-{uuid.uuid4().hex[:8]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
-            "step_id": self.step_id, "step_type": self.step_type.value,
-            "required_role": self.required_role, "action": self.action,
-            "name": self.name, "description": self.description,
-            "timeout_hours": self.timeout_hours, "is_final": self.is_final,
+            "step_id": self.step_id,
+            "step_type": self.step_type.value,
+            "required_role": self.required_role,
+            "action": self.action,
+            "name": self.name,
+            "description": self.description,
+            "timeout_hours": self.timeout_hours,
+            "is_final": self.is_final,
             "condition_expr": self.condition_expr,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "WorkflowStep":
+    def from_dict(cls, data: dict[str, Any]) -> WorkflowStep:
         return cls(
             step_id=data.get("step_id", ""),
             step_type=WorkflowStepType(data.get("step_type", "approval")),
             required_role=data.get("required_role", "gerente"),
-            action=data.get("action", ""), name=data.get("name", ""),
+            action=data.get("action", ""),
+            name=data.get("name", ""),
             description=data.get("description", ""),
             timeout_hours=data.get("timeout_hours", 24),
             is_final=data.get("is_final", False),
@@ -71,11 +78,12 @@ class WorkflowStep:
 @dataclass
 class WorkflowDefinition:
     """Definition of an approval workflow."""
+
     workflow_id: str = ""
     name: str = ""
     description: str = ""
-    steps: List[WorkflowStep] = field(default_factory=list)
-    trigger_actions: List[str] = field(default_factory=list)
+    steps: list[WorkflowStep] = field(default_factory=list)
+    trigger_actions: list[str] = field(default_factory=list)
     is_active: bool = True
     tenant_id: str = "__anonymous__"
     created_at: str = ""
@@ -86,22 +94,26 @@ class WorkflowDefinition:
         if not self.created_at:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
-            "workflow_id": self.workflow_id, "name": self.name,
+            "workflow_id": self.workflow_id,
+            "name": self.name,
             "description": self.description,
             "steps": [s.to_dict() for s in self.steps],
             "trigger_actions": self.trigger_actions,
-            "is_active": self.is_active, "tenant_id": self.tenant_id,
+            "is_active": self.is_active,
+            "tenant_id": self.tenant_id,
             "created_at": self.created_at,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "WorkflowDefinition":
+    def from_dict(cls, data: dict[str, Any]) -> WorkflowDefinition:
         steps = [WorkflowStep.from_dict(s) for s in data.get("steps", [])]
         return cls(
-            workflow_id=data.get("workflow_id", ""), name=data.get("name", ""),
-            description=data.get("description", ""), steps=steps,
+            workflow_id=data.get("workflow_id", ""),
+            name=data.get("name", ""),
+            description=data.get("description", ""),
+            steps=steps,
             trigger_actions=data.get("trigger_actions", []),
             is_active=data.get("is_active", True),
             tenant_id=data.get("tenant_id", "__anonymous__"),
@@ -112,16 +124,17 @@ class WorkflowDefinition:
 @dataclass
 class WorkflowExecution:
     """Runtime state of a workflow execution."""
+
     execution_id: str = ""
     workflow_id: str = ""
     current_step_index: int = 0
     status: str = "in_progress"
     action_type: str = ""
-    action_config: Dict[str, Any] = field(default_factory=dict)
+    action_config: dict[str, Any] = field(default_factory=dict)
     requested_by: int = 0
-    step_results: List[Dict[str, Any]] = field(default_factory=list)
+    step_results: list[dict[str, Any]] = field(default_factory=list)
     created_at: str = ""
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
 
     def __post_init__(self) -> None:
         if not self.execution_id:
@@ -141,10 +154,11 @@ class WorkflowEngine:
         self._approval_chain = get_approval_chain()
 
         from .workflow_parts.persistence import WorkflowDB, get_builtin_workflows
+
         self._db = WorkflowDB(db_path)
         self._ensure_builtin_workflows(get_builtin_workflows())
 
-    def _ensure_builtin_workflows(self, builtins: List[WorkflowDefinition]) -> None:
+    def _ensure_builtin_workflows(self, builtins: list[WorkflowDefinition]) -> None:
         """Create built-in workflows if they don't exist."""
         for wf in builtins:
             existing = self._db.get_workflow(wf.workflow_id)
@@ -159,13 +173,15 @@ class WorkflowEngine:
         logger.info("WorkflowEngine: Created workflow '%s'", workflow.name)
         return workflow
 
-    def get_workflow(self, workflow_id: str) -> Optional[WorkflowDefinition]:
+    def get_workflow(self, workflow_id: str) -> WorkflowDefinition | None:
         """Get a workflow by ID."""
         return self._db.get_workflow(workflow_id)
 
     def list_workflows(
-        self, tenant_id: Optional[str] = None, active_only: bool = True,
-    ) -> List[WorkflowDefinition]:
+        self,
+        tenant_id: str | None = None,
+        active_only: bool = True,
+    ) -> list[WorkflowDefinition]:
         """List all workflows, optionally filtered."""
         return self._db.list_workflows(tenant_id=tenant_id, active_only=active_only)
 
@@ -178,10 +194,10 @@ class WorkflowEngine:
     def trigger_workflow(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         requested_by: int,
         tenant_id: str = "__anonymous__",
-    ) -> Optional[WorkflowExecution]:
+    ) -> WorkflowExecution | None:
         """Find and start a workflow for the given action."""
         workflow = self._find_workflow_for_action(action_type, tenant_id)
         if not workflow:
@@ -199,7 +215,9 @@ class WorkflowEngine:
 
         logger.info(
             "WorkflowEngine: Triggered '%s' for '%s' (exec %s)",
-            workflow.name, action_type, execution.execution_id,
+            workflow.name,
+            action_type,
+            execution.execution_id,
         )
         return execution
 
@@ -210,7 +228,7 @@ class WorkflowEngine:
         approver_role: str,
         approved: bool = True,
         notes: str = "",
-    ) -> Optional[WorkflowExecution]:
+    ) -> WorkflowExecution | None:
         """Advance a workflow execution to the next step."""
         execution = self._db.get_execution(execution_id)
         if not execution:
@@ -222,8 +240,10 @@ class WorkflowEngine:
 
         result = {
             "step_index": execution.current_step_index,
-            "approver_id": approver_id, "approver_role": approver_role,
-            "approved": approved, "notes": notes,
+            "approver_id": approver_id,
+            "approver_role": approver_role,
+            "approved": approved,
+            "notes": notes,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         execution.step_results.append(result)
@@ -246,15 +266,17 @@ class WorkflowEngine:
         self._db.update_execution(execution)
         return execution
 
-    def get_execution(self, execution_id: str) -> Optional[WorkflowExecution]:
+    def get_execution(self, execution_id: str) -> WorkflowExecution | None:
         """Get a workflow execution by ID."""
         return self._db.get_execution(execution_id)
 
     # ── Private helpers ────────────────────────────────────
 
     def _find_workflow_for_action(
-        self, action_type: str, tenant_id: str,
-    ) -> Optional[WorkflowDefinition]:
+        self,
+        action_type: str,
+        tenant_id: str,
+    ) -> WorkflowDefinition | None:
         """Find a workflow that handles the given action type."""
         workflows = self.list_workflows(tenant_id=tenant_id, active_only=True)
         if tenant_id != "__anonymous__":
@@ -266,7 +288,10 @@ class WorkflowEngine:
         return None
 
     def _execute_step(
-        self, execution: WorkflowExecution, workflow: WorkflowDefinition, step_index: int,
+        self,
+        execution: WorkflowExecution,
+        workflow: WorkflowDefinition,
+        step_index: int,
     ) -> None:
         """Execute a workflow step."""
         if step_index >= len(workflow.steps):
@@ -286,7 +311,8 @@ class WorkflowEngine:
         elif step.step_type == WorkflowStepType.NOTIFICATION:
             logger.info(
                 "WorkflowEngine: Notification '%s' sent (workflow %s)",
-                step.name, workflow.workflow_id,
+                step.name,
+                workflow.workflow_id,
             )
 
     # ── Smart Approval Integration (Phase C3) ─────────────
@@ -294,26 +320,30 @@ class WorkflowEngine:
     def trigger_workflow_with_risk(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         requested_by: int,
         tenant_id: str = "__anonymous__",
-    ) -> Optional[WorkflowExecution]:
+    ) -> WorkflowExecution | None:
         """Trigger a workflow with risk-based routing.
-        
+
         Phase C3: Uses RiskBasedApprovalRouter to determine required role
         for each approval step.
         """
         execution = self.trigger_workflow(
-            action_type, action_config, requested_by, tenant_id,
+            action_type,
+            action_config,
+            requested_by,
+            tenant_id,
         )
         if execution is None:
             return None
-        
+
         # Adjust approval steps based on risk
         workflow = self.get_workflow(execution.workflow_id)
         if workflow:
             try:
                 from .risk_routing import get_risk_router
+
                 router = get_risk_router()
                 assessment = router.assess_risk(action_type, action_config, {})
                 for step in workflow.steps:
@@ -322,30 +352,34 @@ class WorkflowEngine:
                             step.required_role = assessment.recommended_role
             except Exception:
                 pass
-        
+
         return execution
 
-    def check_delegations(self) -> List[Dict[str, Any]]:
+    def check_delegations(self) -> list[dict[str, Any]]:
         """Check for pending approvals that need delegation.
-        
+
         Phase C3: Integration with DelegationManager.
         Returns list of delegated approval records.
         """
         delegated = []
         try:
             from .delegation import get_delegation_manager
+
             dm = get_delegation_manager()
             pending = self._approval_chain.list_pending()
             for request in pending:
                 delegate_id = dm.auto_delegate_pending(
-                    request.request_id, timeout_hours=2,
+                    request.request_id,
+                    timeout_hours=2,
                 )
                 if delegate_id:
-                    delegated.append({
-                        "request_id": request.request_id,
-                        "original_approver": request.requested_by,
-                        "delegated_to": delegate_id,
-                    })
+                    delegated.append(
+                        {
+                            "request_id": request.request_id,
+                            "original_approver": request.requested_by,
+                            "delegated_to": delegate_id,
+                        }
+                    )
         except Exception:
             pass
         return delegated
@@ -353,7 +387,7 @@ class WorkflowEngine:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_workflow_engine_instance: Optional[WorkflowEngine] = None
+_workflow_engine_instance: WorkflowEngine | None = None
 _workflow_engine_lock = threading.Lock()
 
 

@@ -1,21 +1,24 @@
 """Core logic for learning_engine."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import threading
 from collections import Counter
-from typing import Any, Dict, List, Optional
-from .outcome_tracker import OutcomeStatus, get_outcome_tracker
+from typing import Any
+
 from ._mixin_patterns import PatternDetectionMixin
+from .outcome_tracker import OutcomeStatus, get_outcome_tracker
 
 logger = logging.getLogger(__name__)
+
 
 class LearningEngine(PatternDetectionMixin):
     """Self-learning engine that analyzes outcomes and generates insights."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
         self._db_path = db_path or str(DB_PATH)  # noqa: F821
         self._init_db()
@@ -43,11 +46,9 @@ class LearningEngine(PatternDetectionMixin):
 
         _retry(_create)  # noqa: F821
 
-    def analyze_patterns(
-        self, action_type: Optional[str] = None
-    ) -> List[LearningInsight]:  # noqa: F821
+    def analyze_patterns(self, action_type: str | None = None) -> list[LearningInsight]:  # noqa: F821
         tracker = get_outcome_tracker()
-        insights: List[LearningInsight] = []  # noqa: F821
+        insights: list[LearningInsight] = []  # noqa: F821
 
         failure_insights = self._detect_failure_patterns(tracker, action_type)
         insights.extend(failure_insights)
@@ -61,7 +62,7 @@ class LearningEngine(PatternDetectionMixin):
 
         return insights
 
-    def generate_recommendation(self, insight: LearningInsight) -> Dict[str, Any]:  # noqa: F821
+    def generate_recommendation(self, insight: LearningInsight) -> dict[str, Any]:  # noqa: F821
         if insight.insight_type == "failure_pattern":
             return {
                 "action": "investigate_and_fix",
@@ -107,6 +108,7 @@ class LearningEngine(PatternDetectionMixin):
 
     def apply_insight(self, insight_id: str) -> bool:
         with self._lock:
+
             def _apply() -> bool:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -124,22 +126,22 @@ class LearningEngine(PatternDetectionMixin):
     def get_insights(
         self,
         min_confidence: float = 0.0,
-        applied: Optional[bool] = None,
-    ) -> List[LearningInsight]:  # noqa: F821
+        applied: bool | None = None,
+    ) -> list[LearningInsight]:  # noqa: F821
         with self._lock:
-            def _fetch() -> List[LearningInsight]:  # noqa: F821
+
+            def _fetch() -> list[LearningInsight]:  # noqa: F821
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    conditions: List[str] = ["confidence >= ?"]
-                    params: List[Any] = [min_confidence]
+                    conditions: list[str] = ["confidence >= ?"]
+                    params: list[Any] = [min_confidence]
                     if applied is not None:
                         conditions.append("applied = ?")
                         params.append(1 if applied else 0)
 
                     where = " AND ".join(conditions)
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM learning_insights WHERE {where} "
-                        f"ORDER BY confidence DESC",
+                        f"SELECT * FROM learning_insights WHERE {where} " f"ORDER BY confidence DESC",
                         params,
                     )
                     return [self._insight_from_row(row) for row in cursor.fetchall()]
@@ -149,11 +151,12 @@ class LearningEngine(PatternDetectionMixin):
             return _retry(_fetch)  # noqa: F821
 
     def auto_learn(
-        self, strategy: LearningStrategy = LearningStrategy.MODERATE  # noqa: F821
-    ) -> Dict[str, Any]:
+        self,
+        strategy: LearningStrategy = LearningStrategy.MODERATE,  # noqa: F821
+    ) -> dict[str, Any]:
         get_outcome_tracker()
         insights = self.analyze_patterns()
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "insights_found": len(insights),
             "applied": 0,
             "skipped": 0,
@@ -179,9 +182,7 @@ class LearningEngine(PatternDetectionMixin):
 
         return result
 
-    def get_failure_prediction(
-        self, action_type: str, context: Dict[str, Any]
-    ) -> float:
+    def get_failure_prediction(self, action_type: str, context: dict[str, Any]) -> float:
         tracker = get_outcome_tracker()
         recent_rate = tracker.get_success_rate(action_type, hours=24)
         failure_rate = 1.0 - recent_rate
@@ -201,9 +202,9 @@ class LearningEngine(PatternDetectionMixin):
         prediction = min(failure_rate + error_factor + context_risk, 1.0)
         return round(max(prediction, 0.0), 4)
 
-    def get_optimization_hints(self, action_type: str) -> List[Dict[str, Any]]:
+    def get_optimization_hints(self, action_type: str) -> list[dict[str, Any]]:
         tracker = get_outcome_tracker()
-        hints: List[Dict[str, Any]] = []
+        hints: list[dict[str, Any]] = []
 
         history = tracker.get_action_history(action_type, limit=50)
         if not history:
@@ -214,56 +215,68 @@ class LearningEngine(PatternDetectionMixin):
             avg = sum(durations) / len(durations)
             slow = [h for h in history if h.duration_ms > avg * 2]
             if slow:
-                hints.append({
-                    "type": "slow_execution",
-                    "message": f"{len(slow)} actions took >2x average ({avg:.0f}ms)",
-                    "avg_duration_ms": round(avg, 2),
-                    "slow_count": len(slow),
-                })
+                hints.append(
+                    {
+                        "type": "slow_execution",
+                        "message": f"{len(slow)} actions took >2x average ({avg:.0f}ms)",
+                        "avg_duration_ms": round(avg, 2),
+                        "slow_count": len(slow),
+                    }
+                )
 
         failures = [h for h in history if h.status != OutcomeStatus.SUCCESS]
         if len(failures) > len(history) * 0.3:
-            hints.append({
-                "type": "high_failure_rate",
-                "message": f"Failure rate is {len(failures)/len(history)*100:.1f}%",
-                "failure_count": len(failures),
-                "total_count": len(history),
-            })
+            hints.append(
+                {
+                    "type": "high_failure_rate",
+                    "message": f"Failure rate is {len(failures)/len(history)*100:.1f}%",
+                    "failure_count": len(failures),
+                    "total_count": len(history),
+                }
+            )
 
         errors: Counter = Counter()
         for f in failures:
             if f.error_message:
                 errors[f.error_message] += 1
         for msg, count in errors.most_common(3):
-            hints.append({
-                "type": "recurring_error",
-                "message": f"Error '{msg[:80]}' occurred {count} times",
-                "error": msg,
-                "count": count,
-            })
+            hints.append(
+                {
+                    "type": "recurring_error",
+                    "message": f"Error '{msg[:80]}' occurred {count} times",
+                    "error": msg,
+                    "count": count,
+                }
+            )
 
         return hints
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
-            def _calc() -> Dict[str, Any]:
+
+            def _calc() -> dict[str, Any]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    total = conn.execute("SELECT COUNT(*) FROM learning_insights").fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
+                    total = conn.execute("SELECT COUNT(*) FROM learning_insights").fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
                     applied = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT COUNT(*) FROM learning_insights WHERE applied = 1"
                     ).fetchone()[0]
 
-                    type_counts: Dict[str, int] = {}
+                    type_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT insight_type, COUNT(*) FROM learning_insights GROUP BY insight_type"
                     )
                     for itype, cnt in cursor.fetchall():
                         type_counts[itype] = cnt
 
-                    avg_conf = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT AVG(confidence) FROM learning_insights"
-                    ).fetchone()[0] or 0.0
+                    avg_conf = (
+                        conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                            "SELECT AVG(confidence) FROM learning_insights"
+                        ).fetchone()[0]
+                        or 0.0
+                    )
 
                     return {
                         "total_insights": total,
@@ -279,6 +292,7 @@ class LearningEngine(PatternDetectionMixin):
 
     def _persist_insight(self, insight: LearningInsight) -> None:  # noqa: F821
         with self._lock:
+
             def _insert() -> None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -288,10 +302,14 @@ class LearningEngine(PatternDetectionMixin):
                             supporting_outcomes, created_at, applied)
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
-                            insight.id, insight.insight_type, insight.pattern,
-                            insight.recommendation, insight.confidence,
+                            insight.id,
+                            insight.insight_type,
+                            insight.pattern,
+                            insight.recommendation,
+                            insight.confidence,
                             json.dumps(insight.supporting_outcomes),
-                            insight.created_at, 1 if insight.applied else 0,
+                            insight.created_at,
+                            1 if insight.applied else 0,
                         ),
                     )
                     conn.commit()

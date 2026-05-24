@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import _DEFAULT_SCOPES, _MAX_ATTACHMENT_SIZE_INLINE, _RateLimitState
 from ._transport import GraphAPITransportMixin
+from ._types import _DEFAULT_SCOPES, _MAX_ATTACHMENT_SIZE_INLINE, _RateLimitState
 
 
 class GraphAPIEmailProvider(GraphAPITransportMixin):
@@ -26,7 +26,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
     def __init__(
         self,
-        token_manager: Optional[OAuth2TokenManager] = None,  # noqa: F821
+        token_manager: OAuth2TokenManager | None = None,  # noqa: F821
         service_name: str = "msgraph",
         from_email: str = "",
     ) -> None:
@@ -42,7 +42,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
         self._service_name = service_name
         self._from_email = from_email
         self._lock = asyncio.Lock()  # noqa: F821
-        self._rate_limit = _RateLimitState()  # noqa: F821
+        self._rate_limit = _RateLimitState()
         self._send_count: int = 0
         self._error_count: int = 0
         self._dry_run_count: int = 0
@@ -57,17 +57,17 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
     async def send_email(
         self,
-        to: List[str],
+        to: list[str],
         subject: str,
         body: str = "",
         html: str = "",
-        cc: Optional[List[str]] = None,
-        bcc: Optional[List[str]] = None,
+        cc: list[str] | None = None,
+        bcc: list[str] | None = None,
         from_email: str = "",
-        attachments: Optional[List[Dict[str, Any]]] = None,
-        reply_to: Optional[List[str]] = None,
+        attachments: list[dict[str, Any]] | None = None,
+        reply_to: list[str] | None = None,
         importance: str = "normal",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send an email via Microsoft Graph API."""
         start = time.monotonic()
 
@@ -81,22 +81,32 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
         # Build the Graph API request payload
         payload = self._build_payload(
-            to=to, subject=subject, body=body, html=html,
-            cc=cc or [], bcc=bcc or [], sender=sender,
-            reply_to=reply_to or [], importance=importance,
+            to=to,
+            subject=subject,
+            body=body,
+            html=html,
+            cc=cc or [],
+            bcc=bcc or [],
+            sender=sender,
+            reply_to=reply_to or [],
+            importance=importance,
             attachments=attachments or [],
         )
 
         # Check for dry-run conditions
         if not self._is_configured():
             return self._dry_run_response(
-                to=to, subject=subject, payload=payload,
+                to=to,
+                subject=subject,
+                payload=payload,
                 reason="service_not_configured",
             )
 
         if not _HAS_AIOHTTP:  # noqa: F821
             return self._dry_run_response(
-                to=to, subject=subject, payload=payload,
+                to=to,
+                subject=subject,
+                payload=payload,
                 reason="aiohttp_not_available",
             )
 
@@ -116,12 +126,12 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
         return self._is_configured()
 
     @property
-    def rate_limit(self) -> Dict[str, Any]:
+    def rate_limit(self) -> dict[str, Any]:
         """Get current rate limit state."""
         return self._rate_limit.to_dict()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get provider statistics."""
         return {
             "service_name": self._service_name,
@@ -136,9 +146,10 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
     # ── Private: Configuration ────────────────────────────────
 
-    def _auto_configure(self) -> "OAuth2TokenManager":  # noqa: F821
+    def _auto_configure(self) -> OAuth2TokenManager:  # noqa: F821
         """Auto-configure token manager from environment variables."""
         from .oauth2 import get_default_token_manager
+
         manager = get_default_token_manager()
 
         token_status = manager.get_token_status(self._service_name)
@@ -146,7 +157,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
             config = config_from_env("MSGRAPH")  # noqa: F821
             if config.is_configured:
                 if not config.scopes:
-                    config.scopes = _DEFAULT_SCOPES  # noqa: F821
+                    config.scopes = _DEFAULT_SCOPES
                 manager.register_service(self._service_name, config)
 
         if not self._from_email:
@@ -163,17 +174,17 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
     @staticmethod
     def _build_payload(
-        to: List[str],
+        to: list[str],
         subject: str,
         body: str,
         html: str,
-        cc: List[str],
-        bcc: List[str],
+        cc: list[str],
+        bcc: list[str],
         sender: str,
-        reply_to: List[str],
+        reply_to: list[str],
         importance: str,
-        attachments: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        attachments: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Build the Graph API sendMail request payload."""
         if html:
             content_type = "HTML"
@@ -182,11 +193,9 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
             content_type = "Text"
             content = body or " "
 
-        to_recipients = [
-            {"emailAddress": {"address": addr}} for addr in to if addr
-        ]
+        to_recipients = [{"emailAddress": {"address": addr}} for addr in to if addr]
 
-        message: Dict[str, Any] = {
+        message: dict[str, Any] = {
             "subject": subject,
             "body": {"contentType": content_type, "content": content},
             "toRecipients": to_recipients,
@@ -194,17 +203,11 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
         }
 
         if cc:
-            message["ccRecipients"] = [
-                {"emailAddress": {"address": addr}} for addr in cc if addr
-            ]
+            message["ccRecipients"] = [{"emailAddress": {"address": addr}} for addr in cc if addr]
         if bcc:
-            message["bccRecipients"] = [
-                {"emailAddress": {"address": addr}} for addr in bcc if addr
-            ]
+            message["bccRecipients"] = [{"emailAddress": {"address": addr}} for addr in bcc if addr]
         if reply_to:
-            message["replyTo"] = [
-                {"emailAddress": {"address": addr}} for addr in reply_to if addr
-            ]
+            message["replyTo"] = [{"emailAddress": {"address": addr}} for addr in reply_to if addr]
         if sender:
             message["from"] = {"emailAddress": {"address": sender}}
 
@@ -213,24 +216,27 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
             inline_attachments = []
             for att in attachments:
                 att_size = att.get("size", 0)
-                if att_size <= _MAX_ATTACHMENT_SIZE_INLINE:  # noqa: F821
+                if att_size <= _MAX_ATTACHMENT_SIZE_INLINE:
                     import base64 as b64
+
                     content_bytes = att.get("content_bytes", b"")
                     if isinstance(content_bytes, bytes):
                         b64_content = b64.b64encode(content_bytes).decode("ascii")
                     else:
                         b64_content = str(content_bytes)
 
-                    inline_attachments.append({
-                        "@odata.type": "#microsoft.graph.fileAttachment",
-                        "name": att.get("name", "attachment"),
-                        "contentType": att.get("content_type", "application/octet-stream"),
-                        "contentBytes": b64_content,
-                    })
+                    inline_attachments.append(
+                        {
+                            "@odata.type": "#microsoft.graph.fileAttachment",
+                            "name": att.get("name", "attachment"),
+                            "contentType": att.get("content_type", "application/octet-stream"),
+                            "contentBytes": b64_content,
+                        }
+                    )
             if inline_attachments:
                 message["attachments"] = inline_attachments
 
-        payload: Dict[str, Any] = {"message": message}
+        payload: dict[str, Any] = {"message": message}
         if sender:
             payload["saveToSentItems"] = True
 

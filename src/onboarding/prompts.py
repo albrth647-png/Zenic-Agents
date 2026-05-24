@@ -15,22 +15,24 @@ from __future__ import annotations
 
 import getpass
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Tuple
 
-from .validators.user_input import ValidationResult, InvalidResult
+from .validators.user_input import InvalidResult, ValidationResult
 
 try:
     from rich.console import Console
-    from rich.prompt import Prompt as RichPrompt
     from rich.panel import Panel
+    from rich.prompt import Prompt as RichPrompt
     from rich.text import Text  # noqa: F401
+
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
 
 
 # ── Prompt Result ────────────────────────────────────────────
+
 
 @dataclass
 class PromptResult:
@@ -41,9 +43,10 @@ class PromptResult:
         cancelled: Whether the user cancelled the prompt.
         errors: Validation errors encountered.
     """
-    values: Dict[str, str] = field(default_factory=dict)
+
+    values: dict[str, str] = field(default_factory=dict)
     cancelled: bool = False
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def get(self, key: str, default: str = "") -> str:
         return self.values.get(key, default)
@@ -54,6 +57,7 @@ class PromptResult:
 
 # ── Abstract Prompt ──────────────────────────────────────────
 
+
 class BasePrompt(ABC):
     """Abstract base for interactive prompts.
 
@@ -61,10 +65,15 @@ class BasePrompt(ABC):
     for different prompt types.
     """
 
-    def __init__(self, field_name: str, label: str,
-                 validator: Optional[Callable[[str], ValidationResult]] = None,
-                 default: str = "", required: bool = True,
-                 mask: bool = False) -> None:
+    def __init__(
+        self,
+        field_name: str,
+        label: str,
+        validator: Callable[[str], ValidationResult] | None = None,
+        default: str = "",
+        required: bool = True,
+        mask: bool = False,
+    ) -> None:
         self.field_name = field_name
         self.label = label
         self.validator = validator
@@ -73,7 +82,7 @@ class BasePrompt(ABC):
         self.mask = mask
 
     @abstractmethod
-    def collect(self) -> Tuple[str, bool]:
+    def collect(self) -> tuple[str, bool]:
         """Collect input from the user.
 
         Returns:
@@ -100,16 +109,17 @@ class BasePrompt(ABC):
 
 # ── Text Prompt ──────────────────────────────────────────────
 
+
 class TextPrompt(BasePrompt):
     """Simple text input prompt with optional validation."""
 
-    def collect(self) -> Tuple[str, bool]:
+    def collect(self) -> tuple[str, bool]:
         """Collect text input from the user."""
         if HAS_RICH:
             return self._collect_rich()
         return self._collect_plain()
 
-    def _collect_rich(self) -> Tuple[str, bool]:
+    def _collect_rich(self) -> tuple[str, bool]:
         """Collect using Rich prompt."""
         try:
             console = Console()
@@ -126,7 +136,7 @@ class TextPrompt(BasePrompt):
         except (KeyboardInterrupt, EOFError):
             return ("", False)
 
-    def _collect_plain(self) -> Tuple[str, bool]:
+    def _collect_plain(self) -> tuple[str, bool]:
         """Collect using plain input()."""
         try:
             if self.mask:
@@ -149,13 +159,19 @@ class TextPrompt(BasePrompt):
 
 # ── Choice Prompt ────────────────────────────────────────────
 
+
 class ChoicePrompt(BasePrompt):
     """Multiple-choice selection prompt."""
 
-    def __init__(self, field_name: str, label: str,
-                 choices: List[Tuple[str, str]],
-                 validator: Optional[Callable[[str], ValidationResult]] = None,
-                 default: str = "", required: bool = True) -> None:
+    def __init__(
+        self,
+        field_name: str,
+        label: str,
+        choices: list[tuple[str, str]],
+        validator: Callable[[str], ValidationResult] | None = None,
+        default: str = "",
+        required: bool = True,
+    ) -> None:
         """
         Args:
             choices: List of (value, description) tuples.
@@ -163,13 +179,13 @@ class ChoicePrompt(BasePrompt):
         super().__init__(field_name, label, validator, default, required, mask=False)
         self.choices = choices
 
-    def collect(self) -> Tuple[str, bool]:
+    def collect(self) -> tuple[str, bool]:
         """Collect choice input from the user."""
         if HAS_RICH:
             return self._collect_rich()
         return self._collect_plain()
 
-    def _collect_rich(self) -> Tuple[str, bool]:
+    def _collect_rich(self) -> tuple[str, bool]:
         """Collect using Rich-styled choice display."""
         try:
             console = Console()
@@ -200,7 +216,7 @@ class ChoicePrompt(BasePrompt):
         except (KeyboardInterrupt, EOFError):
             return ("", False)
 
-    def _collect_plain(self) -> Tuple[str, bool]:
+    def _collect_plain(self) -> tuple[str, bool]:
         """Collect using plain text choice display."""
         try:
             print(f"\n  {self.label}")
@@ -228,14 +244,14 @@ class ChoicePrompt(BasePrompt):
 
 # ── Confirmation Prompt ──────────────────────────────────────
 
+
 class ConfirmPrompt(BasePrompt):
     """Yes/No confirmation prompt."""
 
-    def __init__(self, field_name: str, label: str,
-                 default: bool = True) -> None:
+    def __init__(self, field_name: str, label: str, default: bool = True) -> None:
         super().__init__(field_name, label, required=False, default="y" if default else "n")
 
-    def collect(self) -> Tuple[str, bool]:
+    def collect(self) -> tuple[str, bool]:
         """Collect yes/no confirmation."""
         default_hint = "Y/n" if self.default == "y" else "y/N"
         try:
@@ -248,6 +264,7 @@ class ConfirmPrompt(BasePrompt):
 
 
 # ── Prompt Builder ───────────────────────────────────────────
+
 
 class PromptBuilder:
     """Builder for composing multi-field prompt sessions.
@@ -274,38 +291,35 @@ class PromptBuilder:
 
     def __init__(self, title: str = "") -> None:
         self._title = title
-        self._prompts: List[BasePrompt] = []
+        self._prompts: list[BasePrompt] = []
 
     @property
     def title(self) -> str:
         return self._title
 
-    def add_text(self, field_name: str, label: str,
-                 validator: Optional[Callable[[str], ValidationResult]] = None,
-                 default: str = "", required: bool = True,
-                 mask: bool = False) -> "PromptBuilder":
+    def add_text(
+        self,
+        field_name: str,
+        label: str,
+        validator: Callable[[str], ValidationResult] | None = None,
+        default: str = "",
+        required: bool = True,
+        mask: bool = False,
+    ) -> PromptBuilder:
         """Add a text input prompt (fluent API)."""
-        self._prompts.append(
-            TextPrompt(field_name, label, validator, default, required, mask)
-        )
+        self._prompts.append(TextPrompt(field_name, label, validator, default, required, mask))
         return self
 
-    def add_choice(self, field_name: str, label: str,
-                   choices: List[Tuple[str, str]],
-                   default: str = "",
-                   required: bool = True) -> "PromptBuilder":
+    def add_choice(
+        self, field_name: str, label: str, choices: list[tuple[str, str]], default: str = "", required: bool = True
+    ) -> PromptBuilder:
         """Add a multiple-choice prompt (fluent API)."""
-        self._prompts.append(
-            ChoicePrompt(field_name, label, choices, default=default, required=required)
-        )
+        self._prompts.append(ChoicePrompt(field_name, label, choices, default=default, required=required))
         return self
 
-    def add_confirm(self, field_name: str, label: str,
-                    default: bool = True) -> "PromptBuilder":
+    def add_confirm(self, field_name: str, label: str, default: bool = True) -> PromptBuilder:
         """Add a yes/no confirmation prompt (fluent API)."""
-        self._prompts.append(
-            ConfirmPrompt(field_name, label, default=default)
-        )
+        self._prompts.append(ConfirmPrompt(field_name, label, default=default))
         return self
 
     def run(self) -> PromptResult:
@@ -357,21 +371,27 @@ class PromptBuilder:
 
 # ── Pre-built Prompt Sessions ────────────────────────────────
 
+
 def prompt_registration() -> PromptResult:
     """Pre-built registration prompt session."""
-    from .validators.user_input import validate_username, validate_email
+    from .validators.user_input import validate_email, validate_username
 
     return (
         PromptBuilder(title="Zenic-Agents Registration")
         .add_text("username", "Username", validator=validate_username, required=True)
         .add_text("email", "Email address", validator=validate_email, required=True)
         .add_text("device_name", "Device name", default="My Device", required=False)
-        .add_choice("tier", "Select your plan", choices=[
-            ("starter", "Starter — $29/mo USDT TRC20"),
-            ("business", "Business — $99/mo USDT TRC20 (14-day trial)"),
-            ("enterprise", "Enterprise — $299/mo USDT TRC20"),
-            ("on_premise_enterprise", "On-Premise — $799/mo + $2,000 setup"),
-        ], default="starter")
+        .add_choice(
+            "tier",
+            "Select your plan",
+            choices=[
+                ("starter", "Starter — $29/mo USDT TRC20"),
+                ("business", "Business — $99/mo USDT TRC20 (14-day trial)"),
+                ("enterprise", "Enterprise — $299/mo USDT TRC20"),
+                ("on_premise_enterprise", "On-Premise — $799/mo + $2,000 setup"),
+            ],
+            default="starter",
+        )
         .run()
     )
 
@@ -382,8 +402,7 @@ def prompt_activation() -> PromptResult:
 
     return (
         PromptBuilder(title="License Activation")
-        .add_text("key", "Activation Key (ZENIC-XXXX-XXXX-XXXX-XXXX)",
-                   validator=validate_activation_key, required=True)
+        .add_text("key", "Activation Key (ZENIC-XXXX-XXXX-XXXX-XXXX)", validator=validate_activation_key, required=True)
         .add_text("username", "Registered username", required=False)
         .run()
     )

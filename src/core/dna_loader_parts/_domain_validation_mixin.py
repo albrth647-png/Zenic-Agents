@@ -2,9 +2,9 @@
 Domain expert rules and validation gates API mixin for DNALoader.
 """
 
-import re
 import ast
-from typing import Dict, Any, List, Optional
+import re
+from typing import Any
 
 from ._imports import DomainRule, ValidationGate
 
@@ -16,18 +16,18 @@ class DomainValidationMixin:
     #  DOMAIN EXPERT RULES API
     # ================================================================
 
-    def get_domain_rules(self, industry: str) -> Optional[DomainRule]:
+    def get_domain_rules(self, industry: str) -> DomainRule | None:
         """Obtiene las reglas de negocio para una industria."""
         if not self._loaded:
             self.load_all()
         return self._domain_rules.get(industry)
 
-    def get_mandatory_logic(self, industry: str) -> List[str]:
+    def get_mandatory_logic(self, industry: str) -> list[str]:
         """Obtiene las reglas obligatorias de una industria."""
         rules = self.get_domain_rules(industry)
         return rules.mandatory_logic if rules else []
 
-    def find_industry_for_niche(self, niche_domain: str) -> Optional[DomainRule]:
+    def find_industry_for_niche(self, niche_domain: str) -> DomainRule | None:
         """Encuentra las reglas de industria más cercanas para un dominio de nicho."""
         if not self._loaded:
             self.load_all()
@@ -48,22 +48,21 @@ class DomainValidationMixin:
     #  VALIDATION GATES API
     # ================================================================
 
-    def get_global_gates(self, category: str = "") -> List[ValidationGate]:
+    def get_global_gates(self, category: str = "") -> list[ValidationGate]:
         """Obtiene gates de validación globales, filtradas por categoría."""
         if not self._loaded:
             self.load_all()
         if category:
-            return [g for g in self._validation_gates
-                    if g.category == category and g.category != "domain_specific"]
+            return [g for g in self._validation_gates if g.category == category and g.category != "domain_specific"]
         return [g for g in self._validation_gates if g.category != "domain_specific"]
 
-    def get_domain_gates(self, domain: str) -> List[ValidationGate]:
+    def get_domain_gates(self, domain: str) -> list[ValidationGate]:
         """Obtiene gates de validación específicas de un dominio."""
         if not self._loaded:
             self.load_all()
         return self._domain_gates.get(domain, [])
 
-    def validate_code(self, code: str, domain: str = "") -> Dict[str, Any]:
+    def validate_code(self, code: str, domain: str = "") -> dict[str, Any]:
         """
         Valida código contra todas las gates aplicables.
 
@@ -91,17 +90,21 @@ class DomainValidationMixin:
                 results["passed"].append(gate.id)
             elif check_result == "fail":
                 if gate.severity == "critical":
-                    results["failed"].append({
-                        "id": gate.id,
-                        "rule": gate.rule,
-                        "auto_fix": gate.auto_fix,
-                        "fix_strategy": gate.fix_strategy if gate.auto_fix else "",
-                    })
+                    results["failed"].append(
+                        {
+                            "id": gate.id,
+                            "rule": gate.rule,
+                            "auto_fix": gate.auto_fix,
+                            "fix_strategy": gate.fix_strategy if gate.auto_fix else "",
+                        }
+                    )
                 else:
-                    results["warnings"].append({
-                        "id": gate.id,
-                        "rule": gate.rule,
-                    })
+                    results["warnings"].append(
+                        {
+                            "id": gate.id,
+                            "rule": gate.rule,
+                        }
+                    )
 
         # Calculate score
         total = len(all_gates)
@@ -185,12 +188,12 @@ class DomainValidationMixin:
             return "pass"
 
         elif "bare" in gate.id:
-            if re.search(r'except\s*:', code):
+            if re.search(r"except\s*:", code):
                 return "fail"
             return "pass"
 
         elif "https" in gate.id:
-            if re.search(r'http://(?!localhost|127\.0\.0\.1)', code):
+            if re.search(r"http://(?!localhost|127\.0\.0\.1)", code):
                 return "fail"
             return "pass"
 

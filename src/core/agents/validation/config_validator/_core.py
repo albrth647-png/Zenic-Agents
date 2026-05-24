@@ -12,11 +12,14 @@ Validates:
 """
 
 from __future__ import annotations
+
 import json
-from typing import Any, Optional
+from typing import Any
+
 from ...resilience import BaseAgent
 from ...schemas import ConfigResult, ValidationIssue
-from ._types import REQUIRED_KEYS, OPTIONAL_KEYS_WITH_DEFAULTS, VALUE_CONSTRAINTS, SECURITY_SENSITIVE_KEYS
+from ._types import OPTIONAL_KEYS_WITH_DEFAULTS, REQUIRED_KEYS, SECURITY_SENSITIVE_KEYS, VALUE_CONSTRAINTS
+
 
 class ConfigValidator(BaseAgent[ConfigResult]):
     """
@@ -61,9 +64,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         # 1. Schema validation (required keys)
         if config_type and config_type in REQUIRED_KEYS:
-            schema_issues, applied = self._validate_required_keys(
-                config, config_type
-            )
+            schema_issues, applied = self._validate_required_keys(config, config_type)
             issues.extend(schema_issues)
             defaults_applied.extend(applied)
 
@@ -74,9 +75,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         # 3. Custom schema validation
         if custom_schema:
-            custom_issues, applied = self._validate_custom_schema(
-                config, custom_schema
-            )
+            custom_issues, applied = self._validate_custom_schema(config, custom_schema)
             issues.extend(custom_issues)
             defaults_applied.extend(applied)
 
@@ -100,9 +99,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
             source="deterministic",
         )
 
-    def _parse_config(
-        self, config_data: Any
-    ) -> tuple[Optional[dict[str, Any]], list[ValidationIssue]]:
+    def _parse_config(self, config_data: Any) -> tuple[dict[str, Any] | None, list[ValidationIssue]]:
         """Parse config data from various formats into a dict."""
         issues = []
 
@@ -181,9 +178,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         return issues, defaults_applied
 
-    def _validate_constraints(
-        self, config: dict[str, Any], config_type: str
-    ) -> list[ValidationIssue]:
+    def _validate_constraints(self, config: dict[str, Any], config_type: str) -> list[ValidationIssue]:
         """Validate value types and constraints."""
         issues = []
         constraints = VALUE_CONSTRAINTS.get(config_type, {})
@@ -197,11 +192,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
             # Type check
             expected_type = rules.get("type")
             if expected_type and not isinstance(value, expected_type):
-                type_name = (
-                    expected_type.__name__
-                    if isinstance(expected_type, type)
-                    else str(expected_type)
-                )
+                type_name = expected_type.__name__ if isinstance(expected_type, type) else str(expected_type)
                 issues.append(
                     ValidationIssue(
                         severity="error",
@@ -298,8 +289,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
         for key in SECURITY_SENSITIVE_KEYS["debug_keys"]:
             if key in config:
                 if config[key] is True or (
-                    isinstance(config[key], str)
-                    and config[key].lower() in ("true", "1", "yes")
+                    isinstance(config[key], str) and config[key].lower() in ("true", "1", "yes")
                 ):
                     issues.append(
                         ValidationIssue(
@@ -372,9 +362,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         return issues
 
-    def _apply_defaults(
-        self, config: dict[str, Any], config_type: str
-    ) -> list[str]:
+    def _apply_defaults(self, config: dict[str, Any], config_type: str) -> list[str]:
         """Apply default values for missing optional keys."""
         applied = []
         defaults = OPTIONAL_KEYS_WITH_DEFAULTS.get(config_type, {})

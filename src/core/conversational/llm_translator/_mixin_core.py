@@ -1,14 +1,17 @@
 """Core logic for llm_translator."""
 
 from __future__ import annotations
+
 import json
 import logging
 import re
 import time
-from typing import Any, Dict, Optional
+from typing import Any
+
 from ._mixin_fallback import FallbackMixin
 
 logger = logging.getLogger("zenic_agents.conversational.llm_translator")
+
 
 class LLMTranslator(FallbackMixin):
     """Converts natural language input into structured DAG requests.
@@ -19,7 +22,7 @@ class LLMTranslator(FallbackMixin):
 
     def __init__(
         self,
-        llm_engine: Optional[Any] = None,
+        llm_engine: Any | None = None,
         max_retries: int = 2,
         retry_delay_s: float = 0.5,
     ) -> None:
@@ -42,7 +45,7 @@ class LLMTranslator(FallbackMixin):
 
     # ─── Public API ────────────────────────────────────────────
 
-    def translate(self, user_input: str, context: Optional[Dict] = None) -> Dict:
+    def translate(self, user_input: str, context: dict | None = None) -> dict:
         """Convert NL input to a structured DAG request.
 
         Args:
@@ -86,13 +89,13 @@ class LLMTranslator(FallbackMixin):
 
     # ─── LLM Path ──────────────────────────────────────────────
 
-    def _try_llm_translate(self, user_input: str, context: Dict) -> Optional[Dict]:
+    def _try_llm_translate(self, user_input: str, context: dict) -> dict | None:
         """Attempt LLM-based translation with retries."""
         if self._llm is None:
             return None
 
         # Check if LLM is available
-        if hasattr(self._llm, 'is_loaded') and not self._llm.is_loaded:
+        if hasattr(self._llm, "is_loaded") and not self._llm.is_loaded:
             return None
 
         prompt = self._build_prompt(user_input, context)
@@ -118,7 +121,7 @@ class LLMTranslator(FallbackMixin):
 
         return None
 
-    def _build_prompt(self, user_input: str, context: Dict) -> str:
+    def _build_prompt(self, user_input: str, context: dict) -> str:
         """Build the translation prompt for the LLM."""
         recent_history = context.get("recent_history", [])
         history_str = ""
@@ -138,12 +141,12 @@ class LLMTranslator(FallbackMixin):
             "You are a request parser. Convert the user message into a structured JSON request.\n"
             "Output ONLY valid JSON with these fields:\n"
             '  "intent": one of [chat, question, command, config, feedback, '
-            'code_create, code_refactor, code_debug, code_optimize, code_analyze, '
-            'code_explain, business, automation]\n'
+            "code_create, code_refactor, code_debug, code_optimize, code_analyze, "
+            "code_explain, business, automation]\n"
             '  "entities": {"files": [], "languages": [], "frameworks": [], '
             '"functions": [], "domains": []}\n'
             '  "action_type": one of [CREATE, REFACTOR, DELETE, SEARCH, ANALYZE, '
-            'EXPLAIN, DEBUG, OPTIMIZE, CHAT, COMMAND, CONFIG, QUESTION]\n'
+            "EXPLAIN, DEBUG, OPTIMIZE, CHAT, COMMAND, CONFIG, QUESTION]\n"
             '  "config": {"target_file": "", "language": "", "scope": "", '
             '"operation_detail": ""}\n'
             '  "confidence": float between 0.0 and 1.0\n\n'
@@ -153,14 +156,14 @@ class LLMTranslator(FallbackMixin):
             "JSON:"
         )
 
-    def _parse_response(self, llm_output: str) -> Optional[Dict]:
+    def _parse_response(self, llm_output: str) -> dict | None:
         """Parse LLM output into structured format.
 
         Tries to extract JSON from the response. If parsing fails,
         attempts to extract structured data from freeform text.
         """
         # Strip thinking tokens from Qwen3
-        cleaned = re.sub(r'<think[^>]*>.*?</think\s*>', '', llm_output, flags=re.DOTALL)
+        cleaned = re.sub(r"<think[^>]*>.*?</think\s*>", "", llm_output, flags=re.DOTALL)
         cleaned = cleaned.strip()
 
         # Try to find JSON in the response
@@ -177,25 +180,25 @@ class LLMTranslator(FallbackMixin):
         return self._extract_structured(cleaned)
 
     @staticmethod
-    def _extract_json(text: str) -> Optional[str]:
+    def _extract_json(text: str) -> str | None:
         """Extract JSON block from text."""
         # Try code-block wrapped JSON first
-        cb_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.DOTALL)
+        cb_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
         if cb_match:
             return cb_match.group(1)
 
         # Try raw JSON
-        brace_start = text.find('{')
-        brace_end = text.rfind('}')
+        brace_start = text.find("{")
+        brace_end = text.rfind("}")
         if brace_start != -1 and brace_end > brace_start:
-            return text[brace_start:brace_end + 1]
+            return text[brace_start : brace_end + 1]
 
         return None
 
     @staticmethod
-    def _extract_structured(text: str) -> Optional[Dict]:
+    def _extract_structured(text: str) -> dict | None:
         """Attempt to extract structured data from freeform LLM text."""
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         # Look for intent mentions
         for intent in VALID_INTENTS:  # noqa: F821
@@ -221,7 +224,7 @@ class LLMTranslator(FallbackMixin):
 
     # ─── Validation ────────────────────────────────────────────
 
-    def _validate_result(self, result: Dict) -> Dict:
+    def _validate_result(self, result: dict) -> dict:
         """Validate and sanitize the translation result against known schemas."""
         if not isinstance(result, dict):
             return self._low_confidence_result("invalid_result_type")
@@ -257,7 +260,7 @@ class LLMTranslator(FallbackMixin):
         return result
 
     @staticmethod
-    def _low_confidence_result(reason: str) -> Dict:
+    def _low_confidence_result(reason: str) -> dict:
         """Return an empty result with low confidence."""
         return {
             "intent": "unknown",
@@ -270,12 +273,12 @@ class LLMTranslator(FallbackMixin):
 
     # ─── LLM Helper ────────────────────────────────────────────
 
-    def _call_llm(self, prompt: str) -> Optional[str]:
+    def _call_llm(self, prompt: str) -> str | None:
         """Call the LLM engine safely."""
         try:
-            if hasattr(self._llm, 'chat'):
+            if hasattr(self._llm, "chat"):
                 return self._llm.chat(prompt, max_tokens=512)
-            elif hasattr(self._llm, '_call_llm'):
+            elif hasattr(self._llm, "_call_llm"):
                 return self._llm._call_llm(
                     system_prompt="You are a JSON request parser. Output ONLY valid JSON.",
                     user_prompt=prompt,
@@ -288,7 +291,7 @@ class LLMTranslator(FallbackMixin):
     # ─── Properties ────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Translation statistics."""
         return {**self._stats}
 
@@ -297,6 +300,6 @@ class LLMTranslator(FallbackMixin):
         """Whether the LLM engine is available for translations."""
         if self._llm is None:
             return False
-        if hasattr(self._llm, 'is_loaded'):
+        if hasattr(self._llm, "is_loaded"):
             return self._llm.is_loaded
         return True  # Assume available if no is_loaded check

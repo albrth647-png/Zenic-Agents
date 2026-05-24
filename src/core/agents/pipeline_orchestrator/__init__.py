@@ -24,91 +24,137 @@ import logging
 import time
 from typing import Any, Optional
 
-from .understanding import (  # type: ignore[import-unresolved]
-    IntentClassifier,
-    EntityExtractor,
-    TargetResolver,
-    CriticalityScorer,
-    BilingualRouter,
+# VoicePipeline — audio transcription infrastructure
+from src.core.voice_pipeline import (
+    Ear,
+    FormatAdapter,
+    STTBackendConfig,
+    VoicePipeline,
 )
-from .memory import (  # type: ignore[import-unresolved]
-    MemoryCollector,
-    RelevanceScorer,
-    ContextCompressor,
-    ContextPrefetcher,
-)
-from .business import (  # type: ignore[import-unresolved]
-    InvoiceProcessor,
-    InventoryManager,
-    CRMPipeline,
-    TaskScheduler,
-    ReportGenerator,
-    NotificationDispatcher,
-    DataAnalyzer,
-    OperationRouter,
-)
-# code_ops removed — module deleted
-# CodeGenerator, CodeRefactorer, CodeOptimizer, CodeFixer,
-# ProjectScaffolder, DefensiveInjector no longer available
-from .validation import (  # type: ignore[import-unresolved]
-    SecurityScanner,
-    SyntaxValidator,
-    RiskCalculator,
-    FixSuggester,
-)
+
+from ._core_mixin import PipelineOrchestratorCoreMixin
+from ._extra_mixin import PipelineOrchestratorExtraMixin
 from .automation import (  # type: ignore[import-unresolved]
-    TriggerInferrer,
     ActionInferrer,
-    ScheduleParser,
-    ConditionExtractor,
     AutomationNamer,
+    ConditionExtractor,
+    ScheduleParser,
+    TriggerInferrer,
     WorkflowSerializer,
 )
+from .business import (  # type: ignore[import-unresolved]
+    CRMPipeline,
+    DataAnalyzer,
+    InventoryManager,
+    InvoiceProcessor,
+    NotificationDispatcher,
+    OperationRouter,
+    ReportGenerator,
+    TaskScheduler,
+)
+from .memory import (  # type: ignore[import-unresolved]
+    ContextCompressor,
+    ContextPrefetcher,
+    MemoryCollector,
+    RelevanceScorer,
+)
 from .reasoning import (  # type: ignore[import-unresolved]
+    ConclusionExtractor,
+    ConfidenceEstimator,
     ProblemDetector,
     StepDecomposer,
     TemplateReasoner,
-    ConfidenceEstimator,
-    ConclusionExtractor,
-)
-from .verdict import (  # type: ignore[import-unresolved]
-    VerdictEngineV18,
-    EvidenceCollectorV18,
-    ConsensusResolverV18,
-)
-from .schemas import (  # type: ignore[import-unresolved]
-    Verdict, VerdictOutput, ConsensusResult, Evidence,
-    IntentResult, EntityResult, TargetResult, CriticalityResult,
-    LanguageResult, SecurityResult, SyntaxResult, RiskResult,
-    WorkflowSpec, ProblemType, ReasoningResult, ConfidenceResult, DecomposedSteps, Conclusion,
-    TriggerSpec, ActionSpec, ScheduleSpec, ConditionResult, NameResult,
 )
 from .resilience import (  # type: ignore[import-unresolved]
-    CircuitBreakerManager,
-    BulkheadManager,
-    GlobalHealthMonitor,
     AuditLogger,
+    BulkheadManager,
+    CircuitBreakerManager,
+    GlobalHealthMonitor,
+)
+from .schemas import (  # type: ignore[import-unresolved]
+    ActionSpec,
+    Conclusion,
+    ConditionResult,
+    ConfidenceResult,
+    ConsensusResult,
+    CriticalityResult,
+    DecomposedSteps,
+    EntityResult,
+    Evidence,
+    IntentResult,
+    LanguageResult,
+    NameResult,
+    ProblemType,
+    ReasoningResult,
+    RiskResult,
+    ScheduleSpec,
+    SecurityResult,
+    SyntaxResult,
+    TargetResult,
+    TriggerSpec,
+    Verdict,
+    VerdictOutput,
+    WorkflowSpec,
 )
 from .transport import (  # type: ignore[import-unresolved]
     TextChannelAgent,
     VoiceChannelAgent,
 )
-
-# VoicePipeline — audio transcription infrastructure
-from src.core.voice_pipeline import (
-    VoicePipeline,
-    Ear,
-    FormatAdapter,
-    STTBackendConfig,
+from .understanding import (  # type: ignore[import-unresolved]
+    BilingualRouter,
+    CriticalityScorer,
+    EntityExtractor,
+    IntentClassifier,
+    TargetResolver,
 )
 
-
-from ._core_mixin import PipelineOrchestratorCoreMixin
-from ._extra_mixin import PipelineOrchestratorExtraMixin
+# code_ops removed — module deleted
+# CodeGenerator, CodeRefactorer, CodeOptimizer, CodeFixer,
+# ProjectScaffolder, DefensiveInjector no longer available
+from .validation import (  # type: ignore[import-unresolved]
+    FixSuggester,
+    RiskCalculator,
+    SecurityScanner,
+    SyntaxValidator,
+)
+from .verdict import (  # type: ignore[import-unresolved]
+    ConsensusResolverV18,
+    EvidenceCollectorV18,
+    VerdictEngineV18,
+)
 
 logger = logging.getLogger("zenic_agents.agents.pipeline_orchestrator")
 
-__all__ = ["PipelineOrchestrator", "NicheOnboardingPipeline", "time", "Verdict", "VerdictOutput", "ConsensusResult", "Evidence", "IntentResult", "EntityResult", "TargetResult", "CriticalityResult", "LanguageResult", "SecurityResult", "SyntaxResult", "RiskResult", "WorkflowSpec", "ProblemType", "ReasoningResult", "ConfidenceResult", "DecomposedSteps", "Conclusion", "TriggerSpec", "ActionSpec", "ScheduleSpec", "ConditionResult", "NameResult", "Ear", "FormatAdapter"]
+__all__ = [
+    "ActionSpec",
+    "Conclusion",
+    "ConditionResult",
+    "ConfidenceResult",
+    "ConsensusResult",
+    "CriticalityResult",
+    "DecomposedSteps",
+    "Ear",
+    "EntityResult",
+    "Evidence",
+    "FormatAdapter",
+    "IntentResult",
+    "LanguageResult",
+    "NameResult",
+    "NicheOnboardingPipeline",
+    "PipelineOrchestrator",
+    "ProblemType",
+    "ReasoningResult",
+    "RiskResult",
+    "ScheduleSpec",
+    "SecurityResult",
+    "SyntaxResult",
+    "TargetResult",
+    "TriggerSpec",
+    "Verdict",
+    "VerdictOutput",
+    "WorkflowSpec",
+    "time",
+]
 
 # Phase D: Niche Onboarding Pipeline
 from .niche_onboarding_pipeline import NicheOnboardingPipeline  # noqa: E402
@@ -217,7 +263,7 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
         # Voice pipeline will be wired via wire_voice_pipeline() after startup
 
         # ── VoicePipeline — audio transcription infrastructure ──
-        self._voice_pipeline: Optional[VoicePipeline] = None  # Lazy-initialized via wire_voice_pipeline()
+        self._voice_pipeline: VoicePipeline | None = None  # Lazy-initialized via wire_voice_pipeline()
 
         # ── Business agent registry for routing ──
         self._business_agents = {
@@ -251,13 +297,11 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
                 voice_pipeline=self._voice_pipeline,
                 registry=registry,
             )
-        logger.info(
-            "PipelineOrchestrator: channels wired (A53_TextChannelAgent, A52_VoiceChannelAgent)"
-        )
+        logger.info("PipelineOrchestrator: channels wired (A53_TextChannelAgent, A52_VoiceChannelAgent)")
 
     def wire_voice_pipeline(
         self,
-        stt_config: Optional[STTBackendConfig] = None,
+        stt_config: STTBackendConfig | None = None,
     ) -> VoicePipeline:
         """Wire the VoicePipeline for audio transcription.
 
@@ -281,8 +325,7 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
             registry=None,  # Registry wired separately via wire_channels()
         )
         logger.info(
-            "PipelineOrchestrator: voice pipeline wired "
-            "(backend=%s, adapter=%s, A52_wired=%s)",
+            "PipelineOrchestrator: voice pipeline wired " "(backend=%s, adapter=%s, A52_wired=%s)",
             self._voice_pipeline.active_backend,
             self._voice_pipeline.adapter.is_available,
             self._voice_channel_agent.is_wired,
@@ -290,7 +333,7 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
         return self._voice_pipeline
 
     @property
-    def voice_pipeline(self) -> Optional[VoicePipeline]:
+    def voice_pipeline(self) -> VoicePipeline | None:
         """Access the VoicePipeline (None until wire_voice_pipeline is called)."""
         return self._voice_pipeline
 
@@ -298,4 +341,3 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
     def voice_channel_agent(self) -> VoiceChannelAgent:
         """Access the A52 VoiceChannelAgent."""
         return self._voice_channel_agent
-

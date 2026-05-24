@@ -12,9 +12,10 @@ import logging
 import queue
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 # ======================================================================
 # Configuration
 # ======================================================================
+
 
 @dataclass
 class WorkerPoolConfig:
@@ -35,6 +37,7 @@ class WorkerPoolConfig:
         idle_timeout: Seconds before an idle excess worker exits.
         name: Human-readable pool name (used in logging & thread names).
     """
+
     min_workers: int = 2
     max_workers: int = 4
     queue_size: int = 50
@@ -46,10 +49,11 @@ class WorkerPoolConfig:
 # Internal work item
 # ======================================================================
 
+
 class _WorkItem:
     """Internal representation of a submitted task."""
 
-    __slots__ = ("fn", "args", "kwargs", "future", "priority", "submit_time", "_sentinel")
+    __slots__ = ("_sentinel", "args", "fn", "future", "kwargs", "priority", "submit_time")
 
     def __init__(
         self,
@@ -80,6 +84,7 @@ _SENTINEL = _WorkItem(priority=1_000_000, _sentinel=True)
 # Worker Pool
 # ======================================================================
 
+
 class WorkerPool:
     """
     Thread pool with dynamic scaling and priority scheduling.
@@ -103,7 +108,7 @@ class WorkerPool:
         self._work_queue: queue.PriorityQueue[_WorkItem] = queue.PriorityQueue(
             maxsize=config.queue_size if config.queue_size > 0 else 0
         )
-        self._workers: List[threading.Thread] = []
+        self._workers: list[threading.Thread] = []
         self._lock = threading.Lock()
         self._shutdown = False
         self._active_count = 0
@@ -118,7 +123,8 @@ class WorkerPool:
 
         logger.debug(
             "WorkerPool '%s': started with %d workers",
-            config.name, config.min_workers,
+            config.name,
+            config.min_workers,
         )
 
     # ------------------------------------------------------------------
@@ -204,8 +210,8 @@ class WorkerPool:
     def map(
         self,
         fn: Callable[..., Any],
-        iterables: List[Any],
-    ) -> List[Future]:
+        iterables: list[Any],
+    ) -> list[Future]:
         """
         Submit *fn* for each item in *iterables*.
 
@@ -216,7 +222,7 @@ class WorkerPool:
         Returns:
             List of :class:`~concurrent.futures.Future` objects.
         """
-        futures: List[Future] = []
+        futures: list[Future] = []
         for item in iterables:
             futures.append(self.submit(fn, item))
         return futures
@@ -264,7 +270,7 @@ class WorkerPool:
         return self._work_queue.qsize()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return pool statistics."""
         with self._lock:
             worker_count = len(self._workers)
@@ -328,9 +334,7 @@ class WorkerPool:
                 item.future.set_exception(exc)
                 with self._active_lock:
                     self._total_failed += 1
-                logger.error(
-                    "WorkerPool '%s': task failed – %s", self._config.name, exc
-                )
+                logger.error("WorkerPool '%s': task failed – %s", self._config.name, exc)
             finally:
                 with self._active_lock:
                     self._active_count -= 1

@@ -9,9 +9,9 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, Optional
+from typing import Any
 
-from ._types import AuditRecord, AuditEventType, GENESIS_HASH, _MAX_RETRIES, _RETRY_DELAY
+from ._types import _MAX_RETRIES, _RETRY_DELAY, GENESIS_HASH, AuditEventType, AuditRecord
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class AuditMerklePersistenceMixin:
 
     def _init_db(self) -> None:
         """Create the audit records table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -55,6 +56,7 @@ class AuditMerklePersistenceMixin:
 
     def _get_last_hash(self) -> str:
         """Get the content_hash of the most recent record (for chaining)."""
+
         def _do_query() -> str:
             conn = sqlite3.connect(self._db_path)
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -71,19 +73,26 @@ class AuditMerklePersistenceMixin:
     @staticmethod
     def _compute_content_hash(record: AuditRecord, previous_hash: str) -> str:
         """Compute the SHA-256 content hash for a record."""
-        payload = json.dumps({
-            "request_id": record.request_id,
-            "event_type": record.event_type.value if isinstance(record.event_type, AuditEventType) else record.event_type,
-            "actor_id": record.actor_id,
-            "actor_name": record.actor_name,
-            "details": record.details,
-            "previous_hash": previous_hash,
-            "timestamp": record.timestamp,
-        }, sort_keys=True, separators=(",", ":"))
+        payload = json.dumps(
+            {
+                "request_id": record.request_id,
+                "event_type": record.event_type.value
+                if isinstance(record.event_type, AuditEventType)
+                else record.event_type,
+                "actor_id": record.actor_id,
+                "actor_name": record.actor_name,
+                "details": record.details,
+                "previous_hash": previous_hash,
+                "timestamp": record.timestamp,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(payload.encode()).hexdigest()
 
     def _persist_record(self, record: AuditRecord, *, insert: bool) -> None:
         """Insert or update an audit record in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -144,7 +153,7 @@ class AuditMerklePersistenceMixin:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
@@ -152,7 +161,9 @@ class AuditMerklePersistenceMixin:
                 last_exc = exc
                 logger.warning(
                     "ApprovalAuditMerkle: DB retry %d/%d — %s",
-                    attempt, max_retries, exc,
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

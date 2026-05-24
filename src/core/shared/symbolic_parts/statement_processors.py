@@ -23,7 +23,7 @@ from ..z3_solver import HAS_Z3  # noqa: E402
 if HAS_Z3:
     import z3 as z3_module  # type: ignore[import-unresolved]
 
-from .types import SymbolicValue, SymbolicPath  # noqa: E402
+from .types import SymbolicPath, SymbolicValue  # noqa: E402
 
 
 class StatementProcessorMixin:
@@ -43,7 +43,7 @@ class StatementProcessorMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
 
         for target in stmt.targets:
@@ -65,11 +65,7 @@ class StatementProcessorMixin:
                 for i, elt in enumerate(target.elts):
                     if isinstance(elt, ast.Name):
                         var_name = elt.id
-                        sym_val = SymbolicValue(
-                            name=var_name,
-                            var_type="any",
-                            constraint=None
-                        )
+                        sym_val = SymbolicValue(name=var_name, var_type="any", constraint=None)
                         new_path.variables[var_name] = sym_val
                         new_path.add_assignment(var_name, f"unpack[{i}]")
 
@@ -84,7 +80,7 @@ class StatementProcessorMixin:
                             name=var_name,
                             var_type=existing.var_type,
                             constraint=existing.constraint,
-                            concrete=None  # No longer concretely known
+                            concrete=None,  # No longer concretely known
                         )
                         new_path.add_assignment(f"{var_name}[...]", self._symbolize_expr(stmt.value, path))
 
@@ -98,7 +94,7 @@ class StatementProcessorMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
 
         if isinstance(stmt.target, ast.Name):
@@ -126,17 +122,17 @@ class StatementProcessorMixin:
                             new_concrete = None
 
             op_str_map = {
-                ast.Add: "+=", ast.Sub: "-=", ast.Mult: "*=",
-                ast.Div: "/=", ast.Mod: "%=", ast.FloorDiv: "//=",
+                ast.Add: "+=",
+                ast.Sub: "-=",
+                ast.Mult: "*=",
+                ast.Div: "/=",
+                ast.Mod: "%=",
+                ast.FloorDiv: "//=",
             }
             op_str = op_str_map.get(type(stmt.op), "?=")
             rhs_str = self._symbolize_expr(stmt.value, path)
 
-            new_path.variables[var_name] = SymbolicValue(
-                name=var_name,
-                var_type=old_type,
-                concrete=new_concrete
-            )
+            new_path.variables[var_name] = SymbolicValue(name=var_name, var_type=old_type, concrete=new_concrete)
             new_path.add_assignment(var_name, f"{var_name}{op_str}{rhs_str}")
 
             # Z3: add constraint for the augmented assignment
@@ -155,7 +151,7 @@ class StatementProcessorMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
 
         if stmt.value is not None:
@@ -228,7 +224,7 @@ class StatementProcessorMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
         if true_z3 is not None:
             true_path.add_condition(true_str, true_z3)
@@ -245,7 +241,7 @@ class StatementProcessorMixin:
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
             assignments=list(path.assignments),
-            return_values=list(path.return_values)
+            return_values=list(path.return_values),
         )
         if false_z3 is not None:
             false_path.add_condition(false_str, false_z3)

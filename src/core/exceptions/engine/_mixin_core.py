@@ -6,8 +6,9 @@ import json
 import logging
 import sqlite3
 import threading
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from ..taxonomy import (
     ExceptionCategory,
@@ -34,13 +35,14 @@ class ExceptionEngine:
     def __init__(self, db_path: str = "exception_engine.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._on_signal_callbacks: List[Callable[[ExceptionSignal], None]] = []  # noqa: F821
+        self._on_signal_callbacks: list[Callable[[ExceptionSignal], None]] = []  # noqa: F821
         self._init_db()
 
     # ── DB initialisation ─────────────────────────────────
 
     def _init_db(self) -> None:
         """Create tables and indexes (idempotent)."""
+
         def _exec(conn: sqlite3.Connection) -> None:
             conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)  # noqa: F821
             conn.commit()
@@ -65,7 +67,7 @@ class ExceptionEngine:
         category: ExceptionCategory,
         severity: ExceptionSeverity,
         message: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> ExceptionSignal:  # noqa: F821
         """Create and register an exception signal."""
         # Coerce string arguments to enum instances
@@ -117,8 +119,11 @@ class ExceptionEngine:
         self._fire_callbacks(sig)
         logger.info(
             "ExceptionEngine: signal %s [%s:%s] from %s – %s",
-            sig.signal_id, sig.category.value, sig.severity.value,
-            sig.source, sig.message[:120],
+            sig.signal_id,
+            sig.category.value,
+            sig.severity.value,
+            sig.source,
+            sig.message[:120],
         )
         return sig
 
@@ -127,7 +132,7 @@ class ExceptionEngine:
         source: str,
         confidence: float,
         message: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> ExceptionSignal:  # noqa: F821
         """Convenience: derive category and severity from a confidence score."""
         category = ExceptionCategory.LOW_CONFIDENCE
@@ -140,7 +145,7 @@ class ExceptionEngine:
         self,
         source: str,
         error: Exception,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> ExceptionSignal:  # noqa: F821
         """Convenience: derive category from a Python exception."""
         category = categorize_error(error)
@@ -157,9 +162,10 @@ class ExceptionEngine:
 
     # ── Query ─────────────────────────────────────────────
 
-    def get_active_exceptions(self, tenant_id: str = "") -> List[ExceptionRecord]:  # noqa: F821
+    def get_active_exceptions(self, tenant_id: str = "") -> list[ExceptionRecord]:  # noqa: F821
         """Return unresolved exception records, optionally filtered by tenant."""
-        def _query(conn: sqlite3.Connection) -> List[ExceptionRecord]:  # noqa: F821
+
+        def _query(conn: sqlite3.Connection) -> list[ExceptionRecord]:  # noqa: F821
             if tenant_id:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     """
@@ -234,26 +240,27 @@ class ExceptionEngine:
         if triggered:
             logger.warning(
                 "ExceptionEngine: auto-brake triggered – %d exceptions in %ds (threshold=%d)",
-                count, window_seconds, threshold,
+                count,
+                window_seconds,
+                threshold,
             )
         return triggered
 
     # ── Statistics ────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return aggregate statistics: counts by category, severity, recent rate."""
-        def _collect(conn: sqlite3.Connection) -> Dict[str, Any]:
-            by_category: Dict[str, int] = {}
+
+        def _collect(conn: sqlite3.Connection) -> dict[str, Any]:
+            by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT category, COUNT(*) FROM _zenic_exceptions "
-                "WHERE resolved = 0 GROUP BY category"
+                "SELECT category, COUNT(*) FROM _zenic_exceptions " "WHERE resolved = 0 GROUP BY category"
             ):
                 by_category[row[0]] = row[1]
 
-            by_severity: Dict[str, int] = {}
+            by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT severity, COUNT(*) FROM _zenic_exceptions "
-                "WHERE resolved = 0 GROUP BY severity"
+                "SELECT severity, COUNT(*) FROM _zenic_exceptions " "WHERE resolved = 0 GROUP BY severity"
             ):
                 by_severity[row[0]] = row[1]
 
@@ -264,8 +271,7 @@ class ExceptionEngine:
             # Recent rate: exceptions in the last hour
             one_hour_ago = datetime.now(timezone.utc).timestamp() - 3600
             recent = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT COUNT(*) FROM _zenic_exceptions "
-                "WHERE unixepoch(timestamp) >= ?",
+                "SELECT COUNT(*) FROM _zenic_exceptions " "WHERE unixepoch(timestamp) >= ?",
                 (one_hour_ago,),
             ).fetchone()[0]
 
@@ -290,7 +296,8 @@ class ExceptionEngine:
                 cb(signal)
             except Exception as exc:
                 logger.warning(
-                    "ExceptionEngine: on_signal callback error: %s", exc,
+                    "ExceptionEngine: on_signal callback error: %s",
+                    exc,
                 )
 
     # ── Bridge methods ────────────────────────────────────
@@ -300,12 +307,12 @@ class ExceptionEngine:
         source: str,
         confidence: float,
         message: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> ExceptionSignal:  # noqa: F821
         """Bridge from :class:`ConfidenceEstimator`."""
         return self.signal_from_confidence(source, confidence, message, context)
 
-    def feed_alert(self, alert_data: Dict[str, Any]) -> ExceptionSignal:  # noqa: F821
+    def feed_alert(self, alert_data: dict[str, Any]) -> ExceptionSignal:  # noqa: F821
         """Bridge from :class:`AlertManager`."""
         source = alert_data.get("monitor_name", alert_data.get("source", "alert_manager"))
         category_str = alert_data.get("category", "SYSTEM_ERROR")
@@ -331,11 +338,20 @@ class ExceptionEngine:
     def _row_to_record(
         row: tuple,
     ) -> ExceptionRecord:  # noqa: F821
-        """Convert a DB row tuple to an :class:`ExceptionRecord`."""  # noqa: F821
+        """Convert a DB row tuple to an :class:`ExceptionRecord`."""
         (
-            record_id, signal_id, source, category_str,
-            severity_str, message, context_json, timestamp,
-            routing_action, resolved_int, resolved_at, resolution_note,
+            record_id,
+            signal_id,
+            source,
+            category_str,
+            severity_str,
+            message,
+            context_json,
+            timestamp,
+            routing_action,
+            resolved_int,
+            resolved_at,
+            resolution_note,
         ) = row
 
         try:

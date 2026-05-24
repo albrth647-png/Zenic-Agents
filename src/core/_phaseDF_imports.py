@@ -14,29 +14,29 @@ logger = logging.getLogger(__name__)
 # ── Phase D: Autopilot ────────────────────────────────────
 try:
     from src.core.autopilot import (
-        Objective,
-        ObjectiveStatus,
-        ObjectivePriority,
-        ObjectiveTarget,
-        get_objective_store,
-        KPITracker,
-        KPIMeasurement,
-        KPITrend,
-        get_kpi_tracker,
+        AutonomyConfig,
+        AutonomyLevel,
+        AutopilotEngine,
         AutopilotPlanner,
+        AutopilotStatus,
+        ClosedLoopFeedback,
+        FeedbackAction,
+        FeedbackCycle,
+        KPIMeasurement,
+        KPITracker,
+        KPITrend,
+        Objective,
+        ObjectivePriority,
+        ObjectiveStatus,
+        ObjectiveTarget,
         PlannedAction,
         PlanStep,
-        get_autopilot_planner,
-        ClosedLoopFeedback,
-        FeedbackCycle,
-        FeedbackAction,
-        get_closed_loop_feedback,
-        AutonomyLevel,
-        AutonomyConfig,
         get_autonomy_config,
-        AutopilotEngine,
-        AutopilotStatus,
         get_autopilot_engine,
+        get_autopilot_planner,
+        get_closed_loop_feedback,
+        get_kpi_tracker,
+        get_objective_store,
     )
 except ImportError as exc:
     logger.warning("core: Autopilot import failed: %s", exc)
@@ -70,18 +70,18 @@ try:
         CostAccumulator,
         CostCategory,
         CostEntry,
-        get_cost_accumulator,
-        ValueTracker,
+        DashboardWidget,
+        ImpactScore,
+        ImpactScorer,
+        ROIDashboardData,
+        TrendPoint,
         ValueCategory,
         ValueEntry,
-        get_value_tracker,
-        ImpactScorer,
-        ImpactScore,
+        ValueTracker,
+        get_cost_accumulator,
         get_impact_scorer,
-        ROIDashboardData,
-        DashboardWidget,
-        TrendPoint,
         get_roi_dashboard_data,
+        get_value_tracker,
     )
 except ImportError as exc:
     logger.warning("core: ROI import failed: %s", exc)
@@ -104,17 +104,17 @@ except ImportError as exc:
 # ── Phase E1: Knowledge Graph ─────────────────────────────
 try:
     from src.core.knowledge import (
-        KnowledgeNode,
+        CrossAgentKnowledgeBus,
+        GraphDomain,
         KnowledgeEdge,
+        KnowledgeGraphEngine,
+        KnowledgeNode,
         KnowledgeQuery,
         KnowledgeSearchResult,
-        GraphDomain,
-        KnowledgeGraphEngine,
-        get_knowledge_graph,
-        reset_knowledge_graph,
-        CrossAgentKnowledgeBus,
         get_cross_agent_bus,
+        get_knowledge_graph,
         reset_cross_agent_bus,
+        reset_knowledge_graph,
     )
 except ImportError as exc:
     logger.warning("core: Knowledge import failed: %s", exc)
@@ -133,18 +133,18 @@ except ImportError as exc:
 # ── Phase E2: Conversational Memory v2 ────────────────────
 try:
     from src.core.conversational.memory_v2 import (
-        MemoryTier,
-        MemoryType,
-        MemoryRecord,
-        MemoryQuery,
-        MemorySearchResult,
+        ContextManager,
         ContextWindow,
         MemoryEngineV2,
-        get_memory_engine_v2,
-        reset_memory_engine_v2,
-        ContextManager,
+        MemoryQuery,
+        MemoryRecord,
+        MemorySearchResult,
+        MemoryTier,
+        MemoryType,
         get_context_manager,
+        get_memory_engine_v2,
         reset_context_manager,
+        reset_memory_engine_v2,
     )
 except ImportError as exc:
     logger.warning("core: MemoryV2 import failed: %s", exc)
@@ -164,16 +164,16 @@ except ImportError as exc:
 # ── Phase E3: Self-Learning Loop ──────────────────────────
 try:
     from src.core.learning import (
-        OutcomeStatus,
         ActionOutcome,
-        OutcomeTracker,
-        get_outcome_tracker,
-        reset_outcome_tracker,
+        LearningEngine,
         LearningInsight,
         LearningStrategy,
-        LearningEngine,
+        OutcomeStatus,
+        OutcomeTracker,
         get_learning_engine,
+        get_outcome_tracker,
         reset_learning_engine,
+        reset_outcome_tracker,
     )
 except ImportError as exc:
     logger.warning("core: Learning import failed: %s", exc)
@@ -191,21 +191,21 @@ except ImportError as exc:
 # ── Phase F1: Plugin SDK ──────────────────────────────────
 try:
     from src.core.plugins import (
-        PluginState,
-        PluginCapability,
-        PluginManifest,
-        PluginInstance,
-        PluginRegistry,
-        get_plugin_registry,
-        reset_plugin_registry,
-        PluginLifecycleManager,
-        get_plugin_lifecycle,
-        reset_plugin_lifecycle,
-        HookType,
         HookRegistration,
+        HookType,
+        PluginCapability,
         PluginHookSystem,
+        PluginInstance,
+        PluginLifecycleManager,
+        PluginManifest,
+        PluginRegistry,
+        PluginState,
         get_plugin_hook_system,
+        get_plugin_lifecycle,
+        get_plugin_registry,
         reset_plugin_hook_system,
+        reset_plugin_lifecycle,
+        reset_plugin_registry,
     )
 except ImportError as exc:
     logger.warning("core: Plugins import failed: %s", exc)
@@ -228,17 +228,17 @@ except ImportError as exc:
 # ── Phase F2: Policy-as-Code ──────────────────────────────
 try:
     from src.core.policy_code import (
-        PolicyEffect,
-        PolicyOperator,
-        PolicyCondition,
-        PolicyStatement,
-        PolicyDocument,
-        PolicyEvaluationResult,
         PolicyCodeEngine,
-        get_policy_code_engine,
-        reset_policy_code_engine,
+        PolicyCondition,
+        PolicyDocument,
+        PolicyEffect,
+        PolicyEvaluationResult,
+        PolicyOperator,
+        PolicyStatement,
         get_builtin_policies,
+        get_policy_code_engine,
         install_builtin_policies,
+        reset_policy_code_engine,
     )
 except ImportError as exc:
     logger.warning("core: PolicyCode import failed: %s", exc)
@@ -257,12 +257,12 @@ except ImportError as exc:
 # ── Phase F3: Risk Prediction ─────────────────────────────
 try:
     from src.core.risk import (
-        RiskLevel,
         BlastRadiusReport,
-        RiskPropagationReport,
-        CriticalPathReport,
         CompositeRiskReport,
+        CriticalPathReport,
+        RiskLevel,
         RiskPredictionEngine,
+        RiskPropagationReport,
         get_risk_prediction_engine,
         reset_risk_prediction_engine,
     )
@@ -280,15 +280,15 @@ except ImportError as exc:
 # ── Phase F4: Chaos Engineering ───────────────────────────
 try:
     from src.core.chaos import (
-        ChaosExperimentState,
-        FaultType,
-        FaultInjection,
         ChaosExperiment,
         ChaosExperimentRunner,
-        get_chaos_runner,
-        reset_chaos_runner,
+        ChaosExperimentState,
+        FaultInjection,
+        FaultType,
         SteadyStateVerifier,
+        get_chaos_runner,
         get_steady_state_verifier,
+        reset_chaos_runner,
         reset_steady_state_verifier,
     )
 except ImportError as exc:

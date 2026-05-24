@@ -39,9 +39,10 @@ class ReplayQueuePersistenceMixin:
                 if (
                     evt.tenant_id == tenant_id
                     and evt.created_at < cutoff
-                    and evt.status in (
-                        DeadLetterStatus.SUCCEEDED,  # noqa: F821
-                        DeadLetterStatus.EXHAUSTED,  # noqa: F821
+                    and evt.status
+                    in (
+                        DeadLetterStatus.SUCCEEDED,
+                        DeadLetterStatus.EXHAUSTED,
                     )
                 ):
                     to_remove.append(dlq_id)
@@ -63,7 +64,9 @@ class ReplayQueuePersistenceMixin:
 
         __import__("logging").getLogger("zenic_agents.events.replay_queue").info(
             "ReplayQueue: purged %d events for tenant=%s older than %d hours",
-            len(to_remove), tenant_id, older_than_hours,
+            len(to_remove),
+            tenant_id,
+            older_than_hours,
         )
         return len(to_remove)
 
@@ -88,9 +91,7 @@ class ReplayQueuePersistenceMixin:
         if tenant_id is not None:
             events = [e for e in events if e.tenant_id == tenant_id]
 
-        status_counts: dict[str, int] = {
-            s.value: 0 for s in DeadLetterStatus  # noqa: F821
-        }
+        status_counts: dict[str, int] = {s.value: 0 for s in DeadLetterStatus}
         oldest_created: float = time.time()
         total_retries = 0
 
@@ -101,9 +102,7 @@ class ReplayQueuePersistenceMixin:
                 oldest_created = evt.created_at
 
         now = time.time()
-        oldest_age_hours = (
-            (now - oldest_created) / 3600 if events else 0.0
-        )
+        oldest_age_hours = (now - oldest_created) / 3600 if events else 0.0
 
         return {
             "total": len(events),
@@ -120,13 +119,14 @@ _instance: ReplayQueue | None = None  # noqa: F821
 _instance_lock = threading.Lock()
 
 
-def get_replay_queue() -> "ReplayQueue":  # noqa: F821
+def get_replay_queue() -> ReplayQueue:  # noqa: F821
     """Return the singleton ReplayQueue instance."""
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
                 from ._core import ReplayQueue
+
                 _instance = ReplayQueue()
     return _instance
 

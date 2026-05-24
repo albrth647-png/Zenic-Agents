@@ -13,7 +13,8 @@ import functools
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any
 
 from src.core.shared.deterministic import DeterministicRNG
 
@@ -24,8 +25,10 @@ logger = logging.getLogger(__name__)
 # Capability enum
 # ======================================================================
 
+
 class AgentCapability(enum.Flag):
     """Capabilities that can be attached to agent methods via decorators."""
+
     LOGGING = enum.auto()
     METRICS = enum.auto()
     RETRY = enum.auto()
@@ -38,6 +41,7 @@ class AgentCapability(enum.Flag):
 # ======================================================================
 # Internal helpers
 # ======================================================================
+
 
 class _CircuitBreakerState:
     """Minimal circuit breaker: CLOSED → OPEN → HALF_OPEN → CLOSED."""
@@ -121,7 +125,7 @@ class _MetricsTracker:
                 self.failure_count += 1
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self.lock:
             avg = self.total_duration / max(self.call_count, 1)
             return {
@@ -137,9 +141,9 @@ class _MetricsTracker:
 # Shared registries (one per decorated method for isolation)
 # ======================================================================
 
-_cb_registry: Dict[str, _CircuitBreakerState] = {}
-_rl_registry: Dict[str, _RateLimiter] = {}
-_metrics_registry: Dict[str, _MetricsTracker] = {}
+_cb_registry: dict[str, _CircuitBreakerState] = {}
+_rl_registry: dict[str, _RateLimiter] = {}
+_metrics_registry: dict[str, _MetricsTracker] = {}
 _registry_lock = threading.Lock()
 
 
@@ -178,9 +182,10 @@ def _get_metrics(key: str) -> _MetricsTracker:
 # Decorator factory
 # ======================================================================
 
+
 def agent_decorator(
     *capabilities: AgentCapability,
-    config: Optional[Dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
 ) -> Callable[..., Any]:
     """
     Return a decorator that wraps a function (typically an agent's
@@ -244,12 +249,16 @@ def agent_decorator(
                 log.info("→ %s invoked", key)
 
             # ---- TIMING ----
-            start = time.monotonic() if (AgentCapability.TIMING in caps or
-                                         AgentCapability.METRICS in caps or
-                                         AgentCapability.LOGGING in caps) else 0.0
+            start = (
+                time.monotonic()
+                if (
+                    AgentCapability.TIMING in caps or AgentCapability.METRICS in caps or AgentCapability.LOGGING in caps
+                )
+                else 0.0
+            )
 
             # ---- Execute with optional RETRY ----
-            last_exc: Optional[Exception] = None
+            last_exc: Exception | None = None
             max_attempts = cfg.get("retry_max_attempts", 3) if AgentCapability.RETRY in caps else 1
             delay = cfg.get("retry_delay", 1.0)
             backoff = cfg.get("retry_backoff", 2.0)
@@ -266,10 +275,14 @@ def agent_decorator(
                     if attempt < max_attempts:
                         current_delay = delay * (backoff ** (attempt - 1))
                         # Add jitter
-                        current_delay *= (0.5 + _decorator_rng.random())
+                        current_delay *= 0.5 + _decorator_rng.random()
                         log.warning(
                             "↻ %s attempt %d/%d failed: %s – retrying in %.1fs",
-                            key, attempt, max_attempts, exc, current_delay,
+                            key,
+                            attempt,
+                            max_attempts,
+                            exc,
+                            current_delay,
                         )
                         time.sleep(current_delay)
 
@@ -292,8 +305,7 @@ def agent_decorator(
                 if success:
                     log.info("← %s completed in %.3fs", key, elapsed)
                 else:
-                    log.error("← %s FAILED after %d attempts in %.3fs: %s",
-                              key, max_attempts, elapsed, last_exc)
+                    log.error("← %s FAILED after %d attempts in %.3fs: %s", key, max_attempts, elapsed, last_exc)
 
             # ---- TIMING (inject context) ----
             if AgentCapability.TIMING in caps and isinstance(result, dict):
@@ -318,6 +330,7 @@ def agent_decorator(
 # Thermal helper
 # ======================================================================
 
+
 def _check_thermal(max_temp: float) -> None:
     """
     Best-effort CPU temperature check on Linux.
@@ -327,12 +340,10 @@ def _check_thermal(max_temp: float) -> None:
     """
     try:
         # Try common Linux thermal zone
-        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+        with open("/sys/class/thermal/thermal_zone0/temp") as f:
             temp_c = int(f.read().strip()) / 1000.0
         if temp_c > max_temp:
-            raise RuntimeError(
-                f"Thermal limit exceeded: {temp_c:.1f}°C > {max_temp:.1f}°C"
-            )
+            raise RuntimeError(f"Thermal limit exceeded: {temp_c:.1f}°C > {max_temp:.1f}°C")
     except (FileNotFoundError, PermissionError, ValueError):
         pass  # Not available – skip check
 
@@ -340,6 +351,7 @@ def _check_thermal(max_temp: float) -> None:
 # ======================================================================
 # AgentDecorator (composable)
 # ======================================================================
+
 
 class AgentDecorator:
     """
@@ -357,12 +369,12 @@ class AgentDecorator:
     """
 
     def __init__(self) -> None:
-        self._layers: List[Tuple[AgentCapability, Dict[str, Any]]] = []
+        self._layers: list[tuple[AgentCapability, dict[str, Any]]] = []
 
     def add(
         self,
         capability: AgentCapability,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ) -> "AgentDecorator":
         """Add a capability layer (applied in FIFO order)."""
         self._layers.append((capability, config or {}))

@@ -9,7 +9,7 @@ Defines the core data structures used by the Diff Preview Engine:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -37,7 +37,7 @@ class DiffEntry:
         if self.change_type not in ("added", "modified", "removed"):
             self.change_type = "modified"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "field_path": self.field_path,
@@ -64,9 +64,9 @@ class DiffResult:
     """
 
     action_type: str
-    diffs: List[DiffEntry] = field(default_factory=list)
-    affected_tables: List[str] = field(default_factory=list)
-    affected_files: List[str] = field(default_factory=list)
+    diffs: list[DiffEntry] = field(default_factory=list)
+    affected_tables: list[str] = field(default_factory=list)
+    affected_files: list[str] = field(default_factory=list)
     estimated_risk: str = "low"  # "low" | "medium" | "high"
     summary: str = ""
 
@@ -74,7 +74,7 @@ class DiffResult:
         if self.estimated_risk not in ("low", "medium", "high"):
             self.estimated_risk = "low"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "action_type": self.action_type,
@@ -84,4 +84,6 @@ class DiffResult:
             "estimated_risk": self.estimated_risk,
             "summary": self.summary,
         }
+
+
 __all__ = ["DiffEntry", "DiffResult"]

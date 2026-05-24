@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 try:
     from src.core.approval import (
         ApprovalChain,
+        ApprovalPriority,
         ApprovalRequest,
         ApprovalResult,
         ApprovalStatus,
-        ApprovalPriority,
-        WorkflowEngine,
         WorkflowDefinition,
+        WorkflowEngine,
         WorkflowStep,
         get_approval_chain,
         get_workflow_engine,
@@ -41,16 +41,16 @@ except ImportError as exc:
 try:
     from src.core.defense import (
         AntiTamperingLayer,
-        TamperSeverity,
         BinaryHardeningLayer,
-        HardeningLevel,
-        EncryptionManager,
-        EncryptionLevel,
-        IntegrityVerifier,
-        IntegrityStatus,
-        ServerSecretsLayer,
-        SecretType,
         DefenseManager,
+        EncryptionLevel,
+        EncryptionManager,
+        HardeningLevel,
+        IntegrityStatus,
+        IntegrityVerifier,
+        SecretType,
+        ServerSecretsLayer,
+        TamperSeverity,
         get_defense_manager,
     )
 except ImportError as exc:
@@ -71,13 +71,13 @@ except ImportError as exc:
 # ── Phase 6: Cryptographic Licensing ─────────────────────
 try:
     from src.core.license import (
-        LicenseManager,
-        LicenseTier,
-        LicenseStatus,
-        LicenseInfo,
-        LicenseVerificationResult,
-        KillSwitchStatus,
         HardwareBindingStrength,
+        KillSwitchStatus,
+        LicenseInfo,
+        LicenseManager,
+        LicenseStatus,
+        LicenseTier,
+        LicenseVerificationResult,
         get_license_manager,
     )
 except ImportError as exc:
@@ -95,9 +95,9 @@ except ImportError as exc:
 try:
     from src.core.degraded_mode import (
         DegradedModeManager,
-        SystemMode,
         ModeCapabilities,
         ModeTransition,
+        SystemMode,
         get_degraded_mode_manager,
     )
 except ImportError as exc:
@@ -110,7 +110,7 @@ except ImportError as exc:
 
 # ── Phase 6: Integration ─────────────────────────────────
 try:
-    from src.core.phase6_init import initialize_phase6, get_phase6_status
+    from src.core.phase6_init import get_phase6_status, initialize_phase6
 except ImportError as exc:
     logger.warning("core: phase6_init import failed: %s", exc)
     initialize_phase6 = None  # type: ignore[misc,assignment]

@@ -15,9 +15,10 @@ from typing import Any
 
 class ToolPermission(str, Enum):
     """Niveles de permiso para herramientas."""
-    ALLOWED = "allowed"          # Ejecucion libre
+
+    ALLOWED = "allowed"  # Ejecucion libre
     CONFIRM_REQUIRED = "confirm"  # Requiere confirmacion del usuario
-    DENIED = "denied"            # No permitido
+    DENIED = "denied"  # No permitido
 
 
 @dataclass
@@ -28,13 +29,14 @@ class ToolSpec:
     Define el nombre, descripcion, parametros y permisos
     de una herramienta que el asistente puede invocar.
     """
+
     name: str = ""
     description: str = ""
-    category: str = "general"   # general, code, web, data, system
+    category: str = "general"  # general, code, web, data, system
     parameters: dict[str, Any] = field(default_factory=dict)
     permission: ToolPermission = ToolPermission.CONFIRM_REQUIRED
     enabled: bool = True
-    rate_limit: int = 0         # Max llamadas por minuto (0 = sin limite)
+    rate_limit: int = 0  # Max llamadas por minuto (0 = sin limite)
     timeout_seconds: float = 30.0
 
     @property
@@ -65,11 +67,12 @@ class ToolCall:
     Representa la invocacion de una herramienta con
     sus argumentos y estado de ejecucion.
     """
+
     call_id: str = ""
     tool_name: str = ""
     arguments: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-    status: str = "pending"      # pending, running, completed, failed, denied
+    status: str = "pending"  # pending, running, completed, failed, denied
     result: Any = None
     error: str = ""
     duration_ms: float = 0.0
@@ -94,6 +97,7 @@ class ToolResult:
     Contiene el output, estado, duracion y metadata
     de la ejecucion de una herramienta.
     """
+
     call_id: str = ""
     tool_name: str = ""
     success: bool = False

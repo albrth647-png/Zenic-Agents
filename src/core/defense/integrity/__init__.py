@@ -1,14 +1,21 @@
 """Re-exports for integrity package."""
 
-from ._types import IntegrityStatus, IntegrityCheckResult, _SAFE_IDENTIFIER_RE
-from ._mixin_core import IntegrityVerifier
-
 import threading
 from typing import Any
 
+from ._mixin_core import IntegrityVerifier
+from ._types import _SAFE_IDENTIFIER_RE, IntegrityCheckResult, IntegrityStatus
+
 _lock = threading.Lock()
 
-__all__ = ["IntegrityStatus", "IntegrityCheckResult", "IntegrityVerifier", "get_integrity_verifier", "reset_integrity_verifier", "_SAFE_IDENTIFIER_RE"]
+__all__ = [
+    "_SAFE_IDENTIFIER_RE",
+    "IntegrityCheckResult",
+    "IntegrityStatus",
+    "IntegrityVerifier",
+    "get_integrity_verifier",
+    "reset_integrity_verifier",
+]
 
 
 def get_integrity_verifier(**kwargs: Any) -> IntegrityVerifier:

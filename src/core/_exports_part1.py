@@ -1,4 +1,5 @@
 """Core package exports — re-exports from sub-packages."""
+
 from __future__ import annotations
 
 import logging
@@ -14,12 +15,12 @@ logger = logging.getLogger(__name__)
 try:
     from src.core.approval import (
         ApprovalChain,
+        ApprovalPriority,
         ApprovalRequest,
         ApprovalResult,
         ApprovalStatus,
-        ApprovalPriority,
-        WorkflowEngine,
         WorkflowDefinition,
+        WorkflowEngine,
         WorkflowStep,
         get_approval_chain,
         get_workflow_engine,
@@ -41,16 +42,16 @@ except ImportError as exc:
 try:
     from src.core.defense import (
         AntiTamperingLayer,
-        TamperSeverity,
         BinaryHardeningLayer,
-        HardeningLevel,
-        EncryptionManager,
-        EncryptionLevel,
-        IntegrityVerifier,
-        IntegrityStatus,
-        ServerSecretsLayer,
-        SecretType,
         DefenseManager,
+        EncryptionLevel,
+        EncryptionManager,
+        HardeningLevel,
+        IntegrityStatus,
+        IntegrityVerifier,
+        SecretType,
+        ServerSecretsLayer,
+        TamperSeverity,
         get_defense_manager,
     )
 except ImportError as exc:
@@ -71,13 +72,13 @@ except ImportError as exc:
 # ── Phase 6: Cryptographic Licensing ─────────────────────
 try:
     from src.core.license import (
-        LicenseManager,
-        LicenseTier,
-        LicenseStatus,
-        LicenseInfo,
-        LicenseVerificationResult,
-        KillSwitchStatus,
         HardwareBindingStrength,
+        KillSwitchStatus,
+        LicenseInfo,
+        LicenseManager,
+        LicenseStatus,
+        LicenseTier,
+        LicenseVerificationResult,
         get_license_manager,
     )
 except ImportError as exc:
@@ -95,9 +96,9 @@ except ImportError as exc:
 try:
     from src.core.degraded_mode import (
         DegradedModeManager,
-        SystemMode,
         ModeCapabilities,
         ModeTransition,
+        SystemMode,
         get_degraded_mode_manager,
     )
 except ImportError as exc:
@@ -110,7 +111,7 @@ except ImportError as exc:
 
 # ── Phase 6: Integration ─────────────────────────────────
 try:
-    from src.core.phase6_init import initialize_phase6, get_phase6_status
+    from src.core.phase6_init import get_phase6_status, initialize_phase6
 except ImportError as exc:
     logger.warning("core: phase6_init import failed: %s", exc)
     initialize_phase6 = None  # type: ignore[misc,assignment]
@@ -119,32 +120,32 @@ except ImportError as exc:
 # ── Phase A: Observability ────────────────────────────────
 try:
     from src.core.observability import (
+        AuditEvent,
+        AuditEventType,
+        AuditLogger,
+        AuditSeverity,
+        ChainVerificationResult,
+        EvidenceBundle,
         ForensicEngine,
         ForensicEntry,
         ForensicReport,
-        ChainVerificationResult,
-        EvidenceBundle,
-        get_forensic_engine,
-        SnapshotAuditEngine,
-        SnapshotEntry,
-        SnapshotPair,
-        SnapshotDiff,
-        get_snapshot_audit_engine,
-        AuditLogger,
-        AuditEvent,
-        AuditEventType,
-        AuditSeverity,
-        get_audit_logger,
         HealthAggregator,
-        HealthStatus,
         HealthCheckResult,
-        get_health_aggregator,
+        HealthStatus,
         MetricsCollector,
         MetricsConfig,
-        get_metrics_collector,
+        SnapshotAuditEngine,
+        SnapshotDiff,
+        SnapshotEntry,
+        SnapshotPair,
         TracingConfig,
-        init_tracing,
+        get_audit_logger,
+        get_forensic_engine,
+        get_health_aggregator,
+        get_metrics_collector,
+        get_snapshot_audit_engine,
         get_tracer,
+        init_tracing,
         trace_span,
     )
 except ImportError as exc:
@@ -180,24 +181,28 @@ except ImportError as exc:
 # ── Phase B: Events ───────────────────────────────────────
 try:
     from src.core.events import (
-        TriggerMap,
-        TriggerMapping,
-        TriggerCondition,
-        ConditionOperator as EventConditionOperator,
-        get_trigger_map,
-        # WebhookIngestionEngine removed — external API connection deleted
-        EventSchemaRegistry,
-        EventSchema,
-        ValidationResult as EventValidationResult,
-        ValidationIssue,
-        IssueType,
-        get_schema_registry,
-        ReplayQueue,
+        BatchRetryResult,
         DeadLetterEvent,
         DeadLetterStatus,
+        EventSchema,
+        # WebhookIngestionEngine removed — external API connection deleted
+        EventSchemaRegistry,
+        IssueType,
+        ReplayQueue,
         RetryResult,
-        BatchRetryResult,
+        TriggerCondition,
+        TriggerMap,
+        TriggerMapping,
+        ValidationIssue,
         get_replay_queue,
+        get_schema_registry,
+        get_trigger_map,
+    )
+    from src.core.events import (
+        ConditionOperator as EventConditionOperator,
+    )
+    from src.core.events import (
+        ValidationResult as EventValidationResult,
     )
 except ImportError as exc:
     logger.warning("core: Events import failed: %s", exc)
@@ -223,28 +228,28 @@ except ImportError as exc:
 # ── Phase B: Workflows ────────────────────────────────────
 try:
     from src.core.workflows import (
-        DynamicChainComposer,
-        ComposedChain,
+        BranchCondition,
+        BranchRule,
+        ChainExecutionResult,
         ChainStep,
         ChainStepResult,
-        ChainExecutionResult,
-        ChainValidationResult,
-        get_chain_composer,
-        ChainTemplateLibrary,
         ChainTemplate,
+        ChainTemplateLibrary,
+        ChainValidationResult,
+        ComposedChain,
+        ConditionalBranching,
+        DynamicChainComposer,
+        FieldMapping,
+        HandoffResult,
+        HandoffRule,
+        InterWorkflowHandoff,
+        TemplateCategory,
         TemplateStep,
         TemplateVariable,
-        TemplateCategory,
-        get_template_library,
-        InterWorkflowHandoff,
-        HandoffRule,
-        HandoffResult,
-        FieldMapping,
-        get_inter_workflow_handoff,
-        ConditionalBranching,
-        BranchRule,
-        BranchCondition,
+        get_chain_composer,
         get_conditional_branching,
+        get_inter_workflow_handoff,
+        get_template_library,
     )
 except ImportError as exc:
     logger.warning("core: Workflows import failed: %s", exc)
@@ -274,22 +279,22 @@ except ImportError as exc:
 # ── Phase C: Exceptions ───────────────────────────────────
 try:
     from src.core.exceptions import (
+        AnalyticsSnapshot,
+        ExceptionAnalytics,
         ExceptionCategory,
-        ExceptionSeverity,
-        ZenicException,
         ExceptionContext,
         ExceptionEngine,
-        ExceptionSignal,
-        ExceptionRecord,
-        get_exception_engine,
-        ExceptionRouter,
-        RoutingRule,
-        RoutingAction,
-        get_exception_router,
-        ExceptionAnalytics,
         ExceptionPattern,
-        AnalyticsSnapshot,
+        ExceptionRecord,
+        ExceptionRouter,
+        ExceptionSeverity,
+        ExceptionSignal,
+        RoutingAction,
+        RoutingRule,
+        ZenicException,
         get_exception_analytics,
+        get_exception_engine,
+        get_exception_router,
     )
 except ImportError as exc:
     logger.warning("core: Exceptions import failed: %s", exc)
@@ -313,29 +318,29 @@ except ImportError as exc:
 # ── Phase D: Autopilot ────────────────────────────────────
 try:
     from src.core.autopilot import (
-        Objective,
-        ObjectiveStatus,
-        ObjectivePriority,
-        ObjectiveTarget,
-        get_objective_store,
-        KPITracker,
-        KPIMeasurement,
-        KPITrend,
-        get_kpi_tracker,
+        AutonomyConfig,
+        AutonomyLevel,
+        AutopilotEngine,
         AutopilotPlanner,
+        AutopilotStatus,
+        ClosedLoopFeedback,
+        FeedbackAction,
+        FeedbackCycle,
+        KPIMeasurement,
+        KPITracker,
+        KPITrend,
+        Objective,
+        ObjectivePriority,
+        ObjectiveStatus,
+        ObjectiveTarget,
         PlannedAction,
         PlanStep,
-        get_autopilot_planner,
-        ClosedLoopFeedback,
-        FeedbackCycle,
-        FeedbackAction,
-        get_closed_loop_feedback,
-        AutonomyLevel,
-        AutonomyConfig,
         get_autonomy_config,
-        AutopilotEngine,
-        AutopilotStatus,
         get_autopilot_engine,
+        get_autopilot_planner,
+        get_closed_loop_feedback,
+        get_kpi_tracker,
+        get_objective_store,
     )
 except ImportError as exc:
     logger.warning("core: Autopilot import failed: %s", exc)

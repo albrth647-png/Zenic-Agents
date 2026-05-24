@@ -15,10 +15,10 @@ M8 Implementation: Uses llama_cpp's create_chat_completion with stream=True.
 Works with Qwen3-0.6B on Termux/Android. No external APIs needed.
 """
 
-import time
 import json
 import logging
-from typing import Dict, Generator, Optional, Callable
+import time
+from collections.abc import Callable, Generator
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,9 @@ class StreamingReal:
     #  PUBLIC API
     # ================================================================
 
-    def stream_chat(self, messages: list, max_tokens: int = 512,
-                     temperature: float = 0.7,
-                     on_token: Optional[Callable] = None) -> Generator[str, None, None]:
+    def stream_chat(
+        self, messages: list, max_tokens: int = 512, temperature: float = 0.7, on_token: Callable | None = None
+    ) -> Generator[str, None, None]:
         """Stream a chat completion token by token.
 
         Args:
@@ -60,7 +60,7 @@ class StreamingReal:
             return
 
         # Get the underlying llama_cpp model
-        llama_model = getattr(self._llm, '_llm', None)
+        llama_model = getattr(self._llm, "_llm", None)
         if not llama_model:
             yield self._format_sse({"error": "Llama model not available"}, event="error")
             return
@@ -109,19 +109,20 @@ class StreamingReal:
                     finish = chunk.get("choices", [{}])[0].get("finish_reason")
                     if finish:
                         elapsed = time.time() - start_time
-                        yield self._format_sse({
-                            "finish_reason": finish,
-                            "token_count": token_count,
-                            "elapsed_s": round(elapsed, 2),
-                            "tokens_per_second": round(token_count / max(elapsed, 0.01), 1),
-                        }, event="done")
+                        yield self._format_sse(
+                            {
+                                "finish_reason": finish,
+                                "token_count": token_count,
+                                "elapsed_s": round(elapsed, 2),
+                                "tokens_per_second": round(token_count / max(elapsed, 0.01), 1),
+                            },
+                            event="done",
+                        )
 
             except TypeError:
                 # llama_cpp doesn't support stream=True, fallback to manual streaming
                 logger.info("StreamingReal: stream not supported, using manual streaming")
-                yield from self._manual_stream(
-                    llama_model, messages, max_tokens, temperature, on_token
-                )
+                yield from self._manual_stream(llama_model, messages, max_tokens, temperature, on_token)
 
         except Exception as e:
             logger.error(f"StreamingReal: Error during streaming: {e}")
@@ -130,8 +131,9 @@ class StreamingReal:
         # Send [DONE] marker
         yield SSE_DONE
 
-    def stream_code(self, task_description: str, language: str = "python",
-                     max_tokens: int = 256) -> Generator[str, None, None]:
+    def stream_code(
+        self, task_description: str, language: str = "python", max_tokens: int = 256
+    ) -> Generator[str, None, None]:
         """Stream code generation token by token.
 
         Args:
@@ -165,9 +167,9 @@ class StreamingReal:
     #  HELPERS
     # ================================================================
 
-    def _manual_stream(self, llama_model, messages: list,
-                        max_tokens: int, temperature: float,
-                        on_token: Optional[Callable] = None) -> Generator[str, None, None]:
+    def _manual_stream(
+        self, llama_model, messages: list, max_tokens: int, temperature: float, on_token: Callable | None = None
+    ) -> Generator[str, None, None]:
         """Manual streaming by generating small chunks sequentially.
 
         Fallback when llama_cpp doesn't support stream=True.
@@ -197,11 +199,14 @@ class StreamingReal:
                 total_generated += this_batch
                 elapsed = time.time() - start_time
 
-                yield self._format_sse({
-                    "token": content,
-                    "token_count": total_generated,
-                    "batch": True,
-                }, event="token")
+                yield self._format_sse(
+                    {
+                        "token": content,
+                        "token_count": total_generated,
+                        "batch": True,
+                    },
+                    event="token",
+                )
 
                 if on_token:
                     on_token(content)
@@ -216,15 +221,18 @@ class StreamingReal:
 
         # Done
         elapsed = time.time() - start_time
-        yield self._format_sse({
-            "finish_reason": "stop",
-            "token_count": total_generated,
-            "elapsed_s": round(elapsed, 2),
-            "batch_mode": True,
-        }, event="done")
+        yield self._format_sse(
+            {
+                "finish_reason": "stop",
+                "token_count": total_generated,
+                "elapsed_s": round(elapsed, 2),
+                "batch_mode": True,
+            },
+            event="done",
+        )
 
     @staticmethod
-    def _format_sse(data: Dict, event: str = "") -> str:
+    def _format_sse(data: dict, event: str = "") -> str:
         """Format a dict as an SSE message."""
         payload = json.dumps(data, ensure_ascii=False)
         if event:

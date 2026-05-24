@@ -16,7 +16,7 @@ import time
 # Setting this env var must happen before onnxruntime is first loaded.
 os.environ.setdefault("ORT_DISABLE_THREAD_AFFINITY", "1")
 
-from ._imports import EMBEDDING_MODEL, EMBEDDING_DIM, _get_numpy, HAS_NUMPY, logger
+from ._imports import EMBEDDING_DIM, EMBEDDING_MODEL, HAS_NUMPY, _get_numpy, logger
 
 # Retry configuration for model loading
 _MAX_LOAD_ATTEMPTS = 3
@@ -73,8 +73,10 @@ class LifecycleMixin:
 
         for attempt in range(1, _MAX_LOAD_ATTEMPTS + 1):
             try:
-                from fastembed import TextEmbedding  # type: ignore[import-unresolved]
                 import warnings
+
+                from fastembed import TextEmbedding  # type: ignore[import-unresolved]
+
                 start = time.time()
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", message=".*mean pooling.*", category=UserWarning)
@@ -88,8 +90,7 @@ class LifecycleMixin:
                 self._evict_prototype_cache()
 
                 logger.info(
-                    "SemanticEngine: %s loaded in %.1fs (attempt %d)",
-                    EMBEDDING_MODEL, self._load_time, attempt
+                    "SemanticEngine: %s loaded in %.1fs (attempt %d)", EMBEDDING_MODEL, self._load_time, attempt
                 )
                 return True
             except ImportError:
@@ -99,16 +100,15 @@ class LifecycleMixin:
                 if attempt < _MAX_LOAD_ATTEMPTS:
                     delay = _LOAD_RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
-                        "SemanticEngine: Model load attempt %d/%d failed: %s. "
-                        "Retrying in %.1fs...",
-                        attempt, _MAX_LOAD_ATTEMPTS, e, delay
+                        "SemanticEngine: Model load attempt %d/%d failed: %s. " "Retrying in %.1fs...",
+                        attempt,
+                        _MAX_LOAD_ATTEMPTS,
+                        e,
+                        delay,
                     )
                     time.sleep(delay)
                 else:
-                    logger.warning(
-                        "SemanticEngine: Failed to load model after %d attempts: %s",
-                        _MAX_LOAD_ATTEMPTS, e
-                    )
+                    logger.warning("SemanticEngine: Failed to load model after %d attempts: %s", _MAX_LOAD_ATTEMPTS, e)
 
         self._model = None
         return False
@@ -140,8 +140,7 @@ class LifecycleMixin:
                 for k in keys:
                     del cache[k]
                 logger.debug(
-                    "SemanticEngine: Prototype cache evicted %d entries (limit: %d)",
-                    overflow, _MAX_PROTOTYPE_ENTRIES
+                    "SemanticEngine: Prototype cache evicted %d entries (limit: %d)", overflow, _MAX_PROTOTYPE_ENTRIES
                 )
 
     @property

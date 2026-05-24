@@ -20,14 +20,18 @@ from typing import Any, Dict, List, Optional
 from ._helpers import retry_db_operation, row_to_measurement
 from ._trend_analysis import (
     get_objective_progress as _get_objective_progress,
+)
+from ._trend_analysis import (
     get_trend as _get_trend,
+)
+from ._trend_analysis import (
     measure_all_for_objective as _measure_all_for_objective,
 )
 from ._types import KPIMeasurement, KPITrend
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["KPIMeasurement", "KPITrend", "KPITracker", "get_kpi_tracker", "reset_kpi_tracker", "datetime", "timezone"]
+__all__ = ["KPIMeasurement", "KPITracker", "KPITrend", "datetime", "get_kpi_tracker", "reset_kpi_tracker", "timezone"]
 
 
 class KPITracker:
@@ -158,13 +162,19 @@ class KPITracker:
             retry_db_operation(_insert)
             logger.info(
                 "KPITracker: Measured %s=%s (target=%s, delta=%.4f) for %s",
-                metric_name, value, target_value, delta, objective_id,
+                metric_name,
+                value,
+                target_value,
+                delta,
+                objective_id,
             )
             return measurement
 
     def get_latest(
-        self, objective_id: str, metric_name: str,
-    ) -> Optional[KPIMeasurement]:
+        self,
+        objective_id: str,
+        metric_name: str,
+    ) -> KPIMeasurement | None:
         """Get the latest measurement for a metric.
 
         Args:
@@ -183,7 +193,7 @@ class KPITracker:
         objective_id: str,
         metric_name: str,
         limit: int = 100,
-    ) -> List[KPIMeasurement]:
+    ) -> list[KPIMeasurement]:
         """Get measurement history for a metric.
 
         Args:
@@ -197,7 +207,7 @@ class KPITracker:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> List[KPIMeasurement]:
+            def _fetch() -> list[KPIMeasurement]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -237,7 +247,7 @@ class KPITracker:
     def measure_all_for_objective(
         self,
         objective: Any,
-    ) -> List[KPIMeasurement]:
+    ) -> list[KPIMeasurement]:
         """Measure all KPIs for an objective.
 
         Delegates to the standalone _measure_all_for_objective function.
@@ -249,12 +259,15 @@ class KPITracker:
             A list of KPIMeasurements, one per target.
         """
         return _measure_all_for_objective(
-            objective, self.measure, self.get_latest,
+            objective,
+            self.measure,
+            self.get_latest,
         )
 
     def get_objective_progress(
-        self, objective_id: str,
-    ) -> Dict[str, Any]:
+        self,
+        objective_id: str,
+    ) -> dict[str, Any]:
         """Get comprehensive progress information for an objective.
 
         Delegates to the standalone _get_objective_progress function.
@@ -267,19 +280,25 @@ class KPITracker:
         """
         self._ensure_schema()
         return _get_objective_progress(
-            self._db_path, objective_id, self.get_latest, self.get_trend,
+            self._db_path,
+            objective_id,
+            self.get_latest,
+            self.get_trend,
         )
 
     # ── Internal Helpers ────────────────────────────────────
 
     def _get_last_internal(
-        self, objective_id: str, metric_name: str,
-    ) -> Optional[KPIMeasurement]:
+        self,
+        objective_id: str,
+        metric_name: str,
+    ) -> KPIMeasurement | None:
         """Get the latest measurement without acquiring the lock.
 
         Caller must hold self._lock.
         """
-        def _fetch() -> Optional[KPIMeasurement]:
+
+        def _fetch() -> KPIMeasurement | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             try:
@@ -302,7 +321,7 @@ class KPITracker:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_kpi_tracker_instance: Optional[KPITracker] = None
+_kpi_tracker_instance: KPITracker | None = None
 _kpi_tracker_lock = threading.Lock()
 
 

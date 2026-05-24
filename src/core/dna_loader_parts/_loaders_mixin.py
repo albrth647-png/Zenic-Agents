@@ -5,8 +5,12 @@ Loader methods mixin for DNALoader.
 import os
 
 from ._imports import (
-    yaml, YAML_AVAILABLE,
-    LogicModule, DomainRule, ValidationGate, GlossaryEntry,
+    YAML_AVAILABLE,
+    DomainRule,
+    GlossaryEntry,
+    LogicModule,
+    ValidationGate,
+    yaml,
 )
 
 
@@ -23,7 +27,7 @@ class LoadersMixin:
         if not YAML_AVAILABLE or not os.path.isfile(path):
             return 0
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         for mod_data in data.get("modules", []):
@@ -48,7 +52,7 @@ class LoadersMixin:
         if not YAML_AVAILABLE or not os.path.isfile(path):
             return 0
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         for ind_data in data.get("industries", []):
@@ -74,7 +78,7 @@ class LoadersMixin:
         if not YAML_AVAILABLE or not os.path.isfile(path):
             return 0
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         # Global checks
@@ -120,7 +124,7 @@ class LoadersMixin:
         if not YAML_AVAILABLE or not os.path.isfile(path):
             return 0
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         rules = data.get("transformation_rules", {})
@@ -128,11 +132,13 @@ class LoadersMixin:
 
         # Technical to corporate
         for entry in rules.get("technical_to_corporate", []):
-            self._glossary.append(GlossaryEntry(
-                from_term=entry.get("from", ""),
-                to_term=entry.get("to", ""),
-                context=entry.get("context", ""),
-            ))
+            self._glossary.append(
+                GlossaryEntry(
+                    from_term=entry.get("from", ""),
+                    to_term=entry.get("to", ""),
+                    context=entry.get("context", ""),
+                )
+            )
             count += 1
 
         # Error messages
@@ -154,11 +160,13 @@ class LoadersMixin:
 
         # Status descriptions
         for entry in rules.get("status_descriptions", []):
-            self._glossary.append(GlossaryEntry(
-                from_term=entry.get("technical", ""),
-                to_term=entry.get("client_facing", ""),
-                context="status",
-            ))
+            self._glossary.append(
+                GlossaryEntry(
+                    from_term=entry.get("technical", ""),
+                    to_term=entry.get("client_facing", ""),
+                    context="status",
+                )
+            )
             count += 1
 
         return count

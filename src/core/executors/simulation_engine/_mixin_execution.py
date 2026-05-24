@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import ScenarioComparison, SimulationResult
 
@@ -15,8 +15,8 @@ class SimulationEngineExecutionMixin:
 
     def simulate_dispatch(
         self,
-        dispatch_request_dict: Dict[str, Any],
-    ) -> SimulationResult:  # noqa: F821
+        dispatch_request_dict: dict[str, Any],
+    ) -> SimulationResult:
         """Simulate a single action dispatch.
 
         Args:
@@ -64,9 +64,9 @@ class SimulationEngineExecutionMixin:
 
     def compare_scenarios(
         self,
-        scenario_a: Dict[str, Any],
-        scenario_b: Dict[str, Any],
-    ) -> ScenarioComparison:  # noqa: F821
+        scenario_a: dict[str, Any],
+        scenario_b: dict[str, Any],
+    ) -> ScenarioComparison:
         """A/B comparison of two action scenarios.
 
         Args:
@@ -81,28 +81,34 @@ class SimulationEngineExecutionMixin:
             result_a = self.simulate_dispatch(scenario_a)
             result_b = self.simulate_dispatch(scenario_b)
 
-            differences: List[Dict[str, Any]] = []
+            differences: list[dict[str, Any]] = []
 
             if result_a.nodes_simulated != result_b.nodes_simulated:
-                differences.append({
-                    "field": "nodes_simulated",
-                    "scenario_a": result_a.nodes_simulated,
-                    "scenario_b": result_b.nodes_simulated,
-                })
+                differences.append(
+                    {
+                        "field": "nodes_simulated",
+                        "scenario_a": result_a.nodes_simulated,
+                        "scenario_b": result_b.nodes_simulated,
+                    }
+                )
 
             if result_a.would_succeed != result_b.would_succeed:
-                differences.append({
-                    "field": "would_succeed",
-                    "scenario_a": result_a.would_succeed,
-                    "scenario_b": result_b.would_succeed,
-                })
+                differences.append(
+                    {
+                        "field": "would_succeed",
+                        "scenario_a": result_a.would_succeed,
+                        "scenario_b": result_b.would_succeed,
+                    }
+                )
 
             if abs(result_a.total_duration_ms - result_b.total_duration_ms) > 1.0:
-                differences.append({
-                    "field": "total_duration_ms",
-                    "scenario_a": result_a.total_duration_ms,
-                    "scenario_b": result_b.total_duration_ms,
-                })
+                differences.append(
+                    {
+                        "field": "total_duration_ms",
+                        "scenario_a": result_a.total_duration_ms,
+                        "scenario_b": result_b.total_duration_ms,
+                    }
+                )
 
             # Compare estimated impacts
             impacts_a = result_a.estimated_impacts
@@ -111,24 +117,30 @@ class SimulationEngineExecutionMixin:
                 risk_a = impacts_a[0].get("risk_level", "none") if impacts_a else "none"
                 risk_b = impacts_b[0].get("risk_level", "none") if impacts_b else "none"
                 if risk_a != risk_b:
-                    differences.append({
-                        "field": "risk_level",
-                        "scenario_a": risk_a,
-                        "scenario_b": risk_b,
-                    })
+                    differences.append(
+                        {
+                            "field": "risk_level",
+                            "scenario_a": risk_a,
+                            "scenario_b": risk_b,
+                        }
+                    )
 
                 score_a = impacts_a[0].get("risk_score", 0.0) if impacts_a else 0.0
                 score_b = impacts_b[0].get("risk_score", 0.0) if impacts_b else 0.0
                 if abs(score_a - score_b) > 0.1:
-                    differences.append({
-                        "field": "risk_score",
-                        "scenario_a": score_a,
-                        "scenario_b": score_b,
-                    })
+                    differences.append(
+                        {
+                            "field": "risk_score",
+                            "scenario_a": score_a,
+                            "scenario_b": score_b,
+                        }
+                    )
 
             # Generate recommendation
             recommendation = self._generate_recommendation(
-                result_a, result_b, differences,
+                result_a,
+                result_b,
+                differences,
             )
 
             comparison = ScenarioComparison(
@@ -140,7 +152,8 @@ class SimulationEngineExecutionMixin:
 
             __import__("logging").getLogger("zenic_agents.executors.simulation_engine").info(
                 "SimulationEngine: compare_scenarios — %d differences, recommendation: %s",
-                len(differences), recommendation[:80],
+                len(differences),
+                recommendation[:80],
             )
 
             return comparison
@@ -149,9 +162,9 @@ class SimulationEngineExecutionMixin:
 
     @staticmethod
     def _generate_recommendation(
-        result_a: SimulationResult,  # noqa: F821
-        result_b: SimulationResult,  # noqa: F821
-        differences: List[Dict[str, Any]],
+        result_a: SimulationResult,
+        result_b: SimulationResult,
+        differences: list[dict[str, Any]],
     ) -> str:
         """Generate a human-readable recommendation from the comparison."""
         if not differences:
@@ -186,7 +199,7 @@ class SimulationEngineExecutionMixin:
         return "Both scenarios have similar risk and duration. Review differences for details."
 
 
-def _extract_risk_score(result: SimulationResult) -> float:  # noqa: F821
+def _extract_risk_score(result: SimulationResult) -> float:
     """Extract the maximum risk score from a SimulationResult."""
     max_score = 0.0
     for impact in result.estimated_impacts:
@@ -201,17 +214,18 @@ def _extract_risk_score(result: SimulationResult) -> float:  # noqa: F821
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[SimulationEngine] = None  # noqa: F821
+_instance: SimulationEngine | None = None  # noqa: F821
 _instance_lock = threading.Lock()
 
 
-def get_simulation_engine() -> "SimulationEngine":  # noqa: F821
+def get_simulation_engine() -> SimulationEngine:  # noqa: F821
     """Return the singleton SimulationEngine instance."""
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
                 from ._core import SimulationEngine
+
                 _instance = SimulationEngine()
     return _instance
 

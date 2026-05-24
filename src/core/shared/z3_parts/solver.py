@@ -9,24 +9,25 @@ Combines all mixin classes into the final Z3Solver class with:
 
 import gc
 import logging
-from typing import Any, Callable, Dict, List, Set
+from collections.abc import Callable
+from typing import Any
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]  # noqa: F401
+
     HAS_Z3 = True
 except ImportError:
     HAS_Z3 = False
 
-from .null_safety import Z3NullSafetyMixin
-from .type_safety import Z3TypeSafetyMixin
-from .type_lattice import Z3TypeLatticeMixin
+from ..constraint_solver import Constraint, ConstraintSolver
+from .ac3_fallback import AC3FallbackMixin
 from .invariants import Z3InvariantMixin
 from .invariants_patterns import Z3InvariantPatternsMixin
+from .null_safety import Z3NullSafetyMixin
 from .solver_core import Z3SolverCoreMixin
 from .solver_encoding import Z3SolverEncodingMixin
-from .ac3_fallback import AC3FallbackMixin
-
-from ..constraint_solver import Constraint, ConstraintSolver
+from .type_lattice import Z3TypeLatticeMixin
+from .type_safety import Z3TypeSafetyMixin
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +64,8 @@ class Z3Solver(
         self.timeout_ms = timeout_ms
         self._solver_type = "Z3" if HAS_Z3 else "AC3_FALLBACK"
         # Bidirectional mapping for bijective value encoding
-        self._encode_map = {}   # value -> int
-        self._decode_map = {}   # int -> value
+        self._encode_map = {}  # value -> int
+        self._decode_map = {}  # int -> value
         self._next_encode_id = 0
         # Monotonic counter for unique Z3 sort names (avoids 'already declared' errors)
         self._sort_counter = 0
@@ -77,7 +78,7 @@ class Z3Solver(
     #  Public API - same signatures as before + new prove_code_safety
     # ================================================================
 
-    def prove_null_safety(self, variable_names: List[str], nullable_vars: Set[str]) -> Dict[str, Any]:
+    def prove_null_safety(self, variable_names: list[str], nullable_vars: set[str]) -> dict[str, Any]:
         """
         Verifica que variables no-nullable nunca reciben valor None.
 
@@ -93,7 +94,7 @@ class Z3Solver(
             return self._z3_prove_null_safety(variable_names, nullable_vars)
         return self._ac3_prove_null_safety(variable_names, nullable_vars)
 
-    def prove_type_safety(self, variables_with_types: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def prove_type_safety(self, variables_with_types: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Verifica consistencia de tipos en operaciones.
 
@@ -108,7 +109,9 @@ class Z3Solver(
             return self._z3_prove_type_safety(variables_with_types)
         return self._ac3_prove_type_safety(variables_with_types)
 
-    def prove_invariant(self, invariant_func: Callable[..., bool], variables: List[str], domains: Dict[str, List[Any]]) -> Dict[str, Any]:
+    def prove_invariant(
+        self, invariant_func: Callable[..., bool], variables: list[str], domains: dict[str, list[Any]]
+    ) -> dict[str, Any]:
         """
         Verifica una invariante sobre dominios de variables.
 
@@ -127,7 +130,7 @@ class Z3Solver(
         solver = ConstraintSolver(timeout_ms=self.timeout_ms)
         return solver.verify_invariant(invariant_func, variables, domains)
 
-    def solve_constraints(self, domains: Dict[str, List[Any]], constraints: List[Constraint]) -> Dict[str, Any]:
+    def solve_constraints(self, domains: dict[str, list[Any]], constraints: list[Constraint]) -> dict[str, Any]:
         """
         Resuelve un sistema de restricciones.
 
@@ -144,7 +147,7 @@ class Z3Solver(
         solver = ConstraintSolver(timeout_ms=self.timeout_ms)
         return solver.solve(domains, constraints)
 
-    def prove_code_safety(self, ast_analysis: Dict[str, Any], raw_code: str) -> Dict[str, Any]:
+    def prove_code_safety(self, ast_analysis: dict[str, Any], raw_code: str) -> dict[str, Any]:
         """
         MAIN new method: Extracts REAL constraints from code via AST analysis
         and proves safety properties using Z3 with deep semantic encoding.
@@ -188,20 +191,15 @@ class Z3Solver(
             nullable_vars = set()
             for v in variables_info:
                 annotation = v.get("annotation") or ""
-                if v.get("nullable", False):
-                    nullable_vars.add(v["name"])
-                elif isinstance(annotation, str) and (
-                    "Optional" in annotation
-                    or "None" in annotation
-                    or annotation == "None"
+                if v.get("nullable", False) or (
+                    isinstance(annotation, str)
+                    and ("Optional" in annotation or "None" in annotation or annotation == "None")
                 ):
                     nullable_vars.add(v["name"])
 
             # ---- Phase 2: Null-safety proof with EnumSort ----
             if all_var_names:
-                results["null_safety"] = self._z3_prove_null_safety(
-                    all_var_names, nullable_vars
-                )
+                results["null_safety"] = self._z3_prove_null_safety(all_var_names, nullable_vars)
 
             # ---- Phase 3: Type-safety proof with EnumSort + compatibility ----
             functions_info = ast_analysis.get("functions", [])
@@ -213,42 +211,38 @@ class Z3Solver(
                 annotation = v.get("annotation") or "unknown"
                 # Flatten Optional[X] -> include both X and None
                 types_for_var = self._annotation_to_types(annotation)
-                if v.get("nullable", False) or (
-                    isinstance(annotation, str) and "Optional" in annotation
-                ):
+                if v.get("nullable", False) or (isinstance(annotation, str) and "Optional" in annotation):
                     if "None" not in types_for_var:
                         types_for_var.append("None")
-                variables_with_types.append({
-                    "name": v["name"],
-                    "types": types_for_var if types_for_var else ["unknown"],
-                })
+                variables_with_types.append(
+                    {
+                        "name": v["name"],
+                        "types": types_for_var if types_for_var else ["unknown"],
+                    }
+                )
 
             # Add function return types as variables
             for func in functions_info:
                 ret_type = func.get("return_type") or "unknown"
                 types_for_ret = self._annotation_to_types(ret_type)
-                variables_with_types.append({
-                    "name": f"__return_{func['name']}",
-                    "types": types_for_ret if types_for_ret else ["unknown"],
-                })
+                variables_with_types.append(
+                    {
+                        "name": f"__return_{func['name']}",
+                        "types": types_for_ret if types_for_ret else ["unknown"],
+                    }
+                )
 
             if variables_with_types:
                 # Pass operations for real compatibility checking
-                results["type_safety"] = self._z3_prove_type_safety_deep(
-                    variables_with_types, operations_info
-                )
+                results["type_safety"] = self._z3_prove_type_safety_deep(variables_with_types, operations_info)
 
             # ---- Phase 4: Invariant verification from code patterns ----
             invariants_info = ast_analysis.get("invariants", [])
             if invariants_info:
-                results["invariant_safety"] = self._z3_prove_code_invariants(
-                    invariants_info, variables_info
-                )
+                results["invariant_safety"] = self._z3_prove_code_invariants(invariants_info, variables_info)
             else:
                 # Try to extract invariants from raw_code patterns
-                results["invariant_safety"] = self._z3_prove_pattern_invariants(
-                    raw_code, variables_info
-                )
+                results["invariant_safety"] = self._z3_prove_pattern_invariants(raw_code, variables_info)
 
             # ---- Phase 5: Compute overall status ----
             sub_results = [
@@ -262,9 +256,7 @@ class Z3Solver(
                 results["overall_status"] = "UNKNOWN"
             elif all(r.get("verified", False) for r in sub_results):
                 results["overall_status"] = "PROVEN"
-            elif any(
-                r.get("status") in ("VIOLATED", "UNSATISFIABLE") for r in sub_results
-            ):
+            elif any(r.get("status") in ("VIOLATED", "UNSATISFIABLE") for r in sub_results):
                 results["overall_status"] = "VIOLATED"
             else:
                 results["overall_status"] = "PARTIAL"

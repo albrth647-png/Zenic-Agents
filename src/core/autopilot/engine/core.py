@@ -18,29 +18,31 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
-# ── Re-exports from extracted modules ──────────────────────
-from ._status import AutopilotStatus
-from ._singleton import get_autopilot_engine, reset_autopilot_engine
-from ._fallbacks import (
-    _NoOpImpactPreview,
-    _PermissiveSafetyFallback,
-    _NoOpDispatcher,
-)
-from ._persistence import _PersistenceMixin
-from ._lifecycle import _LifecycleMixin
-from ._execution import _ExecutionMixin
-from ._queries import _QueriesMixin
+from src.core.autopilot.autonomy import AutonomyConfigManager, get_autonomy_config
+from src.core.autopilot.feedback import ClosedLoopFeedback, get_closed_loop_feedback
+from src.core.autopilot.kpi_tracker import KPITracker, get_kpi_tracker
 
 # ── Subsystem imports for lazy-load helpers ────────────────
 from src.core.autopilot.objective import (
     get_objective_store,
 )
-from src.core.autopilot.kpi_tracker import KPITracker, get_kpi_tracker
 from src.core.autopilot.planner import AutopilotPlanner, PlannedAction, get_autopilot_planner
-from src.core.autopilot.feedback import ClosedLoopFeedback, get_closed_loop_feedback
-from src.core.autopilot.autonomy import AutonomyConfigManager, get_autonomy_config
+
+from ._execution import _ExecutionMixin
+from ._fallbacks import (
+    _NoOpDispatcher,
+    _NoOpImpactPreview,
+    _PermissiveSafetyFallback,
+)
+from ._lifecycle import _LifecycleMixin
+from ._persistence import _PersistenceMixin
+from ._queries import _QueriesMixin
+from ._singleton import get_autopilot_engine, reset_autopilot_engine
+
+# ── Re-exports from extracted modules ──────────────────────
+from ._status import AutopilotStatus
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  AUTOPILOT ENGINE
 # ──────────────────────────────────────────────────────────────
+
 
 class AutopilotEngine(
     _PersistenceMixin,
@@ -73,11 +76,11 @@ class AutopilotEngine(
         self._initialized = False
 
         # Lazy-loaded subsystems
-        self._objective_store: Optional[Any] = None
-        self._kpi_tracker: Optional[KPITracker] = None
-        self._planner: Optional[AutopilotPlanner] = None
-        self._feedback: Optional[ClosedLoopFeedback] = None
-        self._autonomy_manager: Optional[AutonomyConfigManager] = None
+        self._objective_store: Any | None = None
+        self._kpi_tracker: KPITracker | None = None
+        self._planner: AutopilotPlanner | None = None
+        self._feedback: ClosedLoopFeedback | None = None
+        self._autonomy_manager: AutonomyConfigManager | None = None
 
         # Lazy-loaded executor subsystems (avoid circular imports)
         self._impact_preview_engine: Any = None
@@ -85,8 +88,8 @@ class AutopilotEngine(
         self._action_dispatcher: Any = None
 
         # Engine state tracking
-        self._objective_statuses: Dict[str, AutopilotStatus] = {}
-        self._active_plans: Dict[str, PlannedAction] = {}
+        self._objective_statuses: dict[str, AutopilotStatus] = {}
+        self._active_plans: dict[str, PlannedAction] = {}
         self._cycle_count: int = 0
         self._stats = {
             "objectives_created": 0,
@@ -142,6 +145,7 @@ class AutopilotEngine(
         if self._impact_preview_engine is None:
             try:
                 from ..executors.impact_preview import get_impact_preview_engine
+
                 self._impact_preview_engine = get_impact_preview_engine()
             except ImportError:
                 logger.warning(
@@ -156,6 +160,7 @@ class AutopilotEngine(
         if self._safety_gate is None:
             try:
                 from ..executors.safety_gate import get_default_safety_gate
+
                 self._safety_gate = get_default_safety_gate()
             except ImportError:
                 logger.warning(
@@ -170,6 +175,7 @@ class AutopilotEngine(
         if self._action_dispatcher is None:
             try:
                 from ..executors.dispatch_action import get_default_dispatcher
+
                 self._action_dispatcher = get_default_dispatcher()
             except ImportError:
                 logger.warning(
@@ -179,4 +185,4 @@ class AutopilotEngine(
         return self._action_dispatcher
 
 
-__all__ = ["AutopilotStatus", "AutopilotEngine", "get_autopilot_engine", "reset_autopilot_engine"]
+__all__ = ["AutopilotEngine", "AutopilotStatus", "get_autopilot_engine", "reset_autopilot_engine"]

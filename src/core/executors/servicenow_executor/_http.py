@@ -9,7 +9,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..base import _validate_url_ssrf
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import aiohttp  # noqa: F401
+
     _AIOHTTP_AVAILABLE = True
 except ImportError:
     _AIOHTTP_AVAILABLE = False
@@ -32,9 +33,9 @@ class _HttpMixin:
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute an HTTP request against the ServiceNow API with retry.
 
         Uses aiohttp when available; falls back to urllib otherwise.
@@ -52,17 +53,23 @@ class _HttpMixin:
         with self._lock:
             self._stats["requests_total"] += 1
 
-        last_error: Optional[str] = None
+        last_error: str | None = None
 
         for attempt in range(_MAX_RETRIES):
             try:
                 if _AIOHTTP_AVAILABLE:
                     result = await self._snow_request_aiohttp(
-                        method, url, headers, json_data,
+                        method,
+                        url,
+                        headers,
+                        json_data,
                     )
                 else:
                     result = await self._snow_request_urllib(
-                        method, url, headers, json_data,
+                        method,
+                        url,
+                        headers,
+                        json_data,
                     )
 
                 # ── Track rate limits from response ───────────
@@ -86,17 +93,20 @@ class _HttpMixin:
                     self._stats["retries_total"] += 1
 
                 if attempt < _MAX_RETRIES - 1:
-                    delay = _RETRY_BASE_DELAY * (2 ** attempt)
+                    delay = _RETRY_BASE_DELAY * (2**attempt)
                     logger.warning(
-                        "ServiceNowExecutor: request failed (attempt %d/%d), "
-                        "retrying in %.1fs — %s",
-                        attempt + 1, _MAX_RETRIES, delay, exc,
+                        "ServiceNowExecutor: request failed (attempt %d/%d), " "retrying in %.1fs — %s",
+                        attempt + 1,
+                        _MAX_RETRIES,
+                        delay,
+                        exc,
                     )
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
                         "ServiceNowExecutor: request failed after %d attempts — %s",
-                        _MAX_RETRIES, exc,
+                        _MAX_RETRIES,
+                        exc,
                     )
 
         with self._lock:
@@ -113,14 +123,14 @@ class _HttpMixin:
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute request using aiohttp (async-native)."""
         import aiohttp  # type: ignore[import-untyped]
 
         async with aiohttp.ClientSession() as session:
-            kwargs: Dict[str, Any] = {
+            kwargs: dict[str, Any] = {
                 "headers": headers,
                 "timeout": aiohttp.ClientTimeout(total=30),
             }
@@ -146,14 +156,14 @@ class _HttpMixin:
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute request using urllib (sync, wrapped in to_thread)."""
 
         validated_url = _validate_url_ssrf(url)
 
-        def _do() -> Dict[str, Any]:
+        def _do() -> dict[str, Any]:
             data = None
             if json_data is not None:
                 data = json.dumps(json_data).encode("utf-8")
@@ -215,7 +225,8 @@ class _HttpMixin:
         if remaining < 10:
             logger.warning(
                 "ServiceNowExecutor: rate limit low for %s — %d remaining",
-                instance_key, remaining,
+                instance_key,
+                remaining,
             )
 
     # ──────────────────────────────────────────────────────────

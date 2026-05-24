@@ -9,15 +9,15 @@ Examples: demand projections, multi-source analysis, capacity planning.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List
+from typing import Any
 
-from .base import MonitorBase, register_monitor
 from ..types import MonitorResult, MonitorWeight
-
+from .base import MonitorBase, register_monitor
 
 # ──────────────────────────────────────────────────────────────
 #  DEMAND PROJECTION MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class DemandProjectionMonitor(MonitorBase):
@@ -40,8 +40,7 @@ class DemandProjectionMonitor(MonitorBase):
     def description(self) -> str:
         return "Proyecta demanda futura y detecta posibles quiebres de stock"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
         sales_table = params.get("sales_table", "sales")
@@ -53,9 +52,9 @@ class DemandProjectionMonitor(MonitorBase):
             # Get daily sales for the last 30 days
             cutoff = time.time() - (30 * 86400)
             rows = self._execute_query(
-                f"SELECT date, SUM(amount) FROM {sales_table} "
-                f"WHERE date >= ? GROUP BY date ORDER BY date",
-                (cutoff,), db_name=db_name,
+                f"SELECT date, SUM(amount) FROM {sales_table} " f"WHERE date >= ? GROUP BY date ORDER BY date",
+                (cutoff,),
+                db_name=db_name,
             )
             if not rows or len(rows) < 5:
                 return self._make_result(
@@ -73,7 +72,7 @@ class DemandProjectionMonitor(MonitorBase):
             x_mean = sum(x_vals) / n
             y_mean = sum(y_vals) / n
 
-            numerator = sum((x - x_mean) * (y - y_mean) for x, y in zip(x_vals, y_vals))
+            numerator = sum((x - x_mean) * (y - y_mean) for x, y in zip(x_vals, y_vals, strict=False))
             denominator = sum((x - x_mean) ** 2 for x in x_vals)
 
             if denominator == 0:
@@ -90,12 +89,13 @@ class DemandProjectionMonitor(MonitorBase):
             # Get current inventory
             inv_rows = self._execute_query(
                 f"SELECT SUM(quantity) FROM {inventory_table}",
-                (), db_name=db_name,
+                (),
+                db_name=db_name,
             )
             current_stock = float(inv_rows[0][0] or 0) if inv_rows else 0
 
             # Calculate stockout risk
-            days_of_stock = (current_stock / projected_daily) if projected_daily > 0 else float('inf')
+            days_of_stock = (current_stock / projected_daily) if projected_daily > 0 else float("inf")
             stockout_risk_pct = 0
             if days_of_stock < projection_days:
                 stockout_risk_pct = ((projection_days - days_of_stock) / projection_days) * 100
@@ -106,14 +106,14 @@ class DemandProjectionMonitor(MonitorBase):
                 f"(stock: {current_stock:.0f}, demanda proyectada: {total_projected:.0f})"
                 if triggered
                 else f"Stock OK para {projection_days} dias "
-                     f"(stock: {current_stock:.0f}, demanda proyectada: {total_projected:.0f})"
+                f"(stock: {current_stock:.0f}, demanda proyectada: {total_projected:.0f})"
             )
             return self._make_result(
                 triggered=triggered,
                 value={
                     "current_stock": round(current_stock, 1),
                     "projected_daily_demand": round(projected_daily, 1),
-                    "days_of_stock": round(days_of_stock, 1) if days_of_stock != float('inf') else -1,
+                    "days_of_stock": round(days_of_stock, 1) if days_of_stock != float("inf") else -1,
                     "stockout_risk_pct": round(stockout_risk_pct, 1),
                     "slope": round(slope, 4),
                 },
@@ -128,13 +128,16 @@ class DemandProjectionMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )
 
 
 # ──────────────────────────────────────────────────────────────
 #  MULTI-SOURCE ANALYSIS MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class MultiSourceAnalysisMonitor(MonitorBase):
@@ -157,22 +160,21 @@ class MultiSourceAnalysisMonitor(MonitorBase):
     def description(self) -> str:
         return "Cruza datos de multiples fuentes para detectar anomalias"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         params.get("db_name", "sna_data.sqlite")
         anomaly_threshold = params.get("anomaly_threshold", 2.0)
 
         try:
             # Collect metrics from multiple sources
-            findings: List[Dict[str, Any]] = []
+            findings: list[dict[str, Any]] = []
 
             # Source 1: Request volume trend
             cutoff = time.time() - 86400
             req_rows = self._execute_query(
-                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests "
-                "WHERE created_at >= ?",
-                (cutoff,), db_name="request_log.sqlite",
+                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests " "WHERE created_at >= ?",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             req_count = req_rows[0][0] if req_rows else 0
             req_avg_ms = float(req_rows[0][1] or 0) if req_rows else 0
@@ -180,7 +182,8 @@ class MultiSourceAnalysisMonitor(MonitorBase):
             # Source 2: Error rate
             err_rows = self._execute_query(
                 "SELECT COUNT(*) FROM requests WHERE created_at >= ? AND status = 'error'",
-                (cutoff,), db_name="request_log.sqlite",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             err_count = err_rows[0][0] if err_rows else 0
             err_rate = (err_count / req_count * 100) if req_count > 0 else 0
@@ -190,6 +193,7 @@ class MultiSourceAnalysisMonitor(MonitorBase):
             ram_pct = 0.0
             try:
                 from src.core.shared.resource_governor import get_governor
+
                 gov = get_governor()
                 if gov:
                     status = gov.get_status()
@@ -237,13 +241,16 @@ class MultiSourceAnalysisMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )
 
 
 # ──────────────────────────────────────────────────────────────
 #  CAPACITY PLANNING MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class CapacityPlanningMonitor(MonitorBase):
@@ -265,18 +272,19 @@ class CapacityPlanningMonitor(MonitorBase):
     def description(self) -> str:
         return "Analiza tendencias de uso de recursos y proyecta necesidades"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         max_ram_pct = params.get("max_ram_pct", 90.0)
         projection_days = params.get("projection_days", 14)
 
         try:
             from src.core.shared.resource_governor import get_governor
+
             gov = get_governor()
             if gov is None:
                 return self._make_result(
-                    triggered=False, detail="ResourceGovernor not available",
+                    triggered=False,
+                    detail="ResourceGovernor not available",
                     start_time=start,
                 )
 
@@ -288,9 +296,9 @@ class CapacityPlanningMonitor(MonitorBase):
             # Get request volume trend for capacity projection
             cutoff = time.time() - (7 * 86400)
             rows = self._execute_query(
-                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests "
-                "WHERE created_at >= ?",
-                (cutoff,), db_name="request_log.sqlite",
+                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests " "WHERE created_at >= ?",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             weekly_requests = rows[0][0] if rows else 0
             float(rows[0][1] or 0) if rows else 0
@@ -306,7 +314,7 @@ class CapacityPlanningMonitor(MonitorBase):
                 f"proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
                 if triggered
                 else f"Capacidad OK: RAM {ram_pct:.1f}%, "
-                     f"proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
+                f"proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
             )
             return self._make_result(
                 triggered=triggered,
@@ -323,5 +331,7 @@ class CapacityPlanningMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )

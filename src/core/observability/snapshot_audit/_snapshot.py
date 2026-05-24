@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.core.shared.db_initializer import get_data_dir
 
@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 # ── SnapshotAuditEngine ──────────────────────────────────────
 
+
 class SnapshotAuditEngine:
     """Before/After snapshot system for CRUD operation auditing.
 
@@ -47,7 +48,7 @@ class SnapshotAuditEngine:
     Persists snapshots to SQLite for long-term retention.
     """
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
             db_path = str(get_data_dir() / "snapshot_audit.sqlite")
         self._db_path = db_path
@@ -61,7 +62,7 @@ class SnapshotAuditEngine:
         self,
         entity_type: str,
         entity_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         tenant_id: str,
     ) -> str:
         """Capture a "before" snapshot of entity state.
@@ -86,12 +87,18 @@ class SnapshotAuditEngine:
         )
 
         persist_snapshot(
-            snapshot, self._db_path, self._lock, self._initialized,
+            snapshot,
+            self._db_path,
+            self._lock,
+            self._initialized,
         )
 
         logger.info(
             "SnapshotAuditEngine: capture_before %s/%s snap=%s tenant=%s",
-            entity_type, entity_id, snapshot.snapshot_id, tenant_id,
+            entity_type,
+            entity_id,
+            snapshot.snapshot_id,
+            tenant_id,
         )
         return snapshot.snapshot_id
 
@@ -99,7 +106,7 @@ class SnapshotAuditEngine:
         self,
         entity_type: str,
         entity_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         tenant_id: str,
         before_snapshot_id: str,
     ) -> SnapshotPair:
@@ -131,7 +138,9 @@ class SnapshotAuditEngine:
 
         # Load the before snapshot to create the pair
         before_snapshot = load_snapshot(
-            before_snapshot_id, self._db_path, self._lock,
+            before_snapshot_id,
+            self._db_path,
+            self._lock,
         )
 
         # Update the before snapshot with pairing info
@@ -148,7 +157,10 @@ class SnapshotAuditEngine:
         # Set pair_id on after snapshot
         after_snapshot.pair_id = pair_id
         persist_snapshot(
-            after_snapshot, self._db_path, self._lock, self._initialized,
+            after_snapshot,
+            self._db_path,
+            self._lock,
+            self._initialized,
         )
 
         # Update after snapshot with pair_id
@@ -170,14 +182,17 @@ class SnapshotAuditEngine:
         )
 
         logger.info(
-            "SnapshotAuditEngine: capture_after %s/%s pair=%s "
-            "before=%s after=%s tenant=%s",
-            entity_type, entity_id, pair_id,
-            before_snapshot_id, after_snapshot.snapshot_id, tenant_id,
+            "SnapshotAuditEngine: capture_after %s/%s pair=%s " "before=%s after=%s tenant=%s",
+            entity_type,
+            entity_id,
+            pair_id,
+            before_snapshot_id,
+            after_snapshot.snapshot_id,
+            tenant_id,
         )
         return pair
 
-    def get_snapshot_pair(self, snapshot_id: str) -> Optional[SnapshotPair]:
+    def get_snapshot_pair(self, snapshot_id: str) -> SnapshotPair | None:
         """Retrieve a before/after pair from either the before or after snapshot_id.
 
         Args:
@@ -191,10 +206,12 @@ class SnapshotAuditEngine:
             return None
 
         # If this entry has a paired_snapshot_id, load the partner
-        partner: Optional[SnapshotEntry] = None
+        partner: SnapshotEntry | None = None
         if entry.paired_snapshot_id:
             partner = load_snapshot(
-                entry.paired_snapshot_id, self._db_path, self._lock,
+                entry.paired_snapshot_id,
+                self._db_path,
+                self._lock,
             )
 
         # Determine before and after
@@ -226,7 +243,7 @@ class SnapshotAuditEngine:
         entity_id: str,
         tenant_id: str,
         limit: int = 100,
-    ) -> List[SnapshotPair]:
+    ) -> list[SnapshotPair]:
         """Return all snapshot pairs (changes) for an entity, newest first.
 
         Args:
@@ -241,13 +258,17 @@ class SnapshotAuditEngine:
         limit = max(1, min(limit, 1000))
 
         raw_rows = query_entity_history(
-            entity_type, entity_id, tenant_id, limit,
-            self._db_path, self._lock,
+            entity_type,
+            entity_id,
+            tenant_id,
+            limit,
+            self._db_path,
+            self._lock,
         )
 
         # Group by pair_id to build pairs
-        pairs_by_id: Dict[str, List[SnapshotEntry]] = {}
-        unpaired: List[SnapshotEntry] = []
+        pairs_by_id: dict[str, list[SnapshotEntry]] = {}
+        unpaired: list[SnapshotEntry] = []
 
         for row in raw_rows:
             entry = row_to_entry(row)
@@ -257,12 +278,12 @@ class SnapshotAuditEngine:
             else:
                 unpaired.append(entry)
 
-        result: List[SnapshotPair] = []
+        result: list[SnapshotPair] = []
 
         # Build pairs from pair_id groups
         for pid, entries in pairs_by_id.items():
-            before_entry: Optional[SnapshotEntry] = None
-            after_entry: Optional[SnapshotEntry] = None
+            before_entry: SnapshotEntry | None = None
+            after_entry: SnapshotEntry | None = None
             for e in entries:
                 if e.snapshot_kind == "before":
                     before_entry = e
@@ -272,38 +293,48 @@ class SnapshotAuditEngine:
             # If we only have one side, try to load the partner
             if before_entry and not after_entry and before_entry.paired_snapshot_id:
                 after_entry = load_snapshot(
-                    before_entry.paired_snapshot_id, self._db_path, self._lock,
+                    before_entry.paired_snapshot_id,
+                    self._db_path,
+                    self._lock,
                 )
             if after_entry and not before_entry and after_entry.paired_snapshot_id:
                 before_entry = load_snapshot(
-                    after_entry.paired_snapshot_id, self._db_path, self._lock,
+                    after_entry.paired_snapshot_id,
+                    self._db_path,
+                    self._lock,
                 )
 
-            result.append(SnapshotPair(
-                pair_id=pid,
-                entity_type=entity_type,
-                entity_id=entity_id,
-                tenant_id=tenant_id,
-                before=before_entry,
-                after=after_entry,
-            ))
+            result.append(
+                SnapshotPair(
+                    pair_id=pid,
+                    entity_type=entity_type,
+                    entity_id=entity_id,
+                    tenant_id=tenant_id,
+                    before=before_entry,
+                    after=after_entry,
+                )
+            )
 
         # Handle unpaired entries (capture_before without capture_after yet)
         for entry in unpaired:
-            partner: Optional[SnapshotEntry] = None
+            partner: SnapshotEntry | None = None
             if entry.paired_snapshot_id:
                 partner = load_snapshot(
-                    entry.paired_snapshot_id, self._db_path, self._lock,
+                    entry.paired_snapshot_id,
+                    self._db_path,
+                    self._lock,
                 )
             before_e = entry if entry.snapshot_kind == "before" else partner
             after_e = entry if entry.snapshot_kind == "after" else partner
-            result.append(SnapshotPair(
-                entity_type=entity_type,
-                entity_id=entity_id,
-                tenant_id=tenant_id,
-                before=before_e,
-                after=after_e,
-            ))
+            result.append(
+                SnapshotPair(
+                    entity_type=entity_type,
+                    entity_id=entity_id,
+                    tenant_id=tenant_id,
+                    before=before_e,
+                    after=after_e,
+                )
+            )
 
         # Sort by the most recent captured_at_epoch in the pair (descending)
         result.sort(
@@ -316,7 +347,7 @@ class SnapshotAuditEngine:
 
         return result[:limit]
 
-    def get_diff(self, snapshot_id: str) -> Dict[str, Any]:
+    def get_diff(self, snapshot_id: str) -> dict[str, Any]:
         """Compute the diff between before and after states for a snapshot pair.
 
         Args:
@@ -354,6 +385,9 @@ class SnapshotAuditEngine:
 
         logger.debug(
             "SnapshotAuditEngine: get_diff snap=%s added=%d removed=%d changed=%d",
-            snapshot_id, len(diff.added), len(diff.removed), len(diff.changed),
+            snapshot_id,
+            len(diff.added),
+            len(diff.removed),
+            len(diff.changed),
         )
         return diff.to_dict()

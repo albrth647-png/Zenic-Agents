@@ -18,7 +18,6 @@ produce complete, working Python modules.
 """
 
 import logging
-from typing import List
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
@@ -31,6 +30,7 @@ MAX_REPAIR_ATTEMPTS = 3
 @dataclass
 class GenerationStep:
     """A single atomic generation step."""
+
     step_id: int
     step_type: str  # "schema" | "imports" | "class_def" | "method" | "tests"
     description: str
@@ -44,11 +44,14 @@ class GenerationStep:
 @dataclass
 class ChainResult:
     """Result of a SmartPromptChain execution."""
+
     success: bool
     code: str = ""
     steps_total: int = 0
     steps_completed: int = 0
     steps_failed: int = 0
     repair_count: int = 0
-    fragments: List[str] = field(default_factory=list)
-__all__ = ["ChainResult", "GenerationStep", "MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS", "logger"]
+    fragments: list[str] = field(default_factory=list)
+
+
+__all__ = ["MAX_LINES_PER_STEP", "MAX_REPAIR_ATTEMPTS", "ChainResult", "GenerationStep", "logger"]

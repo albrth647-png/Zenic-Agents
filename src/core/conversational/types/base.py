@@ -15,11 +15,11 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Any,
-    Callable,
     Generic,
     Protocol,
     TypeVar,
@@ -28,7 +28,6 @@ from typing import (
 
 # Phase 5 — Deterministic ID generation
 from src.core.shared.deterministic import FencingTokenGenerator
-
 
 # ─── Result Monad ─────────────────────────────────────────────
 
@@ -39,6 +38,7 @@ E = TypeVar("E", bound=Exception)
 @dataclass
 class Ok(Generic[T]):
     """Resultado exitoso."""
+
     value: T
 
     @property
@@ -57,6 +57,7 @@ class Ok(Generic[T]):
 @dataclass
 class Err(Generic[E]):
     """Resultado con error."""
+
     error: E
 
     @property
@@ -107,8 +108,10 @@ def new_id(prefix: str = "") -> str:
 
 # ─── Prioridad y Severidad ───────────────────────────────────
 
+
 class Priority(str, Enum):
     """Prioridad de procesamiento."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -117,6 +120,7 @@ class Priority(str, Enum):
 
 class Severity(str, Enum):
     """Severidad de un evento o error."""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -125,6 +129,7 @@ class Severity(str, Enum):
 
 
 # ─── Protocolos Core ─────────────────────────────────────────
+
 
 @runtime_checkable
 class Processor(Protocol):
@@ -190,6 +195,7 @@ class Emitter(Protocol):
 
 # ─── Pipeline Context ────────────────────────────────────────
 
+
 @dataclass
 class PipelineContext:
     """
@@ -198,6 +204,7 @@ class PipelineContext:
     Se enriquece en cada etapa: input → intent → router → response.
     Inmutable en su estructura, mutable en sus datos.
     """
+
     session_id: SessionId = ""
     message_id: MessageId = field(default_factory=lambda: new_id("msg"))
     user_message: str = ""

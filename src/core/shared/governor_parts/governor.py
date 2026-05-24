@@ -1,12 +1,12 @@
 """ResourceGovernor main class combining all mixins."""
 
-import time
 import threading
+import time
 
 from ._imports import logger
-from .monitor import MonitorMixin
 from .api import APIMixin
 from .model_swap import ModelSwapMixin
+from .monitor import MonitorMixin
 
 
 class ResourceGovernor(
@@ -27,10 +27,10 @@ class ResourceGovernor(
     """
 
     # Limites conservadores para un telefono
-    DEFAULT_RAM_LIMIT_MB = 4096       # 4GB max para el engine
-    DEFAULT_GC_THRESHOLD_MB = 3072    # Forzar GC a 3GB
-    DEFAULT_CPU_SLEEP_MS = 50         # 50ms sleep entre ops pesadas
-    DEFAULT_CPU_SAMPLE_INTERVAL = 5   # Muestrear cada 5s
+    DEFAULT_RAM_LIMIT_MB = 4096  # 4GB max para el engine
+    DEFAULT_GC_THRESHOLD_MB = 3072  # Forzar GC a 3GB
+    DEFAULT_CPU_SLEEP_MS = 50  # 50ms sleep entre ops pesadas
+    DEFAULT_CPU_SAMPLE_INTERVAL = 5  # Muestrear cada 5s
     THERMAL_SCALE_BACK_THRESHOLD = 30  # Si >30s a alta CPU, reducir
 
     def __init__(self, ram_limit_mb=None, gc_threshold_mb=None):
@@ -57,7 +57,4 @@ class ResourceGovernor(
             "requests_served": 0,
         }
 
-        logger.info(
-            "ResourceGovernor: RAM limit=%dMB, GC threshold=%dMB",
-            self.ram_limit_mb, self.gc_threshold_mb
-        )
+        logger.info("ResourceGovernor: RAM limit=%dMB, GC threshold=%dMB", self.ram_limit_mb, self.gc_threshold_mb)

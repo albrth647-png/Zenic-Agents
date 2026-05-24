@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 class ProcessBuilderMixin:
     """Mixin providing _build_real_process and _extract_entities_from_intent."""
 
-    def _build_real_process(self, safe_target: str, solver_insights: dict,
-                             mcts_actions: list) -> str:
+    def _build_real_process(self, safe_target: str, solver_insights: dict, mcts_actions: list) -> str:
         """Build a REAL _process() method using CodeAssembler.
 
         Replaces the stub: return {"processed": True, "input": payload}
@@ -21,7 +20,7 @@ class ProcessBuilderMixin:
         - Default → CRUD _process() (every module needs basic data ops)
         """
         # Try CodeAssembler first (produces executor-backed code)
-        if hasattr(self, '_assembler') and self._assembler:
+        if hasattr(self, "_assembler") and self._assembler:
             entity = {
                 "name": safe_target.capitalize(),
                 "fields": [
@@ -103,9 +102,10 @@ class ProcessBuilderMixin:
         }
 
         # Try to extract from intent raw_code (if it has class definitions)
-        raw_code = getattr(intent, 'raw_code', None) or ""
+        raw_code = getattr(intent, "raw_code", None) or ""
         if raw_code and "class " in raw_code:
             import ast
+
             try:
                 tree = ast.parse(raw_code)
                 for node in ast.walk(tree):
@@ -117,9 +117,14 @@ class ProcessBuilderMixin:
                                 field_type = "str"  # default
                                 if isinstance(item.annotation, ast.Name):
                                     type_map = {
-                                        "int": "int", "str": "str", "float": "float",
-                                        "bool": "bool", "list": "list", "dict": "dict",
-                                        "Optional": "str", "List": "list",
+                                        "int": "int",
+                                        "str": "str",
+                                        "float": "float",
+                                        "bool": "bool",
+                                        "list": "list",
+                                        "dict": "dict",
+                                        "Optional": "str",
+                                        "List": "list",
                                     }
                                     field_type = type_map.get(item.annotation.id, "str")
                                 fields.append({"name": field_name, "type": field_type})

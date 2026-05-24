@@ -88,4 +88,6 @@ def _mapping_from_row(row: sqlite3.Row) -> TriggerMapping:
         enabled=bool(row["enabled"]),
         created_at=row["created_at"],
     )
+
+
 __all__ = ["_condition_from_dict", "_condition_to_dict", "_mapping_from_row", "_match_event_pattern", "logger"]

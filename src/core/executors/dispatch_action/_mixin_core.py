@@ -7,17 +7,17 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base import ActionResult, ExecutorRegistry, get_default_registry
-from ..safety_gate import SafetyGate, SafetyVerdict, SafetyCheckResult, get_default_safety_gate
 from ..audit_logger import ExecutorAuditLogger, get_default_audit_logger
+from ..base import ActionResult, ExecutorRegistry, get_default_registry
 from ..blueprint_schema import Blueprint, BlueprintValidator, get_default_blueprint
+from ..coordinated_rollback import CoordinatedRollbackManager, get_coordinated_rollback_manager
+from ..db_journal import DBTransactionJournal, get_db_journal
 from ..dispatch_parts import BlueprintBridgeMixin
 from ..impact_preview import ImpactPreviewEngine, get_impact_preview_engine
-from ..policy_engine import PolicyEngine, PolicyDecision, get_policy_engine
-from ..db_journal import DBTransactionJournal, get_db_journal
-from ..coordinated_rollback import CoordinatedRollbackManager, get_coordinated_rollback_manager
+from ..policy_engine import PolicyDecision, PolicyEngine, get_policy_engine
+from ..safety_gate import SafetyCheckResult, SafetyGate, SafetyVerdict, get_default_safety_gate
 from ._types import DispatchRequest, DispatchResult
 
 logger = logging.getLogger(__name__)
@@ -45,21 +45,21 @@ class ActionDispatcher(BlueprintBridgeMixin):
 
     def __init__(
         self,
-        registry: Optional[ExecutorRegistry] = None,
-        safety_gate: Optional[SafetyGate] = None,
-        audit_logger: Optional[ExecutorAuditLogger] = None,
-        blueprint: Optional[Blueprint] = None,
+        registry: ExecutorRegistry | None = None,
+        safety_gate: SafetyGate | None = None,
+        audit_logger: ExecutorAuditLogger | None = None,
+        blueprint: Blueprint | None = None,
     ) -> None:
         self._registry = registry or get_default_registry()
         self._safety_gate = safety_gate or get_default_safety_gate()
         self._audit_logger = audit_logger or get_default_audit_logger()
         self._blueprint = blueprint or get_default_blueprint()
-        self._pending_confirmations: Dict[str, DispatchRequest] = {}
-        self._pending_approvals: Dict[str, DispatchRequest] = {}
-        self._impact_preview: Optional[ImpactPreviewEngine] = None
-        self._policy_engine: Optional[PolicyEngine] = None
-        self._db_journal: Optional[DBTransactionJournal] = None
-        self._coordinated_rollback: Optional[CoordinatedRollbackManager] = None
+        self._pending_confirmations: dict[str, DispatchRequest] = {}
+        self._pending_approvals: dict[str, DispatchRequest] = {}
+        self._impact_preview: ImpactPreviewEngine | None = None
+        self._policy_engine: PolicyEngine | None = None
+        self._db_journal: DBTransactionJournal | None = None
+        self._coordinated_rollback: CoordinatedRollbackManager | None = None
         self._stats = {
             "dispatched": 0,
             "succeeded": 0,
@@ -74,7 +74,7 @@ class ActionDispatcher(BlueprintBridgeMixin):
     async def dispatch(self, request: DispatchRequest) -> DispatchResult:
         """Dispatch an action through the full pipeline."""
         start = time.monotonic()
-        stages: Dict[str, float] = {}
+        stages: dict[str, float] = {}
 
         # Phase 5: Auto-load Blueprint from registry
         if request.blueprint_name:
@@ -93,13 +93,15 @@ class ActionDispatcher(BlueprintBridgeMixin):
         if blueprint_errors:
             logger.warning(
                 "ActionDispatcher: Blueprint validation failed for %s: %s",
-                request.action_type, blueprint_errors,
+                request.action_type,
+                blueprint_errors,
             )
             critical_errors = [e for e in blueprint_errors if "required" in e.lower() or "invalid type" in e.lower()]
             if critical_errors:
                 self._stats["failed"] += 1
                 return DispatchResult(
-                    action_id=request.action_id, success=False,
+                    action_id=request.action_id,
+                    success=False,
                     safety_verdict=SafetyVerdict.DENY,
                     blueprint_errors=blueprint_errors,
                     total_duration_ms=(time.monotonic() - start) * 1000,
@@ -115,7 +117,8 @@ class ActionDispatcher(BlueprintBridgeMixin):
             self._stats["safety_denied"] += 1
             self._stats["failed"] += 1
             return DispatchResult(
-                action_id=request.action_id, success=False,
+                action_id=request.action_id,
+                success=False,
                 safety_verdict=SafetyVerdict.DENY,
                 blueprint_errors=blueprint_errors,
                 total_duration_ms=(time.monotonic() - start) * 1000,
@@ -125,11 +128,17 @@ class ActionDispatcher(BlueprintBridgeMixin):
         # ── Stage 2: Safety Gate ──
         safety_result = self._run_safety_gate(request, stages)
         if safety_result is not None and safety_result.verdict in (
-            SafetyVerdict.DENY, SafetyVerdict.RATE_LIMITED,
-            SafetyVerdict.CONFIRM, SafetyVerdict.APPROVE,
+            SafetyVerdict.DENY,
+            SafetyVerdict.RATE_LIMITED,
+            SafetyVerdict.CONFIRM,
+            SafetyVerdict.APPROVE,
         ):
             blocked = self._check_blocking_verdict(
-                request, safety_result, blueprint_errors, stages, start,
+                request,
+                safety_result,
+                blueprint_errors,
+                stages,
+                start,
             )
             if blocked is not None:
                 return blocked
@@ -142,7 +151,9 @@ class ActionDispatcher(BlueprintBridgeMixin):
             self._stats["dry_run_executed"] += 1
         else:
             executor_result = await self._registry.execute_action(
-                request.action_type, request.config, request.context,
+                request.action_type,
+                request.config,
+                request.context,
             )
             stages["executor"] = (time.monotonic() - exec_start) * 1000
 
@@ -152,7 +163,8 @@ class ActionDispatcher(BlueprintBridgeMixin):
         else:
             logger.info(
                 "ActionDispatcher: Dry-run completed for %s (action_id=%s)",
-                request.action_type, request.action_id,
+                request.action_type,
+                request.action_id,
             )
 
         # ── Finalize ──
@@ -175,12 +187,16 @@ class ActionDispatcher(BlueprintBridgeMixin):
     # ── Safety Gate Helper ────────────────────────────────
 
     def _run_safety_gate(
-        self, request: DispatchRequest, stages: Dict[str, float],
-    ) -> Optional[SafetyCheckResult]:
+        self,
+        request: DispatchRequest,
+        stages: dict[str, float],
+    ) -> SafetyCheckResult | None:
         """Run Safety Gate check on the request."""
         sg_start = time.monotonic()
         result = self._safety_gate.check(
-            request.action_type, request.config, request.context,
+            request.action_type,
+            request.config,
+            request.context,
         )
         stages["safety_gate"] = (time.monotonic() - sg_start) * 1000
         return result
@@ -189,10 +205,10 @@ class ActionDispatcher(BlueprintBridgeMixin):
         self,
         request: DispatchRequest,
         safety_result: SafetyCheckResult,
-        blueprint_errors: List[str],
-        stages: Dict[str, float],
+        blueprint_errors: list[str],
+        stages: dict[str, float],
         start: float,
-    ) -> Optional[DispatchResult]:
+    ) -> DispatchResult | None:
         """Check if a safety verdict blocks execution."""
         verdict = safety_result.verdict
 
@@ -200,8 +216,10 @@ class ActionDispatcher(BlueprintBridgeMixin):
             self._stats["safety_denied"] += 1
             self._stats["failed"] += 1
             return DispatchResult(
-                action_id=request.action_id, success=False,
-                safety_verdict=verdict, safety_result=safety_result,
+                action_id=request.action_id,
+                success=False,
+                safety_verdict=verdict,
+                safety_result=safety_result,
                 blueprint_errors=blueprint_errors,
                 total_duration_ms=(time.monotonic() - start) * 1000,
                 pipeline_stages=stages,
@@ -210,8 +228,10 @@ class ActionDispatcher(BlueprintBridgeMixin):
         if verdict == SafetyVerdict.RATE_LIMITED:
             self._stats["rate_limited"] += 1
             return DispatchResult(
-                action_id=request.action_id, success=False,
-                safety_verdict=verdict, safety_result=safety_result,
+                action_id=request.action_id,
+                success=False,
+                safety_verdict=verdict,
+                safety_result=safety_result,
                 blueprint_errors=blueprint_errors,
                 total_duration_ms=(time.monotonic() - start) * 1000,
                 pipeline_stages=stages,
@@ -222,8 +242,10 @@ class ActionDispatcher(BlueprintBridgeMixin):
                 self._pending_confirmations[request.action_id] = request
                 self._stats["safety_confirmed"] += 1
                 return DispatchResult(
-                    action_id=request.action_id, success=False,
-                    safety_verdict=verdict, safety_result=safety_result,
+                    action_id=request.action_id,
+                    success=False,
+                    safety_verdict=verdict,
+                    safety_result=safety_result,
                     blueprint_errors=blueprint_errors,
                     total_duration_ms=(time.monotonic() - start) * 1000,
                     pipeline_stages=stages,
@@ -233,8 +255,10 @@ class ActionDispatcher(BlueprintBridgeMixin):
             if not self._safety_gate.is_approved(request.action_id):
                 self._pending_approvals[request.action_id] = request
                 return DispatchResult(
-                    action_id=request.action_id, success=False,
-                    safety_verdict=verdict, safety_result=safety_result,
+                    action_id=request.action_id,
+                    success=False,
+                    safety_verdict=verdict,
+                    safety_result=safety_result,
                     blueprint_errors=blueprint_errors,
                     total_duration_ms=(time.monotonic() - start) * 1000,
                     pipeline_stages=stages,
@@ -248,8 +272,8 @@ class ActionDispatcher(BlueprintBridgeMixin):
         self,
         request: DispatchRequest,
         executor_result: ActionResult,
-        safety_result: Optional[SafetyCheckResult],
-        stages: Dict[str, float],
+        safety_result: SafetyCheckResult | None,
+        stages: dict[str, float],
     ) -> None:
         """Log the action execution to the audit logger."""
         if request.skip_audit and safety_result and safety_result.verdict == SafetyVerdict.ALLOW:
@@ -260,7 +284,9 @@ class ActionDispatcher(BlueprintBridgeMixin):
         self._audit_logger.log_action(
             action_type=request.action_type,
             operation=request.config.get("operation", ""),
-            executor_class=(lambda e: type(e).__name__ if e else "Unknown")(self._registry.get_executor(request.action_type)),
+            executor_class=(lambda e: type(e).__name__ if e else "Unknown")(
+                self._registry.get_executor(request.action_type)
+            ),
             verdict=verdict_str,
             success=executor_result.success,
             duration_ms=executor_result.duration_ms,
@@ -277,7 +303,7 @@ class ActionDispatcher(BlueprintBridgeMixin):
 
     # ── Pending Actions ───────────────────────────────────
 
-    def confirm_action(self, action_id: str) -> Optional[DispatchResult]:
+    def confirm_action(self, action_id: str) -> DispatchResult | None:
         """Confirm a pending action."""
         request = self._pending_confirmations.pop(action_id, None)
         if not request:
@@ -285,7 +311,7 @@ class ActionDispatcher(BlueprintBridgeMixin):
         self._safety_gate.confirm_action(action_id)
         return None
 
-    def approve_action(self, action_id: str, approver_role: str) -> Optional[DispatchResult]:
+    def approve_action(self, action_id: str, approver_role: str) -> DispatchResult | None:
         """Approve a pending action."""
         request = self._pending_approvals.pop(action_id, None)
         if not request:
@@ -293,24 +319,22 @@ class ActionDispatcher(BlueprintBridgeMixin):
         self._safety_gate.approve_action(action_id, approver_role)
         return None
 
-    def get_pending_confirmations(self) -> Dict[str, Dict[str, Any]]:
+    def get_pending_confirmations(self) -> dict[str, dict[str, Any]]:
         """Get all actions pending user confirmation."""
         return {
-            aid: {"action_type": req.action_type, "config": req.config,
-                  "reason": "Requires user confirmation"}
+            aid: {"action_type": req.action_type, "config": req.config, "reason": "Requires user confirmation"}
             for aid, req in self._pending_confirmations.items()
         }
 
-    def get_pending_approvals(self) -> Dict[str, Dict[str, Any]]:
+    def get_pending_approvals(self) -> dict[str, dict[str, Any]]:
         """Get all actions pending role approval."""
         return {
-            aid: {"action_type": req.action_type, "config": req.config,
-                  "reason": "Requires role approval"}
+            aid: {"action_type": req.action_type, "config": req.config, "reason": "Requires role approval"}
             for aid, req in self._pending_approvals.items()
         }
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get dispatcher statistics."""
         return {
             **self._stats,
@@ -362,7 +386,7 @@ class ActionDispatcher(BlueprintBridgeMixin):
             context=request.context,
         )
 
-    def _validate_blueprint(self, request: DispatchRequest) -> List[str]:
+    def _validate_blueprint(self, request: DispatchRequest) -> list[str]:
         """Validate the action against the active Blueprint schema."""
         schema = self._blueprint.executor_schemas.get(request.action_type)
         if not schema:
@@ -376,14 +400,17 @@ class ActionDispatcher(BlueprintBridgeMixin):
         mock = ActionResult(
             success=True,
             data={"dry_run": True, "simulated": True, "action_type": request.action_type},
-            error="", duration_ms=0.0,
+            error="",
+            duration_ms=0.0,
         )
         try:
             from ..dry_run_executor import get_dry_run_executor
+
             dry_runner = get_dry_run_executor()
             ctx = {**request.context, "action_type": request.action_type, "dry_run": True}
             result = await dry_runner.execute(request.config, ctx)
             from ..base import ActionResult as AR
+
             return result if isinstance(result, AR) else mock
         except ImportError:
             logger.warning("ActionDispatcher: DryRunExecutor not available, returning mock result")

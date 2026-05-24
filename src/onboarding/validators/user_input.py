@@ -18,10 +18,10 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Final, List
-
+from typing import ClassVar, Final
 
 # ── Core Validation Result Types ─────────────────────────────
+
 
 @dataclass(frozen=True, slots=True)
 class ValidationResult:
@@ -35,11 +35,12 @@ class ValidationResult:
         ValidResult + InvalidResult = InvalidResult
         InvalidResult + any         = InvalidResult  (short-circuit)
     """
+
     is_valid: bool
     error_message: str = ""
     sanitized_value: str = ""
 
-    def merge(self, other: "ValidationResult") -> "ValidationResult":
+    def merge(self, other: ValidationResult) -> ValidationResult:
         """Compose two validation results (monoidal AND)."""
         if not self.is_valid:
             return self
@@ -54,6 +55,7 @@ class ValidationResult:
 @dataclass(frozen=True, slots=True)
 class ValidResult(ValidationResult):
     """Successful validation — the input passes all checks."""
+
     is_valid: bool = True
     error_message: str = ""
     sanitized_value: str = ""
@@ -62,12 +64,14 @@ class ValidResult(ValidationResult):
 @dataclass(frozen=True, slots=True)
 class InvalidResult(ValidationResult):
     """Failed validation — the input violates one or more rules."""
+
     is_valid: bool = False
     error_message: str = "Validation failed"
     sanitized_value: str = ""
 
 
 # ── Abstract Validator ───────────────────────────────────────
+
 
 class BaseValidator(ABC):
     """Abstract base for all validators (Strategy pattern).
@@ -88,6 +92,7 @@ class BaseValidator(ABC):
 
 # ── Validator Chain (Chain of Responsibility) ────────────────
 
+
 class ValidatorChain:
     """Compose multiple validators into a sequential chain.
 
@@ -104,7 +109,7 @@ class ValidatorChain:
     """
 
     def __init__(self, name: str = "unnamed") -> None:
-        self._validators: List[BaseValidator] = []
+        self._validators: list[BaseValidator] = []
         self._name = name
 
     @property
@@ -115,7 +120,7 @@ class ValidatorChain:
     def validator_count(self) -> int:
         return len(self._validators)
 
-    def add(self, validator: BaseValidator) -> "ValidatorChain":
+    def add(self, validator: BaseValidator) -> ValidatorChain:
         """Add a validator to the chain (fluent API)."""
         self._validators.append(validator)
         return self
@@ -136,14 +141,24 @@ class ValidatorChain:
 # ── Username Validator ───────────────────────────────────────
 
 _RESERVED_USERNAMES: Final[tuple] = (
-    "admin", "root", "system", "zenic", "support", "help",
-    "null", "undefined", "test", "guest", "anonymous",
-    "moderator", "mod", "superuser", "su",
+    "admin",
+    "root",
+    "system",
+    "zenic",
+    "support",
+    "help",
+    "null",
+    "undefined",
+    "test",
+    "guest",
+    "anonymous",
+    "moderator",
+    "mod",
+    "superuser",
+    "su",
 )
 
-_USERNAME_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-    r"^[a-z][a-z0-9_]{2,31}$", re.IGNORECASE
-)
+_USERNAME_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[a-z][a-z0-9_]{2,31}$", re.IGNORECASE)
 
 
 class _UsernameFormatValidator(BaseValidator):
@@ -155,8 +170,7 @@ class _UsernameFormatValidator(BaseValidator):
             return InvalidResult("Username cannot be empty")
         if not _USERNAME_PATTERN.match(sanitized):
             return InvalidResult(
-                "Username must start with a letter and contain only "
-                "letters, digits, and underscores (3-32 chars)"
+                "Username must start with a letter and contain only " "letters, digits, and underscores (3-32 chars)"
             )
         return ValidResult(sanitized_value=sanitized)
 
@@ -217,16 +231,23 @@ class UsernameValidator:
 
 # ── Email Validator ──────────────────────────────────────────
 
-_EMAIL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-    r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
-)
+_EMAIL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")
 
-_DISPOSABLE_DOMAINS: Final[frozenset] = frozenset({
-    "tempmail.com", "throwaway.email", "guerrillamail.com",
-    "mailinator.com", "yopmail.com", "sharklasers.com",
-    "guerrillamailblock.com", "grr.la", "dispostable.com",
-    "trashmail.com", "10minutemail.com",
-})
+_DISPOSABLE_DOMAINS: Final[frozenset] = frozenset(
+    {
+        "tempmail.com",
+        "throwaway.email",
+        "guerrillamail.com",
+        "mailinator.com",
+        "yopmail.com",
+        "sharklasers.com",
+        "guerrillamailblock.com",
+        "grr.la",
+        "dispostable.com",
+        "trashmail.com",
+        "10minutemail.com",
+    }
+)
 
 
 class _EmailFormatValidator(BaseValidator):
@@ -249,8 +270,7 @@ class _EmailDisposableValidator(BaseValidator):
         domain = sanitized.split("@")[-1] if "@" in sanitized else ""
         if domain in _DISPOSABLE_DOMAINS:
             return InvalidResult(
-                f"Disposable email domain '{domain}' is not allowed. "
-                "Please use a permanent email address."
+                f"Disposable email domain '{domain}' is not allowed. " "Please use a permanent email address."
             )
         return ValidResult(sanitized_value=raw.strip())
 
@@ -285,13 +305,9 @@ class EmailValidator:
 
 # ── Payment Reference Validator ──────────────────────────────
 
-_TRC20_ADDRESS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-    r"^T[A-Za-z1-9]{33}$"
-)
+_TRC20_ADDRESS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^T[A-Za-z1-9]{33}$")
 
-_TX_HASH_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-    r"^[a-fA-F0-9]{64}$"
-)
+_TX_HASH_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[a-fA-F0-9]{64}$")
 
 
 class _PaymentFormatValidator(BaseValidator):
@@ -348,6 +364,7 @@ class PaymentRefValidator:
 
 
 # ── Convenience Functions ────────────────────────────────────
+
 
 def validate_username(raw: str) -> ValidationResult:
     """One-shot username validation."""

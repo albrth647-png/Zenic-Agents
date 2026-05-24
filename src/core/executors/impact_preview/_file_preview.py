@@ -7,15 +7,15 @@ All operations are strictly READ-ONLY — this module never modifies data.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ._types import (
-    ImpactRiskLevel,
     FileImpactPreview,
+    ImpactRiskLevel,
 )
 
 
-def _safe_resolve(path: str, base_dir: str) -> Optional[str]:
+def _safe_resolve(path: str, base_dir: str) -> str | None:
     """Safely resolve a file path within base_dir.
 
     Returns None if path is empty or would escape base_dir.
@@ -37,7 +37,7 @@ def _safe_resolve(path: str, base_dir: str) -> Optional[str]:
         return None
 
 
-def preview_file_operation(config: Dict[str, Any]) -> FileImpactPreview:
+def preview_file_operation(config: dict[str, Any]) -> FileImpactPreview:
     """Preview a file operation WITHOUT executing it.
 
     Shows files affected, sizes, whether they exist,
@@ -118,14 +118,9 @@ def preview_file_operation(config: Dict[str, Any]) -> FileImpactPreview:
         preview.would_create = not preview.destination_exists
         preview.would_overwrite = preview.destination_exists
         preview.reversible = False if preview.would_overwrite else True
-        preview.summary = (
-            f"Overwrite file: {destination}" if preview.would_overwrite
-            else f"Create file: {destination}"
-        )
+        preview.summary = f"Overwrite file: {destination}" if preview.would_overwrite else f"Create file: {destination}"
         if preview.would_overwrite:
-            preview.warnings.append(
-                f"Would overwrite existing file ({preview.destination_size} bytes): {destination}"
-            )
+            preview.warnings.append(f"Would overwrite existing file ({preview.destination_size} bytes): {destination}")
             preview.risk_level = ImpactRiskLevel.MEDIUM
             preview.risk_score = 0.4
         else:
@@ -146,15 +141,10 @@ def preview_file_operation(config: Dict[str, Any]) -> FileImpactPreview:
         preview.read_only = False
         preview.would_delete = preview.source_exists
         preview.reversible = False
-        preview.summary = (
-            f"Delete: {source}" if preview.source_exists
-            else f"Delete (not found): {source}"
-        )
+        preview.summary = f"Delete: {source}" if preview.source_exists else f"Delete (not found): {source}"
         if preview.source_exists:
             size_str = f" ({preview.source_size} bytes)" if not preview.source_is_dir else " (directory)"
-            preview.warnings.append(
-                f"Would permanently delete{size_str}: {source}"
-            )
+            preview.warnings.append(f"Would permanently delete{size_str}: {source}")
             preview.risk_level = ImpactRiskLevel.HIGH
             preview.risk_score = 0.8
         else:
@@ -169,9 +159,7 @@ def preview_file_operation(config: Dict[str, Any]) -> FileImpactPreview:
         preview.reversible = True
         preview.summary = f"Copy: {source} \u2192 {destination}"
         if preview.would_overwrite:
-            preview.warnings.append(
-                f"Would overwrite existing destination: {destination}"
-            )
+            preview.warnings.append(f"Would overwrite existing destination: {destination}")
             preview.risk_level = ImpactRiskLevel.MEDIUM
             preview.risk_score = 0.3
         else:
@@ -186,13 +174,9 @@ def preview_file_operation(config: Dict[str, Any]) -> FileImpactPreview:
         preview.reversible = False
         preview.summary = f"Move: {source} \u2192 {destination}"
         if preview.destination_exists:
-            preview.warnings.append(
-                f"Would overwrite destination: {destination}"
-            )
+            preview.warnings.append(f"Would overwrite destination: {destination}")
         if preview.source_exists:
-            preview.warnings.append(
-                f"Source will be removed after move: {source}"
-            )
+            preview.warnings.append(f"Source will be removed after move: {source}")
         preview.risk_level = ImpactRiskLevel.MEDIUM
         preview.risk_score = 0.5
 

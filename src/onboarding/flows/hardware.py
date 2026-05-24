@@ -18,7 +18,7 @@ import logging
 import os
 import platform
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from .base import BaseFlow, FlowContext
 
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Hardware Result ──────────────────────────────────────────
+
 
 @dataclass
 class HardwareResult:
@@ -44,6 +45,7 @@ class HardwareResult:
         components_used: List of components used in fingerprint.
         match_score: Soft-match score against stored license (0-100).
     """
+
     fingerprint: str = ""
     machine_id: str = ""
     cpu_model: str = ""
@@ -53,10 +55,10 @@ class HardwareResult:
     arch: str = ""
     is_android: bool = False
     is_termux: bool = False
-    components_used: List[str] = field(default_factory=list)
+    components_used: list[str] = field(default_factory=list)
     match_score: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "fingerprint": self.fingerprint,
@@ -74,6 +76,7 @@ class HardwareResult:
 
 
 # ── Hardware Flow ────────────────────────────────────────────
+
 
 class HardwareFlow(BaseFlow):
     """Hardware fingerprint display flow for end users.
@@ -106,10 +109,10 @@ class HardwareFlow(BaseFlow):
         )
 
         # Machine ID
-        components_used: List[str] = []
+        components_used: list[str] = []
         for path in ["/etc/machine-id", "/var/lib/dbus/machine-id"]:
             try:
-                with open(path, "r") as f:
+                with open(path) as f:
                     result.machine_id = f.read().strip()
                     components_used.append("machine-id")
                     break
@@ -118,7 +121,7 @@ class HardwareFlow(BaseFlow):
 
         # CPU
         try:
-            with open("/proc/cpuinfo", "r") as f:
+            with open("/proc/cpuinfo") as f:
                 for line in f:
                     if line.startswith("model name"):
                         result.cpu_model = line.split(":")[1].strip()
@@ -129,7 +132,7 @@ class HardwareFlow(BaseFlow):
 
         # Memory
         try:
-            with open("/proc/meminfo", "r") as f:
+            with open("/proc/meminfo") as f:
                 for line in f:
                     if line.startswith("MemTotal:"):
                         kb = int(line.split(":")[1].strip().split()[0])
@@ -142,8 +145,12 @@ class HardwareFlow(BaseFlow):
         # Disk serial
         try:
             import subprocess
+
             proc = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"], capture_output=True, text=True, timeout=3,
+                ["lsblk", "-ndo", "SERIAL"],
+                capture_output=True,
+                text=True,
+                timeout=3,
             )
             if proc.returncode == 0:
                 serials = [s.strip() for s in proc.stdout.split("\n") if s.strip()]
@@ -156,23 +163,24 @@ class HardwareFlow(BaseFlow):
         # Compute fingerprint via license module
         try:
             from src.core.license.license_parts.hw_binding import (
-                get_hardware_fingerprint, check_hardware_match,
+                check_hardware_match,
+                get_hardware_fingerprint,
             )
             from src.core.license.types import HardwareBindingStrength
+
             result.fingerprint = get_hardware_fingerprint()
 
             # Check match against stored license
             try:
                 from src.core.license import get_license_manager
+
                 manager = get_license_manager()
                 license_info = manager.get_current_license()
                 if license_info and license_info.hardware_id:
                     current = get_hardware_fingerprint()
-                    if check_hardware_match(license_info.hardware_id, current,
-                                            HardwareBindingStrength.SOFT):
+                    if check_hardware_match(license_info.hardware_id, current, HardwareBindingStrength.SOFT):
                         result.match_score = 100
-                    elif check_hardware_match(license_info.hardware_id, current,
-                                              HardwareBindingStrength.STRICT):
+                    elif check_hardware_match(license_info.hardware_id, current, HardwareBindingStrength.STRICT):
                         result.match_score = 80
                     else:
                         result.match_score = 30
@@ -181,7 +189,7 @@ class HardwareFlow(BaseFlow):
 
         except ImportError:
             # Fallback: compute fingerprint manually
-            components: List[str] = []
+            components: list[str] = []
             if result.machine_id:
                 components.append(result.machine_id[:32])
             if result.cpu_model:

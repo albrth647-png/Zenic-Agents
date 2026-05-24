@@ -22,13 +22,13 @@ Designed for PostgreSQL (production) and MemoryBackend (dev/testing).
 import logging
 from typing import Any, Dict
 
-from ._types import DistributedSagaState, DistributedSagaStep
 from ..backend import CoordinationBackend
 from ..task_queue import DistributedTaskQueue, TaskMessage, TaskPriority
+from ._types import DistributedSagaState, DistributedSagaStep
 
 logger = logging.getLogger("zenic_agents.distributed.saga_coordinator")
 
-__all__ = ["DistributedSagaCoordinator", "DistributedSagaStep", "DistributedSagaState", "TaskMessage", "TaskPriority"]
+__all__ = ["DistributedSagaCoordinator", "DistributedSagaState", "DistributedSagaStep", "TaskMessage", "TaskPriority"]
 
 
 # ============================================================
@@ -112,7 +112,7 @@ class DistributedSagaCoordinator(DistributedSagaCoordinatorCoreMixin, Distribute
         self._default_step_timeout = default_step_timeout
 
         # In-memory cache of active sagas being coordinated
-        self._active_sagas: Dict[str, Dict[str, Any]] = {}
+        self._active_sagas: dict[str, dict[str, Any]] = {}
 
     # ----------------------------------------------------------
     #  SAGA LIFECYCLE

@@ -22,21 +22,21 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "Event",
-    "EventHandler",
     "EventBus",
+    "EventHandler",
 ]
 
 
 # ============================================================
 #  DATA CONTRACTS
 # ============================================================
+
 
 @dataclass
 class Event:
@@ -50,11 +50,12 @@ class Event:
         source: Origin identifier for tracing (optional).
         correlation_id: Correlation ID for distributed tracing (optional).
     """
+
     name: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-    source: Optional[str] = None
-    correlation_id: Optional[str] = None
+    source: str | None = None
+    correlation_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -64,6 +65,7 @@ class Event:
 # ============================================================
 #  HANDLER INTERFACE
 # ============================================================
+
 
 class EventHandler(ABC):
     """
@@ -107,6 +109,7 @@ class EventHandler(ABC):
 #  EVENT BUS
 # ============================================================
 
+
 class EventBus:
     """
     Thread-safe publish/subscribe event bus with wildcard support.
@@ -142,7 +145,7 @@ class EventBus:
     WILDCARD = "*"
 
     def __init__(self) -> None:
-        self._handlers: Dict[str, List[EventHandler]] = defaultdict(list)
+        self._handlers: dict[str, list[EventHandler]] = defaultdict(list)
         self._lock = threading.Lock()
         self._events_published: int = 0
         self._errors_count: int = 0
@@ -173,7 +176,8 @@ class EventBus:
                 self._handlers[event_name].append(handler)
                 logger.debug(
                     "EventBus: Handler %s subscribed to '%s'",
-                    type(handler).__name__, event_name,
+                    type(handler).__name__,
+                    event_name,
                 )
 
     def unsubscribe(self, event_name: str, handler: EventHandler) -> None:
@@ -193,7 +197,8 @@ class EventBus:
                 handlers.remove(handler)
                 logger.debug(
                     "EventBus: Handler %s unsubscribed from '%s'",
-                    type(handler).__name__, event_name,
+                    type(handler).__name__,
+                    event_name,
                 )
                 # Clean up empty lists to avoid memory leaks on
                 # resource-constrained devices
@@ -231,7 +236,9 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus: Handler %s failed on event '%s': %s",
-                    type(handler).__name__, event.name, exc,
+                    type(handler).__name__,
+                    event.name,
+                    exc,
                     exc_info=True,
                 )
 
@@ -266,7 +273,9 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus[async]: Handler %s failed on event '%s': %s",
-                    type(handler).__name__, evt.name, exc,
+                    type(handler).__name__,
+                    evt.name,
+                    exc,
                     exc_info=True,
                 )
 
@@ -279,7 +288,7 @@ class EventBus:
     #  PUBLISH AND COLLECT
     # ----------------------------------------------------------
 
-    def publish_and_collect(self, event: Event) -> List[Any]:
+    def publish_and_collect(self, event: Event) -> list[Any]:
         """
         Publish an event and collect return values from all handlers.
 
@@ -300,7 +309,7 @@ class EventBus:
             wildcard = list(self._handlers.get(self.WILDCARD, []))
             target_handlers = specific + wildcard
 
-        results: List[Any] = []
+        results: list[Any] = []
         for handler in target_handlers:
             try:
                 result = handler.handle(event)
@@ -309,7 +318,9 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus[collect]: Handler %s failed on event '%s': %s",
-                    type(handler).__name__, event.name, exc,
+                    type(handler).__name__,
+                    event.name,
+                    exc,
                 )
         return results
 
@@ -324,7 +335,7 @@ class EventBus:
             logger.debug("EventBus: All handlers cleared")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """
         Runtime statistics for monitoring and debugging.
 
@@ -336,9 +347,7 @@ class EventBus:
             - event_types: List of event names with subscribers
         """
         with self._lock:
-            total_handlers = sum(
-                len(handlers) for handlers in self._handlers.values()
-            )
+            total_handlers = sum(len(handlers) for handlers in self._handlers.values())
             return {
                 "events_published": self._events_published,
                 "handlers_count": total_handlers,

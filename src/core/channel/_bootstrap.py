@@ -16,17 +16,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.data.local_scanner import LocalDataScanner
-from src.core.channel.a52_voice import VoiceChannelAgent
-from src.core.channel.a53_text import TextChannelAgent, ChannelType
-from src.core.channel.message_bridge import MessageBridge
 from src.core.channel._proactive import (
-    ProactiveChannelBridge,
     AutopilotChannelInterceptor,
+    ProactiveChannelBridge,
     create_sna_callback,
 )
-from src.core.sna.sna_engine import SNAEngine
+from src.core.channel.a52_voice import VoiceChannelAgent
+from src.core.channel.a53_text import ChannelType, TextChannelAgent
+from src.core.channel.message_bridge import MessageBridge
 from src.core.safety.safety_gate import SafetyGate
+from src.core.sna.sna_engine import SNAEngine
+from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +119,7 @@ class ChannelBootstrap:
 
             # Step 8: AutopilotChannelInterceptor
             self._step(8, "AutopilotChannelInterceptor")
-            self.autopilot_interceptor = AutopilotChannelInterceptor(
-                bridge=self.proactive_bridge
-            )
+            self.autopilot_interceptor = AutopilotChannelInterceptor(bridge=self.proactive_bridge)
             steps["8_autopilot_interceptor"] = "ok"
 
             # Step 9: SNA Engine (con callback → bridge)

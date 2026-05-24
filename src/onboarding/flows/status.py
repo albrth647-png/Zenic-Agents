@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .base import BaseFlow, FlowContext
 
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Status Result ────────────────────────────────────────────
+
 
 @dataclass
 class StatusResult:
@@ -44,6 +45,7 @@ class StatusResult:
         signer_algorithm: Algorithm used for signing.
         checks_performed: Verification checks and their results.
     """
+
     has_license: bool = False
     license_id: str = ""
     tier: str = "none"
@@ -51,15 +53,15 @@ class StatusResult:
     is_valid: bool = False
     is_expired: bool = False
     is_perpetual: bool = False
-    days_remaining: Optional[int] = None
-    features: List[str] = field(default_factory=list)
+    days_remaining: int | None = None
+    features: list[str] = field(default_factory=list)
     hardware_bound: bool = False
     kill_switch_active: bool = False
     last_heartbeat: float = 0.0
     signer_algorithm: str = ""
-    checks_performed: List[str] = field(default_factory=list)
+    checks_performed: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "has_license": self.has_license,
@@ -80,6 +82,7 @@ class StatusResult:
 
 
 # ── Status Flow ──────────────────────────────────────────────
+
 
 class StatusFlow(BaseFlow):
     """License status check flow for end users.
@@ -107,8 +110,10 @@ class StatusFlow(BaseFlow):
         """Load license and run verification."""
         try:
             from src.core.license import (
-                get_license_manager, LicenseStatus,  # noqa: F401
+                LicenseStatus,
+                get_license_manager,
             )
+
             manager = get_license_manager()
 
             # Run full verification
@@ -130,7 +135,7 @@ class StatusFlow(BaseFlow):
                 hardware_bound=status_dict.get("hardware_bound", False),
                 kill_switch_active=status_dict.get("kill_switch_active", False),
                 last_heartbeat=status_dict.get("last_heartbeat", 0.0),
-                signer_algorithm=status_dict.get("signer_using_fallback", True) and "hmac-sha256" or "ecdsa-p256",
+                signer_algorithm=(status_dict.get("signer_using_fallback", True) and "hmac-sha256") or "ecdsa-p256",
                 checks_performed=verification.checks_performed,
             )
 
@@ -150,6 +155,7 @@ class StatusFlow(BaseFlow):
     def _check_activation_db(self, ctx: FlowContext) -> None:
         """Fallback: check activation database directly."""
         import sqlite3
+
         db_path = __import__("os").path.expanduser("~/.zenic/activations.sqlite")
 
         if not __import__("os").path.exists(db_path):
@@ -158,9 +164,7 @@ class StatusFlow(BaseFlow):
         try:
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                "SELECT * FROM activations ORDER BY activated_at DESC LIMIT 1"
-            ).fetchone()
+            row = conn.execute("SELECT * FROM activations ORDER BY activated_at DESC LIMIT 1").fetchone()
             conn.close()
 
             if row:
@@ -251,11 +255,20 @@ class StatusFlow(BaseFlow):
             else:
                 lines.append(f"  Features:      {len(features)} enabled")
                 # Show key features
-                key_features = [f for f in features if f in (
-                    "basic_pipeline", "full_pipeline", "app_generation",
-                    "automation_generation", "thinking_engine",
-                    "reasoning_engine", "logic_chains",
-                )]
+                key_features = [
+                    f
+                    for f in features
+                    if f
+                    in (
+                        "basic_pipeline",
+                        "full_pipeline",
+                        "app_generation",
+                        "automation_generation",
+                        "thinking_engine",
+                        "reasoning_engine",
+                        "logic_chains",
+                    )
+                ]
                 if key_features:
                     for feat in key_features[:5]:
                         lines.append(f"    - {feat}")

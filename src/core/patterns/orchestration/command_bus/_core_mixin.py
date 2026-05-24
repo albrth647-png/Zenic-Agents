@@ -1,10 +1,9 @@
 """CommandBus - Core methods."""
 
 import logging
-from typing import Optional
 
-from ._types import Command, CommandHandler, CommandMiddleware, CommandResult, CommandValidator
 from ._helpers import _build_middleware_chain
+from ._types import Command, CommandHandler, CommandMiddleware, CommandResult, CommandValidator
 
 logger = logging.getLogger("zenic_agents.patterns.orchestration.command_bus")
 
@@ -79,7 +78,8 @@ class CommandBusCoreMixin:
             self._handlers[command_type] = handler
             logger.info(
                 "CommandBus: Registered handler %s for command_type '%s'",
-                type(handler).__name__, command_type,
+                type(handler).__name__,
+                command_type,
             )
 
     # ----------------------------------------------------------
@@ -111,7 +111,7 @@ class CommandBusCoreMixin:
             self._middlewares.append(middleware_fn)
             logger.debug(
                 "CommandBus: Added middleware '%s'",
-                getattr(middleware_fn, '__name__', repr(middleware_fn)),
+                getattr(middleware_fn, "__name__", repr(middleware_fn)),
             )
 
     # ----------------------------------------------------------
@@ -140,14 +140,14 @@ class CommandBusCoreMixin:
             self._validators.append(validator_fn)
             logger.debug(
                 "CommandBus: Added validator '%s'",
-                getattr(validator_fn, '__name__', repr(validator_fn)),
+                getattr(validator_fn, "__name__", repr(validator_fn)),
             )
 
     # ----------------------------------------------------------
     #  VALIDATION
     # ----------------------------------------------------------
 
-    def _validate(self, command: Command) -> Optional[str]:
+    def _validate(self, command: Command) -> str | None:
         """
         Run all validators against a command.
 
@@ -163,14 +163,10 @@ class CommandBusCoreMixin:
         for validator in validators:
             try:
                 if not validator(command):
-                    validator_name = getattr(
-                        validator, '__name__', repr(validator)
-                    )
+                    validator_name = getattr(validator, "__name__", repr(validator))
                     return f"Validation failed: {validator_name}"
             except Exception as exc:
-                validator_name = getattr(
-                    validator, '__name__', repr(validator)
-                )
+                validator_name = getattr(validator, "__name__", repr(validator))
                 return f"Validation error in {validator_name}: {exc}"
 
         return None
@@ -199,10 +195,11 @@ class CommandBusCoreMixin:
 
         # Log dispatch
         logger.info(
-            "CommandBus: Dispatching command_type='%s' id='%s' "
-            "(middlewares=%d, validators=%d)",
-            command.command_type, command.command_id[:8],
-            len(middlewares), len(self._validators),
+            "CommandBus: Dispatching command_type='%s' id='%s' " "(middlewares=%d, validators=%d)",
+            command.command_type,
+            command.command_id[:8],
+            len(middlewares),
+            len(self._validators),
         )
 
         # Validate
@@ -211,7 +208,8 @@ class CommandBusCoreMixin:
             self._validation_reject_inc()
             logger.warning(
                 "CommandBus: Command '%s' rejected: %s",
-                command.command_id[:8], validation_error,
+                command.command_id[:8],
+                validation_error,
             )
             return CommandResult(
                 success=False,
@@ -221,10 +219,7 @@ class CommandBusCoreMixin:
 
         # Check handler exists
         if handler is None:
-            error_msg = (
-                f"No handler registered for command_type "
-                f"'{command.command_type}'"
-            )
+            error_msg = f"No handler registered for command_type " f"'{command.command_type}'"
             logger.warning("CommandBus: %s", error_msg)
             self._error_count_inc()
             return CommandResult(
@@ -242,7 +237,8 @@ class CommandBusCoreMixin:
             self._error_count_inc()
             logger.error(
                 "CommandBus: Handler failed for command_type '%s': %s",
-                command.command_type, exc,
+                command.command_type,
+                exc,
                 exc_info=True,
             )
             return CommandResult(
@@ -254,4 +250,3 @@ class CommandBusCoreMixin:
     # ----------------------------------------------------------
     #  ASYNC DISPATCH
     # ----------------------------------------------------------
-

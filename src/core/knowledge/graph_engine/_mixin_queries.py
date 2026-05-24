@@ -1,14 +1,15 @@
 """Query mixin for KnowledgeGraphEngine."""
 
 from __future__ import annotations
+
 import logging
 import sqlite3
 import time
 from collections import deque
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
+from ._helpers import _new_id, _now_iso, _retry
 from .types import KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
-from ._helpers import _retry, _new_id, _now_iso
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +24,16 @@ class KnowledgeGraphQueriesMixin:
 
     def query(self, query: KnowledgeQuery) -> KnowledgeSearchResult:
         t0 = time.monotonic()
-        nodes: List[KnowledgeNode] = []
-        edges: List[KnowledgeEdge] = []
+        nodes: list[KnowledgeNode] = []
+        edges: list[KnowledgeEdge] = []
 
         with self._lock:
-            def _search() -> Tuple[List[KnowledgeNode], List[KnowledgeEdge]]:
+
+            def _search() -> tuple[list[KnowledgeNode], list[KnowledgeEdge]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    conditions: List[str] = []
-                    params: List[Any] = []
+                    conditions: list[str] = []
+                    params: list[Any] = []
                     if query.domain:
                         conditions.append("domain = ?")
                         params.append(query.domain)
@@ -50,21 +52,20 @@ class KnowledgeGraphQueriesMixin:
                     found_nodes = [self._node_from_row(row) for row in cursor.fetchall()]
                     found_node_ids = {n.id for n in found_nodes}
 
-                    found_edges: List[KnowledgeEdge] = []
+                    found_edges: list[KnowledgeEdge] = []
                     if found_node_ids:
                         placeholders = ",".join("?" for _ in found_node_ids)
                         edge_sql = (
                             f"SELECT * FROM kg_edges WHERE source_id IN ({placeholders}) "
                             f"OR target_id IN ({placeholders})"
                         )
-                        cursor = conn.execute(edge_sql, list(found_node_ids) + list(found_node_ids))  # nosemgrep: sqlalchemy-execute-raw-query
+                        cursor = conn.execute(
+                            edge_sql, list(found_node_ids) + list(found_node_ids)
+                        )  # nosemgrep: sqlalchemy-execute-raw-query
                         found_edges = [self._edge_from_row(row) for row in cursor.fetchall()]
 
                     if query.tags:
-                        found_nodes = [
-                            n for n in found_nodes
-                            if query.tags.intersection(n.tags)
-                        ]
+                        found_nodes = [n for n in found_nodes if query.tags.intersection(n.tags)]
                     return found_nodes, found_edges
                 finally:
                     conn.close()
@@ -73,16 +74,21 @@ class KnowledgeGraphQueriesMixin:
 
         elapsed = (time.monotonic() - t0) * 1000
         return KnowledgeSearchResult(
-            nodes=nodes, edges=edges,
-            total_matches=len(nodes), query_time_ms=round(elapsed, 2),
+            nodes=nodes,
+            edges=edges,
+            total_matches=len(nodes),
+            query_time_ms=round(elapsed, 2),
         )
 
-    def get_node(self, node_id: str) -> Optional[KnowledgeNode]:
+    def get_node(self, node_id: str) -> KnowledgeNode | None:
         with self._lock:
-            def _fetch() -> Optional[KnowledgeNode]:
+
+            def _fetch() -> KnowledgeNode | None:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    cursor = conn.execute("SELECT * FROM kg_nodes WHERE id = ?", (node_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+                    cursor = conn.execute(
+                        "SELECT * FROM kg_nodes WHERE id = ?", (node_id,)
+                    )  # nosemgrep: sqlalchemy-execute-raw-query
                     row = cursor.fetchone()
                     if row is None:
                         return None
@@ -98,11 +104,10 @@ class KnowledgeGraphQueriesMixin:
 
             return _retry(_fetch)
 
-    def get_neighbors(
-        self, node_id: str, direction: str = "both"
-    ) -> Tuple[List[KnowledgeNode], List[KnowledgeEdge]]:
+    def get_neighbors(self, node_id: str, direction: str = "both") -> tuple[list[KnowledgeNode], list[KnowledgeEdge]]:
         with self._lock:
-            def _fetch() -> Tuple[List[KnowledgeNode], List[KnowledgeEdge]]:
+
+            def _fetch() -> tuple[list[KnowledgeNode], list[KnowledgeEdge]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     if direction in ("out", "both"):
@@ -122,14 +127,14 @@ class KnowledgeGraphQueriesMixin:
                         in_edges = []
 
                     all_edges = out_edges + in_edges
-                    neighbor_ids: Set[str] = set()
+                    neighbor_ids: set[str] = set()
                     for e in all_edges:
                         if e.source_id != node_id:
                             neighbor_ids.add(e.source_id)
                         if e.target_id != node_id:
                             neighbor_ids.add(e.target_id)
 
-                    neighbor_nodes: List[KnowledgeNode] = []
+                    neighbor_nodes: list[KnowledgeNode] = []
                     if neighbor_ids:
                         placeholders = ",".join("?" for _ in neighbor_ids)
                         cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -144,22 +149,25 @@ class KnowledgeGraphQueriesMixin:
 
             return _retry(_fetch)
 
-    def find_path(self, source_id: str, target_id: str, max_depth: int = 10) -> List[str]:
+    def find_path(self, source_id: str, target_id: str, max_depth: int = 10) -> list[str]:
         if source_id == target_id:
             return [source_id]
 
         with self._lock:
-            def _bfs() -> List[str]:
+
+            def _bfs() -> list[str]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    adj: Dict[str, List[str]] = {}
-                    cursor = conn.execute("SELECT source_id, target_id FROM kg_edges")  # nosemgrep: sqlalchemy-execute-raw-query
+                    adj: dict[str, list[str]] = {}
+                    cursor = conn.execute(
+                        "SELECT source_id, target_id FROM kg_edges"
+                    )  # nosemgrep: sqlalchemy-execute-raw-query
                     for s, t in cursor.fetchall():
                         adj.setdefault(s, []).append(t)
                         adj.setdefault(t, []).append(s)
 
-                    visited: Set[str] = {source_id}
-                    queue: deque[Tuple[str, List[str]]] = deque([(source_id, [source_id])])
+                    visited: set[str] = {source_id}
+                    queue: deque[tuple[str, list[str]]] = deque([(source_id, [source_id])])
 
                     while queue:
                         current, path = queue.popleft()
@@ -180,10 +188,10 @@ class KnowledgeGraphQueriesMixin:
 
     def merge_graph(
         self,
-        other_nodes: List[KnowledgeNode],
-        other_edges: List[KnowledgeEdge],
-    ) -> Dict[str, int]:
-        stats: Dict[str, int] = {"nodes_added": 0, "nodes_updated": 0, "edges_added": 0, "edges_skipped": 0}
+        other_nodes: list[KnowledgeNode],
+        other_edges: list[KnowledgeEdge],
+    ) -> dict[str, int]:
+        stats: dict[str, int] = {"nodes_added": 0, "nodes_updated": 0, "edges_added": 0, "edges_skipped": 0}
 
         with self._lock:
             for node in other_nodes:
@@ -199,7 +207,9 @@ class KnowledgeGraphQueriesMixin:
                         self.add_node(node)
                         stats["nodes_updated"] += 1
                     else:
-                        stats["nodes_skipped" if "nodes_skipped" in stats else "nodes_updated"] = stats.get("nodes_skipped", 0) + 0
+                        stats["nodes_skipped" if "nodes_skipped" in stats else "nodes_updated"] = (
+                            stats.get("nodes_skipped", 0) + 0
+                        )
 
             for edge in other_edges:
                 if not edge.id:
@@ -212,26 +222,27 @@ class KnowledgeGraphQueriesMixin:
 
         return stats
 
-    def get_subgraph(
-        self, center_id: str, depth: int = 2
-    ) -> Tuple[List[KnowledgeNode], List[KnowledgeEdge]]:
+    def get_subgraph(self, center_id: str, depth: int = 2) -> tuple[list[KnowledgeNode], list[KnowledgeEdge]]:
         with self._lock:
-            def _collect() -> Tuple[List[KnowledgeNode], List[KnowledgeEdge]]:
+
+            def _collect() -> tuple[list[KnowledgeNode], list[KnowledgeEdge]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    visited_nodes: Set[str] = set()
-                    visited_edges: Set[str] = set()
-                    result_nodes: List[KnowledgeNode] = []
-                    result_edges: List[KnowledgeEdge] = []
-                    current_level: Set[str] = {center_id}
+                    visited_nodes: set[str] = set()
+                    visited_edges: set[str] = set()
+                    result_nodes: list[KnowledgeNode] = []
+                    result_edges: list[KnowledgeEdge] = []
+                    current_level: set[str] = {center_id}
 
                     for _ in range(depth + 1):
-                        next_level: Set[str] = set()
+                        next_level: set[str] = set()
                         for nid in current_level:
                             if nid in visited_nodes:
                                 continue
                             visited_nodes.add(nid)
-                            cursor = conn.execute("SELECT * FROM kg_nodes WHERE id = ?", (nid,))  # nosemgrep: sqlalchemy-execute-raw-query
+                            cursor = conn.execute(
+                                "SELECT * FROM kg_nodes WHERE id = ?", (nid,)
+                            )  # nosemgrep: sqlalchemy-execute-raw-query
                             row = cursor.fetchone()
                             if row:
                                 result_nodes.append(self._node_from_row(row))
@@ -260,24 +271,32 @@ class KnowledgeGraphQueriesMixin:
 
             return _retry(_collect)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
-            def _calc() -> Dict[str, Any]:
+
+            def _calc() -> dict[str, Any]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    node_count = conn.execute("SELECT COUNT(*) FROM kg_nodes").fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
-                    edge_count = conn.execute("SELECT COUNT(*) FROM kg_edges").fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
+                    node_count = conn.execute("SELECT COUNT(*) FROM kg_nodes").fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
+                    edge_count = conn.execute("SELECT COUNT(*) FROM kg_edges").fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
 
-                    domain_counts: Dict[str, int] = {}
+                    domain_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT domain, COUNT(*) FROM kg_nodes GROUP BY domain"
                     )
                     for domain, cnt in cursor.fetchall():
                         domain_counts[domain or "unspecified"] = cnt
 
-                    avg_confidence = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT AVG(confidence) FROM kg_nodes"
-                    ).fetchone()[0] or 0.0
+                    avg_confidence = (
+                        conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                            "SELECT AVG(confidence) FROM kg_nodes"
+                        ).fetchone()[0]
+                        or 0.0
+                    )
 
                     return {
                         "node_count": node_count,

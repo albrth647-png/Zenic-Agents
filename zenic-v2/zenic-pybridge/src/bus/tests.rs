@@ -1,6 +1,6 @@
 //! High-Performance Shared Memory Bus — Unit Tests
 
-use super::shared_memory_bus::SharedMemoryBus;
+use super::publisher::SharedMemoryBus;
 use super::shared_state::SharedState;
 use super::ring_buffer::RingBuffer;
 

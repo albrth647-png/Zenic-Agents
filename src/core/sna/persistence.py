@@ -11,11 +11,16 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, List
+from typing import Any
 
 from .types import (
-    Alert, AlertSeverity, AlertStatus, MonitorConfig, MonitorWeight,
-    ThresholdConfig, ThresholdOperator,
+    Alert,
+    AlertSeverity,
+    AlertStatus,
+    MonitorConfig,
+    MonitorWeight,
+    ThresholdConfig,
+    ThresholdOperator,
 )
 
 logger = logging.getLogger(__name__)
@@ -101,6 +106,7 @@ CREATE INDEX IF NOT EXISTS idx_sna_history_time ON sna_check_history(checked_at)
 #  PERSISTENCE LAYER
 # ──────────────────────────────────────────────────────────────
 
+
 class SNAPersistence:
     """SQLite/SQLCipher persistence for SNA data.
 
@@ -115,6 +121,7 @@ class SNAPersistence:
     def _get_conn(self) -> sqlite3.Connection:
         """Get a database connection via db_initializer."""
         from src.core.shared.db_initializer import get_connection
+
         return get_connection(self._db_name)
 
     def ensure_schema(self) -> None:
@@ -122,6 +129,7 @@ class SNAPersistence:
         if self._initialized:
             return
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         with write_lock(self._db_name):
             conn.executescript(_CREATE_TABLES_SQL)
@@ -135,6 +143,7 @@ class SNAPersistence:
         """Persist an alert to the database."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         with write_lock(self._db_name):
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -144,16 +153,25 @@ class SNAPersistence:
                     dispatch_actions, metadata, created_at, dispatched_at,
                     notified_at, acknowledged_at, ttl_seconds)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (alert.alert_id, alert.monitor_id, alert.monitor_name,
-                 alert.severity.value, alert.status.value,
-                 alert.title, alert.message,
-                 json.dumps(alert.value) if alert.value is not None else None,
-                 alert.tenant_id, alert.channel,
-                 json.dumps(alert.dispatch_actions),
-                 json.dumps(alert.metadata),
-                 alert.created_at, alert.dispatched_at,
-                 alert.notified_at, alert.acknowledged_at,
-                 alert.ttl_seconds),
+                (
+                    alert.alert_id,
+                    alert.monitor_id,
+                    alert.monitor_name,
+                    alert.severity.value,
+                    alert.status.value,
+                    alert.title,
+                    alert.message,
+                    json.dumps(alert.value) if alert.value is not None else None,
+                    alert.tenant_id,
+                    alert.channel,
+                    json.dumps(alert.dispatch_actions),
+                    json.dumps(alert.metadata),
+                    alert.created_at,
+                    alert.dispatched_at,
+                    alert.notified_at,
+                    alert.acknowledged_at,
+                    alert.ttl_seconds,
+                ),
             )
             conn.commit()
 
@@ -161,10 +179,11 @@ class SNAPersistence:
         """Update the status of an existing alert."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         now = time.time()
         extra_col = ""
-        extra_val: List[Any] = []
+        extra_val: list[Any] = []
         if status == AlertStatus.DISPATCHED:
             extra_col = ", dispatched_at = ?"
             extra_val = [now]
@@ -182,7 +201,7 @@ class SNAPersistence:
             )
             conn.commit()
 
-    def get_active_alerts(self, tenant_id: str = "") -> List[Alert]:
+    def get_active_alerts(self, tenant_id: str = "") -> list[Alert]:
         """Get all non-resolved, non-expired alerts."""
         self.ensure_schema()
         conn = self._get_conn()
@@ -195,8 +214,7 @@ class SNAPersistence:
             ).fetchall()
         else:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT * FROM sna_alerts WHERE status NOT IN ('resolved','expired') "
-                "ORDER BY created_at DESC",
+                "SELECT * FROM sna_alerts WHERE status NOT IN ('resolved','expired') " "ORDER BY created_at DESC",
             ).fetchall()
         return [self._row_to_alert(r) for r in rows]
 
@@ -206,6 +224,7 @@ class SNAPersistence:
         """Persist a threshold configuration."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         with write_lock(self._db_name):
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -214,21 +233,28 @@ class SNAPersistence:
                     value, value_high, severity, cooldown_seconds,
                     tenant_id, blueprint_name)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (threshold.threshold_id, threshold.monitor_id,
-                 threshold.field_name, threshold.operator.value,
-                 threshold.value, threshold.value_high,
-                 threshold.severity.value, threshold.cooldown_seconds,
-                 threshold.tenant_id, threshold.blueprint_name),
+                (
+                    threshold.threshold_id,
+                    threshold.monitor_id,
+                    threshold.field_name,
+                    threshold.operator.value,
+                    threshold.value,
+                    threshold.value_high,
+                    threshold.severity.value,
+                    threshold.cooldown_seconds,
+                    threshold.tenant_id,
+                    threshold.blueprint_name,
+                ),
             )
             conn.commit()
 
-    def get_thresholds(self, monitor_id: str = "", tenant_id: str = "") -> List[ThresholdConfig]:
+    def get_thresholds(self, monitor_id: str = "", tenant_id: str = "") -> list[ThresholdConfig]:
         """Get threshold configurations, optionally filtered."""
         self.ensure_schema()
         conn = self._get_conn()
         conn.row_factory = sqlite3.Row
-        conditions: List[str] = []
-        params: List[Any] = []
+        conditions: list[str] = []
+        params: list[Any] = []
         if monitor_id:
             conditions.append("monitor_id = ?")
             params.append(monitor_id)
@@ -237,7 +263,8 @@ class SNAPersistence:
             params.append(tenant_id)
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM sna_thresholds{where}", params,
+            f"SELECT * FROM sna_thresholds{where}",
+            params,
         ).fetchall()
         return [self._row_to_threshold(r) for r in rows]
 
@@ -247,6 +274,7 @@ class SNAPersistence:
         """Persist a monitor configuration."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         with write_lock(self._db_name):
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -255,15 +283,22 @@ class SNAPersistence:
                     enabled, tenant_id, blueprint_name, params,
                     notification_channel, priority)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (config.monitor_id, config.monitor_name,
-                 config.weight.value, config.interval_seconds,
-                 int(config.enabled), config.tenant_id,
-                 config.blueprint_name, json.dumps(config.params),
-                 config.notification_channel, config.priority),
+                (
+                    config.monitor_id,
+                    config.monitor_name,
+                    config.weight.value,
+                    config.interval_seconds,
+                    int(config.enabled),
+                    config.tenant_id,
+                    config.blueprint_name,
+                    json.dumps(config.params),
+                    config.notification_channel,
+                    config.priority,
+                ),
             )
             conn.commit()
 
-    def get_monitor_configs(self, tenant_id: str = "") -> List[MonitorConfig]:
+    def get_monitor_configs(self, tenant_id: str = "") -> list[MonitorConfig]:
         """Get all enabled monitor configurations."""
         self.ensure_schema()
         conn = self._get_conn()
@@ -281,22 +316,28 @@ class SNAPersistence:
 
     # ── Check History ──────────────────────────────────────
 
-    def record_check(self, monitor_id: str, triggered: bool,
-                     value: Any, detail: str, duration_ms: float,
-                     tenant_id: str = "") -> None:
+    def record_check(
+        self, monitor_id: str, triggered: bool, value: Any, detail: str, duration_ms: float, tenant_id: str = ""
+    ) -> None:
         """Record a monitor check in history."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         with write_lock(self._db_name):
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """INSERT INTO sna_check_history
                    (monitor_id, triggered, value, detail, duration_ms, checked_at, tenant_id)
                    VALUES (?,?,?,?,?,?,?)""",
-                (monitor_id, int(triggered),
-                 json.dumps(value) if value is not None else None,
-                 detail, duration_ms, time.time(),
-                 tenant_id or "__anonymous__"),
+                (
+                    monitor_id,
+                    int(triggered),
+                    json.dumps(value) if value is not None else None,
+                    detail,
+                    duration_ms,
+                    time.time(),
+                    tenant_id or "__anonymous__",
+                ),
             )
             conn.commit()
 
@@ -304,11 +345,13 @@ class SNAPersistence:
         """Prune check history older than N days."""
         self.ensure_schema()
         from src.core.shared.db_initializer import write_lock
+
         conn = self._get_conn()
         cutoff = time.time() - (older_than_days * 86400)
         with write_lock(self._db_name):
             cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "DELETE FROM sna_check_history WHERE checked_at < ?", (cutoff,),
+                "DELETE FROM sna_check_history WHERE checked_at < ?",
+                (cutoff,),
             )
             conn.commit()
             return cursor.rowcount

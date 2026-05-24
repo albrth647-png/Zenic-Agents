@@ -11,7 +11,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-_SAFE_TABLE_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_TABLE_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 def escape_sql_like(value: str) -> str:
@@ -55,7 +55,9 @@ def purge_tenant_rows(conn, table: str, tenant_id: str) -> int:
     try:
         # SECURITY: table name validated by _SAFE_TABLE_RE regex above;
         # tenant_id uses ? parameterization to prevent injection
-        cursor = conn.execute(f"DELETE FROM {table} WHERE tenant_id=?", (tenant_id,))  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+        cursor = conn.execute(
+            f"DELETE FROM {table} WHERE tenant_id=?", (tenant_id,)
+        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
         conn.commit()
         count = cursor.rowcount
         if count > 0:

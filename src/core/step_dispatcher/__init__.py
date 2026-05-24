@@ -17,7 +17,7 @@ with EventBus integration for step lifecycle events and Retry support.
 """
 
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.patterns.behavioral import StrategyRegistry
 from src.core.patterns.orchestration import EventBus
@@ -29,7 +29,7 @@ logger = logging.getLogger("zenic_agents.step_dispatcher")
 from ._core_mixin import StepDispatcherCoreMixin  # noqa: E402
 from ._extra_mixin import StepDispatcherExtraMixin  # noqa: E402
 
-__all__ = ["StepDispatcher", "Dict", "Any", "List", "Optional", "Tuple", "EventBus", "with_retry"]
+__all__ = ["Any", "Dict", "EventBus", "List", "Optional", "StepDispatcher", "Tuple", "with_retry"]
 
 
 class StepDispatcher(StepDispatcherCoreMixin, StepDispatcherExtraMixin):
@@ -69,7 +69,6 @@ class StepDispatcher(StepDispatcherCoreMixin, StepDispatcherExtraMixin):
         """
         self._orch = orchestrator
         self._registry = StrategyRegistry()
-        self._event_bus = getattr(orchestrator, '_event_bus', None)
-        self._retry_config = getattr(orchestrator, '_pipeline_retry', RetryConfig(max_attempts=2, base_delay=0.5))
+        self._event_bus = getattr(orchestrator, "_event_bus", None)
+        self._retry_config = getattr(orchestrator, "_pipeline_retry", RetryConfig(max_attempts=2, base_delay=0.5))
         self._register_handlers()
-

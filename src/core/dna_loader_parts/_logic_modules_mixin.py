@@ -2,8 +2,6 @@
 Logic modules API mixin for DNALoader.
 """
 
-from typing import List, Optional
-
 from ._imports import LogicModule
 
 
@@ -14,20 +12,20 @@ class LogicModulesMixin:
     #  LOGIC MODULES API
     # ================================================================
 
-    def get_module(self, module_id: str) -> Optional[LogicModule]:
+    def get_module(self, module_id: str) -> LogicModule | None:
         """Obtiene un módulo de lógica por ID."""
         if not self._loaded:
             self.load_all()
         return self._logic_modules.get(module_id)
 
-    def get_modules_by_domain(self, domain: str) -> List[LogicModule]:
+    def get_modules_by_domain(self, domain: str) -> list[LogicModule]:
         """Obtiene todos los módulos de un dominio."""
         if not self._loaded:
             self.load_all()
         ids = self._modules_by_domain.get(domain, [])
         return [self._logic_modules[i] for i in ids if i in self._logic_modules]
 
-    def search_modules(self, query: str, limit: int = 10) -> List[LogicModule]:
+    def search_modules(self, query: str, limit: int = 10) -> list[LogicModule]:
         """Busca módulos relevantes basado en una descripción."""
         if not self._loaded:
             self.load_all()
@@ -58,7 +56,7 @@ class LogicModulesMixin:
         scored.sort(key=lambda x: x[0], reverse=True)
         return [m for _, m in scored[:limit]]
 
-    def resolve_modules_for_niche(self, niche_name: str, niche_blocks: List[str]) -> List[LogicModule]:
+    def resolve_modules_for_niche(self, niche_name: str, niche_blocks: list[str]) -> list[LogicModule]:
         """
         Resuelve qué módulos de lógica necesita un nicho basado en sus blocks.
 

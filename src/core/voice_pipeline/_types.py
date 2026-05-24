@@ -12,13 +12,13 @@ Design invariants:
 from __future__ import annotations
 
 import enum
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Dict, Sequence
-
 
 # ──────────────────────────────────────────────────────────────
 #  AUDIO FORMAT
 # ──────────────────────────────────────────────────────────────
+
 
 class AudioFormat(str, enum.Enum):
     """Supported audio formats for the voice pipeline.
@@ -27,19 +27,20 @@ class AudioFormat(str, enum.Enum):
     for conversion routing. The canonical output format for STT
     engines is WAV (16kHz mono PCM).
     """
-    OGG = "ogg"          # WhatsApp voice notes, Telegram (opus codec)
-    MP3 = "mp3"          # Generic audio
-    WAV = "wav"          # Canonical STT input format
-    M4A = "m4a"          # Apple audio, WhatsApp audio messages
-    OPUS = "opus"        # WebRTC, Telegram voice
-    WEBM = "webm"        # Web audio, some recording APIs
-    AMR = "amr"          # Legacy mobile audio
-    AAC = "aac"          # Apple lossy
-    FLAC = "flac"        # Lossless, some STT engines prefer this
+
+    OGG = "ogg"  # WhatsApp voice notes, Telegram (opus codec)
+    MP3 = "mp3"  # Generic audio
+    WAV = "wav"  # Canonical STT input format
+    M4A = "m4a"  # Apple audio, WhatsApp audio messages
+    OPUS = "opus"  # WebRTC, Telegram voice
+    WEBM = "webm"  # Web audio, some recording APIs
+    AMR = "amr"  # Legacy mobile audio
+    AAC = "aac"  # Apple lossy
+    FLAC = "flac"  # Lossless, some STT engines prefer this
     UNKNOWN = "unknown"  # Fallback for unrecognized formats
 
     @classmethod
-    def from_mime(cls, mime_type: str) -> "AudioFormat":
+    def from_mime(cls, mime_type: str) -> AudioFormat:
         """Map a MIME type to an AudioFormat.
 
         Common MIME types from channel providers:
@@ -75,7 +76,7 @@ class AudioFormat(str, enum.Enum):
         return mapping.get(base_mime, cls.UNKNOWN)
 
     @classmethod
-    def from_extension(cls, ext: str) -> "AudioFormat":
+    def from_extension(cls, ext: str) -> AudioFormat:
         """Map a file extension to an AudioFormat.
 
         Args:
@@ -92,7 +93,7 @@ class AudioFormat(str, enum.Enum):
             "wav": cls.WAV,
             "wave": cls.WAV,
             "m4a": cls.M4A,
-            "mp4": cls.M4A,    # audio-only mp4
+            "mp4": cls.M4A,  # audio-only mp4
             "opus": cls.OPUS,
             "webm": cls.WEBM,
             "amr": cls.AMR,
@@ -105,6 +106,7 @@ class AudioFormat(str, enum.Enum):
 # ──────────────────────────────────────────────────────────────
 #  TRANSCRIPTION RESULT
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class TranscriptionResult:
@@ -119,15 +121,16 @@ class TranscriptionResult:
         result (audio was untranscribable or service unavailable).
       - `source` traces which backend produced the result.
     """
-    success: bool = False                          # Did transcription succeed?
-    transcribed_text: str = ""                     # STT output text
-    confidence: float = 0.0                        # 0.0-1.0 (backend-specific)
-    language: str = ""                             # Detected language code (e.g. "es", "en")
-    duration_seconds: float = 0.0                  # Audio duration
-    audio_format: str = ""                         # Original audio format
-    backend: str = ""                              # Which STT backend was used
-    error: str = ""                                # Error details if failed
-    source: str = "deterministic"                  # Audit source trace
+
+    success: bool = False  # Did transcription succeed?
+    transcribed_text: str = ""  # STT output text
+    confidence: float = 0.0  # 0.0-1.0 (backend-specific)
+    language: str = ""  # Detected language code (e.g. "es", "en")
+    duration_seconds: float = 0.0  # Audio duration
+    audio_format: str = ""  # Original audio format
+    backend: str = ""  # Which STT backend was used
+    error: str = ""  # Error details if failed
+    source: str = "deterministic"  # Audit source trace
 
     @property
     def is_empty(self) -> bool:
@@ -144,6 +147,7 @@ class TranscriptionResult:
 #  FORMAT CONVERSION RESULT
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ConversionResult:
     """Output from FormatAdapter audio conversion.
@@ -151,21 +155,23 @@ class ConversionResult:
     Contains the converted WAV bytes and metadata about
     the original and converted audio.
     """
-    success: bool = False                          # Did conversion succeed?
-    wav_bytes: bytes = b""                         # Converted WAV audio (16kHz mono PCM)
-    original_format: str = ""                      # Input audio format
-    original_size_bytes: int = 0                   # Input file size
-    converted_size_bytes: int = 0                  # Output WAV file size
-    duration_seconds: float = 0.0                  # Audio duration
-    sample_rate: int = 16000                       # Output sample rate
-    channels: int = 1                              # Output channels (mono)
-    error: str = ""                                # Error details if failed
-    source: str = "deterministic"                  # Audit source trace
+
+    success: bool = False  # Did conversion succeed?
+    wav_bytes: bytes = b""  # Converted WAV audio (16kHz mono PCM)
+    original_format: str = ""  # Input audio format
+    original_size_bytes: int = 0  # Input file size
+    converted_size_bytes: int = 0  # Output WAV file size
+    duration_seconds: float = 0.0  # Audio duration
+    sample_rate: int = 16000  # Output sample rate
+    channels: int = 1  # Output channels (mono)
+    error: str = ""  # Error details if failed
+    source: str = "deterministic"  # Audit source trace
 
 
 # ──────────────────────────────────────────────────────────────
 #  STT BACKEND CONFIGURATION
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class STTBackendConfig:
@@ -174,21 +180,23 @@ class STTBackendConfig:
     Each backend has its own config. The Ear service uses
     this to initialize the selected backend at runtime.
     """
-    backend_name: str = "auto"                     # auto|dummy|whisper|faster_whisper|cloud
-    language: str = ""                             # Hint language (empty = auto-detect)
-    model_size: str = "base"                       # Whisper model: tiny|base|small|medium|large
-    device: str = "cpu"                            # cpu|cuda for local models
-    compute_type: str = "int8"                     # float16|int8|int8_float16 for faster-whisper
-    api_key: str = ""                              # Cloud API key (if using cloud backend)
-    api_base_url: str = ""                         # Cloud API base URL
-    timeout_seconds: float = 30.0                  # STT request timeout
-    max_audio_seconds: float = 600.0               # Maximum audio duration to transcribe
-    fallback_chain: Sequence[str] = ()             # Override default fallback: first available wins
+
+    backend_name: str = "auto"  # auto|dummy|whisper|faster_whisper|cloud
+    language: str = ""  # Hint language (empty = auto-detect)
+    model_size: str = "base"  # Whisper model: tiny|base|small|medium|large
+    device: str = "cpu"  # cpu|cuda for local models
+    compute_type: str = "int8"  # float16|int8|int8_float16 for faster-whisper
+    api_key: str = ""  # Cloud API key (if using cloud backend)
+    api_base_url: str = ""  # Cloud API base URL
+    timeout_seconds: float = 30.0  # STT request timeout
+    max_audio_seconds: float = 600.0  # Maximum audio duration to transcribe
+    fallback_chain: Sequence[str] = ()  # Override default fallback: first available wins
 
 
 # ──────────────────────────────────────────────────────────────
 #  VOICE PIPELINE METRICS
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class VoicePipelineMetrics:
@@ -196,13 +204,14 @@ class VoicePipelineMetrics:
 
     Thread-safe — updated by the Ear service after each transcription.
     """
+
     total_transcriptions: int = 0
     successful_transcriptions: int = 0
     failed_transcriptions: int = 0
     total_audio_seconds: float = 0.0
     total_conversion_count: int = 0
     failed_conversions: int = 0
-    backend_usage: Dict[str, int] = field(default_factory=dict)
+    backend_usage: dict[str, int] = field(default_factory=dict)
 
     @property
     def success_rate(self) -> float:
@@ -218,8 +227,8 @@ class VoicePipelineMetrics:
 
 __all__ = [
     "AudioFormat",
-    "TranscriptionResult",
     "ConversionResult",
     "STTBackendConfig",
+    "TranscriptionResult",
     "VoicePipelineMetrics",
 ]

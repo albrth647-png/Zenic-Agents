@@ -1,13 +1,28 @@
 """Legacy dict-based conversion methods for NicheConverter."""
 
 from __future__ import annotations
+
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..types import BlueprintTier, BlueprintMetadataV2, DBSchema, DBEntitySchema, BusinessRuleDef, ActionTemplateDef, MonitorHook
-from ..convert_parts import BLOCK_EXECUTOR_MAP, parse_entity_fields, map_trigger_to_monitor, determine_monitor_weight, determine_notification_channel
+from ..convert_parts import (
+    BLOCK_EXECUTOR_MAP,
+    determine_monitor_weight,
+    determine_notification_channel,
+    map_trigger_to_monitor,
+    parse_entity_fields,
+)
 from ..schema import CertifiedBlueprint
+from ..types import (
+    ActionTemplateDef,
+    BlueprintMetadataV2,
+    BlueprintTier,
+    BusinessRuleDef,
+    DBEntitySchema,
+    DBSchema,
+    MonitorHook,
+)
 from ._types import _SENSITIVITY_TIER_MAP
 
 logger = logging.getLogger(__name__)
@@ -23,7 +38,7 @@ class NicheConverterLegacyMixin:
 
     # ── Legacy Dict-Based Conversion (still supported) ──────
 
-    def convert_dict(self, data: Dict[str, Any]) -> Optional[CertifiedBlueprint]:
+    def convert_dict(self, data: dict[str, Any]) -> CertifiedBlueprint | None:
         """Convert a Niche YAML dict to a CertifiedBlueprint (legacy path).
 
         This method is kept for backward compatibility with any code
@@ -54,7 +69,9 @@ class NicheConverterLegacyMixin:
     # ── Legacy Builder Methods (dict-based) ─────────────────
 
     def _build_metadata(
-        self, niche: Dict[str, Any], data: Dict[str, Any],
+        self,
+        niche: dict[str, Any],
+        data: dict[str, Any],
     ) -> BlueprintMetadataV2:
         """Build Blueprint metadata from Niche YAML dict (legacy)."""
         risk = data.get("risk_assessment", {})
@@ -71,27 +88,32 @@ class NicheConverterLegacyMixin:
             scale=niche.get("scale", "medium"),
         )
 
-    def _build_db_schema(self, entities_data: List[Any]) -> DBSchema:
+    def _build_db_schema(self, entities_data: list[Any]) -> DBSchema:
         """Build DB schema from Niche entities (legacy)."""
-        entities: List[DBEntitySchema] = []
+        entities: list[DBEntitySchema] = []
         for entity_data in entities_data:
             if not isinstance(entity_data, dict):
                 continue
             fields = parse_entity_fields(entity_data.get("fields", []))
-            entities.append(DBEntitySchema(
-                name=entity_data.get("name", ""), fields=fields,
-            ))
+            entities.append(
+                DBEntitySchema(
+                    name=entity_data.get("name", ""),
+                    fields=fields,
+                )
+            )
         return DBSchema(entities=entities)
 
-    def _build_executor_schemas(self, composition: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_executor_schemas(self, composition: dict[str, Any]) -> dict[str, Any]:
         """Build executor schemas from composition blocks (legacy)."""
-        schemas: Dict[str, Any] = {}
+        schemas: dict[str, Any] = {}
         blocks = composition.get("blocks", [])
         for block in blocks:
             exec_type = BLOCK_EXECUTOR_MAP.get(block)
             if exec_type and exec_type not in schemas:
                 schemas[exec_type] = {
-                    "required": [], "optional": [], "rate_limits": {},
+                    "required": [],
+                    "optional": [],
+                    "rate_limits": {},
                 }
         if "database" not in schemas:
             schemas["database"] = {
@@ -101,71 +123,83 @@ class NicheConverterLegacyMixin:
             }
         return schemas
 
-    def _build_rules(self, risk: Dict[str, Any]) -> List[BusinessRuleDef]:
+    def _build_rules(self, risk: dict[str, Any]) -> list[BusinessRuleDef]:
         """Build business rules from risk assessment (legacy)."""
-        rules: List[BusinessRuleDef] = []
+        rules: list[BusinessRuleDef] = []
         sensitivity = risk.get("data_sensitivity", "medium")
 
         if sensitivity in ("high", "critical"):
-            rules.append(BusinessRuleDef(
-                rule_id="bulk_delete_block",
-                name="Block bulk delete without confirmation",
-                description=f"Data sensitivity is {sensitivity}",
-                executor_type="database",
-                condition="operation == 'delete' and record_count > 1",
-                action="require_confirmation",
-                severity="block",
-            ))
+            rules.append(
+                BusinessRuleDef(
+                    rule_id="bulk_delete_block",
+                    name="Block bulk delete without confirmation",
+                    description=f"Data sensitivity is {sensitivity}",
+                    executor_type="database",
+                    condition="operation == 'delete' and record_count > 1",
+                    action="require_confirmation",
+                    severity="block",
+                )
+            )
 
         if risk.get("audit_trail"):
-            rules.append(BusinessRuleDef(
-                rule_id="audit_all_actions",
-                name="Audit all actions",
-                description="Risk assessment requires full audit trail",
-                executor_type="*",
-                condition="always",
-                action="log_audit",
-                severity="info",
-            ))
+            rules.append(
+                BusinessRuleDef(
+                    rule_id="audit_all_actions",
+                    name="Audit all actions",
+                    description="Risk assessment requires full audit trail",
+                    executor_type="*",
+                    condition="always",
+                    action="log_audit",
+                    severity="info",
+                )
+            )
 
         compliance = risk.get("compliance", [])
         if compliance:
-            rules.append(BusinessRuleDef(
-                rule_id="compliance_check",
-                name=f"Compliance: {', '.join(compliance)}",
-                description=f"Must comply with {', '.join(compliance)}",
-                executor_type="*",
-                condition="always",
-                action="validate_compliance",
-                severity="warning",
-            ))
+            rules.append(
+                BusinessRuleDef(
+                    rule_id="compliance_check",
+                    name=f"Compliance: {', '.join(compliance)}",
+                    description=f"Must comply with {', '.join(compliance)}",
+                    executor_type="*",
+                    condition="always",
+                    action="validate_compliance",
+                    severity="warning",
+                )
+            )
 
         return rules
 
     def _build_actions(
-        self, niche_name: str, features: Dict[str, Any],
-    ) -> List[ActionTemplateDef]:
+        self,
+        niche_name: str,
+        features: dict[str, Any],
+    ) -> list[ActionTemplateDef]:
         """Build action templates from niche features (legacy)."""
-        actions: List[ActionTemplateDef] = []
+        actions: list[ActionTemplateDef] = []
         for feature in features.get("core", []):
             if not isinstance(feature, str):
                 continue
-            words = re.findall(r'\w+', feature.lower())[:5]
+            words = re.findall(r"\w+", feature.lower())[:5]
             action_id = f"{niche_name}_{'_'.join(words)}"
-            actions.append(ActionTemplateDef(
-                template_id=action_id,
-                name=feature[:60],
-                description=feature,
-                executor_type="database",
-                safety_category="moderate",
-            ))
+            actions.append(
+                ActionTemplateDef(
+                    template_id=action_id,
+                    name=feature[:60],
+                    description=feature,
+                    executor_type="database",
+                    safety_category="moderate",
+                )
+            )
         return actions
 
     def _build_monitor_hooks(
-        self, workflow: Dict[str, Any], domain: str,
-    ) -> List[MonitorHook]:
+        self,
+        workflow: dict[str, Any],
+        domain: str,
+    ) -> list[MonitorHook]:
         """Build SNA monitor hooks from workflow triggers (legacy)."""
-        hooks: List[MonitorHook] = []
+        hooks: list[MonitorHook] = []
         triggers = workflow.get("triggers", [])
         for trigger in triggers:
             if not isinstance(trigger, str):
@@ -176,8 +210,10 @@ class NicheConverterLegacyMixin:
         return hooks
 
     def _parse_trigger(
-        self, trigger: str, domain: str,
-    ) -> Optional[MonitorHook]:
+        self,
+        trigger: str,
+        domain: str,
+    ) -> MonitorHook | None:
         """Parse a single trigger string into a MonitorHook (legacy)."""
         parts = trigger.split(":", 1)
         trigger_id = parts[0].strip()

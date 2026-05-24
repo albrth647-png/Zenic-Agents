@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 from ..safety_gate import ActionCategory
 
@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 #  RISK LEVEL
 # ──────────────────────────────────────────────────────────────
 
+
 class ImpactRiskLevel(str, Enum):
     """Risk level of a previewed impact."""
+
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -29,16 +31,18 @@ class ImpactRiskLevel(str, Enum):
 #  DATACLASSES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ImpactField:
     """A single field that would be affected by an action."""
+
     name: str
     current_value: Any = None
     proposed_value: Any = None
     field_type: str = "unknown"  # e.g. "str", "int", "bool"
     changed: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -57,19 +61,20 @@ class ImpactPreview:
     the action were executed, including risk assessment and
     affected resources.
     """
+
     action_type: str
     category: ActionCategory
     risk_level: ImpactRiskLevel
     risk_score: float
     summary: str
-    affected_resources: List[str] = field(default_factory=list)
-    fields: List[ImpactField] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    affected_resources: list[str] = field(default_factory=list)
+    fields: list[ImpactField] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     reversible: bool = True
     read_only: bool = True
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "action_type": self.action_type,
@@ -94,21 +99,22 @@ class DBImpactPreview:
     For UPDATE: shows before->after diff.
     For INSERT: validates constraints.
     """
-    operation: str                          # "SELECT", "INSERT", "UPDATE", "DELETE"
+
+    operation: str  # "SELECT", "INSERT", "UPDATE", "DELETE"
     table: str
     affected_rows: int = 0
-    estimated_rows: int = 0                 # For DELETE: COUNT(*) with same WHERE
-    fields: List[ImpactField] = field(default_factory=list)
+    estimated_rows: int = 0  # For DELETE: COUNT(*) with same WHERE
+    fields: list[ImpactField] = field(default_factory=list)
     constraints_valid: bool = True
-    constraint_violations: List[str] = field(default_factory=list)
+    constraint_violations: list[str] = field(default_factory=list)
     risk_level: ImpactRiskLevel = ImpactRiskLevel.NONE
     risk_score: float = 0.0
     summary: str = ""
     reversible: bool = True
-    warnings: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "operation": self.operation,
@@ -133,7 +139,8 @@ class FileImpactPreview:
 
     Shows files affected, sizes, and whether they exist.
     """
-    operation: str                          # "read", "write", "append", "delete", "copy", "move"
+
+    operation: str  # "read", "write", "append", "delete", "copy", "move"
     source: str = ""
     destination: str = ""
     source_exists: bool = False
@@ -149,10 +156,10 @@ class FileImpactPreview:
     risk_score: float = 0.0
     summary: str = ""
     reversible: bool = True
-    warnings: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "operation": self.operation,
@@ -182,23 +189,24 @@ class EmailImpactPreview:
 
     Shows recipients, subject, whether it would send.
     """
-    recipients: List[str] = field(default_factory=list)
-    cc: List[str] = field(default_factory=list)
-    bcc: List[str] = field(default_factory=list)
+
+    recipients: list[str] = field(default_factory=list)
+    cc: list[str] = field(default_factory=list)
+    bcc: list[str] = field(default_factory=list)
     subject: str = ""
     from_email: str = ""
     has_html: bool = False
     has_attachments: bool = False
     attachment_count: int = 0
-    would_send: bool = False           # True if SMTP is configured
-    invalid_recipients: List[str] = field(default_factory=list)
+    would_send: bool = False  # True if SMTP is configured
+    invalid_recipients: list[str] = field(default_factory=list)
     risk_level: ImpactRiskLevel = ImpactRiskLevel.NONE
     risk_score: float = 0.0
     summary: str = ""
-    warnings: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "recipients": self.recipients,
@@ -222,4 +230,12 @@ class EmailImpactPreview:
 # ──────────────────────────────────────────────────────────────
 #  RETRY HELPER
 # ──────────────────────────────────────────────────────────────
-__all__ = ["DBImpactPreview", "EmailImpactPreview", "FileImpactPreview", "ImpactField", "ImpactPreview", "ImpactRiskLevel", "logger"]
+__all__ = [
+    "DBImpactPreview",
+    "EmailImpactPreview",
+    "FileImpactPreview",
+    "ImpactField",
+    "ImpactPreview",
+    "ImpactRiskLevel",
+    "logger",
+]

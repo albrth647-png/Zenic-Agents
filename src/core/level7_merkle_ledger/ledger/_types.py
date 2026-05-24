@@ -26,7 +26,6 @@ Sin dependencias externas. Compatible con Android.
 
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 # Number of hex characters to use for hashed backup filenames

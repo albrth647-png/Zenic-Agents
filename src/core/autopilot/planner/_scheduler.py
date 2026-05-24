@@ -9,7 +9,7 @@ and a generic fallback for unknown objectives.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 #  PLAN TEMPLATES
 # ──────────────────────────────────────────────────────────────
 
-_PLAN_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
+_PLAN_TEMPLATES: dict[str, list[dict[str, Any]]] = {
     "reduce_overdue_invoices": [
         {
             "name": "monitor_overdue",
@@ -221,7 +221,7 @@ _PLAN_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     ],
 }
 
-_GENERIC_PLAN_TEMPLATE: List[Dict[str, Any]] = [
+_GENERIC_PLAN_TEMPLATE: list[dict[str, Any]] = [
     {
         "name": "monitor_metric",
         "description": "Monitor the objective metric from data source",
@@ -270,7 +270,7 @@ _GENERIC_PLAN_TEMPLATE: List[Dict[str, Any]] = [
 ]
 
 
-def _match_template(objective: Any) -> List[Dict[str, Any]]:
+def _match_template(objective: Any) -> list[dict[str, Any]]:
     """Match an objective to the best plan template.
 
     Tries to match based on objective name, description, tags, and
@@ -291,14 +291,14 @@ def _match_template(objective: Any) -> List[Dict[str, Any]]:
     search_terms = [name_lower, desc_lower] + tags_lower
 
     # Keyword mapping for template matching
-    keyword_map: Dict[str, str] = {
+    keyword_map: dict[str, str] = {
         "reduce_overdue_invoices": ["overdue", "invoice", "factura", "moroso", "vencida"],
         "reduce_no_shows": ["no_show", "no show", "ausencia", "cita", "appointment"],
         "reduce_stockouts": ["stockout", "stock", "inventario", "inventory", "agotado"],
         "increase_revenue": ["revenue", "ingreso", "sales", "venta", "revenue"],
     }
 
-    best_match: Optional[str] = None
+    best_match: str | None = None
     best_score = 0
 
     for template_key, keywords in keyword_map.items():
@@ -310,7 +310,8 @@ def _match_template(objective: Any) -> List[Dict[str, Any]]:
     if best_match and best_score > 0:
         logger.info(
             "AutopilotPlanner: Matched template '%s' (score=%d) for objective",
-            best_match, best_score,
+            best_match,
+            best_score,
         )
         return _PLAN_TEMPLATES[best_match]
 

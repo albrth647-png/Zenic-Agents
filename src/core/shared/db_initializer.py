@@ -23,18 +23,19 @@ Compatible con Termux + proot-distro (Debian ARM).
    db_initializer will be fully removed once all consumers migrate to FastPool.
 """
 
+import atexit
+import logging
+import os
 import sqlite3
 import threading
 from pathlib import Path
-import os
-import logging
-import atexit
 
 # Try to import ReadWriteLock for better concurrent access
 # Per-database ReadWriteLock instances prevent cross-DB contention:
 # a write lock for one DB no longer blocks reads on all others.
 try:
     from src.core.patterns.concurrency import ReadWriteLock
+
     _HAS_RW_LOCK = True
 except ImportError:
     _HAS_RW_LOCK = False
@@ -42,24 +43,32 @@ except ImportError:
 # Import SQLCipher helper for encrypted database connections
 from src.core.shared.sqlcipher_helper import (
     HAS_SQLCIPHER as _HAS_SQLCIPHER,
+)
+from src.core.shared.sqlcipher_helper import (
     get_sqlcipher_connection as _get_sqlcipher_connection,
 )
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "get_data_dir", "get_db_path", "get_projects_dir", "get_connection",
-    "get_encrypted_connection", "is_encryption_enabled",
-    "close_all_connections", "write_lock", "initialize_databases",
+    "close_all_connections",
+    "get_connection",
+    "get_data_dir",
+    "get_db_path",
+    "get_encrypted_connection",
+    "get_projects_dir",
+    "initialize_databases",
+    "is_encryption_enabled",
+    "write_lock",
 ]
 
 # ============================================================
 #  CONNECTION POOL - Reutiliza conexiones SQLite
 # ============================================================
 
-_db_connections = {}       # {db_name: sqlite3.Connection}
-_db_write_locks = {}       # {db_name: threading.Lock} — one lock per connection for write ops
-_db_rw_locks = {}          # {db_name: ReadWriteLock} — per-DB rw lock when available
+_db_connections = {}  # {db_name: sqlite3.Connection}
+_db_write_locks = {}  # {db_name: threading.Lock} — one lock per connection for write ops
+_db_rw_locks = {}  # {db_name: ReadWriteLock} — per-DB rw lock when available
 _db_lock = threading.Lock()
 
 # Environment variable for enabling SQLCipher encryption on all connections
@@ -77,13 +86,15 @@ def _optimize_pragma(conn):
     mmap_size: Memory-mapped I/O para lecturas grandes
     """
     conn.execute("PRAGMA journal_mode=WAL")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA cache_size=-8192")      # 8MB cache (doubled from 4MB)  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA synchronous=NORMAL")     # Mas rapido con WAL  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA temp_store=MEMORY")      # Temp en RAM  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA mmap_size=67108864")     # 64MB mmap  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA wal_autocheckpoint=1000") # Auto-checkpoint cada 1000 frames  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA busy_timeout=5000")       # 5s timeout para locks  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("PRAGMA foreign_keys=ON")         # Enforce referential integrity  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA cache_size=-8192")  # 8MB cache (doubled from 4MB)  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA synchronous=NORMAL")  # Mas rapido con WAL  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA temp_store=MEMORY")  # Temp en RAM  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA mmap_size=67108864")  # 64MB mmap  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "PRAGMA wal_autocheckpoint=1000"
+    )  # Auto-checkpoint cada 1000 frames  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA busy_timeout=5000")  # 5s timeout para locks  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute("PRAGMA foreign_keys=ON")  # Enforce referential integrity  # nosemgrep: sqlalchemy-execute-raw-query
 
 
 def is_encryption_enabled() -> bool:
@@ -100,9 +111,10 @@ def is_encryption_enabled() -> bool:
 
 
 def get_data_dir() -> Path:
-    if 'ANDROID_ARGUMENT' in os.environ:
+    if "ANDROID_ARGUMENT" in os.environ:
         try:
             from android.storage import app_storage_path  # type: ignore[import-unresolved]
+
             data_dir = Path(app_storage_path()) / "zenic_data"
         except Exception:
             data_dir = Path.home() / ".zenic_agents" / "data"
@@ -190,6 +202,7 @@ def get_connection(db_name: str) -> sqlite3.Connection:
     via `with db_initializer.write_lock(db_name):` to ensure thread safety.
     """
     import warnings
+
     warnings.warn(
         "db_initializer.get_connection() is deprecated since FASE 1.3. "
         "Use FastPool.get(db_name) instead for better connection management.",
@@ -316,10 +329,18 @@ def initialize_databases():
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
         UNIQUE(file_path, name, node_type, tenant_id))""")
     # Indice para busquedas rapidas por nombre (usado por MacroRouter)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
     conn.commit()
     # Migrate: add tenant_id column if it doesn't exist (for existing databases)
     try:
@@ -345,8 +366,12 @@ def initialize_databases():
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
         PRIMARY KEY (structural_hash, tenant_id))""")
     # Indice para skeleton hash lookups (O(1) bypass experiencial)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
     conn.commit()
     # Migrate: add tenant_id column if it doesn't exist (for existing databases)
     try:
@@ -367,8 +392,12 @@ def initialize_databases():
         operation TEXT NOT NULL,
         timestamp REAL NOT NULL,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
     conn.commit()
     # Migrate: add tenant_id column if it doesn't exist (for existing databases)
     try:
@@ -395,9 +424,15 @@ def initialize_databases():
         cache_hit INTEGER DEFAULT 0,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)")  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)"
+    )  # nosemgrep: sqlalchemy-execute-raw-query
     conn.commit()
     # Migrate: add tenant_id column if it doesn't exist (for existing databases)
     try:

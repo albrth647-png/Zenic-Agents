@@ -22,10 +22,12 @@ import secrets
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from src.core.shared.sqlcipher_helper import (
     get_sqlcipher_connection as _helper_get_conn,
+)
+from src.core.shared.sqlcipher_helper import (
     is_sqlcipher_available,
 )
 
@@ -34,20 +36,23 @@ logger = logging.getLogger(__name__)
 
 class EncryptionUnavailableError(RuntimeError):
     """Raised when encryption is required but unavailable."""
+
     pass
 
 
 class EncryptionLevel(str, Enum):
     """Level of encryption active."""
+
     NONE = "none"
-    FERNET = "fernet"           # Symmetric encryption for sensitive data
-    SQLCIPHER = "sqlcipher"     # Full database encryption
-    FULL = "full"               # Both Fernet + SQLCipher
+    FERNET = "fernet"  # Symmetric encryption for sensitive data
+    SQLCIPHER = "sqlcipher"  # Full database encryption
+    FULL = "full"  # Both Fernet + SQLCipher
 
 
 @dataclass
 class EncryptionStatus:
     """Current encryption status."""
+
     level: EncryptionLevel
     fernet_available: bool
     sqlcipher_available: bool
@@ -86,8 +91,8 @@ class EncryptionManager:
         self._fernet_key: bytes = b""
         self._lock = threading.Lock()
         self._kdf_algorithm: str = "PBKDF2-SHA256"
-        self._previous_fernet_key: Optional[bytes] = None
-        self._previous_fernet: Optional[Any] = None
+        self._previous_fernet_key: bytes | None = None
+        self._previous_fernet: Any | None = None
         self._sqlcipher_available = False
 
         # Check Fernet availability
@@ -102,6 +107,7 @@ class EncryptionManager:
         """Check if cryptography.fernet is available."""
         try:
             from cryptography.fernet import Fernet  # noqa: F401
+
             return True
         except ImportError:
             logger.debug("EncryptionManager: cryptography not available, Fernet disabled")
@@ -136,8 +142,8 @@ class EncryptionManager:
             key_bytes = argon2.low_level.hash_secret_raw(
                 secret=self._passphrase.encode(),
                 salt=salt,
-                time_cost=3,          # OWASP recommendation
-                memory_cost=65536,    # 64 MB
+                time_cost=3,  # OWASP recommendation
+                memory_cost=65536,  # 64 MB
                 parallelism=4,
                 hash_len=32,
                 type=argon2.low_level.Type.ID,
@@ -204,7 +210,9 @@ class EncryptionManager:
         """
         logger.info(
             "EncryptionManager: Re-encrypting with new KDF (was: %s/%d, now: %s)",
-            old_kdf, old_iterations, self._kdf_algorithm,
+            old_kdf,
+            old_iterations,
+            self._kdf_algorithm,
         )
         # Re-derive key with current settings — this replaces the existing Fernet key
         self._init_fernet()
@@ -232,6 +240,7 @@ class EncryptionManager:
         """
         try:
             from src.core.shared.db_initializer import get_data_dir
+
             data_dir = get_data_dir()
         except Exception:
             data_dir = os.path.expanduser("~/.zenic_agents/data")
@@ -268,7 +277,7 @@ class EncryptionManager:
 
         # CPU info
         try:
-            with open("/proc/cpuinfo", "r") as f:
+            with open("/proc/cpuinfo") as f:
                 for line in f:
                     if line.startswith("model name"):
                         components.append(line.strip())
@@ -279,7 +288,7 @@ class EncryptionManager:
         # Machine ID (Linux)
         for path in ["/etc/machine-id", "/var/lib/dbus/machine-id"]:
             try:
-                with open(path, "r") as f:
+                with open(path) as f:
                     components.append(f.read().strip())
                     break
             except (FileNotFoundError, PermissionError):
@@ -288,8 +297,12 @@ class EncryptionManager:
         # Disk serial
         try:
             import subprocess
+
             result = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"], capture_output=True, text=True, timeout=3,
+                ["lsblk", "-ndo", "SERIAL"],
+                capture_output=True,
+                text=True,
+                timeout=3,
             )
             if result.returncode == 0:
                 serials = [s.strip() for s in result.stdout.split("\n") if s.strip()]
@@ -300,7 +313,7 @@ class EncryptionManager:
 
         # Memory info
         try:
-            with open("/proc/meminfo", "r") as f:
+            with open("/proc/meminfo") as f:
                 for line in f:
                     if line.startswith("MemTotal:"):
                         components.append(line.strip())
@@ -334,8 +347,7 @@ class EncryptionManager:
                 )
                 return f"ZENIC_UNENCRYPTED:{base64.b64encode(plaintext.encode()).decode()}"
             raise EncryptionUnavailableError(
-                "Fernet encryption is not available. "
-                "Install the 'cryptography' package or set ZENIC_DB_PASSPHRASE."
+                "Fernet encryption is not available. " "Install the 'cryptography' package or set ZENIC_DB_PASSPHRASE."
             )
 
         with self._lock:
@@ -357,7 +369,7 @@ class EncryptionManager:
         if ciphertext.startswith("ZENIC_UNENCRYPTED:"):
             if os.environ.get("ZENIC_DEV_MODE") == "1":
                 logger.warning("EncryptionManager: Decrypting DEV MODE base64 wrapper — NOT encrypted")
-                b64_part = ciphertext[len("ZENIC_UNENCRYPTED:"):]
+                b64_part = ciphertext[len("ZENIC_UNENCRYPTED:") :]
                 return base64.b64decode(b64_part).decode()
             raise EncryptionUnavailableError(
                 "Found unencrypted data in non-dev environment. "
@@ -380,7 +392,7 @@ class EncryptionManager:
                 logger.error("EncryptionManager: Decryption failed with both current and previous keys")
                 raise ValueError("Decryption failed with both current and previous keys")
 
-    def encrypt_dict(self, data: Dict[str, Any], sensitive_keys: Optional[list] = None) -> Dict[str, Any]:
+    def encrypt_dict(self, data: dict[str, Any], sensitive_keys: list | None = None) -> dict[str, Any]:
         """Encrypt sensitive fields in a dictionary."""
         if not sensitive_keys:
             return data
@@ -389,9 +401,7 @@ class EncryptionManager:
             if os.environ.get("ZENIC_DEV_MODE") == "1":
                 logger.warning("EncryptionManager: DEV MODE — encrypt_dict without Fernet, skipping encryption")
                 return data
-            raise EncryptionUnavailableError(
-                "Fernet encryption is not available for encrypt_dict."
-            )
+            raise EncryptionUnavailableError("Fernet encryption is not available for encrypt_dict.")
 
         result = dict(data)
         for key in sensitive_keys:
@@ -400,14 +410,11 @@ class EncryptionManager:
                 result[f"_{key}_encrypted"] = True
         return result
 
-    def decrypt_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def decrypt_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         """Decrypt all encrypted fields in a dictionary."""
         if not self._fernet:
             # Check if any values start with ZENIC_UNENCRYPTED: prefix (dev mode)
-            has_unencrypted = any(
-                isinstance(v, str) and v.startswith("ZENIC_UNENCRYPTED:")
-                for v in data.values()
-            )
+            has_unencrypted = any(isinstance(v, str) and v.startswith("ZENIC_UNENCRYPTED:") for v in data.values())
             if has_unencrypted and os.environ.get("ZENIC_DEV_MODE") == "1":
                 result = dict(data)
                 encrypted_markers = [k for k in result if k.endswith("_encrypted") and result[k]]
@@ -417,9 +424,7 @@ class EncryptionManager:
                         result[key] = self.decrypt(result[key])
                         del result[marker]
                 return result
-            raise EncryptionUnavailableError(
-                "Fernet is not available for decrypt_dict."
-            )
+            raise EncryptionUnavailableError("Fernet is not available for decrypt_dict.")
 
         result = dict(data)
         encrypted_markers = [k for k in result if k.endswith("_encrypted") and result[k]]
@@ -431,8 +436,10 @@ class EncryptionManager:
         return result
 
     def get_sqlcipher_connection(
-        self, db_path: str, passphrase: Optional[str] = None,
-    ) -> Optional[Any]:
+        self,
+        db_path: str,
+        passphrase: str | None = None,
+    ) -> Any | None:
         """Get an encrypted SQLCipher database connection.
 
         Args:
@@ -453,7 +460,7 @@ class EncryptionManager:
                 if os.environ.get("NODE_ENV") == "production":
                     raise RuntimeError(
                         "ZENIC_DB_PASSPHRASE is required for SQLCipher in production. "
-                        "Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                        'Generate with: python -c "import secrets; print(secrets.token_hex(32))"'
                     )
                 logger.warning(
                     "EncryptionManager: No passphrase configured for SQLCipher. "
@@ -518,8 +525,8 @@ class EncryptionManager:
             raise ValueError("New passphrase cannot be empty")
 
         # Keep old key for decrypt fallback
-        self._previous_fernet_key: Optional[bytes] = self._fernet_key
-        self._previous_fernet: Optional[Any] = self._fernet
+        self._previous_fernet_key: bytes | None = self._fernet_key
+        self._previous_fernet: Any | None = self._fernet
 
         try:
             # Derive new key with new passphrase
@@ -583,7 +590,8 @@ class EncryptionManager:
 
             logger.info(
                 "EncryptionManager: Key rotation completed (algorithm=%s, iterations=%d)",
-                self._kdf_algorithm, self._pbkdf2_iterations,
+                self._kdf_algorithm,
+                self._pbkdf2_iterations,
             )
         except Exception as exc:
             # Rollback — restore old key
@@ -596,6 +604,7 @@ class EncryptionManager:
         """Persist a salt value to the data directory."""
         try:
             from src.core.shared.db_initializer import get_data_dir
+
             data_dir = get_data_dir()
         except Exception:
             data_dir = os.path.expanduser("~/.zenic_agents/data")
@@ -611,7 +620,7 @@ class EncryptionManager:
 
     # ── Per-Tenant Key Diversification ──────────────────────
 
-    def _derive_tenant_key(self, tenant_id: str) -> "Fernet":  # noqa: F821  # TODO: Phase3 - verify import
+    def _derive_tenant_key(self, tenant_id: str) -> Fernet:  # noqa: F821  # TODO: Phase3 - verify import
         """Derive a tenant-specific Fernet key from the master key.
 
         Uses HKDF-SHA256 with tenant_id as info parameter.
@@ -625,8 +634,8 @@ class EncryptionManager:
             A Fernet instance with a tenant-specific key.
         """
         from cryptography.fernet import Fernet
-        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
         from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
         hkdf = HKDF(
             algorithm=hashes.SHA256(),
@@ -691,7 +700,7 @@ class EncryptionManager:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_encryption_manager: Optional[EncryptionManager] = None
+_encryption_manager: EncryptionManager | None = None
 _lock = threading.Lock()
 
 

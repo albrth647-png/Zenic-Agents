@@ -74,6 +74,13 @@ impl NicheCategory {
     fn __repr__(&self) -> String {
         format!("NicheCategory.{}", self.display_name().replace(' ', ""))
     }
+
+    /// Compliance standards for this category. Delegates to zenic-safety.
+    fn compliance_standards(&self) -> Vec<String> {
+        let canonical: zenic_safety::NicheCategory = (*self).into();
+        canonical.compliance_standards()
+            .iter().map(|s| s.to_string()).collect()
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -99,6 +106,44 @@ impl DataSensitivity {
             DataSensitivity::Critical => "critical",
         }
     }
+
+    /// Delegate level() to zenic-safety canonical implementation.
+    pub fn level(&self) -> u8 {
+        let canonical: zenic_safety::DataSensitivity = (*self).into();
+        canonical.level()
+    }
+
+    /// Delegate requires_escalation() to zenic-safety.
+    pub fn requires_escalation(&self) -> bool {
+        let canonical: zenic_safety::DataSensitivity = (*self).into();
+        canonical.requires_escalation()
+    }
+
+    /// Delegate escalate_verdict() to zenic-safety.
+    pub fn escalate_verdict(&self) -> crate::safety_gate::types::SafetyVerdict {
+        let canonical: zenic_safety::DataSensitivity = (*self).into();
+        canonical.escalate_verdict().into()
+    }
+}
+
+impl Default for DataSensitivity {
+    fn default() -> Self {
+        DataSensitivity::Low
+    }
+}
+
+impl Ord for DataSensitivity {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let a: zenic_safety::DataSensitivity = (*self).into();
+        let b: zenic_safety::DataSensitivity = (*other).into();
+        a.cmp(&b)
+    }
+}
+
+impl PartialOrd for DataSensitivity {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[pymethods]
@@ -109,6 +154,17 @@ impl DataSensitivity {
 
     fn __repr__(&self) -> String {
         format!("DataSensitivity.{}", self.as_str().to_uppercase())
+    }
+
+    /// Numeric level (0=Low .. 3=Critical). Delegates to zenic-safety.
+    #[getter]
+    fn level(&self) -> u8 {
+        DataSensitivity::level(self)
+    }
+
+    /// Whether escalation is required. Delegates to zenic-safety.
+    fn requires_escalation(&self) -> bool {
+        DataSensitivity::requires_escalation(self)
     }
 }
 

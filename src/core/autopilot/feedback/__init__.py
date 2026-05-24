@@ -1,6 +1,5 @@
 """Re-exports for feedback package."""
 
-
 import json
 import logging
 import sqlite3
@@ -9,7 +8,7 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-_closed_loop_feedback_instance: Optional[ClosedLoopFeedback] = None  # noqa: F821  # TODO: verify import
+_closed_loop_feedback_instance: ClosedLoopFeedback | None = None  # noqa: F821  # TODO: verify import
 _closed_loop_feedback_lock = threading.Lock()
 
 
@@ -37,11 +36,24 @@ def get_closed_loop_feedback(
 
 
 def reset_closed_loop_feedback() -> None:
-    """Reset the global ClosedLoopFeedback instance (for testing)."""  # noqa: F821  # TODO: verify import
+    """Reset the global ClosedLoopFeedback instance (for testing)."""  # TODO: verify import
     global _closed_loop_feedback_instance
     with _closed_loop_feedback_lock:
         _closed_loop_feedback_instance = None
 
 
-
-__all__ = ["FeedbackAction", "FeedbackCycle", "ClosedLoopFeedback", "get_closed_loop_feedback", "reset_closed_loop_feedback", "json", "logging", "sqlite3", "time", "uuid", "Any", "Dict", "List"]  # noqa: F821  # TODO: verify import
+__all__ = [
+    "Any",
+    "ClosedLoopFeedback",
+    "Dict",
+    "FeedbackAction",
+    "FeedbackCycle",
+    "List",
+    "get_closed_loop_feedback",
+    "json",
+    "logging",
+    "reset_closed_loop_feedback",
+    "sqlite3",
+    "time",
+    "uuid",
+]  # TODO: verify import

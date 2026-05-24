@@ -7,11 +7,11 @@ Main pipeline orchestrator for document ingestion and field matching.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
+from ._types import NATIVE_AVAILABLE, IngestionResult, _native, os_path_exists
 from .bridge import NicheCatalog, NicheTemplate
 from .document_parser import DocumentParser
-from ._types import IngestionResult, NATIVE_AVAILABLE, _native, os_path_exists
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +54,8 @@ class DocumentIngestor:
     def ingest_and_match(
         self,
         niche_id: str,
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
     ) -> IngestionResult:
         """Full ingestion pipeline: parse → extract → match → fill."""
         result = IngestionResult()
@@ -90,9 +90,7 @@ class DocumentIngestor:
             # Step 4: Apply matches to template
             if NATIVE_AVAILABLE and hasattr(extraction_result, "matches"):
                 try:
-                    _native.extractor_apply_matches(
-                        template_dict, extraction_result.matches
-                    )
+                    _native.extractor_apply_matches(template_dict, extraction_result.matches)
                 except Exception as e:
                     result.errors.append(f"Apply matches error: {e}")
 
@@ -108,8 +106,8 @@ class DocumentIngestor:
 
     def ingest_files_only(
         self,
-        files: List[Tuple[str, Optional[bytes]]],
-    ) -> List[Any]:
+        files: list[tuple[str, bytes | None]],
+    ) -> list[Any]:
         """Extract text from files without matching to a template."""
         return self._extract_all_texts(files, [])
 
@@ -153,7 +151,7 @@ class DocumentIngestor:
         }
         return format_map.get(ext, "unknown")
 
-    def supported_formats(self) -> List[str]:
+    def supported_formats(self) -> list[str]:
         """Get list of all supported document format strings."""
         if NATIVE_AVAILABLE:
             try:
@@ -171,9 +169,9 @@ class DocumentIngestor:
                 pass
         return 0 < size_bytes <= 50 * 1024 * 1024
 
-    def available_parsers(self) -> Dict[str, bool]:
+    def available_parsers(self) -> dict[str, bool]:
         """Check which parsers (Rust and Python) are available."""
-        parsers: Dict[str, bool] = {}
+        parsers: dict[str, bool] = {}
         parsers["rust_native"] = NATIVE_AVAILABLE
         parsers.update(self._parser.available_parsers())
         return parsers
@@ -182,11 +180,11 @@ class DocumentIngestor:
 
     def _extract_all_texts(
         self,
-        files: Optional[List[Tuple[str, Optional[bytes]]]],
-        texts: Optional[List[str]],
-    ) -> List[Any]:
+        files: list[tuple[str, bytes | None]] | None,
+        texts: list[str] | None,
+    ) -> list[Any]:
         """Extract text from all sources (files + raw texts)."""
-        extracted: List[Any] = []
+        extracted: list[Any] = []
 
         if files:
             for file_info in files:
@@ -208,9 +206,7 @@ class DocumentIngestor:
 
         return extracted
 
-    def _extract_single_file(
-        self, filename: str, data: Optional[bytes]
-    ) -> Optional[Any]:
+    def _extract_single_file(self, filename: str, data: bytes | None) -> Any | None:
         """Extract text from a single file."""
         fmt_str = self.detect_format(filename)
 
@@ -227,7 +223,7 @@ class DocumentIngestor:
 
         if fmt_str in ("pdf", "docx", "html"):
             text_content: str = ""
-            errors: List[str] = []
+            errors: list[str] = []
 
             if data is not None:
                 text_content, errors = self._parser.parse_bytes(filename, data)
@@ -236,9 +232,7 @@ class DocumentIngestor:
 
             if text_content and NATIVE_AVAILABLE:
                 try:
-                    return _native.ingest_process_extracted_text(
-                        filename, fmt_str, text_content
-                    )
+                    return _native.ingest_process_extracted_text(filename, fmt_str, text_content)
                 except Exception as e:
                     logger.error("Rust processing failed for %s: %s", filename, e)
                     return {"filename": filename, "text": text_content, "errors": errors}
@@ -256,9 +250,7 @@ class DocumentIngestor:
 
         if text_content and NATIVE_AVAILABLE:
             try:
-                return _native.ingest_process_extracted_text(
-                    filename, fmt_str, text_content
-                )
+                return _native.ingest_process_extracted_text(filename, fmt_str, text_content)
             except Exception:
                 return {"filename": filename, "text": text_content, "errors": errors}
 
@@ -267,16 +259,14 @@ class DocumentIngestor:
 
         return None
 
-    def _process_raw_text(self, text: str) -> Optional[Any]:
+    def _process_raw_text(self, text: str) -> Any | None:
         """Process a raw text string through the Rust pipeline."""
         if not text.strip():
             return None
 
         if NATIVE_AVAILABLE:
             try:
-                return _native.ingest_process_extracted_text(
-                    "user_text", "txt", text
-                )
+                return _native.ingest_process_extracted_text("user_text", "txt", text)
             except Exception as e:
                 logger.error("Rust text processing failed: %s", e)
 
@@ -284,9 +274,9 @@ class DocumentIngestor:
 
     def _match_fields(
         self,
-        template_dict: Dict[str, Any],
-        extracted_texts: List[Any],
-    ) -> Optional[Any]:
+        template_dict: dict[str, Any],
+        extracted_texts: list[Any],
+    ) -> Any | None:
         """Match extracted text fields against template using Rust extractor."""
         if not NATIVE_AVAILABLE:
             logger.warning("DocumentIngestor._match_fields: Rust extension not available")
@@ -299,9 +289,7 @@ class DocumentIngestor:
                     text_content = ext.get("text", "")
                     filename = ext.get("filename", "unknown")
                     if text_content:
-                        native_text = _native.ingest_process_extracted_text(
-                            filename, "txt", text_content
-                        )
+                        native_text = _native.ingest_process_extracted_text(filename, "txt", text_content)
                         native_texts.append(native_text)
                 else:
                     native_texts.append(ext)

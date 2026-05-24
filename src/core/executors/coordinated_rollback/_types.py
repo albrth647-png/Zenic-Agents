@@ -10,8 +10,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  ENUMS
@@ -55,7 +54,7 @@ class ResourceRecord:
 
     resource_type: ResourceType = ResourceType.DB
     resource_id: str = ""
-    rollback_data: Dict[str, Any] = field(default_factory=dict)
+    rollback_data: dict[str, Any] = field(default_factory=dict)
     compensation_executed: bool = False
     created_at: float = 0.0
 
@@ -78,7 +77,7 @@ class CoordinatedAction:
 
     action_id: str = ""
     tenant_id: str = ""
-    records: List[ResourceRecord] = field(default_factory=list)
+    records: list[ResourceRecord] = field(default_factory=list)
     status: ActionStatus = ActionStatus.IN_PROGRESS
     created_at: float = 0.0
 
@@ -105,5 +104,7 @@ class CoordinatedRollbackResult:
     action_id: str = ""
     compensations_attempted: int = 0
     compensations_succeeded: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+
 __all__ = ["ActionStatus", "CoordinatedAction", "CoordinatedRollbackResult", "ResourceRecord", "ResourceType"]

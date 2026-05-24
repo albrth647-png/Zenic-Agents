@@ -12,34 +12,36 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, AsyncIterator, Optional
+from collections.abc import AsyncIterator
+from typing import Any
 
-from .types.base import Result
-from .types.session import Session
-from .types.intent import AssistantIntent, IntentCategory
-from .types.response import (
-    AssistantResponse, StreamingChunk,
-)
-from .types.personality import PersonalityProfile
-from .types.memory import MemoryCategory
-from .session_manager import SessionManager
-from .personality_manager import PersonalityManager
-from .zenic_bridge import ZenicBridge
-from .engine_parts import IntentClassifier, ResponseGenerator, EngineFormatter
-from .pipeline_handlers import PipelineHandlers
-from .input import InputSanitizer, InputParser, InputEnricher
-from .routing import AssistantRouter, PipelineSelector, FallbackChain
-from .routing.router import Pipeline
-from .routing.intent_engine import IntentEngine
-from .routing.fallback_chain import FallbackEntry
-from .memory import MemoryManager
-from .tools import ToolManager
-from .events import EventBus, EventTypes
-from .conversation import ConversationManager
-from .knowledge import KnowledgeBase
 from .context_builder import ContextBuilder
-from .engine_phase2_handlers import Phase2Handlers
+from .conversation import ConversationManager
 from .engine_knowledge import load_builtin_knowledge
+from .engine_parts import EngineFormatter, IntentClassifier, ResponseGenerator
+from .engine_phase2_handlers import Phase2Handlers
+from .events import EventBus, EventTypes
+from .input import InputEnricher, InputParser, InputSanitizer
+from .knowledge import KnowledgeBase
+from .memory import MemoryManager
+from .personality_manager import PersonalityManager
+from .pipeline_handlers import PipelineHandlers
+from .routing import AssistantRouter, FallbackChain, PipelineSelector
+from .routing.fallback_chain import FallbackEntry
+from .routing.intent_engine import IntentEngine
+from .routing.router import Pipeline
+from .session_manager import SessionManager
+from .tools import ToolManager
+from .types.base import Result
+from .types.intent import AssistantIntent, IntentCategory
+from .types.memory import MemoryCategory
+from .types.personality import PersonalityProfile
+from .types.response import (
+    AssistantResponse,
+    StreamingChunk,
+)
+from .types.session import Session
+from .zenic_bridge import ZenicBridge
 
 logger = logging.getLogger("zenic_agents.conversational.conversation")
 
@@ -54,9 +56,9 @@ class ConversationEngine:
 
     def __init__(
         self,
-        session_manager: Optional[SessionManager] = None,
-        personality_manager: Optional[PersonalityManager] = None,
-        zenic_bridge: Optional[ZenicBridge] = None,
+        session_manager: SessionManager | None = None,
+        personality_manager: PersonalityManager | None = None,
+        zenic_bridge: ZenicBridge | None = None,
     ) -> None:
         # Core
         self._sessions = session_manager or SessionManager()
@@ -105,12 +107,14 @@ class ConversationEngine:
         self._total_fallbacks = 0
 
         # Fallback garantizado
-        self._fallback_chain.register(FallbackEntry(
-            pipeline=Pipeline.CONVERSATIONAL,
-            handler=PipelineHandlers.fallback_handler,
-            priority=10,
-            description="Fallback conversacional garantizado",
-        ))
+        self._fallback_chain.register(
+            FallbackEntry(
+                pipeline=Pipeline.CONVERSATIONAL,
+                handler=PipelineHandlers.fallback_handler,
+                priority=10,
+                description="Fallback conversacional garantizado",
+            )
+        )
 
         # Cargar conocimiento base
         load_builtin_knowledge(self._knowledge)
@@ -121,7 +125,7 @@ class ConversationEngine:
         self,
         session_id: str,
         user_message: str,
-        personality: Optional[PersonalityProfile] = None,
+        personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
         """Procesa un mensaje completo por el pipeline Fase 2."""
         start_time = time.time()
@@ -142,7 +146,9 @@ class ConversationEngine:
 
         # 3. Memory (unificado)
         memory_entries = self._memory.retrieve_for_context(
-            query_text=sanitized.cleaned, session_id=session_id, max_results=5,
+            query_text=sanitized.cleaned,
+            session_id=session_id,
+            max_results=5,
         )
         enriched = self._enricher.enrich(sanitized, parsed, session, memory_entries).unwrap
         self._sessions.add_user_message(session_id, user_message)
@@ -153,16 +159,21 @@ class ConversationEngine:
 
         # 5. Conversation (Fase 2)
         self._conversation_mgr.process_user_turn(
-            session_id=session_id, content=user_message,
-            intent=intent.category, confidence=intent.confidence,
+            session_id=session_id,
+            content=user_message,
+            intent=intent.category,
+            confidence=intent.confidence,
             entities=[e.text for e in parsed.entities],
         )
 
         # 6. Events + Logging
         self._events.intent_classified(
-            session_id=session_id, category=intent.category.value,
-            confidence=intent.confidence, mode=intent.mode.value,
-            is_conversational=intent.is_conversational, needs_engine=intent.needs_engine,
+            session_id=session_id,
+            category=intent.category.value,
+            confidence=intent.confidence,
+            mode=intent.mode.value,
+            is_conversational=intent.is_conversational,
+            needs_engine=intent.needs_engine,
         )
         logger.info(f"Intent: {intent.category.value} (conf={intent.confidence:.2f})")
 
@@ -184,44 +195,63 @@ class ConversationEngine:
         elapsed = (time.time() - start_time) * 1000
         response.metadata.latency_ms = elapsed
         response.metadata.intent_category = intent.category.value
-        self._sessions.add_assistant_message(session_id, response.content, metadata={
-            "latency_ms": elapsed, "intent_category": intent.category.value,
-            "source": response.metadata.source, "pipeline": pipeline.value,
-        })
+        self._sessions.add_assistant_message(
+            session_id,
+            response.content,
+            metadata={
+                "latency_ms": elapsed,
+                "intent_category": intent.category.value,
+                "source": response.metadata.source,
+                "pipeline": pipeline.value,
+            },
+        )
         self._events.response_generated(
-            session_id=session_id, content_length=len(response.content),
-            resp_source=response.metadata.source, latency_ms=elapsed,
+            session_id=session_id,
+            content_length=len(response.content),
+            resp_source=response.metadata.source,
+            latency_ms=elapsed,
         )
         return response
 
     async def stream_message(
-        self, session_id: str, user_message: str,
-        personality: Optional[PersonalityProfile] = None,
+        self,
+        session_id: str,
+        user_message: str,
+        personality: PersonalityProfile | None = None,
     ) -> AsyncIterator[StreamingChunk]:
         """Procesa un mensaje y retorna la respuesta como stream."""
         response = await self.process_message(session_id, user_message, personality)
         for i in range(0, len(response.content), 50):
             yield StreamingChunk.create(
-                content=response.content[i:i + 50],
+                content=response.content[i : i + 50],
                 is_final=(i + 50) >= len(response.content),
             )
 
     # ─── Public helpers ───────────────────────────────────────
 
-    async def execute_tool(self, tool_name: str, arguments: dict[str, Any], session_id: str = "") -> Result[Any, Exception]:
+    async def execute_tool(
+        self, tool_name: str, arguments: dict[str, Any], session_id: str = ""
+    ) -> Result[Any, Exception]:
         """Ejecuta una herramienta."""
         return await self._tools.execute_tool(tool_name, arguments, session_id)
 
-    def build_context(self, session_id: str, intent: AssistantIntent, personality: PersonalityProfile | None = None) -> dict[str, Any]:
+    def build_context(
+        self, session_id: str, intent: AssistantIntent, personality: PersonalityProfile | None = None
+    ) -> dict[str, Any]:
         """Construye contexto completo para LLM/prompt."""
         session = self._sessions.get_session(session_id)
         if session is None:
             return {}
-        ctx = self._context_builder.build(session=session, intent=intent, personality=personality, user_message=intent.raw_text)
+        ctx = self._context_builder.build(
+            session=session, intent=intent, personality=personality, user_message=intent.raw_text
+        )
         return {
-            "system_prompt": ctx.system_prompt, "messages": ctx.to_chat_messages(),
-            "tools": ctx.tools, "conversation_state": ctx.conversation_state,
-            "sources_used": ctx.sources_used, "build_time_ms": ctx.build_time_ms,
+            "system_prompt": ctx.system_prompt,
+            "messages": ctx.to_chat_messages(),
+            "tools": ctx.tools,
+            "conversation_state": ctx.conversation_state,
+            "sources_used": ctx.sources_used,
+            "build_time_ms": ctx.build_time_ms,
         }
 
     def search_knowledge(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
@@ -231,8 +261,12 @@ class ConversationEngine:
     # ─── Pipeline ─────────────────────────────────────────────
 
     async def _process_pipeline(
-        self, pipeline: Pipeline, intent: AssistantIntent,
-        enriched: Any, session: Session, personality: Optional[PersonalityProfile],
+        self,
+        pipeline: Pipeline,
+        intent: AssistantIntent,
+        enriched: Any,
+        session: Session,
+        personality: PersonalityProfile | None,
     ) -> AssistantResponse:
         """Despacha al handler del pipeline."""
         if pipeline == Pipeline.CODE_ENGINE:
@@ -261,11 +295,14 @@ class ConversationEngine:
         }
         cat = cat_map.get(intent.category)
         if cat is None:
-            cat = MemoryCategory.SKILL if intent.is_code_related else (
-                MemoryCategory.FACT if intent.category == IntentCategory.QUESTION
-                else MemoryCategory.CONTEXT
+            cat = (
+                MemoryCategory.SKILL
+                if intent.is_code_related
+                else (MemoryCategory.FACT if intent.category == IntentCategory.QUESTION else MemoryCategory.CONTEXT)
             )
-        result = self._memory.store(content=message[:500], category=cat, session_id=session_id, source="user", tags=[intent.category.value])
+        result = self._memory.store(
+            content=message[:500], category=cat, session_id=session_id, source="user", tags=[intent.category.value]
+        )
         if result.is_ok:
             self._events.memory_stored(session_id=session_id, category=cat.value, importance=result.unwrap.importance)
 
@@ -299,14 +336,25 @@ class ConversationEngine:
             }
 
     @property
-    def event_bus(self) -> EventBus: return self._event_bus
+    def event_bus(self) -> EventBus:
+        return self._event_bus
+
     @property
-    def memory_manager(self) -> MemoryManager: return self._memory
+    def memory_manager(self) -> MemoryManager:
+        return self._memory
+
     @property
-    def tool_manager(self) -> ToolManager: return self._tools
+    def tool_manager(self) -> ToolManager:
+        return self._tools
+
     @property
-    def conversation_manager(self) -> ConversationManager: return self._conversation_mgr
+    def conversation_manager(self) -> ConversationManager:
+        return self._conversation_mgr
+
     @property
-    def knowledge_base(self) -> KnowledgeBase: return self._knowledge
+    def knowledge_base(self) -> KnowledgeBase:
+        return self._knowledge
+
     @property
-    def router(self) -> AssistantRouter: return self._router
+    def router(self) -> AssistantRouter:
+        return self._router

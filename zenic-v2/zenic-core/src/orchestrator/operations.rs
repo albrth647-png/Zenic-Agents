@@ -12,7 +12,7 @@ use crate::errors::CoreError;
 use crate::router::{RequestRouter, RouteDecision};
 use crate::step_bridge::DagStepExecutor;
 
-use super::orchestrator_struct::Orchestrator;
+use super::types::Orchestrator;
 
 impl Orchestrator {
     // -----------------------------------------------------------------------

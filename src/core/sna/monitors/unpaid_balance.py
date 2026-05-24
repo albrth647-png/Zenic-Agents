@@ -9,6 +9,7 @@ NO espera a que el cliente pague espontáneamente.
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 
 logger = logging.getLogger(__name__)
@@ -43,12 +44,14 @@ class UnpaidBalanceMonitor(BaseMonitor):
                 total_pending += float(balance)
             except (ValueError, TypeError):
                 pass
-            findings.append({
-                "type": "unpaid_balance",
-                "client": name_val,
-                "balance": balance,
-                "message": f"Saldo pendiente: {name_val} debe {balance}",
-            })
+            findings.append(
+                {
+                    "type": "unpaid_balance",
+                    "client": name_val,
+                    "balance": balance,
+                    "message": f"Saldo pendiente: {name_val} debe {balance}",
+                }
+            )
 
         return MonitorResult(
             monitor_name=self.name,

@@ -14,7 +14,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import ast
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ======================================================================
 # Abstract base classes
 # ======================================================================
+
 
 class ASTNode(ABC):
     """
@@ -83,6 +84,7 @@ class ASTVisitor(ABC):
 # VisitableAST — wraps Python ast.AST nodes
 # ======================================================================
 
+
 class VisitableAST(ASTNode):
     """
     Adapter that wraps a :class:`ast.AST` node to make it visitable.
@@ -112,9 +114,9 @@ class VisitableAST(ASTNode):
             return default(self)
         return None
 
-    def children(self) -> List["VisitableAST"]:
+    def children(self) -> list["VisitableAST"]:
         """Return immediate VisitableAST children of this node."""
-        result: List[VisitableAST] = []
+        result: list[VisitableAST] = []
         for child in ast.iter_child_nodes(self._node):
             result.append(VisitableAST(child))
         return result
@@ -123,6 +125,7 @@ class VisitableAST(ASTNode):
 # ======================================================================
 # Concrete visitors
 # ======================================================================
+
 
 class TokenCountVisitor(ASTVisitor):
     """
@@ -133,9 +136,9 @@ class TokenCountVisitor(ASTVisitor):
     """
 
     def __init__(self) -> None:
-        self.token_counts: Dict[str, int] = {}
+        self.token_counts: dict[str, int] = {}
 
-    def visit(self, node: ASTNode) -> Dict[str, int]:
+    def visit(self, node: ASTNode) -> dict[str, int]:
         self.token_counts.clear()
         if isinstance(node, VisitableAST):
             self._walk(node.node)
@@ -150,7 +153,7 @@ class TokenCountVisitor(ASTVisitor):
             self._walk(child)
 
     # Type-specific overrides (optional — the generic _walk handles all)
-    def visit_default(self, node: ASTNode) -> Dict[str, int]:
+    def visit_default(self, node: ASTNode) -> dict[str, int]:
         if isinstance(node, VisitableAST):
             return self.visit(VisitableAST(node.node))
         self.token_counts[type(node).__name__] = self.token_counts.get(type(node).__name__, 0) + 1
@@ -168,10 +171,18 @@ class ComplexityVisitor(ASTVisitor):
     """
 
     # Node types that add 1 to the decision count
-    _DECISION_NODES: Set[str] = {
-        "If", "For", "While", "ExceptHandler",
-        "With", "Assert", "IfExp",
-        "ListComp", "SetComp", "DictComp", "GeneratorExp",
+    _DECISION_NODES: set[str] = {
+        "If",
+        "For",
+        "While",
+        "ExceptHandler",
+        "With",
+        "Assert",
+        "IfExp",
+        "ListComp",
+        "SetComp",
+        "DictComp",
+        "GeneratorExp",
     }
 
     def __init__(self) -> None:
@@ -215,9 +226,9 @@ class RefactorVisitor(ASTVisitor):
     """
 
     def __init__(self) -> None:
-        self.refactor_marks: List[Dict[str, Any]] = []
+        self.refactor_marks: list[dict[str, Any]] = []
 
-    def visit(self, node: ASTNode) -> List[Dict[str, Any]]:
+    def visit(self, node: ASTNode) -> list[dict[str, Any]]:
         self.refactor_marks.clear()
         if isinstance(node, VisitableAST):
             self._walk(node.node, depth=0)
@@ -236,55 +247,63 @@ class RefactorVisitor(ASTVisitor):
             if node.args.kwarg:
                 arg_count += 1
             if arg_count > 10:
-                self.refactor_marks.append({
-                    "type": "too_many_args",
-                    "node": "FunctionDef",
-                    "name": node.name,
-                    "line": node.lineno,
-                    "value": arg_count,
-                })
+                self.refactor_marks.append(
+                    {
+                        "type": "too_many_args",
+                        "node": "FunctionDef",
+                        "name": node.name,
+                        "line": node.lineno,
+                        "value": arg_count,
+                    }
+                )
 
             # Function body too long
             if hasattr(node, "end_lineno") and node.end_lineno:
                 lines = node.end_lineno - node.lineno + 1
                 if lines > 50:
-                    self.refactor_marks.append({
-                        "type": "function_too_long",
-                        "node": "FunctionDef",
-                        "name": node.name,
-                        "line": node.lineno,
-                        "value": lines,
-                    })
+                    self.refactor_marks.append(
+                        {
+                            "type": "function_too_long",
+                            "node": "FunctionDef",
+                            "name": node.name,
+                            "line": node.lineno,
+                            "value": lines,
+                        }
+                    )
 
         # Class with too many methods
         if isinstance(node, ast.ClassDef):
-            method_count = sum(
-                1 for item in node.body if isinstance(item, ast.FunctionDef)
-            )
+            method_count = sum(1 for item in node.body if isinstance(item, ast.FunctionDef))
             if method_count > 20:
-                self.refactor_marks.append({
-                    "type": "too_many_methods",
-                    "node": "ClassDef",
-                    "name": node.name,
-                    "line": node.lineno,
-                    "value": method_count,
-                })
+                self.refactor_marks.append(
+                    {
+                        "type": "too_many_methods",
+                        "node": "ClassDef",
+                        "name": node.name,
+                        "line": node.lineno,
+                        "value": method_count,
+                    }
+                )
 
         # Deep nesting
         if name in ("If", "For", "While", "With", "Try"):
             if depth > 4:
-                self.refactor_marks.append({
-                    "type": "deep_nesting",
-                    "node": name,
-                    "line": getattr(node, "lineno", 0),
-                    "value": depth,
-                })
+                self.refactor_marks.append(
+                    {
+                        "type": "deep_nesting",
+                        "node": name,
+                        "line": getattr(node, "lineno", 0),
+                        "value": depth,
+                    }
+                )
 
         for child in ast.iter_child_nodes(node):
-            child_depth = depth + 1 if name in ("If", "For", "While", "With", "Try", "FunctionDef", "ClassDef") else depth
+            child_depth = (
+                depth + 1 if name in ("If", "For", "While", "With", "Try", "FunctionDef", "ClassDef") else depth
+            )
             self._walk(child, child_depth)
 
-    def visit_default(self, node: ASTNode) -> List[Dict[str, Any]]:
+    def visit_default(self, node: ASTNode) -> list[dict[str, Any]]:
         if isinstance(node, VisitableAST):
             return self.visit(VisitableAST(node.node))
         return list(self.refactor_marks)

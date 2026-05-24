@@ -24,11 +24,14 @@ import logging
 import threading
 import time
 from collections import deque
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable, Deque, Dict, List, Optional
+from typing import Any
 
 from ._types import _MiddlewareContext
+
 logger = logging.getLogger("core.patterns.resilience.sidecar._core")
+
 
 class Sidecar:
     """
@@ -51,17 +54,17 @@ class Sidecar:
         self._call_count = 0
         self._error_count = 0
         self._total_duration = 0.0
-        self._last_error: Optional[Exception] = None
-        self._last_error_time: Optional[float] = None
+        self._last_error: Exception | None = None
+        self._last_error_time: float | None = None
 
         # Per-action metrics
-        self._action_metrics: Dict[str, Dict[str, Any]] = {}
+        self._action_metrics: dict[str, dict[str, Any]] = {}
 
         # Middleware chain
-        self._middlewares: List[Callable[[_MiddlewareContext], _MiddlewareContext]] = []
+        self._middlewares: list[Callable[[_MiddlewareContext], _MiddlewareContext]] = []
 
         # Recent history for debugging
-        self._history: Deque[_MiddlewareContext] = deque(maxlen=max_history)
+        self._history: deque[_MiddlewareContext] = deque(maxlen=max_history)
 
         self._lock = threading.Lock()
 
@@ -75,14 +78,10 @@ class Sidecar:
         return self._name
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Snapshot of sidecar statistics."""
         with self._lock:
-            avg_duration = (
-                self._total_duration / self._call_count
-                if self._call_count > 0
-                else 0.0
-            )
+            avg_duration = self._total_duration / self._call_count if self._call_count > 0 else 0.0
             return {
                 "name": self._name,
                 "call_count": self._call_count,
@@ -128,7 +127,9 @@ class Sidecar:
             except Exception as mw_err:
                 logger.warning(
                     "Sidecar '%s': middleware error in action '%s': %s",
-                    self._name, ctx.action_name, mw_err,
+                    self._name,
+                    ctx.action_name,
+                    mw_err,
                 )
         return ctx
 
@@ -137,7 +138,7 @@ class Sidecar:
     # ----------------------------------------------------------
 
     @contextmanager
-    def before(self, action_name: str, metadata: Optional[Dict[str, Any]] = None):  # noqa: ANN201
+    def before(self, action_name: str, metadata: dict[str, Any] | None = None):
         """
         Context manager for before-hooks. Starts timing and runs
         middlewares in pre-processing phase.
@@ -160,7 +161,9 @@ class Sidecar:
 
         logger.debug(
             "Sidecar '%s': before '%s' (metadata=%s)",
-            self._name, action_name, ctx.metadata,
+            self._name,
+            action_name,
+            ctx.metadata,
         )
 
         try:
@@ -180,7 +183,7 @@ class Sidecar:
         self,
         action_name: str,
         result: Any = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Record a successful after-hook for *action_name*.
@@ -203,7 +206,7 @@ class Sidecar:
         self,
         action_name: str,
         error: Exception,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Record an error-hook for *action_name*.
@@ -262,7 +265,8 @@ class Sidecar:
 
             logger.debug(
                 "Sidecar '%s': before async '%s'",
-                self._name, action_name,
+                self._name,
+                action_name,
             )
 
             try:
@@ -288,9 +292,7 @@ class Sidecar:
     #  Internal recording
     # ----------------------------------------------------------
 
-    def _record_success(
-        self, action_name: str, ctx: _MiddlewareContext
-    ) -> None:
+    def _record_success(self, action_name: str, ctx: _MiddlewareContext) -> None:
         """Record a successful call."""
         duration = ctx.duration
         with self._lock:
@@ -310,14 +312,16 @@ class Sidecar:
 
         logger.debug(
             "Sidecar '%s': after '%s' (duration=%.4fs)",
-            self._name, action_name, duration,
+            self._name,
+            action_name,
+            duration,
         )
 
     def _record_error(
         self,
         action_name: str,
         error: Exception,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Record a failed call."""
         with self._lock:
@@ -339,7 +343,10 @@ class Sidecar:
 
         logger.warning(
             "Sidecar '%s': error in '%s': %s (metadata=%s)",
-            self._name, action_name, error, metadata,
+            self._name,
+            action_name,
+            error,
+            metadata,
         )
 
     # ----------------------------------------------------------
@@ -347,16 +354,13 @@ class Sidecar:
     # ----------------------------------------------------------
 
     def __repr__(self) -> str:
-        return (
-            f"Sidecar(name={self._name!r}, "
-            f"calls={self._call_count}, "
-            f"errors={self._error_count})"
-        )
+        return f"Sidecar(name={self._name!r}, " f"calls={self._call_count}, " f"errors={self._error_count})"
 
 
 # ============================================================
 #  CONVENIENCE DECORATOR
 # ============================================================
+
 
 def sidecar_decorator(sidecar_instance: Sidecar) -> Callable[..., Any]:
     """

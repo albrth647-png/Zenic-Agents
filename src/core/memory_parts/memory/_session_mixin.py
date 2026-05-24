@@ -7,12 +7,12 @@ Session lifecycle, conversation summaries, and memory consolidation.
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, List
-
-from ..types import DB_PATH, MemoryEntry, IMPORTANCE_THRESHOLD
+from typing import Any
 
 # Phase 5 — Deterministic UUID for session IDs
 from src.core.shared.deterministic import DeterministicUUID
+
+from ..types import DB_PATH, IMPORTANCE_THRESHOLD, MemoryEntry
 
 _session_uuid_gen = DeterministicUUID("smart_memory_session_mixin")
 
@@ -43,43 +43,48 @@ class SessionMixin:
         self._session_id = _session_uuid_gen.next()[:8]
         with self._working_lock:
             self._working_memory.clear()
-        
+
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                """INSERT OR REPLACE INTO conversation_sessions 
+                """INSERT OR REPLACE INTO conversation_sessions
                    (id, started_at, exchange_count, importance, client_id, tenant_id)
                    VALUES (?, ?, 0, 0.5, ?, ?)""",
-                (self._session_id, time.time(), self._client_id, self._tenant_id)
+                (self._session_id, time.time(), self._client_id, self._tenant_id),
             )
-        
+
         logger.info(
             f"SmartMemory: Session {self._session_id} started "
             f"(tenant='{self._tenant_id}', client='{self._client_id}')"
         )
         return self._session_id
 
-    def end_session(self) -> Dict[str, Any]:
+    def end_session(self) -> dict[str, Any]:
         """Termina la sesión actual y consolida memorias (tenant-aware)."""
         with self._working_lock:
             summary = self.get_conversation_summary()
             exchange_count = len(self._working_memory)
-            
+
             with sqlite3.connect(DB_PATH) as conn:
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    """UPDATE conversation_sessions 
+                    """UPDATE conversation_sessions
                        SET ended_at=?, summary=?, exchange_count=?, importance=?
                        WHERE id=? AND tenant_id=?""",
-                    (time.time(), summary[:1000], exchange_count,
-                     max((e.importance for e in self._working_memory), default=0.5),
-                     self._session_id, self._tenant_id)
+                    (
+                        time.time(),
+                        summary[:1000],
+                        exchange_count,
+                        max((e.importance for e in self._working_memory), default=0.5),
+                        self._session_id,
+                        self._tenant_id,
+                    ),
                 )
-            
+
             # Snapshot working memory for consolidation (within lock)
             working_snapshot = list(self._working_memory)
-        
+
         # Trigger consolidation (uses snapshot, no lock needed for DB ops)
         self._consolidate_from_snapshot(working_snapshot)
-        
+
         with self._working_lock:
             self._working_memory.clear()
         logger.info(
@@ -93,49 +98,49 @@ class SessionMixin:
         sid = session_id or self._session_id
         if not sid:
             return ""
-        
+
         # From working memory if current session (thread-safe read)
         if sid == self._session_id:
             with self._working_lock:
                 if self._working_memory:
                     ops = [f"{e.operation}/{e.goal}: {e.query[:50]}" for e in self._working_memory[-10:]]
                     return f"Session {sid}: {' | '.join(ops)}"
-        
+
         # From database for past sessions (tenant-scoped)
         with sqlite3.connect(DB_PATH) as conn:
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT summary, exchange_count FROM conversation_sessions WHERE id=? AND tenant_id=?",
-                (sid, self._tenant_id)
+                (sid, self._tenant_id),
             ).fetchone()
             if row and row[0]:
                 return row[0]
-        
+
         return ""
 
-    def consolidate_memories(self) -> Dict[str, int]:
+    def consolidate_memories(self) -> dict[str, int]:
         """
         Consolida memorias: promueve working → long-term, agrupa similares.
-        
+
         Returns dict with counts of items consolidated.
         """
         # Snapshot working memory under lock
         with self._working_lock:
             working_snapshot = list(self._working_memory)
-        
+
         return self._consolidate_from_snapshot(working_snapshot)
 
-    def _consolidate_from_snapshot(self, working_snapshot: List[MemoryEntry]) -> Dict[str, int]:
+    def _consolidate_from_snapshot(self, working_snapshot: list[MemoryEntry]) -> dict[str, int]:
         """Consolidate from a snapshot of working memory (thread-safe, tenant-aware)."""
         promoted = 0
         consolidated_episodes = 0
-        
+
         # 1. Promote important working memory to long-term
         for entry in working_snapshot:
             if entry.importance >= IMPORTANCE_THRESHOLD:
                 # Check if already exists in long-term (avoid duplicates)
                 existing = self.find_similar_solutions(entry.query, top_k=1)
                 is_duplicate = any(s.get("similarity", 0) > 0.9 for s in existing)
-                
+
                 if not is_duplicate:
                     self.save_to_long_term(
                         query=entry.query,
@@ -147,44 +152,51 @@ class SessionMixin:
                         tags=[entry.operation, entry.goal, self._session_id],
                     )
                     promoted += 1
-        
+
         # 2. Consolidate episodic memories with same event_type (tenant-scoped)
         with sqlite3.connect(DB_PATH) as conn:
             event_types = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT event_type, COUNT(*) as cnt FROM episodic_memory WHERE tenant_id=? GROUP BY event_type HAVING cnt > 3",
-                (self._tenant_id,)
+                (self._tenant_id,),
             ).fetchall()
-            
+
             for event_type, count in event_types:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT id, description, importance FROM episodic_memory WHERE event_type=? AND tenant_id=? ORDER BY importance DESC",
-                    (event_type, self._tenant_id)
+                    (event_type, self._tenant_id),
                 ).fetchall()
-                
+
                 if len(rows) > 3:
                     ids_to_remove = [r[0] for r in rows[3:]]
                     descriptions = [r[1][:100] for r in rows[3:]]
                     avg_importance = sum(r[2] for r in rows[3:]) / len(rows[3:])
-                    
-                    consolidated_desc = f"Consolidated {len(ids_to_remove)} {event_type} events: {'; '.join(descriptions[:3])}"
-                    
+
+                    consolidated_desc = (
+                        f"Consolidated {len(ids_to_remove)} {event_type} events: {'; '.join(descriptions[:3])}"
+                    )
+
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        """INSERT INTO episodic_memory 
+                        """INSERT INTO episodic_memory
                            (event_type, description, importance, created_at, client_id, tenant_id)
                            VALUES (?, ?, ?, ?, ?, ?)""",
-                        (event_type, consolidated_desc[:1000], avg_importance, time.time(),
-                         self._client_id, self._tenant_id)
+                        (
+                            event_type,
+                            consolidated_desc[:1000],
+                            avg_importance,
+                            time.time(),
+                            self._client_id,
+                            self._tenant_id,
+                        ),
                     )
-                    
+
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})",
-                        ids_to_remove
+                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})", ids_to_remove
                     )
                     consolidated_episodes += len(ids_to_remove)
-        
+
         if promoted > 0 or consolidated_episodes > 0:
             logger.info(f"SmartMemory: Consolidated - promoted={promoted}, episodes_merged={consolidated_episodes}")
-        
+
         return {"promoted_to_long_term": promoted, "episodes_consolidated": consolidated_episodes}
 
     def get_recent_entries(self, limit: int = 30):

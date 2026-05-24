@@ -4,10 +4,10 @@ ZENIC-AGENTS - Validation Logic Blocks
 Validation and sanitization blocks: required, types, ranges, unique, sanitize.
 """
 
-import re
 import logging
-from typing import Any, Dict
+import re
 from copy import deepcopy
+from typing import Any
 
 from .chain import LogicBlock, _validate_identifier
 
@@ -28,7 +28,7 @@ class ValidateRequiredBlock(LogicBlock):
     inputs = ["data", "required_fields"]
     outputs = ["valid", "errors", "missing"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             required = data.get("required_fields", data.get("_required_fields", []))
             if isinstance(required, str):
@@ -51,7 +51,7 @@ class ValidateRequiredBlock(LogicBlock):
                 "missing": missing,
             }
         except Exception as e:
-            return {"success": False, "error": f"ValidateRequiredBlock: {str(e)}"}
+            return {"success": False, "error": f"ValidateRequiredBlock: {e!s}"}
 
 
 class ValidateTypesBlock(LogicBlock):
@@ -63,38 +63,44 @@ class ValidateTypesBlock(LogicBlock):
     inputs = ["data", "type_schema"]
     outputs = ["valid", "errors", "type_mismatches"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             schema = data.get("type_schema", data.get("_type_schema", {}))
             errors = []
             mismatches = []
 
             type_map = {
-                "str": str, "string": str,
-                "int": int, "integer": int,
-                "float": float, "number": (int, float),
-                "bool": bool, "boolean": bool,
-                "list": list, "array": list,
-                "dict": dict, "object": dict,
+                "str": str,
+                "string": str,
+                "int": int,
+                "integer": int,
+                "float": float,
+                "number": (int, float),
+                "bool": bool,
+                "boolean": bool,
+                "list": list,
+                "array": list,
+                "dict": dict,
+                "object": dict,
             }
 
             for field_name, expected_type in schema.items():
                 if field_name not in data:
                     continue  # Skip missing fields (use validate_required for that)
                 value = data[field_name]
-                python_type = type_map.get(expected_type, None)
+                python_type = type_map.get(expected_type)
                 if python_type and not isinstance(value, python_type):
                     # Allow int for float fields
                     if python_type is float and isinstance(value, int):
                         continue
-                    mismatches.append({
-                        "field": field_name,
-                        "expected": expected_type,
-                        "actual": type(value).__name__,
-                    })
-                    errors.append(
-                        f"Field '{field_name}' expected {expected_type}, got {type(value).__name__}"
+                    mismatches.append(
+                        {
+                            "field": field_name,
+                            "expected": expected_type,
+                            "actual": type(value).__name__,
+                        }
                     )
+                    errors.append(f"Field '{field_name}' expected {expected_type}, got {type(value).__name__}")
 
             is_valid = len(errors) == 0
             logger.debug(f"ValidateTypesBlock: valid={is_valid}, mismatches={len(mismatches)}")
@@ -105,7 +111,7 @@ class ValidateTypesBlock(LogicBlock):
                 "type_mismatches": mismatches,
             }
         except Exception as e:
-            return {"success": False, "error": f"ValidateTypesBlock: {str(e)}"}
+            return {"success": False, "error": f"ValidateTypesBlock: {e!s}"}
 
 
 class ValidateRangesBlock(LogicBlock):
@@ -117,7 +123,7 @@ class ValidateRangesBlock(LogicBlock):
     inputs = ["data", "range_schema"]
     outputs = ["valid", "errors", "violations"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             range_schema = data.get("range_schema", data.get("_range_schema", {}))
             errors = []
@@ -152,7 +158,7 @@ class ValidateRangesBlock(LogicBlock):
                 "violations": violations,
             }
         except Exception as e:
-            return {"success": False, "error": f"ValidateRangesBlock: {str(e)}"}
+            return {"success": False, "error": f"ValidateRangesBlock: {e!s}"}
 
 
 class ValidateUniqueBlock(LogicBlock):
@@ -164,7 +170,7 @@ class ValidateUniqueBlock(LogicBlock):
     inputs = ["data", "field", "table"]
     outputs = ["is_unique", "existing"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             field_name = data.get("unique_field", data.get("field", "email"))
             table_name = data.get("table", data.get("_table", "users"))
@@ -174,7 +180,7 @@ class ValidateUniqueBlock(LogicBlock):
                 return {"success": True, "is_unique": False, "error": f"Field '{field_name}' not provided"}
 
             # Check against database if available
-            db = context.get("db", None)
+            db = context.get("db")
             existing = None
 
             if db is not None:
@@ -183,12 +189,11 @@ class ValidateUniqueBlock(LogicBlock):
                     _validate_identifier(field_name)
                     _validate_identifier(table_name)
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?',
-                        (value,)
+                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?', (value,)
                     )
-                    row = cursor.fetchone() if hasattr(cursor, 'fetchone') else None
+                    row = cursor.fetchone() if hasattr(cursor, "fetchone") else None
                     if row:
-                        existing = dict(row) if hasattr(row, 'keys') else {"id": row[0], field_name: row[1]}
+                        existing = dict(row) if hasattr(row, "keys") else {"id": row[0], field_name: row[1]}
                 except Exception as db_err:
                     logger.warning(f"ValidateUniqueBlock: DB check failed: {db_err}")
                     # Fallback: assume unique when DB unavailable
@@ -204,7 +209,7 @@ class ValidateUniqueBlock(LogicBlock):
                 "checked_value": value,
             }
         except Exception as e:
-            return {"success": False, "error": f"ValidateUniqueBlock: {str(e)}"}
+            return {"success": False, "error": f"ValidateUniqueBlock: {e!s}"}
 
 
 class SanitizeBlock(LogicBlock):
@@ -216,7 +221,7 @@ class SanitizeBlock(LogicBlock):
     inputs = ["data", "fields"]
     outputs = ["data", "sanitized_fields"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             fields_to_sanitize = data.get("sanitize_fields", data.get("fields", []))
             if isinstance(fields_to_sanitize, str):
@@ -227,19 +232,19 @@ class SanitizeBlock(LogicBlock):
 
             # XSS patterns
             xss_patterns = [
-                (r'<script[^>]*>.*?</script>', '', re.IGNORECASE | re.DOTALL),
-                (r'javascript:', '', re.IGNORECASE),
-                (r'on\w+\s*=', '', re.IGNORECASE),
-                (r'<iframe[^>]*>.*?</iframe>', '', re.IGNORECASE | re.DOTALL),
-                (r'<object[^>]*>.*?</object>', '', re.IGNORECASE | re.DOTALL),
+                (r"<script[^>]*>.*?</script>", "", re.IGNORECASE | re.DOTALL),
+                (r"javascript:", "", re.IGNORECASE),
+                (r"on\w+\s*=", "", re.IGNORECASE),
+                (r"<iframe[^>]*>.*?</iframe>", "", re.IGNORECASE | re.DOTALL),
+                (r"<object[^>]*>.*?</object>", "", re.IGNORECASE | re.DOTALL),
             ]
 
             # SQL injection patterns
             sql_patterns = [
-                (r"('|\");?\s*(DROP|DELETE|INSERT|UPDATE|ALTER|CREATE|EXEC)\s", '', re.IGNORECASE),
-                (r"(--|/\*|\*/)", '', re.IGNORECASE),
-                (r"(\bOR\b\s+\d+\s*=\s*\d+)", '', re.IGNORECASE),
-                (r"(\bUNION\b\s+\bSELECT\b)", '', re.IGNORECASE),
+                (r"('|\");?\s*(DROP|DELETE|INSERT|UPDATE|ALTER|CREATE|EXEC)\s", "", re.IGNORECASE),
+                (r"(--|/\*|\*/)", "", re.IGNORECASE),
+                (r"(\bOR\b\s+\d+\s*=\s*\d+)", "", re.IGNORECASE),
+                (r"(\bUNION\b\s+\bSELECT\b)", "", re.IGNORECASE),
             ]
 
             all_patterns = xss_patterns + sql_patterns
@@ -254,9 +259,11 @@ class SanitizeBlock(LogicBlock):
                 return cleaned.strip()
 
             # If no specific fields, sanitize all string fields
-            target_fields = fields_to_sanitize if fields_to_sanitize else [
-                k for k, v in data.items() if isinstance(v, str) and not k.startswith("_")
-            ]
+            target_fields = (
+                fields_to_sanitize
+                if fields_to_sanitize
+                else [k for k, v in data.items() if isinstance(v, str) and not k.startswith("_")]
+            )
 
             for field_name in target_fields:
                 if field_name in result_data and isinstance(result_data[field_name], str):
@@ -274,4 +281,4 @@ class SanitizeBlock(LogicBlock):
                 "sanitized_count": len(sanitized),
             }
         except Exception as e:
-            return {"success": False, "error": f"SanitizeBlock: {str(e)}"}
+            return {"success": False, "error": f"SanitizeBlock: {e!s}"}

@@ -9,10 +9,11 @@ to keep the main file under 400 lines.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, TYPE_CHECKING  # noqa: F401
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
     from src.core.blueprints import CertifiedBlueprint
+
     from ..blueprint_schema import Blueprint
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT BRIDGE MIXIN
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintBridgeMixin:
     """Mixin for ActionDispatcher that provides Blueprint Registry integration.
@@ -31,12 +33,14 @@ class BlueprintBridgeMixin:
       - _certified_to_legacy: Convert CertifiedBlueprint → legacy Blueprint
     """
 
-    def set_blueprint(self, blueprint: "Blueprint") -> None:
+    def set_blueprint(self, blueprint: Blueprint) -> None:
         """Set the active Blueprint for validation (Phase 5)."""
         self._blueprint = blueprint
 
     def set_blueprint_from_registry(
-        self, blueprint_name: str = "", tenant_id: str = "",
+        self,
+        blueprint_name: str = "",
+        tenant_id: str = "",
     ) -> bool:
         """Load active Blueprint from the Blueprint Registry (Phase 5).
 
@@ -45,6 +49,7 @@ class BlueprintBridgeMixin:
         """
         try:
             from src.core.blueprints import get_blueprint_registry
+
             reg = get_blueprint_registry()
 
             bp = None
@@ -63,20 +68,24 @@ class BlueprintBridgeMixin:
             return False
 
     def _certified_to_legacy(
-        self, certified: "CertifiedBlueprint",
-    ) -> "Blueprint":
+        self,
+        certified: CertifiedBlueprint,
+    ) -> Blueprint:
         """Convert a CertifiedBlueprint (Phase 5) to legacy Blueprint.
 
         Maintains backward compatibility with the Phase 3 Blueprint
         dataclass used by BlueprintValidator.
         """
         from ..blueprint_schema import (
-            Blueprint, BlueprintMetadata, BusinessRule,
-            ActionTemplate, ExecutorSchema,
+            ActionTemplate,
+            Blueprint,
+            BlueprintMetadata,
+            BusinessRule,
+            ExecutorSchema,
         )
 
         # Convert executor schemas
-        executor_schemas: Dict[str, Any] = {}
+        executor_schemas: dict[str, Any] = {}
         for exec_type, schema_data in certified.executor_schemas.items():
             if isinstance(schema_data, ExecutorSchema):
                 executor_schemas[exec_type] = schema_data
@@ -97,17 +106,19 @@ class BlueprintBridgeMixin:
         # Convert business rules
         business_rules = []
         for rule in certified.rules:
-            business_rules.append(BusinessRule(
-                name=rule.name,
-                description=rule.description,
-                executor_type=rule.executor_type,
-                condition=rule.condition,
-                action=rule.action,
-                severity=rule.severity,
-            ))
+            business_rules.append(
+                BusinessRule(
+                    name=rule.name,
+                    description=rule.description,
+                    executor_type=rule.executor_type,
+                    condition=rule.condition,
+                    action=rule.action,
+                    severity=rule.severity,
+                )
+            )
 
         # Convert action templates
-        action_templates: Dict[str, Any] = {}
+        action_templates: dict[str, Any] = {}
         for action in certified.actions:
             action_templates[action.template_id] = ActionTemplate(
                 name=action.name,
@@ -134,7 +145,5 @@ class BlueprintBridgeMixin:
             business_rules=business_rules,
             action_templates=action_templates,
             monitor_hooks=monitor_hooks,
-            compatible_with=[
-                c.blueprint_name for c in certified.metadata.compatibility
-            ],
+            compatible_with=[c.blueprint_name for c in certified.metadata.compatibility],
         )

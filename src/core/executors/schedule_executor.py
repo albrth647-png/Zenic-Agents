@@ -6,16 +6,16 @@ Ejecutor de programación de jobs. Usa APScheduler si disponible, sino dict simp
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
-from .base import ActionExecutor, ActionResult, _HAS_APSCHEDULER
+from .base import _HAS_APSCHEDULER, ActionExecutor, ActionResult
 
 # Conditional imports for APScheduler (must be at module level to avoid NameError)
 if _HAS_APSCHEDULER:
     try:
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
-        from apscheduler.triggers.interval import IntervalTrigger
         from apscheduler.triggers.cron import CronTrigger
+        from apscheduler.triggers.interval import IntervalTrigger
     except ImportError:
         _HAS_APSCHEDULER = False
 
@@ -30,9 +30,9 @@ class ScheduleExecutor(ActionExecutor):
     """
 
     def __init__(self) -> None:
-        self._scheduler: Optional[Any] = None
-        self._simple_jobs: Dict[str, Dict[str, Any]] = {}
-        self._job_results: Dict[str, Any] = {}
+        self._scheduler: Any | None = None
+        self._simple_jobs: dict[str, dict[str, Any]] = {}
+        self._job_results: dict[str, Any] = {}
         if _HAS_APSCHEDULER:
             try:
                 self._scheduler = AsyncIOScheduler()
@@ -41,19 +41,27 @@ class ScheduleExecutor(ActionExecutor):
                 logger.warning(f"ScheduleExecutor: APScheduler init failed: {e}")
                 self._scheduler = None
 
-    async def execute(self, config: Dict[str, Any], context: Dict[str, Any]) -> ActionResult:
+    async def execute(self, config: dict[str, Any], context: dict[str, Any]) -> ActionResult:
         start = self._measure()
         operation = config.get("operation", "list").lower()
         job_id = config.get("job_id", "")
 
         valid_ops = {"add", "remove", "list", "pause", "resume"}
         if operation not in valid_ops:
-            return ActionResult(False, {"operation": operation},
-                                f"Invalid schedule operation: {operation}. Must be one of {valid_ops}", self._elapsed_ms(start))
+            return ActionResult(
+                False,
+                {"operation": operation},
+                f"Invalid schedule operation: {operation}. Must be one of {valid_ops}",
+                self._elapsed_ms(start),
+            )
         try:
-            dispatch = {"add": lambda: self._add_job(config), "remove": lambda: self._remove_job(job_id),
-                        "list": lambda: self._list_jobs(), "pause": lambda: self._pause_job(job_id),
-                        "resume": lambda: self._resume_job(job_id)}
+            dispatch = {
+                "add": lambda: self._add_job(config),
+                "remove": lambda: self._remove_job(job_id),
+                "list": lambda: self._list_jobs(),
+                "pause": lambda: self._pause_job(job_id),
+                "resume": lambda: self._resume_job(job_id),
+            }
             result_data = await dispatch[operation]()
             elapsed = self._elapsed_ms(start)
             logger.info(f"ScheduleExecutor: {operation} completed for job '{job_id}'")
@@ -72,13 +80,23 @@ class ScheduleExecutor(ActionExecutor):
         if not func_name:
             raise ValueError("Schedule add requires 'func' (function name)")
 
-        job_info = {"job_id": job_id, "func": func_name, "interval": interval, "cron": cron,
-                    "args": args, "status": "active", "created_at": time.time(), "next_run": time.time() + interval}
+        job_info = {
+            "job_id": job_id,
+            "func": func_name,
+            "interval": interval,
+            "cron": cron,
+            "args": args,
+            "status": "active",
+            "created_at": time.time(),
+            "next_run": time.time() + interval,
+        }
 
         if self._scheduler and _HAS_APSCHEDULER:
+
             async def _task(*a):
                 logger.info(f"ScheduleExecutor: Executing scheduled job '{job_id}' - {func_name}")
                 self._job_results[job_id] = {"last_run": time.time(), "status": "executed"}
+
             try:
                 if cron:
                     parts = cron.split()
@@ -117,9 +135,14 @@ class ScheduleExecutor(ActionExecutor):
         if self._scheduler and _HAS_APSCHEDULER and self._scheduler.running:
             try:
                 for job in self._scheduler.get_jobs():
-                    jobs.append({"job_id": job.id, "func": str(job.func),
-                                 "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-                                 "scheduler": "apscheduler"})
+                    jobs.append(
+                        {
+                            "job_id": job.id,
+                            "func": str(job.func),
+                            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                            "scheduler": "apscheduler",
+                        }
+                    )
             except Exception as e:
                 logger.warning(f"ScheduleExecutor: Could not list APScheduler jobs: {e}")
         return {"jobs": jobs, "count": len(jobs)}

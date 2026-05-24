@@ -4,10 +4,9 @@ ZENIC-AGENTS - Retry Pattern v16: Configuration and Delay Calculation
 RetryConfig dataclass and _compute_delay function.
 """
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Tuple, Type
-
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from src.core.shared.deterministic import ControllableJitter
 
@@ -37,8 +36,8 @@ class RetryConfig:
     exponential_base: float = 2.0
     jitter: bool = True
     jitter_max: float = 0.5
-    retryable_exceptions: Tuple[Type[Exception], ...] = (Exception,)
-    on_retry: Optional[Callable[[int, Exception, float], None]] = None
+    retryable_exceptions: tuple[type[Exception], ...] = (Exception,)
+    on_retry: Callable[[int, Exception, float], None] | None = None
     backoff_strategy: str = "exponential"
 
     def __post_init__(self) -> None:
@@ -54,8 +53,7 @@ class RetryConfig:
             raise ValueError("jitter_max must be in [0.0, 1.0]")
         if self.backoff_strategy not in ("exponential", "linear", "fixed"):
             raise ValueError(
-                f"backoff_strategy must be 'exponential', 'linear', or 'fixed', "
-                f"got {self.backoff_strategy!r}"
+                f"backoff_strategy must be 'exponential', 'linear', or 'fixed', " f"got {self.backoff_strategy!r}"
             )
 
 

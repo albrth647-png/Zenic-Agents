@@ -1,15 +1,15 @@
 """Re-exports for analytics package."""
 
-
 import json
 import logging
 import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Tuple
 
-_analytics_instance: Optional[ExceptionAnalytics] = None  # noqa: F821  # TODO: verify import
+_analytics_instance: ExceptionAnalytics | None = None  # noqa: F821  # TODO: verify import
 _analytics_lock = threading.Lock()
 
 
@@ -32,10 +32,26 @@ def get_exception_analytics(
 
 
 def reset_exception_analytics() -> None:
-    """Reset the global :class:`ExceptionAnalytics` (for testing)."""  # noqa: F821  # TODO: verify import
+    """Reset the global :class:`ExceptionAnalytics` (for testing)."""  # TODO: verify import
     global _analytics_instance
     with _analytics_lock:
         _analytics_instance = None
 
 
-__all__ = ["ExceptionPattern", "AnalyticsSnapshot", "ExceptionAnalytics", "get_exception_analytics", "reset_exception_analytics", "json", "logging", "sqlite3", "time", "uuid", "Any", "Callable", "Dict", "List", "Tuple"]  # noqa: F821  # TODO: verify import
+__all__ = [
+    "AnalyticsSnapshot",
+    "Any",
+    "Callable",
+    "Dict",
+    "ExceptionAnalytics",
+    "ExceptionPattern",
+    "List",
+    "Tuple",
+    "get_exception_analytics",
+    "json",
+    "logging",
+    "reset_exception_analytics",
+    "sqlite3",
+    "time",
+    "uuid",
+]  # TODO: verify import

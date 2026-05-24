@@ -21,12 +21,14 @@ Ventajas sobre la versión con IA:
   - Funciona sin GPU, sin modelo, sin dependencias externas
 """
 
-import re
 import os
-from typing import Dict, Any
-from ..types import DeterministicResult
+import re
+from typing import Any
+
 from ..evidence_collector import EvidenceCollector
+from ..types import DeterministicResult
 from ._types import EXT_LANG_MAP, PATTERN_HEURISTICS
+
 
 class DeterministicTasks1To4Mixin:
     """
@@ -62,6 +64,7 @@ class DeterministicTasks1To4Mixin:
         all_evidence = evidence + result
 
         from ..consensus_resolver import ConsensusResolver
+
         resolver = ConsensusResolver()
         return resolver.resolve_classification(text, all_evidence)
 
@@ -77,7 +80,7 @@ class DeterministicTasks1To4Mixin:
         Mejora: 0ms de latencia, 0% de JSON parse errors
         """
         # File extraction
-        file_match = re.search(r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))', text)
+        file_match = re.search(r"([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))", text)
         file_name = file_match.group(1) if file_match else ""
 
         # Language from extension
@@ -85,7 +88,7 @@ class DeterministicTasks1To4Mixin:
         lang = EXT_LANG_MAP.get(ext, "unknown")
 
         # Function name extraction
-        func_match = re.search(r'(?:function|func|def|fun)\s+(\w+)', text)
+        func_match = re.search(r"(?:function|func|def|fun)\s+(\w+)", text)
         function = func_match.group(1) if func_match else None
 
         # Language from keywords (if no file extension)
@@ -153,15 +156,14 @@ class DeterministicTasks1To4Mixin:
     #  TASK 4: fill_template_gaps (reemplaza MiniAIEngine.fill_template_gaps)
     # ================================================================
 
-    def fill_template_gaps(self, template: str,
-                           context: Dict[str, Any]) -> DeterministicResult:
+    def fill_template_gaps(self, template: str, context: dict[str, Any]) -> DeterministicResult:
         """
         Rellena huecos de template con contexto y defaults.
 
         Reemplaza: MiniAIEngine.fill_template_gaps() (que usaba LLM para JSON)
         Mejora: Siempre rellena todos los huecos, 0% de JSON parse errors
         """
-        gaps = re.findall(r'__GAP_(\w+)__', template)
+        gaps = re.findall(r"__GAP_(\w+)__", template)
         if not gaps:
             return DeterministicResult(
                 task_name="fill_template_gaps",
@@ -205,7 +207,7 @@ class DeterministicTasks1To4Mixin:
             result = result.replace(f"__GAP_{gap}__", str(value))
             filled_count += 1
 
-        all_filled = not re.search(r'__GAP_\w+__', result)
+        all_filled = not re.search(r"__GAP_\w+__", result)
         confidence = 1.0 if all_filled else 0.5
 
         return DeterministicResult(

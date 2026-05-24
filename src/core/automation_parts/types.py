@@ -29,10 +29,9 @@ Optimizado para:
 """
 
 import os
-from typing import Dict, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
-
+from typing import Any
 
 DB_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "db")
 DB_PATH = os.path.join(DB_DIR, "automation.sqlite")
@@ -40,9 +39,9 @@ PROJECTS_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "projects"
 
 
 class TriggerType(str, Enum):
-    SCHEDULE = "schedule"        # Cron/schedule trigger
-    EVENT = "event"              # Event-based trigger
-    WEBHOOK = "webhook"          # HTTP webhook trigger
+    SCHEDULE = "schedule"  # Cron/schedule trigger
+    EVENT = "event"  # Event-based trigger
+    WEBHOOK = "webhook"  # HTTP webhook trigger
     FILE_CHANGE = "file_change"  # File system trigger
     DATA_CHANGE = "data_change"  # Database change trigger
 
@@ -61,8 +60,9 @@ class ActionType(str, Enum):
 @dataclass
 class Trigger:
     """Disparador de una automatización."""
+
     type: TriggerType = TriggerType.SCHEDULE
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     # Schedule: {"interval": "daily", "hour": 9, "minute": 0, "day_of_week": "mon"}
     # Event: {"event_type": "stock_low", "threshold": 5}
     # Webhook: {"path": "/webhook/stock-alert"}
@@ -72,8 +72,9 @@ class Trigger:
 @dataclass
 class Action:
     """Acción a ejecutar cuando se dispara el trigger."""
+
     type: ActionType = ActionType.SEND_NOTIFICATION
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     # Email: {"to": "admin@company.com", "subject": "Report", "template": "weekly_report"}
     # Script: {"code": "print('hello')", "language": "python"}
     # DB: {"query": "SELECT * FROM sales WHERE date > ?", "params": []}
@@ -85,12 +86,13 @@ class Action:
 @dataclass
 class Workflow:
     """Definición completa de una automatización."""
+
     id: str = ""
     name: str = ""
     description: str = ""
     trigger: Trigger = field(default_factory=Trigger)
-    conditions: List[Dict[str, Any]] = field(default_factory=list)
-    actions: List[Action] = field(default_factory=list)
+    conditions: list[dict[str, Any]] = field(default_factory=list)
+    actions: list[Action] = field(default_factory=list)
     enabled: bool = True
     created_at: float = 0.0
     last_run: float = 0.0
@@ -101,6 +103,7 @@ class Workflow:
 @dataclass
 class WorkflowExecution:
     """Resultado de una ejecución de workflow."""
+
     workflow_id: str = ""
     started_at: float = 0.0
     finished_at: float = 0.0

@@ -1,24 +1,26 @@
 """Core logic for experiment_runner."""
 
 from __future__ import annotations
+
 import logging
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from ..types import ChaosExperiment, FaultInjection, ChaosExperimentState
-from ._types import DB_PATH
+from ..types import ChaosExperiment, ChaosExperimentState, FaultInjection
 from ._mixin_persistence import ChaosPersistenceMixin
+from ._types import DB_PATH
 
 logger = logging.getLogger("zenic_agents.core.chaos.experiment_runner")
+
 
 class ChaosExperimentRunner(ChaosPersistenceMixin):
     """Thread-safe chaos experiment runner with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._experiments: Dict[str, ChaosExperiment] = {}
+        self._experiments: dict[str, ChaosExperiment] = {}
         self._db_path = db_path or str(DB_PATH)
         self._run_count = 0
         self._success_count = 0
@@ -39,22 +41,18 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
             logger.info("Experiment created: %s", experiment.id)
             return experiment.id
 
-    def get_experiment(self, experiment_id: str) -> Optional[ChaosExperiment]:
+    def get_experiment(self, experiment_id: str) -> ChaosExperiment | None:
         with self._lock:
             return self._experiments.get(experiment_id)
 
-    def list_experiments(
-        self, state: Optional[ChaosExperimentState] = None
-    ) -> List[ChaosExperiment]:
+    def list_experiments(self, state: ChaosExperimentState | None = None) -> list[ChaosExperiment]:
         with self._lock:
             result = list(self._experiments.values())
             if state is not None:
                 result = [e for e in result if e.state == state]
             return result
 
-    def run_experiment(
-        self, experiment_id: str, dry_run: bool = False
-    ) -> Dict[str, Any]:
+    def run_experiment(self, experiment_id: str, dry_run: bool = False) -> dict[str, Any]:
         """Run or dry-run an experiment."""
         with self._lock:
             exp = self._experiments.get(experiment_id)
@@ -99,7 +97,7 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
         self._record_history(experiment_id, "started", {"injections": len(exp.injections)})
 
         # Execute fault injections
-        injection_results: List[Dict[str, Any]] = []
+        injection_results: list[dict[str, Any]] = []
         any_failed = False
         for injection in exp.injections:
             try:
@@ -140,7 +138,8 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
                 self._fail_count += 1
 
         self._record_history(
-            experiment_id, "completed",
+            experiment_id,
+            "completed",
             {"state": exp.state.value, "steady_maintained": post_steady_ok},
         )
 
@@ -168,9 +167,7 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
             self._rollback(exp)
             return True
 
-    def _verify_steady_state(
-        self, experiment: ChaosExperiment
-    ) -> Tuple[bool, Dict[str, Any]]:
+    def _verify_steady_state(self, experiment: ChaosExperiment) -> tuple[bool, dict[str, Any]]:
         """Verify the steady state hypothesis."""
         hypothesis = experiment.steady_state_hypothesis
         if not hypothesis:
@@ -180,7 +177,7 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
         if not probes:
             return (True, {"status": "no_probes_defined"})
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         all_ok = True
         for probe in probes:
             probe_type = probe.get("type", "health")
@@ -189,6 +186,7 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
             try:
                 # Use steady state verifier if available
                 from .steady_state import get_steady_state_verifier
+
                 verifier = get_steady_state_verifier()
                 health = verifier.check_system_health()
                 if health.get("status") != "healthy":
@@ -198,21 +196,25 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
             except Exception:
                 probe_ok = False
 
-            results.append({
-                "probe": target or probe_type,
-                "ok": probe_ok,
-            })
+            results.append(
+                {
+                    "probe": target or probe_type,
+                    "ok": probe_ok,
+                }
+            )
             if not probe_ok:
                 all_ok = False
 
         return (all_ok, {"probes": results})
 
-    def _inject_fault(self, injection: FaultInjection) -> Dict[str, Any]:
+    def _inject_fault(self, injection: FaultInjection) -> dict[str, Any]:
         """Inject a fault (simulated)."""
         logger.info(
             "Injecting %s fault on %s (magnitude=%.2f, duration=%ds)",
-            injection.fault_type.value, injection.target,
-            injection.magnitude, injection.duration_seconds,
+            injection.fault_type.value,
+            injection.target,
+            injection.magnitude,
+            injection.duration_seconds,
         )
         # In a real implementation, this would interact with the actual system
         return {
@@ -242,10 +244,11 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
         self._record_history(experiment.id, "rollback", {"actions": len(actions)})
         return True
 
-    def _measure_impact(self, experiment: ChaosExperiment) -> Dict[str, Any]:
+    def _measure_impact(self, experiment: ChaosExperiment) -> dict[str, Any]:
         """Measure the impact of the experiment."""
         try:
             from .steady_state import get_steady_state_verifier
+
             verifier = get_steady_state_verifier()
             health = verifier.check_system_health()
             return {
@@ -266,7 +269,7 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
                 return 1.0
             return self._success_count / total
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "total_experiments": len(self._experiments),
@@ -275,9 +278,6 @@ class ChaosExperimentRunner(ChaosPersistenceMixin):
                 "failed_runs": self._fail_count,
                 "resilience_score": round(self.get_resilience_score(), 3),
                 "by_state": {
-                    s.value: sum(
-                        1 for e in self._experiments.values() if e.state == s
-                    )
-                    for s in ChaosExperimentState
+                    s.value: sum(1 for e in self._experiments.values() if e.state == s) for s in ChaosExperimentState
                 },
             }

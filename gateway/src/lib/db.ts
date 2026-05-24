@@ -5,13 +5,13 @@ const logger = createRedactedLogger(console)
 
 /**
  * #56 Fix: Optimized Prisma Client Configuration
- * 
+ *
  * Previous issues:
  * 1. log: ['query'] was ALWAYS on — massive overhead in production
  * 2. No WAL mode — readers block writers and vice versa
  * 3. No busy_timeout — SQLITE_BUSY fails immediately under load
  * 4. No retry logic — transient SQLITE_BUSY errors kill the request
- * 
+ *
  * Fixes applied:
  * 1. Conditional logging — only in development, only 'query' + 'error'
  * 2. WAL mode via $queryRaw on first connection (readers don't block writers)
@@ -95,7 +95,7 @@ function isBusyError(error: unknown): boolean {
 /**
  * Execute a DB operation with automatic retry on SQLITE_BUSY.
  * Uses exponential backoff: 100ms, 200ms, 400ms.
- * 
+ *
  * Usage:
  *   const result = await withRetry(() => db.user.findMany())
  */
@@ -127,7 +127,7 @@ export async function withRetry<T>(
 /**
  * Batch write — queue multiple writes and execute them in a transaction.
  * Reduces SQLITE_BUSY contention by grouping writes together.
- * 
+ *
  * Usage:
  *   await batchWrite([
  *     () => db.approvalAction.create({ data: ... }),

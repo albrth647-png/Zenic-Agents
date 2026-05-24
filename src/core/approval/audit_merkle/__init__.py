@@ -6,22 +6,21 @@ HITL event is recorded in a hash-chained Merkle structure that provides
 tamper-evident integrity verification.
 """
 
-from ._types import (
-    AuditEventType,
-    AuditRecord,
-    MerkleProof,
-    GENESIS_HASH,
-    _MAX_RETRIES,
-    _RETRY_DELAY,
-)
-from ._mixin_core import ApprovalAuditMerkle
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_audit_merkle_instance: Optional[ApprovalAuditMerkle] = None
+from ._mixin_core import ApprovalAuditMerkle
+from ._types import (
+    _MAX_RETRIES,
+    _RETRY_DELAY,
+    GENESIS_HASH,
+    AuditEventType,
+    AuditRecord,
+    MerkleProof,
+)
+
+_audit_merkle_instance: ApprovalAuditMerkle | None = None
 _audit_merkle_lock = threading.Lock()
 
 
@@ -42,4 +41,14 @@ def reset_approval_audit_merkle() -> None:
     _audit_merkle_instance = None
 
 
-__all__ = ["AuditEventType", "AuditRecord", "MerkleProof", "GENESIS_HASH", "ApprovalAuditMerkle", "get_approval_audit_merkle", "reset_approval_audit_merkle", "_MAX_RETRIES", "_RETRY_DELAY"]
+__all__ = [
+    "GENESIS_HASH",
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "ApprovalAuditMerkle",
+    "AuditEventType",
+    "AuditRecord",
+    "MerkleProof",
+    "get_approval_audit_merkle",
+    "reset_approval_audit_merkle",
+]

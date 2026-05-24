@@ -11,46 +11,107 @@ import threading
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import IntentResult, TargetResult, CriticalityResult
+from ..schemas import CriticalityResult, IntentResult, TargetResult
 
 # ──────────────────────────────────────────────────────────────
 # CRITICALITY CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
 CRITICAL_KEYWORDS = [
-    "auth", "password", "token", "secret", "crypto", "encrypt", "decrypt",
-    "payment", "stripe", "credit", "bank", "transaction", "money",
-    "security", "vulnerability", "exploit", "injection", "xss",
-    "migration", "drop", "alter", "production",
+    "auth",
+    "password",
+    "token",
+    "secret",
+    "crypto",
+    "encrypt",
+    "decrypt",
+    "payment",
+    "stripe",
+    "credit",
+    "bank",
+    "transaction",
+    "money",
+    "security",
+    "vulnerability",
+    "exploit",
+    "injection",
+    "xss",
+    "migration",
+    "drop",
+    "alter",
+    "production",
     # Spanish
-    "autenticar", "contrasena", "secreto", "pago", "seguridad",
-    "vulnerabilidad", "produccion",
+    "autenticar",
+    "contrasena",
+    "secreto",
+    "pago",
+    "seguridad",
+    "vulnerabilidad",
+    "produccion",
 ]
 
 MODERATE_KEYWORDS = [
-    "database", "db", "sql", "api", "config", "settings",
-    "deploy", "server", "endpoint", "webhook",
+    "database",
+    "db",
+    "sql",
+    "api",
+    "config",
+    "settings",
+    "deploy",
+    "server",
+    "endpoint",
+    "webhook",
     # Spanish
-    "base de datos", "configuracion", "desplegar", "servidor",
+    "base de datos",
+    "configuracion",
+    "desplegar",
+    "servidor",
 ]
 
 # Operation → baseline criticality
 OP_CRITICALITY = {
-    "CREATE": 2, "REFACTOR": 2, "DELETE": 3, "SEARCH": 1,
-    "ANALYZE": 1, "EXPLAIN": 1, "DEBUG": 2, "OPTIMIZE": 2,
+    "CREATE": 2,
+    "REFACTOR": 2,
+    "DELETE": 3,
+    "SEARCH": 1,
+    "ANALYZE": 1,
+    "EXPLAIN": 1,
+    "DEBUG": 2,
+    "OPTIMIZE": 2,
 }
 
 # Goal → baseline criticality
 GOAL_CRITICALITY = {
-    "COMPLEXITY_REDUCTION": 1, "MODERN_PATTERN": 1, "BUG_FIX": 2,
-    "FEATURE_ADD": 2, "SECURITY_HARDEN": 3, "PERFORMANCE": 2, "READABILITY": 1,
+    "COMPLEXITY_REDUCTION": 1,
+    "MODERN_PATTERN": 1,
+    "BUG_FIX": 2,
+    "FEATURE_ADD": 2,
+    "SECURITY_HARDEN": 3,
+    "PERFORMANCE": 2,
+    "READABILITY": 1,
 }
 
 # UI/Visual keywords → force Level 1
 VISUAL_KEYWORDS = [
-    "ui", "ux", "frontend", "css", "html", "design", "layout", "style",
-    "button", "form", "modal", "dialog", "responsive", "animation",
-    "interfaz", "diseno", "estilo", "boton", "formulario",
+    "ui",
+    "ux",
+    "frontend",
+    "css",
+    "html",
+    "design",
+    "layout",
+    "style",
+    "button",
+    "form",
+    "modal",
+    "dialog",
+    "responsive",
+    "animation",
+    "interfaz",
+    "diseno",
+    "estilo",
+    "boton",
+    "formulario",
 ]
 
 # Signal weights
@@ -148,7 +209,7 @@ class CriticalityScorer(BaseAgent[CriticalityResult]):
             level=level,
             path=path,
             reason=f"Weighted fusion: kw={kw_signal:.1f} base={baseline_signal:.1f} "
-                   f"imp={importance_signal:.1f} router={router_signal:.1f} hist={history_signal:.1f}",
+            f"imp={importance_signal:.1f} router={router_signal:.1f} hist={history_signal:.1f}",
             confidence=round(confidence, 2),
             adjustments=adjustments,
             source="deterministic",

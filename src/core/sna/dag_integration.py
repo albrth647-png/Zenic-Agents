@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .types import Alert, MonitorResult
 from .alert_manager import AlertManager
+from .types import Alert, MonitorResult
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  REFLEX ARC REGISTRY
 # ──────────────────────────────────────────────────────────────
+
 
 class ReflexArc:
     """A reflex arc defines an automatic, immediate response to a
@@ -42,14 +43,14 @@ class ReflexArc:
         self,
         monitor_id: str,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         max_per_hour: int = 5,
     ) -> None:
         self.monitor_id = monitor_id
         self.action_type = action_type
         self.action_config = action_config
         self.max_per_hour = max_per_hour
-        self._trigger_times: List[float] = []
+        self._trigger_times: list[float] = []
 
     def should_fire(self, result: MonitorResult) -> bool:
         """Check if this reflex arc should fire for the given result."""
@@ -65,7 +66,7 @@ class ReflexArc:
         self._trigger_times.append(now)
         return True
 
-    def get_dispatch_dict(self) -> Dict[str, Any]:
+    def get_dispatch_dict(self) -> dict[str, Any]:
         """Get the dispatch action dict for this reflex arc."""
         return {
             "type": self.action_type,
@@ -77,6 +78,7 @@ class ReflexArc:
 # ──────────────────────────────────────────────────────────────
 #  SNA → DAG BRIDGE
 # ──────────────────────────────────────────────────────────────
+
 
 class SNADagBridge:
     """Bridges SNA alerts to the DAG/Executor pipeline.
@@ -94,9 +96,9 @@ class SNADagBridge:
     Both modes use the ActionDispatcher for execution consistency.
     """
 
-    def __init__(self, alert_manager: Optional[AlertManager] = None) -> None:
+    def __init__(self, alert_manager: AlertManager | None = None) -> None:
         self._alert_manager = alert_manager or AlertManager()
-        self._reflex_arcs: Dict[str, ReflexArc] = {}
+        self._reflex_arcs: dict[str, ReflexArc] = {}
         self._dispatcher = None
         self._stats = {
             "full_pipeline_dispatches": 0,
@@ -116,7 +118,8 @@ class SNADagBridge:
         self._reflex_arcs[arc.monitor_id] = arc
         logger.info(
             "SNADagBridge: Registered reflex arc for %s → %s",
-            arc.monitor_id, arc.action_type,
+            arc.monitor_id,
+            arc.action_type,
         )
 
     def unregister_reflex_arc(self, monitor_id: str) -> None:
@@ -125,7 +128,7 @@ class SNADagBridge:
 
     # ── Dispatch Methods ───────────────────────────────────
 
-    async def dispatch_alert(self, alert: Alert) -> Dict[str, Any]:
+    async def dispatch_alert(self, alert: Alert) -> dict[str, Any]:
         """Dispatch an alert through the full DAG pipeline.
 
         This is the primary dispatch method. It creates a DispatchRequest
@@ -137,7 +140,8 @@ class SNADagBridge:
         """
         if not alert.dispatch_actions:
             logger.debug(
-                "SNADagBridge: Alert %s has no dispatch_actions", alert.alert_id,
+                "SNADagBridge: Alert %s has no dispatch_actions",
+                alert.alert_id,
             )
             return {"status": "no_actions", "alert_id": alert.alert_id}
 
@@ -166,35 +170,44 @@ class SNADagBridge:
 
                 if self._dispatcher:
                     result = await self._dispatcher.dispatch(request)
-                    results.append({
-                        "action_type": request.action_type,
-                        "success": result.success,
-                        "safety_verdict": result.safety_verdict.value,
-                        "duration_ms": result.total_duration_ms,
-                    })
+                    results.append(
+                        {
+                            "action_type": request.action_type,
+                            "success": result.success,
+                            "safety_verdict": result.safety_verdict.value,
+                            "duration_ms": result.total_duration_ms,
+                        }
+                    )
                 else:
                     # No dispatcher: try direct executor execution
                     exec_result = await self._direct_execute(
-                        request.action_type, request.config, request.context,
+                        request.action_type,
+                        request.config,
+                        request.context,
                     )
-                    results.append({
-                        "action_type": request.action_type,
-                        "success": exec_result.get("success", False),
-                        "fallback": True,
-                    })
+                    results.append(
+                        {
+                            "action_type": request.action_type,
+                            "success": exec_result.get("success", False),
+                            "fallback": True,
+                        }
+                    )
 
                 self._stats["full_pipeline_dispatches"] += 1
 
             except Exception as e:
                 self._stats["dispatch_errors"] += 1
-                results.append({
-                    "action_type": action.get("type", ""),
-                    "success": False,
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "action_type": action.get("type", ""),
+                        "success": False,
+                        "error": str(e),
+                    }
+                )
                 logger.error(
                     "SNADagBridge: Dispatch failed for alert %s: %s",
-                    alert.alert_id, e,
+                    alert.alert_id,
+                    e,
                 )
 
         # Update alert status
@@ -210,7 +223,7 @@ class SNADagBridge:
             "results": results,
         }
 
-    async def check_reflex_arcs(self, result: MonitorResult) -> List[Dict[str, Any]]:
+    async def check_reflex_arcs(self, result: MonitorResult) -> list[dict[str, Any]]:
         """Check and fire any matching reflex arcs for a monitor result.
 
         Returns list of dispatch results from fired arcs.
@@ -227,41 +240,49 @@ class SNADagBridge:
         dispatch = arc.get_dispatch_dict()
         try:
             exec_result = await self._direct_execute(
-                dispatch["type"], dispatch["config"], dispatch["context"],
+                dispatch["type"],
+                dispatch["config"],
+                dispatch["context"],
             )
             self._stats["reflex_arc_dispatches"] += 1
             logger.info(
                 "SNADagBridge: Reflex arc fired for %s → %s",
-                result.monitor_id, arc.action_type,
+                result.monitor_id,
+                arc.action_type,
             )
-            return [{
-                "type": "reflex",
-                "monitor_id": result.monitor_id,
-                "action_type": arc.action_type,
-                "success": exec_result.get("success", False),
-                "duration_ms": exec_result.get("duration_ms", 0),
-            }]
+            return [
+                {
+                    "type": "reflex",
+                    "monitor_id": result.monitor_id,
+                    "action_type": arc.action_type,
+                    "success": exec_result.get("success", False),
+                    "duration_ms": exec_result.get("duration_ms", 0),
+                }
+            ]
         except Exception as e:
             self._stats["dispatch_errors"] += 1
             logger.error(
                 "SNADagBridge: Reflex arc failed for %s: %s",
-                result.monitor_id, e,
+                result.monitor_id,
+                e,
             )
-            return [{
-                "type": "reflex",
-                "monitor_id": result.monitor_id,
-                "success": False,
-                "error": str(e),
-            }]
+            return [
+                {
+                    "type": "reflex",
+                    "monitor_id": result.monitor_id,
+                    "success": False,
+                    "error": str(e),
+                }
+            ]
 
     # ── Direct Execution (fallback) ────────────────────────
 
     async def _direct_execute(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute an action directly via ExecutorRegistry.
 
         Used when no ActionDispatcher is configured, or for
@@ -269,6 +290,7 @@ class SNADagBridge:
         """
         try:
             from src.core.executors.base import get_default_registry
+
             registry = get_default_registry()
             result = await registry.execute_action(action_type, config, context)
             return {
@@ -285,33 +307,37 @@ class SNADagBridge:
     def register_default_reflex_arcs(self) -> None:
         """Register built-in reflex arcs for system-critical monitors."""
         # Disk space critical → log emergency warning + notify
-        self.register_reflex_arc(ReflexArc(
-            monitor_id="disk_space",
-            action_type="notification",
-            action_config={
-                "channel": "log",
-                "message": "ALERTA CRITICA: Espacio en disco muy bajo!",
-                "subject": "[SNA-CRITICAL] Disco Lleno",
-            },
-            max_per_hour=2,
-        ))
+        self.register_reflex_arc(
+            ReflexArc(
+                monitor_id="disk_space",
+                action_type="notification",
+                action_config={
+                    "channel": "log",
+                    "message": "ALERTA CRITICA: Espacio en disco muy bajo!",
+                    "subject": "[SNA-CRITICAL] Disco Lleno",
+                },
+                max_per_hour=2,
+            )
+        )
 
         # System health critical → log emergency
-        self.register_reflex_arc(ReflexArc(
-            monitor_id="system_health",
-            action_type="notification",
-            action_config={
-                "channel": "log",
-                "message": "ALERTA CRITICA: Recursos del sistema agotados!",
-                "subject": "[SNA-CRITICAL] Recursos Criticos",
-            },
-            max_per_hour=2,
-        ))
+        self.register_reflex_arc(
+            ReflexArc(
+                monitor_id="system_health",
+                action_type="notification",
+                action_config={
+                    "channel": "log",
+                    "message": "ALERTA CRITICA: Recursos del sistema agotados!",
+                    "subject": "[SNA-CRITICAL] Recursos Criticos",
+                },
+                max_per_hour=2,
+            )
+        )
 
     # ── Statistics ─────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get bridge statistics."""
         return {
             **self._stats,

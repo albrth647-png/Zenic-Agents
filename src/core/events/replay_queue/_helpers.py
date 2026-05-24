@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-import sqlite3
-from ._types import DeadLetterEvent
-
 import logging
+import sqlite3
+
+from ._types import DeadLetterEvent
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,8 @@ def _load_from_db(self) -> None:
         conn.close()
     logger.info(
         "ReplayQueue: loaded %d events from %s",
-        len(self._events), self._db_path,
+        len(self._events),
+        self._db_path,
     )
 
 
@@ -108,6 +109,7 @@ def _delete_event(self, dlq_id: str) -> None:
         conn.commit()
     finally:
         conn.close()
+
 
 # ── Enqueue ─────────────────────────────────────────────────
 __all__ = ["_delete_event", "_init_db", "_load_from_db", "_persist_event", "logger"]

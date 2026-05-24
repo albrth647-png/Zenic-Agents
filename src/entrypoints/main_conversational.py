@@ -10,28 +10,23 @@ Uso:
   python3 main_conversational.py --debug            # Modo debug
 """
 
-import sys
-import logging
 import argparse
+import logging
+import sys
 
 from src.core.env_loader import load_env
+
 load_env()
 
 from src.core.shared._version import ZENIC_VERSION_STR  # noqa: E402
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-    datefmt='%H:%M:%S'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("ZENIC.CONVERSATIONAL")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description=f"ZENIC-AGENTS {ZENIC_VERSION_STR} - Conversational Assistant (Local)"
-    )
-    parser.add_argument('--debug', action='store_true', help='Modo debug')
+    parser = argparse.ArgumentParser(description=f"ZENIC-AGENTS {ZENIC_VERSION_STR} - Conversational Assistant (Local)")
+    parser.add_argument("--debug", action="store_true", help="Modo debug")
     args = parser.parse_args()
 
     if args.debug:
@@ -41,6 +36,7 @@ def main() -> None:
     engine = None
     try:
         from src.core.conversational import ConversationEngine
+
         engine = ConversationEngine()
         logger.info("ConversationEngine initialized")
     except Exception as e:
@@ -51,6 +47,7 @@ def main() -> None:
     if engine is None:
         try:
             from src.core.orchestrator import ZenicOrchestrator
+
             engine = ZenicOrchestrator()
             logger.info("Using ZenicOrchestrator as fallback")
         except Exception as e:
@@ -67,6 +64,7 @@ def main() -> None:
 
     # Interactive loop
     import asyncio
+
     while True:
         try:
             user_input = input("zenic-chat> ").strip()
@@ -80,23 +78,23 @@ def main() -> None:
 
         try:
             loop = asyncio.new_event_loop()
-            if hasattr(engine, 'execute'):
+            if hasattr(engine, "execute"):
                 result = loop.run_until_complete(engine.execute(user_input))
-            elif hasattr(engine, 'process'):
+            elif hasattr(engine, "process"):
                 result = loop.run_until_complete(engine.process(user_input))
             else:
                 result = {"error": "Engine has no execute/process method"}
             loop.close()
 
             if isinstance(result, dict):
-                if result.get('error'):
+                if result.get("error"):
                     print(f"  ❌ {result['error']}")
-                elif result.get('response'):
+                elif result.get("response"):
                     print(f"  {result['response']}")
-                elif result.get('code'):
+                elif result.get("code"):
                     print(f"  Code:\n{result['code']}")
-                elif result.get('explanations'):
-                    for exp in result['explanations']:
+                elif result.get("explanations"):
+                    for exp in result["explanations"]:
                         print(f"  {exp}")
                 else:
                     print(f"  {result}")

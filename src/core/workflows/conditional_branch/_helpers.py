@@ -45,8 +45,7 @@ def _resolve_context_path(context: dict[str, Any], path: str) -> Any:
 
 def _parse_value(raw: str) -> Any:
     """Parse a raw token value into a Python object."""
-    if (raw.startswith("'") and raw.endswith("'")) or \
-       (raw.startswith('"') and raw.endswith('"')):
+    if (raw.startswith("'") and raw.endswith("'")) or (raw.startswith('"') and raw.endswith('"')):
         return raw[1:-1]
     if raw == "True":
         return True
@@ -258,4 +257,6 @@ def safe_evaluate(expression: str, context: dict[str, Any]) -> bool:
     except (SyntaxError, IndexError, ValueError) as exc:
         logger.warning("Failed to evaluate expression '%s': %s — defaulting to False", expression, exc)
         return False
+
+
 __all__ = ["_ExpressionEvaluator", "_parse_value", "_resolve_context_path", "_tokenize", "logger", "safe_evaluate"]

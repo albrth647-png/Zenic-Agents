@@ -22,19 +22,20 @@ import secrets
 import sqlite3
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Protocol
+from typing import Any, Protocol
 
-from .base import BaseFlow, FlowContext
 from ..validators.activation_key import (
-    validate_activation_key,
     ActivationKey,
     generate_confirmation_code,
+    validate_activation_key,
 )
+from .base import BaseFlow, FlowContext
 
 logger = logging.getLogger(__name__)
 
 
 # ── Activation Result ────────────────────────────────────────
+
 
 @dataclass
 class ActivationResult:
@@ -51,6 +52,7 @@ class ActivationResult:
         activated_at: Timestamp of activation.
         activation_method: How the activation was performed (online/offline).
     """
+
     activated: bool = False
     license_id: str = ""
     activation_key: str = ""
@@ -61,7 +63,7 @@ class ActivationResult:
     activated_at: float = 0.0
     activation_method: str = "offline"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "activated": self.activated,
@@ -77,6 +79,7 @@ class ActivationResult:
 
 
 # ── Activation Strategy Protocol ─────────────────────────────
+
 
 class ActivationStrategy(Protocol):
     """Protocol for activation strategies.
@@ -178,9 +181,18 @@ class OfflineActivationStrategy:
             "(license_id, activation_key, confirmation_code, tier, device_id, "
             "username, expires_at, activated_at, activation_method, metadata) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (license_id, key.upper().strip(), conf_code, tier, device_id,
-             username, expires_at, now, "offline",
-             json.dumps({"key_masked": key_obj.masked() if 'key_obj' in dir() else key[:20]})),
+            (
+                license_id,
+                key.upper().strip(),
+                conf_code,
+                tier,
+                device_id,
+                username,
+                expires_at,
+                now,
+                "offline",
+                json.dumps({"key_masked": key_obj.masked() if "key_obj" in dir() else key[:20]}),
+            ),
         )
         conn.commit()
         conn.close()
@@ -211,8 +223,7 @@ class OnlineActivationStrategy:
 
     FIREBASE_TIMEOUT: float = 30.0  # seconds to wait for admin response
 
-    def __init__(self, firebase_url: Optional[str] = None,
-                 firebase_key: Optional[str] = None) -> None:
+    def __init__(self, firebase_url: str | None = None, firebase_key: str | None = None) -> None:
         self._firebase_url = firebase_url or os.environ.get("ZENIC_FIREBASE_URL", "")
         self._firebase_key = firebase_key or os.environ.get("ZENIC_FIREBASE_KEY", "")
         self._offline = OfflineActivationStrategy()
@@ -234,20 +245,24 @@ class OnlineActivationStrategy:
         try:
             # Post activation request
             import urllib.request
-            request_data = json.dumps({
-                "activation_key": key,
-                "device_id": device_id,
-                "username": username,
-                "timestamp": time.time(),
-                "nonce": secrets.token_hex(8),
-            }).encode()
+
+            request_data = json.dumps(
+                {
+                    "activation_key": key,
+                    "device_id": device_id,
+                    "username": username,
+                    "timestamp": time.time(),
+                    "nonce": secrets.token_hex(8),
+                }
+            ).encode()
 
             url = f"{self._firebase_url}/activation_requests.json"
             if self._firebase_key:
                 url += f"?auth={self._firebase_key}"
 
             req = urllib.request.Request(
-                url, data=request_data,
+                url,
+                data=request_data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
@@ -274,6 +289,7 @@ class OnlineActivationStrategy:
 
 # ── Activation Flow ──────────────────────────────────────────
 
+
 class ActivationFlow(BaseFlow):
     """End-user license activation flow.
 
@@ -291,7 +307,7 @@ class ActivationFlow(BaseFlow):
     description = "Activate your Zenic-Agents license with an activation key"
     version = "1.0.0"
 
-    def __init__(self, strategy: Optional[ActivationStrategy] = None) -> None:
+    def __init__(self, strategy: ActivationStrategy | None = None) -> None:
         super().__init__()
         if strategy is not None:
             self._strategy = strategy
@@ -321,6 +337,7 @@ class ActivationFlow(BaseFlow):
         device_id = ""
         try:
             from src.core.license.license_parts.hw_binding import get_hardware_fingerprint
+
             device_id = get_hardware_fingerprint()
         except ImportError:
             device_id = hashlib.sha256(f"device:{time.time()}".encode()).hexdigest()[:32]
@@ -342,8 +359,11 @@ class ActivationFlow(BaseFlow):
         # Also try to register with LicenseManager
         try:
             from src.core.license import (
-                LicenseTier, HardwareBindingStrength, get_license_manager,
+                HardwareBindingStrength,
+                LicenseTier,
+                get_license_manager,
             )
+
             manager = get_license_manager()
             tier_map = {
                 "starter": LicenseTier.STARTER,
@@ -369,7 +389,8 @@ class ActivationFlow(BaseFlow):
 
         logger.info(
             "ActivationFlow: Key activated → %s (tier=%s, method=%s)",
-            activation_result.license_id, activation_result.tier,
+            activation_result.license_id,
+            activation_result.tier,
             activation_result.activation_method,
         )
 

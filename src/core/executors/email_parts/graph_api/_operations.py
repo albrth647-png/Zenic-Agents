@@ -12,13 +12,13 @@ import logging
 import os
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..oauth2 import OAuth2TokenManager, config_from_env
 from ._types import (
+    _DEFAULT_SCOPES,
     _HAS_AIOHTTP,
     _MAX_ATTACHMENT_SIZE_INLINE,
-    _DEFAULT_SCOPES,
 )
 
 logger = logging.getLogger("zenic_agents.email_parts.graph_api")
@@ -26,18 +26,19 @@ logger = logging.getLogger("zenic_agents.email_parts.graph_api")
 
 # ── Payload Construction ─────────────────────────────────────────
 
+
 def build_payload(
-    to: List[str],
+    to: list[str],
     subject: str,
     body: str,
     html: str,
-    cc: List[str],
-    bcc: List[str],
+    cc: list[str],
+    bcc: list[str],
     sender: str,
-    reply_to: List[str],
+    reply_to: list[str],
     importance: str,
-    attachments: List[Dict[str, Any]],
-) -> Dict[str, Any]:
+    attachments: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Build the Graph API sendMail request payload.
 
     Args:
@@ -64,11 +65,9 @@ def build_payload(
         content = body or " "
 
     # Recipients
-    to_recipients = [
-        {"emailAddress": {"address": addr}} for addr in to if addr
-    ]
+    to_recipients = [{"emailAddress": {"address": addr}} for addr in to if addr]
 
-    message: Dict[str, Any] = {
+    message: dict[str, Any] = {
         "subject": subject,
         "body": {
             "contentType": content_type,
@@ -80,21 +79,15 @@ def build_payload(
 
     # CC
     if cc:
-        message["ccRecipients"] = [
-            {"emailAddress": {"address": addr}} for addr in cc if addr
-        ]
+        message["ccRecipients"] = [{"emailAddress": {"address": addr}} for addr in cc if addr]
 
     # BCC
     if bcc:
-        message["bccRecipients"] = [
-            {"emailAddress": {"address": addr}} for addr in bcc if addr
-        ]
+        message["bccRecipients"] = [{"emailAddress": {"address": addr}} for addr in bcc if addr]
 
     # Reply-to
     if reply_to:
-        message["replyTo"] = [
-            {"emailAddress": {"address": addr}} for addr in reply_to if addr
-        ]
+        message["replyTo"] = [{"emailAddress": {"address": addr}} for addr in reply_to if addr]
 
     # From
     if sender:
@@ -112,17 +105,19 @@ def build_payload(
                 else:
                     b64_content = str(content_bytes)
 
-                inline_attachments.append({
-                    "@odata.type": "#microsoft.graph.fileAttachment",
-                    "name": att.get("name", "attachment"),
-                    "contentType": att.get("content_type", "application/octet-stream"),
-                    "contentBytes": b64_content,
-                })
+                inline_attachments.append(
+                    {
+                        "@odata.type": "#microsoft.graph.fileAttachment",
+                        "name": att.get("name", "attachment"),
+                        "contentType": att.get("content_type", "application/octet-stream"),
+                        "contentBytes": b64_content,
+                    }
+                )
         if inline_attachments:
             message["attachments"] = inline_attachments
 
     # Wrap in sendMail envelope
-    payload: Dict[str, Any] = {"message": message}
+    payload: dict[str, Any] = {"message": message}
     if sender:
         payload["saveToSentItems"] = True
 
@@ -131,13 +126,14 @@ def build_payload(
 
 # ── Dry Run ──────────────────────────────────────────────────────
 
+
 def dry_run_response(
-    to: List[str],
+    to: list[str],
     subject: str,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     reason: str,
     dry_run_count_ref: list,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a dry-run response (not actually sent).
 
     Args:
@@ -155,7 +151,9 @@ def dry_run_response(
 
     logger.info(
         "GraphAPIEmailProvider: Dry-run send (reason=%s) to=%s subject='%s'",
-        reason, to, subject[:50],
+        reason,
+        to,
+        subject[:50],
     )
 
     return {
@@ -171,6 +169,7 @@ def dry_run_response(
 
 # ── Configuration ────────────────────────────────────────────────
 
+
 def auto_configure(
     service_name: str,
     from_email_ref: list,
@@ -185,6 +184,7 @@ def auto_configure(
         Configured OAuth2TokenManager instance.
     """
     from ..oauth2 import get_default_token_manager
+
     manager = get_default_token_manager()
 
     # Check if msgraph is already registered (get_default_token_manager auto-registers)
@@ -223,19 +223,20 @@ def is_configured(
 
 # ── Main Send Flow ───────────────────────────────────────────────
 
+
 async def send_email(
     provider: Any,
-    to: List[str],
+    to: list[str],
     subject: str,
     body: str = "",
     html: str = "",
-    cc: Optional[List[str]] = None,
-    bcc: Optional[List[str]] = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
     from_email: str = "",
-    attachments: Optional[List[Dict[str, Any]]] = None,
-    reply_to: Optional[List[str]] = None,
+    attachments: list[dict[str, Any]] | None = None,
+    reply_to: list[str] | None = None,
     importance: str = "normal",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Send an email via Microsoft Graph API.
 
     Orchestrates the full send flow: validation, payload construction,
@@ -286,14 +287,18 @@ async def send_email(
     # Check for dry-run conditions
     if not provider._is_configured():
         return dry_run_response(
-            to=to, subject=subject, payload=payload,
+            to=to,
+            subject=subject,
+            payload=payload,
             reason="service_not_configured",
             dry_run_count_ref=provider._dry_run_count_ref,
         )
 
     if not _HAS_AIOHTTP:
         return dry_run_response(
-            to=to, subject=subject, payload=payload,
+            to=to,
+            subject=subject,
+            payload=payload,
             reason="aiohttp_not_available",
             dry_run_count_ref=provider._dry_run_count_ref,
         )

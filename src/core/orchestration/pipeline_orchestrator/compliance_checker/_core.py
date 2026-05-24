@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import time
+from typing import Any
+
 from ._types import ComplianceResult, ComplianceRule, ComplianceStandard, ComplianceViolation, logger
 
-import time
-from typing import Any, Dict, List, Optional, Set
+
 class ComplianceChecker:
     """
     Compliance verification for pipeline orchestration.
@@ -39,9 +41,9 @@ class ComplianceChecker:
     """
 
     def __init__(self) -> None:
-        self._rules: Dict[str, ComplianceRule] = {}
-        self._rules_by_standard: Dict[ComplianceStandard, List[str]] = {}
-        self._audit_trail: List[ComplianceResult] = []
+        self._rules: dict[str, ComplianceRule] = {}
+        self._rules_by_standard: dict[ComplianceStandard, list[str]] = {}
+        self._audit_trail: list[ComplianceResult] = []
 
     # ── Rule Management ──────────────────────────────────────
 
@@ -58,7 +60,8 @@ class ComplianceChecker:
         self._rules_by_standard[rule.standard].append(rule.rule_id)
         logger.debug(
             "ComplianceChecker: Added rule '%s' (%s)",
-            rule.rule_id, rule.standard.value,
+            rule.rule_id,
+            rule.standard.value,
         )
 
     def remove_rule(self, rule_id: str) -> bool:
@@ -82,16 +85,14 @@ class ComplianceChecker:
         self._install_sox_rules()
         self._install_iso27001_rules()
         self._install_nist_rules()
-        logger.info(
-            "ComplianceChecker: Installed %d default rules", len(self._rules)
-        )
+        logger.info("ComplianceChecker: Installed %d default rules", len(self._rules))
 
     # ── Compliance Checking ──────────────────────────────────
 
     def check(
         self,
         standard: ComplianceStandard,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> ComplianceResult:
         """
         Check compliance against a specific standard.
@@ -105,8 +106,8 @@ class ComplianceChecker:
         """
         start = time.monotonic()
         rule_ids = self._rules_by_standard.get(standard, [])
-        violations: List[ComplianceViolation] = []
-        warnings: List[str] = []
+        violations: list[ComplianceViolation] = []
+        warnings: list[str] = []
 
         if not rule_ids:
             warnings.append(f"No rules registered for standard '{standard.value}'")
@@ -132,15 +133,17 @@ class ComplianceChecker:
         logger.info(
             "ComplianceChecker: %s (standard=%s, violations=%d, %.1fms)",
             "PASS" if result.compliant else "FAIL",
-            standard.value, len(violations), elapsed,
+            standard.value,
+            len(violations),
+            elapsed,
         )
         return result
 
     def check_all(
         self,
-        context: Dict[str, Any],
-        standards: Optional[List[ComplianceStandard]] = None,
-    ) -> Dict[ComplianceStandard, ComplianceResult]:
+        context: dict[str, Any],
+        standards: list[ComplianceStandard] | None = None,
+    ) -> dict[ComplianceStandard, ComplianceResult]:
         """
         Check compliance against multiple standards.
 
@@ -154,16 +157,16 @@ class ComplianceChecker:
         if standards is None:
             standards = list(self._rules_by_standard.keys())
 
-        results: Dict[ComplianceStandard, ComplianceResult] = {}
+        results: dict[ComplianceStandard, ComplianceResult] = {}
         for std in standards:
             results[std] = self.check(std, context)
         return results
 
     def check_pipeline(
         self,
-        pipeline_context: Dict[str, Any],
-        required_standards: Optional[List[ComplianceStandard]] = None,
-    ) -> Dict[ComplianceStandard, ComplianceResult]:
+        pipeline_context: dict[str, Any],
+        required_standards: list[ComplianceStandard] | None = None,
+    ) -> dict[ComplianceStandard, ComplianceResult]:
         """
         Check pipeline-level compliance.
 
@@ -184,7 +187,7 @@ class ComplianceChecker:
     # ── Built-in Rule Installers ─────────────────────────────
 
     @property
-    def registered_standards(self) -> Set[ComplianceStandard]:
+    def registered_standards(self) -> set[ComplianceStandard]:
         """Set of standards with registered rules."""
         return set(self._rules_by_standard.keys())
 
@@ -194,17 +197,14 @@ class ComplianceChecker:
         return len(self._rules)
 
     @property
-    def audit_trail(self) -> List[ComplianceResult]:
+    def audit_trail(self) -> list[ComplianceResult]:
         """Compliance check audit trail."""
         return list(self._audit_trail)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
-        std_counts = {
-            std.value: len(rules)
-            for std, rules in self._rules_by_standard.items()
-        }
+        std_counts = {std.value: len(rules) for std, rules in self._rules_by_standard.items()}
         return {
             "total_rules": len(self._rules),
             "standards": std_counts,
@@ -218,7 +218,4 @@ class ComplianceChecker:
         self._audit_trail.clear()
 
     def __repr__(self) -> str:
-        return (
-            f"ComplianceChecker(rules={self.rule_count}, "
-            f"standards={len(self._rules_by_standard)})"
-        )
+        return f"ComplianceChecker(rules={self.rule_count}, " f"standards={len(self._rules_by_standard)})"

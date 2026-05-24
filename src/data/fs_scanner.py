@@ -11,13 +11,13 @@ El SNA usa esto para detectar problemas ANTES de que el usuario los reporte.
 
 from __future__ import annotations
 
-import os
 import json
 import logging
+import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Any
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,9 @@ class FileSystemScanner:
         """Uso de disco del path base."""
         try:
             usage = shutil.disk_usage(str(self.base_path))
-            total_gb = usage.total / (1024 ** 3)
-            used_gb = usage.used / (1024 ** 3)
-            free_gb = usage.free / (1024 ** 3)
+            total_gb = usage.total / (1024**3)
+            used_gb = usage.used / (1024**3)
+            free_gb = usage.free / (1024**3)
             percent = (usage.used / usage.total) * 100 if usage.total > 0 else 0
             return {
                 "total_gb": round(total_gb, 2),
@@ -139,7 +139,9 @@ class FileSystemScanner:
 
             if age_hours > max_age_days * 24:
                 result["status"] = "outdated"
-                result["recommendation"] = f"Último backup tiene {age_hours:.0f} horas. Recomendado: cada {max_age_days * 24}h"
+                result["recommendation"] = (
+                    f"Último backup tiene {age_hours:.0f} horas. Recomendado: cada {max_age_days * 24}h"
+                )
             else:
                 result["status"] = "ok"
 
@@ -251,11 +253,13 @@ class FileSystemScanner:
                     mtime = datetime.fromtimestamp(f.stat().st_mtime)
                     age_hours = (now - mtime).total_seconds() / 3600
                     if age_hours > max_age_hours:
-                        stale_files.append({
-                            "name": f.name,
-                            "age_hours": round(age_hours, 1),
-                            "size_kb": round(f.stat().st_size / 1024, 2),
-                        })
+                        stale_files.append(
+                            {
+                                "name": f.name,
+                                "age_hours": round(age_hours, 1),
+                                "size_kb": round(f.stat().st_size / 1024, 2),
+                            }
+                        )
 
             result["stale_file_count"] = len(stale_files)
             result["stale_files"] = stale_files[:20]  # Limitar a 20
@@ -263,7 +267,9 @@ class FileSystemScanner:
 
             if stale_files:
                 total_kb = sum(sf["size_kb"] for sf in stale_files)
-                result["recommendation"] = f"{len(stale_files)} archivos temporales antiguos ({total_kb:.0f}KB). Limpiar."
+                result["recommendation"] = (
+                    f"{len(stale_files)} archivos temporales antiguos ({total_kb:.0f}KB). Limpiar."
+                )
 
         except Exception as e:
             result["status"] = "error"

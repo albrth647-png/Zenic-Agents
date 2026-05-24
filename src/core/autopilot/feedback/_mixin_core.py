@@ -1,13 +1,15 @@
 """Core logic for feedback."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class ClosedLoopFeedback:
     """Measures results and adjusts strategy for autopilot objectives.
@@ -95,7 +97,7 @@ class ClosedLoopFeedback:
         # Get KPI measurements before this cycle
         previous_cycles = self.get_cycles(objective.objective_id, limit=1)
         cycle_number = 1
-        kpi_before: Dict[str, float] = {}
+        kpi_before: dict[str, float] = {}
 
         if previous_cycles:
             last_cycle = previous_cycles[0]
@@ -104,7 +106,7 @@ class ClosedLoopFeedback:
 
         # Measure current KPIs
         measurements = kpi_tracker.measure_all_for_objective(objective)
-        kpi_after: Dict[str, float] = {}
+        kpi_after: dict[str, float] = {}
         for m in measurements:
             kpi_after[m.metric_name] = m.value
 
@@ -166,13 +168,18 @@ class ClosedLoopFeedback:
 
         logger.info(
             "ClosedLoopFeedback: Cycle %d for %s → %s (%s)",
-            cycle_number, objective.objective_id, action.value, analysis,
+            cycle_number,
+            objective.objective_id,
+            action.value,
+            analysis,
         )
         return cycle
 
     def get_cycles(
-        self, objective_id: str, limit: int = 20,
-    ) -> List[FeedbackCycle]:  # noqa: F821
+        self,
+        objective_id: str,
+        limit: int = 20,
+    ) -> list[FeedbackCycle]:  # noqa: F821
         """Get feedback cycles for an objective.
 
         Args:
@@ -185,7 +192,7 @@ class ClosedLoopFeedback:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> List[FeedbackCycle]:  # noqa: F821
+            def _fetch() -> list[FeedbackCycle]:  # noqa: F821
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -202,8 +209,9 @@ class ClosedLoopFeedback:
             return _retry_db_operation(_fetch)  # noqa: F821
 
     def get_latest_cycle(
-        self, objective_id: str,
-    ) -> Optional[FeedbackCycle]:  # noqa: F821
+        self,
+        objective_id: str,
+    ) -> FeedbackCycle | None:  # noqa: F821
         """Get the latest feedback cycle for an objective.
 
         Args:
@@ -253,10 +261,10 @@ class ClosedLoopFeedback:
     def _determine_action(
         self,
         objective_id: str,
-        kpi_before: Dict[str, float],
-        kpi_after: Dict[str, float],
+        kpi_before: dict[str, float],
+        kpi_after: dict[str, float],
         cycle_number: int,
-        targets: List[Any],
+        targets: list[Any],
     ) -> tuple:
         """Determine the feedback action based on KPI changes.
 
@@ -264,7 +272,7 @@ class ClosedLoopFeedback:
             A tuple of (FeedbackAction, analysis_string).  # noqa: F821
         """
         # Calculate per-metric improvement relative to targets
-        improvements: Dict[str, float] = {}
+        improvements: dict[str, float] = {}
         for metric, after_val in kpi_after.items():
             before_val = kpi_before.get(metric, after_val)
             # Find the target for this metric to determine direction
@@ -290,10 +298,7 @@ class ClosedLoopFeedback:
             else:
                 improvements[metric] = delta
 
-        avg_improvement = (
-            sum(improvements.values()) / len(improvements)
-            if improvements else 0.0
-        )
+        avg_improvement = sum(improvements.values()) / len(improvements) if improvements else 0.0
 
         # Check for significant worsening (> 20% regression)
         significant_worsening = False
@@ -332,8 +337,7 @@ class ClosedLoopFeedback:
         elif negative_count >= 3:
             action = FeedbackAction.ESCALATE_TO_HUMAN  # noqa: F821
             analysis = (
-                f"3+ consecutive negative cycles ({negative_count}). "
-                f"Escalating to human for manual intervention."
+                f"3+ consecutive negative cycles ({negative_count}). " f"Escalating to human for manual intervention."
             )
         elif avg_improvement < 0:
             action = FeedbackAction.CHANGE_APPROACH  # noqa: F821
@@ -344,8 +348,7 @@ class ClosedLoopFeedback:
         elif stagnant_count >= self._max_cycles_without_improvement:
             action = FeedbackAction.ADJUST_STRATEGY  # noqa: F821
             analysis = (
-                f"No improvement for {stagnant_count} consecutive cycles. "
-                f"Adjusting strategy to break plateau."
+                f"No improvement for {stagnant_count} consecutive cycles. " f"Adjusting strategy to break plateau."
             )
         elif avg_improvement > 0:
             action = FeedbackAction.CONTINUE  # noqa: F821
@@ -355,16 +358,13 @@ class ClosedLoopFeedback:
             )
         else:
             action = FeedbackAction.CONTINUE  # noqa: F821
-            analysis = (
-                f"No change detected on cycle {cycle_number}. "
-                f"Continuing to monitor."
-            )
+            analysis = f"No change detected on cycle {cycle_number}. " f"Continuing to monitor."
 
         return action, analysis
 
     @staticmethod
     def _row_to_cycle(row: sqlite3.Row) -> FeedbackCycle:  # noqa: F821
-        """Convert a database row to a FeedbackCycle instance."""  # noqa: F821
+        """Convert a database row to a FeedbackCycle instance."""
         return FeedbackCycle(  # noqa: F821
             cycle_id=row["cycle_id"],
             objective_id=row["objective_id"],
@@ -381,4 +381,3 @@ class ClosedLoopFeedback:
 # ──────────────────────────────────────────────────────────────
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
-

@@ -41,9 +41,13 @@ logger = logging.getLogger("zenic_agents.verdict_parts.resilience")
 #  VERDICT CIRCUIT BREAKER
 # ============================================================
 
+
 class VerdictCircuitState(str, Enum):
     """Estados del Circuit Breaker para veredictos."""
-    CLOSED = "closed"         # Normal: LLM se usa cuando se necesita
-    OPEN = "open"             # LLM no se llama: fallos consecutivos
-    HALF_OPEN = "half_open"   # Probando si el LLM se recuperó
+
+    CLOSED = "closed"  # Normal: LLM se usa cuando se necesita
+    OPEN = "open"  # LLM no se llama: fallos consecutivos
+    HALF_OPEN = "half_open"  # Probando si el LLM se recuperó
+
+
 __all__ = ["VerdictCircuitState", "logger"]

@@ -12,7 +12,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.core.shared.db_initializer import get_connection, get_data_dir
 
@@ -43,7 +43,7 @@ class ForensicEngine:
     Records every forensic query in its own SQLite DB for auditability.
     """
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
             db_path = str(get_data_dir() / "forensic_queries.sqlite")
         self._db_path = db_path
@@ -94,7 +94,7 @@ class ForensicEngine:
     def forensic_query(
         self,
         entity_id: str,
-        time_range: Optional[Tuple[float, float]],
+        time_range: tuple[float, float] | None,
         tenant_id: str,
     ) -> ForensicReport:
         """Query audit events + ledger entries for an entity and cross-correlate.
@@ -110,11 +110,13 @@ class ForensicEngine:
         """
         logger.info(
             "ForensicEngine: forensic_query entity=%s tenant=%s range=%s",
-            entity_id, tenant_id, time_range,
+            entity_id,
+            tenant_id,
+            time_range,
         )
 
-        audit_rows: List[Dict[str, Any]] = []
-        ledger_rows: List[Dict[str, Any]] = []
+        audit_rows: list[dict[str, Any]] = []
+        ledger_rows: list[dict[str, Any]] = []
 
         # --- Query audit events ---
         try:
@@ -160,7 +162,8 @@ class ForensicEngine:
 
         logger.info(
             "ForensicEngine: forensic_query complete — report=%s entries=%d",
-            report.report_id, len(entries),
+            report.report_id,
+            len(entries),
         )
         return report
 
@@ -179,9 +182,9 @@ class ForensicEngine:
         """
         logger.info("ForensicEngine: verify_chain tenant=%s", tenant_id)
 
-        ledger_rows: List[Dict[str, Any]] = []
+        ledger_rows: list[dict[str, Any]] = []
 
-        def _load() -> List[Dict[str, Any]]:
+        def _load() -> list[dict[str, Any]]:
             conn = get_connection("merkle_ledger.sqlite")
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT id, file_path, hash_sha256, parent_hash, operation, timestamp "
@@ -218,7 +221,9 @@ class ForensicEngine:
 
         logger.info(
             "ForensicEngine: verify_chain complete — valid=%s total=%d broken=%d",
-            result.is_valid, result.total_entries, len(result.broken_links),
+            result.is_valid,
+            result.total_entries,
+            len(result.broken_links),
         )
         return result
 
@@ -241,11 +246,12 @@ class ForensicEngine:
         """
         logger.info(
             "ForensicEngine: export_evidence_bundle entity=%s tenant=%s",
-            entity_id, tenant_id,
+            entity_id,
+            tenant_id,
         )
 
         # Gather audit events
-        audit_events: List[Dict[str, Any]] = []
+        audit_events: list[dict[str, Any]] = []
         try:
             audit_events = retry(
                 lambda: load_audit_events(entity_id, tenant_id),
@@ -255,7 +261,7 @@ class ForensicEngine:
             logger.error("ForensicEngine: export audit load failed: %s", exc)
 
         # Gather ledger entries
-        ledger_entries: List[Dict[str, Any]] = []
+        ledger_entries: list[dict[str, Any]] = []
         try:
             ledger_entries = retry(
                 lambda: load_ledger_entries(entity_id, tenant_id),
@@ -314,7 +320,7 @@ class ForensicEngine:
         query_type: str,
         entity_id: str,
         tenant_id: str,
-        time_range: Optional[Tuple[float, float]],
+        time_range: tuple[float, float] | None,
         result_summary: str,
     ) -> None:
         """Persist a record of a forensic query to SQLite."""
@@ -351,11 +357,11 @@ class ForensicEngine:
 
 # ── Singleton ────────────────────────────────────────────────
 
-_forensic_engine_instance: Optional[ForensicEngine] = None
+_forensic_engine_instance: ForensicEngine | None = None
 _forensic_engine_lock = threading.Lock()
 
 
-def get_forensic_engine(db_path: Optional[str] = None) -> ForensicEngine:
+def get_forensic_engine(db_path: str | None = None) -> ForensicEngine:
     """Get or create the singleton ForensicEngine.
 
     Args:

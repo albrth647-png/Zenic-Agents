@@ -1,10 +1,10 @@
 """Verdict Resilience - Orchestrator."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ._circuit_breaker import VerdictCircuitBreaker, VerdictRetryConfig, VerdictHealthSnapshot
-from ._health_audit import VerdictHealthMonitor, VerdictAuditor, VerdictAuditEntry
+from ._circuit_breaker import VerdictCircuitBreaker, VerdictHealthSnapshot, VerdictRetryConfig
+from ._health_audit import VerdictAuditEntry, VerdictAuditor, VerdictHealthMonitor
 
 logger = logging.getLogger("zenic_agents.verdict_parts.resilience")
 
@@ -33,10 +33,10 @@ class VerdictResilienceOrchestrator:
 
     def __init__(
         self,
-        circuit_breaker: Optional[VerdictCircuitBreaker] = None,
-        health_monitor: Optional[VerdictHealthMonitor] = None,
-        auditor: Optional[VerdictAuditor] = None,
-        retry_config: Optional[VerdictRetryConfig] = None,
+        circuit_breaker: VerdictCircuitBreaker | None = None,
+        health_monitor: VerdictHealthMonitor | None = None,
+        auditor: VerdictAuditor | None = None,
+        retry_config: VerdictRetryConfig | None = None,
     ):
         self.circuit_breaker = circuit_breaker or VerdictCircuitBreaker()
         self.health_monitor = health_monitor or VerdictHealthMonitor()
@@ -70,17 +70,13 @@ class VerdictResilienceOrchestrator:
     def record_success(self, latency_s: float, was_ambiguous: bool = False) -> None:
         """Record a successful LLM verdict call."""
         self.circuit_breaker.record_success()
-        self.health_monitor.record_call(
-            success=True, latency_s=latency_s, was_ambiguous=was_ambiguous
-        )
+        self.health_monitor.record_call(success=True, latency_s=latency_s, was_ambiguous=was_ambiguous)
 
-    def record_failure(self, latency_s: float, was_timeout: bool = False,
-                       was_ambiguous: bool = False) -> None:
+    def record_failure(self, latency_s: float, was_timeout: bool = False, was_ambiguous: bool = False) -> None:
         """Record a failed LLM verdict call."""
         self.circuit_breaker.record_failure()
         self.health_monitor.record_call(
-            success=False, latency_s=latency_s,
-            was_timeout=was_timeout, was_ambiguous=was_ambiguous
+            success=False, latency_s=latency_s, was_timeout=was_timeout, was_ambiguous=was_ambiguous
         )
 
     def audit_verdict(self, entry: VerdictAuditEntry) -> None:
@@ -104,7 +100,7 @@ class VerdictResilienceOrchestrator:
         )
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Comprehensive resilience statistics."""
         return {
             "circuit_breaker": self.circuit_breaker.stats,

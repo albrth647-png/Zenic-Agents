@@ -8,9 +8,9 @@ El SNA NO es adivino: pregunta directamente a los datos del usuario.
 
 from __future__ import annotations
 
-import sqlite3
-import os
 import logging
+import os
+import sqlite3
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ class DBAccess:
         cursor = conn.execute(sql, params)
         columns = [desc[0] for desc in cursor.description] if cursor.description else []
         rows = cursor.fetchall()
-        return [dict(zip(columns, row)) for row in rows]
+        return [dict(zip(columns, row, strict=False)) for row in rows]
 
     def execute_write(self, sql: str, params: tuple = ()) -> int:
         """Ejecuta una query INSERT/UPDATE/DELETE. Devuelve rows affected.
@@ -154,7 +154,9 @@ class DBAccess:
         row = conn.execute("PRAGMA integrity_check").fetchone()
         return {"status": dict(row).get("integrity_check", "unknown") if row else "no_result"}
 
-    def find_orphan_records(self, child_table: str, child_fk: str, parent_table: str, parent_pk: str = "id") -> list[dict[str, Any]]:
+    def find_orphan_records(
+        self, child_table: str, child_fk: str, parent_table: str, parent_pk: str = "id"
+    ) -> list[dict[str, Any]]:
         """Busca registros huérfanos (child con FK sin padre)."""
         sql = f"""
             SELECT c.* FROM [{child_table}] c
@@ -185,22 +187,29 @@ class DBAccess:
     #  Consultas de negocio (genéricas pero comunes)                     #
     # ------------------------------------------------------------------ #
 
-    def get_low_stock_items(self, stock_column: str = "stock", threshold: int = 5, table: str = "productos") -> list[dict[str, Any]]:
+    def get_low_stock_items(
+        self, stock_column: str = "stock", threshold: int = 5, table: str = "productos"
+    ) -> list[dict[str, Any]]:
         """Busca productos con stock bajo."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC",
-                (threshold,)
+                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC", (threshold,)
             )
         except Exception:
             return []
 
-    def get_overdue_invoices(self, table: str = "facturas", due_column: str = "fecha_vencimiento", status_column: str = "estado", paid_status: str = "pagada") -> list[dict[str, Any]]:
+    def get_overdue_invoices(
+        self,
+        table: str = "facturas",
+        due_column: str = "fecha_vencimiento",
+        status_column: str = "estado",
+        paid_status: str = "pagada",
+    ) -> list[dict[str, Any]]:
         """Busca facturas vencidas sin pagar."""
         try:
             return self.execute_query(
                 f"SELECT * FROM [{table}] WHERE [{status_column}] != ? AND [{due_column}] < date('now') ORDER BY [{due_column}] ASC",
-                (paid_status,)
+                (paid_status,),
             )
         except Exception:
             return []
@@ -214,17 +223,20 @@ class DBAccess:
         except Exception:
             return []
 
-    def get_unpaid_balances(self, table: str = "clientes", balance_column: str = "saldo_pendiente", threshold: float = 0) -> list[dict[str, Any]]:
+    def get_unpaid_balances(
+        self, table: str = "clientes", balance_column: str = "saldo_pendiente", threshold: float = 0
+    ) -> list[dict[str, Any]]:
         """Busca clientes con saldo pendiente."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC",
-                (threshold,)
+                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC", (threshold,)
             )
         except Exception:
             return []
 
-    def get_sales_trend(self, table: str = "ventas", date_column: str = "fecha", amount_column: str = "monto", days: int = 30) -> list[dict[str, Any]]:
+    def get_sales_trend(
+        self, table: str = "ventas", date_column: str = "fecha", amount_column: str = "monto", days: int = 30
+    ) -> list[dict[str, Any]]:
         """Obtiene tendencia de ventas de los últimos N días."""
         try:
             return self.execute_query(
@@ -235,7 +247,9 @@ class DBAccess:
         except Exception:
             return []
 
-    def get_stale_inventory(self, table: str = "productos", last_sold_column: str = "ultima_venta", days: int = 90) -> list[dict[str, Any]]:
+    def get_stale_inventory(
+        self, table: str = "productos", last_sold_column: str = "ultima_venta", days: int = 90
+    ) -> list[dict[str, Any]]:
         """Busca productos sin venta en los últimos N días."""
         try:
             return self.execute_query(

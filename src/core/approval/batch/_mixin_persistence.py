@@ -8,9 +8,9 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, Optional
+from typing import Any
 
-from ._types import BatchRequest, _MAX_RETRIES, _RETRY_DELAY
+from ._types import _MAX_RETRIES, _RETRY_DELAY, BatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class BatchPersistenceMixin:
 
     def _init_db(self) -> None:
         """Create the batch_requests table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -50,9 +51,10 @@ class BatchPersistenceMixin:
 
     # ── Private Helpers ────────────────────────────────────
 
-    def _get_batch_internal(self, batch_id: str) -> Optional[BatchRequest]:
+    def _get_batch_internal(self, batch_id: str) -> BatchRequest | None:
         """Retrieve a batch from the database."""
-        def _do_find() -> Optional[BatchRequest]:
+
+        def _do_find() -> BatchRequest | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -68,6 +70,7 @@ class BatchPersistenceMixin:
 
     def _persist_batch(self, batch: BatchRequest, *, insert: bool) -> None:
         """Insert or update a batch in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -78,11 +81,15 @@ class BatchPersistenceMixin:
                         rejected_count, request_ids, created_at)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
-                        batch.batch_id, batch.action_type,
+                        batch.batch_id,
+                        batch.action_type,
                         json.dumps(batch.action_configs),
-                        batch.requested_by, batch.required_role,
-                        batch.status, batch.total_count,
-                        batch.approved_count, batch.rejected_count,
+                        batch.requested_by,
+                        batch.required_role,
+                        batch.status,
+                        batch.total_count,
+                        batch.approved_count,
+                        batch.rejected_count,
                         json.dumps(batch.request_ids),
                         batch.created_at,
                     ),
@@ -93,8 +100,10 @@ class BatchPersistenceMixin:
                        status=?, approved_count=?, rejected_count=?, request_ids=?
                        WHERE batch_id=?""",
                     (
-                        batch.status, batch.approved_count,
-                        batch.rejected_count, json.dumps(batch.request_ids),
+                        batch.status,
+                        batch.approved_count,
+                        batch.rejected_count,
+                        json.dumps(batch.request_ids),
                         batch.batch_id,
                     ),
                 )
@@ -127,14 +136,17 @@ class BatchPersistenceMixin:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
             except sqlite3.OperationalError as exc:
                 last_exc = exc
                 logger.warning(
-                    "BatchApproval: DB retry %d/%d — %s", attempt, max_retries, exc,
+                    "BatchApproval: DB retry %d/%d — %s",
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

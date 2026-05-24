@@ -1,6 +1,9 @@
 //! High-Performance Shared Memory Bus — SharedMemoryBus.
+//!
+//! The canonical implementation lives in `src/bus/publisher.rs`.
+//! This sub-module re-exports it for convenience.
 
 mod types;
-mod methods;
+// methods.rs is intentionally empty — #[pymethods] is in publisher.rs
 
 pub use types::SharedMemoryBus;

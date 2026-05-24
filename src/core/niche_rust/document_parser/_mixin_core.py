@@ -9,9 +9,8 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Dict, List, Tuple
 
-from ._parsers import _parse_pdf, _parse_pdf_bytes, _parse_docx, _parse_docx_bytes, _parse_html
+from ._parsers import _parse_docx, _parse_docx_bytes, _parse_html, _parse_pdf, _parse_pdf_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 MAX_FILE_SIZE: int = 50 * 1024 * 1024
 
 #: Supported format strings for Python parsing.
-PYTHON_FORMATS: Tuple[str, ...] = ("pdf", "docx", "html")
+PYTHON_FORMATS: tuple[str, ...] = ("pdf", "docx", "html")
 
 #: Format string for unknown/unparseable documents.
 FORMAT_UNKNOWN: str = "unknown"
@@ -32,6 +31,7 @@ FORMAT_UNKNOWN: str = "unknown"
 # ──────────────────────────────────────────────────────────────
 #  DocumentParser — Main public class
 # ──────────────────────────────────────────────────────────────
+
 
 class DocumentParser:
     """Python document parser for PDF, DOCX, and HTML files.
@@ -55,7 +55,7 @@ class DocumentParser:
             ...
     """
 
-    def parse_file(self, file_path: str) -> Tuple[str, List[str]]:
+    def parse_file(self, file_path: str) -> tuple[str, list[str]]:
         """Parse a document file and extract its text content."""
         if not file_path or not isinstance(file_path, str):
             return ("", ["file_path must be a non-empty string"])
@@ -77,23 +77,21 @@ class DocumentParser:
             return _parse_docx(file_path)
         elif ext in ("html", "htm"):
             try:
-                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(file_path, encoding="utf-8", errors="replace") as f:
                     html_content = f.read()
                 return _parse_html(html_content)
             except Exception as e:
                 return ("", [f"HTML file read error: {e}"])
         elif ext in ("txt", "csv", "tsv", "json", "md", "markdown"):
             try:
-                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(file_path, encoding="utf-8", errors="replace") as f:
                     return (f.read(), [])
             except Exception as e:
                 return ("", [f"Text file read error: {e}"])
         else:
             return ("", [f"Unsupported format: .{ext}"])
 
-    def parse_bytes(
-        self, filename: str, data: bytes
-    ) -> Tuple[str, List[str]]:
+    def parse_bytes(self, filename: str, data: bytes) -> tuple[str, list[str]]:
         """Parse document bytes and extract text content."""
         if not filename or not isinstance(filename, str):
             return ("", ["filename must be a non-empty string"])
@@ -126,26 +124,37 @@ class DocumentParser:
     def supports(self, format_str: str) -> bool:
         """Check if a format is supported for Python-side parsing."""
         return format_str.lower() in PYTHON_FORMATS or format_str.lower() in (
-            "txt", "csv", "tsv", "json", "md", "markdown", "html", "htm", "doc",
+            "txt",
+            "csv",
+            "tsv",
+            "json",
+            "md",
+            "markdown",
+            "html",
+            "htm",
+            "doc",
         )
 
-    def available_parsers(self) -> Dict[str, bool]:
+    def available_parsers(self) -> dict[str, bool]:
         """Check which Python parsers are actually available."""
-        available: Dict[str, bool] = {}
+        available: dict[str, bool] = {}
         try:
             import PyPDF2  # noqa: F401
+
             available["pdf_pypdf2"] = True
         except ImportError:
             available["pdf_pypdf2"] = False
 
         try:
             import pdfminer  # noqa: F401
+
             available["pdf_pdfminer"] = True
         except ImportError:
             available["pdf_pdfminer"] = False
 
         try:
             import docx  # noqa: F401
+
             available["docx_python_docx"] = True
         except ImportError:
             available["docx_python_docx"] = False

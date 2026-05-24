@@ -1,12 +1,13 @@
 """Core logic for dag_builder."""
 
 from __future__ import annotations
+
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
-from ._types import DAGNode, DAGEdge, DAGValidationResult
 from ._mixin_graph import DAGBuilderGraphMixin
+from ._types import DAGEdge, DAGNode, DAGValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,10 @@ class DAGBuilder(DAGBuilderGraphMixin):
     """
 
     def __init__(self) -> None:
-        self._nodes: Dict[str, DAGNode] = {}
-        self._edges: List[DAGEdge] = []
-        self._adjacency: Dict[str, List[str]] = defaultdict(list)
-        self._reverse_adjacency: Dict[str, List[str]] = defaultdict(list)
+        self._nodes: dict[str, DAGNode] = {}
+        self._edges: list[DAGEdge] = []
+        self._adjacency: dict[str, list[str]] = defaultdict(list)
+        self._reverse_adjacency: dict[str, list[str]] = defaultdict(list)
 
     # ── Node Management ──────────────────────────────────────
 
@@ -46,8 +47,8 @@ class DAGBuilder(DAGBuilderGraphMixin):
         node_id: str,
         name: str = "",
         node_type: str = "generic",
-        config: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> DAGNode:
         """
         Add a node to the DAG.
@@ -80,7 +81,7 @@ class DAGBuilder(DAGBuilderGraphMixin):
         logger.debug("DAGBuilder: Added node '%s' (type=%s)", node_id, node_type)
         return node
 
-    def get_node(self, node_id: str) -> Optional[DAGNode]:
+    def get_node(self, node_id: str) -> DAGNode | None:
         """Retrieve a node by ID, or None if not found."""
         return self._nodes.get(node_id)
 
@@ -99,18 +100,12 @@ class DAGBuilder(DAGBuilderGraphMixin):
         del self._nodes[node_id]
         # Remove outgoing edges
         for target in list(self._adjacency.get(node_id, [])):
-            self._edges = [
-                e for e in self._edges
-                if not (e.source_id == node_id and e.target_id == target)
-            ]
+            self._edges = [e for e in self._edges if not (e.source_id == node_id and e.target_id == target)]
             if target in self._reverse_adjacency and node_id in self._reverse_adjacency[target]:
                 self._reverse_adjacency[target].remove(node_id)
         # Remove incoming edges
         for source in list(self._reverse_adjacency.get(node_id, [])):
-            self._edges = [
-                e for e in self._edges
-                if not (e.source_id == source and e.target_id == node_id)
-            ]
+            self._edges = [e for e in self._edges if not (e.source_id == source and e.target_id == node_id)]
             if source in self._adjacency and node_id in self._adjacency[source]:
                 self._adjacency[source].remove(node_id)
         self._adjacency.pop(node_id, None)
@@ -160,17 +155,16 @@ class DAGBuilder(DAGBuilderGraphMixin):
         self._reverse_adjacency[target_id].append(source_id)
         logger.debug(
             "DAGBuilder: Added edge '%s' -> '%s' (type=%s)",
-            source_id, target_id, edge_type,
+            source_id,
+            target_id,
+            edge_type,
         )
         return edge
 
     def remove_edge(self, source_id: str, target_id: str) -> bool:
         """Remove an edge. Returns True if found and removed."""
         original_len = len(self._edges)
-        self._edges = [
-            e for e in self._edges
-            if not (e.source_id == source_id and e.target_id == target_id)
-        ]
+        self._edges = [e for e in self._edges if not (e.source_id == source_id and e.target_id == target_id)]
         if source_id in self._adjacency and target_id in self._adjacency[source_id]:
             self._adjacency[source_id].remove(target_id)
         if target_id in self._reverse_adjacency and source_id in self._reverse_adjacency[target_id]:
@@ -202,41 +196,34 @@ class DAGBuilder(DAGBuilderGraphMixin):
         if cycles:
             result.is_valid = False
             result.cycles = cycles
-            result.errors.append(
-                f"DAG contains {len(cycles)} cycle(s): "
-                + "; ".join(" -> ".join(c) for c in cycles)
-            )
+            result.errors.append(f"DAG contains {len(cycles)} cycle(s): " + "; ".join(" -> ".join(c) for c in cycles))
 
         # Check for orphan nodes
-        connected: Set[str] = set()
+        connected: set[str] = set()
         for edge in self._edges:
             connected.add(edge.source_id)
             connected.add(edge.target_id)
         orphans = [nid for nid in self._nodes if nid not in connected]
         if orphans:
-            result.warnings.append(
-                f"DAG has {len(orphans)} orphan node(s): {', '.join(orphans)}"
-            )
+            result.warnings.append(f"DAG has {len(orphans)} orphan node(s): {', '.join(orphans)}")
             result.orphan_nodes = orphans
 
         # Check for duplicate edges
-        seen_edges: Set[Tuple[str, str]] = set()
+        seen_edges: set[tuple[str, str]] = set()
         for edge in self._edges:
             key = (edge.source_id, edge.target_id)
             if key in seen_edges:
-                result.warnings.append(
-                    f"Duplicate edge: '{edge.source_id}' -> '{edge.target_id}'"
-                )
+                result.warnings.append(f"Duplicate edge: '{edge.source_id}' -> '{edge.target_id}'")
             seen_edges.add(key)
 
         return result
 
-    def _detect_cycles(self) -> List[List[str]]:
+    def _detect_cycles(self) -> list[list[str]]:
         """Detect cycles using DFS with recursion stack."""
         WHITE, GRAY, BLACK = 0, 1, 2
-        color: Dict[str, int] = {nid: WHITE for nid in self._nodes}
-        cycles: List[List[str]] = []
-        path: List[str] = []
+        color: dict[str, int] = {nid: WHITE for nid in self._nodes}
+        cycles: list[list[str]] = []
+        path: list[str] = []
 
         def dfs(node: str) -> None:
             color[node] = GRAY
@@ -261,7 +248,7 @@ class DAGBuilder(DAGBuilderGraphMixin):
 
     # ── Topological Sort ─────────────────────────────────────
 
-    def topological_sort(self) -> List[str]:
+    def topological_sort(self) -> list[str]:
         """
         Compute a topological ordering of the DAG.
 
@@ -275,14 +262,12 @@ class DAGBuilder(DAGBuilderGraphMixin):
         if not result.is_valid:
             raise ValueError("Cannot topologically sort a DAG with cycles")
 
-        in_degree: Dict[str, int] = {nid: 0 for nid in self._nodes}
+        in_degree: dict[str, int] = {nid: 0 for nid in self._nodes}
         for edge in self._edges:
             in_degree[edge.target_id] = in_degree.get(edge.target_id, 0) + 1
 
-        queue: List[str] = sorted(
-            [nid for nid, deg in in_degree.items() if deg == 0]
-        )
-        order: List[str] = []
+        queue: list[str] = sorted([nid for nid, deg in in_degree.items() if deg == 0])
+        order: list[str] = []
 
         while queue:
             node = queue.pop(0)

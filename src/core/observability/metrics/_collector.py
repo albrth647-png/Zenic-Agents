@@ -8,7 +8,6 @@ to internal counters when prometheus_client is unavailable.
 import logging
 import threading
 import time
-from typing import Dict, Optional
 
 from ._config import MetricsConfig, _init_prometheus
 
@@ -25,22 +24,22 @@ class MetricsCollector:
     Thread-safe: all operations are protected by locks.
     """
 
-    def __init__(self, config: Optional[MetricsConfig] = None) -> None:
+    def __init__(self, config: MetricsConfig | None = None) -> None:
         self._config = config or MetricsConfig()
         self._lock = threading.Lock()
         self._prom_available = False
 
         # Internal counters for fallback mode
         self._request_count: int = 0
-        self._request_count_by_path: Dict[str, int] = {}
-        self._request_count_by_status: Dict[int, int] = {}
+        self._request_count_by_path: dict[str, int] = {}
+        self._request_count_by_status: dict[int, int] = {}
         self._active_requests: int = 0
         self._rate_limit_accepted: int = 0
         self._rate_limit_rejected: int = 0
         self._auth_success: int = 0
         self._auth_failure: int = 0
-        self._circuit_breaker_open: Dict[str, bool] = {}
-        self._task_queue_depth: Dict[str, int] = {}
+        self._circuit_breaker_open: dict[str, bool] = {}
+        self._task_queue_depth: dict[str, int] = {}
         self._start_time: float = time.time()
 
         # Initialize Prometheus
@@ -68,11 +67,14 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._http_requests_total.labels(
-                    method=method, path=path, status=str(status),
+                    method=method,
+                    path=path,
+                    status=str(status),
                 ).inc()
                 if self._config.histograms:
                     self._http_request_duration_seconds.labels(
-                        method=method, path=path,
+                        method=method,
+                        path=path,
                     ).observe(duration)
             except Exception as exc:
                 logger.debug("Metrics: Failed to record request: %s", exc)
@@ -172,7 +174,8 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._tasks_completed_total.labels(
-                    task_type=task_type, worker_id=worker_id,
+                    task_type=task_type,
+                    worker_id=worker_id,
                 ).inc()
                 if self._config.histograms and duration > 0:
                     self._task_duration_seconds.labels(task_type=task_type).observe(duration)
@@ -184,7 +187,8 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._tasks_failed_total.labels(
-                    task_type=task_type, worker_id=worker_id,
+                    task_type=task_type,
+                    worker_id=worker_id,
                 ).inc()
             except Exception:
                 pass
@@ -223,6 +227,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 import prometheus_client
+
                 return prometheus_client.generate_latest().decode("utf-8")
             except Exception:
                 pass
@@ -255,18 +260,12 @@ class MetricsCollector:
             ]
 
             for status, count in sorted(self._request_count_by_status.items()):
-                lines.append(
-                    f'{self._config.namespace}_requests_total{{status="{status}"}} {count}'
-                )
+                lines.append(f'{self._config.namespace}_requests_total{{status="{status}"}} {count}')
             for name, is_open in self._circuit_breaker_open.items():
                 value = 1 if is_open else 0
-                lines.append(
-                    f'{self._config.namespace}_circuit_breaker_state{{name="{name}"}} {value}'
-                )
+                lines.append(f'{self._config.namespace}_circuit_breaker_state{{name="{name}"}} {value}')
             for queue, depth in self._task_queue_depth.items():
-                lines.append(
-                    f'{self._config.namespace}_task_queue_depth{{queue_name="{queue}"}} {depth}'
-                )
+                lines.append(f'{self._config.namespace}_task_queue_depth{{queue_name="{queue}"}} {depth}')
 
         return "\n".join(lines) + "\n"
 

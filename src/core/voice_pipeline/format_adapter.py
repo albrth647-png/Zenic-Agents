@@ -33,7 +33,7 @@ import os
 import tempfile
 import threading
 import time
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 from ._types import AudioFormat, ConversionResult
 
@@ -44,9 +44,9 @@ _logger = logging.getLogger("zenic_agents.voice_pipeline.format_adapter")
 #  CANONICAL OUTPUT SPECIFICATION
 # ──────────────────────────────────────────────────────────────
 
-_CANONICAL_SAMPLE_RATE = 16000   # 16kHz — standard for STT engines
-_CANONICAL_CHANNELS = 1          # Mono
-_CANONICAL_SAMPLE_WIDTH = 2      # 16-bit = 2 bytes per sample
+_CANONICAL_SAMPLE_RATE = 16000  # 16kHz — standard for STT engines
+_CANONICAL_CHANNELS = 1  # Mono
+_CANONICAL_SAMPLE_WIDTH = 2  # 16-bit = 2 bytes per sample
 _CANONICAL_FORMAT = "wav"
 
 
@@ -55,14 +55,23 @@ _CANONICAL_FORMAT = "wav"
 # ──────────────────────────────────────────────────────────────
 
 # Formats supported by pydub/ffmpeg for reading
-_SUPPORTED_INPUT_FORMATS: Set[str] = {
-    "ogg", "mp3", "wav", "m4a", "opus", "webm",
-    "amr", "aac", "flac", "oga", "mp4",
+_SUPPORTED_INPUT_FORMATS: set[str] = {
+    "ogg",
+    "mp3",
+    "wav",
+    "m4a",
+    "opus",
+    "webm",
+    "amr",
+    "aac",
+    "flac",
+    "oga",
+    "mp4",
 }
 
 # Maximum reasonable audio sizes (safety limits)
-_MAX_AUDIO_SIZE_BYTES = 50 * 1024 * 1024   # 50 MB — hard ceiling
-_MAX_AUDIO_DURATION_SECONDS = 3600.0       # 1 hour — hard ceiling
+_MAX_AUDIO_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB — hard ceiling
+_MAX_AUDIO_DURATION_SECONDS = 3600.0  # 1 hour — hard ceiling
 
 
 def _normalize_format(audio_format: str) -> str:
@@ -89,7 +98,7 @@ def _normalize_format(audio_format: str) -> str:
         "wave": "wav",
         "mpeg": "mp3",
         "mpeg3": "mp3",
-        "mp4": "m4a",   # audio-only mp4
+        "mp4": "m4a",  # audio-only mp4
     }
     return aliases.get(fmt, fmt)
 
@@ -97,6 +106,7 @@ def _normalize_format(audio_format: str) -> str:
 # ──────────────────────────────────────────────────────────────
 #  FORMAT ADAPTER
 # ──────────────────────────────────────────────────────────────
+
 
 class FormatAdapter:
     """Audio format converter — any format → WAV 16kHz mono PCM.
@@ -145,6 +155,7 @@ class FormatAdapter:
         """Check if pydub is importable."""
         try:
             import pydub  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -182,8 +193,7 @@ class FormatAdapter:
             return ConversionResult(
                 success=False,
                 original_size_bytes=input_size,
-                error=f"Audio too large: {input_size} bytes exceeds "
-                      f"limit of {self._max_size} bytes",
+                error=f"Audio too large: {input_size} bytes exceeds " f"limit of {self._max_size} bytes",
                 source="format_adapter",
             )
 
@@ -191,8 +201,7 @@ class FormatAdapter:
             return ConversionResult(
                 success=False,
                 original_size_bytes=input_size,
-                error="pydub not installed — format conversion unavailable. "
-                      "Install pydub: pip install pydub",
+                error="pydub not installed — format conversion unavailable. " "Install pydub: pip install pydub",
                 source="format_adapter",
             )
 
@@ -212,7 +221,10 @@ class FormatAdapter:
             elapsed = time.monotonic() - start
             _logger.error(
                 "FormatAdapter: conversion failed in %.2fs (format=%s, size=%d): %s",
-                elapsed, fmt, input_size, e,
+                elapsed,
+                fmt,
+                input_size,
+                e,
             )
             return ConversionResult(
                 success=False,
@@ -231,15 +243,17 @@ class FormatAdapter:
                 original_format=fmt,
                 original_size_bytes=input_size,
                 duration_seconds=duration,
-                error=f"Audio too long: {duration:.1f}s exceeds "
-                      f"limit of {self._max_duration:.1f}s",
+                error=f"Audio too long: {duration:.1f}s exceeds " f"limit of {self._max_duration:.1f}s",
                 source="format_adapter",
             )
 
         _logger.info(
-            "FormatAdapter: converted %s→wav in %.2fs "
-            "(%d→%d bytes, %.1fs audio)",
-            fmt or "(auto)", elapsed, input_size, len(wav_bytes), duration,
+            "FormatAdapter: converted %s→wav in %.2fs " "(%d→%d bytes, %.1fs audio)",
+            fmt or "(auto)",
+            elapsed,
+            input_size,
+            len(wav_bytes),
+            duration,
         )
 
         return ConversionResult(
@@ -264,6 +278,7 @@ class FormatAdapter:
         Runs the synchronous conversion in a thread pool.
         """
         import asyncio
+
         return await asyncio.to_thread(self.convert, audio_bytes, audio_format)
 
     def _do_convert(
@@ -293,7 +308,7 @@ class FormatAdapter:
 
         try:
             # Load with pydub
-            load_kwargs: Dict[str, Any] = {}
+            load_kwargs: dict[str, Any] = {}
             if fmt and fmt in _SUPPORTED_INPUT_FORMATS:
                 load_kwargs["format"] = fmt
 
@@ -345,7 +360,7 @@ class FormatAdapter:
         fmt = _normalize_format(audio_format)
         return fmt in _SUPPORTED_INPUT_FORMATS
 
-    def get_supported_formats(self) -> Set[str]:
+    def get_supported_formats(self) -> set[str]:
         """Return the set of supported input formats."""
         return set(_SUPPORTED_INPUT_FORMATS)
 
@@ -369,6 +384,7 @@ class FormatAdapter:
         if self._pydub_available and audio_bytes:
             try:
                 from pydub import AudioSegment
+
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                     tmp.write(audio_bytes)
                     tmp_path = tmp.name
@@ -395,9 +411,9 @@ class FormatAdapter:
         audio_bytes: bytes,
         audio_format: str = "",
         *,
-        max_duration: Optional[float] = None,
-        max_size: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        max_duration: float | None = None,
+        max_size: int | None = None,
+    ) -> dict[str, Any]:
         """Validate audio data against size and duration limits.
 
         Non-destructive — does NOT convert the audio.
@@ -421,9 +437,7 @@ class FormatAdapter:
         size_valid = size_bytes <= size_limit
 
         if not size_valid:
-            errors.append(
-                f"Size {size_bytes} exceeds limit {size_limit}"
-            )
+            errors.append(f"Size {size_bytes} exceeds limit {size_limit}")
 
         # Duration requires loading the audio — lightweight check
         duration_seconds = 0.0
@@ -432,6 +446,7 @@ class FormatAdapter:
         if audio_bytes and self._pydub_available:
             try:
                 from pydub import AudioSegment
+
                 fmt = _normalize_format(audio_format)
                 suffix = f".{fmt}" if fmt in _SUPPORTED_INPUT_FORMATS else ".wav"
                 with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
@@ -445,10 +460,7 @@ class FormatAdapter:
                     duration_seconds = len(audio) / 1000.0
                     duration_valid = duration_seconds <= duration_limit
                     if not duration_valid:
-                        errors.append(
-                            f"Duration {duration_seconds:.1f}s exceeds "
-                            f"limit {duration_limit:.1f}s"
-                        )
+                        errors.append(f"Duration {duration_seconds:.1f}s exceeds " f"limit {duration_limit:.1f}s")
                 except Exception as e:
                     errors.append(f"Cannot determine duration: {e}")
                 finally:
@@ -475,7 +487,7 @@ class FormatAdapter:
         """Whether format conversion is available (pydub installed)."""
         return self._pydub_available
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Health check for the FormatAdapter."""
         return {
             "service": "format_adapter",
@@ -493,7 +505,7 @@ class FormatAdapter:
 # ──────────────────────────────────────────────────────────────
 
 # Default singleton — lazy-created on first access
-_default_adapter: Optional[FormatAdapter] = None
+_default_adapter: FormatAdapter | None = None
 _adapter_lock = threading.Lock()
 
 
@@ -517,10 +529,10 @@ def get_format_adapter() -> FormatAdapter:
 # ──────────────────────────────────────────────────────────────
 
 __all__ = [
-    "FormatAdapter",
-    "get_format_adapter",
-    "_CANONICAL_SAMPLE_RATE",
     "_CANONICAL_CHANNELS",
+    "_CANONICAL_SAMPLE_RATE",
     "_CANONICAL_SAMPLE_WIDTH",
     "_SUPPORTED_INPUT_FORMATS",
+    "FormatAdapter",
+    "get_format_adapter",
 ]

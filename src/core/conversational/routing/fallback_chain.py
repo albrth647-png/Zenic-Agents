@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Awaitable
+from typing import Any
 
-from ..types.base import Result, Ok, PipelineContext
+from ..types.base import Ok, PipelineContext, Result
 from ..types.response import AssistantResponse, ResponseFormat, ResponseMetadata
 from .router import Pipeline
 
@@ -30,13 +31,15 @@ FallbackHandler = Callable[[PipelineContext], Awaitable[Result[AssistantResponse
 @dataclass
 class FallbackEntry:
     """Entrada en la cadena de fallback."""
+
     pipeline: Pipeline
     handler: FallbackHandler | None = None
-    priority: int = 0             # Mayor = se intenta primero
+    priority: int = 0  # Mayor = se intenta primero
     description: str = ""
 
 
 # ─── Cadena de fallback ──────────────────────────────────────
+
 
 class FallbackChain:
     """
@@ -75,8 +78,7 @@ class FallbackChain:
         start_time = time.time()
 
         logger.info(
-            f"Fallback chain activada "
-            f"(pipeline fallido: {failed_pipeline.value if failed_pipeline else 'none'})"
+            f"Fallback chain activada " f"(pipeline fallido: {failed_pipeline.value if failed_pipeline else 'none'})"
         )
 
         # Intentar cada fallback registrado
@@ -89,15 +91,10 @@ class FallbackChain:
                 if result.is_ok:
                     elapsed = (time.time() - start_time) * 1000
                     self._stats["successful_fallbacks"] += 1
-                    logger.info(
-                        f"Fallback exitoso: {entry.pipeline.value} "
-                        f"({elapsed:.0f}ms)"
-                    )
+                    logger.info(f"Fallback exitoso: {entry.pipeline.value} " f"({elapsed:.0f}ms)")
                     return result
             except Exception as e:
-                logger.warning(
-                    f"Fallback {entry.pipeline.value} fallo: {e}"
-                )
+                logger.warning(f"Fallback {entry.pipeline.value} fallo: {e}")
                 continue
 
         # Terminal fallback: respuesta generica garantizada

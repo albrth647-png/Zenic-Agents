@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import threading
+from datetime import datetime, timezone
+from typing import Any
+
 from ._types import (
     Objective,
     ObjectivePriority,
@@ -10,10 +15,7 @@ from ._types import (
     _retry_db_operation,
     logger,
 )
-import json
-import threading
-from datetime import datetime, timezone
-from typing import Any, List, Optional
+
 
 class ObjectiveStore:
     """SQLite persistence layer for objectives.
@@ -116,11 +118,12 @@ class ObjectiveStore:
             _retry_db_operation(_insert)
             logger.info(
                 "ObjectiveStore: Created objective %s (%s)",
-                objective.objective_id, objective.name,
+                objective.objective_id,
+                objective.name,
             )
             return objective
 
-    def get_objective(self, objective_id: str) -> Optional[Objective]:
+    def get_objective(self, objective_id: str) -> Objective | None:
         """Get an objective by ID.
 
         Args:
@@ -132,7 +135,7 @@ class ObjectiveStore:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> Optional[Objective]:
+            def _fetch() -> Objective | None:
                 conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
                 conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
                 try:
@@ -191,7 +194,8 @@ class ObjectiveStore:
 
             _retry_db_operation(_update)
             logger.info(
-                "ObjectiveStore: Updated objective %s", objective.objective_id,
+                "ObjectiveStore: Updated objective %s",
+                objective.objective_id,
             )
             return objective
 
@@ -223,12 +227,12 @@ class ObjectiveStore:
 
     def list_objectives(
         self,
-        status: Optional[ObjectiveStatus] = None,
-        priority: Optional[ObjectivePriority] = None,
+        status: ObjectiveStatus | None = None,
+        priority: ObjectivePriority | None = None,
         tenant_id: str = "",
         tag: str = "",
         limit: int = 100,
-    ) -> List[Objective]:
+    ) -> list[Objective]:
         """List objectives with optional filters.
 
         Args:
@@ -244,12 +248,12 @@ class ObjectiveStore:
         self._ensure_schema()
         with self._lock:
 
-            def _list() -> List[Objective]:
+            def _list() -> list[Objective]:
                 conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
                 conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
                 try:
-                    conditions: List[str] = []
-                    params: List[Any] = []
+                    conditions: list[str] = []
+                    params: list[Any] = []
                     if status is not None:
                         conditions.append("status = ?")
                         params.append(status.value)
@@ -264,8 +268,7 @@ class ObjectiveStore:
                         params.append(f'%"{tag}"%')
                     where = " WHERE " + " AND ".join(conditions) if conditions else ""
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM _zenic_objectives{where} "
-                        f"ORDER BY created_at DESC LIMIT ?",
+                        f"SELECT * FROM _zenic_objectives{where} " f"ORDER BY created_at DESC LIMIT ?",
                         params + [limit],
                     ).fetchall()
                     return [self._row_to_objective(r) for r in rows]
@@ -274,7 +277,7 @@ class ObjectiveStore:
 
             return _retry_db_operation(_list)
 
-    def get_active_objectives(self, tenant_id: str = "") -> List[Objective]:
+    def get_active_objectives(self, tenant_id: str = "") -> list[Objective]:
         """Get all active objectives.
 
         Args:
@@ -284,10 +287,11 @@ class ObjectiveStore:
             A list of active Objectives.
         """
         return self.list_objectives(
-            status=ObjectiveStatus.ACTIVE, tenant_id=tenant_id,
+            status=ObjectiveStatus.ACTIVE,
+            tenant_id=tenant_id,
         )
 
-    def get_objectives_by_tag(self, tag: str) -> List[Objective]:
+    def get_objectives_by_tag(self, tag: str) -> list[Objective]:
         """Get objectives that have a specific tag.
 
         Args:
@@ -309,9 +313,7 @@ class ObjectiveStore:
             description=row["description"],
             priority=ObjectivePriority(row["priority"]),
             status=ObjectiveStatus(row["status"]),
-            targets=[
-                ObjectiveTarget(**t) for t in json.loads(row["targets"])
-            ],
+            targets=[ObjectiveTarget(**t) for t in json.loads(row["targets"])],
             deadline=row["deadline"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
@@ -325,7 +327,7 @@ class ObjectiveStore:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_objective_store_instance: Optional[ObjectiveStore] = None
+_objective_store_instance: ObjectiveStore | None = None
 _objective_store_lock = threading.Lock()
 
 
@@ -353,11 +355,11 @@ def reset_objective_store() -> None:
 
 
 __all__ = [
-    "ObjectiveStatus",
-    "ObjectivePriority",
-    "ObjectiveTarget",
     "Objective",
+    "ObjectivePriority",
+    "ObjectiveStatus",
     "ObjectiveStore",
+    "ObjectiveTarget",
     "get_objective_store",
     "reset_objective_store",
 ]

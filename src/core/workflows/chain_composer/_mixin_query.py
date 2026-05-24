@@ -12,11 +12,11 @@ import uuid
 from typing import Any
 
 from src.core.workflows.chain_composer._types import (
+    ChainExecutionResult,
+    ChainStatus,
     ChainStep,
     ChainStepType,
-    ChainStatus,
     ComposedChain,
-    ChainExecutionResult,
 )
 
 _DB_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "db")
@@ -78,27 +78,37 @@ class QueryMixin:
             chain_id = row[0]
             try:
                 chain = ComposedChain(
-                    chain_id=chain_id, name=row[1], description=row[2],
+                    chain_id=chain_id,
+                    name=row[1],
+                    description=row[2],
                     steps=self._deserialize_steps(json.loads(row[3]) if row[3] else []),
                     metadata=json.loads(row[4]) if row[4] else {},
-                    tenant_id=row[5], created_at=row[6],
+                    tenant_id=row[5],
+                    created_at=row[6],
                     status=ChainStatus(row[7]) if row[7] else ChainStatus.DRAFT,
                 )
                 self._chains[chain_id] = chain
             except (json.JSONDecodeError, TypeError, ValueError, KeyError) as exc:
                 import logging
+
                 logging.getLogger(__name__).warning("Failed to load chain %s: %s", chain_id, exc)
 
     @staticmethod
     def _serialize_steps(steps: list[ChainStep]) -> str:
-        return json.dumps([
-            {"step_id": s.step_id,
-             "step_type": s.step_type.value if isinstance(s.step_type, ChainStepType) else s.step_type,
-             "config": s.config, "next_step_id": s.next_step_id,
-             "condition_expr": s.condition_expr, "timeout_ms": s.timeout_ms,
-             "retry_count": s.retry_count}
-            for s in steps
-        ])
+        return json.dumps(
+            [
+                {
+                    "step_id": s.step_id,
+                    "step_type": s.step_type.value if isinstance(s.step_type, ChainStepType) else s.step_type,
+                    "config": s.config,
+                    "next_step_id": s.next_step_id,
+                    "condition_expr": s.condition_expr,
+                    "timeout_ms": s.timeout_ms,
+                    "retry_count": s.retry_count,
+                }
+                for s in steps
+            ]
+        )
 
     @staticmethod
     def _deserialize_steps(raw: list[dict[str, Any]]) -> list[ChainStep]:
@@ -109,12 +119,17 @@ class QueryMixin:
                 step_type = ChainStepType(step_type_raw)
             except ValueError:
                 step_type = ChainStepType.ACTION
-            result.append(ChainStep(
-                step_id=s.get("step_id", ""), step_type=step_type,
-                config=s.get("config", {}), next_step_id=s.get("next_step_id", ""),
-                condition_expr=s.get("condition_expr", ""),
-                timeout_ms=s.get("timeout_ms", 30000), retry_count=s.get("retry_count", 3),
-            ))
+            result.append(
+                ChainStep(
+                    step_id=s.get("step_id", ""),
+                    step_type=step_type,
+                    config=s.get("config", {}),
+                    next_step_id=s.get("next_step_id", ""),
+                    condition_expr=s.get("condition_expr", ""),
+                    timeout_ms=s.get("timeout_ms", 30000),
+                    retry_count=s.get("retry_count", 3),
+                )
+            )
         return result
 
     def _save_chain(self, chain: ComposedChain) -> None:
@@ -124,9 +139,12 @@ class QueryMixin:
                 "(chain_id, name, description, steps, metadata, tenant_id, created_at, status) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    chain.chain_id, chain.name, chain.description,
+                    chain.chain_id,
+                    chain.name,
+                    chain.description,
                     self._serialize_steps(chain.steps),
-                    json.dumps(chain.metadata), chain.tenant_id,
+                    json.dumps(chain.metadata),
+                    chain.tenant_id,
                     chain.created_at,
                     chain.status.value if isinstance(chain.status, ChainStatus) else chain.status,
                 ),
@@ -142,14 +160,26 @@ class QueryMixin:
                 "total_duration_ms, failed_step, error, executed_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    execution_id, result.chain_id,
+                    execution_id,
+                    result.chain_id,
                     1 if result.success else 0,
-                    json.dumps([{"step_id": sr.step_id, "success": sr.success,
-                                "output": sr.output, "duration_ms": sr.duration_ms,
-                                "retry_count": sr.retry_count, "error": sr.error}
-                               for sr in result.step_results]),
-                    result.total_duration_ms, result.failed_step,
-                    result.error, time.time(),
+                    json.dumps(
+                        [
+                            {
+                                "step_id": sr.step_id,
+                                "success": sr.success,
+                                "output": sr.output,
+                                "duration_ms": sr.duration_ms,
+                                "retry_count": sr.retry_count,
+                                "error": sr.error,
+                            }
+                            for sr in result.step_results
+                        ]
+                    ),
+                    result.total_duration_ms,
+                    result.failed_step,
+                    result.error,
+                    time.time(),
                 ),
             )
             conn.commit()

@@ -10,14 +10,14 @@ from __future__ import annotations
 
 import logging
 import urllib.parse
-from typing import Any, Dict, List
+from typing import Any
 
 from ..base import ActionResult
 
 logger = logging.getLogger(__name__)
 
 # Import the closed-state constant from the auth module
-from ._auth import _STATE_CLOSED  # noqa: F401, E402
+from ._auth import _STATE_CLOSED  # noqa: E402
 
 
 class _IncidentOpsMixin:
@@ -25,8 +25,8 @@ class _IncidentOpsMixin:
 
     async def _create_incident(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Create a new ServiceNow incident.
@@ -47,7 +47,7 @@ class _IncidentOpsMixin:
             )
 
         # Build incident payload
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "short_description": short_desc,
         }
 
@@ -74,7 +74,8 @@ class _IncidentOpsMixin:
             incident_number = result_data.get("number", "unknown")
             logger.info(
                 "ServiceNowExecutor: created incident %s (sys_id=%s)",
-                incident_number, result_data.get("sys_id", ""),
+                incident_number,
+                result_data.get("sys_id", ""),
             )
             return ActionResult(
                 success=True,
@@ -89,7 +90,8 @@ class _IncidentOpsMixin:
 
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
-            "ServiceNowExecutor: create_incident failed — %s", error_msg,
+            "ServiceNowExecutor: create_incident failed — %s",
+            error_msg,
         )
         return ActionResult(
             success=False,
@@ -100,8 +102,8 @@ class _IncidentOpsMixin:
 
     async def _update_incident(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Update an existing ServiceNow incident.
@@ -120,11 +122,16 @@ class _IncidentOpsMixin:
             )
 
         # Build update payload from provided fields
-        payload: Dict[str, Any] = {}
+        payload: dict[str, Any] = {}
 
         for field_name in (
-            "short_description", "description", "priority", "severity",
-            "category", "assignment_group", "state",
+            "short_description",
+            "description",
+            "priority",
+            "severity",
+            "category",
+            "assignment_group",
+            "state",
         ):
             value = config.get(field_name)
             if value is not None:
@@ -169,7 +176,8 @@ class _IncidentOpsMixin:
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
             "ServiceNowExecutor: update_incident failed for %s — %s",
-            incident_id, error_msg,
+            incident_id,
+            error_msg,
         )
         return ActionResult(
             success=False,
@@ -180,8 +188,8 @@ class _IncidentOpsMixin:
 
     async def _close_incident(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Close a ServiceNow incident.
@@ -203,7 +211,7 @@ class _IncidentOpsMixin:
 
         close_state = config.get("state", _STATE_CLOSED)
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "state": close_state,
         }
 
@@ -228,7 +236,8 @@ class _IncidentOpsMixin:
             result_data = body["result"]
             logger.info(
                 "ServiceNowExecutor: closed incident %s (state=%s)",
-                incident_id, result_data.get("state", close_state),
+                incident_id,
+                result_data.get("state", close_state),
             )
             return ActionResult(
                 success=True,
@@ -244,7 +253,8 @@ class _IncidentOpsMixin:
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
             "ServiceNowExecutor: close_incident failed for %s — %s",
-            incident_id, error_msg,
+            incident_id,
+            error_msg,
         )
         return ActionResult(
             success=False,
@@ -255,8 +265,8 @@ class _IncidentOpsMixin:
 
     async def _get_incident(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Retrieve a single ServiceNow incident by ID.
@@ -309,7 +319,8 @@ class _IncidentOpsMixin:
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
             "ServiceNowExecutor: get_incident failed for %s — %s",
-            incident_id, error_msg,
+            incident_id,
+            error_msg,
         )
         return ActionResult(
             success=False,
@@ -320,8 +331,8 @@ class _IncidentOpsMixin:
 
     async def _search_incidents(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         instance_url: str,
     ) -> ActionResult:
         """Search ServiceNow incidents using an encoded query.
@@ -343,7 +354,7 @@ class _IncidentOpsMixin:
         url = self._build_url(instance_url, "incident")
 
         # Build query parameters
-        params: List[str] = [
+        params: list[str] = [
             f"sysparm_query={urllib.parse.quote(search_query, safe='')}",
         ]
 
@@ -385,7 +396,8 @@ class _IncidentOpsMixin:
 
         error_msg = resp_error or body.get("error", {}).get("message", "") or f"HTTP {status}"
         logger.error(
-            "ServiceNowExecutor: search_incidents failed — %s", error_msg,
+            "ServiceNowExecutor: search_incidents failed — %s",
+            error_msg,
         )
         return ActionResult(
             success=False,

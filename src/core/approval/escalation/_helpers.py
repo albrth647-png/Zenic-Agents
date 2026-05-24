@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-import sqlite3
-from ._types import EscalationLevel, SLAPolicy, EscalationSLA
-
 import logging
+import sqlite3
 import threading
 import time
-from typing import Any, Optional
+from typing import Any
+
+from ._types import EscalationLevel, EscalationSLA, SLAPolicy
 
 logger = logging.getLogger(__name__)
 
 
 def _init_db(self) -> None:
     """Create the escalation tables if they do not exist."""
+
     def _do_init() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -62,11 +63,13 @@ def _init_db(self) -> None:
     self._with_retry(_do_init)
     self._load_sla_policies()
 
+
 # ── SLA Policy Management ──────────────────────────────
 
 
 def _load_sla_policies(self) -> None:
     """Load SLA policies from the database, overriding defaults."""
+
     def _do_load() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
@@ -86,6 +89,7 @@ def _load_sla_policies(self) -> None:
 
 def _persist_sla_policy(self, policy: SLAPolicy) -> None:
     """Persist an SLA policy to the database."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(self._db_path)
         conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -106,9 +110,13 @@ def _persist_sla_policy(self, policy: SLAPolicy) -> None:
 
 
 def _persist_escalation_sla(
-    self, sla: EscalationSLA, *, insert: bool,
+    self,
+    sla: EscalationSLA,
+    *,
+    insert: bool,
 ) -> None:
     """Insert or update an escalation SLA record."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(self._db_path)
         if insert:
@@ -189,10 +197,11 @@ def _send_escalation_notification(self, sla: EscalationSLA) -> None:
     """Send an escalation notification via NotificationDispatcher."""
     try:
         from .notification import (
-            get_notification_dispatcher,
             NotificationEvent,
             NotificationPriority,
+            get_notification_dispatcher,
         )
+
         dispatcher = get_notification_dispatcher()
         dispatcher.dispatch(
             event=NotificationEvent.APPROVAL_ESCALATED,
@@ -210,21 +219,24 @@ def _send_escalation_notification(self, sla: EscalationSLA) -> None:
             },
         )
     except Exception as exc:
-        logger.debug("EscalationManager: notification dispatch failed: %s", exc)  # noqa: F821
+        logger.debug("EscalationManager: notification dispatch failed: %s", exc)
 
 
 def _record_audit_event(
-    self, request_id: str, sla: EscalationSLA,
+    self,
+    request_id: str,
+    sla: EscalationSLA,
 ) -> None:
     """Record an ESCALATION_TRIGGERED event in the audit merkle trail."""
     try:
         from .audit_merkle import get_approval_audit_merkle
+
         audit = get_approval_audit_merkle()
         audit.record_event(
             request_id=request_id,
             event_type="ESCALATION_TRIGGERED",
             actor_id="escalation_manager",
-            actor_name="EscalationManager",  # noqa: F821
+            actor_name="EscalationManager",
             details={
                 "current_level": sla.current_level.value,
                 "target_role": sla.target_role,
@@ -232,7 +244,7 @@ def _record_audit_event(
             },
         )
     except Exception as exc:
-        logger.debug("EscalationManager: audit event recording failed: %s", exc)  # noqa: F821
+        logger.debug("EscalationManager: audit event recording failed: %s", exc)
 
 
 def _row_to_escalation_sla(row: sqlite3.Row) -> EscalationSLA:
@@ -254,36 +266,38 @@ def _with_retry(
     max_retries: int = _MAX_RETRIES,  # noqa: F821
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, max_retries + 1):
         try:
             return fn()
         except sqlite3.OperationalError as exc:
             last_exc = exc
             logger.warning(
-                "EscalationManager: DB retry %d/%d — %s",  # noqa: F821
-                attempt, max_retries, exc,
+                "EscalationManager: DB retry %d/%d — %s",
+                attempt,
+                max_retries,
+                exc,
             )
             if attempt < max_retries:
                 time.sleep(_RETRY_DELAY * attempt)  # noqa: F821
         except Exception as exc:
             last_exc = exc
-            logger.error("EscalationManager: DB error — %s", exc)  # noqa: F821
+            logger.error("EscalationManager: DB error — %s", exc)
             break
-    logger.error("EscalationManager: All retries exhausted — %s", last_exc)  # noqa: F821
+    logger.error("EscalationManager: All retries exhausted — %s", last_exc)
     return fallback
 
 
 # ── Singleton ─────────────────────────────────────────────
 
-_escalation_instance: Optional[EscalationManager] = None  # noqa: F821
+_escalation_instance: EscalationManager | None = None  # noqa: F821
 _escalation_lock = threading.Lock()
 
 
 def get_escalation_manager(
     db_path: str = "escalation.sqlite",
 ) -> EscalationManager:  # noqa: F821
-    """Get or create the global EscalationManager instance."""  # noqa: F821
+    """Get or create the global EscalationManager instance."""
     global _escalation_instance
     with _escalation_lock:
         if _escalation_instance is None:
@@ -292,13 +306,15 @@ def get_escalation_manager(
 
 
 def reset_escalation_manager() -> None:
-    """Reset the global EscalationManager (for testing)."""  # noqa: F821
+    """Reset the global EscalationManager (for testing)."""
     global _escalation_instance
     _escalation_instance = None
 
 
 __all__ = [
-    "EscalationLevel", "SLAPolicy", "EscalationSLA", "get_escalation_manager",
+    "EscalationLevel",
+    "EscalationSLA",
+    "SLAPolicy",
+    "get_escalation_manager",
     "reset_escalation_manager",
 ]
-

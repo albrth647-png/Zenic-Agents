@@ -7,7 +7,7 @@ SQLite-based storage for audit entries with query and prune support.
 import json
 import logging
 import sqlite3
-from typing import Any, List
+from typing import Any
 
 from ._types import AuditEntry, AuditQuery
 
@@ -75,23 +75,36 @@ class AuditPersistence:
                     request_id, risk_score, category, error, metadata,
                     merkle_hash, prev_hash, timestamp)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (entry.entry_id, entry.action_type, entry.operation,
-                 entry.executor_class, entry.verdict,
-                 int(entry.success), entry.duration_ms,
-                 entry.user_id, entry.tenant_id, entry.session_id,
-                 entry.request_id, entry.risk_score, entry.category,
-                 entry.error, json.dumps(entry.metadata),
-                 entry.merkle_hash, entry.prev_hash, entry.timestamp),
+                (
+                    entry.entry_id,
+                    entry.action_type,
+                    entry.operation,
+                    entry.executor_class,
+                    entry.verdict,
+                    int(entry.success),
+                    entry.duration_ms,
+                    entry.user_id,
+                    entry.tenant_id,
+                    entry.session_id,
+                    entry.request_id,
+                    entry.risk_score,
+                    entry.category,
+                    entry.error,
+                    json.dumps(entry.metadata),
+                    entry.merkle_hash,
+                    entry.prev_hash,
+                    entry.timestamp,
+                ),
             )
             conn.commit()
         finally:
             conn.close()
 
-    def query(self, q: AuditQuery) -> List[AuditEntry]:
+    def query(self, q: AuditQuery) -> list[AuditEntry]:
         """Query audit entries with filters."""
         self._ensure_init()
-        conditions: List[str] = []
-        params: List[Any] = []
+        conditions: list[str] = []
+        params: list[Any] = []
 
         if q.action_type:
             conditions.append("action_type = ?")

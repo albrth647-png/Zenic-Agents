@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Any, Dict
+from typing import Any
 
 from ._types import _BACKOFF_MULTIPLIER, _GRAPH_BASE_URL, _INITIAL_BACKOFF_SECONDS, _MAX_RETRIES
 
@@ -16,12 +16,12 @@ class GraphAPITransportMixin:
 
     async def _send_with_retry(
         self,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         sender: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send email with exponential backoff retry."""
         last_error = ""
-        for attempt in range(_MAX_RETRIES):  # noqa: F821
+        for attempt in range(_MAX_RETRIES):
             try:
                 result = await self._send_once(payload, sender)
                 if result.get("success"):
@@ -47,11 +47,13 @@ class GraphAPITransportMixin:
 
                 if status_code >= 500:
                     # Server error — retry with backoff
-                    backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)  # noqa: F821
+                    backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                     __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                        "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs "
-                        "(attempt %d/%d)",
-                        status_code, backoff, attempt + 1, _MAX_RETRIES,  # noqa: F821
+                        "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs " "(attempt %d/%d)",
+                        status_code,
+                        backoff,
+                        attempt + 1,
+                        _MAX_RETRIES,
                     )
                     await asyncio.sleep(backoff)
                     last_error = result.get("error", f"HTTP {status_code}")
@@ -62,21 +64,24 @@ class GraphAPITransportMixin:
                 return result
 
             except asyncio.TimeoutError:
-                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)  # noqa: F821
+                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                 __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                    "GraphAPIEmailProvider: Request timed out, retrying in %.1fs "
-                    "(attempt %d/%d)",
-                    backoff, attempt + 1, _MAX_RETRIES,  # noqa: F821
+                    "GraphAPIEmailProvider: Request timed out, retrying in %.1fs " "(attempt %d/%d)",
+                    backoff,
+                    attempt + 1,
+                    _MAX_RETRIES,
                 )
                 last_error = "Request timed out"
                 await asyncio.sleep(backoff)
 
             except Exception as exc:
-                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)  # noqa: F821
+                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                 __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                    "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs "
-                    "(attempt %d/%d)",
-                    exc, backoff, attempt + 1, _MAX_RETRIES,  # noqa: F821
+                    "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs " "(attempt %d/%d)",
+                    exc,
+                    backoff,
+                    attempt + 1,
+                    _MAX_RETRIES,
                 )
                 last_error = str(exc)
                 await asyncio.sleep(backoff)
@@ -87,14 +92,14 @@ class GraphAPITransportMixin:
             "success": False,
             "message_id": "",
             "status_code": 0,
-            "error": f"All {_MAX_RETRIES} retries exhausted: {last_error}",  # noqa: F821
+            "error": f"All {_MAX_RETRIES} retries exhausted: {last_error}",
         }
 
     async def _send_once(
         self,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         sender: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a single send attempt via Graph API."""
         async with self._lock:
             token = await self._token_manager.get_token(self._service_name)
@@ -109,9 +114,9 @@ class GraphAPITransportMixin:
 
         # Determine endpoint
         if sender:
-            endpoint = f"{_GRAPH_BASE_URL}/users/{sender}/sendMail"  # noqa: F821
+            endpoint = f"{_GRAPH_BASE_URL}/users/{sender}/sendMail"
         else:
-            endpoint = f"{_GRAPH_BASE_URL}/me/sendMail"  # noqa: F821
+            endpoint = f"{_GRAPH_BASE_URL}/me/sendMail"
 
         try:
             async with aiohttp.ClientSession() as session:  # noqa: F821
@@ -128,15 +133,11 @@ class GraphAPITransportMixin:
                     timeout=aiohttp.ClientTimeout(total=60),  # noqa: F821
                 ) as response:
                     # Update rate limit from headers
-                    resp_headers = {
-                        k: v for k, v in response.headers.items()
-                    }
+                    resp_headers = {k: v for k, v in response.headers.items()}
                     self._rate_limit.update_from_headers(resp_headers)
 
                     if response.status == 202:
-                        message_id = response.headers.get(
-                            "Location", f"msg-{uuid.uuid4().hex[:12]}"
-                        )
+                        message_id = response.headers.get("Location", f"msg-{uuid.uuid4().hex[:12]}")
                         return {
                             "success": True,
                             "message_id": message_id,
@@ -146,14 +147,11 @@ class GraphAPITransportMixin:
                     # Error response
                     try:
                         error_body = await response.json()
-                        error_msg = (
-                            error_body.get("error", {}).get("message", "")
-                            or f"HTTP {response.status}"
-                        )
+                        error_msg = error_body.get("error", {}).get("message", "") or f"HTTP {response.status}"
                     except Exception:
                         error_msg = f"HTTP {response.status}"
 
-                    result: Dict[str, Any] = {
+                    result: dict[str, Any] = {
                         "success": False,
                         "message_id": "",
                         "status_code": response.status,

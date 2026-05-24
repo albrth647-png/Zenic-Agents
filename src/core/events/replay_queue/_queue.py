@@ -39,6 +39,7 @@ logger = logging.getLogger("zenic_agents.events.replay_queue")
 
 # ─── ReplayQueue ────────────────────────────────────────────────
 
+
 class ReplayQueue(ReplayMixin):
     """
     Dead-letter queue with event replay capability.
@@ -126,7 +127,8 @@ class ReplayQueue(ReplayMixin):
             conn.close()
         logger.info(
             "ReplayQueue: loaded %d events from %s",
-            len(self._events), self._db_path,
+            len(self._events),
+            self._db_path,
         )
 
     def _persist_event(self, evt: DeadLetterEvent) -> None:
@@ -217,7 +219,10 @@ class ReplayQueue(ReplayMixin):
 
         logger.info(
             "ReplayQueue: enqueued %s (event_type=%s, tenant=%s, error='%s')",
-            dlq_id, event_type, tenant_id, error[:100],
+            dlq_id,
+            event_type,
+            tenant_id,
+            error[:100],
         )
         return dlq_id
 
@@ -292,7 +297,8 @@ class ReplayQueue(ReplayMixin):
                 if (
                     evt.tenant_id == tenant_id
                     and evt.created_at < cutoff
-                    and evt.status in (
+                    and evt.status
+                    in (
                         DeadLetterStatus.SUCCEEDED,
                         DeadLetterStatus.EXHAUSTED,
                     )
@@ -316,7 +322,9 @@ class ReplayQueue(ReplayMixin):
 
         logger.info(
             "ReplayQueue: purged %d events for tenant=%s older than %d hours",
-            len(to_remove), tenant_id, older_than_hours,
+            len(to_remove),
+            tenant_id,
+            older_than_hours,
         )
         return len(to_remove)
 
@@ -341,9 +349,7 @@ class ReplayQueue(ReplayMixin):
         if tenant_id is not None:
             events = [e for e in events if e.tenant_id == tenant_id]
 
-        status_counts: dict[str, int] = {
-            s.value: 0 for s in DeadLetterStatus
-        }
+        status_counts: dict[str, int] = {s.value: 0 for s in DeadLetterStatus}
         oldest_created: float = time.time()
         total_retries = 0
 
@@ -354,9 +360,7 @@ class ReplayQueue(ReplayMixin):
                 oldest_created = evt.created_at
 
         now = time.time()
-        oldest_age_hours = (
-            (now - oldest_created) / 3600 if events else 0.0
-        )
+        oldest_age_hours = (now - oldest_created) / 3600 if events else 0.0
 
         return {
             "total": len(events),

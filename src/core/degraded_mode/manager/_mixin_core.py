@@ -1,14 +1,18 @@
 """Core logic for manager."""
 
 from __future__ import annotations
+
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
+
 from .persistence import DegradationPersistence
 from .types import DegradationLevel, DegradationReason, DegradationState
 
 logger = logging.getLogger(__name__)
+
 
 class DegradedModeManager:
     """Manages feature degradation based on security and billing state.
@@ -25,8 +29,8 @@ class DegradedModeManager:
         self._persistence = DegradationPersistence(db_path)
         self._state = self._persistence.load_state()
         self._current_mode = self._level_to_system_mode(self._state.level)
-        self._transition_history: List[ModeTransition] = []  # noqa: F821
-        self._callbacks: List[Callable[[ModeTransition], None]] = []  # noqa: F821
+        self._transition_history: list[ModeTransition] = []  # noqa: F821
+        self._callbacks: list[Callable[[ModeTransition], None]] = []  # noqa: F821
         self._lock = threading.RLock()
 
     # ── Mode mapping helpers ──────────────────────────────
@@ -86,7 +90,9 @@ class DegradedModeManager:
             self._notify_callbacks(transition)
             logger.warning(
                 "DegradedModeManager: %s → %s (%s)",
-                old_level.name, target_level.name, reason.value,
+                old_level.name,
+                target_level.name,
+                reason.value,
             )
         return self._state
 
@@ -149,7 +155,7 @@ class DegradedModeManager:
                 return False
         return True
 
-    def get_restricted_features(self) -> List[str]:
+    def get_restricted_features(self) -> list[str]:
         """Return the list of currently restricted feature prefixes."""
         return list(self._state.restricted_features)
 
@@ -157,9 +163,9 @@ class DegradedModeManager:
 
     def check_and_auto_degrade(
         self,
-        billing_status: Optional[str] = None,
-        license_valid: Optional[bool] = None,
-    ) -> Optional[DegradationState]:
+        billing_status: str | None = None,
+        license_valid: bool | None = None,
+    ) -> DegradationState | None:
         """Evaluate billing & license and auto-degrade if needed.
 
         Returns the new DegradationState if a transition occurred, else None.
@@ -192,29 +198,29 @@ class DegradedModeManager:
         exception_count: int,
         window_seconds: int = 300,
         threshold: int = 5,
-    ) -> Optional[DegradationState]:
+    ) -> DegradationState | None:
         """Auto-degrade based on exception count in a time window.
-        
+
         Phase C2: Integration with ExceptionEngine.auto_brake.
         If exception_count >= threshold in the given window, enter degraded mode.
         """
         if self._state.level >= DegradationLevel.PARALYSIS_1:
             return None  # Already locked down
-        
+
         if exception_count >= threshold * 2:
             return self.enter_degraded(
                 reason=DegradationReason.TAMPERING_DETECTED,
                 message=f"Critical exception rate: {exception_count} in {window_seconds}s",
                 level=2,
             )
-        
+
         if exception_count >= threshold:
             return self.enter_degraded(
                 reason=DegradationReason.MANUAL,
                 message=f"High exception rate: {exception_count} in {window_seconds}s",
                 level=1,
             )
-        
+
         return None
 
     # ── Legacy compatibility ──────────────────────────────
@@ -222,17 +228,31 @@ class DegradedModeManager:
     def enter_restrictive(self, reason: str = "Update pending") -> ModeTransition:  # noqa: F821
         """Enter restrictive mode (limited writes) — legacy compat."""
         self.enter_degraded(DegradationReason.MANUAL, reason, level=1)
-        return self._transition_history[-1] if self._transition_history else ModeTransition(  # noqa: F821
-            from_mode=SystemMode.NORMAL, to_mode=SystemMode.RESTRICTIVE, reason=reason,  # noqa: F821
+        return (
+            self._transition_history[-1]
+            if self._transition_history
+            else ModeTransition(  # noqa: F821
+                from_mode=SystemMode.NORMAL,
+                to_mode=SystemMode.RESTRICTIVE,
+                reason=reason,  # noqa: F821
+            )
         )
 
     def return_to_normal(
-        self, reason: str = "License restored", operator: str = "admin",
+        self,
+        reason: str = "License restored",
+        operator: str = "admin",
     ) -> ModeTransition:  # noqa: F821
         """Return to normal mode — legacy compat."""
         self.exit_degraded()
-        return self._transition_history[-1] if self._transition_history else ModeTransition(  # noqa: F821
-            from_mode=SystemMode.DEGRADED, to_mode=SystemMode.NORMAL, reason=reason,  # noqa: F821
+        return (
+            self._transition_history[-1]
+            if self._transition_history
+            else ModeTransition(  # noqa: F821
+                from_mode=SystemMode.DEGRADED,
+                to_mode=SystemMode.NORMAL,
+                reason=reason,  # noqa: F821
+            )
         )
 
     def get_current_mode(self) -> SystemMode:  # noqa: F821
@@ -242,29 +262,38 @@ class DegradedModeManager:
     def get_capabilities(self) -> Any:
         """Get the capabilities for the current mode."""
         from .mode_parts.capabilities import MODE_CAPABILITIES
+
         return MODE_CAPABILITIES.get(
             self._current_mode,
             MODE_CAPABILITIES[SystemMode.DEGRADED],  # noqa: F821
         )
 
-    def check_action(self, action: str) -> Dict[str, Any]:
+    def check_action(self, action: str) -> dict[str, Any]:
         """Check if an action is allowed in the current mode."""
         caps = self.get_capabilities()
         blocked = "*" in caps.blocked_actions or action in caps.blocked_actions
         if not blocked:
-            cap = {"read": caps.can_read, "write": caps.can_write,
-                   "delete": caps.can_delete, "manage_users": caps.can_manage_users,
-                   "change_config": caps.can_change_config,
-                   "approve_action": caps.can_approve_actions,
-                   "export_data": caps.can_export_data, "import_data": caps.can_import_data,
-                   "send_email": caps.can_send_email, "create_invoice": caps.can_create_invoice,
-                   "create_payment": caps.can_process_payment,
-                   "schedule": caps.can_schedule}.get(action, True)
+            cap = {
+                "read": caps.can_read,
+                "write": caps.can_write,
+                "delete": caps.can_delete,
+                "manage_users": caps.can_manage_users,
+                "change_config": caps.can_change_config,
+                "approve_action": caps.can_approve_actions,
+                "export_data": caps.can_export_data,
+                "import_data": caps.can_import_data,
+                "send_email": caps.can_send_email,
+                "create_invoice": caps.can_create_invoice,
+                "create_payment": caps.can_process_payment,
+                "schedule": caps.can_schedule,
+            }.get(action, True)
             blocked = not cap
         if blocked:
-            return {"allowed": False,
-                    "reason": f"Action '{action}' blocked in {self._current_mode.value} mode",
-                    "mode": self._current_mode.value}
+            return {
+                "allowed": False,
+                "reason": f"Action '{action}' blocked in {self._current_mode.value} mode",
+                "mode": self._current_mode.value,
+            }
         return {"allowed": True, "reason": "", "mode": self._current_mode.value}
 
     def is_endpoint_allowed(self, endpoint: str) -> bool:
@@ -274,10 +303,11 @@ class DegradedModeManager:
             return True
         return any(endpoint.startswith(a) for a in caps.allowed_endpoints)
 
-    def resolve_mode_from_license(self) -> Optional[SystemMode]:  # noqa: F821
+    def resolve_mode_from_license(self) -> SystemMode | None:  # noqa: F821
         """Determine the correct mode based on license status."""
         try:
             from src.core.license.manager import get_license_manager
+
             result = get_license_manager().verify()
             if result.status.value == "active":
                 return SystemMode.NORMAL  # noqa: F821
@@ -303,7 +333,7 @@ class DegradedModeManager:
 
     # ── Status ────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive degraded mode status."""
         return {
             "current_mode": self._current_mode.value,
@@ -315,10 +345,9 @@ class DegradedModeManager:
             "transition_count": len(self._transition_history),
         }
 
-    def get_transition_history(self, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_transition_history(self, limit: int = 20) -> list[dict[str, Any]]:
         """Get recent mode transition history from persistence."""
         return self._persistence.get_history(limit)
 
 
 # ── Singleton ─────────────────────────────────────────────
-

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-import sqlite3
-from ._types import SnapshotEntry, _retry
-
 import logging
+import sqlite3
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
+
+from ._types import SnapshotEntry, _retry
 
 logger = logging.getLogger(__name__)
 
@@ -52,18 +52,19 @@ def _init_db(self) -> None:
         conn.close()
 
     try:
-        _retry(_create, label="SnapshotAuditEngine._init_db")  # noqa: F821  # TODO: verify import
+        _retry(_create, label="SnapshotAuditEngine._init_db")  # TODO: verify import
         self._initialized = True
         logger.info(
-            "SnapshotAuditEngine: Database initialized at %s",  # noqa: F821  # TODO: verify import
+            "SnapshotAuditEngine: Database initialized at %s",  # TODO: verify import
             self._db_path,
         )
     except Exception as exc:
         logger.error(
-            "SnapshotAuditEngine: Database initialization failed: %s",  # noqa: F821  # TODO: verify import
+            "SnapshotAuditEngine: Database initialization failed: %s",  # TODO: verify import
             exc,
         )
         self._initialized = False
+
 
 # ── Public API ───────────────────────────────────────
 
@@ -72,7 +73,7 @@ def _persist_snapshot(self, snapshot: SnapshotEntry) -> None:
     """Write a SnapshotEntry to SQLite."""
     if not self._initialized:
         logger.warning(
-            "SnapshotAuditEngine: DB not initialized, skipping persist for %s",  # noqa: F821  # TODO: verify import
+            "SnapshotAuditEngine: DB not initialized, skipping persist for %s",  # TODO: verify import
             snapshot.snapshot_id,
         )
         return
@@ -103,11 +104,12 @@ def _persist_snapshot(self, snapshot: SnapshotEntry) -> None:
             conn.close()
 
     try:
-        _retry(_insert, label="SnapshotAuditEngine._persist_snapshot")  # noqa: F821  # TODO: verify import
+        _retry(_insert, label="SnapshotAuditEngine._persist_snapshot")  # TODO: verify import
     except Exception as exc:
         logger.error(
-            "SnapshotAuditEngine: failed to persist snapshot %s: %s",  # noqa: F821  # TODO: verify import
-            snapshot.snapshot_id, exc,
+            "SnapshotAuditEngine: failed to persist snapshot %s: %s",  # TODO: verify import
+            snapshot.snapshot_id,
+            exc,
         )
 
 
@@ -123,26 +125,26 @@ def _update_pairing(
         with self._lock:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? "
-                "WHERE snapshot_id = ?",
+                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? " "WHERE snapshot_id = ?",
                 (paired_snapshot_id, pair_id, snapshot_id),
             )
             conn.commit()
             conn.close()
 
     try:
-        _retry(_update, label="SnapshotAuditEngine._update_pairing")  # noqa: F821  # TODO: verify import
+        _retry(_update, label="SnapshotAuditEngine._update_pairing")  # TODO: verify import
     except Exception as exc:
         logger.error(
-            "SnapshotAuditEngine: failed to update pairing for %s: %s",  # noqa: F821  # TODO: verify import
-            snapshot_id, exc,
+            "SnapshotAuditEngine: failed to update pairing for %s: %s",  # TODO: verify import
+            snapshot_id,
+            exc,
         )
 
 
-def _load_snapshot(self, snapshot_id: str) -> Optional[SnapshotEntry]:
+def _load_snapshot(self, snapshot_id: str) -> SnapshotEntry | None:
     """Load a single SnapshotEntry from SQLite by snapshot_id."""
 
-    def _query() -> Optional[SnapshotEntry]:
+    def _query() -> SnapshotEntry | None:
         with self._lock:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -156,16 +158,17 @@ def _load_snapshot(self, snapshot_id: str) -> Optional[SnapshotEntry]:
         return self._row_to_entry(dict(row))
 
     try:
-        return _retry(_query, label="SnapshotAuditEngine._load_snapshot")  # noqa: F821  # TODO: verify import
+        return _retry(_query, label="SnapshotAuditEngine._load_snapshot")  # TODO: verify import
     except Exception as exc:
         logger.error(
-            "SnapshotAuditEngine: failed to load snapshot %s: %s",  # noqa: F821  # TODO: verify import
-            snapshot_id, exc,
+            "SnapshotAuditEngine: failed to load snapshot %s: %s",  # TODO: verify import
+            snapshot_id,
+            exc,
         )
         return None
 
 
-def _row_to_entry(row: Dict[str, Any]) -> SnapshotEntry:
+def _row_to_entry(row: dict[str, Any]) -> SnapshotEntry:
     """Convert a raw DB row dict to a SnapshotEntry."""
     data_raw = row.get("data", "{}")
     if isinstance(data_raw, str):
@@ -194,12 +197,12 @@ def _row_to_entry(row: Dict[str, Any]) -> SnapshotEntry:
 
 # ── Singleton ────────────────────────────────────────────────
 
-_snapshot_audit_instance: Optional[SnapshotAuditEngine] = None  # noqa: F821  # TODO: verify import
+_snapshot_audit_instance: SnapshotAuditEngine | None = None  # noqa: F821  # TODO: verify import
 _snapshot_audit_lock = threading.Lock()
 
 
 def get_snapshot_audit_engine(
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ) -> SnapshotAuditEngine:  # noqa: F821  # TODO: verify import
     """Get or create the singleton SnapshotAuditEngine.  # noqa: F821  # TODO: verify import
 
@@ -217,16 +220,17 @@ def get_snapshot_audit_engine(
 
 
 def reset_snapshot_audit_engine() -> None:
-    """Reset the singleton SnapshotAuditEngine (for testing / reconfiguration)."""  # noqa: F821  # TODO: verify import
+    """Reset the singleton SnapshotAuditEngine (for testing / reconfiguration)."""  # TODO: verify import
     global _snapshot_audit_instance
     with _snapshot_audit_lock:
         _snapshot_audit_instance = None
-    logger.info("SnapshotAuditEngine: singleton reset")  # noqa: F821  # TODO: verify import
+    logger.info("SnapshotAuditEngine: singleton reset")  # TODO: verify import
 
 
 # ── Module exports ───────────────────────────────────────────
 
 __all__ = [
-    "SnapshotEntry", "get_snapshot_audit_engine", "reset_snapshot_audit_engine",
+    "SnapshotEntry",
+    "get_snapshot_audit_engine",
+    "reset_snapshot_audit_engine",
 ]
-

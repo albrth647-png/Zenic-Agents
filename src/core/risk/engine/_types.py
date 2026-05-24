@@ -1,10 +1,17 @@
 """Types and constants for engine."""
 
 from __future__ import annotations
+
 import logging
 
 try:
-    from ...native._risk import calculate_blast_radius, propagate_risks, find_critical_path, multi_node_blast_radius  # noqa: F401
+    from ...native._risk import (  # noqa: F401
+        calculate_blast_radius,
+        find_critical_path,
+        multi_node_blast_radius,
+        propagate_risks,
+    )
+
     HAS_NATIVE = True
 except ImportError:
     HAS_NATIVE = False

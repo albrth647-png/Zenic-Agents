@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from src.core.native import (
     HAS_NATIVE as _HAS_NATIVE,
@@ -22,12 +22,13 @@ logger = logging.getLogger(__name__)
 
 # ── Local chain verification ─────────────────────────────────
 
-def verify_local_chain(ledger_rows: List[Dict[str, Any]]) -> bool:
+
+def verify_local_chain(ledger_rows: list[dict[str, Any]]) -> bool:
     """Quick chain check for the ledger rows returned by a forensic query."""
     if not ledger_rows:
         return True
     # Group by file_path
-    file_groups: Dict[str, List[Dict[str, Any]]] = {}
+    file_groups: dict[str, list[dict[str, Any]]] = {}
     for r in ledger_rows:
         fp = r.get("file_path", "__unknown__")
         file_groups.setdefault(fp, []).append(r)
@@ -48,8 +49,9 @@ def verify_local_chain(ledger_rows: List[Dict[str, Any]]) -> bool:
 
 # ── Full chain verification ──────────────────────────────────
 
+
 def verify_chain_entries(
-    ledger_rows: List[Dict[str, Any]],
+    ledger_rows: list[dict[str, Any]],
     tenant_id: str,
 ) -> ChainVerificationResult:
     """Verify Merkle chain integrity for all ledger entries of a tenant.
@@ -65,20 +67,18 @@ def verify_chain_entries(
     Returns:
         ChainVerificationResult with validity status and break details.
     """
-    broken_links: List[Dict[str, Any]] = []
+    broken_links: list[dict[str, Any]] = []
     valid_count = 0
 
     # Build a lookup: id -> row for parent resolution
-    {
-        r["id"]: r for r in ledger_rows
-    }
+    {r["id"]: r for r in ledger_rows}
     # Build a lookup: hash -> row id for parent resolution
-    hash_to_id: Dict[str, int] = {}
+    hash_to_id: dict[str, int] = {}
     for r in ledger_rows:
         hash_to_id[r["hash_sha256"]] = r["id"]
 
     # Group by file_path and verify each chain independently
-    file_groups: Dict[str, List[Dict[str, Any]]] = {}
+    file_groups: dict[str, list[dict[str, Any]]] = {}
     for r in ledger_rows:
         fp = r["file_path"]
         file_groups.setdefault(fp, []).append(r)
@@ -105,15 +105,17 @@ def verify_chain_entries(
             if row["parent_hash"] == expected_parent_hash:
                 valid_count += 1
             else:
-                broken_links.append({
-                    "file_path": fp,
-                    "entry_id": row["id"],
-                    "expected_parent_hash": expected_parent_hash,
-                    "actual_parent_hash": row["parent_hash"],
-                    "entry_hash": row["hash_sha256"],
-                    "operation": row["operation"],
-                    "timestamp": row["timestamp"],
-                })
+                broken_links.append(
+                    {
+                        "file_path": fp,
+                        "entry_id": row["id"],
+                        "expected_parent_hash": expected_parent_hash,
+                        "actual_parent_hash": row["parent_hash"],
+                        "entry_hash": row["hash_sha256"],
+                        "operation": row["operation"],
+                        "timestamp": row["timestamp"],
+                    }
+                )
 
     total = len(ledger_rows)
     is_valid = len(broken_links) == 0
@@ -131,21 +133,22 @@ def verify_chain_entries(
 
 # ── Merkle proofs ────────────────────────────────────────────
 
+
 def build_merkle_proofs(
-    ledger_entries: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    ledger_entries: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Build merkle inclusion proofs for each ledger entry.
 
     Each proof contains the entry's hash, its parent hash, and the
     sibling hashes needed to reconstruct the path to the root.
     For a simplified proof, we include the direct chain links.
     """
-    proofs: List[Dict[str, Any]] = []
+    proofs: list[dict[str, Any]] = []
     if not ledger_entries:
         return proofs
 
     # Group by file_path for chain-based proofs
-    file_groups: Dict[str, List[Dict[str, Any]]] = {}
+    file_groups: dict[str, list[dict[str, Any]]] = {}
     for entry in ledger_entries:
         fp = entry.get("file_path", "__unknown__")
         file_groups.setdefault(fp, []).append(entry)
@@ -159,26 +162,25 @@ def build_merkle_proofs(
         root = compute_merkle_root(all_hashes)
 
         for entry in sorted_group:
-            proofs.append({
-                "file_path": fp,
-                "entry_id": entry.get("id"),
-                "hash_sha256": entry.get("hash_sha256", ""),
-                "parent_hash": entry.get("parent_hash", ""),
-                "operation": entry.get("operation", ""),
-                "merkle_root": root,
-                "sibling_hashes": [
-                    r["hash_sha256"]
-                    for r in sorted_group
-                    if r.get("id") != entry.get("id")
-                ],
-            })
+            proofs.append(
+                {
+                    "file_path": fp,
+                    "entry_id": entry.get("id"),
+                    "hash_sha256": entry.get("hash_sha256", ""),
+                    "parent_hash": entry.get("parent_hash", ""),
+                    "operation": entry.get("operation", ""),
+                    "merkle_root": root,
+                    "sibling_hashes": [r["hash_sha256"] for r in sorted_group if r.get("id") != entry.get("id")],
+                }
+            )
 
     return proofs
 
 
 # ── Merkle root ──────────────────────────────────────────────
 
-def compute_merkle_root(hashes: List[str]) -> str:
+
+def compute_merkle_root(hashes: list[str]) -> str:
     """Compute a Merkle root hash from a list of leaf hashes.
 
     Delegates to the Rust native extension when available for
@@ -200,7 +202,7 @@ def compute_merkle_root(hashes: List[str]) -> str:
 
     working = list(hashes)
     while len(working) > 1:
-        next_level: List[str] = []
+        next_level: list[str] = []
         for i in range(0, len(working), 2):
             left = working[i]
             right = working[i + 1] if i + 1 < len(working) else left

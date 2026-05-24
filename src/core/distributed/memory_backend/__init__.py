@@ -14,8 +14,8 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
 from ..backend import BackendConfig, CoordinationBackend
-from ._task_lock_mixin import TaskLockMixin
 from ._coord_mixin import CoordinationMixin
+from ._task_lock_mixin import TaskLockMixin
 
 logger = logging.getLogger(__name__)
 
@@ -35,24 +35,24 @@ class MemoryBackend(TaskLockMixin, CoordinationMixin, CoordinationBackend):
         self._lock = threading.Lock()
 
         # Task queues: queue_name -> list of task dicts
-        self._tasks: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        self._tasks: dict[str, list[dict[str, Any]]] = defaultdict(list)
         # task_id -> task dict (index for fast lookup)
-        self._task_index: Dict[str, Dict[str, Any]] = {}
+        self._task_index: dict[str, dict[str, Any]] = {}
 
         # Distributed locks: lock_name -> {holder_id, expires_at}
-        self._locks: Dict[str, Dict[str, Any]] = {}
+        self._locks: dict[str, dict[str, Any]] = {}
 
         # Leader election: election_name -> {leader_id, expires_at}
-        self._elections: Dict[str, Dict[str, Any]] = {}
+        self._elections: dict[str, dict[str, Any]] = {}
 
         # Circuit breaker state: circuit_name -> {state, version, ...}
-        self._circuits: Dict[str, Dict[str, Any]] = {}
+        self._circuits: dict[str, dict[str, Any]] = {}
 
         # Saga state: saga_id -> {name, status, steps, context, ...}
-        self._sagas: Dict[str, Dict[str, Any]] = {}
+        self._sagas: dict[str, dict[str, Any]] = {}
 
         # Node topology: node_id -> node_info
-        self._nodes: Dict[str, Dict[str, Any]] = {}
+        self._nodes: dict[str, dict[str, Any]] = {}
 
     # ----------------------------------------------------------
     #  LIFECYCLE
@@ -76,7 +76,7 @@ class MemoryBackend(TaskLockMixin, CoordinationMixin, CoordinationBackend):
         self._connected = False
         logger.info("MemoryBackend: Disconnected")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check backend health (always healthy for in-memory)."""
         start = time.monotonic()
         with self._lock:

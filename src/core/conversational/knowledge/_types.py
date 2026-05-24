@@ -15,28 +15,30 @@ from ..types.base import new_id
 
 class KnowledgeType(str, Enum):
     """Tipos de entrada en la base de conocimiento."""
-    CONCEPT = "concept"           # Definicion o concepto
-    PATTERN = "pattern"           # Patron de codigo o diseno
-    TUTORIAL = "tutorial"         # Tutorial paso a paso
-    REFERENCE = "reference"       # Referencia tecnica
-    FAQ = "faq"                   # Pregunta frecuente
+
+    CONCEPT = "concept"  # Definicion o concepto
+    PATTERN = "pattern"  # Patron de codigo o diseno
+    TUTORIAL = "tutorial"  # Tutorial paso a paso
+    REFERENCE = "reference"  # Referencia tecnica
+    FAQ = "faq"  # Pregunta frecuente
     BEST_PRACTICE = "best_practice"  # Mejor practica
-    TROUBLESHOOT = "troubleshoot"    # Solucion de problemas
+    TROUBLESHOOT = "troubleshoot"  # Solucion de problemas
 
 
 @dataclass
 class KnowledgeEntry:
     """Entrada en la base de conocimiento."""
+
     entry_id: str = field(default_factory=lambda: new_id("kno"))
     title: str = ""
     content: str = ""
     knowledge_type: KnowledgeType = KnowledgeType.CONCEPT
-    category: str = "general"       # programming, architecture, devops, etc.
+    category: str = "general"  # programming, architecture, devops, etc.
     tags: list[str] = field(default_factory=list)
     keywords: list[str] = field(default_factory=list)
     related_ids: list[str] = field(default_factory=list)
-    source: str = "builtin"         # builtin, user, web, system
-    language: str = ""              # Lenguaje de programacion (si aplica)
+    source: str = "builtin"  # builtin, user, web, system
+    language: str = ""  # Lenguaje de programacion (si aplica)
     importance: float = 0.5
     access_count: int = 0
     created_at: float = field(default_factory=time.time)
@@ -46,7 +48,8 @@ class KnowledgeEntry:
     @property
     def is_code_related(self) -> bool:
         return self.knowledge_type in (
-            KnowledgeType.PATTERN, KnowledgeType.REFERENCE,
+            KnowledgeType.PATTERN,
+            KnowledgeType.REFERENCE,
             KnowledgeType.BEST_PRACTICE,
         )
 
@@ -69,6 +72,7 @@ class KnowledgeEntry:
 @dataclass
 class KnowledgeQuery:
     """Query para buscar en la base de conocimiento."""
+
     text: str = ""
     knowledge_types: list[KnowledgeType] = field(default_factory=list)
     categories: list[str] = field(default_factory=list)
@@ -81,6 +85,7 @@ class KnowledgeQuery:
 @dataclass
 class KnowledgeResult:
     """Resultado de busqueda en la base de conocimiento."""
+
     entries: list[KnowledgeEntry] = field(default_factory=list)
     total_matches: int = 0
     search_time_ms: float = 0.0
@@ -96,20 +101,47 @@ class KnowledgeResult:
             return ""
         lines: list[str] = []
         for entry in self.entries[:max_entries]:
-            lines.append(
-                f"[{entry.knowledge_type.value}/{entry.category}] "
-                f"{entry.title}: {entry.content[:200]}"
-            )
+            lines.append(f"[{entry.knowledge_type.value}/{entry.category}] " f"{entry.title}: {entry.content[:200]}")
         return "\n".join(lines)
 
 
 # ─── Keyword extraction helper ────────────────────────────────
 
 _STOP_WORDS = {
-    "el", "la", "los", "las", "de", "en", "es", "un", "una",
-    "y", "o", "a", "por", "para", "con", "que", "se", "su",
-    "the", "is", "are", "was", "a", "an", "and", "or", "but",
-    "in", "on", "at", "to", "for", "of", "with", "it",
+    "el",
+    "la",
+    "los",
+    "las",
+    "de",
+    "en",
+    "es",
+    "un",
+    "una",
+    "y",
+    "o",
+    "a",
+    "por",
+    "para",
+    "con",
+    "que",
+    "se",
+    "su",
+    "the",
+    "is",
+    "are",
+    "was",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "it",
 }
 
 
@@ -117,4 +149,6 @@ def _extract_keywords(text: str) -> list[str]:
     """Extrae keywords significativas de un texto."""
     words = re.findall(r"\b\w{3,}\b", text.lower())
     return [w for w in words if w not in _STOP_WORDS][:20]
-__all__ = ["KnowledgeEntry", "KnowledgeQuery", "KnowledgeResult", "KnowledgeType", "_STOP_WORDS", "_extract_keywords"]
+
+
+__all__ = ["_STOP_WORDS", "KnowledgeEntry", "KnowledgeQuery", "KnowledgeResult", "KnowledgeType", "_extract_keywords"]

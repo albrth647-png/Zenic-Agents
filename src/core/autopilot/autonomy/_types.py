@@ -1,16 +1,19 @@
 """Types and constants for autonomy."""
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class AutonomyLevel(str, Enum):
     """Autonomy level of the autopilot system."""
+
     SUPERVISED = "supervised"
     SEMI_AUTONOMOUS = "semi_autonomous"
     FULL_AUTONOMOUS = "full_autonomous"
@@ -28,6 +31,7 @@ class AutonomyConfig:
     Controls the degree of autonomous action the system can take,
     including risk thresholds for auto-execution vs. human approval.
     """
+
     level: AutonomyLevel = AutonomyLevel.SEMI_AUTONOMOUS
     objective_id: str = ""
     tenant_id: str = ""
@@ -79,7 +83,7 @@ class AutonomyConfig:
         """
         return not self.can_auto_execute(risk_score)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "level": self.level.value,
@@ -96,7 +100,7 @@ class AutonomyConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> AutonomyConfig:
+    def from_dict(cls, data: dict[str, Any]) -> AutonomyConfig:
         """Deserialize from dictionary.
 
         Args:
@@ -119,4 +123,6 @@ class AutonomyConfig:
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
         )
+
+
 __all__ = ["AutonomyConfig", "AutonomyLevel", "logger"]

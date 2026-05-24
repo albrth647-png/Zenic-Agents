@@ -3,12 +3,10 @@ Phase 7 Auth & Logic Builder API mixin for BaseOrchestrator.
 """
 
 
-
 class Phase7Mixin:
     """Phase 7: Auth & Logic Builder API methods for BaseOrchestrator."""
 
-    async def register_user(self, username: str, email: str, password: str,
-                           role: str = "user") -> dict:
+    async def register_user(self, username: str, email: str, password: str, role: str = "user") -> dict:
         """Registra un nuevo usuario en el sistema de autenticacion."""
         if not self._auth:
             return {"error": "AuthService not available"}
@@ -53,6 +51,7 @@ class Phase7Mixin:
                 # E-20 FIX: Replaced generate_process_method() (removed from LogicBuilder)
                 # with generate_inline_block_code() from builder_registry.
                 from src.core.logic_blocks.builder_registry import generate_inline_block_code, safe_var_name
+
                 code_lines = []
                 for i, block_name in enumerate(blocks):
                     var_name = safe_var_name(f"result_{block_name}_{i}")
@@ -70,6 +69,7 @@ class Phase7Mixin:
         # E-20 FIX: Replaced generate_process_method() (removed from LogicBuilder)
         # with generate_inline_block_code() from builder_registry.
         from src.core.logic_blocks.builder_registry import generate_inline_block_code, safe_var_name
+
         code_lines = []
         for i, block_name in enumerate(blocks):
             var_name = safe_var_name(f"result_{block_name}_{i}")

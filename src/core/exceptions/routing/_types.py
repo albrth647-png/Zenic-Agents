@@ -6,9 +6,10 @@ import logging
 import sqlite3
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from .engine import ExceptionSignal
 from .taxonomy import ExceptionCategory, ExceptionSeverity
@@ -16,7 +17,8 @@ from .taxonomy import ExceptionCategory, ExceptionSeverity
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "RoutingAction", "RoutingRule",
+    "RoutingAction",
+    "RoutingRule",
 ]
 
 # ── Retry helper ──────────────────────────────────────────────
@@ -27,24 +29,29 @@ _BASE_DELAY = 0.1
 
 def _retry_db(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """Execute *fn* with exponential-backoff retry on DB errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(_MAX_RETRIES):
         try:
             return fn(*args, **kwargs)
         except sqlite3.OperationalError as exc:
             last_exc = exc
-            delay = _BASE_DELAY * (2 ** attempt)
+            delay = _BASE_DELAY * (2**attempt)
             logger.warning(
                 "ExceptionRouter: DB retry %d/%d after %.2fs – %s",
-                attempt + 1, _MAX_RETRIES, delay, exc,
+                attempt + 1,
+                _MAX_RETRIES,
+                delay,
+                exc,
             )
             time.sleep(delay)
         except sqlite3.Error as exc:
             last_exc = exc
-            delay = _BASE_DELAY * (2 ** attempt)
+            delay = _BASE_DELAY * (2**attempt)
             logger.warning(
                 "ExceptionRouter: DB error retry %d/%d – %s",
-                attempt + 1, _MAX_RETRIES, exc,
+                attempt + 1,
+                _MAX_RETRIES,
+                exc,
             )
             time.sleep(delay)
     if last_exc is not None:
@@ -69,7 +76,7 @@ class RoutingAction(str, Enum):
 
 # ── Severity ordering for rule matching ───────────────────────
 
-_SEVERITY_ORDER: Dict[ExceptionSeverity, int] = {
+_SEVERITY_ORDER: dict[ExceptionSeverity, int] = {
     ExceptionSeverity.INFO: 0,
     ExceptionSeverity.WARNING: 1,
     ExceptionSeverity.ERROR: 2,
@@ -96,7 +103,7 @@ class RoutingRule:
     min_severity: ExceptionSeverity = ExceptionSeverity.INFO
     max_severity: ExceptionSeverity = ExceptionSeverity.FATAL
     action: RoutingAction = RoutingAction.LOG_AND_CONTINUE
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     priority: int = 0
     enabled: bool = True
 
@@ -104,7 +111,7 @@ class RoutingRule:
         if not self.rule_id:
             self.rule_id = f"rule-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "rule_id": self.rule_id,
@@ -153,4 +160,3 @@ CREATE TABLE IF NOT EXISTS _zenic_routing_rules (
 
 
 # ── ExceptionRouter ───────────────────────────────────────────
-

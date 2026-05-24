@@ -5,7 +5,7 @@ Task completion, failure, lease management, and stats.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class LifecycleMixin:
     async def complete(
         self: Any,
         task_id: str,
-        result: Optional[Dict[str, Any]] = None,
+        result: dict[str, Any] | None = None,
     ) -> bool:
         """
         Mark a task as completed.
@@ -66,7 +66,9 @@ class LifecycleMixin:
                     self._total_retried += 1
             logger.warning(
                 "TaskQueue: Failed %s (retryable=%s): %s",
-                task_id[:8], retryable, error[:100],
+                task_id[:8],
+                retryable,
+                error[:100],
             )
 
         return success
@@ -107,12 +109,13 @@ class LifecycleMixin:
         if count > 0:
             logger.info(
                 "TaskQueue: Expired %d leases in queue '%s'",
-                count, queue_name,
+                count,
+                queue_name,
             )
         return count
 
     @property
-    def stats(self: Any) -> Dict[str, Any]:
+    def stats(self: Any) -> dict[str, Any]:
         """
         Queue statistics for observability.
 

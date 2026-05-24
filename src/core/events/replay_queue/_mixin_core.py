@@ -6,9 +6,9 @@ import time
 from typing import Any
 
 from ._types import (
-    BatchRetryResult,
     DB_PATH,
     DEFAULT_MAX_RETRIES,
+    BatchRetryResult,
     DeadLetterEvent,
     DeadLetterStatus,
     RetryResult,
@@ -34,8 +34,8 @@ class ReplayQueueCoreMixin:
         trigger_map: TriggerMap | None = None,  # noqa: F821
     ) -> None:
         self._lock = __import__("threading").RLock()
-        self._db_path = db_path or DB_PATH  # noqa: F821
-        self._events: dict[str, DeadLetterEvent] = {}  # noqa: F821
+        self._db_path = db_path or DB_PATH
+        self._events: dict[str, DeadLetterEvent] = {}
         self._trigger_map = trigger_map
         self._initialized = False
         self._init_db()
@@ -78,17 +78,17 @@ class ReplayQueueCoreMixin:
             raise ValueError("tenant_id must be a non-empty string")
 
         dlq_id = f"dlq_{uuid.uuid4().hex[:12]}"  # noqa: F821
-        evt = DeadLetterEvent(  # noqa: F821
+        evt = DeadLetterEvent(
             dlq_id=dlq_id,
             event_type=event_type,
             event_data=event_data,
             error=error,
             tenant_id=tenant_id,
             retry_count=0,
-            max_retries=DEFAULT_MAX_RETRIES,  # noqa: F821
+            max_retries=DEFAULT_MAX_RETRIES,
             last_retry_at=0.0,
             created_at=time.time(),
-            status=DeadLetterStatus.PENDING,  # noqa: F821
+            status=DeadLetterStatus.PENDING,
         )
 
         with self._lock:
@@ -97,13 +97,16 @@ class ReplayQueueCoreMixin:
 
         __import__("logging").getLogger("zenic_agents.events.replay_queue").info(
             "ReplayQueue: enqueued %s (event_type=%s, tenant=%s, error='%s')",
-            dlq_id, event_type, tenant_id, error[:100],
+            dlq_id,
+            event_type,
+            tenant_id,
+            error[:100],
         )
         return dlq_id
 
     # ── Dequeue ─────────────────────────────────────────────────
 
-    def dequeue(self, dlq_id: str) -> DeadLetterEvent | None:  # noqa: F821
+    def dequeue(self, dlq_id: str) -> DeadLetterEvent | None:
         """
         Get a specific dead-letter event by ID.
 
@@ -119,7 +122,7 @@ class ReplayQueueCoreMixin:
         self,
         tenant_id: str | None = None,
         limit: int = 100,
-    ) -> list[DeadLetterEvent]:  # noqa: F821
+    ) -> list[DeadLetterEvent]:
         """
         List events pending retry.
 
@@ -135,7 +138,7 @@ class ReplayQueueCoreMixin:
 
         result = []
         for evt in events:
-            if evt.status not in (DeadLetterStatus.PENDING, DeadLetterStatus.RETRYING):  # noqa: F821
+            if evt.status not in (DeadLetterStatus.PENDING, DeadLetterStatus.RETRYING):
                 continue
             if tenant_id is not None and evt.tenant_id != tenant_id:
                 continue
@@ -148,7 +151,7 @@ class ReplayQueueCoreMixin:
 
     # ── Retry Single Event ──────────────────────────────────────
 
-    def retry_event(self, dlq_id: str) -> RetryResult:  # noqa: F821
+    def retry_event(self, dlq_id: str) -> RetryResult:
         """
         Re-dispatch a single event through the TriggerMap.
 
@@ -169,14 +172,14 @@ class ReplayQueueCoreMixin:
             evt = self._events.get(dlq_id)
 
             if evt is None:
-                return RetryResult(  # noqa: F821
+                return RetryResult(
                     success=False,
                     dlq_id=dlq_id,
                     event_type="",
                     error=f"No dead-letter event found with id {dlq_id}",
                 )
 
-            if evt.status == DeadLetterStatus.EXHAUSTED:  # noqa: F821
+            if evt.status == DeadLetterStatus.EXHAUSTED:
                 return RetryResult(
                     success=False,
                     dlq_id=dlq_id,
@@ -186,7 +189,7 @@ class ReplayQueueCoreMixin:
                     error="Event is exhausted (max retries reached)",
                 )
 
-            if evt.status == DeadLetterStatus.SUCCEEDED:  # noqa: F821
+            if evt.status == DeadLetterStatus.SUCCEEDED:
                 return RetryResult(
                     success=False,
                     dlq_id=dlq_id,
@@ -197,7 +200,7 @@ class ReplayQueueCoreMixin:
                 )
 
             # Atomic update: mark as retrying and increment count
-            evt.status = DeadLetterStatus.RETRYING  # noqa: F821
+            evt.status = DeadLetterStatus.RETRYING
             evt.retry_count += 1
             evt.last_retry_at = time.time()
             current_retry_count = evt.retry_count
@@ -219,23 +222,27 @@ class ReplayQueueCoreMixin:
             if not matches:
                 logger.debug(
                     "ReplayQueue: no automations matched event %s on retry %d",
-                    evt.event_type, evt.retry_count,
+                    evt.event_type,
+                    evt.retry_count,
                 )
         except Exception as exc:
             dispatch_ok = False
             dispatch_error = str(exc)
             logger.warning(
                 "ReplayQueue: dispatch error for %s on retry %d: %s",
-                evt.dlq_id, evt.retry_count, exc,
+                evt.dlq_id,
+                evt.retry_count,
+                exc,
             )
 
         if dispatch_ok:
             with self._lock:
-                evt.status = DeadLetterStatus.SUCCEEDED  # noqa: F821
+                evt.status = DeadLetterStatus.SUCCEEDED
             self._persist_event(evt)
             logger.info(
                 "ReplayQueue: retry succeeded for %s after %d attempt(s)",
-                dlq_id, evt.retry_count,
+                dlq_id,
+                evt.retry_count,
             )
             return RetryResult(
                 success=True,
@@ -247,12 +254,13 @@ class ReplayQueueCoreMixin:
         else:
             if evt.retry_count >= evt.max_retries:
                 with self._lock:
-                    evt.status = DeadLetterStatus.EXHAUSTED  # noqa: F821
+                    evt.status = DeadLetterStatus.EXHAUSTED
                     evt.error = dispatch_error or "Max retries reached"
                 self._persist_event(evt)
                 logger.warning(
                     "ReplayQueue: %s exhausted after %d retries",
-                    dlq_id, evt.retry_count,
+                    dlq_id,
+                    evt.retry_count,
                 )
                 return RetryResult(
                     success=False,
@@ -264,7 +272,7 @@ class ReplayQueueCoreMixin:
                 )
             else:
                 with self._lock:
-                    evt.status = DeadLetterStatus.PENDING  # noqa: F821
+                    evt.status = DeadLetterStatus.PENDING
                     evt.error = dispatch_error or "Retry failed"
                 self._persist_event(evt)
                 return RetryResult(
@@ -282,7 +290,7 @@ class ReplayQueueCoreMixin:
         self,
         tenant_id: str,
         event_type: str | None = None,
-    ) -> BatchRetryResult:  # noqa: F821
+    ) -> BatchRetryResult:
         """
         Retry all matching pending/retrying events for a tenant.
 
@@ -297,7 +305,7 @@ class ReplayQueueCoreMixin:
         if event_type is not None:
             candidates = [e for e in candidates if e.event_type == event_type]
 
-        result = BatchRetryResult(total_attempted=len(candidates))  # noqa: F821
+        result = BatchRetryResult(total_attempted=len(candidates))
 
         for evt in candidates:
             rr = self.retry_event(evt.dlq_id)
@@ -306,15 +314,18 @@ class ReplayQueueCoreMixin:
                 result.succeeded += 1
             else:
                 result.failed += 1
-                if rr.status == DeadLetterStatus.EXHAUSTED:  # noqa: F821
+                if rr.status == DeadLetterStatus.EXHAUSTED:
                     result.exhausted += 1
 
         __import__("logging").getLogger("zenic_agents.events.replay_queue").info(
             "ReplayQueue: batch retry for tenant=%s event_type=%s — "
             "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
-            tenant_id, event_type,
-            result.total_attempted, result.succeeded,
-            result.failed, result.exhausted,
+            tenant_id,
+            event_type,
+            result.total_attempted,
+            result.succeeded,
+            result.failed,
+            result.exhausted,
         )
         return result
 
@@ -324,7 +335,7 @@ class ReplayQueueCoreMixin:
         self,
         since_timestamp: float,
         tenant_id: str | None = None,
-    ) -> BatchRetryResult:  # noqa: F821
+    ) -> BatchRetryResult:
         """
         Replay all events created since a given timestamp.
 
@@ -338,14 +349,15 @@ class ReplayQueueCoreMixin:
         """
         with self._lock:
             candidates = [
-                evt for evt in self._events.values()
+                evt
+                for evt in self._events.values()
                 if evt.created_at >= since_timestamp
-                and evt.status in (DeadLetterStatus.PENDING, DeadLetterStatus.RETRYING)  # noqa: F821
+                and evt.status in (DeadLetterStatus.PENDING, DeadLetterStatus.RETRYING)
                 and (tenant_id is None or evt.tenant_id == tenant_id)
             ]
 
         candidates.sort(key=lambda e: e.created_at)
-        result = BatchRetryResult(total_attempted=len(candidates))  # noqa: F821
+        result = BatchRetryResult(total_attempted=len(candidates))
 
         for evt in candidates:
             rr = self.retry_event(evt.dlq_id)
@@ -354,14 +366,16 @@ class ReplayQueueCoreMixin:
                 result.succeeded += 1
             else:
                 result.failed += 1
-                if rr.status == DeadLetterStatus.EXHAUSTED:  # noqa: F821
+                if rr.status == DeadLetterStatus.EXHAUSTED:
                     result.exhausted += 1
 
         __import__("logging").getLogger("zenic_agents.events.replay_queue").info(
-            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — "
-            "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
-            since_timestamp, tenant_id,
-            result.total_attempted, result.succeeded,
-            result.failed, result.exhausted,
+            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — " "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
+            since_timestamp,
+            tenant_id,
+            result.total_attempted,
+            result.succeeded,
+            result.failed,
+            result.exhausted,
         )
         return result

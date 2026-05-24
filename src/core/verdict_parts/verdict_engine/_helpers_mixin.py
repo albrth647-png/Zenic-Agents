@@ -1,20 +1,21 @@
 """VerdictEngine - Helpers Mixin."""
 
-import re
 import logging
+import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.core.shared.deterministic import ControllableJitter
 from src.core.verdict_engine_module import _validate_ai_verdict  # H-88: AI output validation
 
 try:
     from ..resilience import VerdictAuditEntry
+
     _AUDIT_AVAILABLE = True
 except ImportError:
     _AUDIT_AVAILABLE = False
 
-from ..types import Verdict, Evidence, VerdictInput, ConsensusResult
+from ..types import ConsensusResult, Evidence, Verdict, VerdictInput
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
@@ -25,7 +26,6 @@ _fallback_jitter = ControllableJitter("verdict_engine_helpers")
 
 class VerdictHelpersMixin:
     """Mixin providing resilience helpers, LLM call, parsing, and formatting."""
-
 
     # ================================================================
     #  INTERNAL: Resilience helpers
@@ -45,21 +45,28 @@ class VerdictHelpersMixin:
         if self._resilience:
             self._resilience.record_success(latency_s, was_ambiguous)
 
-    def _record_failure(self, latency_s: float, was_timeout: bool = False,
-                         was_ambiguous: bool = False) -> None:
+    def _record_failure(self, latency_s: float, was_timeout: bool = False, was_ambiguous: bool = False) -> None:
         """Record failure to resilience systems."""
         if self._resilience:
-            self._resilience.record_failure(
-                latency_s, was_timeout=was_timeout, was_ambiguous=was_ambiguous
-            )
+            self._resilience.record_failure(latency_s, was_timeout=was_timeout, was_ambiguous=was_ambiguous)
 
-    def _audit_result(self, question: str, verdict: str, source: str,
-                       llm_used: bool, confidence: float, latency_ms: int,
-                       retry_count: int, evidence_for_count: int,
-                       evidence_against_count: int, consensus_score: float,
-                       was_timeout: bool = False, was_ambiguous: bool = False,
-                       circuit_breaker_state: str = "",
-                       raw_response: str = "") -> None:
+    def _audit_result(
+        self,
+        question: str,
+        verdict: str,
+        source: str,
+        llm_used: bool,
+        confidence: float,
+        latency_ms: int,
+        retry_count: int,
+        evidence_for_count: int,
+        evidence_against_count: int,
+        consensus_score: float,
+        was_timeout: bool = False,
+        was_ambiguous: bool = False,
+        circuit_breaker_state: str = "",
+        raw_response: str = "",
+    ) -> None:
         """Record result in audit log."""
         if self._resilience and _AUDIT_AVAILABLE:
             entry = VerdictAuditEntry(
@@ -74,9 +81,7 @@ class VerdictHelpersMixin:
                 evidence_for_count=evidence_for_count,
                 evidence_against_count=evidence_against_count,
                 consensus_score=consensus_score,
-                circuit_breaker_state=circuit_breaker_state or (
-                    self._resilience.circuit_breaker.state.value
-                ),
+                circuit_breaker_state=circuit_breaker_state or (self._resilience.circuit_breaker.state.value),
                 was_timeout=was_timeout,
                 was_ambiguous=was_ambiguous,
                 raw_llm_response=raw_response[:100],
@@ -87,7 +92,7 @@ class VerdictHelpersMixin:
     #  INTERNAL: LLM call and parsing
     # ================================================================
 
-    def _call_llm_safe(self, prompt: str, max_tokens: int) -> Optional[str]:
+    def _call_llm_safe(self, prompt: str, max_tokens: int) -> str | None:
         """Llama al LLM de forma segura. No lanza excepciones.
 
         H-88: All AI output is validated through _validate_ai_verdict()
@@ -107,7 +112,7 @@ class VerdictHelpersMixin:
             logger.warning(f"VerdictEngine: Safe LLM call failed: {e}")
             return None
 
-    def _parse_verdict(self, response: str) -> Optional[Verdict]:
+    def _parse_verdict(self, response: str) -> Verdict | None:
         """
         Parsea la respuesta del LLM. Solo acepta YES o NO.
 
@@ -123,7 +128,7 @@ class VerdictHelpersMixin:
 
         # Limpiar thinking blocks de Qwen3
         clean = response.strip()
-        think_match = re.search(r'</think\s*>(.*)', clean, re.DOTALL)
+        think_match = re.search(r"</think\s*>(.*)", clean, re.DOTALL)
         if think_match:
             clean = think_match.group(1).strip()
 
@@ -140,16 +145,14 @@ class VerdictHelpersMixin:
         # Only exact matches are accepted. Any ambiguity → None → treated as NO.
 
         # Cualquier otra cosa = ambiguo = None (se convierte en NO)
-        logger.warning(
-            f"VerdictEngine: Ambiguous LLM response: '{response[:50]}'. Defaulting to NO."
-        )
+        logger.warning(f"VerdictEngine: Ambiguous LLM response: '{response[:50]}'. Defaulting to NO.")
         return None
 
     # ================================================================
     #  INTERNAL: Formatting helpers
     # ================================================================
 
-    def _format_evidence(self, evidence: List[Evidence]) -> str:
+    def _format_evidence(self, evidence: list[Evidence]) -> str:
         """Formatea evidencia para incluir en el prompt del LLM."""
         if not evidence:
             return "None"
@@ -178,8 +181,7 @@ class VerdictHelpersMixin:
             f"score={input_data.consensus_score:.2f}"
         )
 
-    def _build_context_summary(self, text: str, code: str,
-                                pipeline_results: Dict[str, Any]) -> str:
+    def _build_context_summary(self, text: str, code: str, pipeline_results: dict[str, Any]) -> str:
         """Construye resumen de contexto para el prompt."""
         parts = []
         if text:

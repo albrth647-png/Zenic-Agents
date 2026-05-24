@@ -6,32 +6,39 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.core.shared.agent_schemas import (
+    ActionSpec as SharedActionSpec,
+)
+from src.core.shared.agent_schemas import (
+    ScheduleSpec as SharedScheduleSpec,
+)
+from src.core.shared.agent_schemas import (
+    TriggerSpec as SharedTriggerSpec,
+)
+
+# Shared utilities
+from src.core.shared.agent_schemas import (
+    ValidationIssue as SharedValidationIssue,
+)
+
 # v2 agents
 from ..automation import (
-    TriggerInferrer,
     ActionInferrer,
-    ScheduleParser,
     AutomationNamer,
+    ScheduleParser,
+    TriggerInferrer,
     WorkflowSerializer,
 )
-from ..validation import SecurityScanner, SyntaxValidator, RiskCalculator
 
 # v2 schemas
-from ..schemas import SecurityResult, SyntaxResult, RiskResult
+from ..schemas import RiskResult, SecurityResult, SyntaxResult
 
 # v1 schema types
 from ..schemas._v1_compat_schemas import (
     AutomationOutput,
     ValidationOutput,
 )
-
-# Shared utilities
-from src.core.shared.agent_schemas import (
-    ValidationIssue as SharedValidationIssue,
-    TriggerSpec as SharedTriggerSpec,
-    ActionSpec as SharedActionSpec,
-    ScheduleSpec as SharedScheduleSpec,
-)
+from ..validation import RiskCalculator, SecurityScanner, SyntaxValidator
 
 # Local compat types
 
@@ -39,6 +46,7 @@ from src.core.shared.agent_schemas import (
 # ══════════════════════════════════════════════════════════════
 #  AutomationAgentCompat
 # ══════════════════════════════════════════════════════════════
+
 
 class AutomationAgentCompat:
     """
@@ -59,8 +67,7 @@ class AutomationAgentCompat:
         self._serializer = WorkflowSerializer(**kwargs)
         self._call_count = 0
 
-    def design_with_runner(self, runner: Any, description: str,
-                           **kwargs) -> AutomationOutput:
+    def design_with_runner(self, runner: Any, description: str, **kwargs) -> AutomationOutput:
         """Design automation using v2 agents."""
         self._call_count += 1
 
@@ -90,14 +97,8 @@ class AutomationAgentCompat:
         """Convert AutomationOutput to workflow dict."""
         return {
             "name": output.name,
-            "triggers": [
-                {"type": t.type, "config": t.config, "description": t.description}
-                for t in output.triggers
-            ],
-            "actions": [
-                {"type": a.type, "config": a.config, "description": a.description}
-                for a in output.actions
-            ],
+            "triggers": [{"type": t.type, "config": t.config, "description": t.description} for t in output.triggers],
+            "actions": [{"type": a.type, "config": a.config, "description": a.description} for a in output.actions],
             "schedule": {
                 "type": output.schedule.type,
                 "cron": output.schedule.cron_expression,
@@ -112,14 +113,16 @@ class AutomationAgentCompat:
             raw = data["triggers"]
             if isinstance(raw, list):
                 return [
-                    t if isinstance(t, SharedTriggerSpec) else SharedTriggerSpec(
+                    t
+                    if isinstance(t, SharedTriggerSpec)
+                    else SharedTriggerSpec(
                         type=t.get("type", "manual") if isinstance(t, dict) else "manual",
                         config=t.get("config", {}) if isinstance(t, dict) else {},
                         description=t.get("description", "") if isinstance(t, dict) else str(t),
                     )
                     for t in raw
                 ]
-        return [SharedTriggerSpec(type="manual", description= "Inferred from user description")]
+        return [SharedTriggerSpec(type="manual", description="Inferred from user description")]
 
     def _extract_actions(self, result: dict) -> list[SharedActionSpec]:
         """Extract actions from v2 ActionInferrer result."""
@@ -128,7 +131,9 @@ class AutomationAgentCompat:
             raw = data["actions"]
             if isinstance(raw, list):
                 return [
-                    a if isinstance(a, SharedActionSpec) else SharedActionSpec(
+                    a
+                    if isinstance(a, SharedActionSpec)
+                    else SharedActionSpec(
                         type=a.get("type", "log") if isinstance(a, dict) else "log",
                         config=a.get("config", {}) if isinstance(a, dict) else {},
                         description=a.get("description", "") if isinstance(a, dict) else str(a),
@@ -170,6 +175,7 @@ class AutomationAgentCompat:
 #  ValidationAgentCompat
 # ══════════════════════════════════════════════════════════════
 
+
 class ValidationAgentCompat:
     """
     v1-compatible ValidationAgent wrapper around v2 validation agents.
@@ -186,9 +192,9 @@ class ValidationAgentCompat:
         self._risk_calculator = RiskCalculator(**kwargs)
         self._call_count = 0
 
-    def validate_with_runner(self, runner: Any, target: str, content: str,
-                             rules: list[str] = None,
-                             language: str = "python") -> ValidationOutput:
+    def validate_with_runner(
+        self, runner: Any, target: str, content: str, rules: list[str] = None, language: str = "python"
+    ) -> ValidationOutput:
         """Validate using v2 agents."""
         self._call_count += 1
         rules = rules or ["security", "quality"]
@@ -200,47 +206,54 @@ class ValidationAgentCompat:
             sec_result = self._security_scanner.run({"code": content, "language": language})
             sec_data = sec_result.get("data")
             if isinstance(sec_data, SecurityResult):
-                all_issues.extend([
-                    SharedValidationIssue(
-                        severity=t.severity,
-                        code=t.code,
-                        message=t.message,
-                        line=t.line,
-                        suggestion=t.suggestion,
-                    )
-                    for t in sec_data.threats
-                ])
+                all_issues.extend(
+                    [
+                        SharedValidationIssue(
+                            severity=t.severity,
+                            code=t.code,
+                            message=t.message,
+                            line=t.line,
+                            suggestion=t.suggestion,
+                        )
+                        for t in sec_data.threats
+                    ]
+                )
 
         # Syntax validation
         if "quality" in rules and content:
             syn_result = self._syntax_validator.run({"code": content, "language": language})
             syn_data = syn_result.get("data")
             if isinstance(syn_data, SyntaxResult):
-                all_issues.extend([
-                    SharedValidationIssue(
-                        severity=e.severity,
-                        code=e.code,
-                        message=e.message,
-                        line=e.line,
-                        suggestion=e.suggestion,
-                    )
-                    for e in syn_data.errors
-                ])
+                all_issues.extend(
+                    [
+                        SharedValidationIssue(
+                            severity=e.severity,
+                            code=e.code,
+                            message=e.message,
+                            line=e.line,
+                            suggestion=e.suggestion,
+                        )
+                        for e in syn_data.errors
+                    ]
+                )
 
         # Chain validation
         if target == "chain" and content:
             from ..validation import ChainValidator
+
             chain_val = ChainValidator()
             chain_result = chain_val.run({"description": content})
             chain_data = chain_result.get("data")
             if isinstance(chain_data, dict):
                 incompat = chain_data.get("incompatibilities", [])
                 for inc in incompat:
-                    all_issues.append(SharedValidationIssue(
-                        severity="warning",
-                        code="chain_incompatibility",
-                        message=str(inc),
-                    ))
+                    all_issues.append(
+                        SharedValidationIssue(
+                            severity="warning",
+                            code="chain_incompatibility",
+                            message=str(inc),
+                        )
+                    )
 
         # Risk calculation
         risk_score = 0.0
@@ -251,9 +264,7 @@ class ValidationAgentCompat:
                 risk_score = risk_data.score
 
         # Build suggestions
-        suggestions = [
-            i.suggestion for i in all_issues if i.suggestion
-        ]
+        suggestions = [i.suggestion for i in all_issues if i.suggestion]
 
         is_valid = not any(i.severity == "error" for i in all_issues)
 

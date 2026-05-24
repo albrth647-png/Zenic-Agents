@@ -6,24 +6,23 @@ multiple factors: action category, monetary amount, target environment,
 time of day, and user history.
 """
 
-from ._types import (
-    RiskLevel,
-    RiskAssessment,
-    _ACTION_CATEGORY_SCORES,
-    _ROLE_LEVELS,
-    _MAX_RETRIES,
-    _RETRY_DELAY,
-    _score_to_risk_level,
-    _score_to_role,
-)
-from ._mixin_core import RiskBasedApprovalRouter
-
 # ── Singleton ─────────────────────────────────────────────
-
 import threading
 from typing import Optional
 
-_risk_router_instance: Optional[RiskBasedApprovalRouter] = None
+from ._mixin_core import RiskBasedApprovalRouter
+from ._types import (
+    _ACTION_CATEGORY_SCORES,
+    _MAX_RETRIES,
+    _RETRY_DELAY,
+    _ROLE_LEVELS,
+    RiskAssessment,
+    RiskLevel,
+    _score_to_risk_level,
+    _score_to_role,
+)
+
+_risk_router_instance: RiskBasedApprovalRouter | None = None
 _risk_router_lock = threading.Lock()
 
 
@@ -42,4 +41,16 @@ def reset_risk_router() -> None:
     _risk_router_instance = None
 
 
-__all__ = ["RiskLevel", "RiskAssessment", "RiskBasedApprovalRouter", "get_risk_router", "reset_risk_router", "_ACTION_CATEGORY_SCORES", "_ROLE_LEVELS", "_MAX_RETRIES", "_RETRY_DELAY", "_score_to_risk_level", "_score_to_role"]
+__all__ = [
+    "_ACTION_CATEGORY_SCORES",
+    "_MAX_RETRIES",
+    "_RETRY_DELAY",
+    "_ROLE_LEVELS",
+    "RiskAssessment",
+    "RiskBasedApprovalRouter",
+    "RiskLevel",
+    "_score_to_risk_level",
+    "_score_to_role",
+    "get_risk_router",
+    "reset_risk_router",
+]

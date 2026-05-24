@@ -31,13 +31,15 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 
 try:
     import aiohttp  # noqa: F401
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
+    import urllib.error
     import urllib.request
-    import urllib.error  # noqa: F401
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -48,5 +50,5 @@ except ImportError:
 _DEFAULT_API_URL = "https://outlook.office.com/webhook"
 _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 0.5  # seconds
-_WEBHOOK_TIMEOUT = 30    # seconds
+_WEBHOOK_TIMEOUT = 30  # seconds
 __all__ = ["_DEFAULT_API_URL", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_WEBHOOK_TIMEOUT", "_validate_url"]

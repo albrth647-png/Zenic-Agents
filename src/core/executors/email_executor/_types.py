@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 # ── Optional: aiosmtplib ──────────────────────────────────────────
 
 try:
     import aiosmtplib  # type: ignore[import-unresolved]  # noqa: F401
+
     _HAS_AIOSMTPLIB_LOCAL = True
 except ImportError:
     _HAS_AIOSMTPLIB_LOCAL = False
@@ -18,8 +18,9 @@ except ImportError:
 # ── Optional: urllib fallback ─────────────────────────────────────
 
 try:
+    import urllib.error
     import urllib.request
-    import urllib.error  # noqa: F401
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False

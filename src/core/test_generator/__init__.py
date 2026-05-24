@@ -18,26 +18,25 @@ M9 Implementation: Pure Python, no external APIs. Uses ast module.
 
 import ast
 import logging
-from typing import List, Dict
+from typing import Dict, List
 
-from ._helpers import (
-    TYPE_FIXTURES,
-    generate_syntax_error_tests,
-    generate_minimal_tests,
-)
 from ._analysis_mixin import ASTAnalysisMixin
 from ._codegen_mixin import CodeGenMixin
+from ._helpers import (
+    TYPE_FIXTURES,
+    generate_minimal_tests,
+    generate_syntax_error_tests,
+)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["TestGenerator", "List", "Dict", "TYPE_FIXTURES"]
+__all__ = ["TYPE_FIXTURES", "Dict", "List", "TestGenerator"]
 
 
 class TestGenerator(ASTAnalysisMixin, CodeGenMixin):
     """Auto-generate pytest test files from Python source code."""
 
-    def generate_tests(self, code: str, module_name: str = "module",
-                        project_name: str = "test_project") -> str:
+    def generate_tests(self, code: str, module_name: str = "module", project_name: str = "test_project") -> str:
         """Generate a complete pytest test file from source code.
 
         Args:
@@ -76,4 +75,4 @@ class TestGenerator(ASTAnalysisMixin, CodeGenMixin):
         for fn_info in functions:
             parts.append(self._generate_function_tests(fn_info, module_name))
 
-        return '\n\n'.join(parts) + '\n'
+        return "\n\n".join(parts) + "\n"

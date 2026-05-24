@@ -20,9 +20,9 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from ._types import SafetyVerdict, ActionCategory, SafetyRule, SafetyCheckResult, SAFETY_RULES
+from ._types import SAFETY_RULES, ActionCategory, SafetyCheckResult, SafetyRule, SafetyVerdict
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +46,11 @@ class ActionRateLimiter:
         self._max_per_hour = max_per_hour
         self._max_destructive_per_hour = max_destructive_per_hour
         self._max_financial_per_hour = max_financial_per_hour
-        self._timestamps: Dict[str, List[float]] = {}
-        self._category_timestamps: Dict[ActionCategory, List[float]] = {}
+        self._timestamps: dict[str, list[float]] = {}
+        self._category_timestamps: dict[ActionCategory, list[float]] = {}
         self._lock = threading.Lock()
 
-    def check(self, action_type: str, category: ActionCategory) -> Optional[str]:
+    def check(self, action_type: str, category: ActionCategory) -> str | None:
         """Check if action is rate-limited. Returns reason or None."""
         with self._lock:
             # Phase 5: Use time.monotonic() for rate-limiting decisions
@@ -101,14 +101,14 @@ class SafetyGate:
 
     def __init__(
         self,
-        custom_rules: Optional[List[SafetyRule]] = None,
-        rate_limiter: Optional[ActionRateLimiter] = None,
+        custom_rules: list[SafetyRule] | None = None,
+        rate_limiter: ActionRateLimiter | None = None,
     ) -> None:
         self._rules = list(SAFETY_RULES) + (custom_rules or [])
         self._rate_limiter = rate_limiter or ActionRateLimiter()
-        self._confirmations: Dict[str, float] = {}
-        self._approvals: Dict[str, str] = {}
-        self._denied_actions: Set[str] = set()          # FIX A2 (#10): track denied action_ids
+        self._confirmations: dict[str, float] = {}
+        self._approvals: dict[str, str] = {}
+        self._denied_actions: set[str] = set()  # FIX A2 (#10): track denied action_ids
         self._denied_count: int = 0
         self._allowed_count: int = 0
 
@@ -129,27 +129,27 @@ class SafetyGate:
     def check(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> SafetyCheckResult:
         """Run all safety checks for an action."""
         context = context or {}
-        action_id = self._generate_action_id()             # FIX A2: unique ID per check
+        action_id = self._generate_action_id()  # FIX A2: unique ID per check
         category = self._classify_action(action_type, config)
 
         rule_result = self._check_rules(action_type, config)
         if rule_result:
-            rule_result.action_id = action_id               # FIX A2: assign action_id
+            rule_result.action_id = action_id  # FIX A2: assign action_id
             if rule_result.verdict == SafetyVerdict.DENY:
-                self._denied_actions.add(action_id)         # FIX A2: track denied
+                self._denied_actions.add(action_id)  # FIX A2: track denied
             return rule_result
 
         rate_reason = self._rate_limiter.check(action_type, category)
         if rate_reason:
             self._denied_count += 1
-            self._denied_actions.add(action_id)             # FIX A2: track rate-limited as denied
+            self._denied_actions.add(action_id)  # FIX A2: track rate-limited as denied
             return SafetyCheckResult(
-                action_id=action_id,                        # FIX A2: include action_id
+                action_id=action_id,  # FIX A2: include action_id
                 verdict=SafetyVerdict.RATE_LIMITED,
                 category=category,
                 reason=rate_reason,
@@ -162,7 +162,7 @@ class SafetyGate:
             self._allowed_count += 1
 
         return SafetyCheckResult(
-            action_id=action_id,                            # FIX A2: include action_id
+            action_id=action_id,  # FIX A2: include action_id
             verdict=verdict,
             category=category,
             reason=f"Action classified as {category.value}",
@@ -226,18 +226,18 @@ class SafetyGate:
         """
         return action_id in self._denied_actions
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get safety gate statistics."""
         return {
             "allowed": self._allowed_count,
             "denied": self._denied_count,
-            "denied_actions": len(self._denied_actions),        # FIX A2
+            "denied_actions": len(self._denied_actions),  # FIX A2
             "pending_confirmations": len(self._confirmations),
             "pending_approvals": len(self._approvals),
             "rules_count": len(self._rules),
         }
 
-    def _classify_action(self, action_type: str, config: Dict[str, Any]) -> ActionCategory:
+    def _classify_action(self, action_type: str, config: dict[str, Any]) -> ActionCategory:
         """Classify action into risk category (deterministic)."""
         action_type_lower = action_type.lower()
 
@@ -307,9 +307,7 @@ class SafetyGate:
             return new
         return current
 
-    def _check_rules(
-        self, action_type: str, config: Dict[str, Any]
-    ) -> Optional[SafetyCheckResult]:
+    def _check_rules(self, action_type: str, config: dict[str, Any]) -> SafetyCheckResult | None:
         """Check config against ALL safety rules and return the most severe match.
 
         SECURITY (A7 fix): Iterates every rule instead of returning on the
@@ -318,7 +316,7 @@ class SafetyGate:
         """
         config_str = self._config_to_searchable(action_type, config)
 
-        worst_result: Optional[SafetyCheckResult] = None
+        worst_result: SafetyCheckResult | None = None
         worst_verdict: SafetyVerdict = SafetyVerdict.ALLOW
 
         for rule in self._rules:
@@ -344,7 +342,7 @@ class SafetyGate:
 
         return worst_result
 
-    def _config_to_searchable(self, action_type: str, config: Dict[str, Any]) -> str:
+    def _config_to_searchable(self, action_type: str, config: dict[str, Any]) -> str:
         """Convert config to a searchable string for rule matching."""
         parts = [action_type]
         for key, value in config.items():
@@ -383,7 +381,7 @@ class SafetyGate:
 
 # ── Global Instance ──────────────────────────────────────
 
-_default_safety_gate: Optional[SafetyGate] = None
+_default_safety_gate: SafetyGate | None = None
 _safety_gate_lock = threading.Lock()
 
 
@@ -391,7 +389,7 @@ _safety_gate_lock = threading.Lock()
 # When configured, denied action IDs are persisted to disk so they
 # survive reset_safety_gate() calls. This enforces the DENY invariant.
 
-_DENY_PERSIST_DIR: Optional[str] = None
+_DENY_PERSIST_DIR: str | None = None
 
 
 def configure_deny_persistence(log_dir: str) -> None:
@@ -425,7 +423,7 @@ def get_default_safety_gate() -> SafetyGate:
                     deny_path = os.path.join(_DENY_PERSIST_DIR, ".safety-denied-actions.json")
                     if os.path.exists(deny_path):
                         try:
-                            with open(deny_path, "r") as f:
+                            with open(deny_path) as f:
                                 data = json.load(f)
                             for action_id in data.get("denied_actions", []):
                                 gate._denied_actions.add(action_id)
@@ -483,11 +481,11 @@ def set_default_safety_gate(gate: SafetyGate) -> None:
     with _safety_gate_lock:
         if _default_safety_gate is not None:
             # Transfer denied actions if the old gate has them
-            if hasattr(gate, 'original') and hasattr(gate.original, '_denied_actions'):
+            if hasattr(gate, "original") and hasattr(gate.original, "_denied_actions"):
                 # EnhancedSafetyGate — denied actions are on .original
                 pass
-            elif hasattr(_default_safety_gate, '_denied_actions'):
+            elif hasattr(_default_safety_gate, "_denied_actions"):
                 denied = _default_safety_gate._denied_actions
-                if hasattr(gate, '_denied_actions'):
+                if hasattr(gate, "_denied_actions"):
                     gate._denied_actions.update(denied)
         _default_safety_gate = gate

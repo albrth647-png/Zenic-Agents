@@ -1,7 +1,6 @@
 """CodeAssembler - Helpers Mixin."""
 
 import logging
-from typing import Dict, List
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.assembler")
 
@@ -17,24 +16,35 @@ class AssemblerHelpersMixin:
     def _map_type(yaml_type: str) -> str:
         """Map YAML type to Python type annotation."""
         mapping = {
-            "str": "str", "string": "str", "text": "str",
-            "int": "int", "integer": "int", "number": "int",
-            "float": "float", "decimal": "float", "double": "float",
-            "bool": "bool", "boolean": "bool",
-            "date": "datetime", "datetime": "datetime",
-            "list": "List[Any]", "array": "List[Any]",
-            "dict": "Dict[str, Any]", "json": "Dict[str, Any]",
-            "email": "str", "url": "str", "phone": "str",
+            "str": "str",
+            "string": "str",
+            "text": "str",
+            "int": "int",
+            "integer": "int",
+            "number": "int",
+            "float": "float",
+            "decimal": "float",
+            "double": "float",
+            "bool": "bool",
+            "boolean": "bool",
+            "date": "datetime",
+            "datetime": "datetime",
+            "list": "List[Any]",
+            "array": "List[Any]",
+            "dict": "Dict[str, Any]",
+            "json": "Dict[str, Any]",
+            "email": "str",
+            "url": "str",
+            "phone": "str",
         }
         return mapping.get(yaml_type.lower(), "str")
 
     @staticmethod
     def _block_to_class(block_name: str) -> str:
         """Convert block_name to PascalCase class name."""
-        return ''.join(word.capitalize() for word in block_name.split('_'))
+        return "".join(word.capitalize() for word in block_name.split("_"))
 
-    def _prepare_variables(self, project_name: str, entities: List[Dict],
-                           blocks: List[str]) -> Dict:
+    def _prepare_variables(self, project_name: str, entities: list[dict], blocks: list[str]) -> dict:
         """Prepare template variables for rendering."""
         entity_names = [e.get("name", "Item") for e in entities]
         entity_fields = {}
@@ -53,7 +63,7 @@ class AssemblerHelpersMixin:
             "version": "1.0.0",
         }
 
-    def _resolve_dependencies(self, block_names: List[str]) -> List[str]:
+    def _resolve_dependencies(self, block_names: list[str]) -> list[str]:
         """Resolve block dependencies in correct order."""
         # Define dependency graph
         deps = {

@@ -17,19 +17,23 @@ import threading
 import time
 from dataclasses import dataclass
 
-from ..types.base import Result, Ok
-from ..types.memory import (
-    MemoryEntry, MemoryQuery, MemoryResult,
-    MemoryType, MemoryStats,
-)
 from ..config.constants import MEMORY_MAX_WORKING
+from ..types.base import Ok, Result
+from ..types.memory import (
+    MemoryEntry,
+    MemoryQuery,
+    MemoryResult,
+    MemoryStats,
+    MemoryType,
+)
 
 
 @dataclass
 class WorkingMemoryConfig:
     """Configuracion de working memory."""
+
     max_entries: int = MEMORY_MAX_WORKING
-    ttl_seconds: float = 0.0       # 0 = sin expiracion
+    ttl_seconds: float = 0.0  # 0 = sin expiracion
 
 
 class WorkingMemory:
@@ -80,10 +84,7 @@ class WorkingMemory:
 
         with self._lock:
             # Filtrar por query
-            candidates = [
-                e for e in self._entries
-                if not e.is_expired and query.matches(e)
-            ]
+            candidates = [e for e in self._entries if not e.is_expired and query.matches(e)]
 
             # Scoring
             for entry in candidates:
@@ -94,15 +95,13 @@ class WorkingMemory:
             candidates.sort(key=lambda e: e.relevance_score, reverse=True)
 
             # Limitar resultados
-            results = candidates[:query.max_results]
+            results = candidates[: query.max_results]
 
         elapsed = (time.time() - start) * 1000
         self._stats.total_retrieved += 1
         self._stats.cache_hits += len(results)
         self._stats.cache_misses += max(0, len(candidates) - len(results))
-        self._stats.avg_retrieval_ms = (
-            (self._stats.avg_retrieval_ms + elapsed) / 2
-        )
+        self._stats.avg_retrieval_ms = (self._stats.avg_retrieval_ms + elapsed) / 2
 
         return MemoryResult(
             entries=results,
@@ -124,9 +123,7 @@ class WorkingMemory:
             recent = self._entries[-max_entries:]
             lines: list[str] = []
             for entry in recent:
-                lines.append(
-                    f"[{entry.category.value}] {entry.content}"
-                )
+                lines.append(f"[{entry.category.value}] {entry.content}")
             return "\n".join(lines)
 
     # ─── Management ───────────────────────────────────────────

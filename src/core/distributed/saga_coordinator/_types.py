@@ -2,17 +2,17 @@
 
 import enum
 from dataclasses import dataclass
-from typing import Optional
 
 from ..task_queue import TaskPriority
-
 
 # ============================================================
 #  ENUMS
 # ============================================================
 
+
 class DistributedSagaState(str, enum.Enum):
     """Saga lifecycle states (consistent with single-process SagaStatus)."""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -24,6 +24,7 @@ class DistributedSagaState(str, enum.Enum):
 # ============================================================
 #  SAGA STEP DEFINITION
 # ============================================================
+
 
 @dataclass
 class DistributedSagaStep:
@@ -38,10 +39,11 @@ class DistributedSagaStep:
         timeout: Optional timeout in seconds.
         priority: Task priority for queue scheduling.
     """
+
     name: str
     action_task_type: str = ""
-    compensation_task_type: Optional[str] = None
-    timeout: Optional[float] = None
+    compensation_task_type: str | None = None
+    timeout: float | None = None
     priority: int = TaskPriority.NORMAL
 
     def __post_init__(self) -> None:
@@ -50,4 +52,6 @@ class DistributedSagaStep:
         if not self.action_task_type:
             # Default: use name as task type
             self.action_task_type = f"saga_step_{self.name}"
+
+
 __all__ = ["DistributedSagaState", "DistributedSagaStep"]

@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-    # ── Helpers ───────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────
+
 
 def _auto_fill_field(
-    self, template_dict: Dict[str, Any], field_name: str, value: str,  # noqa: F821  # TODO: Phase3 - verify import
+    self,
+    template_dict: Dict[str, Any],
+    field_name: str,
+    value: str,  # noqa: F821  # TODO: Phase3 - verify import
 ) -> bool:
     """Auto-fill a field by searching all sections."""
     template = template_dict.get("template", template_dict)
@@ -19,4 +23,6 @@ def _auto_fill_field(
             return self._bridge.fill_field(template_dict, section_id, field_name, value)
 
     return False
+
+
 __all__ = ["_auto_fill_field"]

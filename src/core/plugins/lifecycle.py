@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import logging
 import threading
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from .registry import PluginRegistry, get_plugin_registry
 from .types import PluginManifest, PluginState
@@ -14,12 +14,12 @@ logger = logging.getLogger("zenic_agents.core.plugins.lifecycle")
 class PluginLifecycleManager:
     """Thread-safe plugin lifecycle manager."""
 
-    def __init__(self, registry: Optional[PluginRegistry] = None) -> None:
+    def __init__(self, registry: PluginRegistry | None = None) -> None:
         self._lock = threading.RLock()
         self._registry = registry or get_plugin_registry()
-        self._loaded_modules: Dict[str, Any] = {}
+        self._loaded_modules: dict[str, Any] = {}
 
-    def load_plugin(self, plugin_id: str) -> Tuple[bool, Optional[str]]:
+    def load_plugin(self, plugin_id: str) -> tuple[bool, str | None]:
         """Load and activate a plugin."""
         with self._lock:
             instance = self._registry.get_plugin(plugin_id)
@@ -44,7 +44,8 @@ class PluginLifecycleManager:
                         ok, err = self.load_plugin(dep_id)
                         if not ok:
                             self._registry.set_state(
-                                plugin_id, PluginState.ERROR,
+                                plugin_id,
+                                PluginState.ERROR,
                                 f"Dependency {dep_id} failed: {err}",
                             )
                             return (False, f"Dependency {dep_id} failed: {err}")
@@ -74,7 +75,8 @@ class PluginLifecycleManager:
                 if plugin_id in p.manifest.dependencies:
                     logger.warning(
                         "Cannot unload %s: active plugin %s depends on it",
-                        plugin_id, p.manifest.id,
+                        plugin_id,
+                        p.manifest.id,
                     )
                     return False
 
@@ -83,7 +85,7 @@ class PluginLifecycleManager:
             logger.info("Plugin unloaded: %s", plugin_id)
             return True
 
-    def reload_plugin(self, plugin_id: str) -> Tuple[bool, Optional[str]]:
+    def reload_plugin(self, plugin_id: str) -> tuple[bool, str | None]:
         """Unload then load a plugin."""
         with self._lock:
             if not self.unload_plugin(plugin_id):
@@ -115,10 +117,10 @@ class PluginLifecycleManager:
             logger.info("Plugin disabled: %s", plugin_id)
             return True
 
-    def load_all(self) -> Dict[str, bool]:
+    def load_all(self) -> dict[str, bool]:
         """Load all registered plugins in dependency order."""
         with self._lock:
-            results: Dict[str, bool] = {}
+            results: dict[str, bool] = {}
             all_plugins = self._registry.list_plugins()
 
             # Build a set of plugin IDs to load
@@ -137,7 +139,8 @@ class PluginLifecycleManager:
                         results[pid] = False
                         continue
                     deps_met = all(
-                        d in loaded or self._registry.get_plugin(d) is None
+                        d in loaded
+                        or self._registry.get_plugin(d) is None
                         or self._registry.get_plugin(d).state == PluginState.ACTIVE
                         for d in instance.manifest.dependencies
                     )
@@ -154,10 +157,10 @@ class PluginLifecycleManager:
                     break
             return results
 
-    def unload_all(self) -> Dict[str, bool]:
+    def unload_all(self) -> dict[str, bool]:
         """Unload all active plugins in reverse dependency order."""
         with self._lock:
-            results: Dict[str, bool] = {}
+            results: dict[str, bool] = {}
             active = self._registry.list_plugins(state=PluginState.ACTIVE)
 
             # Sort by reverse dependency order
@@ -165,7 +168,7 @@ class PluginLifecycleManager:
                 results[p.manifest.id] = self.unload_plugin(p.manifest.id)
             return results
 
-    def health_check(self, plugin_id: str) -> Dict[str, Any]:
+    def health_check(self, plugin_id: str) -> dict[str, Any]:
         with self._lock:
             instance = self._registry.get_plugin(plugin_id)
             if instance is None:
@@ -178,16 +181,16 @@ class PluginLifecycleManager:
                 "error_message": instance.error_message,
             }
 
-    def _execute_entry_point(
-        self, manifest: PluginManifest
-    ) -> Tuple[bool, Optional[str]]:
+    def _execute_entry_point(self, manifest: PluginManifest) -> tuple[bool, str | None]:
         """Execute a plugin's entry point module."""
         if not manifest.entry_point:
             return (True, None)
 
         try:
             module_path, _, attr = manifest.entry_point.partition(":")
-            module = importlib.import_module(module_path)  # nosemgrep: non-literal-import  # SECURITY: module_path comes from validated plugin manifest
+            module = importlib.import_module(
+                module_path
+            )  # nosemgrep: non-literal-import  # SECURITY: module_path comes from validated plugin manifest
             if attr:
                 initializer = getattr(module, attr, None)
                 if initializer is not None and callable(initializer):
@@ -200,9 +203,7 @@ class PluginLifecycleManager:
             logger.error("Entry point failed for %s: %s", manifest.id, exc)
             return (False, str(exc))
 
-    def _call_hook(
-        self, plugin_id: str, hook_name: str, data: Dict[str, Any]
-    ) -> Any:
+    def _call_hook(self, plugin_id: str, hook_name: str, data: dict[str, Any]) -> Any:
         """Call a hook on a loaded plugin module."""
         module = self._loaded_modules.get(plugin_id)
         if module is None:
@@ -217,12 +218,12 @@ class PluginLifecycleManager:
             return None
 
 
-_lifecycle_instance: Optional[PluginLifecycleManager] = None
+_lifecycle_instance: PluginLifecycleManager | None = None
 _lifecycle_lock = threading.Lock()
 
 
 def get_plugin_lifecycle(
-    registry: Optional[PluginRegistry] = None,
+    registry: PluginRegistry | None = None,
 ) -> PluginLifecycleManager:
     global _lifecycle_instance
     with _lifecycle_lock:

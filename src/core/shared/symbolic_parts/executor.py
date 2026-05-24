@@ -17,13 +17,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .types import SymbolicValue, SymbolicPath  # noqa: E402
-from .z3_bridge import Z3BridgeMixin  # noqa: E402
-from .statement_processors import StatementProcessorMixin  # noqa: E402
-from .statement_loops import StatementLoopsMixin  # noqa: E402
-from .executor_helpers import ExecutorHelpersMixin  # noqa: E402
-from .violations import ViolationCheckerMixin  # noqa: E402
 from .concrete_gen import ConcreteGenMixin  # noqa: E402
+from .executor_helpers import ExecutorHelpersMixin  # noqa: E402
+from .statement_loops import StatementLoopsMixin  # noqa: E402
+from .statement_processors import StatementProcessorMixin  # noqa: E402
+from .types import SymbolicPath, SymbolicValue  # noqa: E402
+from .violations import ViolationCheckerMixin  # noqa: E402
+from .z3_bridge import Z3BridgeMixin  # noqa: E402
 
 
 class SymbolicExecutor(
@@ -51,10 +51,20 @@ class SymbolicExecutor(
 
     # Operaciones que son side effects y deben ser podadas
     IO_OPERATIONS = {
-        "open", "read", "write", "input", "print",
-        "fetch", "urlopen", "request",
-        "execute", "cursor", "query",
-        "connect", "send", "recv",
+        "open",
+        "read",
+        "write",
+        "input",
+        "print",
+        "fetch",
+        "urlopen",
+        "request",
+        "execute",
+        "cursor",
+        "query",
+        "connect",
+        "send",
+        "recv",
     }
 
     # Bounded loop unrolling: max iterations
@@ -62,10 +72,14 @@ class SymbolicExecutor(
 
     # Incompatible type pairs for binary operations
     INCOMPATIBLE_TYPES = {
-        frozenset({"str", "int"}), frozenset({"str", "float"}),
-        frozenset({"list", "int"}), frozenset({"dict", "int"}),
-        frozenset({"None", "int"}), frozenset({"None", "float"}),
-        frozenset({"None", "str"}), frozenset({"None", "list"}),
+        frozenset({"str", "int"}),
+        frozenset({"str", "float"}),
+        frozenset({"list", "int"}),
+        frozenset({"dict", "int"}),
+        frozenset({"None", "int"}),
+        frozenset({"None", "float"}),
+        frozenset({"None", "str"}),
+        frozenset({"None", "list"}),
     }
 
     def __init__(self, k_path_limit=10, max_depth=20):
@@ -101,7 +115,7 @@ class SymbolicExecutor(
                 "paths": [],
                 "violations": [],
                 "warnings": [f"Syntax error: {e.msg} at line {e.lineno}"],
-                "metrics": {"paths_explored": 0, "paths_pruned": 0}
+                "metrics": {"paths_explored": 0, "paths_pruned": 0},
             }
 
         # Pre-scan: build a map of function names for call resolution
@@ -154,7 +168,7 @@ class SymbolicExecutor(
                 "paths_pruned": self.paths_pruned,
                 "total_paths": len(all_paths),
                 "feasible_paths": sum(1 for p in all_paths if p.is_feasible()),
-            }
+            },
         }
 
     # ----------------------------------------------------------------
@@ -177,23 +191,15 @@ class SymbolicExecutor(
             arg_type = "any"
             if arg.annotation:
                 arg_type = self._annotation_to_type(arg.annotation)
-            initial_state[arg.arg] = SymbolicValue(
-                name=arg.arg,
-                var_type=arg_type
-            )
+            initial_state[arg.arg] = SymbolicValue(name=arg.arg, var_type=arg_type)
             # Pre-create Z3 vars for parameters
             self._get_or_create_z3_var(arg.arg, arg_type)
 
         # Process function body statement by statement
-        initial_path = SymbolicPath(
-            variables=dict(initial_state),
-            z3_conditions=[],
-            assignments=[],
-            return_values=[]
-        )
+        initial_path = SymbolicPath(variables=dict(initial_state), z3_conditions=[], assignments=[], return_values=[])
         paths = self._process_stmts(func_node.body, initial_path)
 
-        return paths[:self.k_path_limit]
+        return paths[: self.k_path_limit]
 
     def _process_stmts(self, stmts, current_path):
         """
@@ -293,7 +299,7 @@ class SymbolicExecutor(
                     is_pruned=path.is_pruned,
                     z3_conditions=list(path.z3_conditions),
                     assignments=list(path.assignments),
-                    return_values=list(path.return_values)
+                    return_values=list(path.return_values),
                 )
                 new_path.add_return(f"raise {exc_desc}", "exception")
                 completed_paths.append(new_path)
@@ -302,4 +308,4 @@ class SymbolicExecutor(
             else:
                 worklist.append((rest, path))
 
-        return completed_paths[:self.k_path_limit]
+        return completed_paths[: self.k_path_limit]

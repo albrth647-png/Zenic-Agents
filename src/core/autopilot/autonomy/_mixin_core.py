@@ -1,14 +1,15 @@
 """Core logic for autonomy."""
 
 from __future__ import annotations
+
 import logging
 import sqlite3
 import threading
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class AutonomyConfigManager:
     """Manages autonomy configuration for objectives and tenants.
@@ -87,7 +88,7 @@ class AutonomyConfigManager:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> Optional[AutonomyConfig]:  # noqa: F821
+            def _fetch() -> AutonomyConfig | None:  # noqa: F821
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -139,12 +140,15 @@ class AutonomyConfigManager:
         self._persist_config(config)
         logger.info(
             "AutonomyConfigManager: Updated config for objective %s (level=%s)",
-            config.objective_id, config.level.value,
+            config.objective_id,
+            config.level.value,
         )
         return config
 
     def set_level(
-        self, objective_id: str, level: AutonomyLevel,  # noqa: F821
+        self,
+        objective_id: str,
+        level: AutonomyLevel,  # noqa: F821
     ) -> AutonomyConfig:  # noqa: F821
         """Set the autonomy level for an objective.
 
@@ -159,7 +163,7 @@ class AutonomyConfigManager:
         config.level = level
         return self.update_config(config)
 
-    def list_configs(self, tenant_id: str = "") -> List[AutonomyConfig]:  # noqa: F821
+    def list_configs(self, tenant_id: str = "") -> list[AutonomyConfig]:  # noqa: F821
         """List autonomy configs, optionally filtered by tenant.
 
         Args:
@@ -171,7 +175,7 @@ class AutonomyConfigManager:
         self._ensure_schema()
         with self._lock:
 
-            def _list() -> List[AutonomyConfig]:  # noqa: F821
+            def _list() -> list[AutonomyConfig]:  # noqa: F821
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -243,7 +247,7 @@ class AutonomyConfigManager:
 
     @staticmethod
     def _row_to_config(row: sqlite3.Row) -> AutonomyConfig:  # noqa: F821
-        """Convert a database row to an AutonomyConfig instance."""  # noqa: F821
+        """Convert a database row to an AutonomyConfig instance."""
         return AutonomyConfig(  # noqa: F821
             level=AutonomyLevel(row["level"]),  # noqa: F821  # TODO: Phase3 - verify import
             objective_id=row["objective_id"],
@@ -262,4 +266,3 @@ class AutonomyConfigManager:
 # ──────────────────────────────────────────────────────────────
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
-

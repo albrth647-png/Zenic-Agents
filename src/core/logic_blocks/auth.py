@@ -4,11 +4,11 @@ ZENIC-AGENTS - Auth Logic Blocks
 Authentication and authorization blocks: login, register, verify, RBAC.
 """
 
-import json
-import time
 import hashlib
+import json
 import logging
-from typing import Any, Dict
+import time
+from typing import Any
 
 from .chain import LogicBlock
 
@@ -36,33 +36,37 @@ class AuthLoginBlock(LogicBlock):
     inputs = ["username", "password"]
     outputs = ["token", "user_id", "role"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             username = data.get("username", data.get("email", ""))
             password = data.get("password", "")
             secret = context.get("secret_key")
 
             if not secret:
-                raise RuntimeError("FATAL: 'secret_key' not provided in context. JWT authentication cannot proceed without a secure secret key.")
+                raise RuntimeError(
+                    "FATAL: 'secret_key' not provided in context. JWT authentication cannot proceed without a secure secret key."
+                )
 
             if not username or not password:
                 return {"success": False, "error": "Username and password required"}
 
             # Verify against database
-            db = context.get("db", None)
+            db = context.get("db")
             user = None
 
             if db is not None:
                 try:
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT id, username, password_hash, role FROM users WHERE username = ? OR email = ?",
-                        (username, username)
+                        (username, username),
                     )
                     row = cursor.fetchone()
                     if row:
-                        user = dict(row) if hasattr(row, 'keys') else {
-                            "id": row[0], "username": row[1], "password_hash": row[2], "role": row[3]
-                        }
+                        user = (
+                            dict(row)
+                            if hasattr(row, "keys")
+                            else {"id": row[0], "username": row[1], "password_hash": row[2], "role": row[3]}
+                        )
                 except Exception as db_err:
                     logger.debug(f"AuthLoginBlock: DB lookup failed: {db_err}")
 
@@ -88,16 +92,17 @@ class AuthLoginBlock(LogicBlock):
             return {"success": False, "error": "Invalid credentials"}
 
         except Exception as e:
-            return {"success": False, "error": f"AuthLoginBlock: {str(e)}"}
+            return {"success": False, "error": f"AuthLoginBlock: {e!s}"}
 
     @staticmethod
     def _verify_password(password: str, stored_hash: str) -> bool:
         """Verifica password contra hash almacenado."""
         import hmac as hmac_mod
+
         try:
             if ":" in stored_hash:
                 salt, hash_val = stored_hash.split(":", 1)
-                dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000)
+                dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
                 return hmac_mod.compare_digest(dk.hex(), hash_val)
             # Fallback: plain comparison (dev only)
             return password == stored_hash
@@ -105,17 +110,26 @@ class AuthLoginBlock(LogicBlock):
             return False
 
     @staticmethod
-    def _generate_token(user: Dict, secret: str) -> str:
+    def _generate_token(user: dict, secret: str) -> str:
         """Genera JWT token simple."""
         try:
             import base64
+
             header = base64.urlsafe_b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode()).decode()
-            payload = base64.urlsafe_b64encode(json.dumps({
-                "sub": user["id"], "username": user["username"],
-                "role": user.get("role", "user"), "exp": int(time.time()) + 86400,
-                "iat": int(time.time()),
-            }, default=str).encode()).decode()
+            payload = base64.urlsafe_b64encode(
+                json.dumps(
+                    {
+                        "sub": user["id"],
+                        "username": user["username"],
+                        "role": user.get("role", "user"),
+                        "exp": int(time.time()) + 86400,
+                        "iat": int(time.time()),
+                    },
+                    default=str,
+                ).encode()
+            ).decode()
             import hmac as hmac_mod
+
             sig = hmac_mod.new(secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).hexdigest()
             return f"{header}.{payload}.{sig}"
         except Exception:
@@ -131,7 +145,7 @@ class AuthRegisterBlock(LogicBlock):
     inputs = ["username", "email", "password", "role"]
     outputs = ["user_id", "status"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             username = data.get("username", "")
             email = data.get("email", "")
@@ -151,28 +165,28 @@ class AuthRegisterBlock(LogicBlock):
 
             # Hash password
             import secrets
+
             salt = secrets.token_hex(16)
-            dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000)
+            dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
             password_hash = f"{salt}:{dk.hex()}"
 
             # Check uniqueness and insert
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     # Check if user/email already exists
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT id FROM users WHERE username = ? OR email = ?",
-                        (username, email)
+                        "SELECT id FROM users WHERE username = ? OR email = ?", (username, email)
                     )
                     if cursor.fetchone():
                         return {"success": False, "error": "Username or email already exists"}
 
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                        (username, email, password_hash, role)
+                        (username, email, password_hash, role),
                     )
-                    user_id = cursor.lastrowid if hasattr(cursor, 'lastrowid') else None
-                    db.commit() if hasattr(db, 'commit') else None
+                    user_id = cursor.lastrowid if hasattr(cursor, "lastrowid") else None
+                    db.commit() if hasattr(db, "commit") else None
 
                     logger.debug(f"AuthRegisterBlock: Registered user {_sanitize(username)} (id={user_id})")
                     return {
@@ -185,7 +199,7 @@ class AuthRegisterBlock(LogicBlock):
                     }
                 except Exception as db_err:
                     logger.warning(f"AuthRegisterBlock: DB error: {db_err}")
-                    return {"success": False, "error": f"Registration failed: {str(db_err)}"}
+                    return {"success": False, "error": f"Registration failed: {db_err!s}"}
 
             # Fallback: return user data without DB
             user_id = hashlib.md5(f"{username}{email}".encode()).hexdigest()[:8]
@@ -199,7 +213,7 @@ class AuthRegisterBlock(LogicBlock):
                 "status": "registered_no_db",
             }
         except Exception as e:
-            return {"success": False, "error": f"AuthRegisterBlock: {str(e)}"}
+            return {"success": False, "error": f"AuthRegisterBlock: {e!s}"}
 
 
 class AuthVerifyBlock(LogicBlock):
@@ -211,13 +225,15 @@ class AuthVerifyBlock(LogicBlock):
     inputs = ["token"]
     outputs = ["valid", "user_id", "role", "decoded"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             token = data.get("token", "")
             secret = context.get("secret_key")
 
             if not secret:
-                raise RuntimeError("FATAL: 'secret_key' not provided in context. JWT verification cannot proceed without a secure secret key.")
+                raise RuntimeError(
+                    "FATAL: 'secret_key' not provided in context. JWT verification cannot proceed without a secure secret key."
+                )
 
             if not token:
                 return {"success": False, "error": "No token provided", "valid": False}
@@ -234,9 +250,7 @@ class AuthVerifyBlock(LogicBlock):
                 header, payload, signature = parts
 
                 # Verify signature
-                expected_sig = hmac_mod.new(
-                    secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256
-                ).hexdigest()
+                expected_sig = hmac_mod.new(secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).hexdigest()
 
                 if not hmac_mod.compare_digest(signature, expected_sig):
                     return {"success": True, "valid": False, "error": "Invalid signature"}
@@ -261,10 +275,10 @@ class AuthVerifyBlock(LogicBlock):
 
             except Exception as token_err:
                 logger.warning(f"AuthVerifyBlock: Token verification failed: {_sanitize(str(token_err))}")
-                return {"success": True, "valid": False, "error": f"Token verification failed: {str(token_err)}"}
+                return {"success": True, "valid": False, "error": f"Token verification failed: {token_err!s}"}
 
         except Exception as e:
-            return {"success": False, "error": f"AuthVerifyBlock: {str(e)}"}
+            return {"success": False, "error": f"AuthVerifyBlock: {e!s}"}
 
 
 class AuthRBACBlock(LogicBlock):
@@ -276,7 +290,7 @@ class AuthRBACBlock(LogicBlock):
     inputs = ["user_role", "resource", "action"]
     outputs = ["allowed", "reason"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             user_role = data.get("user_role", data.get("role", "guest"))
             resource = data.get("resource", "")
@@ -333,4 +347,4 @@ class AuthRBACBlock(LogicBlock):
                 "action": action,
             }
         except Exception as e:
-            return {"success": False, "error": f"AuthRBACBlock: {str(e)}"}
+            return {"success": False, "error": f"AuthRBACBlock: {e!s}"}

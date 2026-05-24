@@ -3,10 +3,13 @@ Internal helpers and fallback methods mixin for ReasoningEngine.
 """
 
 import re
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Any
 
 from ._imports import (
-    logger, ReasoningStep, ReasoningResult, ReasoningMode,
+    ReasoningMode,
+    ReasoningResult,
+    ReasoningStep,
+    logger,
 )
 
 
@@ -17,7 +20,7 @@ class HelpersMixin:
     #  INTERNAL HELPERS
     # ================================================================
 
-    def _call_ai(self, system_prompt: str, user_prompt: str, max_tokens: int) -> Optional[str]:
+    def _call_ai(self, system_prompt: str, user_prompt: str, max_tokens: int) -> str | None:
         """Call MiniAIEngine if available."""
         if not self._ai or not self._ai.is_loaded:
             return None
@@ -54,8 +57,7 @@ class HelpersMixin:
         if confidence >= 0.6:
             self._memory.save_to_cache(query, answer[:500], mode, "", importance)
 
-    def _build_step_prompt(self, step_num: int, max_steps: int,
-                           accumulated: str, problem: str) -> str:
+    def _build_step_prompt(self, step_num: int, max_steps: int, accumulated: str, problem: str) -> str:
         """Build the prompt for a specific reasoning step."""
         if step_num == 1:
             return f"First, identify the type and key aspects of this problem:\n{accumulated}"
@@ -67,16 +69,15 @@ class HelpersMixin:
     def _extract_conclusion(self, text: str) -> str:
         """Extract the core conclusion from a reasoning step."""
         # Look for conclusion markers
-        markers = ["therefore", "thus", "conclusion:", "so,", "hence",
-                    "por lo tanto", "en conclusión", "resultado:"]
+        markers = ["therefore", "thus", "conclusion:", "so,", "hence", "por lo tanto", "en conclusión", "resultado:"]
         text_lower = text.lower()
         for marker in markers:
             idx = text_lower.find(marker)
             if idx >= 0:
-                return text[idx + len(marker):].strip()[:200]
+                return text[idx + len(marker) :].strip()[:200]
 
         # Fallback: return last meaningful sentence
-        sentences = re.split(r'[.!?]\s', text)
+        sentences = re.split(r"[.!?]\s", text)
         meaningful = [s.strip() for s in sentences if len(s.strip()) > 10]
         return meaningful[-1] if meaningful else text[:200]
 
@@ -111,15 +112,36 @@ class HelpersMixin:
             score += 0.1
 
         # Multiple concepts indicate complexity
-        concept_markers = ["and", "but", "however", "also", "while", "additionally",
-                          "y", "pero", "sin embargo", "además", "también"]
+        concept_markers = [
+            "and",
+            "but",
+            "however",
+            "also",
+            "while",
+            "additionally",
+            "y",
+            "pero",
+            "sin embargo",
+            "además",
+            "también",
+        ]
         for marker in concept_markers:
             if marker in problem.lower():
                 score += 0.1
 
         # Technical terms increase complexity
-        tech_terms = ["api", "database", "auth", "microservice", "pipeline",
-                     "webhook", "scheduler", "orm", "cache", "async"]
+        tech_terms = [
+            "api",
+            "database",
+            "auth",
+            "microservice",
+            "pipeline",
+            "webhook",
+            "scheduler",
+            "orm",
+            "cache",
+            "async",
+        ]
         for term in tech_terms:
             if term in problem.lower():
                 score += 0.1
@@ -136,8 +158,7 @@ class HelpersMixin:
     #  FALLBACK METHODS (deterministic, no LLM)
     # ================================================================
 
-    def _fallback_step(self, step_num: int, problem: str,
-                       previous_steps: List[ReasoningStep]) -> str:
+    def _fallback_step(self, step_num: int, problem: str, previous_steps: list[ReasoningStep]) -> str:
         """Deterministic fallback for a reasoning step."""
         problem_lower = problem.lower()
 
@@ -152,7 +173,9 @@ class HelpersMixin:
             elif any(kw in problem_lower for kw in ["automat", "workflow", "schedule"]):
                 return "This is an automation problem requiring workflow design and action chaining."
             else:
-                return "This appears to be a general software engineering problem requiring analysis and implementation."
+                return (
+                    "This appears to be a general software engineering problem requiring analysis and implementation."
+                )
 
         elif step_num == 2:
             return "Apply standard patterns: validate inputs, process business logic, handle errors gracefully, and return structured results."
@@ -180,7 +203,7 @@ class HelpersMixin:
         else:
             return "Based on analysis, this requires a structured implementation with: (1) Data models and validation, (2) Business logic with error handling, (3) API endpoints or automation workflows, (4) Tests for critical paths."
 
-    def _fallback_evaluate(self, answer: str, problem: str) -> Tuple[float, List[str]]:
+    def _fallback_evaluate(self, answer: str, problem: str) -> tuple[float, list[str]]:
         """Deterministic evaluation of an answer."""
         issues = []
         score = 0.5
@@ -191,7 +214,7 @@ class HelpersMixin:
         if "TODO" in answer or "FIXME" in answer:
             issues.append("Answer contains unresolved TODO markers")
             score -= 0.1
-        if re.search(r'\bpass\b', answer) and len(answer) < 100:
+        if re.search(r"\bpass\b", answer) and len(answer) < 100:
             issues.append("Answer appears to be a placeholder")
             score -= 0.15
         if any(kw in answer.lower() for kw in ["eval(", "exec(", "os.system("]):
@@ -206,7 +229,7 @@ class HelpersMixin:
 
         return max(0.1, min(0.9, score)), issues
 
-    def _fallback_context_reasoning(self, problem: str, semantic_info: Dict[str, Any]) -> str:
+    def _fallback_context_reasoning(self, problem: str, semantic_info: dict[str, Any]) -> str:
         """Fallback reasoning using semantic info only."""
         op = semantic_info.get("operation", "UNKNOWN")
         goal = semantic_info.get("goal", "UNKNOWN")
@@ -219,12 +242,14 @@ class HelpersMixin:
             answer=answer,
             confidence=0.25,
             mode=ReasoningMode.FALLBACK,
-            steps=[ReasoningStep(
-                step_number=1,
-                thought="No AI model available, using deterministic fallback",
-                conclusion=answer[:200],
-                confidence=0.25,
-                source="fallback",
-            )],
+            steps=[
+                ReasoningStep(
+                    step_number=1,
+                    thought="No AI model available, using deterministic fallback",
+                    conclusion=answer[:200],
+                    confidence=0.25,
+                    source="fallback",
+                )
+            ],
             source="fallback",
         )

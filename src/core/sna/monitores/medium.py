@@ -9,15 +9,15 @@ Examples: sales trends, CRM conversion ratio, response time trends.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict
+from typing import Any
 
-from .base import MonitorBase, register_monitor
 from ..types import MonitorResult, MonitorWeight
-
+from .base import MonitorBase, register_monitor
 
 # ──────────────────────────────────────────────────────────────
 #  SALES TREND MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class SalesTrendMonitor(MonitorBase):
@@ -39,8 +39,7 @@ class SalesTrendMonitor(MonitorBase):
     def description(self) -> str:
         return "Analiza tendencias de ventas y detecta caidas o picos significativos"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
         table = params.get("table", "sales")
@@ -54,11 +53,13 @@ class SalesTrendMonitor(MonitorBase):
 
             current_rows = self._execute_query(
                 f"SELECT SUM(amount) FROM {table} WHERE date >= ?",
-                (current_start,), db_name=db_name,
+                (current_start,),
+                db_name=db_name,
             )
             prev_rows = self._execute_query(
                 f"SELECT SUM(amount) FROM {table} WHERE date >= ? AND date < ?",
-                (prev_start, current_start), db_name=db_name,
+                (prev_start, current_start),
+                db_name=db_name,
             )
 
             current_total = float(current_rows[0][0] or 0) if current_rows else 0
@@ -89,13 +90,16 @@ class SalesTrendMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )
 
 
 # ──────────────────────────────────────────────────────────────
 #  CRM CONVERSION MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class CRMConversionMonitor(MonitorBase):
@@ -117,8 +121,7 @@ class CRMConversionMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea el ratio de conversion de leads a clientes en el CRM"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
         table = params.get("table", "crm_leads")
@@ -126,20 +129,22 @@ class CRMConversionMonitor(MonitorBase):
 
         try:
             total_rows = self._execute_query(
-                f"SELECT COUNT(*) FROM {table}", (), db_name=db_name,
+                f"SELECT COUNT(*) FROM {table}",
+                (),
+                db_name=db_name,
             )
             converted_rows = self._execute_query(
                 f"SELECT COUNT(*) FROM {table} WHERE status = 'converted'",
-                (), db_name=db_name,
+                (),
+                db_name=db_name,
             )
             total_leads = total_rows[0][0] if total_rows else 0
             converted = converted_rows[0][0] if converted_rows else 0
             conversion_pct = (converted / total_leads * 100) if total_leads > 0 else 0
 
-            triggered = (total_leads > 10 and conversion_pct < min_conversion_pct)
+            triggered = total_leads > 10 and conversion_pct < min_conversion_pct
             detail = (
-                f"Conversion baja: {conversion_pct:.1f}% "
-                f"({converted}/{total_leads} leads)"
+                f"Conversion baja: {conversion_pct:.1f}% " f"({converted}/{total_leads} leads)"
                 if triggered
                 else f"Conversion OK: {conversion_pct:.1f}% ({converted}/{total_leads})"
             )
@@ -157,13 +162,16 @@ class CRMConversionMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )
 
 
 # ──────────────────────────────────────────────────────────────
 #  RESPONSE TIME MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class ResponseTimeMonitor(MonitorBase):
@@ -185,8 +193,7 @@ class ResponseTimeMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea el tiempo promedio de respuesta de la API"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         max_avg_ms = params.get("max_avg_ms", 5000)
         window_minutes = params.get("window_minutes", 30)
@@ -194,14 +201,14 @@ class ResponseTimeMonitor(MonitorBase):
         try:
             cutoff = time.time() - (window_minutes * 60)
             rows = self._execute_query(
-                "SELECT AVG(processing_time_ms), COUNT(*) FROM requests "
-                "WHERE created_at >= ?",
-                (cutoff,), db_name="request_log.sqlite",
+                "SELECT AVG(processing_time_ms), COUNT(*) FROM requests " "WHERE created_at >= ?",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             avg_ms = float(rows[0][0] or 0) if rows else 0
             count = int(rows[0][1] or 0) if rows else 0
 
-            triggered = (count > 5 and avg_ms > max_avg_ms)
+            triggered = count > 5 and avg_ms > max_avg_ms
             detail = (
                 f"Respuesta lenta: {avg_ms:.0f}ms promedio ({count} requests)"
                 if triggered
@@ -217,13 +224,16 @@ class ResponseTimeMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )
 
 
 # ──────────────────────────────────────────────────────────────
 #  ERROR RATE MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class ErrorRateMonitor(MonitorBase):
@@ -245,8 +255,7 @@ class ErrorRateMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea la tasa de errores en los requests"
 
-    async def check(self, params: Dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         max_error_pct = params.get("max_error_pct", 15.0)
         window_minutes = params.get("window_minutes", 15)
@@ -255,17 +264,19 @@ class ErrorRateMonitor(MonitorBase):
             cutoff = time.time() - (window_minutes * 60)
             total_rows = self._execute_query(
                 "SELECT COUNT(*) FROM requests WHERE created_at >= ?",
-                (cutoff,), db_name="request_log.sqlite",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             error_rows = self._execute_query(
                 "SELECT COUNT(*) FROM requests WHERE created_at >= ? AND status = 'error'",
-                (cutoff,), db_name="request_log.sqlite",
+                (cutoff,),
+                db_name="request_log.sqlite",
             )
             total = total_rows[0][0] if total_rows else 0
             errors = error_rows[0][0] if error_rows else 0
             error_pct = (errors / total * 100) if total > 0 else 0
 
-            triggered = (total > 10 and error_pct > max_error_pct)
+            triggered = total > 10 and error_pct > max_error_pct
             detail = (
                 f"Tasa de errores alta: {error_pct:.1f}% ({errors}/{total})"
                 if triggered
@@ -281,5 +292,7 @@ class ErrorRateMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}", start_time=start,
+                triggered=False,
+                detail=f"Error: {e}",
+                start_time=start,
             )

@@ -16,14 +16,18 @@ from __future__ import annotations
 import threading
 import time
 
-from ..types.base import Result, Ok
-from ..types.memory import (
-    MemoryEntry, MemoryQuery, MemoryResult,
-    MemoryType, MemoryCategory, MemoryStats,
-)
 from ..config.constants import (
-    MEMORY_MAX_LONG_TERM,
     MEMORY_IMPORTANCE_THRESHOLD,
+    MEMORY_MAX_LONG_TERM,
+)
+from ..types.base import Ok, Result
+from ..types.memory import (
+    MemoryCategory,
+    MemoryEntry,
+    MemoryQuery,
+    MemoryResult,
+    MemoryStats,
+    MemoryType,
 )
 
 
@@ -118,11 +122,7 @@ class LongTermMemory:
                 ids: list[str] = []
                 for cat in query.categories:
                     ids.extend(self._category_index.get(cat, []))
-                candidates = [
-                    self._entries[mid]
-                    for mid in set(ids)
-                    if mid in self._entries
-                ]
+                candidates = [self._entries[mid] for mid in set(ids) if mid in self._entries]
             else:
                 candidates = list(self._entries.values())
 
@@ -132,17 +132,11 @@ class LongTermMemory:
                 for tag in query.tags:
                     tag_ids.extend(self._tag_index.get(tag, []))
                 tag_set = set(tag_ids)
-                candidates = [
-                    e for e in candidates
-                    if e.memory_id in tag_set
-                ]
+                candidates = [e for e in candidates if e.memory_id in tag_set]
 
             # Filtrar por importancia
             if query.min_importance > 0:
-                candidates = [
-                    e for e in candidates
-                    if e.importance >= query.min_importance
-                ]
+                candidates = [e for e in candidates if e.importance >= query.min_importance]
 
             # Scoring
             for entry in candidates:
@@ -150,13 +144,11 @@ class LongTermMemory:
                 entry.touch()
 
             candidates.sort(key=lambda e: e.relevance_score, reverse=True)
-            results = candidates[:query.max_results]
+            results = candidates[: query.max_results]
 
         elapsed = (time.time() - start) * 1000
         self._stats.total_retrieved += 1
-        self._stats.avg_retrieval_ms = (
-            (self._stats.avg_retrieval_ms + elapsed) / 2
-        )
+        self._stats.avg_retrieval_ms = (self._stats.avg_retrieval_ms + elapsed) / 2
 
         return MemoryResult(
             entries=results,
@@ -210,14 +202,10 @@ class LongTermMemory:
         if entry:
             for tag in entry.tags:
                 if tag in self._tag_index:
-                    self._tag_index[tag] = [
-                        i for i in self._tag_index[tag] if i != mid
-                    ]
+                    self._tag_index[tag] = [i for i in self._tag_index[tag] if i != mid]
             cat = entry.category
             if cat in self._category_index:
-                self._category_index[cat] = [
-                    i for i in self._category_index[cat] if i != mid
-                ]
+                self._category_index[cat] = [i for i in self._category_index[cat] if i != mid]
 
     @staticmethod
     def _score(entry: MemoryEntry, query: MemoryQuery) -> float:

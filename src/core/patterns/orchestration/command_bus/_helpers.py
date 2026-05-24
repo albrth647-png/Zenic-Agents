@@ -1,13 +1,13 @@
 """CommandBus - Helper functions for middleware chain."""
 
-from typing import Callable, List
+from collections.abc import Callable
 
 from ._types import Command, CommandMiddleware, CommandResult
 
 
 def _build_middleware_chain(
     handler_fn: Callable[[Command], CommandResult],
-    middlewares: List[CommandMiddleware],
+    middlewares: list[CommandMiddleware],
 ) -> Callable[[Command], CommandResult]:
     """
     Build a chain of middleware wrapping a handler.
@@ -42,7 +42,11 @@ def _wrap_middleware(
     Returns:
         A new callable that applies the middleware.
     """
+
     def _wrapped(command: Command) -> CommandResult:
         return middleware(command, next_fn)
+
     return _wrapped
+
+
 __all__ = ["_build_middleware_chain", "_wrap_middleware"]

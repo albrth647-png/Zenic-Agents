@@ -1,7 +1,6 @@
 """StepDispatcher - Additional methods."""
 
 import logging
-from typing import Dict, List, Tuple
 
 logger = logging.getLogger("zenic_agents.step_dispatcher")
 
@@ -9,9 +8,7 @@ logger = logging.getLogger("zenic_agents.step_dispatcher")
 class StepDispatcherExtraMixin:
     """Additional methods mixin."""
 
-    async def _handle_quality_report(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_quality_report(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle QUALITY_REPORT action."""
         if code:
             report = self._orch._analysis.generate_quality_report(
@@ -20,14 +17,10 @@ class StepDispatcherExtraMixin:
             explanations.append(report)
         return result_code, code, explanations
 
-    async def _handle_explain_code(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_explain_code(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle EXPLAIN_CODE action."""
         if code:
-            base_explanation = self._orch._analysis.explain_code(
-                code, lang, ast_analysis
-            )
+            base_explanation = self._orch._analysis.explain_code(code, lang, ast_analysis)
             # MiniAI: mejorar explicacion si hay violaciones detectadas
             if self._orch._ai.is_loaded:
                 violations = []
@@ -36,39 +29,28 @@ class StepDispatcherExtraMixin:
                 if "os.system(" in code:
                     violations.append("command_injection")
                 if violations:
-                    ai_explain = self._orch._ai.explain_violation(
-                        code[:200], violations
-                    )
+                    ai_explain = self._orch._ai.explain_violation(code[:200], violations)
                     if ai_explain:
                         base_explanation += f" | AI: {ai_explain}"
             explanations.append(base_explanation)
         else:
-            explanations.append(
-                self._orch._analysis.explain_concept(intent)
-            )
+            explanations.append(self._orch._analysis.explain_concept(intent))
         return result_code, code, explanations
 
-    async def _handle_search_definition(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_search_definition(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle SEARCH_DEFINITION action."""
         if code:
             nodes = self._orch.ast_engine.get_node_info(intent.target)
             if nodes:
                 for n in nodes[:5]:
                     explanations.append(
-                        f"Found: {n['node_type']} '{n['name']}' "
-                        f"(complexity: {n.get('complexity', 'N/A')})"
+                        f"Found: {n['node_type']} '{n['name']}' " f"(complexity: {n.get('complexity', 'N/A')})"
                     )
             else:
-                explanations.append(
-                    f"'{intent.target}' not found in code"
-                )
+                explanations.append(f"'{intent.target}' not found in code")
         return result_code, code, explanations
 
-    async def _handle_validation(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_validation(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle SYMBOLIC_VALIDATION / SYNTAX_VALIDATION action."""
         # Use ValidationAgent (F5) for intelligent validation
         if self._orch._validation_agent and code:
@@ -80,10 +62,7 @@ class StepDispatcherExtraMixin:
                 language=lang,
             )
             if v_output.issues:
-                issue_strs = [
-                    f"{i.severity}: {i.message}"
-                    for i in v_output.issues[:5]
-                ]
+                issue_strs = [f"{i.severity}: {i.message}" for i in v_output.issues[:5]]
                 explanations.append(
                     f"Validation (F5): {len(v_output.issues)} issues "
                     f"found (risk={v_output.risk_score:.2f}, "
@@ -92,26 +71,18 @@ class StepDispatcherExtraMixin:
                 for iss in issue_strs:
                     explanations.append(f"  - {iss}")
             else:
-                explanations.append(
-                    "Validation (F5): No issues found"
-                )
+                explanations.append("Validation (F5): No issues found")
         else:
-            explanations.append(
-                "Symbolic validation executed "
-                "(bounded symbolic execution)"
-            )
+            explanations.append("Symbolic validation executed " "(bounded symbolic execution)")
         return result_code, code, explanations
 
-    async def _handle_scaffold_fractal(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_scaffold_fractal(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle SCAFFOLD_FRACTAL action."""
         # Brecha C: Generacion Fractal (Top-Down) multi-archivo
-        if hasattr(self._orch, '_fractal_gen') and self._orch._fractal_gen:
+        if hasattr(self._orch, "_fractal_gen") and self._orch._fractal_gen:
             from src.core.agents.understanding import infer_template_type  # v18 utility
-            project_type = infer_template_type(
-                str(intent.op), intent.raw_code or str(intent)
-            )
+
+            project_type = infer_template_type(str(intent.op), intent.raw_code or str(intent))
             fractal_result = self._orch._fractal_gen.generate_project(
                 description=str(intent),
                 project_type=project_type,
@@ -122,24 +93,17 @@ class StepDispatcherExtraMixin:
             if fractal_result.spec and fractal_result.spec.files:
                 project_repr = []
                 for f_bp in fractal_result.spec.files:
-                    content = getattr(f_bp, 'generated_content', '') or getattr(f_bp, '_generated_content', '')
+                    content = getattr(f_bp, "generated_content", "") or getattr(f_bp, "_generated_content", "")
                     if content:
-                        project_repr.append(
-                            f"# === {f_bp.path} ===\n{content}"
-                        )
+                        project_repr.append(f"# === {f_bp.path} ===\n{content}")
                 result_code = "\n\n".join(project_repr)
                 explanations.append(
-                    f"Fractal: {len(fractal_result.files_generated)} "
-                    f"files, phase={fractal_result.current_phase}"
+                    f"Fractal: {len(fractal_result.files_generated)} " f"files, phase={fractal_result.current_phase}"
                 )
             else:
-                explanations.append(
-                    "Fractal: Fallback to standard generation"
-                )
+                explanations.append("Fractal: Fallback to standard generation")
         else:
-            explanations.append(
-                "Fractal: Not available in this orchestrator"
-            )
+            explanations.append("Fractal: Not available in this orchestrator")
         return result_code, code, explanations
 
     async def _handle_analyze_and_respond(
@@ -147,48 +111,28 @@ class StepDispatcherExtraMixin:
     ):
         """Handle ANALYZE_AND_RESPOND action."""
         if code:
-            explanations.append(
-                self._orch._analysis.analyze_and_respond(
-                    code, intent, ast_analysis
-                )
-            )
+            explanations.append(self._orch._analysis.analyze_and_respond(code, intent, ast_analysis))
         else:
-            explanations.append(
-                self._orch._analysis.general_response(intent)
-            )
+            explanations.append(self._orch._analysis.general_response(intent))
         return result_code, code, explanations
 
-    async def _handle_quick_analysis(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_quick_analysis(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle QUICK_ANALYSIS action."""
         explanations.append("Quick analysis completed")
         return result_code, code, explanations
 
-    async def _handle_full_analysis(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_full_analysis(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle FULL_ANALYSIS action."""
         if code:
-            explanations.append(
-                self._orch._analysis.full_analysis(
-                    code, intent, ast_analysis, lang
-                )
-            )
+            explanations.append(self._orch._analysis.full_analysis(code, intent, ast_analysis, lang))
         else:
-            explanations.append(
-                self._orch._analysis.general_response(intent)
-            )
+            explanations.append(self._orch._analysis.general_response(intent))
         return result_code, code, explanations
 
-    async def _handle_check_dependencies(
-        self, step, intent, code, result_code, explanations, lang, ast_analysis, plan
-    ):
+    async def _handle_check_dependencies(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
         """Handle CHECK_DEPENDENCIES action."""
         if code:
-            deps = self._orch._analysis.check_dependencies(
-                code, intent.target, lang
-            )
+            deps = self._orch._analysis.check_dependencies(code, intent.target, lang)
             explanations.extend(deps)
         return result_code, code, explanations
 
@@ -201,10 +145,10 @@ class StepDispatcherExtraMixin:
         plan,
         intent,
         code: str,
-        explanations: List[str],
+        explanations: list[str],
         lang: str,
-        ast_analysis: Dict,
-    ) -> Tuple[str, str, List[str]]:
+        ast_analysis: dict,
+    ) -> tuple[str, str, list[str]]:
         """
         Iterate all steps in a plan and execute them sequentially.
 
@@ -223,9 +167,14 @@ class StepDispatcherExtraMixin:
 
         for step in plan.steps:
             result_code, code, explanations = await self.execute_step(
-                step, intent, code, result_code, explanations,
-                lang, ast_analysis, plan,
+                step,
+                intent,
+                code,
+                result_code,
+                explanations,
+                lang,
+                ast_analysis,
+                plan,
             )
 
         return result_code, code, explanations
-

@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "ANONYMOUS_TENANT",
-    "resolve_tenant_id",
-    "set_tenant_context",
     "clear_tenant_context",
     "require_tenant",
+    "resolve_tenant_id",
+    "set_tenant_context",
 ]
 
 # Default tenant_id for backward compatibility
@@ -51,8 +51,7 @@ def set_tenant_context(tenant_id: str) -> None:
     if tenant_id == ANONYMOUS_TENANT:
         if os.environ.get("ZENIC_DEV_MODE") != "1":
             raise ValueError(
-                f"Cannot set tenant to {ANONYMOUS_TENANT!r} in production. "
-                "Set ZENIC_DEV_MODE=1 for development."
+                f"Cannot set tenant to {ANONYMOUS_TENANT!r} in production. " "Set ZENIC_DEV_MODE=1 for development."
             )
         logger.warning("Tenant context set to anonymous — dev mode only")
     _tenant_context.tenant_id = tenant_id
@@ -109,8 +108,5 @@ def require_tenant() -> str:
     """
     tenant_id = getattr(_tenant_context, "tenant_id", None)
     if tenant_id is None or tenant_id == ANONYMOUS_TENANT:
-        raise RuntimeError(
-            "A real tenant ID is required for this operation. "
-            "Anonymous tenant is not permitted."
-        )
+        raise RuntimeError("A real tenant ID is required for this operation. " "Anonymous tenant is not permitted.")
     return tenant_id

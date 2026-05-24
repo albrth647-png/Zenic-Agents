@@ -7,8 +7,8 @@ and logging requests. Most methods are pure functions or need minimal orchestrat
 
 import ast
 import json
-import uuid
 import logging
+import uuid
 
 from src.core.shared.db_initializer import get_connection
 
@@ -43,9 +43,9 @@ class AnalysisUtils:
             f"Max complexity: {analysis.get('max_complexity', 0)}",
             f"Avg complexity: {analysis.get('avg_complexity', 0)}",
         ]
-        if analysis.get('max_complexity', 0) > 10:
+        if analysis.get("max_complexity", 0) > 10:
             parts.append("ALERT: Function with complexity >10 detected. Refactor recommended.")
-        if analysis.get('total_complexity', 0) > 50:
+        if analysis.get("total_complexity", 0) > 50:
             parts.append("ALERT: High total complexity. Consider splitting into modules.")
         return "\n".join(parts)
 
@@ -71,15 +71,19 @@ class AnalysisUtils:
             except SyntaxError:
                 parts.append("Syntax error - cannot analyze AST")
         if ast_analysis:
-            parts.append(f"\nMetrics: {ast_analysis.get('functions', 0)} functions, {ast_analysis.get('classes', 0)} classes")
+            parts.append(
+                f"\nMetrics: {ast_analysis.get('functions', 0)} functions, {ast_analysis.get('classes', 0)} classes"
+            )
         return "\n".join(parts)
 
     @staticmethod
     def explain_concept(intent):
-        return (f"ZENIC-AGENTS - Explanation\n"
-                f"Operation: {intent.op}\nTarget: {intent.target}\n"
-                f"Goal: {intent.goal}\nConfidence: {intent.confidence}\n\n"
-                f"Include code in your message for detailed analysis.")
+        return (
+            f"ZENIC-AGENTS - Explanation\n"
+            f"Operation: {intent.op}\nTarget: {intent.target}\n"
+            f"Goal: {intent.goal}\nConfidence: {intent.confidence}\n\n"
+            f"Include code in your message for detailed analysis."
+        )
 
     @staticmethod
     def analyze_and_respond(code, intent, ast_analysis):
@@ -92,32 +96,38 @@ class AnalysisUtils:
 
     @staticmethod
     def general_response(intent):
-        return (f"ZENIC-AGENTS\n"
-                f"Op: {intent.op} | Target: {intent.target}\n"
-                f"Goal: {intent.goal} | Lang: {intent.language}\n\n"
-                f"Include code with ```python ... ``` for full analysis.")
+        return (
+            f"ZENIC-AGENTS\n"
+            f"Op: {intent.op} | Target: {intent.target}\n"
+            f"Goal: {intent.goal} | Lang: {intent.language}\n\n"
+            f"Include code with ```python ... ``` for full analysis."
+        )
 
     @staticmethod
     def full_analysis(code, intent, ast_analysis, lang):
         parts = ["FULL ANALYSIS - ZENIC-AGENTS", f"Language: {lang}", f"Operation: {intent.op}"]
         if ast_analysis:
-            parts.extend([f"Functions: {ast_analysis.get('functions', 0)}",
-                         f"Classes: {ast_analysis.get('classes', 0)}",
-                         f"Max complexity: {ast_analysis.get('max_complexity', 0)}",
-                         f"Avg complexity: {ast_analysis.get('avg_complexity', 0)}"])
+            parts.extend(
+                [
+                    f"Functions: {ast_analysis.get('functions', 0)}",
+                    f"Classes: {ast_analysis.get('classes', 0)}",
+                    f"Max complexity: {ast_analysis.get('max_complexity', 0)}",
+                    f"Avg complexity: {ast_analysis.get('avg_complexity', 0)}",
+                ]
+            )
         return "\n".join(parts)
 
     def check_dependencies(self, code, target, lang):
         if not self._orchestrator:
             return ["No orchestrator available for dependency check"]
-        ast_engine = getattr(self._orchestrator, 'ast_engine', None)
+        ast_engine = getattr(self._orchestrator, "ast_engine", None)
         if not ast_engine:
             return ["No AST engine available for dependency check"]
-        nodes = ast_engine.get_node_info(target.replace('.py', ''))
+        nodes = ast_engine.get_node_info(target.replace(".py", ""))
         results = []
         if nodes:
             for n in nodes[:5]:
-                conns = json.loads(n.get('connections', '[]'))
+                conns = json.loads(n.get("connections", "[]"))
                 results.append(f"  {n['node_type']} '{n['name']}' -> deps: {conns}")
         else:
             results.append(f"  No dependencies found for '{target}'")
@@ -128,8 +138,7 @@ class AnalysisUtils:
     # ============================================================
 
     @staticmethod
-    def log_request(intent, status, elapsed_ms, cache_hit=False,
-                    solver_status="", mcts_sims=0):
+    def log_request(intent, status, elapsed_ms, cache_hit=False, solver_status="", mcts_sims=0):
         if intent is None:
             return
         try:
@@ -139,9 +148,19 @@ class AnalysisUtils:
                 (request_id, model, operation, goal, route, status,
                  processing_time_ms, solver_status, mcts_simulations, cache_hit)
                 VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (str(uuid.uuid4())[:8], "zenic-agents",
-                 intent.op, intent.goal, "", status, elapsed_ms,
-                 solver_status, mcts_sims, int(cache_hit)))
+                (
+                    str(uuid.uuid4())[:8],
+                    "zenic-agents",
+                    intent.op,
+                    intent.goal,
+                    "",
+                    status,
+                    elapsed_ms,
+                    solver_status,
+                    mcts_sims,
+                    int(cache_hit),
+                ),
+            )
             conn.commit()
         except Exception as e:
             logger.debug(f"AnalysisUtils: Failed to log request to database: {e}")

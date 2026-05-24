@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
-from ..types.tool_use import ToolSpec, BUILTIN_TOOLS
+from ..types.tool_use import BUILTIN_TOOLS, ToolSpec
 
 logger = logging.getLogger("zenic_agents.conversational.tools.registry")
 
@@ -23,9 +24,11 @@ ToolHandler = Callable[[dict[str, Any]], Awaitable[Any]]
 
 # ─── Entry de registro ───────────────────────────────────────
 
+
 class _ToolEntry:
     """Entrada interna del registro."""
-    __slots__ = ("spec", "handler", "call_count", "error_count", "total_ms")
+
+    __slots__ = ("call_count", "error_count", "handler", "spec", "total_ms")
 
     def __init__(self, spec: ToolSpec, handler: ToolHandler | None = None) -> None:
         self.spec = spec
@@ -93,9 +96,7 @@ class ToolRegistry:
             # Limpiar indice
             cat = entry.spec.category
             if cat in self._category_index:
-                self._category_index[cat] = [
-                    n for n in self._category_index[cat] if n != name
-                ]
+                self._category_index[cat] = [n for n in self._category_index[cat] if n != name]
             return True
 
     # ─── Lectura ──────────────────────────────────────────────
@@ -127,15 +128,8 @@ class ToolRegistry:
         with self._lock:
             if category:
                 names = self._category_index.get(category, [])
-                return [
-                    self._tools[n].spec
-                    for n in names
-                    if n in self._tools and self._tools[n].spec.enabled
-                ]
-            return [
-                e.spec for e in self._tools.values()
-                if e.spec.enabled
-            ]
+                return [self._tools[n].spec for n in names if n in self._tools and self._tools[n].spec.enabled]
+            return [e.spec for e in self._tools.values() if e.spec.enabled]
 
     def list_chat_format(self) -> list[dict[str, Any]]:
         """Lista tools en formato de chat."""
@@ -159,18 +153,13 @@ class ToolRegistry:
         with self._lock:
             return {
                 "total_tools": len(self._tools),
-                "enabled_tools": sum(
-                    1 for e in self._tools.values() if e.spec.enabled
-                ),
+                "enabled_tools": sum(1 for e in self._tools.values() if e.spec.enabled),
                 "categories": list(self._category_index.keys()),
                 "tools": {
                     name: {
                         "calls": entry.call_count,
                         "errors": entry.error_count,
-                        "avg_ms": (
-                            entry.total_ms / entry.call_count
-                            if entry.call_count > 0 else 0.0
-                        ),
+                        "avg_ms": (entry.total_ms / entry.call_count if entry.call_count > 0 else 0.0),
                     }
                     for name, entry in self._tools.items()
                 },

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .engine import get_memory_engine_v2
 from .types import MemoryQuery, MemoryTier, MemoryType
@@ -19,8 +19,8 @@ _FACT_PATTERNS = [
 ]
 
 
-def _extract_facts(text: str) -> List[str]:
-    facts: List[str] = []
+def _extract_facts(text: str) -> list[str]:
+    facts: list[str] = []
     for pattern in _FACT_PATTERNS:
         for match in pattern.finditer(text):
             facts.append(match.group(0).strip())
@@ -39,11 +39,11 @@ class ContextManager:
     def build_system_context(
         self,
         session_id: str,
-        user_preferences: Optional[Dict[str, Any]] = None,
+        user_preferences: dict[str, Any] | None = None,
     ) -> str:
         engine = self._engine()
         context_window = engine.build_context_window(session_id, max_tokens=2048)
-        parts: List[str] = ["You are Zenic, an enterprise assistant."]
+        parts: list[str] = ["You are Zenic, an enterprise assistant."]
 
         if context_window.summary:
             parts.append(f"Session context: {context_window.summary}")
@@ -69,16 +69,18 @@ class ContextManager:
         self,
         session_id: str,
         max_tokens: int = 4096,
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         engine = self._engine()
         context_window = engine.build_context_window(session_id, max_tokens=max_tokens)
-        messages: List[Dict[str, str]] = []
+        messages: list[dict[str, str]] = []
 
         if context_window.summary:
-            messages.append({
-                "role": "system",
-                "content": f"Previous context: {context_window.summary}",
-            })
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"Previous context: {context_window.summary}",
+                }
+            )
 
         for record in context_window.records:
             if record.mem_type == MemoryType.CONVERSATION:
@@ -141,9 +143,7 @@ class ContextManager:
                 importance=0.9,
             )
 
-    def get_relevant_facts(
-        self, query: str, session_id: str, max_facts: int = 5
-    ) -> List[str]:
+    def get_relevant_facts(self, query: str, session_id: str, max_facts: int = 5) -> list[str]:
         engine = self._engine()
         query_obj = MemoryQuery(
             query_text=query,
@@ -163,7 +163,7 @@ class ContextManager:
 
 # ── Singleton ──────────────────────────────────────────────────
 
-_instance: Optional[ContextManager] = None
+_instance: ContextManager | None = None
 _instance_lock = threading.Lock()
 
 

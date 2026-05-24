@@ -63,31 +63,37 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef):
                     if not self._function_returns_on_all_paths(node):
-                        errors.append(ValidationIssue(
-                            severity="warning",
-                            code="missing_return",
-                            message=f"Function '{node.name}' may not return on all paths",
-                            line=node.lineno,
-                        ))
+                        errors.append(
+                            ValidationIssue(
+                                severity="warning",
+                                code="missing_return",
+                                message=f"Function '{node.name}' may not return on all paths",
+                                line=node.lineno,
+                            )
+                        )
 
                 # Check for resource leaks (open without with)
                 if isinstance(node, ast.Call):
                     if isinstance(node.func, ast.Name) and node.func.id == "open":
-                        errors.append(ValidationIssue(
-                            severity="warning",
-                            code="resource_leak",
-                            message="open() without 'with' context manager may leak resources",
-                            line=node.lineno,
-                        ))
+                        errors.append(
+                            ValidationIssue(
+                                severity="warning",
+                                code="resource_leak",
+                                message="open() without 'with' context manager may leak resources",
+                                line=node.lineno,
+                            )
+                        )
 
                 # Check for bare except
                 if isinstance(node, ast.ExceptHandler) and node.type is None:
-                    errors.append(ValidationIssue(
-                        severity="warning",
-                        code="bare_except",
-                        message="Bare except catches all exceptions including SystemExit",
-                        line=node.lineno,
-                    ))
+                    errors.append(
+                        ValidationIssue(
+                            severity="warning",
+                            code="bare_except",
+                            message="Bare except catches all exceptions including SystemExit",
+                            line=node.lineno,
+                        )
+                    )
 
             return SyntaxResult(
                 valid=True,
@@ -97,12 +103,14 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
             )
 
         except SyntaxError as e:
-            errors.append(ValidationIssue(
-                severity="error",
-                code="syntax_error",
-                message=str(e.msg),
-                line=e.lineno or 0,
-            ))
+            errors.append(
+                ValidationIssue(
+                    severity="error",
+                    code="syntax_error",
+                    message=str(e.msg),
+                    line=e.lineno or 0,
+                )
+            )
             return SyntaxResult(
                 valid=False,
                 errors=errors,
@@ -126,31 +134,37 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
             elif char in pairs.values():
                 if not stack:
                     line = code[:i].count("\n") + 1
-                    errors.append(ValidationIssue(
-                        severity="error",
-                        code="unmatched_brace",
-                        message=f"Unmatched closing '{char}'",
-                        line=line,
-                    ))
+                    errors.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="unmatched_brace",
+                            message=f"Unmatched closing '{char}'",
+                            line=line,
+                        )
+                    )
                 elif pairs[stack[-1][0]] != char:
                     line = code[:i].count("\n") + 1
-                    errors.append(ValidationIssue(
-                        severity="error",
-                        code="mismatched_brace",
-                        message=f"Expected '{pairs[stack[-1][0]]}' but found '{char}'",
-                        line=line,
-                    ))
+                    errors.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="mismatched_brace",
+                            message=f"Expected '{pairs[stack[-1][0]]}' but found '{char}'",
+                            line=line,
+                        )
+                    )
                 else:
                     stack.pop()
 
         for char, pos in stack:
             line = code[:pos].count("\n") + 1
-            errors.append(ValidationIssue(
-                severity="error",
-                code="unclosed_brace",
-                message=f"Unclosed '{char}'",
-                line=line,
-            ))
+            errors.append(
+                ValidationIssue(
+                    severity="error",
+                    code="unclosed_brace",
+                    message=f"Unclosed '{char}'",
+                    line=line,
+                )
+            )
 
         return SyntaxResult(
             valid=len(errors) == 0,
@@ -200,7 +214,14 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
         return False
 
     def fallback(self, input_data: Any) -> SyntaxResult:
-        return SyntaxResult(valid=False, source="fallback", errors=[
-            ValidationIssue(severity="warning", code="validation_degraded",
-                           message="Syntax validation unavailable — treating as invalid for safety")
-        ])
+        return SyntaxResult(
+            valid=False,
+            source="fallback",
+            errors=[
+                ValidationIssue(
+                    severity="warning",
+                    code="validation_degraded",
+                    message="Syntax validation unavailable — treating as invalid for safety",
+                )
+            ],
+        )

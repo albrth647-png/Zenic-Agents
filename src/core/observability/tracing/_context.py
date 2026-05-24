@@ -10,9 +10,10 @@ import functools
 import logging
 import threading
 import uuid
-from typing import Any, Callable, Dict, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
-from ._config import _tracing_enabled, _tracer
+from ._config import _tracer, _tracing_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ def get_current_trace_id() -> str:
     if _tracing_enabled:
         try:
             from opentelemetry import trace
+
             span = trace.get_current_span()
             ctx = span.get_span_context()
             if ctx and ctx.trace_id != 0:
@@ -53,6 +55,7 @@ def get_current_span_id() -> str:
     if _tracing_enabled:
         try:
             from opentelemetry import trace
+
             span = trace.get_current_span()
             ctx = span.get_span_context()
             if ctx and ctx.span_id != 0:
@@ -72,8 +75,8 @@ def get_current_span_id() -> str:
 @contextlib.contextmanager
 def trace_span(
     name: str,
-    attributes: Optional[Dict[str, Any]] = None,
-    kind: Optional[Any] = None,
+    attributes: dict[str, Any] | None = None,
+    kind: Any | None = None,
 ):
     """Context manager for creating a traced span.
 
@@ -141,11 +144,12 @@ def trace_span(
         _trace_context.span_id = parent_span_id or _trace_context.span_id
 
 
-def inject_trace_context(carrier: Dict[str, str]) -> Dict[str, str]:
+def inject_trace_context(carrier: dict[str, str]) -> dict[str, str]:
     """Inject trace context into a carrier dict (for propagation)."""
     if _tracing_enabled:
         try:
             from opentelemetry import propagate
+
             propagate.inject(carrier)
             return carrier
         except Exception:
@@ -156,11 +160,12 @@ def inject_trace_context(carrier: Dict[str, str]) -> Dict[str, str]:
     return carrier
 
 
-def extract_trace_context(carrier: Dict[str, str]) -> Optional[Any]:
+def extract_trace_context(carrier: dict[str, str]) -> Any | None:
     """Extract trace context from a carrier dict."""
     if _tracing_enabled:
         try:
             from opentelemetry import propagate
+
             return propagate.extract(carrier)
         except Exception:
             pass
@@ -179,7 +184,7 @@ def extract_trace_context(carrier: Dict[str, str]) -> Optional[Any]:
 F = TypeVar("F", bound=Callable)
 
 
-def traced(name: Optional[str] = None, **span_attrs: Any) -> Callable[[F], F]:
+def traced(name: str | None = None, **span_attrs: Any) -> Callable[[F], F]:
     """Decorator that wraps a function in a trace span.
 
     Usage:
@@ -191,6 +196,7 @@ def traced(name: Optional[str] = None, **span_attrs: Any) -> Callable[[F], F]:
         name: Span name (defaults to function.__qualname__).
         **span_attrs: Static span attributes.
     """
+
     def decorator(func: F) -> F:
         span_name = name or func.__qualname__
 
@@ -205,6 +211,7 @@ def traced(name: Optional[str] = None, **span_attrs: Any) -> Callable[[F], F]:
                 return await func(*args, **kwargs)
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore
         return sync_wrapper  # type: ignore

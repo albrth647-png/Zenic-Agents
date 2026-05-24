@@ -10,21 +10,21 @@ import json
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ._utils import (
-    _HAS_CRYPTOGRAPHY,
-    _HAS_PYJWT,
     _FCM_SCOPE,
     _FCM_TOKEN_URL,
+    _HAS_CRYPTOGRAPHY,
+    _HAS_PYJWT,
     _base64url_encode,
 )
 
 # Conditional imports for type hints
 if _HAS_CRYPTOGRAPHY:
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
-    from cryptography.hazmat.backends import default_backend
 
 
 logger = logging.getLogger("zenic_agents.channels.push")
@@ -40,24 +40,22 @@ class _FcmAuthMixin:
 
         try:
             path = os.path.expanduser(self._fcm_service_account_key_path)
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 self._fcm_service_account_data = json.load(f)
 
             logger.debug(
-                "PushChannelProvider: loaded FCM service account "
-                "(client_email=%s)",
+                "PushChannelProvider: loaded FCM service account " "(client_email=%s)",
                 self._fcm_service_account_data.get("client_email", "N/A"),
             )
         except Exception as e:
             logger.warning(
-                "PushChannelProvider: failed to load FCM service account "
-                "key from '%s': %s",
+                "PushChannelProvider: failed to load FCM service account " "key from '%s': %s",
                 self._fcm_service_account_key_path,
                 e,
             )
             self._fcm_service_account_data = None
 
-    async def _get_fcm_access_token(self) -> Optional[str]:
+    async def _get_fcm_access_token(self) -> str | None:
         """Get a valid FCM OAuth2 access token.
 
         Uses self-signed JWT with RS256 if `cryptography` is available.
@@ -83,11 +81,12 @@ class _FcmAuthMixin:
             return await self._fetch_fcm_access_token()
         except Exception as e:
             logger.warning(
-                "PushChannelProvider: failed to get FCM access token: %s", e,
+                "PushChannelProvider: failed to get FCM access token: %s",
+                e,
             )
             return None
 
-    async def _fetch_fcm_access_token(self) -> Optional[str]:
+    async def _fetch_fcm_access_token(self) -> str | None:
         """Fetch a new FCM OAuth2 access token using self-signed JWT.
 
         Returns:
@@ -102,10 +101,7 @@ class _FcmAuthMixin:
         token_uri = sa_data.get("token_uri", _FCM_TOKEN_URL)
 
         if not client_email or not private_key:
-            logger.warning(
-                "PushChannelProvider: FCM service account missing "
-                "client_email or private_key"
-            )
+            logger.warning("PushChannelProvider: FCM service account missing " "client_email or private_key")
             return None
 
         now = int(time.time())
@@ -120,18 +116,22 @@ class _FcmAuthMixin:
         }
 
         # Sign the JWT
-        jwt_token: Optional[str] = None
+        jwt_token: str | None = None
 
         # Try PyJWT first
         if _HAS_PYJWT:
             try:
                 import jwt as pyjwt_mod
+
                 jwt_token = pyjwt_mod.encode(
-                    claim, private_key, algorithm="RS256",
+                    claim,
+                    private_key,
+                    algorithm="RS256",
                 )
             except Exception as e:
                 logger.debug(
-                    "PushChannelProvider: PyJWT RS256 encoding failed: %s", e,
+                    "PushChannelProvider: PyJWT RS256 encoding failed: %s",
+                    e,
                 )
 
         # Manual JWT with cryptography
@@ -145,10 +145,7 @@ class _FcmAuthMixin:
                 )
 
         if jwt_token is None:
-            logger.warning(
-                "PushChannelProvider: no crypto library available for "
-                "RS256 JWT signing"
-            )
+            logger.warning("PushChannelProvider: no crypto library available for " "RS256 JWT signing")
             return None
 
         # Exchange JWT for access token
@@ -173,7 +170,9 @@ class _FcmAuthMixin:
         return None
 
     def _sign_rs256_jwt(
-        self, claim: Dict[str, Any], private_key_pem: str,
+        self,
+        claim: dict[str, Any],
+        private_key_pem: str,
     ) -> str:
         """Sign a JWT with RS256 using the cryptography package.
 

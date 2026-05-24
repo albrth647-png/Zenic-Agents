@@ -14,7 +14,7 @@ Ported from:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import ProblemType, ReasoningResult, ReasoningStep
@@ -32,9 +32,15 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
             "with Pydantic models and add OpenAPI documentation."
         ),
         "steps": [
-            {"desc": "Identify resources and map to endpoints", "conclusion": "Resources identified and endpoints mapped"},
+            {
+                "desc": "Identify resources and map to endpoints",
+                "conclusion": "Resources identified and endpoints mapped",
+            },
             {"desc": "Define request/response schemas", "conclusion": "Schemas defined with validation rules"},
-            {"desc": "Implement route handlers with error handling", "conclusion": "Routes implemented with proper HTTP status codes"},
+            {
+                "desc": "Implement route handlers with error handling",
+                "conclusion": "Routes implemented with proper HTTP status codes",
+            },
         ],
         "confidence": 0.75,
     },
@@ -47,8 +53,14 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
         ),
         "steps": [
             {"desc": "Define auth mechanism and user model", "conclusion": "JWT auth selected with user model defined"},
-            {"desc": "Implement credential verification and token generation", "conclusion": "Token generation and verification implemented"},
-            {"desc": "Add authorization middleware with role-based access", "conclusion": "RBAC middleware implemented"},
+            {
+                "desc": "Implement credential verification and token generation",
+                "conclusion": "Token generation and verification implemented",
+            },
+            {
+                "desc": "Add authorization middleware with role-based access",
+                "conclusion": "RBAC middleware implemented",
+            },
         ],
         "confidence": 0.80,
     },
@@ -61,7 +73,10 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
         ),
         "steps": [
             {"desc": "Analyze data requirements and relationships", "conclusion": "Entity relationships mapped"},
-            {"desc": "Design normalized schema with constraints", "conclusion": "Schema designed with proper normalization"},
+            {
+                "desc": "Design normalized schema with constraints",
+                "conclusion": "Schema designed with proper normalization",
+            },
             {"desc": "Implement CRUD with parameterized queries", "conclusion": "CRUD operations implemented safely"},
         ],
         "confidence": 0.78,
@@ -75,7 +90,10 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
         ),
         "steps": [
             {"desc": "Define invoice model with line items and tax rules", "conclusion": "Invoice data model defined"},
-            {"desc": "Implement subtotal, tax, and discount calculations", "conclusion": "Calculations implemented with precision handling"},
+            {
+                "desc": "Implement subtotal, tax, and discount calculations",
+                "conclusion": "Calculations implemented with precision handling",
+            },
             {"desc": "Add validation and PDF export", "conclusion": "Validation and PDF generation ready"},
         ],
         "confidence": 0.82,
@@ -87,8 +105,14 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
             "with validation. Add batch operations and warehouse management."
         ),
         "steps": [
-            {"desc": "Define product and movement data models", "conclusion": "Models defined with proper relationships"},
-            {"desc": "Implement stock tracking with real-time updates", "conclusion": "Real-time stock levels implemented"},
+            {
+                "desc": "Define product and movement data models",
+                "conclusion": "Models defined with proper relationships",
+            },
+            {
+                "desc": "Implement stock tracking with real-time updates",
+                "conclusion": "Real-time stock levels implemented",
+            },
             {"desc": "Add alerts, history, and reporting", "conclusion": "Alert system and reporting ready"},
         ],
         "confidence": 0.80,
@@ -114,8 +138,14 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
         ),
         "steps": [
             {"desc": "Identify trigger type and action requirements", "conclusion": "Trigger and actions identified"},
-            {"desc": "Design workflow with conditions and error handling", "conclusion": "Workflow designed with proper error recovery"},
-            {"desc": "Implement execution engine with retry logic", "conclusion": "Execution engine ready with backoff retry"},
+            {
+                "desc": "Design workflow with conditions and error handling",
+                "conclusion": "Workflow designed with proper error recovery",
+            },
+            {
+                "desc": "Implement execution engine with retry logic",
+                "conclusion": "Execution engine ready with backoff retry",
+            },
         ],
         "confidence": 0.73,
     },
@@ -126,7 +156,10 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
             "expression parsing and support AND/OR/NOT operators."
         ),
         "steps": [
-            {"desc": "Identify conditions and map decision tree", "conclusion": "Decision tree mapped with all branches"},
+            {
+                "desc": "Identify conditions and map decision tree",
+                "conclusion": "Decision tree mapped with all branches",
+            },
             {"desc": "Implement rule evaluation with short-circuit", "conclusion": "Evaluation engine implemented"},
             {"desc": "Add validation for edge cases", "conclusion": "Edge cases handled and validated"},
         ],
@@ -153,9 +186,15 @@ REASONING_TEMPLATES: dict[str, dict[str, Any]] = {
             "migration plan with regression tests."
         ),
         "steps": [
-            {"desc": "Analyze current structure and identify improvements", "conclusion": "Structure analysis complete"},
+            {
+                "desc": "Analyze current structure and identify improvements",
+                "conclusion": "Structure analysis complete",
+            },
             {"desc": "Design target architecture with module boundaries", "conclusion": "Target architecture designed"},
-            {"desc": "Implement incremental refactoring with tests", "conclusion": "Refactoring done with regression safety"},
+            {
+                "desc": "Implement incremental refactoring with tests",
+                "conclusion": "Refactoring done with regression safety",
+            },
         ],
         "confidence": 0.65,
     },
@@ -233,7 +272,7 @@ class TemplateReasoner(BaseAgent[ReasoningResult]):
             source="deterministic",
         )
 
-    def _extract_problem_type(self, input_data: Any) -> Optional[ProblemType]:
+    def _extract_problem_type(self, input_data: Any) -> ProblemType | None:
         """Extract ProblemType from input."""
         if isinstance(input_data, ProblemType):
             return input_data
@@ -270,12 +309,14 @@ class TemplateReasoner(BaseAgent[ReasoningResult]):
         """Build ReasoningStep list from template."""
         steps: list[ReasoningStep] = []
         for i, step_data in enumerate(template.get("steps", [])):
-            steps.append(ReasoningStep(
-                step_number=i + 1,
-                description=step_data.get("desc", ""),
-                conclusion=step_data.get("conclusion", ""),
-                confidence=template.get("confidence", 0.5),
-            ))
+            steps.append(
+                ReasoningStep(
+                    step_number=i + 1,
+                    description=step_data.get("desc", ""),
+                    conclusion=step_data.get("conclusion", ""),
+                    confidence=template.get("confidence", 0.5),
+                )
+            )
         return steps
 
     def list_available_templates(self) -> list[str]:

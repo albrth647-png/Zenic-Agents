@@ -89,7 +89,7 @@ class Z3BridgeMixin:
             if left is None:
                 return None
             z3_conds = []
-            for op, comp in zip(node.ops, node.comparators):
+            for op, comp in zip(node.ops, node.comparators, strict=False):
                 right = self._z3_value_from_node(comp, current_path)
                 if right is None:
                     return None
@@ -207,17 +207,18 @@ class Z3BridgeMixin:
         """Analisis simbolico simplificado para lenguajes no-Python."""
         # Contar ramas condicionales
         branch_patterns = {
-            "kotlin": r'\bif\b|\bwhen\b|\belse\b',
-            "go": r'\bif\b|\bswitch\b|\belse\b',
-            "javascript": r'\bif\b|\bswitch\b|\belse\b|\?.*:',
-            "typescript": r'\bif\b|\bswitch\b|\belse\b|\?.*:',
-            "java": r'\bif\b|\bswitch\b|\belse\b',
-            "rust": r'\bif\b|\bmatch\b|\belse\b',
+            "kotlin": r"\bif\b|\bwhen\b|\belse\b",
+            "go": r"\bif\b|\bswitch\b|\belse\b",
+            "javascript": r"\bif\b|\bswitch\b|\belse\b|\?.*:",
+            "typescript": r"\bif\b|\bswitch\b|\belse\b|\?.*:",
+            "java": r"\bif\b|\bswitch\b|\belse\b",
+            "rust": r"\bif\b|\bmatch\b|\belse\b",
         }
-        pattern = branch_patterns.get(language, r'\bif\b|\belse\b')
+        pattern = branch_patterns.get(language, r"\bif\b|\belse\b")
         import re
+
         branches = len(re.findall(pattern, code))
-        estimated_paths = min(2 ** branches, 1000) if branches > 0 else 1
+        estimated_paths = min(2**branches, 1000) if branches > 0 else 1
 
         return {
             "status": "PASS",
@@ -229,5 +230,5 @@ class Z3BridgeMixin:
                 "paths_pruned": 0,
                 "total_paths": estimated_paths,
                 "feasible_paths": estimated_paths,
-            }
+            },
         }

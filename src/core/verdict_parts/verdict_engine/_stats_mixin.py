@@ -1,19 +1,20 @@
 """Stats and lifecycle mixin for VerdictEngine."""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from ._config import VERDICT_CONSENSUS_ATTEMPTS, VERDICT_MAX_RETRIES
 
 try:
     from ..resilience import (
-        VerdictCircuitBreaker,  # noqa: F401
-        VerdictRetryConfig,  # noqa: F401
-        VerdictHealthMonitor,  # noqa: F401
-        VerdictAuditor,  # noqa: F401
         VerdictAuditEntry,  # noqa: F401
+        VerdictAuditor,  # noqa: F401
+        VerdictCircuitBreaker,  # noqa: F401
+        VerdictHealthMonitor,  # noqa: F401
         VerdictResilienceOrchestrator,  # noqa: F401
+        VerdictRetryConfig,  # noqa: F401
     )
+
     _RESILIENCE_AVAILABLE = True
 except ImportError:
     _RESILIENCE_AVAILABLE = False
@@ -25,7 +26,7 @@ class VerdictStatsMixin:
     """Mixin providing stats, health, and lifecycle methods for VerdictEngine."""
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas del VerdictEngine con resiliencia."""
         with self._stats_lock:
             total_verdicts = self._total_verdicts
@@ -61,7 +62,7 @@ class VerdictStatsMixin:
         return base_stats
 
     @property
-    def health(self) -> Dict[str, Any]:
+    def health(self) -> dict[str, Any]:
         """Health status of the verdict system."""
         if self._resilience:
             snap = self._resilience.health_snapshot
@@ -78,8 +79,7 @@ class VerdictStatsMixin:
             "circuit_breaker_state": "not_configured",
         }
 
-    def update_engines(self, mini_ai=None, semantic_engine=None,
-                       smart_memory=None, memory_chip=None) -> None:
+    def update_engines(self, mini_ai=None, semantic_engine=None, smart_memory=None, memory_chip=None) -> None:
         """Actualiza las referencias a los motores."""
         if mini_ai is not None:
             self._mini_ai = mini_ai
@@ -103,7 +103,7 @@ class VerdictStatsMixin:
             self._resilience.circuit_breaker.reset()
             logger.info("VerdictEngine: Circuit breaker reset to CLOSED")
 
-    def get_audit_trail(self, count: int = 20) -> List[Dict[str, Any]]:
+    def get_audit_trail(self, count: int = 20) -> list[dict[str, Any]]:
         """Get recent audit entries as dictionaries."""
         if self._resilience and _RESILIENCE_AVAILABLE:
             entries = self._resilience.auditor.get_recent(count)
@@ -122,7 +122,7 @@ class VerdictStatsMixin:
             ]
         return []
 
-    def get_failure_pattern(self) -> Dict[str, Any]:
+    def get_failure_pattern(self) -> dict[str, Any]:
         """Analyze recent verdicts for failure patterns."""
         if self._resilience:
             return self._resilience.auditor.get_failure_pattern()

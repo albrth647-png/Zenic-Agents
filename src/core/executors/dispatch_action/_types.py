@@ -8,19 +8,20 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..safety_gate import SafetyVerdict, SafetyCheckResult
 from ..audit_logger import AuditEntry
 from ..base import ActionResult
+from ..safety_gate import SafetyCheckResult, SafetyVerdict
 
 
 @dataclass
 class DispatchRequest:
     """A request to dispatch an action through the pipeline."""
+
     action_type: str
-    config: Dict[str, Any]
-    context: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any]
+    context: dict[str, Any] = field(default_factory=dict)
     action_id: str = ""
     user_id: str = ""
     tenant_id: str = ""
@@ -40,13 +41,16 @@ class DispatchRequest:
 @dataclass
 class DispatchResult:
     """Result of a dispatch through the full pipeline."""
+
     action_id: str
     success: bool
     safety_verdict: SafetyVerdict
-    executor_result: Optional[ActionResult] = None
-    audit_entry: Optional[AuditEntry] = None
-    safety_result: Optional[SafetyCheckResult] = None
-    blueprint_errors: List[str] = field(default_factory=list)
+    executor_result: ActionResult | None = None
+    audit_entry: AuditEntry | None = None
+    safety_result: SafetyCheckResult | None = None
+    blueprint_errors: list[str] = field(default_factory=list)
     total_duration_ms: float = 0.0
-    pipeline_stages: Dict[str, float] = field(default_factory=dict)
+    pipeline_stages: dict[str, float] = field(default_factory=dict)
+
+
 __all__ = ["DispatchRequest", "DispatchResult"]

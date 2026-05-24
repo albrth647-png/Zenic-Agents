@@ -5,8 +5,11 @@ import time
 from typing import Any
 
 from ..schemas import (
-    SecurityResult, SyntaxResult, ConsensusResult,
-    Verdict, VerdictOutput,
+    ConsensusResult,
+    SecurityResult,
+    SyntaxResult,
+    Verdict,
+    VerdictOutput,
 )
 
 logger = logging.getLogger("zenic_agents.agents.pipeline_orchestrator")
@@ -52,8 +55,7 @@ class PipelineOrchestratorCoreMixin:
     #  MAIN PIPELINE
     # ══════════════════════════════════════════════════════════
 
-    async def execute(self, message: str, code: str = "",
-                      language: str = "python") -> dict[str, Any]:
+    async def execute(self, message: str, code: str = "", language: str = "python") -> dict[str, Any]:
         """
         Execute the full 6-phase pipeline.
 
@@ -70,15 +72,21 @@ class PipelineOrchestratorCoreMixin:
         self._run_agent(self._bilingual_router, message)
         intent_result = self._run_agent(self._intent_classifier, message)
         entity_result = self._run_agent(self._entity_extractor, message)
-        target_result = self._run_agent(self._target_resolver, {
-            "entity_result": entity_result,
-            "message": message,
-        })
-        criticality_result = self._run_agent(self._criticality_scorer, {
-            "intent_result": intent_result,
-            "target_result": target_result,
-            "message": message,
-        })
+        target_result = self._run_agent(
+            self._target_resolver,
+            {
+                "entity_result": entity_result,
+                "message": message,
+            },
+        )
+        criticality_result = self._run_agent(
+            self._criticality_scorer,
+            {
+                "intent_result": intent_result,
+                "target_result": target_result,
+                "message": message,
+            },
+        )
 
         phases["understand"] = (time.monotonic() - phase_start) * 1000
 
@@ -87,23 +95,35 @@ class PipelineOrchestratorCoreMixin:
         # ══════════════════════════════════════════════════════
         phase_start = time.monotonic()
 
-        memory_entries = self._run_agent(self._memory_collector, {
-            "intent_result": intent_result,
-            "target_result": target_result,
-        })
-        scored_entries = self._run_agent(self._relevance_scorer, {
-            "memory_entries": memory_entries,
-            "intent_result": intent_result,
-        })
-        compressed_context = self._run_agent(self._context_compressor, {
-            "scored_entries": scored_entries,
-            "operation": intent_result.operation if intent_result else "SEARCH",
-            "goal": intent_result.goal if intent_result else "FEATURE_ADD",
-        })
-        self._run_agent(self._context_prefetcher, {
-            "intent_result": intent_result,
-            "memory_entries": memory_entries,
-        })
+        memory_entries = self._run_agent(
+            self._memory_collector,
+            {
+                "intent_result": intent_result,
+                "target_result": target_result,
+            },
+        )
+        scored_entries = self._run_agent(
+            self._relevance_scorer,
+            {
+                "memory_entries": memory_entries,
+                "intent_result": intent_result,
+            },
+        )
+        compressed_context = self._run_agent(
+            self._context_compressor,
+            {
+                "scored_entries": scored_entries,
+                "operation": intent_result.operation if intent_result else "SEARCH",
+                "goal": intent_result.goal if intent_result else "FEATURE_ADD",
+            },
+        )
+        self._run_agent(
+            self._context_prefetcher,
+            {
+                "intent_result": intent_result,
+                "memory_entries": memory_entries,
+            },
+        )
 
         phases["context"] = (time.monotonic() - phase_start) * 1000
 
@@ -118,7 +138,7 @@ class PipelineOrchestratorCoreMixin:
         # Determine if this is a code operation, business operation, automation, or reasoning
         operation = intent_result.operation if intent_result else "SEARCH"
         goal = intent_result.goal if intent_result else "FEATURE_ADD"
-        
+
         # Check for automation/reasoning intent from message keywords
         is_automation = self._is_automation_intent(message, intent_result)
         is_reasoning = self._is_reasoning_intent(message, intent_result)
@@ -126,26 +146,21 @@ class PipelineOrchestratorCoreMixin:
         if operation in ("CREATE", "OPTIMIZE", "REFACTOR", "DEBUG") and not is_automation:
             # ── Code operation path — code_ops module DELETED ──
             # Return a result indicating code operations are not available
-            logger.warning("Code operation requested (%s) but code_ops module is not available. "
-                          "Falling back to business operation.", operation)
-            execution_result, execution_type = self._execute_business_operation(
-                message, intent_result
+            logger.warning(
+                "Code operation requested (%s) but code_ops module is not available. "
+                "Falling back to business operation.",
+                operation,
             )
+            execution_result, execution_type = self._execute_business_operation(message, intent_result)
         elif is_automation:
             # ── Automation path ──
-            execution_result, execution_type = self._execute_automation_operation(
-                message, intent_result
-            )
+            execution_result, execution_type = self._execute_automation_operation(message, intent_result)
         elif is_reasoning:
             # ── Reasoning path ──
-            execution_result, execution_type = self._execute_reasoning_operation(
-                message, intent_result
-            )
+            execution_result, execution_type = self._execute_reasoning_operation(message, intent_result)
         else:
             # ── Business operation path ──
-            execution_result, execution_type = self._execute_business_operation(
-                message, intent_result
-            )
+            execution_result, execution_type = self._execute_business_operation(message, intent_result)
 
         # ── Defensive injection — not available (code_ops deleted) ──
         defensive_result = None
@@ -159,35 +174,47 @@ class PipelineOrchestratorCoreMixin:
 
         # Validate the final code (after defensive injection)
         code_to_validate = ""
-        if defensive_result and hasattr(defensive_result, 'code'):
+        if defensive_result and hasattr(defensive_result, "code"):
             code_to_validate = defensive_result.code
-        elif execution_result and hasattr(execution_result, 'code'):
+        elif execution_result and hasattr(execution_result, "code"):
             code_to_validate = execution_result.code
         else:
             code_to_validate = code  # Fall back to input code
 
-        security_result = self._run_agent(self._security_scanner, {
-            "code": code_to_validate,
-            "language": language,
-        })
-        syntax_result = self._run_agent(self._syntax_validator, {
-            "code": code_to_validate,
-            "language": language,
-        })
-        risk_result = self._run_agent(self._risk_calculator, {
-            "security_result": security_result,
-            "syntax_result": syntax_result,
-        })
+        security_result = self._run_agent(
+            self._security_scanner,
+            {
+                "code": code_to_validate,
+                "language": language,
+            },
+        )
+        syntax_result = self._run_agent(
+            self._syntax_validator,
+            {
+                "code": code_to_validate,
+                "language": language,
+            },
+        )
+        risk_result = self._run_agent(
+            self._risk_calculator,
+            {
+                "security_result": security_result,
+                "syntax_result": syntax_result,
+            },
+        )
         # Collect all validation issues for FixSuggester
         all_issues = []
         if security_result and isinstance(security_result, SecurityResult):
             all_issues.extend(security_result.threats)
         if syntax_result and isinstance(syntax_result, SyntaxResult):
             all_issues.extend(syntax_result.errors)
-        
-        fix_result = self._run_agent(self._fix_suggester, {
-            "issues": all_issues,
-        })
+
+        fix_result = self._run_agent(
+            self._fix_suggester,
+            {
+                "issues": all_issues,
+            },
+        )
 
         phases["validate"] = (time.monotonic() - phase_start) * 1000
 
@@ -197,24 +224,30 @@ class PipelineOrchestratorCoreMixin:
         phase_start = time.monotonic()
 
         # Collect evidence
-        evidence = self._run_agent(self._evidence_collector, {
-            "security_result": security_result,
-            "syntax_result": syntax_result,
-            "criticality_result": criticality_result,
-            "intent_result": intent_result,
-        })
+        evidence = self._run_agent(
+            self._evidence_collector,
+            {
+                "security_result": security_result,
+                "syntax_result": syntax_result,
+                "criticality_result": criticality_result,
+                "intent_result": intent_result,
+            },
+        )
 
         # Resolve consensus
         consensus = self._run_agent(self._consensus_resolver, evidence)
 
         # If AI arbitration needed, ask VerdictEngine
         if consensus and isinstance(consensus, ConsensusResult) and consensus.needs_llm:
-            verdict_result = self._run_agent(self._verdict_engine, {
-                "question": f"Should code for {operation}/{goal} be approved?",
-                "consensus_result": consensus,
-                "evidence_for": consensus.evidence_for,
-                "evidence_against": consensus.evidence_against,
-            })
+            verdict_result = self._run_agent(
+                self._verdict_engine,
+                {
+                    "question": f"Should code for {operation}/{goal} be approved?",
+                    "consensus_result": consensus,
+                    "evidence_for": consensus.evidence_for,
+                    "evidence_against": consensus.evidence_against,
+                },
+            )
         else:
             if isinstance(consensus, ConsensusResult):
                 verdict_result = VerdictOutput(
@@ -279,29 +312,34 @@ class PipelineOrchestratorCoreMixin:
         """Execute a business operation by routing to the correct agent."""
         # Infer business type from message keywords (not hardcoded "custom")
         biz_type = self._infer_business_type(message)
-        
-        # Route to the correct agent
-        route = self._run_agent(self._operation_router, {
-            "type": biz_type,
-            "data": {"description": message},
-            "context": {},
-            "description": message,
-        })
 
-        if route and hasattr(route, 'target_agent'):
+        # Route to the correct agent
+        route = self._run_agent(
+            self._operation_router,
+            {
+                "type": biz_type,
+                "data": {"description": message},
+                "context": {},
+                "description": message,
+            },
+        )
+
+        if route and hasattr(route, "target_agent"):
             agent = self._business_agents.get(route.target_agent)
             if agent:
                 result = self._run_agent(agent, route.transformed_input.get("data", {}))
                 return result, f"business:{route.target_agent}"
 
         # Fallback: data analyzer
-        result = self._run_agent(self._data_analyzer, {
-            "data": [message],
-            "metrics": ["count"],
-        })
+        result = self._run_agent(
+            self._data_analyzer,
+            {
+                "data": [message],
+                "metrics": ["count"],
+            },
+        )
         return result, "business:fallback"
 
     # ══════════════════════════════════════════════════════════
     #  AUTOMATION OPERATION EXECUTION
     # ══════════════════════════════════════════════════════════
-

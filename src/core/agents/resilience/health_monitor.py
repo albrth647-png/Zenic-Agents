@@ -17,6 +17,7 @@ from typing import Any
 @dataclass
 class HealthCallRecord:
     """Record of a single agent call for health tracking."""
+
     success: bool
     latency_s: float
     was_timeout: bool = False
@@ -27,6 +28,7 @@ class HealthCallRecord:
 @dataclass
 class AgentHealthSnapshot:
     """Health snapshot for a single agent."""
+
     agent_name: str
     healthy: bool = True
     success_rate: float = 1.0
@@ -71,13 +73,15 @@ class GlobalHealthMonitor:
         with self._lock:
             if agent_name not in self._windows:
                 self._windows[agent_name] = deque(maxlen=self.window_size)
-            self._windows[agent_name].append(HealthCallRecord(
-                success=success,
-                latency_s=latency_s,
-                was_timeout=was_timeout,
-                was_ambiguous=was_ambiguous,
-                timestamp=time.monotonic(),
-            ))
+            self._windows[agent_name].append(
+                HealthCallRecord(
+                    success=success,
+                    latency_s=latency_s,
+                    was_timeout=was_timeout,
+                    was_ambiguous=was_ambiguous,
+                    timestamp=time.monotonic(),
+                )
+            )
 
     def is_healthy(self, agent_name: str) -> bool:
         """Check if an agent is healthy."""

@@ -15,11 +15,11 @@ Pero la IA NUNCA puede aprobar algo que las reglas denegaron.
 
 from __future__ import annotations
 
-import re
 import logging
+import re
 from dataclasses import dataclass
-from typing import Any
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class SafetyVerdict(str, Enum):
 @dataclass
 class SafetyResult:
     """Resultado de la evaluación del SafetyGate."""
+
     approved: bool
     verdict: SafetyVerdict
     reason: str = ""
@@ -75,7 +76,7 @@ class SafetyGate:
     La IA NUNCA puede sobrepasar un DENY de las capas 1 o 2.
     """
 
-    def __init__(self, policy_engine: 'PolicyEngine | None' = None):  # noqa: F821  # TODO: Phase3 - verify import
+    def __init__(self, policy_engine: PolicyEngine | None = None):  # noqa: F821  # TODO: Phase3 - verify import
         self._policy_engine = policy_engine
         self._denied_count = 0
         self._approved_count = 0
@@ -160,6 +161,7 @@ class SafetyGate:
         """Capa 2: Policy check usando PolicyEngine si disponible."""
         if self._policy_engine:
             from src.core.safety.policy import PolicyAction
+
             policy_action = self._policy_engine.evaluate(action, context)
 
             if policy_action == PolicyAction.DENY:

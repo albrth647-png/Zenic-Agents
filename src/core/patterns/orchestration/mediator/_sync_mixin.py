@@ -3,7 +3,8 @@ ZENIC-AGENTS - Mediator Pattern: Sync Dispatch Mixin
 """
 
 import logging
-from typing import Any, Callable, List
+from collections.abc import Callable
+from typing import Any
 
 from ._types import PipelineBehavior, Request, Response
 
@@ -20,8 +21,10 @@ def _wrap_pipeline(
     Creates a closure that invokes the pipeline with the request
     and the next callable.
     """
+
     def _wrapped(request: Request) -> Response:
         return pipeline(request, next_fn)
+
     return _wrapped
 
 
@@ -44,13 +47,12 @@ class SyncDispatchMixin:
         # Log dispatch
         logger.info(
             "Mediator: Dispatching request_type='%s' (pipelines=%d)",
-            request.request_type, len(pipelines),
+            request.request_type,
+            len(pipelines),
         )
 
         if handler is None:
-            error_msg = (
-                f"No handler registered for request_type '{request.request_type}'"
-            )
+            error_msg = f"No handler registered for request_type '{request.request_type}'"
             logger.warning("Mediator: %s", error_msg)
             self._error_count_inc()
             return Response(
@@ -62,7 +64,7 @@ class SyncDispatchMixin:
         # Build the handler chain
         def _build_chain(
             handler_fn: Callable[[Request], Response],
-            pipelines: List[PipelineBehavior],
+            pipelines: list[PipelineBehavior],
         ) -> Callable[[Request], Response]:
             chain = handler_fn
             for pipeline in reversed(pipelines):
@@ -77,7 +79,8 @@ class SyncDispatchMixin:
             self._error_count_inc()
             logger.error(
                 "Mediator: Handler failed for request_type '%s': %s",
-                request.request_type, exc,
+                request.request_type,
+                exc,
                 exc_info=True,
             )
             return Response(

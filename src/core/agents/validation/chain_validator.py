@@ -13,7 +13,7 @@ Validates:
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import ChainResult
@@ -133,7 +133,7 @@ class ChainValidator(BaseAgent[ChainResult]):
             source="deterministic",
         )
 
-    def _parse_chain(self, chain_data: Any) -> Optional[list[Any]]:
+    def _parse_chain(self, chain_data: Any) -> list[Any] | None:
         """Parse chain data into a list of blocks."""
         if isinstance(chain_data, str):
             try:
@@ -162,19 +162,13 @@ class ChainValidator(BaseAgent[ChainResult]):
 
         for i, block in enumerate(blocks):
             block_dict = block if isinstance(block, dict) else {}
-            block_name = (
-                block_dict.get("name", None)
-                if isinstance(block, dict)
-                else getattr(block, "name", None)
-            )
+            block_name = block_dict.get("name", None) if isinstance(block, dict) else getattr(block, "name", None)
             if not block_name:
                 issues.append(f"Block at index {i} has no name")
 
             # Check for execute method on object blocks
             if not isinstance(block, dict) and not hasattr(block, "execute"):
-                issues.append(
-                    f"CRITICAL: Block '{block_name or f'block_{i}'}' has no execute method"
-                )
+                issues.append(f"CRITICAL: Block '{block_name or f'block_{i}'}' has no execute method")
 
             # Check category
             category = self._get_block_category(block)
@@ -185,20 +179,14 @@ class ChainValidator(BaseAgent[ChainResult]):
             required_ctx = CATEGORY_CONTEXT_REQUIREMENTS.get(category, [])
             for req in required_ctx:
                 if req not in context:
-                    issues.append(
-                        f"Block '{block_name or f'block_{i}'}' ({category}) "
-                        f"may need '{req}' in context"
-                    )
+                    issues.append(f"Block '{block_name or f'block_{i}'}' ({category}) " f"may need '{req}' in context")
 
             # Category-specific data requirements
             data_reqs = CATEGORY_DATA_REQUIREMENTS.get(category, {})
             for block_type, req_field in data_reqs.items():
                 if block_name and block_name.startswith(block_type):
                     if req_field not in initial_data:
-                        issues.append(
-                            f"Block '{block_name}' ({category}) needs "
-                            f"'{req_field}' in initial data"
-                        )
+                        issues.append(f"Block '{block_name}' ({category}) needs " f"'{req_field}' in initial data")
 
         return issues
 
@@ -221,10 +209,7 @@ class ChainValidator(BaseAgent[ChainResult]):
                     if isinstance(next_block, dict)
                     else getattr(next_block, "name", f"block_{i+1}")
                 )
-                issues.append(
-                    f"Type mismatch: '{current_name}' outputs incompatible "
-                    f"with '{next_name}' inputs"
-                )
+                issues.append(f"Type mismatch: '{current_name}' outputs incompatible " f"with '{next_name}' inputs")
 
         return issues
 
@@ -277,10 +262,7 @@ class ChainValidator(BaseAgent[ChainResult]):
 
             rule = CHAIN_COMPATIBILITY_RULES.get((current_cat, next_cat))
             if rule == "warning":
-                issues.append(
-                    f"Category hint: {current_cat} → {next_cat} at step {i}-{i+1}: "
-                    f"consider reordering"
-                )
+                issues.append(f"Category hint: {current_cat} → {next_cat} at step {i}-{i+1}: " f"consider reordering")
 
         return issues
 
@@ -295,17 +277,13 @@ class ChainValidator(BaseAgent[ChainResult]):
 
         # Check if chain has auth operations but no auth block
         has_auth_context = bool(context.get("auth_required"))
-        has_auth_block = any(
-            self._get_block_category(b) == "auth" for b in blocks
-        )
+        has_auth_block = any(self._get_block_category(b) == "auth" for b in blocks)
         if has_auth_context and not has_auth_block:
             missing.append("auth_block")
 
         # Check if chain has database operations but no data block
         has_db_context = bool(context.get("db"))
-        has_data_block = any(
-            self._get_block_category(b) == "data" for b in blocks
-        )
+        has_data_block = any(self._get_block_category(b) == "data" for b in blocks)
         if has_db_context and not has_data_block:
             missing.append("data_block")
 
@@ -321,9 +299,7 @@ class ChainValidator(BaseAgent[ChainResult]):
 
         # Long chain warning
         if len(blocks) > 10:
-            issues.append(
-                f"Chain has {len(blocks)} blocks — consider splitting into sub-chains"
-            )
+            issues.append(f"Chain has {len(blocks)} blocks — consider splitting into sub-chains")
 
         # Duplicate block names
         names = []
@@ -335,19 +311,14 @@ class ChainValidator(BaseAgent[ChainResult]):
         seen = set()
         for name in names:
             if name and name in seen:
-                issues.append(
-                    f"Duplicate block name '{name}' — verify this is intentional"
-                )
+                issues.append(f"Duplicate block name '{name}' — verify this is intentional")
             seen.add(name)
 
         # Check that validation comes before business logic
         categories = [self._get_block_category(b) for b in blocks]
         for i in range(len(categories) - 1):
             if categories[i] == "business_logic" and categories[i + 1] == "validation":
-                issues.append(
-                    f"Validation after business logic at step {i+1} — "
-                    f"consider validating first"
-                )
+                issues.append(f"Validation after business logic at step {i+1} — " f"consider validating first")
 
         return issues
 

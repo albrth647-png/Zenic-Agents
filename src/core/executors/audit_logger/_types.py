@@ -7,17 +7,18 @@ AuditEntry, AuditQuery dataclasses for structured audit logging.
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass
 class AuditEntry:
     """A single audit log entry for an executor action."""
+
     entry_id: str = ""
     action_type: str = ""
     operation: str = ""
     executor_class: str = ""
-    verdict: str = ""              # ALLOW, CONFIRM, DENY, RATE_LIMITED
+    verdict: str = ""  # ALLOW, CONFIRM, DENY, RATE_LIMITED
     success: bool = False
     duration_ms: float = 0.0
     user_id: str = ""
@@ -25,9 +26,9 @@ class AuditEntry:
     session_id: str = ""
     request_id: str = ""
     risk_score: float = 0.0
-    category: str = ""             # safe, moderate, destructive, financial, system
+    category: str = ""  # safe, moderate, destructive, financial, system
     error: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     merkle_hash: str = ""
     prev_hash: str = ""
     timestamp: float = 0.0
@@ -42,15 +43,18 @@ class AuditEntry:
 @dataclass
 class AuditQuery:
     """Query parameters for searching audit entries."""
-    action_type: Optional[str] = None
-    executor_class: Optional[str] = None
-    user_id: Optional[str] = None
-    tenant_id: Optional[str] = None
-    success: Optional[bool] = None
-    verdict: Optional[str] = None
-    category: Optional[str] = None
-    from_timestamp: Optional[float] = None
-    to_timestamp: Optional[float] = None
+
+    action_type: str | None = None
+    executor_class: str | None = None
+    user_id: str | None = None
+    tenant_id: str | None = None
+    success: bool | None = None
+    verdict: str | None = None
+    category: str | None = None
+    from_timestamp: float | None = None
+    to_timestamp: float | None = None
     limit: int = 100
     offset: int = 0
+
+
 __all__ = ["AuditEntry", "AuditQuery"]

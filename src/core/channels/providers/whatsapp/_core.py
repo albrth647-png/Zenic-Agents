@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from ._types import _HTTP_TIMEOUT, _MAX_BUTTONS, _WHATSAPP_API_BASE, logger
-
 import hashlib
+import hmac
 import os
 import threading
-from typing import Any, Dict, Optional
-import hmac
+from typing import Any
+
 import aiohttp
+
+from ._types import _HTTP_TIMEOUT, _MAX_BUTTONS, _WHATSAPP_API_BASE, logger
+
+
 class WhatsAppChannelProvider:
     """WhatsApp Business Cloud API channel provider.
 
@@ -21,11 +24,11 @@ class WhatsAppChannelProvider:
 
     def __init__(
         self,
-        access_token: Optional[str] = None,
-        phone_number_id: Optional[str] = None,
-        verify_token: Optional[str] = None,
-        app_secret: Optional[str] = None,
-        api_base: Optional[str] = None,
+        access_token: str | None = None,
+        phone_number_id: str | None = None,
+        verify_token: str | None = None,
+        app_secret: str | None = None,
+        api_base: str | None = None,
     ) -> None:
         self._access_token = access_token or os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
         self._phone_number_id = phone_number_id or os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
@@ -38,9 +41,9 @@ class WhatsAppChannelProvider:
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()  # noqa: F821  # TODO: add import
-        self._message_handler: Optional[MessageHandler] = None  # noqa: F821  # TODO: add import
-        self._confirmation_handler: Optional[ConfirmationHandler] = None  # noqa: F821  # TODO: add import
-        self._session: Optional[Any] = None
+        self._message_handler: MessageHandler | None = None  # noqa: F821  # TODO: add import
+        self._confirmation_handler: ConfirmationHandler | None = None  # noqa: F821  # TODO: add import
+        self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
 
@@ -100,7 +103,8 @@ class WhatsAppChannelProvider:
         return response
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,  # noqa: F821  # TODO: add import
+        self,
+        request: ConfirmationRequest,  # noqa: F821  # TODO: add import
     ) -> ChannelResponse:  # noqa: F821  # TODO: add import
         """Send an interactive confirmation via WhatsApp buttons.
 
@@ -152,7 +156,8 @@ class WhatsAppChannelProvider:
 
         self._started = True
         logger.info(
-            "WhatsAppChannelProvider: started (configured=%s)", self.is_available,
+            "WhatsAppChannelProvider: started (configured=%s)",
+            self.is_available,
         )
 
     async def stop(self) -> None:
@@ -165,7 +170,7 @@ class WhatsAppChannelProvider:
         logger.info("WhatsAppChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics."""
         with self._lock:
             return {
@@ -246,7 +251,7 @@ class WhatsAppChannelProvider:
 
         return hmac.compare(expected, signature[7:])
 
-    def parse_inbound_message(self, payload: Dict[str, Any]) -> Optional[ChannelMessage]:  # noqa: F821  # TODO: add import
+    def parse_inbound_message(self, payload: dict[str, Any]) -> ChannelMessage | None:  # noqa: F821  # TODO: add import
         """Parse a WhatsApp webhook payload into a ChannelMessage.
 
         Args:

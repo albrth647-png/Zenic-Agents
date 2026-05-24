@@ -8,7 +8,7 @@ import asyncio
 import logging
 import os
 import shutil
-from typing import Any, Dict
+from typing import Any
 
 from .base import ActionExecutor, ActionResult, _safe_path
 
@@ -22,7 +22,7 @@ class FileExecutor(ActionExecutor):
     Operations: read, write, append, copy, move, delete, list, mkdir, exists
     """
 
-    async def execute(self, config: Dict[str, Any], context: Dict[str, Any]) -> ActionResult:
+    async def execute(self, config: dict[str, Any], context: dict[str, Any]) -> ActionResult:
         start = self._measure()
         operation = config.get("operation", "read").lower()
         base_dir = config.get("base_dir", os.getcwd())
@@ -33,19 +33,29 @@ class FileExecutor(ActionExecutor):
 
         valid_ops = {"read", "write", "append", "copy", "move", "delete", "list", "mkdir", "exists"}
         if operation not in valid_ops:
-            return ActionResult(False, {"operation": operation},
-                                f"Invalid file operation: {operation}. Must be one of {valid_ops}", self._elapsed_ms(start))
+            return ActionResult(
+                False,
+                {"operation": operation},
+                f"Invalid file operation: {operation}. Must be one of {valid_ops}",
+                self._elapsed_ms(start),
+            )
         try:
             if source:
                 source = _safe_path(source, base_dir)
             if destination:
                 destination = _safe_path(destination, base_dir)
 
-            ops = {"read": lambda: self._read(source), "write": lambda: self._write(destination or source, content),
-                   "append": lambda: self._append(destination or source, content), "copy": lambda: self._copy(source, destination),
-                   "move": lambda: self._move(source, destination), "delete": lambda: self._delete(source),
-                   "list": lambda: self._list(source or base_dir, pattern), "mkdir": lambda: self._mkdir(source),
-                   "exists": lambda: self._exists(source)}
+            ops = {
+                "read": lambda: self._read(source),
+                "write": lambda: self._write(destination or source, content),
+                "append": lambda: self._append(destination or source, content),
+                "copy": lambda: self._copy(source, destination),
+                "move": lambda: self._move(source, destination),
+                "delete": lambda: self._delete(source),
+                "list": lambda: self._list(source or base_dir, pattern),
+                "mkdir": lambda: self._mkdir(source),
+                "exists": lambda: self._exists(source),
+            }
             result_data = await ops[operation]()
             elapsed = self._elapsed_ms(start)
             logger.info(f"FileExecutor: {operation} completed - {source or base_dir}")
@@ -60,9 +70,11 @@ class FileExecutor(ActionExecutor):
     async def _read(self, path):
         if not os.path.exists(path):
             raise FileNotFoundError(f"File not found: {path}")
+
         def _do_read():
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
+            with open(path, encoding="utf-8", errors="replace") as f:
                 return f.read()
+
         content = await asyncio.to_thread(_do_read)
         return {"content": content, "size": len(content), "path": path}
 
@@ -70,9 +82,11 @@ class FileExecutor(ActionExecutor):
         d = os.path.dirname(path)
         if d:
             os.makedirs(d, exist_ok=True)
+
         def _do_write():
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
+
         await asyncio.to_thread(_do_write)
         return {"path": path, "size": len(content), "operation": "write"}
 
@@ -80,6 +94,7 @@ class FileExecutor(ActionExecutor):
         def _do_append():
             with open(path, "a", encoding="utf-8") as f:
                 f.write(content)
+
         await asyncio.to_thread(_do_append)
         return {"path": path, "appended_size": len(content), "operation": "append"}
 
@@ -89,7 +104,12 @@ class FileExecutor(ActionExecutor):
         d = os.path.dirname(destination)
         if d:
             os.makedirs(d, exist_ok=True)
-        def _do(): shutil.copytree(source, destination, dirs_exist_ok=True) if os.path.isdir(source) else shutil.copy2(source, destination)
+
+        def _do():
+            shutil.copytree(source, destination, dirs_exist_ok=True) if os.path.isdir(source) else shutil.copy2(
+                source, destination
+            )
+
         await asyncio.to_thread(_do)
         return {"source": source, "destination": destination, "operation": "copy"}
 
@@ -105,7 +125,10 @@ class FileExecutor(ActionExecutor):
     async def _delete(self, path):
         if not os.path.exists(path):
             raise FileNotFoundError(f"Path not found: {path}")
-        def _do(): shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+
+        def _do():
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+
         await asyncio.to_thread(_do)
         return {"path": path, "operation": "delete"}
 
@@ -113,6 +136,7 @@ class FileExecutor(ActionExecutor):
         if not os.path.isdir(path):
             raise NotADirectoryError(f"Not a directory: {path}")
         import glob as glob_module
+
         files = await asyncio.to_thread(lambda: glob_module.glob(os.path.join(path, pattern)))
         return {"files": files, "count": len(files), "path": path, "pattern": pattern}
 

@@ -18,7 +18,7 @@ Design invariants:
 
 from __future__ import annotations
 
-from typing import Any, Dict, FrozenSet, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from ._types import (
     ChannelCapability,
@@ -30,10 +30,10 @@ from ._types import (
     RateLimitInfo,
 )
 
-
 # ──────────────────────────────────────────────────────────────
 #  OUTBOUND-ONLY PROVIDER
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class ChannelProvider(Protocol):
@@ -49,7 +49,7 @@ class ChannelProvider(Protocol):
         ...
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
+    def capabilities(self) -> frozenset[ChannelCapability]:
         """Set of capabilities this provider supports."""
         ...
 
@@ -77,9 +77,7 @@ class ChannelProvider(Protocol):
         """
         ...
 
-    async def send_confirmation(
-        self, request: ConfirmationRequest
-    ) -> ChannelResponse:
+    async def send_confirmation(self, request: ConfirmationRequest) -> ChannelResponse:
         """Send an interactive confirmation request.
 
         If the channel doesn't support interactive elements,
@@ -108,7 +106,7 @@ class ChannelProvider(Protocol):
         ...
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Provider statistics for monitoring and health checks."""
         ...
 
@@ -121,6 +119,7 @@ class ChannelProvider(Protocol):
 # ──────────────────────────────────────────────────────────────
 #  BIDIRECTIONAL PROVIDER
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class InboundChannelProvider(ChannelProvider, Protocol):
@@ -165,6 +164,7 @@ class InboundChannelProvider(ChannelProvider, Protocol):
 #  PROVIDER CAPABILITY CHECKS
 # ──────────────────────────────────────────────────────────────
 
+
 def has_capability(provider: ChannelProvider, cap: ChannelCapability) -> bool:
     """Check if a provider has a specific capability."""
     return cap in provider.capabilities
@@ -205,9 +205,9 @@ def can_send_voice(provider: ChannelProvider) -> bool:
 __all__ = [
     "ChannelProvider",
     "InboundChannelProvider",
+    "can_receive_voice",
+    "can_send_confirmation",
+    "can_send_voice",
     "has_capability",
     "requires_inbound",
-    "can_send_confirmation",
-    "can_receive_voice",
-    "can_send_voice",
 ]

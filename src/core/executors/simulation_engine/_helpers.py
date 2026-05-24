@@ -9,7 +9,7 @@ import logging
 import sqlite3
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from ._types import SimulationResult
 
@@ -26,28 +26,34 @@ def retry(
 
     Default is 2 retries with 0.1s base delay.
     """
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return fn()
         except Exception as exc:
             last_exc = exc
             if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 logger.debug(
                     "%s: retry %d/%d after %.2fs — %s",
-                    label, attempt + 1, max_retries, delay, exc,
+                    label,
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                    exc,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
                     "%s: failed after %d attempts — %s",
-                    label, max_retries, exc,
+                    label,
+                    max_retries,
+                    exc,
                 )
     raise last_exc  # type: ignore[misc]
 
 
-def ensure_db(db_path: Optional[str], history_db_name: str) -> str:
+def ensure_db(db_path: str | None, history_db_name: str) -> str:
     """Ensure the SQLite history database exists and return its path.
 
     Args:
@@ -62,9 +68,11 @@ def ensure_db(db_path: Optional[str], history_db_name: str) -> str:
 
     try:
         from src.core.shared.db_initializer import get_data_dir
+
         data_dir = get_data_dir()
     except Exception:
         import tempfile
+
         data_dir = tempfile.mkdtemp(prefix="zenic_sim_")
 
     resolved_path = str(data_dir / history_db_name)
@@ -86,8 +94,7 @@ def ensure_db(db_path: Optional[str], history_db_name: str) -> str:
                 """
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "CREATE INDEX IF NOT EXISTS idx_sim_created "
-                "ON _simulation_history(created_at)"
+                "CREATE INDEX IF NOT EXISTS idx_sim_created " "ON _simulation_history(created_at)"
             )
             conn.commit()
         finally:
@@ -149,4 +156,6 @@ def persist_result(db_path: str, result: SimulationResult, max_history: int = 50
         retry(_do_persist, max_retries=2, base_delay=0.1, label="SimulationEngine._persist_result")
     except Exception as exc:
         logger.debug("SimulationEngine: persist failed: %s", exc)
+
+
 __all__ = ["ensure_db", "logger", "persist_result", "retry"]

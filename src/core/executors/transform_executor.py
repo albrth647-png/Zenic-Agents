@@ -6,7 +6,7 @@ Ejecutor de transformación y mapeo de datos.
 
 import csv
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .base import ActionExecutor, ActionResult
 
@@ -23,28 +23,33 @@ class TransformExecutor(ActionExecutor):
              index_field, column_field}
     """
 
-    async def execute(self, config: Dict[str, Any], context: Dict[str, Any]) -> ActionResult:
+    async def execute(self, config: dict[str, Any], context: dict[str, Any]) -> ActionResult:
         start = self._measure()
         operation = config.get("operation", "map_fields").lower()
-        data = config.get("data", None)
+        data = config.get("data")
 
-        valid_ops = {"map_fields", "filter", "sort", "aggregate",
-                     "format_convert", "merge", "deduplicate", "pivot"}
+        valid_ops = {"map_fields", "filter", "sort", "aggregate", "format_convert", "merge", "deduplicate", "pivot"}
         if operation not in valid_ops:
-            return ActionResult(False, {"operation": operation},
-                                f"Invalid transform operation: {operation}. Must be one of {valid_ops}", self._elapsed_ms(start))
+            return ActionResult(
+                False,
+                {"operation": operation},
+                f"Invalid transform operation: {operation}. Must be one of {valid_ops}",
+                self._elapsed_ms(start),
+            )
         if data is None:
             return ActionResult(False, {}, "No input data provided", self._elapsed_ms(start))
 
         try:
-            dispatch = {"map_fields": lambda: self._map_fields(data, config.get("mapping", {})),
-                        "filter": lambda: self._filter(data, config),
-                        "sort": lambda: self._sort(data, config),
-                        "aggregate": lambda: self._aggregate(data, config),
-                        "format_convert": lambda: self._format_convert(data, config),
-                        "merge": lambda: self._merge(data, config),
-                        "deduplicate": lambda: self._deduplicate(data, config),
-                        "pivot": lambda: self._pivot(data, config)}
+            dispatch = {
+                "map_fields": lambda: self._map_fields(data, config.get("mapping", {})),
+                "filter": lambda: self._filter(data, config),
+                "sort": lambda: self._sort(data, config),
+                "aggregate": lambda: self._aggregate(data, config),
+                "format_convert": lambda: self._format_convert(data, config),
+                "merge": lambda: self._merge(data, config),
+                "deduplicate": lambda: self._deduplicate(data, config),
+                "pivot": lambda: self._pivot(data, config),
+            }
             result_data = dispatch[operation]()
             elapsed = self._elapsed_ms(start)
             logger.info(f"TransformExecutor: {operation} completed")
@@ -67,9 +72,15 @@ class TransformExecutor(ActionExecutor):
         key, operator, value = config.get("key", ""), config.get("operator", "eq"), config.get("value", None)
         if not key:
             raise ValueError("filter requires 'key' in config")
-        ops = {"eq": lambda a,b: a==b, "neq": lambda a,b: a!=b, "gt": lambda a,b: a>b,
-               "lt": lambda a,b: a<b, "gte": lambda a,b: a>=b, "lte": lambda a,b: a<=b,
-               "contains": lambda a,b: b in str(a)}
+        ops = {
+            "eq": lambda a, b: a == b,
+            "neq": lambda a, b: a != b,
+            "gt": lambda a, b: a > b,
+            "lt": lambda a, b: a < b,
+            "gte": lambda a, b: a >= b,
+            "lte": lambda a, b: a <= b,
+            "contains": lambda a, b: b in str(a),
+        }
         fn = ops.get(operator, ops["eq"])
         return [item for item in data if isinstance(item, dict) and key in item and fn(item[key], value)]
 
@@ -80,10 +91,12 @@ class TransformExecutor(ActionExecutor):
         keys = config.get("keys", [])
         if not key and not keys:
             raise ValueError("sort requires 'key' or 'keys' in config")
+
         def _sk(item):
             if keys:
                 return tuple(item.get(k, "") for k in keys)
             return item.get(key, "")
+
         return sorted(data, key=_sk, reverse=not ascending)
 
     def _aggregate(self, data, config):
@@ -102,7 +115,7 @@ class TransformExecutor(ActionExecutor):
         elif aggregation == "sum":
             return {"sum": sum(values)}
         elif aggregation == "avg":
-            return {"avg": sum(values)/len(values) if values else 0}
+            return {"avg": sum(values) / len(values) if values else 0}
         elif aggregation == "min":
             return {"min": min(values) if values else None}
         elif aggregation == "max":
@@ -116,13 +129,17 @@ class TransformExecutor(ActionExecutor):
                 groups.setdefault(str(item[group_by]), []).append(item)
         result = {}
         for gk, items in groups.items():
-            vals = [item[value_field] for item in items if value_field in item and isinstance(item[value_field], (int, float))]
+            vals = [
+                item[value_field]
+                for item in items
+                if value_field in item and isinstance(item[value_field], (int, float))
+            ]
             if aggregation == "count":
                 result[gk] = len(items)
             elif aggregation == "sum":
                 result[gk] = sum(vals)
             elif aggregation == "avg":
-                result[gk] = sum(vals)/len(vals) if vals else 0
+                result[gk] = sum(vals) / len(vals) if vals else 0
             elif aggregation == "min":
                 result[gk] = min(vals) if vals else None
             elif aggregation == "max":
@@ -227,7 +244,11 @@ class TransformExecutor(ActionExecutor):
     def _pivot(self, data, config):
         if not isinstance(data, list):
             raise ValueError("pivot requires a list of dicts")
-        idx_f, col_f, val_f = config.get("index_field", ""), config.get("column_field", ""), config.get("value_field", "")
+        idx_f, col_f, val_f = (
+            config.get("index_field", ""),
+            config.get("column_field", ""),
+            config.get("value_field", ""),
+        )
         if not all([idx_f, col_f, val_f]):
             raise ValueError("pivot requires 'index_field', 'column_field', and 'value_field'")
         pivoted, columns = {}, set()

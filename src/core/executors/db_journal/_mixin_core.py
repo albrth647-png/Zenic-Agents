@@ -7,16 +7,16 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.shared.retry import with_retry
-from src.core.executors.db_journal._types import JournalEntry, RollbackResult
 from src.core.executors.db_journal._helpers import (
+    count_placeholders,
+    extract_set_clause_from_update,
     extract_table_and_where_from_delete,
     extract_table_and_where_from_update,
-    extract_set_clause_from_update,
-    count_placeholders,
 )
+from src.core.executors.db_journal._types import JournalEntry, RollbackResult
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +57,13 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant "
-                    "ON journal_entries(db_path, tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant " "ON journal_entries(db_path, tenant_id)"
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_tenant "
-                    "ON journal_entries(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_tenant " "ON journal_entries(tenant_id)"
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_created "
-                    "ON journal_entries(created_at)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_created " "ON journal_entries(created_at)"
                 )
                 conn.commit()
             finally:
@@ -78,17 +75,24 @@ class CoreMixin:
     # ── Core public API ──────────────────────────────────────
 
     def journal_before(
-        self, db_path: str, operation: str, query: str,
-        params: List[Any], tenant_id: str,
+        self,
+        db_path: str,
+        operation: str,
+        query: str,
+        params: list[Any],
+        tenant_id: str,
     ) -> str:
         """Capture the current row state *before* a write operation."""
         op = operation.strip().upper()
         entry = JournalEntry(
-            db_path=db_path, operation=op, query=query,
-            params=list(params), tenant_id=tenant_id,
+            db_path=db_path,
+            operation=op,
+            query=query,
+            params=list(params),
+            tenant_id=tenant_id,
         )
 
-        before_data: List[Dict[str, Any]] = []
+        before_data: list[dict[str, Any]] = []
         if op in ("DELETE", "UPDATE"):
             before_data = self._capture_before_state(db_path, op, query, params)
 
@@ -97,13 +101,18 @@ class CoreMixin:
 
         logger.info(
             "DBTransactionJournal: journal_before %s op=%s db=%s [tenant=%s]",
-            entry.journal_id[:12], op, db_path, tenant_id,
+            entry.journal_id[:12],
+            op,
+            db_path,
+            tenant_id,
         )
         return entry.journal_id
 
     def journal_after(
-        self, journal_id: str, affected_rows: int,
-        lastrowid: Optional[int],
+        self,
+        journal_id: str,
+        affected_rows: int,
+        lastrowid: int | None,
     ) -> None:
         """Record the result *after* the write operation has executed."""
 
@@ -119,7 +128,9 @@ class CoreMixin:
                 conn.close()
 
         with_retry(
-            _do_update, max_retries=3, base_delay=0.5,
+            _do_update,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal.journal_after({journal_id[:12]})",
         )
 
@@ -129,19 +140,22 @@ class CoreMixin:
             entry = self.get_journal(journal_id)
             if entry is None:
                 return RollbackResult(
-                    success=False, journal_id=journal_id,
+                    success=False,
+                    journal_id=journal_id,
                     errors=[f"Journal entry {journal_id} not found"],
                 )
 
             if entry.rolled_back:
                 return RollbackResult(
-                    success=False, journal_id=journal_id,
+                    success=False,
+                    journal_id=journal_id,
                     operation=entry.operation,
                     errors=[f"Journal entry {journal_id} already rolled back"],
                 )
 
             result = RollbackResult(
-                journal_id=journal_id, operation=entry.operation,
+                journal_id=journal_id,
+                operation=entry.operation,
             )
 
             try:
@@ -152,30 +166,32 @@ class CoreMixin:
                 elif entry.operation == "INSERT":
                     result.rows_restored = self._rollback_insert(entry, result)
                 else:
-                    result.errors.append(
-                        f"Unsupported operation for rollback: {entry.operation}"
-                    )
+                    result.errors.append(f"Unsupported operation for rollback: {entry.operation}")
 
                 self._mark_rolled_back(journal_id)
                 result.success = len(result.errors) == 0
                 logger.info(
                     "DBTransactionJournal: rollback_to %s op=%s restored=%d success=%s",
-                    journal_id[:12], entry.operation, result.rows_restored, result.success,
+                    journal_id[:12],
+                    entry.operation,
+                    result.rows_restored,
+                    result.success,
                 )
             except Exception as exc:
                 result.errors.append(str(exc))
                 result.success = False
                 logger.error(
                     "DBTransactionJournal: rollback_to %s FAILED: %s",
-                    journal_id[:12], exc,
+                    journal_id[:12],
+                    exc,
                 )
 
             return result
 
-    def get_journal(self, journal_id: str) -> Optional[JournalEntry]:
+    def get_journal(self, journal_id: str) -> JournalEntry | None:
         """Retrieve a journal entry by its ID."""
 
-        def _do_get() -> Optional[JournalEntry]:
+        def _do_get() -> JournalEntry | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             try:
@@ -191,16 +207,21 @@ class CoreMixin:
                 conn.close()
 
         return with_retry(
-            _do_get, max_retries=3, base_delay=0.5,
+            _do_get,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal.get_journal({journal_id[:12]})",
         )
 
     def list_journals(
-        self, db_path: str, tenant_id: str, limit: int = 100,
-    ) -> List[JournalEntry]:
+        self,
+        db_path: str,
+        tenant_id: str,
+        limit: int = 100,
+    ) -> list[JournalEntry]:
         """List journal entries for a specific database and tenant."""
 
-        def _do_list() -> List[JournalEntry]:
+        def _do_list() -> list[JournalEntry]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             try:
@@ -215,52 +236,61 @@ class CoreMixin:
                 conn.close()
 
         return with_retry(
-            _do_list, max_retries=3, base_delay=0.5,
+            _do_list,
+            max_retries=3,
+            base_delay=0.5,
             label="db_journal.list_journals",
         )
 
     def prune_journals(self, older_than_hours: int, tenant_id: str) -> int:
         """Delete journal entries older than the specified number of hours."""
         import time
+
         cutoff = time.time() - (older_than_hours * 3600)
 
         def _do_prune() -> int:
             conn = sqlite3.connect(self._db_path)
             try:
                 cursor = conn.execute(  # nosemgrep
-                    "DELETE FROM journal_entries "
-                    "WHERE created_at < ? AND tenant_id = ? AND rolled_back = 0",
+                    "DELETE FROM journal_entries " "WHERE created_at < ? AND tenant_id = ? AND rolled_back = 0",
                     (cutoff, tenant_id),
                 )
                 conn.commit()
                 deleted = cursor.rowcount
                 logger.info(
                     "DBTransactionJournal: prune_journals deleted %d entries older than %dh [tenant=%s]",
-                    deleted, older_than_hours, tenant_id,
+                    deleted,
+                    older_than_hours,
+                    tenant_id,
                 )
                 return deleted
             finally:
                 conn.close()
 
         return with_retry(
-            _do_prune, max_retries=3, base_delay=0.5,
+            _do_prune,
+            max_retries=3,
+            base_delay=0.5,
             label="db_journal.prune_journals",
         )
 
     # ── Before-state capture ──────────────────────────────────
 
     def _capture_before_state(
-        self, db_path: str, operation: str,
-        query: str, params: List[Any],
-    ) -> List[Dict[str, Any]]:
+        self,
+        db_path: str,
+        operation: str,
+        query: str,
+        params: list[Any],
+    ) -> list[dict[str, Any]]:
         """Execute a SELECT to capture affected rows before the write."""
 
-        def _do_capture() -> List[Dict[str, Any]]:
+        def _do_capture() -> list[dict[str, Any]]:
             if db_path == ":memory:":
                 return []
 
             select_query = ""
-            select_params: List[Any] = []
+            select_params: list[Any] = []
 
             if operation == "DELETE":
                 table, where_clause = extract_table_and_where_from_delete(query)
@@ -297,12 +327,15 @@ class CoreMixin:
             except Exception as exc:
                 logger.warning(
                     "DBTransactionJournal: failed to capture before-state for %s: %s",
-                    operation, exc,
+                    operation,
+                    exc,
                 )
                 return []
 
         return with_retry(
-            _do_capture, max_retries=3, base_delay=0.5,
+            _do_capture,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._capture_before_state({operation})",
         )
 
@@ -321,11 +354,17 @@ class CoreMixin:
                     "tenant_id, created_at, rolled_back) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        entry.journal_id, entry.db_path, entry.operation,
-                        entry.query, json.dumps(entry.params, default=str),
-                        entry.before_data, entry.after_data,
-                        entry.affected_rows, entry.lastrowid,
-                        entry.tenant_id, entry.created_at,
+                        entry.journal_id,
+                        entry.db_path,
+                        entry.operation,
+                        entry.query,
+                        json.dumps(entry.params, default=str),
+                        entry.before_data,
+                        entry.after_data,
+                        entry.affected_rows,
+                        entry.lastrowid,
+                        entry.tenant_id,
+                        entry.created_at,
                         1 if entry.rolled_back else 0,
                     ),
                 )
@@ -334,7 +373,9 @@ class CoreMixin:
                 conn.close()
 
         with_retry(
-            _do_persist, max_retries=3, base_delay=0.5,
+            _do_persist,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._persist_entry({entry.journal_id[:12]})",
         )
 
@@ -353,7 +394,9 @@ class CoreMixin:
                 conn.close()
 
         with_retry(
-            _do_mark, max_retries=3, base_delay=0.5,
+            _do_mark,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._mark_rolled_back({journal_id[:12]})",
         )
 

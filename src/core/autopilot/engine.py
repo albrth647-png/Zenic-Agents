@@ -10,13 +10,14 @@ Nunca genera contenido ni toma decisiones ejecutivas.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from src.data.local_scanner import LocalDataScanner
 from src.core.safety.safety_gate import SafetyGate
+from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class GoalTemplate(str, Enum):
 @dataclass
 class Goal:
     """Objetivo del Autopilot."""
+
     id: str
     template: GoalTemplate
     description: str
@@ -52,6 +54,7 @@ class Goal:
 @dataclass
 class ActionStep:
     """Un paso en el plan de acción."""
+
     id: str
     goal_id: str
     step_number: int
@@ -66,6 +69,7 @@ class ActionStep:
 @dataclass
 class Plan:
     """Plan de acción generado por el Autopilot."""
+
     id: str
     goal: Goal
     steps: list[ActionStep] = field(default_factory=list)
@@ -164,11 +168,13 @@ class AutopilotEngine:
                 logger.info(f"Paso {step.step_number} requiere aprobación: {step.description}")
                 # Notificar al usuario via AutopilotChannelInterceptor
                 if self._on_action:
-                    self._on_action({
-                        "type": "approval_required",
-                        "plan_id": plan_id,
-                        "step": step,
-                    })
+                    self._on_action(
+                        {
+                            "type": "approval_required",
+                            "plan_id": plan_id,
+                            "step": step,
+                        }
+                    )
                 continue
 
             # SafetyGate check
@@ -254,65 +260,130 @@ class AutopilotEngine:
     def _template_customer_retention(self, goal: Goal) -> list[ActionStep]:
         """Template: Retener clientes en riesgo."""
         return [
-            ActionStep(id=f"{goal.id}_s1", goal_id=goal.id, step_number=1,
-                       action_type="scan", description="Identificar clientes en riesgo usando datos locales",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s2", goal_id=goal.id, step_number=2,
-                       action_type="notify", description="Enviar recordatorio proactivo al cliente",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s3", goal_id=goal.id, step_number=3,
-                       action_type="update", description="Marcar cliente como contactado en la BD",
-                       risk="medium"),
+            ActionStep(
+                id=f"{goal.id}_s1",
+                goal_id=goal.id,
+                step_number=1,
+                action_type="scan",
+                description="Identificar clientes en riesgo usando datos locales",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s2",
+                goal_id=goal.id,
+                step_number=2,
+                action_type="notify",
+                description="Enviar recordatorio proactivo al cliente",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s3",
+                goal_id=goal.id,
+                step_number=3,
+                action_type="update",
+                description="Marcar cliente como contactado en la BD",
+                risk="medium",
+            ),
         ]
 
     def _template_inventory(self, goal: Goal) -> list[ActionStep]:
         """Template: Optimizar inventario."""
         return [
-            ActionStep(id=f"{goal.id}_s1", goal_id=goal.id, step_number=1,
-                       action_type="scan", description="Escaneo de inventario actual desde BD local",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s2", goal_id=goal.id, step_number=2,
-                       action_type="notify", description="Notificar productos con stock bajo",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s3", goal_id=goal.id, step_number=3,
-                       action_type="suggest", description="Sugerir pedido de reabastecimiento",
-                       risk="medium"),
+            ActionStep(
+                id=f"{goal.id}_s1",
+                goal_id=goal.id,
+                step_number=1,
+                action_type="scan",
+                description="Escaneo de inventario actual desde BD local",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s2",
+                goal_id=goal.id,
+                step_number=2,
+                action_type="notify",
+                description="Notificar productos con stock bajo",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s3",
+                goal_id=goal.id,
+                step_number=3,
+                action_type="suggest",
+                description="Sugerir pedido de reabastecimiento",
+                risk="medium",
+            ),
         ]
 
     def _template_revenue_recovery(self, goal: Goal) -> list[ActionStep]:
         """Template: Recuperar ingresos perdidos."""
         return [
-            ActionStep(id=f"{goal.id}_s1", goal_id=goal.id, step_number=1,
-                       action_type="scan", description="Buscar facturas vencidas en BD local",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s2", goal_id=goal.id, step_number=2,
-                       action_type="notify", description="Enviar recordatorio de pago al cliente",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s3", goal_id=goal.id, step_number=3,
-                       action_type="update", description="Actualizar estado de factura en BD",
-                       risk="medium"),
+            ActionStep(
+                id=f"{goal.id}_s1",
+                goal_id=goal.id,
+                step_number=1,
+                action_type="scan",
+                description="Buscar facturas vencidas en BD local",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s2",
+                goal_id=goal.id,
+                step_number=2,
+                action_type="notify",
+                description="Enviar recordatorio de pago al cliente",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s3",
+                goal_id=goal.id,
+                step_number=3,
+                action_type="update",
+                description="Actualizar estado de factura en BD",
+                risk="medium",
+            ),
         ]
 
     def _template_appointment(self, goal: Goal) -> list[ActionStep]:
         """Template: Recordar citas."""
         return [
-            ActionStep(id=f"{goal.id}_s1", goal_id=goal.id, step_number=1,
-                       action_type="scan", description="Buscar citas de mañana en BD local",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s2", goal_id=goal.id, step_number=2,
-                       action_type="notify", description="Enviar recordatorio de cita",
-                       risk="low"),
+            ActionStep(
+                id=f"{goal.id}_s1",
+                goal_id=goal.id,
+                step_number=1,
+                action_type="scan",
+                description="Buscar citas de mañana en BD local",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s2",
+                goal_id=goal.id,
+                step_number=2,
+                action_type="notify",
+                description="Enviar recordatorio de cita",
+                risk="low",
+            ),
         ]
 
     def _template_generic(self, goal: Goal) -> list[ActionStep]:
         """Template: Objetivo genérico."""
         return [
-            ActionStep(id=f"{goal.id}_s1", goal_id=goal.id, step_number=1,
-                       action_type="scan", description=f"Analizar datos locales para: {goal.description}",
-                       risk="low"),
-            ActionStep(id=f"{goal.id}_s2", goal_id=goal.id, step_number=2,
-                       action_type="notify", description="Notificar hallazgo al usuario",
-                       risk="low"),
+            ActionStep(
+                id=f"{goal.id}_s1",
+                goal_id=goal.id,
+                step_number=1,
+                action_type="scan",
+                description=f"Analizar datos locales para: {goal.description}",
+                risk="low",
+            ),
+            ActionStep(
+                id=f"{goal.id}_s2",
+                goal_id=goal.id,
+                step_number=2,
+                action_type="notify",
+                description="Notificar hallazgo al usuario",
+                risk="low",
+            ),
         ]
 
     def _execute_step(self, step: ActionStep) -> dict[str, Any]:

@@ -24,22 +24,22 @@ use crate::usage::{UsageMeter, UsageType};
 /// for transactional reliability. All payments are USDT TRC20 only.
 pub struct SubscriptionEngine {
     /// Active subscriptions indexed by tenant ID.
-    pub(super) subscriptions: HashMap<TenantId, Subscription>,
+    pub(crate) subscriptions: HashMap<TenantId, Subscription>,
 
     /// Trial manager.
-    pub(super) trial_manager: TrialManager,
+    pub(crate) trial_manager: TrialManager,
 
     /// Usage metering.
-    pub(super) usage_meter: UsageMeter,
+    pub(crate) usage_meter: UsageMeter,
 
     /// USDT TRC20 payments indexed by payment ID.
-    pub(super) payments: HashMap<PaymentId, UsdtPayment>,
+    pub(crate) payments: HashMap<PaymentId, UsdtPayment>,
 
     /// Company USDT TRC20 wallet address for receiving payments.
-    pub(super) company_wallet: String,
+    pub(crate) company_wallet: String,
 
     /// Default payment processing method.
-    pub(super) default_payment_method: UsdtPaymentMethod,
+    pub(crate) default_payment_method: UsdtPaymentMethod,
 }
 
 impl SubscriptionEngine {

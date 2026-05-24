@@ -10,9 +10,8 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import List, Optional
 
-from ..workflows import WorkflowDefinition, WorkflowStep, WorkflowStepType, WorkflowExecution
+from ..workflows import WorkflowDefinition, WorkflowExecution, WorkflowStep, WorkflowStepType
 
 logger = logging.getLogger(__name__)
 
@@ -71,11 +70,14 @@ class WorkflowDB:
                     trigger_actions, is_active, tenant_id, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    workflow.workflow_id, workflow.name, workflow.description,
+                    workflow.workflow_id,
+                    workflow.name,
+                    workflow.description,
                     json.dumps([s.to_dict() for s in workflow.steps]),
                     json.dumps(workflow.trigger_actions),
                     1 if workflow.is_active else 0,
-                    workflow.tenant_id, workflow.created_at,
+                    workflow.tenant_id,
+                    workflow.created_at,
                 ),
             )
             conn.commit()
@@ -83,13 +85,14 @@ class WorkflowDB:
         except Exception as exc:
             logger.error("WorkflowDB: Create failed: %s", exc)
 
-    def get_workflow(self, workflow_id: str) -> Optional[WorkflowDefinition]:
+    def get_workflow(self, workflow_id: str) -> WorkflowDefinition | None:
         """Get a workflow by ID."""
         try:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT * FROM workflows WHERE workflow_id = ?", (workflow_id,),
+                "SELECT * FROM workflows WHERE workflow_id = ?",
+                (workflow_id,),
             ).fetchone()
             conn.close()
             if not row:
@@ -99,8 +102,10 @@ class WorkflowDB:
             return None
 
     def list_workflows(
-        self, tenant_id: Optional[str] = None, active_only: bool = True,
-    ) -> List[WorkflowDefinition]:
+        self,
+        tenant_id: str | None = None,
+        active_only: bool = True,
+    ) -> list[WorkflowDefinition]:
         """List workflows with optional filters."""
         try:
             conn = sqlite3.connect(self._db_path)
@@ -113,7 +118,8 @@ class WorkflowDB:
                 params.append(tenant_id)
             where = " AND ".join(conditions) if conditions else "1=1"
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM workflows WHERE {where} ORDER BY name", params,
+                f"SELECT * FROM workflows WHERE {where} ORDER BY name",
+                params,
             ).fetchall()
             conn.close()
             return [self._row_to_workflow(r) for r in rows]
@@ -124,7 +130,9 @@ class WorkflowDB:
         """Delete a workflow."""
         try:
             conn = sqlite3.connect(self._db_path)
-            cur = conn.execute("DELETE FROM workflows WHERE workflow_id = ?", (workflow_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            cur = conn.execute(
+                "DELETE FROM workflows WHERE workflow_id = ?", (workflow_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             conn.commit()
             conn.close()
             return cur.rowcount > 0
@@ -144,11 +152,16 @@ class WorkflowDB:
                     created_at, completed_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    execution.execution_id, execution.workflow_id,
-                    execution.current_step_index, execution.status,
-                    execution.action_type, json.dumps(execution.action_config),
-                    execution.requested_by, json.dumps(execution.step_results),
-                    execution.created_at, execution.completed_at,
+                    execution.execution_id,
+                    execution.workflow_id,
+                    execution.current_step_index,
+                    execution.status,
+                    execution.action_type,
+                    json.dumps(execution.action_config),
+                    execution.requested_by,
+                    json.dumps(execution.step_results),
+                    execution.created_at,
+                    execution.completed_at,
                 ),
             )
             conn.commit()
@@ -165,9 +178,11 @@ class WorkflowDB:
                    current_step_index=?, status=?, step_results=?, completed_at=?
                    WHERE execution_id=?""",
                 (
-                    execution.current_step_index, execution.status,
+                    execution.current_step_index,
+                    execution.status,
                     json.dumps(execution.step_results),
-                    execution.completed_at, execution.execution_id,
+                    execution.completed_at,
+                    execution.execution_id,
                 ),
             )
             conn.commit()
@@ -175,7 +190,7 @@ class WorkflowDB:
         except Exception as exc:
             logger.error("WorkflowDB: Update execution failed: %s", exc)
 
-    def get_execution(self, execution_id: str) -> Optional[WorkflowExecution]:
+    def get_execution(self, execution_id: str) -> WorkflowExecution | None:
         """Get a workflow execution by ID."""
         try:
             conn = sqlite3.connect(self._db_path)
@@ -218,7 +233,7 @@ class WorkflowDB:
         )
 
 
-def get_builtin_workflows() -> List[WorkflowDefinition]:
+def get_builtin_workflows() -> list[WorkflowDefinition]:
     """Return the built-in workflow templates."""
     return [
         WorkflowDefinition(

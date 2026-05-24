@@ -9,7 +9,7 @@ import json
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 # Action categories that are NEVER auto-approved
 _FINANCIAL_KEYWORDS = ("payment", "financial", "refund", "invoice_pay")
@@ -41,7 +41,7 @@ class AdaptiveApprovalRecord:
         """Return True if consecutive_approvals >= threshold."""
         return self.consecutive_approvals >= threshold
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "record_id": self.record_id,
@@ -56,8 +56,10 @@ class AdaptiveApprovalRecord:
         }
 
 
-def _hash_config(action_config: Dict[str, Any]) -> str:
+def _hash_config(action_config: dict[str, Any]) -> str:
     """Produce a stable hash of an action config dict."""
     canonical = json.dumps(action_config, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
-__all__ = ["AdaptiveApprovalRecord", "_FINANCIAL_KEYWORDS", "_MAX_RETRIES", "_RETRY_DELAY", "_hash_config"]
+
+
+__all__ = ["_FINANCIAL_KEYWORDS", "_MAX_RETRIES", "_RETRY_DELAY", "AdaptiveApprovalRecord", "_hash_config"]

@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import re
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 from src.core.executors.diff_preview._types import DiffEntry
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  RETRY HELPER
 # ──────────────────────────────────────────────────────────────
+
 
 def retry(
     fn: Any,
@@ -28,23 +29,29 @@ def retry(
 
     Delays: base_delay * 2^attempt  →  0.1s, 0.2s, 0.4s.
     """
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return fn()
         except Exception as exc:
             last_exc = exc
             if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 logger.debug(
                     "%s: retry %d/%d after %.2fs — %s",
-                    label, attempt + 1, max_retries, delay, exc,
+                    label,
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                    exc,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
                     "%s: failed after %d attempts — %s",
-                    label, max_retries, exc,
+                    label,
+                    max_retries,
+                    exc,
                 )
     raise last_exc  # type: ignore[misc]
 
@@ -53,8 +60,9 @@ def retry(
 #  RISK ESTIMATION
 # ──────────────────────────────────────────────────────────────
 
+
 def estimate_risk_from_diffs(
-    diffs: List[DiffEntry],
+    diffs: list[DiffEntry],
     operation: str = "",
 ) -> str:
     """Estimate risk from a list of DiffEntry objects."""
@@ -79,6 +87,7 @@ def estimate_risk_from_diffs(
 #  SQL PARSING HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 def extract_where_clause(query: str, operation: str) -> str:
     """Best-effort extraction of WHERE clause from a SQL query."""
     op_upper = operation.upper()
@@ -86,21 +95,23 @@ def extract_where_clause(query: str, operation: str) -> str:
     if op_upper == "DELETE":
         m = re.match(
             r"^\s*DELETE\s+FROM\s+\w+\s+WHERE\s+(.+)$",
-            query, re.IGNORECASE | re.DOTALL,
+            query,
+            re.IGNORECASE | re.DOTALL,
         )
         return m.group(1).strip() if m else ""
 
     if op_upper == "UPDATE":
         m = re.match(
             r"^\s*UPDATE\s+\w+\s+SET\s+.+?\s+WHERE\s+(.+)$",
-            query, re.IGNORECASE | re.DOTALL,
+            query,
+            re.IGNORECASE | re.DOTALL,
         )
         return m.group(1).strip() if m else ""
 
     return ""
 
 
-def parse_set_fields(query: str) -> List[tuple]:
+def parse_set_fields(query: str) -> list[tuple]:
     """Parse SET clause from an UPDATE query.
 
     Returns:
@@ -108,13 +119,14 @@ def parse_set_fields(query: str) -> List[tuple]:
     """
     m = re.match(
         r"^\s*UPDATE\s+\w+\s+SET\s+(.+?)(?:\s+WHERE\s+.+)?$",
-        query, re.IGNORECASE | re.DOTALL,
+        query,
+        re.IGNORECASE | re.DOTALL,
     )
     if not m:
         return []
 
     set_clause = m.group(1).strip()
-    fields: List[tuple] = []
+    fields: list[tuple] = []
 
     for assignment in set_clause.split(","):
         assignment = assignment.strip()
@@ -142,18 +154,20 @@ def count_placeholders_in_set(query: str) -> int:
     """Count the number of ``?`` placeholders in the SET clause."""
     m = re.match(
         r"^\s*UPDATE\s+\w+\s+SET\s+(.+?)(?:\s+WHERE\s+.+)?$",
-        query, re.IGNORECASE | re.DOTALL,
+        query,
+        re.IGNORECASE | re.DOTALL,
     )
     if not m:
         return 0
     return m.group(1).count("?")
 
 
-def parse_insert_columns(query: str) -> List[str]:
+def parse_insert_columns(query: str) -> list[str]:
     """Parse column names from an INSERT query."""
     m = re.match(
         r"^\s*INSERT\s+INTO\s+\w+\s*\(([^)]+)\)",
-        query, re.IGNORECASE,
+        query,
+        re.IGNORECASE,
     )
     if not m:
         return []
@@ -165,7 +179,7 @@ def build_db_summary(
     operation: str,
     table: str,
     affected_rows: int,
-    diffs: List[DiffEntry],
+    diffs: list[DiffEntry],
 ) -> str:
     """Build a human-readable summary for a DB diff."""
     if not diffs:
@@ -175,7 +189,7 @@ def build_db_summary(
     added = sum(1 for d in diffs if d.change_type == "added")
     modified = sum(1 for d in diffs if d.change_type == "modified")
 
-    parts: List[str] = [f"DB {operation} on {table}:"]
+    parts: list[str] = [f"DB {operation} on {table}:"]
     if added:
         parts.append(f"{added} field(s) added")
     if modified:
@@ -193,10 +207,23 @@ def build_db_summary(
 #  FORMATTING HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 def truncate(value: Any, max_len: int = 50) -> str:
     """Truncate a value representation for display."""
     s = str(value)
     if len(s) > max_len:
-        return s[:max_len - 3] + "..."
+        return s[: max_len - 3] + "..."
     return s
-__all__ = ["build_db_summary", "count_placeholders_in_set", "estimate_risk_from_diffs", "extract_where_clause", "logger", "parse_insert_columns", "parse_set_fields", "retry", "truncate"]
+
+
+__all__ = [
+    "build_db_summary",
+    "count_placeholders_in_set",
+    "estimate_risk_from_diffs",
+    "extract_where_clause",
+    "logger",
+    "parse_insert_columns",
+    "parse_set_fields",
+    "retry",
+    "truncate",
+]

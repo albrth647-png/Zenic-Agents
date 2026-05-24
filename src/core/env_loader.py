@@ -19,22 +19,22 @@ Uso:
     token = get_env("GITHUB_TOKEN", default="")
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 import threading  # noqa: E402
+
 _load_lock = threading.Lock()
 
 # Estado interno (carga unica)
 _loaded = False
-_loaded_path: Optional[str] = None
+_loaded_path: str | None = None
 
 
-def _parse_env_line(line: str) -> Optional[tuple]:
+def _parse_env_line(line: str) -> tuple | None:
     """
     Parsea una linea de .env y devuelve (key, value) o None.
 
@@ -48,15 +48,15 @@ def _parse_env_line(line: str) -> Optional[tuple]:
     line = line.strip()
 
     # Ignorar lineas vacias y comentarios
-    if not line or line.startswith('#'):
+    if not line or line.startswith("#"):
         return None
 
     # Debe tener al menos un = para ser valida
-    if '=' not in line:
+    if "=" not in line:
         return None
 
     # Separar en la PRIMERA ocurrencia de =
-    key, _, value = line.partition('=')
+    key, _, value = line.partition("=")
     key = key.strip()
     value = value.strip()
 
@@ -65,14 +65,13 @@ def _parse_env_line(line: str) -> Optional[tuple]:
 
     # Remover comillas si el valor esta envuelto en ellas
     if len(value) >= 2:
-        if (value.startswith('"') and value.endswith('"')) or \
-           (value.startswith("'") and value.endswith("'")):
+        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
             value = value[1:-1]
 
     return key, value
 
 
-def _find_env_file() -> Optional[Path]:
+def _find_env_file() -> Path | None:
     """
     Busca el archivo .env en orden de prioridad:
     1. Directorio de trabajo actual (CWD)
@@ -139,7 +138,7 @@ def load_env(force: bool = False) -> bool:
             return False
 
         try:
-            with open(env_path, 'r', encoding='utf-8') as f:
+            with open(env_path, encoding="utf-8") as f:
                 lines = f.readlines()
         except (OSError, PermissionError) as e:
             logger.warning("env_loader: Cannot read %s: %s", env_path, e)
@@ -169,7 +168,9 @@ def load_env(force: bool = False) -> bool:
 
         logger.info(
             "env_loader: Loaded %d vars from %s (%d skipped, already in env)",
-            loaded_count, env_path.name, skipped_count
+            loaded_count,
+            env_path.name,
+            skipped_count,
         )
         return True
 
@@ -214,7 +215,7 @@ def get_env_bool(key: str, default: bool = False) -> bool:
     return default
 
 
-def get_env_list(key: str, default: Optional[list] = None, separator: str = ",") -> list:
+def get_env_list(key: str, default: list | None = None, separator: str = ",") -> list:
     """Obtiene una variable de entorno como lista (separada por comas)."""
     value = get_env(key, "")
     if not value:
@@ -222,7 +223,7 @@ def get_env_list(key: str, default: Optional[list] = None, separator: str = ",")
     return [item.strip() for item in value.split(separator) if item.strip()]
 
 
-def get_loaded_path() -> Optional[str]:
+def get_loaded_path() -> str | None:
     """Retorna la ruta del .env cargado, o None si no se cargo."""
     return _loaded_path
 
@@ -247,8 +248,7 @@ def get_metrics_config() -> dict:
     """
     return {
         "enabled": get_env_bool("GITHUB_METRICS_ENABLED", True),
-        "collect": get_env_list("GITHUB_METRICS_COLLECT",
-                                ["rate_limit", "search_results", "repo_stats"]),
+        "collect": get_env_list("GITHUB_METRICS_COLLECT", ["rate_limit", "search_results", "repo_stats"]),
         "refresh_interval": get_env_int("GITHUB_METRICS_REFRESH_INTERVAL", 300),
     }
 
@@ -271,9 +271,9 @@ def get_scraper_config() -> dict:
         "github_token": get_github_token(),
         # DevDocs
         "devdocs_url": get_env("DEVDOCS_BASE_URL", "https://devdocs.io"),
-        "devdocs_languages": get_env_list("DEVDOCS_DEFAULT_LANGUAGES",
-                                          ["python", "kotlin", "javascript",
-                                           "typescript", "html", "css"]),
+        "devdocs_languages": get_env_list(
+            "DEVDOCS_DEFAULT_LANGUAGES", ["python", "kotlin", "javascript", "typescript", "html", "css"]
+        ),
         # IconStack
         "iconstack_url": get_env("ICONSTACK_BASE_URL", "https://icon-icons.com"),
         "iconstack_style": get_env("ICONSTACK_DEFAULT_STYLE", "material"),

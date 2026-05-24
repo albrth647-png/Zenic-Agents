@@ -10,14 +10,13 @@ import logging
 import os
 import secrets
 import urllib.parse
-from typing import Dict, Optional, Tuple
 
 from ._types import OAuth2Config, OAuth2GrantType
 
 logger = logging.getLogger("zenic_agents.email_parts.oauth2")
 
 
-def generate_pkce_pair() -> Tuple[str, str]:
+def generate_pkce_pair() -> tuple[str, str]:
     """Generate a PKCE code_verifier and code_challenge pair.
 
     Uses S256 method as per RFC 7636:
@@ -42,7 +41,7 @@ def build_authorization_url(
     config: OAuth2Config,
     state: str = "",
     code_challenge: str = "",
-    extra_params: Optional[Dict[str, str]] = None,
+    extra_params: dict[str, str] | None = None,
 ) -> str:
     """Build an authorization URL for the authorization code flow.
 
@@ -61,7 +60,7 @@ def build_authorization_url(
     if not state:
         state = secrets.token_urlsafe(32)
 
-    params: Dict[str, str] = {
+    params: dict[str, str] = {
         "response_type": "code",
         "client_id": config.client_id,
         "redirect_uri": config.redirect_uri,
@@ -103,6 +102,7 @@ def config_from_env(prefix: str) -> OAuth2Config:
         config = config_from_env("MSGRAPH")
         # Reads MSGRAPH_CLIENT_ID, MSGRAPH_CLIENT_SECRET, etc.
     """
+
     def _env(key: str) -> str:
         return os.environ.get(f"{prefix}_{key}", "")
 
@@ -149,7 +149,7 @@ def config_from_env(prefix: str) -> OAuth2Config:
 
 
 def register_service_from_env(
-    manager: "OAuth2TokenManager",  # noqa: F821  # TODO: Phase3 - verify import
+    manager: OAuth2TokenManager,  # noqa: F821  # TODO: Phase3 - verify import
     service_name: str,
     prefix: str,
 ) -> bool:
@@ -167,14 +167,18 @@ def register_service_from_env(
     if not config.is_configured:
         logger.debug(
             "register_service_from_env: Service '%s' not configured (prefix=%s)",
-            service_name, prefix,
+            service_name,
+            prefix,
         )
         return False
 
     manager.register_service(service_name, config)
     logger.info(
         "register_service_from_env: Registered '%s' from env prefix '%s'",
-        service_name, prefix,
+        service_name,
+        prefix,
     )
     return True
+
+
 __all__ = ["build_authorization_url", "config_from_env", "generate_pkce_pair", "logger", "register_service_from_env"]

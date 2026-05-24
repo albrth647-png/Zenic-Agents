@@ -6,11 +6,13 @@ CodeAssembler to produce REAL CRUD/analytics/notification logic instead
 of the stub: return {"processed": True, "input": payload}
 """
 
-import re
 import logging
-from src.core.shared.contracts import OperationType, GoalType
+import re
+
+from src.core.shared.contracts import GoalType, OperationType
 
 from ._process_builder import ProcessBuilderMixin
+
 logger = logging.getLogger("core.code_gen_parts._pipeline_mixin._core")
 
 
@@ -24,7 +26,11 @@ class PipelineMixin(ProcessBuilderMixin):
         ast_context = self.extract_ast_context(ast_analysis)
 
         target = intent.target
-        safe_target = re.sub(r'[^\w]', '_', target.replace('.py', '').replace('.kt', '').replace('.go', '').replace('.js', '')) if target != "unknown" else "module"
+        safe_target = (
+            re.sub(r"[^\w]", "_", target.replace(".py", "").replace(".kt", "").replace(".go", "").replace(".js", ""))
+            if target != "unknown"
+            else "module"
+        )
 
         has_security_action = any(a in mcts_actions for a in ["VALIDATE_SECURITY", "SYMBOLIC_VALIDATION"])
         has_replace_node = "REPLACE_AST_NODE" in mcts_actions
@@ -32,9 +38,15 @@ class PipelineMixin(ProcessBuilderMixin):
 
         if lang == "python":
             return self.generate_python_pipeline_driven(
-                intent, ast_analysis, ast_context, solver_insights,
-                mcts_actions, safe_target, has_security_action,
-                has_replace_node, has_patch_fix
+                intent,
+                ast_analysis,
+                ast_context,
+                solver_insights,
+                mcts_actions,
+                safe_target,
+                has_security_action,
+                has_replace_node,
+                has_patch_fix,
             )
         elif lang == "kotlin":
             return self.generate_kotlin_contextual(intent, safe_target, ast_context.get("class_names", []))
@@ -44,21 +56,35 @@ class PipelineMixin(ProcessBuilderMixin):
             return self.generate_javascript_contextual(intent, safe_target)
 
         return self.generate_python_pipeline_driven(
-            intent, ast_analysis, ast_context, solver_insights,
-            mcts_actions, safe_target, has_security_action,
-            has_replace_node, has_patch_fix
+            intent,
+            ast_analysis,
+            ast_context,
+            solver_insights,
+            mcts_actions,
+            safe_target,
+            has_security_action,
+            has_replace_node,
+            has_patch_fix,
         )
 
-    def generate_python_pipeline_driven(self, intent, ast_analysis, ast_context,
-                                          solver_insights, mcts_actions, safe_target,
-                                          has_security_action, has_replace_node,
-                                          has_patch_fix):
+    def generate_python_pipeline_driven(
+        self,
+        intent,
+        ast_analysis,
+        ast_context,
+        solver_insights,
+        mcts_actions,
+        safe_target,
+        has_security_action,
+        has_replace_node,
+        has_patch_fix,
+    ):
         """Generate Python code using all pipeline intelligence."""
         orch = self._orchestrator
 
         if has_replace_node and intent.raw_code:
             target_name = ""
-            for step in (intent._plan_steps if hasattr(intent, '_plan_steps') else []):
+            for step in intent._plan_steps if hasattr(intent, "_plan_steps") else []:
                 if step.action == "REPLACE_AST_NODE" and step.target_node_name:
                     target_name = step.target_node_name
                     break
@@ -89,14 +115,13 @@ class PipelineMixin(ProcessBuilderMixin):
             return orch._code_transform.fix_python(intent.raw_code, ast_analysis, solver_insights)
 
         # M1 FIX: Try CodeAssembler for real project generation first
-        if intent.op == OperationType.CREATE and hasattr(self, '_assembler') and self._assembler:
+        if intent.op == OperationType.CREATE and hasattr(self, "_assembler") and self._assembler:
             description = str(intent) if intent else safe_target
             try:
                 # Extract entities from intent description
                 entities = self._extract_entities_from_intent(intent, safe_target)
                 result = self._assembler.assemble_project(
-                    description, niche_plan=None,
-                    project_name=safe_target, entities=entities
+                    description, niche_plan=None, project_name=safe_target, entities=entities
                 )
                 if result and len(result) > 2:
                     # Return the most relevant file (main module)
@@ -116,13 +141,12 @@ class PipelineMixin(ProcessBuilderMixin):
         existing_classes = ast_context.get("class_names", [])
         needed_imports = set(ast_context.get("import_dependencies", []))
         return self.generate_pipeline_feature_module(
-            safe_target, existing_functions, existing_classes,
-            needed_imports, solver_insights, mcts_actions
+            safe_target, existing_functions, existing_classes, needed_imports, solver_insights, mcts_actions
         )
 
-    def generate_pipeline_feature_module(self, safe_target, existing_functions,
-                                           existing_classes, needed_imports,
-                                           solver_insights, mcts_actions):
+    def generate_pipeline_feature_module(
+        self, safe_target, existing_functions, existing_classes, needed_imports, solver_insights, mcts_actions
+    ):
         """Generate feature module with REAL _process() via CodeAssembler.
 
         M1 FIX: No more stubs. The _process() method now contains actual
@@ -147,11 +171,11 @@ class PipelineMixin(ProcessBuilderMixin):
         if existing_functions:
             fn_list = ", ".join(existing_functions[:5])
             cls_list = ", ".join(existing_classes[:3]) if existing_classes else "none"
-            integration_methods = f'''
+            integration_methods = f"""
     # Contextual integration with existing code
     # Detected functions: {fn_list}
     # Detected classes: {cls_list}
-'''
+"""
 
         null_check_code = ""
         if solver_insights["null_safety_required"]:
@@ -200,8 +224,7 @@ class PipelineMixin(ProcessBuilderMixin):
 
         div_guard_code = ""
         if solver_insights.get("division_by_zero_risks") or any(
-            "division by zero" in str(v).lower()
-            for v in solver_insights.get("violated_constraints", [])
+            "division by zero" in str(v).lower() for v in solver_insights.get("violated_constraints", [])
         ):
             div_guard_code = '''
     @staticmethod
@@ -214,8 +237,7 @@ class PipelineMixin(ProcessBuilderMixin):
 
         index_guard_code = ""
         if solver_insights.get("index_oob_risks") or any(
-            "index out of bounds" in str(v).lower()
-            for v in solver_insights.get("violated_constraints", [])
+            "index out of bounds" in str(v).lower() for v in solver_insights.get("violated_constraints", [])
         ):
             index_guard_code = '''
     @staticmethod
@@ -238,7 +260,7 @@ class PipelineMixin(ProcessBuilderMixin):
                     test_cases_lines.append(
                         f"    def test_case_{i+1}(self):\n"
                         f"        result = self.execute({{{args_str}}})\n"
-                        f"        assert result.success, f\"Test {i+1} failed: {{result.error}}\""
+                        f'        assert result.success, f"Test {i+1} failed: {{result.error}}"'
                     )
             if test_cases_lines:
                 test_code = '\n\nclass Test{cls_name}:\n    """Test cases generated from Z3 concrete symbolic inputs."""\n{test_methods}\n'.format(

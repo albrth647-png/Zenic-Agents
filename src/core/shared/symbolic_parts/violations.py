@@ -73,14 +73,15 @@ class ViolationCheckerMixin:
                     # Variable may be None - check if path condition excludes it
                     for cond in path.condition:
                         cond_str = str(cond)
-                        if (f"SYM({var_name})!=" in cond_str or
-                                f"SYM({var_name}) is_not None" in cond_str or
-                                f"SYM({var_name}) is_not None" in cond_str):
+                        if (
+                            f"SYM({var_name})!=" in cond_str
+                            or f"SYM({var_name}) is_not None" in cond_str
+                            or f"SYM({var_name}) is_not None" in cond_str
+                        ):
                             break
                     else:
                         violations.append(
-                            f"Potential None dereference: '{var_name}' may be None "
-                            f"in function '{func_name}'"
+                            f"Potential None dereference: '{var_name}' may be None " f"in function '{func_name}'"
                         )
 
     def _check_division_by_zero(self, path, func_name, violations):
@@ -97,18 +98,18 @@ class ViolationCheckerMixin:
                 for expr_str in all_exprs:
                     if f"/SYM({var_name})" in expr_str or f"%SYM({var_name})" in expr_str:
                         violations.append(
-                            f"Potential division by zero: '{var_name}' may be 0 "
-                            f"in function '{func_name}'"
+                            f"Potential division by zero: '{var_name}' may be 0 " f"in function '{func_name}'"
                         )
                         break  # One violation per variable is enough
 
         # Check 2: scan all expression descriptions for division patterns
         # and check if denominator variable can be 0 using Z3 or heuristic
         import re as _re
+
         for expr_str in all_exprs:
             # Find all denominator variables in division/modulo operations
             # Match patterns like /SYM(var) or %SYM(var)
-            denom_refs = _re.findall(r'[/%]SYM\((\w+)\)', expr_str)
+            denom_refs = _re.findall(r"[/%]SYM\((\w+)\)", expr_str)
             for denom_var in denom_refs:
                 sym_val = path.variables.get(denom_var)
                 if not isinstance(sym_val, SymbolicValue):
@@ -117,9 +118,7 @@ class ViolationCheckerMixin:
                 if sym_val.var_type == "None":
                     continue
                 # If we already detected this variable, skip
-                already_found = any(
-                    f"'{denom_var}'" in v for v in violations
-                )
+                already_found = any(f"'{denom_var}'" in v for v in violations)
                 if already_found:
                     continue
                 # If concrete value is known and non-zero, it's safe
@@ -148,28 +147,26 @@ class ViolationCheckerMixin:
                         # away from zero, flag it as potential issue
                         logger.debug("SymbolicExecutor: Z3 div-by-zero check failed: %s", e)
                         is_constrained_nonzero = any(
-                            f"SYM({denom_var})!=0" in str(c) or
-                            f"SYM({denom_var})>0" in str(c) or
-                            f"SYM({denom_var})<" in str(c)
+                            f"SYM({denom_var})!=0" in str(c)
+                            or f"SYM({denom_var})>0" in str(c)
+                            or f"SYM({denom_var})<" in str(c)
                             for c in path.condition
                         )
                         if not is_constrained_nonzero:
                             violations.append(
-                                f"Potential division by zero: '{denom_var}' may be 0 "
-                                f"in function '{func_name}'"
+                                f"Potential division by zero: '{denom_var}' may be 0 " f"in function '{func_name}'"
                             )
                 else:
                     # No Z3: heuristic check - is the variable constrained away from zero?
                     is_constrained_nonzero = any(
-                        f"SYM({denom_var})!=0" in str(c) or
-                        f"SYM({denom_var})>0" in str(c) or
-                        f"SYM({denom_var})<" in str(c)
+                        f"SYM({denom_var})!=0" in str(c)
+                        or f"SYM({denom_var})>0" in str(c)
+                        or f"SYM({denom_var})<" in str(c)
                         for c in path.condition
                     )
                     if not is_constrained_nonzero and sym_val.concrete is None:
                         violations.append(
-                            f"Potential division by zero: '{denom_var}' may be 0 "
-                            f"in function '{func_name}'"
+                            f"Potential division by zero: '{denom_var}' may be 0 " f"in function '{func_name}'"
                         )
 
     def _check_index_out_of_bounds(self, path, func_name, violations):
@@ -211,6 +208,7 @@ class ViolationCheckerMixin:
         """Check for type mismatches in binary operations."""
         # Collect all expression descriptions (from assignments and return values)
         import re as _re
+
         all_exprs = [str(desc) for _, desc in path.assignments]
         for rv in path.return_values:
             all_exprs.append(str(rv.get("desc", "")))
@@ -219,7 +217,7 @@ class ViolationCheckerMixin:
         checked_pairs = set()
         for expr_str in all_exprs:
             # Find all SYM(var) references in this expression
-            sym_refs = _re.findall(r'SYM\((\w+)\)', expr_str)
+            sym_refs = _re.findall(r"SYM\((\w+)\)", expr_str)
             if len(sym_refs) < 2:
                 continue
             # Check all pairs of referenced variables for type incompatibility
@@ -269,18 +267,17 @@ class ViolationCheckerMixin:
             desc = str(rv.get("desc", ""))
             # If the description is just a bare name (not SYM(...), not a literal)
             # then the variable was not in the symbolic state when used
-            if not desc.startswith("SYM(") and not desc.startswith(("'", '"', '-', '(')):
+            if not desc.startswith("SYM(") and not desc.startswith(("'", '"', "-", "(")):
                 # It's a bare name - check if it was initialized
-                if (desc not in {'None', 'True', 'False', 'UNKNOWN', 'SYM_EXPR'}
-                        and not desc[0].isdigit()
-                        and desc not in path.variables
-                        and desc not in initialized
-                        and not desc.startswith('_')
-                        and '(' not in desc):
-                    violations.append(
-                        f"Potential uninitialized variable: '{desc}' used "
-                        f"in function '{func_name}'"
-                    )
+                if (
+                    desc not in {"None", "True", "False", "UNKNOWN", "SYM_EXPR"}
+                    and not desc[0].isdigit()
+                    and desc not in path.variables
+                    and desc not in initialized
+                    and not desc.startswith("_")
+                    and "(" not in desc
+                ):
+                    violations.append(f"Potential uninitialized variable: '{desc}' used " f"in function '{func_name}'")
 
     # ----------------------------------------------------------------
     #  Return Consistency Check
@@ -316,8 +313,6 @@ class ViolationCheckerMixin:
             # None is sometimes acceptable alongside other types (Optional)
             non_none_types = non_any_types - {"None"}
             if len(non_none_types) > 1:
-                warnings.append(
-                    f"Function '{func_name}' may return inconsistent types: {non_any_types}"
-                )
+                warnings.append(f"Function '{func_name}' may return inconsistent types: {non_any_types}")
 
         return warnings

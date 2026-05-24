@@ -13,9 +13,9 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from src.core.sna.monitors.base import MonitorResult
 
@@ -38,6 +38,7 @@ class AlertChannel(str, Enum):
 @dataclass
 class Alert:
     """Alerta generada por un monitor."""
+
     id: str
     monitor_name: str
     severity: AlertSeverity
@@ -58,6 +59,7 @@ class Alert:
 @dataclass
 class AlertStats:
     """Estadísticas del AlertManager."""
+
     total_alerts: int = 0
     alerts_by_severity: dict[str, int] = field(default_factory=dict)
     alerts_by_monitor: dict[str, int] = field(default_factory=dict)
@@ -133,7 +135,9 @@ class AlertManager:
         self._alert_times.append(time.time())
         self._stats.total_alerts += 1
         self._stats.alerts_by_severity[severity.value] = self._stats.alerts_by_severity.get(severity.value, 0) + 1
-        self._stats.alerts_by_monitor[result.monitor_name] = self._stats.alerts_by_monitor.get(result.monitor_name, 0) + 1
+        self._stats.alerts_by_monitor[result.monitor_name] = (
+            self._stats.alerts_by_monitor.get(result.monitor_name, 0) + 1
+        )
 
         self._pending_alerts.append(alert)
         logger.info(f"Alerta generada: [{severity.value}] {result.monitor_name} → {channel.value}")

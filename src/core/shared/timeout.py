@@ -5,9 +5,10 @@ Enfuerza timeouts reales usando threading.Event.
 Compatible con Android/Termux (no usa signal.alarm).
 """
 
-import threading
 import logging
-from typing import Any, Callable
+import threading
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ __all__ = ["TimeoutEnforcer"]
 # ============================================================
 #  TIMEOUT ENFORCER - Mecanismo de Timeout Real
 # ============================================================
+
 
 class TimeoutEnforcer:
     """

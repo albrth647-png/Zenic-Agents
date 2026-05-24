@@ -32,26 +32,28 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from typing import Any, Callable, Coroutine, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "HealthAggregator",
-    "HealthStatus",
     "HealthCheckResult",
-    "get_health_aggregator",
-    "check_redis",
-    "check_postgresql",
+    "HealthStatus",
     "check_circuit_breakers",
+    "check_postgresql",
+    "check_redis",
     "check_vector_store",
+    "get_health_aggregator",
     "register_default_checks",
 ]
 
 
 class HealthStatus(str, enum.Enum):
     """Health check result status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -69,11 +71,12 @@ class HealthCheckResult:
         latency_ms: Check latency in milliseconds.
         details: Additional structured details.
     """
+
     name: str
     status: HealthStatus = HealthStatus.UNKNOWN
     message: str = ""
     latency_ms: float = 0.0
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 # Type for health check functions
@@ -94,12 +97,12 @@ class HealthAggregator:
     def __init__(
         self,
         check_timeout: float = 5.0,
-        liveness_checks: Optional[Dict[str, HealthCheckFunc]] = None,
-        readiness_checks: Optional[Dict[str, HealthCheckFunc]] = None,
+        liveness_checks: dict[str, HealthCheckFunc] | None = None,
+        readiness_checks: dict[str, HealthCheckFunc] | None = None,
     ) -> None:
         self._check_timeout = check_timeout
-        self._liveness_checks: Dict[str, HealthCheckFunc] = liveness_checks or {}
-        self._readiness_checks: Dict[str, HealthCheckFunc] = readiness_checks or {}
+        self._liveness_checks: dict[str, HealthCheckFunc] = liveness_checks or {}
+        self._readiness_checks: dict[str, HealthCheckFunc] = readiness_checks or {}
 
     def register_liveness_check(self, name: str, check: HealthCheckFunc) -> None:
         """Register a liveness check.
@@ -125,7 +128,7 @@ class HealthAggregator:
         """
         self._readiness_checks[name] = check
 
-    async def check_liveness(self) -> Dict[str, Any]:
+    async def check_liveness(self) -> dict[str, Any]:
         """Run liveness checks.
 
         Returns:
@@ -135,15 +138,18 @@ class HealthAggregator:
         overall = self._compute_overall_status(results)
         return {
             "status": overall.value,
-            "checks": {r.name: {
-                "status": r.status.value,
-                "message": r.message,
-                "latency_ms": round(r.latency_ms, 2),
-            } for r in results},
+            "checks": {
+                r.name: {
+                    "status": r.status.value,
+                    "message": r.message,
+                    "latency_ms": round(r.latency_ms, 2),
+                }
+                for r in results
+            },
             "timestamp": time.time(),
         }
 
-    async def check_readiness(self) -> Dict[str, Any]:
+    async def check_readiness(self) -> dict[str, Any]:
         """Run readiness checks.
 
         Returns:
@@ -154,19 +160,22 @@ class HealthAggregator:
         return {
             "ready": overall != HealthStatus.UNHEALTHY,
             "status": overall.value,
-            "checks": {r.name: {
-                "status": r.status.value,
-                "message": r.message,
-                "latency_ms": round(r.latency_ms, 2),
-                **r.details,
-            } for r in results},
+            "checks": {
+                r.name: {
+                    "status": r.status.value,
+                    "message": r.message,
+                    "latency_ms": round(r.latency_ms, 2),
+                    **r.details,
+                }
+                for r in results
+            },
             "timestamp": time.time(),
         }
 
     async def _run_checks(
         self,
-        checks: Dict[str, HealthCheckFunc],
-    ) -> List[HealthCheckResult]:
+        checks: dict[str, HealthCheckFunc],
+    ) -> list[HealthCheckResult]:
         """Run health checks concurrently with timeout.
 
         Args:
@@ -206,7 +215,7 @@ class HealthAggregator:
         return await asyncio.gather(*tasks)
 
     @staticmethod
-    def _compute_overall_status(results: List[HealthCheckResult]) -> HealthStatus:
+    def _compute_overall_status(results: list[HealthCheckResult]) -> HealthStatus:
         """Compute overall status from individual check results.
 
         Rules:
@@ -231,6 +240,7 @@ class HealthAggregator:
 
 
 # ── Built-in Health Check Functions ───────────────────────
+
 
 async def check_orchestrator(orchestrator: Any) -> HealthCheckResult:
     """Check if the orchestrator is available."""
@@ -344,7 +354,7 @@ async def check_redis(redis_url: str = "redis://localhost:6379") -> HealthCheckR
 
 
 async def check_postgresql(
-    database_url: Optional[str] = None,
+    database_url: str | None = None,
 ) -> HealthCheckResult:
     """Check PostgreSQL connectivity.
 
@@ -415,7 +425,7 @@ async def check_postgresql(
 
 
 async def check_circuit_breakers(
-    breaker_registry: Optional[Dict[str, Any]] = None,
+    breaker_registry: dict[str, Any] | None = None,
 ) -> HealthCheckResult:
     """Check unified circuit breaker state.
 
@@ -434,10 +444,9 @@ async def check_circuit_breakers(
         # Try to discover from the module-level registry
         try:
             from ..patterns.resilience.circuit_breaker import CircuitBreaker  # noqa: F401
+
             # No global registry — check if there's one in observability
-            breaker_registry = getattr(
-                check_circuit_breakers, "_registry", {}
-            )
+            breaker_registry = getattr(check_circuit_breakers, "_registry", {})
         except ImportError:
             breaker_registry = {}
 
@@ -451,7 +460,7 @@ async def check_circuit_breakers(
     open_count = 0
     half_open_count = 0
     closed_count = 0
-    breaker_details: Dict[str, Any] = {}
+    breaker_details: dict[str, Any] = {}
 
     for name, breaker in breaker_registry.items():
         try:
@@ -515,6 +524,7 @@ async def check_vector_store(
     if vector_store is None:
         try:
             from ..vector.vector_store import get_vector_store
+
             vector_store = get_vector_store()
         except ImportError:
             return HealthCheckResult(
@@ -596,11 +606,12 @@ async def check_disk_space(path: str = ".", min_mb: float = 100.0) -> HealthChec
 
 # ── Auto-Registration ─────────────────────────────────────
 
+
 def register_default_checks(
     aggregator: HealthAggregator,
-    redis_url: Optional[str] = None,
-    database_url: Optional[str] = None,
-    breaker_registry: Optional[Dict[str, Any]] = None,
+    redis_url: str | None = None,
+    database_url: str | None = None,
+    breaker_registry: dict[str, Any] | None = None,
 ) -> None:
     """Auto-register all available health checks based on environment.
 
@@ -648,8 +659,7 @@ def register_default_checks(
     # Vector store check (Phase 4.1: if DATABASE_URL is PostgreSQL)
     effective_db_url = database_url or os.environ.get("DATABASE_URL")
     if effective_db_url and (
-        effective_db_url.startswith("postgresql://") or
-        effective_db_url.startswith("postgres://")
+        effective_db_url.startswith("postgresql://") or effective_db_url.startswith("postgres://")
     ):
         aggregator.register_readiness_check(
             "vector_store",
@@ -664,7 +674,7 @@ def register_default_checks(
 
 
 # ── Singleton ─────────────────────────────────────────────
-_health_aggregator: Optional[HealthAggregator] = None
+_health_aggregator: HealthAggregator | None = None
 _health_lock = threading.Lock()
 
 

@@ -21,13 +21,13 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .circuit_breaker import CircuitBreakerManager, CircuitState
 
 __all__ = [
-    "RedisCircuitBreakerManager",
     "RedisCircuitBreakerConfig",
+    "RedisCircuitBreakerManager",
 ]
 
 
@@ -212,7 +212,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
 
     def __init__(
         self,
-        redis_config: Optional[RedisCircuitBreakerConfig] = None,
+        redis_config: RedisCircuitBreakerConfig | None = None,
     ) -> None:
         super().__init__()
         self._redis_config = redis_config or RedisCircuitBreakerConfig()
@@ -220,7 +220,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
         self._redis_available = False
         self._fallback_active = False
         self._fallback_count = 0
-        self._fallback_last_error: Optional[str] = None
+        self._fallback_last_error: str | None = None
         self._fallback_since: float = 0.0
         self._initialized = False
 
@@ -377,7 +377,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
         except Exception as e:
             self._handle_redis_error(e)
 
-    async def all_stats(self) -> Dict[str, Dict]:
+    async def all_stats(self) -> dict[str, dict]:
         """
         Get stats for all known circuits.
         Merges local in-memory stats with Redis data.
@@ -395,9 +395,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
             redis_keys: list = []
 
             while True:
-                cursor, keys = await self._redis.scan(
-                    cursor=cursor, match=pattern, count=100
-                )
+                cursor, keys = await self._redis.scan(cursor=cursor, match=pattern, count=100)
                 redis_keys.extend(keys)
                 if cursor == 0:
                     break
@@ -413,16 +411,12 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
                         try:
                             parsed_config = json.loads(data["config"])
                             config = {
-                                "failure_threshold": parsed_config.get(
-                                    "failureThreshold", config["failure_threshold"]
-                                ),
+                                "failure_threshold": parsed_config.get("failureThreshold", config["failure_threshold"]),
                                 "recovery_timeout": parsed_config.get(
                                     "recoveryTimeoutMs", config["recovery_timeout"] * 1000
                                 )
                                 / 1000,
-                                "success_threshold": parsed_config.get(
-                                    "successThreshold", config["success_threshold"]
-                                ),
+                                "success_threshold": parsed_config.get("successThreshold", config["success_threshold"]),
                             }
                         except (json.JSONDecodeError, KeyError):
                             pass
@@ -449,7 +443,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
             self._handle_redis_error(e)
             return local_stats
 
-    async def get_stats(self, agent_name: str) -> Optional[Dict]:
+    async def get_stats(self, agent_name: str) -> dict | None:
         """
         Get stats for a specific circuit from Redis.
         Falls back to local stats if Redis is unavailable.
@@ -472,16 +466,10 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
                 try:
                     parsed_config = json.loads(data["config"])
                     config = {
-                        "failure_threshold": parsed_config.get(
-                            "failureThreshold", config["failure_threshold"]
-                        ),
-                        "recovery_timeout": parsed_config.get(
-                            "recoveryTimeoutMs", config["recovery_timeout"] * 1000
-                        )
+                        "failure_threshold": parsed_config.get("failureThreshold", config["failure_threshold"]),
+                        "recovery_timeout": parsed_config.get("recoveryTimeoutMs", config["recovery_timeout"] * 1000)
                         / 1000,
-                        "success_threshold": parsed_config.get(
-                            "successThreshold", config["success_threshold"]
-                        ),
+                        "success_threshold": parsed_config.get("successThreshold", config["success_threshold"]),
                     }
                 except (json.JSONDecodeError, KeyError):
                     pass
@@ -503,7 +491,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
 
     # ── Fallback State ─────────────────────────────────────────
 
-    def get_fallback_state(self) -> Dict[str, Any]:
+    def get_fallback_state(self) -> dict[str, Any]:
         """Get current fallback state for monitoring."""
         return {
             "active": self._fallback_active,
@@ -514,12 +502,10 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
 
     # ── Internal Helpers ───────────────────────────────────────
 
-    def _get_effective_config(self, agent_name: str) -> Dict[str, Any]:
+    def _get_effective_config(self, agent_name: str) -> dict[str, Any]:
         """Get the effective config for an agent, applying group defaults."""
         group = self._classify_agent(agent_name)
-        group_config = self.DEFAULT_CONFIGS.get(
-            group, {"failure_threshold": 3, "recovery_timeout": 60.0}
-        )
+        group_config = self.DEFAULT_CONFIGS.get(group, {"failure_threshold": 3, "recovery_timeout": 60.0})
         return {
             "failure_threshold": group_config.get("failure_threshold", 3),
             "recovery_timeout": group_config.get("recovery_timeout", 60.0),

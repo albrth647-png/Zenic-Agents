@@ -2,7 +2,7 @@
 //!
 //! Layer 1: Base SafetyGate (10 generic rules)
 //! Layer 2: Domain-specific rules (35 = 5 per NicheCategory)
-//! Layer 3: Compliance validation (8 standards) — HARD BLOCK
+//! Layer 3: Compliance validation (10 standards) — HARD BLOCK
 //! Layer 4: Sensitivity escalation (critical → auto-deny)
 //!
 //! INVARIANTS:

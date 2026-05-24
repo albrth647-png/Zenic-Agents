@@ -9,7 +9,8 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ._types import RETRY_BASE_DELAY, RETRY_MAX_ATTEMPTS
 
@@ -18,9 +19,10 @@ logger = logging.getLogger(__name__)
 
 # ── Retry helper ─────────────────────────────────────────────
 
+
 def retry(fn: Callable[[], Any], label: str = "snapshot_audit_db_op") -> Any:
     """Execute *fn* with exponential backoff (3 retries, base 1 s)."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, RETRY_MAX_ATTEMPTS + 1):
         try:
             return fn()
@@ -30,23 +32,30 @@ def retry(fn: Callable[[], Any], label: str = "snapshot_audit_db_op") -> Any:
                 delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
                 logger.debug(
                     "%s error (attempt %d/%d): %s — retrying in %.2fs",
-                    label, attempt, RETRY_MAX_ATTEMPTS, exc, delay,
+                    label,
+                    attempt,
+                    RETRY_MAX_ATTEMPTS,
+                    exc,
+                    delay,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
                     "%s failed after %d attempts: %s",
-                    label, RETRY_MAX_ATTEMPTS, exc,
+                    label,
+                    RETRY_MAX_ATTEMPTS,
+                    exc,
                 )
     raise last_exc  # type: ignore[misc]
 
 
 # ── Diff computation ─────────────────────────────────────────
 
+
 def compute_diff(
-    before_data: Dict[str, Any],
-    after_data: Dict[str, Any],
-) -> Dict[str, Any]:
+    before_data: dict[str, Any],
+    after_data: dict[str, Any],
+) -> dict[str, Any]:
     """Compute a deep diff between two dictionaries.
 
     Returns a dict with keys:
@@ -55,9 +64,9 @@ def compute_diff(
       - "changed": keys present in both but with different values;
                    each entry is {"old": <before_val>, "new": <after_val>}
     """
-    added: Dict[str, Any] = {}
-    removed: Dict[str, Any] = {}
-    changed: Dict[str, Dict[str, Any]] = {}
+    added: dict[str, Any] = {}
+    removed: dict[str, Any] = {}
+    changed: dict[str, dict[str, Any]] = {}
 
     before_keys = set(before_data.keys())
     after_keys = set(after_data.keys())
@@ -98,12 +107,12 @@ def compute_diff(
 
 # ── Singleton ────────────────────────────────────────────────
 
-_snapshot_audit_instance: Optional[Any] = None  # SnapshotAuditEngine
+_snapshot_audit_instance: Any | None = None  # SnapshotAuditEngine
 _snapshot_audit_lock = threading.Lock()
 
 
 def get_snapshot_audit_engine(
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ):
     """Get or create the singleton SnapshotAuditEngine.
 
@@ -118,6 +127,7 @@ def get_snapshot_audit_engine(
         if _snapshot_audit_instance is None:
             # Import here to avoid circular imports
             from ._snapshot import SnapshotAuditEngine
+
             _snapshot_audit_instance = SnapshotAuditEngine(db_path=db_path)
         return _snapshot_audit_instance
 

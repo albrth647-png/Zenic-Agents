@@ -92,7 +92,7 @@ class ConcreteGenMixin:
                             inputs[var_name] = bool(val)
                         elif z3_var.sort() == z3_module.RealSort():
                             dec_str = val.as_decimal(6)
-                            inputs[var_name] = float(dec_str.rstrip('0').rstrip('.') if '.' in dec_str else dec_str)
+                            inputs[var_name] = float(dec_str.rstrip("0").rstrip(".") if "." in dec_str else dec_str)
                         else:
                             inputs[var_name] = str(val)
                     except Exception as e:
@@ -149,28 +149,28 @@ class ConcreteGenMixin:
             cond_str = str(cond)
             # Try to extract variable assignments from conditions
             # Pattern: SYM(var) == value
-            eq_match = _re.match(r'SYM\((\w+)\)\s*==\s*(\d+)', cond_str)
+            eq_match = _re.match(r"SYM\((\w+)\)\s*==\s*(\d+)", cond_str)
             if eq_match:
                 var_name, value = eq_match.group(1), int(eq_match.group(2))
                 inputs[var_name] = value
                 continue
 
             # Pattern: SYM(var) > value
-            gt_match = _re.match(r'SYM\((\w+)\)\s*>\s*(\d+)', cond_str)
+            gt_match = _re.match(r"SYM\((\w+)\)\s*>\s*(\d+)", cond_str)
             if gt_match:
                 var_name, value = gt_match.group(1), int(gt_match.group(2))
                 inputs[var_name] = value + 1
                 continue
 
             # Pattern: SYM(var) < value
-            lt_match = _re.match(r'SYM\((\w+)\)\s*<\s*(\d+)', cond_str)
+            lt_match = _re.match(r"SYM\((\w+)\)\s*<\s*(\d+)", cond_str)
             if lt_match:
                 var_name, value = lt_match.group(1), int(lt_match.group(2))
                 inputs[var_name] = value - 1
                 continue
 
             # Pattern: SYM(var) != value
-            neq_match = _re.match(r'SYM\((\w+)\)\s*!=\s*(\d+)', cond_str)
+            neq_match = _re.match(r"SYM\((\w+)\)\s*!=\s*(\d+)", cond_str)
             if neq_match:
                 var_name, value = neq_match.group(1), int(neq_match.group(2))
                 inputs[var_name] = value + 1
@@ -252,7 +252,9 @@ class ConcreteGenMixin:
                             counterexample[var_name] = str(val)
                     except Exception as e:
                         counterexample[var_name] = str(val)
-                        logger.debug("SymbolicExecutor: Z3 counterexample value extraction failed for '%s': %s", var_name, e)
+                        logger.debug(
+                            "SymbolicExecutor: Z3 counterexample value extraction failed for '%s': %s", var_name, e
+                        )
 
                 return {
                     "reachable": True,
@@ -307,9 +309,7 @@ class ConcreteGenMixin:
         if z3_var is None:
             return None
 
-        if "division by zero" in violation.lower():
-            return z3_var == 0
-        elif "none dereference" in violation.lower():
+        if "division by zero" in violation.lower() or "none dereference" in violation.lower():
             return z3_var == 0
         elif "index out of bounds" in violation.lower() or "negative" in violation.lower():
             return z3_var < 0
@@ -371,7 +371,9 @@ class ConcreteGenMixin:
                                     entry["concrete_inputs"][var_name] = str(val)
                             except Exception as e:
                                 entry["concrete_inputs"][var_name] = str(val)
-                                logger.debug("SymbolicExecutor: Path export value extraction failed for '%s': %s", var_name, e)
+                                logger.debug(
+                                    "SymbolicExecutor: Path export value extraction failed for '%s': %s", var_name, e
+                                )
                 except Exception as export_err:
                     logger.debug(f"SymbolicExecutor: Path export failed: {export_err}")
 

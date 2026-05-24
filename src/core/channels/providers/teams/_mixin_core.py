@@ -12,7 +12,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, FrozenSet, Optional
+from typing import Any
 
 from ..._formatter import (
     build_teams_confirmation_card,
@@ -29,13 +29,13 @@ from ..._types import (
     RateLimitInfo,
 )
 from ._helpers import (
-    _validate_url,
+    _DEFAULT_API_URL,
     _HAS_AIOHTTP,
     _HAS_URLLIB,
-    _DEFAULT_API_URL,
     _MAX_RETRIES,
     _RETRY_BASE_DELAY,
     _WEBHOOK_TIMEOUT,
+    _validate_url,
 )
 
 logger = logging.getLogger("zenic_agents.channels.teams")
@@ -53,9 +53,9 @@ class TeamsChannelProvider:
 
     def __init__(
         self,
-        webhook_url: Optional[str] = None,
-        bot_token: Optional[str] = None,
-        api_url: Optional[str] = None,
+        webhook_url: str | None = None,
+        bot_token: str | None = None,
+        api_url: str | None = None,
     ) -> None:
         self._webhook_url = webhook_url or os.environ.get("TEAMS_WEBHOOK_URL", "")
         self._bot_token = bot_token or os.environ.get("TEAMS_BOT_TOKEN", "")
@@ -66,16 +66,16 @@ class TeamsChannelProvider:
         self._confirmation_count: int = 0
         self._started: bool = False
         self._rate_limit_info = RateLimitInfo()
-        self._message_handler: Optional[MessageHandler] = None
-        self._confirmation_handler: Optional[ConfirmationHandler] = None
-        self._session: Optional[Any] = None
+        self._message_handler: MessageHandler | None = None
+        self._confirmation_handler: ConfirmationHandler | None = None
+        self._session: Any | None = None
 
     @property
     def name(self) -> str:
         return "teams"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:
+    def capabilities(self) -> frozenset[ChannelCapability]:
         caps = {
             ChannelCapability.SEND_TEXT,
             ChannelCapability.SEND_RICH,
@@ -106,9 +106,7 @@ class TeamsChannelProvider:
 
         return response
 
-    async def send_confirmation(
-        self, request: ConfirmationRequest
-    ) -> ChannelResponse:
+    async def send_confirmation(self, request: ConfirmationRequest) -> ChannelResponse:
         """Send an interactive confirmation via Teams ActionCard."""
         if not self._webhook_url:
             return self._dry_run_confirmation(request)
@@ -154,7 +152,7 @@ class TeamsChannelProvider:
         logger.info("TeamsChannelProvider: stopped")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "name": "teams",
@@ -185,7 +183,7 @@ class TeamsChannelProvider:
 
     # ── Internal: HTTP ──────────────────────────────────────────
 
-    async def _post_webhook(self, payload: Dict[str, Any]) -> ChannelResponse:
+    async def _post_webhook(self, payload: dict[str, Any]) -> ChannelResponse:
         """POST a payload to the Teams Incoming Webhook."""
         data = json.dumps(payload).encode("utf-8")
 
@@ -197,7 +195,8 @@ class TeamsChannelProvider:
                     return await self._post_urllib(data)
                 else:
                     return ChannelResponse(
-                        success=False, channel="teams",
+                        success=False,
+                        channel="teams",
                         status=DeliveryStatus.FAILED,
                         error="No HTTP library available",
                         timestamp=time.time(),
@@ -207,31 +206,39 @@ class TeamsChannelProvider:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
                         "TeamsChannelProvider: attempt %d/%d failed: %s — retrying in %.1fs",
-                        attempt, _MAX_RETRIES, e, delay,
+                        attempt,
+                        _MAX_RETRIES,
+                        e,
+                        delay,
                     )
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     return ChannelResponse(
-                        success=False, channel="teams",
+                        success=False,
+                        channel="teams",
                         status=DeliveryStatus.FAILED,
                         error=f"HTTP error after {_MAX_RETRIES} attempts: {e}",
                         timestamp=time.time(),
                     )
 
         return ChannelResponse(
-            success=False, channel="teams",
+            success=False,
+            channel="teams",
             status=DeliveryStatus.FAILED,
             error="Unexpected retry loop exit",
             timestamp=time.time(),
         )
 
     async def _post_aiohttp(self, data: bytes) -> ChannelResponse:
-        """Send via aiohttp ClientSession."""  # noqa: F821  # TODO: verify import
+        """Send via aiohttp ClientSession."""  # TODO: verify import
         assert self._session is not None
         headers = {"Content-Type": "application/json"}
         async with self._session.post(
-            self._webhook_url, data=data, headers=headers,
+            self._webhook_url,
+            data=data,
+            headers=headers,
         ) as resp:
             body = await resp.text()
 
@@ -246,7 +253,8 @@ class TeamsChannelProvider:
 
             if resp.status in (200, 202):
                 return ChannelResponse(
-                    success=True, channel="teams",
+                    success=True,
+                    channel="teams",
                     status=DeliveryStatus.SENT,
                     metadata={"http_status": resp.status, "body": body[:200]},
                     timestamp=time.time(),
@@ -255,27 +263,30 @@ class TeamsChannelProvider:
                 retry_after = float(resp.headers.get("Retry-After", "5"))
                 self._rate_limit_info = RateLimitInfo(remaining=0, reset_at=time.time() + retry_after)
                 return ChannelResponse(
-                    success=False, channel="teams",
+                    success=False,
+                    channel="teams",
                     status=DeliveryStatus.RATE_LIMITED,
                     error=f"Rate limited. Retry after {retry_after}s",
                     timestamp=time.time(),
                 )
             else:
                 return ChannelResponse(
-                    success=False, channel="teams",
+                    success=False,
+                    channel="teams",
                     status=DeliveryStatus.FAILED,
                     error=f"HTTP {resp.status}: {body[:200]}",
                     timestamp=time.time(),
                 )
 
     async def _post_urllib(self, data: bytes) -> ChannelResponse:
-        """Send via urllib (sync, wrapped in asyncio.to_thread)."""  # noqa: F821  # TODO: verify import
+        """Send via urllib (sync, wrapped in asyncio.to_thread)."""  # TODO: verify import
         import asyncio
 
         def _sync_post() -> ChannelResponse:
             validated_url = _validate_url(self._webhook_url)
             req = urllib.request.Request(  # noqa: F821  # TODO: verify import
-                validated_url, data=data,
+                validated_url,
+                data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
@@ -283,7 +294,8 @@ class TeamsChannelProvider:
                 with urllib.request.urlopen(req, timeout=_WEBHOOK_TIMEOUT) as resp:  # noqa: F821  # TODO: verify import
                     body = resp.read().decode("utf-8", errors="replace")
                     return ChannelResponse(
-                        success=True, channel="teams",
+                        success=True,
+                        channel="teams",
                         status=DeliveryStatus.SENT,
                         metadata={"http_status": resp.status, "body": body[:200]},
                         timestamp=time.time(),
@@ -292,23 +304,26 @@ class TeamsChannelProvider:
                 if e.code == 429:
                     retry_after = float(e.headers.get("Retry-After", "5"))
                     return ChannelResponse(
-                        success=False, channel="teams",
+                        success=False,
+                        channel="teams",
                         status=DeliveryStatus.RATE_LIMITED,
                         error=f"Rate limited. Retry after {retry_after}s",
                         timestamp=time.time(),
                     )
                 body = e.read().decode("utf-8", errors="replace")[:200]
                 return ChannelResponse(
-                    success=False, channel="teams",
+                    success=False,
+                    channel="teams",
                     status=DeliveryStatus.FAILED,
                     error=f"HTTP {e.code}: {body}",
                     timestamp=time.time(),
                 )
             except Exception as e:
                 return ChannelResponse(
-                    success=False, channel="teams",
+                    success=False,
+                    channel="teams",
                     status=DeliveryStatus.FAILED,
-                    error=f"urllib error: {e}",  # noqa: F821  # TODO: verify import
+                    error=f"urllib error: {e}",  # TODO: verify import
                     timestamp=time.time(),
                 )
 
@@ -327,23 +342,27 @@ class TeamsChannelProvider:
             text_preview,
         )
         return ChannelResponse(
-            success=True, channel="teams",
+            success=True,
+            channel="teams",
             status=DeliveryStatus.DRY_RUN,
             metadata={"mode": "dry_run"},
             timestamp=time.time(),
         )
 
     def _dry_run_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         with self._lock:
             self._confirmation_count += 1
         logger.info(
             "[TEAMS DRY-RUN] Confirmation: %s | Options: %s",
-            request.title, list(request.options),
+            request.title,
+            list(request.options),
         )
         return ChannelResponse(
-            success=True, channel="teams",
+            success=True,
+            channel="teams",
             status=DeliveryStatus.DRY_RUN,
             metadata={"mode": "dry_run", "action_id": request.action_id},
             timestamp=time.time(),

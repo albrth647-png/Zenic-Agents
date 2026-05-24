@@ -1,16 +1,20 @@
 """Core logic for analytics."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import threading
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List
+from typing import Any
+
 from ..engine import ExceptionSignal
 from ..taxonomy import ExceptionCategory
 
 logger = logging.getLogger(__name__)
+
 
 class ExceptionAnalytics:
     """Exception analytics engine for pattern detection and dashboards.
@@ -36,6 +40,7 @@ class ExceptionAnalytics:
         def _exec(conn: sqlite3.Connection) -> None:
             conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)  # noqa: F821
             conn.commit()
+
         _retry_db(self._with_conn, _exec)  # noqa: F821
 
     def _with_conn(self, fn: Callable[[sqlite3.Connection], Any]) -> Any:
@@ -104,7 +109,7 @@ class ExceptionAnalytics:
                 "timestamp >= ?",
                 "timestamp <= ?",
             ]
-            params: List[Any] = [period_start, period_end]
+            params: list[Any] = [period_start, period_end]
 
             if tenant_id:
                 where_clauses.append("tenant_id = ?")
@@ -120,25 +125,23 @@ class ExceptionAnalytics:
             total = total_row[0] if total_row else 0
 
             # By category
-            by_category: Dict[str, int] = {}
+            by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals "
-                f"WHERE {where_sql} GROUP BY category",
+                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY category",
                 params,
             ):
                 by_category[row[0]] = row[1]
 
             # By severity
-            by_severity: Dict[str, int] = {}
+            by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals "
-                f"WHERE {where_sql} GROUP BY severity",
+                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY severity",
                 params,
             ):
                 by_severity[row[0]] = row[1]
 
             # By source
-            by_source: Dict[str, int] = {}
+            by_source: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 f"SELECT source, COUNT(*) FROM _zenic_analytics_signals "
                 f"WHERE {where_sql} GROUP BY source ORDER BY COUNT(*) DESC LIMIT 20",
@@ -169,7 +172,9 @@ class ExceptionAnalytics:
         try:
             patterns = self.detect_patterns(tenant_id=tenant_id)
             snapshot.top_patterns = sorted(
-                patterns, key=lambda p: p.frequency, reverse=True,
+                patterns,
+                key=lambda p: p.frequency,
+                reverse=True,
             )[:10]
         except Exception as exc:
             logger.warning(
@@ -184,7 +189,7 @@ class ExceptionAnalytics:
     def detect_patterns(
         self,
         tenant_id: str = "",
-    ) -> List[ExceptionPattern]:  # noqa: F821
+    ) -> list[ExceptionPattern]:  # noqa: F821
         """Detect recurring exception patterns.
 
         Groups signals by ``category + source``, then for each group:
@@ -192,8 +197,9 @@ class ExceptionAnalytics:
           - Determines trend by comparing recent frequency to older
           - Samples up to 5 messages
         """
-        def _query(conn: sqlite3.Connection) -> List[ExceptionPattern]:  # noqa: F821
-            params: List[Any] = []
+
+        def _query(conn: sqlite3.Connection) -> list[ExceptionPattern]:  # noqa: F821
+            params: list[Any] = []
             tenant_filter = ""
             if tenant_id:
                 tenant_filter = "AND tenant_id = ?"
@@ -214,7 +220,7 @@ class ExceptionAnalytics:
                 params,
             ).fetchall()
 
-            patterns: List[ExceptionPattern] = []  # noqa: F821
+            patterns: list[ExceptionPattern] = []  # noqa: F821
             now = datetime.now(timezone.utc)
 
             for row in group_rows:
@@ -238,7 +244,12 @@ class ExceptionAnalytics:
 
                 # Trend: compare recent half vs older half
                 trend = self._compute_trend(
-                    conn, category_str, source, tenant_filter, params, now,
+                    conn,
+                    category_str,
+                    source,
+                    tenant_filter,
+                    params,
+                    now,
                 )
 
                 # Sample messages (up to 5)
@@ -275,7 +286,7 @@ class ExceptionAnalytics:
         category: str,
         source: str,
         tenant_filter: str,
-        params: List[Any],
+        params: list[Any],
         now: datetime,
     ) -> str:
         """Compare recent vs older frequency to determine trend."""
@@ -316,15 +327,14 @@ class ExceptionAnalytics:
         self,
         category: ExceptionCategory,
         days: int = 7,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Return daily exception counts for a category over *days*.
 
         Each dict has ``date`` and ``count`` keys.
         """
-        def _query(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
-            cutoff = (
-                datetime.now(timezone.utc) - timedelta(days=days)
-            ).isoformat()
+
+        def _query(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 SELECT DATE(timestamp) as day, COUNT(*) as cnt
@@ -341,9 +351,10 @@ class ExceptionAnalytics:
 
     # ── Top sources ───────────────────────────────────────
 
-    def get_top_sources(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_top_sources(self, limit: int = 10) -> list[dict[str, Any]]:
         """Return sources with the most exceptions."""
-        def _query(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
+
+        def _query(conn: sqlite3.Connection) -> list[dict[str, Any]]:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 SELECT source, COUNT(*) as cnt,
@@ -368,9 +379,10 @@ class ExceptionAnalytics:
 
     # ── Hourly distribution ───────────────────────────────
 
-    def get_hourly_distribution(self) -> Dict[int, int]:
+    def get_hourly_distribution(self) -> dict[int, int]:
         """Return exception counts by hour of day (0-23)."""
-        def _query(conn: sqlite3.Connection) -> Dict[int, int]:
+
+        def _query(conn: sqlite3.Connection) -> dict[int, int]:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 SELECT CAST(STRFTIME('%H', timestamp) AS INTEGER) as hour,
@@ -386,4 +398,3 @@ class ExceptionAnalytics:
 
 
 # ── Singleton ─────────────────────────────────────────────────
-

@@ -18,8 +18,9 @@ import hashlib
 import logging
 import os
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Any
 
 from src.core.shared.sqlcipher_helper import (
     HAS_SQLCIPHER,
@@ -36,6 +37,7 @@ _HAS_SQLCIPHER = HAS_SQLCIPHER
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @contextmanager
 def _null_context():
     """No-op context manager."""
@@ -45,6 +47,7 @@ def _null_context():
 # ──────────────────────────────────────────────────────────────
 #  SQLCIPHER ADAPTER
 # ──────────────────────────────────────────────────────────────
+
 
 class SQLCipherAdapter:
     """Adapter for SQLCipher encrypted database connections.
@@ -79,7 +82,7 @@ class SQLCipherAdapter:
         self._cipher_page_size = cipher_page_size
         self._hardware_bind = hardware_bind
         self._encrypted = HAS_SQLCIPHER and bool(passphrase)
-        self._pool: List[Any] = []
+        self._pool: list[Any] = []
 
         if not HAS_SQLCIPHER and passphrase:
             logger.warning(
@@ -136,9 +139,9 @@ class SQLCipherAdapter:
     def execute(
         self,
         query: str,
-        params: Tuple = (),
+        params: tuple = (),
         fetch: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a single SQL statement.
 
         Returns:
@@ -149,7 +152,7 @@ class SQLCipherAdapter:
             cursor = conn.execute(query, params)  # nosemgrep: sqlalchemy-execute-raw-query
             if fetch and query.strip().upper().startswith("SELECT"):
                 columns = [desc[0] for desc in cursor.description] if cursor.description else []
-                rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                rows = [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]
                 return {"rows": rows, "row_count": len(rows)}
             conn.commit()
             return {
@@ -157,7 +160,7 @@ class SQLCipherAdapter:
                 "lastrowid": cursor.lastrowid,
             }
 
-    def execute_script(self, script: str) -> Dict[str, Any]:
+    def execute_script(self, script: str) -> dict[str, Any]:
         """Execute a SQL script with multiple statements."""
         with self.connection() as conn:
             conn.executescript(script)
@@ -174,16 +177,19 @@ class SQLCipherAdapter:
             )
             return cursor.fetchone() is not None
 
-    def get_table_schema(self, table_name: str) -> List[Dict[str, Any]]:
+    def get_table_schema(self, table_name: str) -> list[dict[str, Any]]:
         """Get the schema of a table."""
         # SECURITY: Validate table_name before interpolation into PRAGMA
         import re
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
             raise ValueError(f"Invalid table name: {table_name!r}")
         with self.connection() as conn:
-            cursor = conn.execute(f'PRAGMA table_info("{table_name}")')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            cursor = conn.execute(
+                f'PRAGMA table_info("{table_name}")'
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             columns = ["cid", "name", "type", "notnull", "dflt_value", "pk"]
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+            return [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]
 
     def close_all(self) -> None:
         """Close all connections in the pool."""

@@ -9,5 +9,7 @@ This module is a thin facade; all logic lives in reasoning_parts/.
 from .reasoning_parts import ReasoningEngine, ReasoningMode, ReasoningResult
 
 __all__ = [
-    "ReasoningEngine", "ReasoningMode", "ReasoningResult",
+    "ReasoningEngine",
+    "ReasoningMode",
+    "ReasoningResult",
 ]

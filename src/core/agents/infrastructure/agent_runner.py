@@ -15,9 +15,16 @@ Ported from:
 from __future__ import annotations
 
 import threading
-from typing import Any, Optional
+from typing import Any
 
-from ..resilience import BaseAgent, AgentRetryConfig, CircuitBreakerManager, BulkheadManager, GlobalHealthMonitor, AuditLogger
+from ..resilience import (
+    AgentRetryConfig,
+    AuditLogger,
+    BaseAgent,
+    BulkheadManager,
+    CircuitBreakerManager,
+    GlobalHealthMonitor,
+)
 from ..schemas import AgentResult
 
 
@@ -32,11 +39,11 @@ class AgentRunner(BaseAgent[AgentResult]):
 
     def __init__(
         self,
-        circuit_breaker_manager: Optional[CircuitBreakerManager] = None,
-        bulkhead_manager: Optional[BulkheadManager] = None,
-        health_monitor: Optional[GlobalHealthMonitor] = None,
-        audit_logger: Optional[AuditLogger] = None,
-        retry_config: Optional[AgentRetryConfig] = None,
+        circuit_breaker_manager: CircuitBreakerManager | None = None,
+        bulkhead_manager: BulkheadManager | None = None,
+        health_monitor: GlobalHealthMonitor | None = None,
+        audit_logger: AuditLogger | None = None,
+        retry_config: AgentRetryConfig | None = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -65,7 +72,7 @@ class AgentRunner(BaseAgent[AgentResult]):
         for agent in agents:
             self.register(agent)
 
-    def get_agent(self, name: str) -> Optional[BaseAgent]:
+    def get_agent(self, name: str) -> BaseAgent | None:
         """Get a registered agent by name."""
         with self._registry_lock:
             return self._registered_agents.get(name)

@@ -1,23 +1,33 @@
 """Core logic for engine."""
 
 from __future__ import annotations
+
 import logging
 import re
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from ._types import DB_PATH, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator, PolicyEvaluationResult
 from ._mixin_persistence import PolicyPersistenceMixin
+from ._types import (
+    DB_PATH,
+    PolicyCondition,
+    PolicyDocument,
+    PolicyEffect,
+    PolicyEvaluationResult,
+    PolicyOperator,
+    PolicyStatement,
+)
 
 logger = logging.getLogger("zenic_agents.core.policy_code.engine")
+
 
 class PolicyCodeEngine(PolicyPersistenceMixin):
     """Thread-safe policy evaluation engine with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._policies: Dict[str, PolicyDocument] = {}
+        self._policies: dict[str, PolicyDocument] = {}
         self._db_path = db_path or str(DB_PATH)
         self._eval_count = 0
         self._init_db()
@@ -58,25 +68,23 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
             self._delete_from_db(policy_id)
             return True
 
-    def get_policy(self, policy_id: str) -> Optional[PolicyDocument]:
+    def get_policy(self, policy_id: str) -> PolicyDocument | None:
         with self._lock:
             return self._policies.get(policy_id)
 
-    def evaluate(
-        self, resource: str, action: str, context: Dict[str, Any]
-    ) -> PolicyEvaluationResult:
+    def evaluate(self, resource: str, action: str, context: dict[str, Any]) -> PolicyEvaluationResult:
         """Evaluate all enabled policies."""
         start = time.monotonic()
         with self._lock:
             self._eval_count += 1
             allowed = True
-            matched: List[str] = []
-            denied_by: List[str] = []
-            cond_met: List[str] = []
-            cond_failed: List[str] = []
+            matched: list[str] = []
+            denied_by: list[str] = []
+            cond_met: list[str] = []
+            cond_failed: list[str] = []
 
             # Collect all matching statements sorted by priority (higher first)
-            all_stmts: List[Tuple[str, PolicyStatement]] = []
+            all_stmts: list[tuple[str, PolicyStatement]] = []
             for pid, doc in self._policies.items():
                 if not doc.enabled:
                     continue
@@ -116,7 +124,7 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
         policy_id: str,
         resource: str,
         action: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> PolicyEvaluationResult:
         """Evaluate a single policy."""
         start = time.monotonic()
@@ -126,10 +134,10 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
                 return PolicyEvaluationResult(evaluation_time_ms=(time.monotonic() - start) * 1000)
 
             allowed = True
-            matched: List[str] = []
-            denied_by: List[str] = []
-            cond_met: List[str] = []
-            cond_failed: List[str] = []
+            matched: list[str] = []
+            denied_by: list[str] = []
+            cond_met: list[str] = []
+            cond_failed: list[str] = []
 
             for stmt in doc.statements:
                 match, met, failed = self._match_statement(stmt, resource, action, context)
@@ -137,10 +145,7 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
                     matched.append(stmt.id)
                     cond_met.extend(met)
                     cond_failed.extend(failed)
-                    if stmt.effect == PolicyEffect.DENY:
-                        allowed = False
-                        denied_by.append(stmt.id)
-                    elif stmt.effect == PolicyEffect.CONDITIONAL and not met:
+                    if stmt.effect == PolicyEffect.DENY or (stmt.effect == PolicyEffect.CONDITIONAL and not met):
                         allowed = False
                         denied_by.append(stmt.id)
 
@@ -159,16 +164,16 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
         statement: PolicyStatement,
         resource: str,
         action: str,
-        context: Dict[str, Any],
-    ) -> Tuple[bool, List[str], List[str]]:
+        context: dict[str, Any],
+    ) -> tuple[bool, list[str], list[str]]:
         """Match a statement against resource/action/context."""
         if not self._resource_matches(statement.resource, resource):
             return (False, [], [])
         if not self._action_matches(statement.action, action):
             return (False, [], [])
 
-        conditions_met: List[str] = []
-        conditions_failed: List[str] = []
+        conditions_met: list[str] = []
+        conditions_failed: list[str] = []
         for cond in statement.conditions:
             if self._evaluate_condition(cond, context):
                 conditions_met.append(cond.field)
@@ -200,9 +205,7 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
         except re.error:
             return pattern == action
 
-    def _evaluate_condition(
-        self, condition: PolicyCondition, context: Dict[str, Any]
-    ) -> bool:
+    def _evaluate_condition(self, condition: PolicyCondition, context: dict[str, Any]) -> bool:
         """Evaluate a single condition against context."""
         value = context.get(condition.field)
         target = condition.value
@@ -242,7 +245,7 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
         except (TypeError, re.error):
             return False
 
-    def list_policies(self, enabled_only: bool = True) -> List[PolicyDocument]:
+    def list_policies(self, enabled_only: bool = True) -> list[PolicyDocument]:
         with self._lock:
             policies = list(self._policies.values())
             if enabled_only:
@@ -285,9 +288,9 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
                 raise ValueError(f"Policy not found: {policy_id}")
             return self._policy_to_json(doc)
 
-    def validate_policy(self, doc: PolicyDocument) -> Tuple[bool, List[str]]:
+    def validate_policy(self, doc: PolicyDocument) -> tuple[bool, list[str]]:
         """Validate a policy document."""
-        errors: List[str] = []
+        errors: list[str] = []
         if not doc.id:
             errors.append("Policy ID is required")
         if not doc.name:
@@ -310,10 +313,10 @@ class PolicyCodeEngine(PolicyPersistenceMixin):
                     errors.append(f"Statement {stmt.id}: condition field is required")
         return (len(errors) == 0, errors)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
             total_stmts = sum(len(p.statements) for p in self._policies.values())
-            effect_counts: Dict[str, int] = {}
+            effect_counts: dict[str, int] = {}
             for p in self._policies.values():
                 for s in p.statements:
                     effect_counts[s.effect.value] = effect_counts.get(s.effect.value, 0) + 1

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import threading
+from datetime import datetime, timezone
+from typing import Any
+
 from ._types import (
     ChannelConfig,
     NotificationChannel,
@@ -10,9 +14,7 @@ from ._types import (
     NotificationPriority,
     logger,
 )
-import threading
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+
 
 class NotificationDispatcher:
     """Multi-channel notification dispatcher with fallback support.
@@ -25,7 +27,7 @@ class NotificationDispatcher:
     def __init__(self, db_path: str = "notification.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._channels: Dict[NotificationChannel, ChannelConfig] = {}
+        self._channels: dict[NotificationChannel, ChannelConfig] = {}
         self._init_db()
         # In-app is always enabled
         self._channels[NotificationChannel.IN_APP] = ChannelConfig(
@@ -37,7 +39,9 @@ class NotificationDispatcher:
     # ── DB Initialisation ──────────────────────────────────
 
     def register_channel(
-        self, channel_type: Union[NotificationChannel, str], config: Union[ChannelConfig, Dict[str, Any]],
+        self,
+        channel_type: NotificationChannel | str,
+        config: ChannelConfig | dict[str, Any],
     ) -> None:
         """Register or update a notification channel configuration."""
         # Coerce string to enum
@@ -56,19 +60,20 @@ class NotificationDispatcher:
 
         logger.info(
             "NotificationDispatcher: Registered channel %s (enabled=%s)",
-            channel_type.value, config.enabled,
+            channel_type.value,
+            config.enabled,
         )
 
     def dispatch(
         self,
-        event: Union[NotificationEvent, str],
+        event: NotificationEvent | str,
         request_id: str,
         recipient_id: str,
         title: str,
         body: str,
-        priority: Union[NotificationPriority, str] = NotificationPriority.NORMAL,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> List[NotificationMessage]:
+        priority: NotificationPriority | str = NotificationPriority.NORMAL,
+        metadata: dict[str, Any] | None = None,
+    ) -> list[NotificationMessage]:
         """Send notifications via all enabled channels.
 
         Args:
@@ -95,7 +100,7 @@ class NotificationDispatcher:
             except ValueError:
                 priority = NotificationPriority.NORMAL
 
-        messages: List[NotificationMessage] = []
+        messages: list[NotificationMessage] = []
         meta = metadata or {}
 
         with self._lock:
@@ -116,9 +121,10 @@ class NotificationDispatcher:
                 messages.append(result)
 
         logger.info(
-            "NotificationDispatcher: Dispatched %s event for request %s "
-            "to %d channels",
-            event.value, request_id, len(messages),
+            "NotificationDispatcher: Dispatched %s event for request %s " "to %d channels",
+            event.value,
+            request_id,
+            len(messages),
         )
         return messages
 
@@ -156,7 +162,8 @@ class NotificationDispatcher:
         except Exception as exc:
             logger.warning(
                 "NotificationDispatcher: Failed to send via %s — %s",
-                channel.value, exc,
+                channel.value,
+                exc,
             )
             message.status = "failed"
 
@@ -167,10 +174,12 @@ class NotificationDispatcher:
         return message
 
     def get_notification_history(
-        self, request_id: str,
-    ) -> List[NotificationMessage]:
+        self,
+        request_id: str,
+    ) -> list[NotificationMessage]:
         """Get all notifications sent for a request."""
-        def _do_query() -> List[NotificationMessage]:
+
+        def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
             conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -184,9 +193,10 @@ class NotificationDispatcher:
 
         return self._with_retry(_do_query, fallback=[])
 
-    def get_pending_notifications(self) -> List[NotificationMessage]:
+    def get_pending_notifications(self) -> list[NotificationMessage]:
         """Get all notifications with 'pending' or 'failed' status."""
-        def _do_query() -> List[NotificationMessage]:
+
+        def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
             conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -214,4 +224,3 @@ class NotificationDispatcher:
         # Retry via the same channel
         result = self.dispatch_to_channel(message.channel, message)
         return result
-

@@ -35,14 +35,14 @@ import math
 import random
 import threading
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["HNSWIndex"]
 
 # Type alias for vector data
-Vector = List[float]
+Vector = list[float]
 
 
 def _cosine_similarity(a: Vector, b: Vector) -> float:
@@ -75,10 +75,11 @@ class HNSWNode:
         level: The maximum layer this node appears in.
         neighbors: Dict mapping layer -> set of neighbor node IDs.
     """
+
     id: str
     vector: Vector
     level: int
-    neighbors: Dict[int, Set[str]] = field(default_factory=dict)
+    neighbors: dict[int, set[str]] = field(default_factory=dict)
 
 
 class HNSWIndex:
@@ -100,7 +101,7 @@ class HNSWIndex:
         M: int = 16,
         ef_construction: int = 64,
         max_level_mult: float = 1.0 / math.log(2),  # Level generation factor
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         """Initialize HNSW index.
 
@@ -124,8 +125,8 @@ class HNSWIndex:
         self._max_level_mult = max_level_mult
         self._rng = random.Random(seed)
 
-        self._nodes: Dict[str, HNSWNode] = {}
-        self._entry_point: Optional[str] = None
+        self._nodes: dict[str, HNSWNode] = {}
+        self._entry_point: str | None = None
         self._max_level: int = -1
 
         self._lock = threading.RLock()
@@ -163,10 +164,10 @@ class HNSWIndex:
     def _search_layer(
         self,
         query: Vector,
-        entry_points: List[str],
+        entry_points: list[str],
         ef: int,
         layer: int,
-    ) -> List[Tuple[float, str]]:
+    ) -> list[tuple[float, str]]:
         """Search a single layer of the HNSW graph.
 
         Performs a greedy beam search starting from the entry points,
@@ -181,11 +182,11 @@ class HNSWIndex:
         Returns:
             List of (similarity, node_id) tuples, sorted by similarity descending.
         """
-        visited: Set[str] = set(entry_points)
+        visited: set[str] = set(entry_points)
 
         # Initialize candidates (min-heap by negative similarity for max extraction)
-        candidates: List[Tuple[float, str]] = []  # min-heap: (-sim, id)
-        results: List[Tuple[float, str]] = []  # min-heap: (sim, id)
+        candidates: list[tuple[float, str]] = []  # min-heap: (-sim, id)
+        results: list[tuple[float, str]] = []  # min-heap: (sim, id)
 
         for ep_id in entry_points:
             if ep_id not in self._nodes:
@@ -239,9 +240,9 @@ class HNSWIndex:
     def _select_neighbors(
         self,
         query: Vector,
-        candidates: List[Tuple[float, str]],
+        candidates: list[tuple[float, str]],
         M: int,
-    ) -> List[str]:
+    ) -> list[str]:
         """Select M best neighbors from candidates using simple selection.
 
         For production, a heuristic selection (diversity-aware) would be
@@ -301,9 +302,7 @@ class HNSWIndex:
 
         # Phase 2: Insert at each layer from level down to 0
         for layer in range(min(level, self._max_level), -1, -1):
-            results = self._search_layer(
-                vector, [current_id], ef=self._ef_construction, layer=layer
-            )
+            results = self._search_layer(vector, [current_id], ef=self._ef_construction, layer=layer)
 
             M_max = self._M_max0 if layer == 0 else self._M_max
             neighbors = self._select_neighbors(vector, results, M_max)
@@ -345,9 +344,9 @@ class HNSWIndex:
         self,
         query: Vector,
         top_k: int = 5,
-        ef: Optional[int] = None,
+        ef: int | None = None,
         threshold: float = 0.0,
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Search for the top_k most similar vectors.
 
         Args:
@@ -377,9 +376,9 @@ class HNSWIndex:
         self,
         query: Vector,
         top_k: int = 5,
-        ef: Optional[int] = None,
+        ef: int | None = None,
         threshold: float = 0.0,
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Internal search logic (must be called with lock held)."""
         if not self._nodes or self._entry_point is None:
             return []
@@ -446,7 +445,7 @@ class HNSWIndex:
             self._entry_point = None
             self._max_level = -1
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get index statistics.
 
         Returns:
@@ -454,9 +453,7 @@ class HNSWIndex:
         """
         with self._lock:
             avg_search_latency_us = (
-                self._stats["total_search_latency_us"] / self._stats["searches"]
-                if self._stats["searches"] > 0
-                else 0
+                self._stats["total_search_latency_us"] / self._stats["searches"] if self._stats["searches"] > 0 else 0
             )
 
             # Estimate memory usage
@@ -480,7 +477,7 @@ class HNSWIndex:
                 "estimated_memory_mb": round((vector_bytes + neighbor_bytes) / 1024 / 1024, 2),
             }
 
-    def bulk_insert(self, items: List[Tuple[str, Vector]]) -> int:
+    def bulk_insert(self, items: list[tuple[str, Vector]]) -> int:
         """Insert multiple vectors efficiently.
 
         More efficient than individual insert() calls because

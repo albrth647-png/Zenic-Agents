@@ -26,14 +26,15 @@ Sin dependencias externas. Compatible con Android.
 """
 
 import ast
-import re
 import hashlib
 import json
 import logging
-from typing import Any, Dict, Optional
+import re
+from typing import Any
+
 from src.core.shared.db_initializer import get_connection
-from src.core.shared.retry import with_retry
 from src.core.shared.db_utils import purge_tenant_rows
+from src.core.shared.retry import with_retry
 from src.core.shared.tenant_utils import resolve_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -100,13 +101,15 @@ class TheoremCache:
                 for node in ast.walk(tree):
                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         num_args = len(node.args.args)
-                        complexity = sum(1 for n in ast.walk(node)
-                                       if isinstance(n, (ast.If, ast.While, ast.For, ast.ExceptHandler)))
+                        complexity = sum(
+                            1 for n in ast.walk(node) if isinstance(n, (ast.If, ast.While, ast.For, ast.ExceptHandler))
+                        )
                         num_returns = sum(1 for n in ast.walk(node) if isinstance(n, ast.Return))
                         skeleton_parts.append(f"FN({num_args},{complexity},{num_returns})")
                     elif isinstance(node, ast.ClassDef):
-                        num_methods = sum(1 for n in node.body
-                                        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)))
+                        num_methods = sum(
+                            1 for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        )
                         skeleton_parts.append(f"CLS({num_methods})")
                     elif isinstance(node, ast.Import):
                         skeleton_parts.append("IMP")
@@ -118,10 +121,14 @@ class TheoremCache:
                 pass
 
         # Fallback para otros lenguajes: normalizar por regex
-        structure = re.sub(r'\b(?!def|class|return|if|for|while|try|with|import|from|else|elif|pass|raise|except|async|await|yield|break|continue|lambda|not|and|or|is|in|True|False|None)\w+\b', 'X', code)
+        structure = re.sub(
+            r"\b(?!def|class|return|if|for|while|try|with|import|from|else|elif|pass|raise|except|async|await|yield|break|continue|lambda|not|and|or|is|in|True|False|None)\w+\b",
+            "X",
+            code,
+        )
         structure = re.sub(r'".*?"', '"S"', structure)
         structure = re.sub(r"'.*?'", "'S'", structure)
-        structure = re.sub(r'#.*', '', structure)
+        structure = re.sub(r"#.*", "", structure)
         return hashlib.sha256(structure.encode()).hexdigest()
 
     def _hash(self, intent, code=None):
@@ -140,7 +147,7 @@ class TheoremCache:
             composite = f"{composite}|{code_hash}"
         return hashlib.sha256(composite.encode()).hexdigest()
 
-    def lookup(self, intent, code=None, language="python") -> 'Optional[Dict[str, Any]]':
+    def lookup(self, intent, code=None, language="python") -> "dict[str, Any] | None":
         """
         Busca en la cache usando hash compuesto primero,
         luego skeleton hash como fallback estructural.
@@ -155,11 +162,13 @@ class TheoremCache:
             intent_hash = self._hash(intent, code)
             r = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT solution_payload, hit_count FROM theorems WHERE structural_hash=? AND tenant_id=?",
-                (intent_hash, tid)).fetchone()
+                (intent_hash, tid),
+            ).fetchone()
             if r:
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "UPDATE theorems SET hit_count=hit_count+1, last_used=CURRENT_TIMESTAMP WHERE structural_hash=? AND tenant_id=?",
-                    (intent_hash, tid))
+                    (intent_hash, tid),
+                )
                 conn.commit()
                 return {"source": "composite_hash", "data": json.loads(r[0]), "hits": r[1]}
 
@@ -168,11 +177,13 @@ class TheoremCache:
                 sk_hash = self._skeleton_hash(code, language)
                 r = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT solution_payload, hit_count FROM theorems WHERE skeleton_hash=? AND tenant_id=?",
-                    (sk_hash, tid)).fetchone()
+                    (sk_hash, tid),
+                ).fetchone()
                 if r:
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "UPDATE theorems SET hit_count=hit_count+1, last_used=CURRENT_TIMESTAMP WHERE skeleton_hash=? AND tenant_id=?",
-                        (sk_hash, tid))
+                        (sk_hash, tid),
+                    )
                     conn.commit()
                     return {"source": "skeleton_hash", "data": json.loads(r[0]), "hits": r[1]}
         except Exception as e:
@@ -199,8 +210,8 @@ class TheoremCache:
                     proof_result=excluded.proof_result,
                     solution_payload=excluded.solution_payload,
                     skeleton_hash=excluded.skeleton_hash""",
-                (self._hash(intent, code), intent.op, intent.goal, proof,
-                 json.dumps(sol), skeleton_hash, tid))
+                (self._hash(intent, code), intent.op, intent.goal, proof, json.dumps(sol), skeleton_hash, tid),
+            )
             conn.commit()
             # Eviction: remove LRU entries if limit exceeded (scoped by tenant)
             self._evict_if_needed(conn)
@@ -251,7 +262,7 @@ class TheoremCache:
                     ORDER BY last_used ASC, hit_count ASC
                     LIMIT ?
                 )""",
-                (tid, to_evict)
+                (tid, to_evict),
             )
             conn.commit()
 
@@ -261,12 +272,15 @@ class TheoremCache:
             ).fetchone()[0]
             logger.info(
                 "Cache eviction [tenant=%s]: removed %d entries, %d remaining (max: %d)",
-                tid, to_evict, remaining, self.max_entries
+                tid,
+                to_evict,
+                remaining,
+                self.max_entries,
             )
         except Exception as e:
             logger.debug("Cache eviction error: %s", e)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return cache statistics scoped by the current tenant.
 
         Returns:
@@ -286,8 +300,7 @@ class TheoremCache:
                 "SELECT COALESCE(AVG(hit_count), 0) FROM theorems WHERE tenant_id=?", (tid,)
             ).fetchone()[0]
             max_hits_row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT hit_count FROM theorems WHERE tenant_id=? ORDER BY hit_count DESC LIMIT 1",
-                (tid,)
+                "SELECT hit_count FROM theorems WHERE tenant_id=? ORDER BY hit_count DESC LIMIT 1", (tid,)
             ).fetchone()
             max_hits = max_hits_row[0] if max_hits_row else 0
             return {

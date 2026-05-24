@@ -12,8 +12,8 @@ Validates:
 """
 
 from __future__ import annotations
-from typing import Any
 
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 # CONFIG SCHEMAS — Known configuration schemas and their rules

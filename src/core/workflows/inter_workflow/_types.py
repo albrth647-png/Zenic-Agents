@@ -48,18 +48,55 @@ class HandoffResult:
 
 
 _ALLOWED_NAMES: set[str] = {
-    "abs", "len", "max", "min", "round", "int", "float", "str", "bool",
-    "list", "dict", "set", "tuple", "sorted", "sum", "any", "all",
-    "True", "False", "None",
+    "abs",
+    "len",
+    "max",
+    "min",
+    "round",
+    "int",
+    "float",
+    "str",
+    "bool",
+    "list",
+    "dict",
+    "set",
+    "tuple",
+    "sorted",
+    "sum",
+    "any",
+    "all",
+    "True",
+    "False",
+    "None",
 }
 
-_COMPARISON_OPS = re.compile(
-    r"(==|!=|>=|<=|>|<)"
-)
+_COMPARISON_OPS = re.compile(r"(==|!=|>=|<=|>|<)")
 
-_KEYWORDS = frozenset({
-    "and", "or", "not", "in", "is",
-    "True", "False", "None",
-    "contains", "startswith", "endswith", "exists", "not_empty",
-})
-__all__ = ["FieldMapping", "HandoffResult", "HandoffRule", "_ALLOWED_NAMES", "_COMPARISON_OPS", "_DB_DIR", "_DB_PATH", "_KEYWORDS", "logger"]
+_KEYWORDS = frozenset(
+    {
+        "and",
+        "or",
+        "not",
+        "in",
+        "is",
+        "True",
+        "False",
+        "None",
+        "contains",
+        "startswith",
+        "endswith",
+        "exists",
+        "not_empty",
+    }
+)
+__all__ = [
+    "_ALLOWED_NAMES",
+    "_COMPARISON_OPS",
+    "_DB_DIR",
+    "_DB_PATH",
+    "_KEYWORDS",
+    "FieldMapping",
+    "HandoffResult",
+    "HandoffRule",
+    "logger",
+]

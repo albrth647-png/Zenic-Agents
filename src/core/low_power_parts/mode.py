@@ -2,11 +2,11 @@
 
 import time
 from collections import deque
-from typing import Optional, Dict, Any
+from typing import Any
 
-from ._imports import logger, PowerMode, HardwareState
-from .evaluate import EvaluateMixin
+from ._imports import HardwareState, PowerMode, logger
 from .decision import DecisionMixin
+from .evaluate import EvaluateMixin
 
 
 class LowPowerSequentialMode(
@@ -22,14 +22,14 @@ class LowPowerSequentialMode(
     """
 
     # Umbrales para cambiar de modo
-    CPU_CONSERVATIVE_THRESHOLD = 0.65     # 65% CPU -> conservativo
-    CPU_EMERGENCY_THRESHOLD = 0.85        # 85% CPU -> emergencia
-    RAM_CONSERVATIVE_THRESHOLD = 0.70     # 70% RAM -> conservativo
-    RAM_EMERGENCY_THRESHOLD = 0.90        # 90% RAM -> emergencia
-    TEMP_CONSERVATIVE_THRESHOLD = 55.0    # 55C -> conservativo
-    TEMP_EMERGENCY_THRESHOLD = 65.0       # 65C -> emergencia
-    BATTERY_CONSERVATIVE_THRESHOLD = 30.0 # 30% bateria -> conservativo
-    BATTERY_EMERGENCY_THRESHOLD = 15.0    # 15% bateria -> emergencia
+    CPU_CONSERVATIVE_THRESHOLD = 0.65  # 65% CPU -> conservativo
+    CPU_EMERGENCY_THRESHOLD = 0.85  # 85% CPU -> emergencia
+    RAM_CONSERVATIVE_THRESHOLD = 0.70  # 70% RAM -> conservativo
+    RAM_EMERGENCY_THRESHOLD = 0.90  # 90% RAM -> emergencia
+    TEMP_CONSERVATIVE_THRESHOLD = 55.0  # 55C -> conservativo
+    TEMP_EMERGENCY_THRESHOLD = 65.0  # 65C -> emergencia
+    BATTERY_CONSERVATIVE_THRESHOLD = 30.0  # 30% bateria -> conservativo
+    BATTERY_EMERGENCY_THRESHOLD = 15.0  # 15% bateria -> emergencia
 
     # Duracion minima en un modo antes de poder cambiar (evita flapping)
     MODE_STICKINESS_SECONDS = 30.0
@@ -42,7 +42,7 @@ class LowPowerSequentialMode(
         self._current_mode = PowerMode.NORMAL
         self._mode_since = time.time()
         self._history: deque = deque(maxlen=100)
-        self._forced_mode: Optional[PowerMode] = None
+        self._forced_mode: PowerMode | None = None
         self._eval_cache_time = 0.0
         self._eval_cache_mode = PowerMode.NORMAL
 
@@ -50,7 +50,7 @@ class LowPowerSequentialMode(
         """Conecta con el ResourceGovernor existente."""
         self._governor = governor
 
-    def force_mode(self, mode: Optional[PowerMode]):
+    def force_mode(self, mode: PowerMode | None):
         """Fuerza un modo especifico (para testing o configuracion manual)."""
         self._forced_mode = mode
         if mode:
@@ -80,7 +80,7 @@ class LowPowerSequentialMode(
         return mode
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadisticas del modo de energia."""
         hw = self._read_hardware_state()
         mode = self._evaluate_cached()

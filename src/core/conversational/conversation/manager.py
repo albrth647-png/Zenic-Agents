@@ -18,12 +18,12 @@ import logging
 import threading
 from typing import Any
 
-from ..types.base import Result, Ok
+from ..types.base import Ok, Result
+from ..types.intent import ConversationMode, IntentCategory
 from ..types.session import Session
-from ..types.intent import IntentCategory, ConversationMode
-from .state import ConversationState, ConversationPhase, ConversationTopic
-from .turn_tracker import TurnTracker
+from .state import ConversationPhase, ConversationState, ConversationTopic
 from .summarizer import ContextSummarizer, SummarizerConfig
+from .turn_tracker import TurnTracker
 
 logger = logging.getLogger("zenic_agents.conversational.conversation.manager")
 
@@ -208,13 +208,15 @@ class ConversationManager:
         }
 
         if state:
-            context.update({
-                "conversation_phase": state.phase.value,
-                "conversation_mode": state.mode.value,
-                "turn_count": state.turn_count,
-                "active_topics": [t.name for t in state.active_topics],
-                "has_clarifications": state.has_pending_clarifications,
-            })
+            context.update(
+                {
+                    "conversation_phase": state.phase.value,
+                    "conversation_mode": state.mode.value,
+                    "turn_count": state.turn_count,
+                    "active_topics": [t.name for t in state.active_topics],
+                    "has_clarifications": state.has_pending_clarifications,
+                }
+            )
 
         if tracker:
             context["coherence"] = tracker.compute_coherence()
@@ -230,7 +232,9 @@ class ConversationManager:
 
     @staticmethod
     def _infer_topic(
-        content: str, intent: IntentCategory, state: ConversationState,
+        content: str,
+        intent: IntentCategory,
+        state: ConversationState,
     ) -> str:
         """Infiere el topic del mensaje."""
         text_lower = content.lower()
@@ -282,10 +286,7 @@ class ConversationManager:
 
         # Limpiar topics inactivos (mas de 10 min sin mencion)
         cutoff = 600.0  # 10 minutos
-        stale = [
-            t for t in state.active_topics
-            if (state.last_activity - t.last_mentioned) > cutoff
-        ]
+        stale = [t for t in state.active_topics if (state.last_activity - t.last_mentioned) > cutoff]
         for t in stale:
             state.complete_topic(t.name)
 
@@ -293,8 +294,10 @@ class ConversationManager:
     def _infer_mode(intent: IntentCategory, content: str) -> ConversationMode:
         """Infiere el modo de conversacion."""
         if intent in (
-            IntentCategory.CODE_CREATE, IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR, IntentCategory.CODE_OPTIMIZE,
+            IntentCategory.CODE_CREATE,
+            IntentCategory.CODE_DEBUG,
+            IntentCategory.CODE_REFACTOR,
+            IntentCategory.CODE_OPTIMIZE,
         ):
             return ConversationMode.CODING
 

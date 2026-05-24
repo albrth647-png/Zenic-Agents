@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 def _store_and_replace(match: re.Match, store: List[str]) -> str:  # noqa: F821  # TODO: Phase3 - verify import
     """Store a regex match and return a placeholder."""
     idx = len(store)
@@ -24,10 +25,17 @@ def _parse_color(color: str) -> int:
 
     # Named colors
     named = {
-        "red": 0xFF0000, "green": 0x00FF00, "blue": 0x0000FF,
-        "yellow": 0xFFFF00, "orange": 0xFFA500, "purple": 0x800080,
-        "cyan": 0x00FFFF, "white": 0xFFFFFF, "black": 0x000000,
-        "gray": 0x808080, "grey": 0x808080,
+        "red": 0xFF0000,
+        "green": 0x00FF00,
+        "blue": 0x0000FF,
+        "yellow": 0xFFFF00,
+        "orange": 0xFFA500,
+        "purple": 0x800080,
+        "cyan": 0x00FFFF,
+        "white": 0xFFFFFF,
+        "black": 0x000000,
+        "gray": 0x808080,
+        "grey": 0x808080,
     }
     if color.lower() in named:
         return named[color.lower()]

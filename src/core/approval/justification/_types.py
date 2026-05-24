@@ -9,7 +9,7 @@ import json
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -24,7 +24,7 @@ class JustificationRequirement:
     require_compliance_check: bool = False
     require_business_justification: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "min_length": self.min_length,
@@ -62,18 +62,22 @@ class ApprovalJustification:
 
     def _compute_hash(self) -> str:
         """Compute SHA-256 hash of the justification content."""
-        payload = json.dumps({
-            "request_id": self.request_id,
-            "reason": self.reason,
-            "risk_acknowledgment": self.risk_acknowledgment,
-            "compliance_check": self.compliance_check,
-            "business_justification": self.business_justification,
-            "created_by": self.created_by,
-            "created_at": self.created_at,
-        }, sort_keys=True, separators=(",", ":"))
+        payload = json.dumps(
+            {
+                "request_id": self.request_id,
+                "reason": self.reason,
+                "risk_acknowledgment": self.risk_acknowledgment,
+                "compliance_check": self.compliance_check,
+                "business_justification": self.business_justification,
+                "created_by": self.created_by,
+                "created_at": self.created_at,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(payload.encode()).hexdigest()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "justification_id": self.justification_id,
@@ -86,4 +90,6 @@ class ApprovalJustification:
             "created_at": self.created_at,
             "content_hash": self.content_hash,
         }
-__all__ = ["ApprovalJustification", "JustificationRequirement", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_DELAY", "ApprovalJustification", "JustificationRequirement"]

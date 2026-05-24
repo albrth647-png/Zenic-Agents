@@ -7,9 +7,8 @@ from __future__ import annotations
 import logging
 import sqlite3
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.shared.retry import with_retry
 from src.core.executors.coordinated_rollback._types import (
     ActionStatus,
     CoordinatedAction,
@@ -17,6 +16,7 @@ from src.core.executors.coordinated_rollback._types import (
     ResourceRecord,
     ResourceType,
 )
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +47,10 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_ca_tenant "
-                    "ON coordinated_actions(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_ca_tenant " "ON coordinated_actions(tenant_id)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_ca_status "
-                    "ON coordinated_actions(status)"
+                    "CREATE INDEX IF NOT EXISTS idx_ca_status " "ON coordinated_actions(status)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     """
@@ -69,8 +67,7 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_rr_action "
-                    "ON resource_records(action_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_rr_action " "ON resource_records(action_id)"
                 )
                 conn.commit()
             finally:
@@ -82,9 +79,7 @@ class CoreMixin:
             base_delay=0.5,
             label="coordinated_rollback._init_db",
         )
-        logger.debug(
-            "CoordinatedRollbackManager: schema initialised at %s", self._db_path
-        )
+        logger.debug("CoordinatedRollbackManager: schema initialised at %s", self._db_path)
 
     # ── Core public API ──────────────────────────────────────
 
@@ -131,7 +126,8 @@ class CoreMixin:
 
         logger.info(
             "CoordinatedRollbackManager: began action %s [tenant=%s]",
-            action_id[:12], tenant_id,
+            action_id[:12],
+            tenant_id,
         )
         return action
 
@@ -145,13 +141,14 @@ class CoreMixin:
         self._add_record(action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded DB action journal=%s for action=%s",
-            journal_id[:12], action_id[:12],
+            journal_id[:12],
+            action_id[:12],
         )
 
     def record_email_action(
         self,
         action_id: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ) -> None:
         """Record that an email was sent."""
         record = ResourceRecord(
@@ -185,14 +182,16 @@ class CoreMixin:
         self._add_record(action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded file action op=%s source=%s for action=%s",
-            operation, source, action_id[:12],
+            operation,
+            source,
+            action_id[:12],
         )
 
     def record_webhook_action(
         self,
         action_id: str,
         url: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> None:
         """Record a webhook call."""
         record = ResourceRecord(
@@ -207,7 +206,8 @@ class CoreMixin:
         self._add_record(action_id, record)
         logger.debug(
             "CoordinatedRollbackManager: recorded webhook action url=%s for action=%s",
-            url[:50], action_id[:12],
+            url[:50],
+            action_id[:12],
         )
 
     def commit_action(self, action_id: str) -> None:
@@ -255,7 +255,8 @@ class CoreMixin:
 
             logger.info(
                 "CoordinatedRollbackManager: rolling back action %s reason=%s",
-                action_id[:12], reason,
+                action_id[:12],
+                reason,
             )
 
             result = CoordinatedRollbackResult(action_id=action_id)
@@ -273,12 +274,12 @@ class CoreMixin:
                     result.compensations_succeeded += 1
                 except Exception as exc:
                     error_msg = (
-                        f"Compensation failed for {record.resource_type.value}"
-                        f" ({record.resource_id}): {exc}"
+                        f"Compensation failed for {record.resource_type.value}" f" ({record.resource_id}): {exc}"
                     )
                     result.errors.append(error_msg)
                     logger.error(
-                        "CoordinatedRollbackManager: %s", error_msg,
+                        "CoordinatedRollbackManager: %s",
+                        error_msg,
                     )
                     # Continue with the rest (best-effort)
 
@@ -287,8 +288,7 @@ class CoreMixin:
 
             result.success = len(result.errors) == 0
             logger.info(
-                "CoordinatedRollbackManager: rollback complete action=%s "
-                "attempted=%d succeeded=%d errors=%d",
+                "CoordinatedRollbackManager: rollback complete action=%s " "attempted=%d succeeded=%d errors=%d",
                 action_id[:12],
                 result.compensations_attempted,
                 result.compensations_succeeded,
@@ -296,10 +296,10 @@ class CoreMixin:
             )
             return result
 
-    def get_action(self, action_id: str) -> Optional[CoordinatedAction]:
+    def get_action(self, action_id: str) -> CoordinatedAction | None:
         """Retrieve a coordinated action by its ID."""
 
-        def _do_get() -> Optional[CoordinatedAction]:
+        def _do_get() -> CoordinatedAction | None:
             return self._load_action(action_id)
 
         return with_retry(
@@ -309,10 +309,10 @@ class CoreMixin:
             label=f"coordinated_rollback.get_action({action_id[:12]})",
         )
 
-    def list_active_actions(self, tenant_id: str) -> List[CoordinatedAction]:
+    def list_active_actions(self, tenant_id: str) -> list[CoordinatedAction]:
         """List all in-progress actions for a tenant."""
 
-        def _do_list() -> List[CoordinatedAction]:
+        def _do_list() -> list[CoordinatedAction]:
             conn = sqlite3.connect(self._db_path)
             try:
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -324,7 +324,7 @@ class CoreMixin:
                     (tenant_id, ActionStatus.IN_PROGRESS.value),
                 )
                 action_ids = [row[0] for row in cursor.fetchall()]
-                actions: List[CoordinatedAction] = []
+                actions: list[CoordinatedAction] = []
                 for aid in action_ids:
                     action = self._load_action(aid)
                     if action is not None:

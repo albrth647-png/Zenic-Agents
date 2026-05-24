@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ._types import DispatchRequest
 from ._mixin_core import ActionDispatcher
+from ._types import DispatchRequest
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,10 @@ logger = logging.getLogger(__name__)
 #  DAG NODE: DISPATCH_ACTION
 # ──────────────────────────────────────────────────────────────
 
-async def exec_dispatch_action(ctx: Dict[str, Any]) -> Dict[str, Any]:
+
+async def exec_dispatch_action(ctx: dict[str, Any]) -> dict[str, Any]:
     """DAG node executor for DISPATCH_ACTION."""
-    dispatcher: Optional[ActionDispatcher] = ctx.get("_action_dispatcher")
+    dispatcher: ActionDispatcher | None = ctx.get("_action_dispatcher")
     if not dispatcher:
         dispatcher = ActionDispatcher()
 
@@ -44,14 +45,16 @@ async def exec_dispatch_action(ctx: Dict[str, Any]) -> Dict[str, Any]:
             dry_run=is_dry_run,
         )
         result = await dispatcher.dispatch(request)
-        results.append({
-            "action_id": result.action_id,
-            "success": result.success,
-            "safety_verdict": result.safety_verdict.value,
-            "duration_ms": result.total_duration_ms,
-            "dry_run": is_dry_run,
-            "error": result.executor_result.error if result.executor_result else "",
-        })
+        results.append(
+            {
+                "action_id": result.action_id,
+                "success": result.success,
+                "safety_verdict": result.safety_verdict.value,
+                "duration_ms": result.total_duration_ms,
+                "dry_run": is_dry_run,
+                "error": result.executor_result.error if result.executor_result else "",
+            }
+        )
 
     all_success = all(r["success"] for r in results)
     return {
@@ -67,7 +70,7 @@ async def exec_dispatch_action(ctx: Dict[str, Any]) -> Dict[str, Any]:
 #  GLOBAL INSTANCE
 # ──────────────────────────────────────────────────────────────
 
-_default_dispatcher: Optional[ActionDispatcher] = None
+_default_dispatcher: ActionDispatcher | None = None
 _dispatcher_lock = threading.Lock()
 
 

@@ -11,15 +11,16 @@ Design Patterns:
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
+    from rich.box import ROUNDED, SIMPLE
+    from rich.columns import Columns  # noqa: F401
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
     from rich.text import Text  # noqa: F401
-    from rich.box import ROUNDED, SIMPLE
-    from rich.columns import Columns  # noqa: F401
+
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
@@ -27,7 +28,7 @@ except ImportError:
 
 # ── Status Color Mapping ─────────────────────────────────────
 
-_STATUS_COLORS: Dict[str, str] = {
+_STATUS_COLORS: dict[str, str] = {
     "active": "bold green",
     "trial": "bold cyan",
     "grace_period": "bold yellow",
@@ -38,7 +39,7 @@ _STATUS_COLORS: Dict[str, str] = {
     "pending_activation": "yellow",
 }
 
-_TIER_COLORS: Dict[str, str] = {
+_TIER_COLORS: dict[str, str] = {
     "starter": "white",
     "business": "bold cyan",
     "enterprise": "bold magenta",
@@ -55,11 +56,11 @@ class StatusRenderer:
       - Compact: Single-line status indicator
     """
 
-    def __init__(self, console: Optional["Console"] = None, compact: bool = False) -> None:
+    def __init__(self, console: Console | None = None, compact: bool = False) -> None:
         self._console = console or (Console() if HAS_RICH else None)
         self._compact = compact
 
-    def render(self, status_data: Dict[str, Any]) -> str:
+    def render(self, status_data: dict[str, Any]) -> str:
         """Render the status display.
 
         Args:
@@ -75,7 +76,7 @@ class StatusRenderer:
             return self._render_rich(status_data)
         return self._render_plain(status_data)
 
-    def _render_compact(self, data: Dict[str, Any]) -> str:
+    def _render_compact(self, data: dict[str, Any]) -> str:
         """Render a compact single-line status indicator."""
         status = data.get("status", "no_license")
         tier = data.get("tier", "none")
@@ -87,9 +88,10 @@ class StatusRenderer:
 
         return f"[{icon}] {status_str} | Tier: {tier_str}"
 
-    def _render_rich(self, data: Dict[str, Any]) -> str:
+    def _render_rich(self, data: dict[str, Any]) -> str:
         """Render with Rich tables and panels."""
         import io
+
         buf = io.StringIO()
         console = Console(file=buf, force_terminal=True, width=64)
 
@@ -133,7 +135,7 @@ class StatusRenderer:
 
         return buf.getvalue()
 
-    def _render_plain(self, data: Dict[str, Any]) -> str:
+    def _render_plain(self, data: dict[str, Any]) -> str:
         """Render as plain text."""
         status = data.get("status", "no_license")
         tier = data.get("tier", "none")
@@ -161,6 +163,7 @@ class StatusRenderer:
 
 # ── Convenience Function ────────────────────────────────────
 
-def render_status_panel(data: Dict[str, Any], compact: bool = False) -> str:
+
+def render_status_panel(data: dict[str, Any], compact: bool = False) -> str:
     """One-shot status panel rendering."""
     return StatusRenderer(compact=compact).render(data)

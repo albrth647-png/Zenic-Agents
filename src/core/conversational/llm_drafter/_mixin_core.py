@@ -1,12 +1,14 @@
 """Core logic for llm_drafter."""
 
 from __future__ import annotations
+
 import logging
 import re
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.conversational.llm_drafter")
+
 
 class LLMDrafter:
     """Converts DAG execution results into natural language responses.
@@ -17,7 +19,7 @@ class LLMDrafter:
 
     def __init__(
         self,
-        llm_engine: Optional[Any] = None,
+        llm_engine: Any | None = None,
         default_personality: str = "zenic",
         default_channel: str = "cli",
         max_retries: int = 1,
@@ -45,9 +47,9 @@ class LLMDrafter:
 
     def draft(
         self,
-        dag_result: Dict,
-        conversation_context: Optional[Dict] = None,
-        personality: Optional[str] = None,
+        dag_result: dict,
+        conversation_context: dict | None = None,
+        personality: str | None = None,
     ) -> str:
         """Convert DAG output to natural language.
 
@@ -86,10 +88,7 @@ class LLMDrafter:
             drafted = self._format_by_channel(drafted, channel)
 
         elapsed_ms = (time.time() - start) * 1000
-        logger.debug(
-            f"Drafted response in {elapsed_ms:.1f}ms "
-            f"(status={status}, personality={personality})"
-        )
+        logger.debug(f"Drafted response in {elapsed_ms:.1f}ms " f"(status={status}, personality={personality})")
 
         return drafted
 
@@ -97,14 +96,14 @@ class LLMDrafter:
 
     def _try_llm_draft(
         self,
-        dag_result: Dict,
-        context: Dict,
+        dag_result: dict,
+        context: dict,
         personality: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Attempt LLM-based drafting with retries."""
         if self._llm is None:
             return None
-        if hasattr(self._llm, 'is_loaded') and not self._llm.is_loaded:
+        if hasattr(self._llm, "is_loaded") and not self._llm.is_loaded:
             return None
 
         prompt = self._build_prompt(dag_result, context, personality)
@@ -114,7 +113,7 @@ class LLMDrafter:
                 raw = self._call_llm(prompt)
                 if raw and len(raw.strip()) > 5:
                     # Strip thinking tokens from Qwen3
-                    cleaned = re.sub(r'<think[^>]*>.*?</think\s*>', '', raw, flags=re.DOTALL)
+                    cleaned = re.sub(r"<think[^>]*>.*?</think\s*>", "", raw, flags=re.DOTALL)
                     return cleaned.strip()
             except Exception as e:
                 logger.warning(f"LLM draft attempt {attempt + 1} failed: {e}")
@@ -123,8 +122,8 @@ class LLMDrafter:
 
     def _build_prompt(
         self,
-        dag_result: Dict,
-        context: Dict,
+        dag_result: dict,
+        context: dict,
         personality: str,
     ) -> str:
         """Build the drafting prompt for the LLM."""
@@ -211,24 +210,26 @@ class LLMDrafter:
         """
         # Preserve code blocks using alphanumeric-only placeholders
         code_blocks: list[str] = []
+
         def _save_code(match: re.Match) -> str:
             code_blocks.append(match.group(0))
             return f"ZENICDRCODE{len(code_blocks) - 1}ENDZENIC"
 
-        text = re.sub(r'```[\s\S]*?```', _save_code, text)
+        text = re.sub(r"```[\s\S]*?```", _save_code, text)
 
         # Preserve inline code
         inline_codes: list[str] = []
+
         def _save_inline(match: re.Match) -> str:
             inline_codes.append(match.group(0))
             return f"ZENICDRINLINE{len(inline_codes) - 1}ENDZENIC"
 
-        text = re.sub(r'`[^`]+`', _save_inline, text)
+        text = re.sub(r"`[^`]+`", _save_inline, text)
 
         # Escape special characters for MarkdownV2
-        special_chars = r'_*[]()~>#+-=|{}.!'
+        special_chars = r"_*[]()~>#+-=|{}.!"
         for char in special_chars:
-            text = text.replace(char, f'\\{char}')
+            text = text.replace(char, f"\\{char}")
 
         # Restore inline code
         for i, code in enumerate(inline_codes):
@@ -258,7 +259,7 @@ class LLMDrafter:
 
     # ─── Template-based Fallback ───────────────────────────────
 
-    def _deterministic_draft(self, dag_result: Dict) -> str:
+    def _deterministic_draft(self, dag_result: dict) -> str:
         """When LLM unavailable, uses template-based response generation."""
         status = dag_result.get("status", "UNKNOWN")
         code = dag_result.get("code", "")
@@ -313,7 +314,7 @@ class LLMDrafter:
 
         return "\n".join(parts) if parts else "Operation processed."
 
-    def _draft_error(self, dag_result: Dict, personality: str) -> str:
+    def _draft_error(self, dag_result: dict, personality: str) -> str:
         """Draft a user-friendly error message."""
         status = dag_result.get("status", "ERROR")
         error = dag_result.get("error", "An unknown error occurred")
@@ -344,12 +345,12 @@ class LLMDrafter:
 
     # ─── LLM Helper ────────────────────────────────────────────
 
-    def _call_llm(self, prompt: str) -> Optional[str]:
+    def _call_llm(self, prompt: str) -> str | None:
         """Call the LLM engine safely."""
         try:
-            if hasattr(self._llm, 'chat'):
+            if hasattr(self._llm, "chat"):
                 return self._llm.chat(prompt, max_tokens=1024)
-            elif hasattr(self._llm, '_call_llm'):
+            elif hasattr(self._llm, "_call_llm"):
                 return self._llm._call_llm(
                     system_prompt="You are drafting a response to a user. Be concise and helpful.",
                     user_prompt=prompt,
@@ -362,7 +363,7 @@ class LLMDrafter:
     # ─── Properties ────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Drafting statistics."""
         return {**self._stats}
 
@@ -371,7 +372,6 @@ class LLMDrafter:
         """Whether the LLM engine is available for drafting."""
         if self._llm is None:
             return False
-        if hasattr(self._llm, 'is_loaded'):
+        if hasattr(self._llm, "is_loaded"):
             return self._llm.is_loaded
         return True
-

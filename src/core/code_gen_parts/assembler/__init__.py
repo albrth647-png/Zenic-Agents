@@ -1,17 +1,17 @@
 """CodeAssembler - Connects templates + YAML + executors to generate code."""
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from ._constants import BLOCK_TEMPLATE_MAP, KEYWORD_BLOCK_MAP
 from ._generators_mixin import AssemblerGeneratorsMixin
-from ._scaffolding_mixin import AssemblerScaffoldingMixin
 from ._helpers_mixin import AssemblerHelpersMixin
+from ._scaffolding_mixin import AssemblerScaffoldingMixin
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.assembler")
 
-__all__ = ["CodeAssembler", "Any"]
+__all__ = ["Any", "CodeAssembler"]
 
 
 class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, AssemblerHelpersMixin):
@@ -24,7 +24,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
     #  PUBLIC API
     # ================================================================
 
-    def resolve_blocks(self, description: str, niche_plan=None) -> List[str]:
+    def resolve_blocks(self, description: str, niche_plan=None) -> list[str]:
         """Resolve which blocks are needed based on description + niche.
 
         Args:
@@ -37,7 +37,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
         blocks = set()
 
         # 1. From niche plan if available
-        if niche_plan and hasattr(niche_plan, 'blocks'):
+        if niche_plan and hasattr(niche_plan, "blocks"):
             for b in niche_plan.blocks:
                 if b in BLOCK_TEMPLATE_MAP:
                     blocks.add(b)
@@ -50,16 +50,16 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
                     blocks.add(b)
 
         # 3. Always add crud_service if entities exist (every app needs CRUD)
-        if niche_plan and hasattr(niche_plan, 'entities') and niche_plan.entities:
+        if niche_plan and hasattr(niche_plan, "entities") and niche_plan.entities:
             if len(niche_plan.entities) > 0:
                 blocks.add("crud_service")
 
         # 4. Resolve dependency order
         return self._resolve_dependencies(list(blocks))
 
-    def assemble_project(self, description: str, niche_plan=None,
-                         project_name: str = "zenic_app",
-                         entities: Optional[List[Dict]] = None) -> Dict[str, str]:
+    def assemble_project(
+        self, description: str, niche_plan=None, project_name: str = "zenic_app", entities: list[dict] | None = None
+    ) -> dict[str, str]:
         """Assemble a complete project with REAL functional code.
 
         Args:
@@ -73,7 +73,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
         """
         blocks = self.resolve_blocks(description, niche_plan)
         entities = entities or []
-        if niche_plan and hasattr(niche_plan, 'entities') and niche_plan.entities:
+        if niche_plan and hasattr(niche_plan, "entities") and niche_plan.entities:
             entities = niche_plan.entities
 
         # Prepare template variables
@@ -103,7 +103,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
 
         return files
 
-    def build_service_method(self, entity: Dict, operation: str = "crud") -> str:
+    def build_service_method(self, entity: dict, operation: str = "crud") -> str:
         """Build a REAL _process() method for a given entity and operation.
 
         This replaces the stub: return {"processed": True, "input": payload}
@@ -133,7 +133,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
     #  BLOCK RENDERING
     # ================================================================
 
-    def _render_block(self, block_name: str, variables: Dict) -> Optional[str]:
+    def _render_block(self, block_name: str, variables: dict) -> str | None:
         """Render a single block template with variables."""
         template_path = BLOCK_TEMPLATE_MAP.get(block_name)
         if not template_path:
@@ -152,7 +152,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
         # Fallback: read template file and do simple substitution
         return self._fallback_render(template_path, variables)
 
-    def _fallback_render(self, template_path: str, variables: Dict) -> Optional[str]:
+    def _fallback_render(self, template_path: str, variables: dict) -> str | None:
         """Fallback rendering without Jinja2."""
         # Find template file
         template_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
@@ -166,7 +166,7 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
             return None
 
         try:
-            with open(full_path, "r", encoding="utf-8") as f:
+            with open(full_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Simple {{ variable }} substitution

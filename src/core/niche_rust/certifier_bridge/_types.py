@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ _native = None
 
 try:
     import _zenic_native as _native  # type: ignore[import-not-found]
+
     NATIVE_AVAILABLE = True
 except ImportError:
     logger.warning(
@@ -34,6 +35,7 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 #  CertificationResult — Python-side result wrapper
 # ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class CertificationResultPy:
@@ -54,20 +56,20 @@ class CertificationResultPy:
     """
 
     success: bool = False
-    blueprint_id: Optional[str] = None
+    blueprint_id: str | None = None
     content_hash: str = ""
     status: str = "error"
-    blueprint_dict: Optional[Dict[str, Any]] = None
-    yaml_string: Optional[str] = None
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    blueprint_dict: dict[str, Any] | None = None
+    yaml_string: str | None = None
+    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def is_certified(self) -> bool:
         """Check if the blueprint was successfully certified."""
         return self.success and self.status in ("signed", "verified")
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """Get a summary dict for display purposes."""
         return {
             "success": self.success,
@@ -78,4 +80,6 @@ class CertificationResultPy:
             "warnings": len(self.warnings),
             "errors": len(self.errors),
         }
-__all__ = ["CertificationResultPy", "NATIVE_AVAILABLE", "_native", "logger"]
+
+
+__all__ = ["NATIVE_AVAILABLE", "CertificationResultPy", "_native", "logger"]

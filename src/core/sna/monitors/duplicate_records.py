@@ -9,6 +9,7 @@ NO espera a que el usuario note inconsistencias.
 from __future__ import annotations
 
 import logging
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 from src.data.local_scanner import LocalDataScanner
 
@@ -54,14 +55,16 @@ class DuplicateRecordsMonitor(BaseMonitor):
 
                 duplicates = self.scanner.scan_duplicates(table, [col])
                 for dup in duplicates:
-                    all_findings.append({
-                        "type": "duplicate_record",
-                        "table": table,
-                        "column": col,
-                        "value": dup.get(col, "?"),
-                        "count": dup.get("duplicate_count", 2),
-                        "message": f"Duplicado en {table}.{col}: '{dup.get(col, '?')}' aparece {dup.get('duplicate_count', 2)} veces",
-                    })
+                    all_findings.append(
+                        {
+                            "type": "duplicate_record",
+                            "table": table,
+                            "column": col,
+                            "value": dup.get(col, "?"),
+                            "count": dup.get("duplicate_count", 2),
+                            "message": f"Duplicado en {table}.{col}: '{dup.get(col, '?')}' aparece {dup.get('duplicate_count', 2)} veces",
+                        }
+                    )
 
         if not all_findings:
             return MonitorResult(

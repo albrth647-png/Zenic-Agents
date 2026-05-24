@@ -1,8 +1,8 @@
 """Fallback translation mixin for LLMTranslator."""
 
 from __future__ import annotations
+
 import logging
-from typing import Dict
 
 logger = logging.getLogger("zenic_agents.conversational.llm_translator")
 
@@ -10,10 +10,10 @@ logger = logging.getLogger("zenic_agents.conversational.llm_translator")
 class FallbackMixin:
     """Mixin providing deterministic and keyword-based fallback translation methods."""
 
-    def _deterministic_fallback(self, user_input: str) -> Dict:
+    def _deterministic_fallback(self, user_input: str) -> dict:
         """When LLM unavailable, uses keyword matching + IntentClassifier."""
         try:
-            from ..agents.understanding import IntentClassifier, EntityExtractor
+            from ..agents.understanding import EntityExtractor, IntentClassifier
 
             classifier = IntentClassifier()
             extractor = EntityExtractor()
@@ -73,7 +73,7 @@ class FallbackMixin:
             # agents not available — pure keyword matching
             return self._pure_keyword_fallback(user_input)
 
-    def _pure_keyword_fallback(self, user_input: str) -> Dict:
+    def _pure_keyword_fallback(self, user_input: str) -> dict:
         """Minimal keyword-only fallback when IntentClassifier is unavailable."""
         lower = user_input.lower()
 
@@ -82,8 +82,18 @@ class FallbackMixin:
         confidence = 0.3
 
         # Simple keyword rules
-        code_words = ("crear", "create", "generar", "build", "funcion", "function",
-                      "clase", "class", "modulo", "module")
+        code_words = (
+            "crear",
+            "create",
+            "generar",
+            "build",
+            "funcion",
+            "function",
+            "clase",
+            "class",
+            "modulo",
+            "module",
+        )
         debug_words = ("debug", "fix", "corregir", "error", "bug", "arreglar")
         question_words = ("que es", "what is", "como", "how", "por que", "why", "?")
         refactor_words = ("refactor", "reestructurar", "limpiar codigo", "clean code")

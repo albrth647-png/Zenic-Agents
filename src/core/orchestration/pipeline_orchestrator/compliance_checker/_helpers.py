@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from ._types import ComplianceStandard, ComplianceSeverity, ComplianceRule
-
 import logging
+
+from ._types import ComplianceRule, ComplianceSeverity, ComplianceStandard
 
 logger = logging.getLogger(__name__)
 
@@ -279,5 +279,15 @@ def _install_nist_rules(self) -> None:
     for rule in rules:
         self.add_rule(rule)
 
+
 # ── Accessors ────────────────────────────────────────────
-__all__ = ["_install_gdpr_rules", "_install_hipaa_rules", "_install_iso27001_rules", "_install_nist_rules", "_install_pci_dss_rules", "_install_soc2_rules", "_install_sox_rules", "logger"]
+__all__ = [
+    "_install_gdpr_rules",
+    "_install_hipaa_rules",
+    "_install_iso27001_rules",
+    "_install_nist_rules",
+    "_install_pci_dss_rules",
+    "_install_soc2_rules",
+    "_install_sox_rules",
+    "logger",
+]

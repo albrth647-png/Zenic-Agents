@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
-import uuid
-
 import logging
-from typing import Any, Dict, List, Optional
+import uuid
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def _dry_run_response(
     self,
-    to: List[str],
+    to: list[str],
     subject: str,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     reason: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a dry-run response (not actually sent)."""
     self._dry_run_count += 1
     dry_run_id = f"dry-run-{uuid.uuid4().hex[:12]}"
 
     logger.info(
         "GraphAPIEmailProvider: Dry-run send (reason=%s) to=%s subject='%s'",
-        reason, to, subject[:50],
+        reason,
+        to,
+        subject[:50],
     )
 
     return {
@@ -36,13 +37,15 @@ def _dry_run_response(
         "subject": subject,
     }
 
+
 # ── Private: Large Attachment Upload ──────────────────────
+
 
 async def _upload_attachment_session(
     self,
     sender: str,
-    attachment: Dict[str, Any],
-) -> Optional[str]:
+    attachment: dict[str, Any],
+) -> str | None:
     """Upload a large attachment using a Graph API upload session.
 
     For attachments larger than 4MB, creates an upload session
@@ -115,7 +118,7 @@ async def _upload_attachment_session(
             offset = 0
 
             while offset < len(content_bytes):
-                chunk = content_bytes[offset:offset + chunk_size]
+                chunk = content_bytes[offset : offset + chunk_size]
                 chunk_len = len(chunk)
                 content_range = f"bytes {offset}-{offset + chunk_len - 1}/{file_size}"
 
@@ -131,7 +134,8 @@ async def _upload_attachment_session(
                     if put_response.status not in (200, 201, 202):
                         logger.warning(
                             "GraphAPIEmailProvider: Chunk upload failed at offset %d: HTTP %d",
-                            offset, put_response.status,
+                            offset,
+                            put_response.status,
                         )
                         return None
 
@@ -146,7 +150,10 @@ async def _upload_attachment_session(
 
     except Exception as exc:
         logger.warning(
-            "GraphAPIEmailProvider: Attachment upload session failed: %s", exc,
+            "GraphAPIEmailProvider: Attachment upload session failed: %s",
+            exc,
         )
         return None
+
+
 __all__ = ["_dry_run_response", "_upload_attachment_session", "logger"]

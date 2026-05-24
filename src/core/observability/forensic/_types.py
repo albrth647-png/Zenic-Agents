@@ -11,7 +11,7 @@ import json
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 @dataclass
@@ -36,7 +36,7 @@ class ForensicEntry:
     operation: str = ""
     hash_sha256: str = ""
     parent_hash: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.entry_id:
@@ -51,8 +51,8 @@ class ForensicReport:
     entity_id: str = ""
     tenant_id: str = ""
     query_time: str = ""
-    time_range: Optional[Tuple[float, float]] = None
-    entries: List[ForensicEntry] = field(default_factory=list)
+    time_range: tuple[float, float] | None = None
+    entries: list[ForensicEntry] = field(default_factory=list)
     total_audit_events: int = 0
     total_ledger_entries: int = 0
     correlated_count: int = 0
@@ -73,7 +73,7 @@ class ChainVerificationResult:
     verification_time: str = ""
     total_entries: int = 0
     valid_entries: int = 0
-    broken_links: List[Dict[str, Any]] = field(default_factory=list)
+    broken_links: list[dict[str, Any]] = field(default_factory=list)
     is_valid: bool = True
     root_hash: str = ""
 
@@ -94,10 +94,10 @@ class EvidenceBundle:
     entity_id: str = ""
     tenant_id: str = ""
     export_time: str = ""
-    audit_events: List[Dict[str, Any]] = field(default_factory=list)
-    ledger_entries: List[Dict[str, Any]] = field(default_factory=list)
-    merkle_proofs: List[Dict[str, Any]] = field(default_factory=list)
-    chain_verification: Optional[Dict[str, Any]] = None
+    audit_events: list[dict[str, Any]] = field(default_factory=list)
+    ledger_entries: list[dict[str, Any]] = field(default_factory=list)
+    merkle_proofs: list[dict[str, Any]] = field(default_factory=list)
+    chain_verification: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not self.bundle_id:
@@ -105,7 +105,7 @@ class EvidenceBundle:
         if not self.export_time:
             self.export_time = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-compatible dictionary."""
         return {
             "bundle_id": self.bundle_id,
@@ -121,4 +121,6 @@ class EvidenceBundle:
     def to_json(self) -> str:
         """Serialize to a JSON string."""
         return json.dumps(self.to_dict(), ensure_ascii=False, default=str, indent=2)
+
+
 __all__ = ["ChainVerificationResult", "EvidenceBundle", "ForensicEntry", "ForensicReport"]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, FrozenSet, List
+from typing import Any
 
 from ._types import _PRIORITY_TO_IMPORTANCE
 
@@ -19,15 +19,17 @@ class EmailTransportMixin:
         return "email"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:  # noqa: F821
+    def capabilities(self) -> frozenset[ChannelCapability]:  # noqa: F821
         """Set of capabilities this provider supports."""
-        return frozenset({
-            ChannelCapability.SEND_TEXT,  # noqa: F821
-            ChannelCapability.SEND_RICH,  # noqa: F821
-            ChannelCapability.SEND_HTML,  # noqa: F821
-            ChannelCapability.SEND_FILE,  # noqa: F821
-            ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
-        })
+        return frozenset(
+            {
+                ChannelCapability.SEND_TEXT,  # noqa: F821
+                ChannelCapability.SEND_RICH,  # noqa: F821
+                ChannelCapability.SEND_HTML,  # noqa: F821
+                ChannelCapability.SEND_FILE,  # noqa: F821
+                ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
+            }
+        )
 
     @property
     def is_available(self) -> bool:
@@ -45,7 +47,7 @@ class EmailTransportMixin:
         executor = self._get_executor()
         config = self._message_to_config(message)
 
-        context: Dict[str, Any] = {"channel": "email"}
+        context: dict[str, Any] = {"channel": "email"}
         result = await executor.execute(config, context)
 
         if result.success:
@@ -74,13 +76,17 @@ class EmailTransportMixin:
             else:
                 status = DeliveryStatus.FAILED  # noqa: F821
             return ChannelResponse(  # noqa: F821  # TODO: add import
-                success=False, channel="email",
-                status=status, error=result.error,
-                metadata=result.data, timestamp=time.time(),
+                success=False,
+                channel="email",
+                status=status,
+                error=result.error,
+                metadata=result.data,
+                timestamp=time.time(),
             )
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,  # noqa: F821
+        self,
+        request: ConfirmationRequest,  # noqa: F821
     ) -> ChannelResponse:  # noqa: F821  # TODO: add import
         """Send a confirmation email with YES/NO/MORE_INFO action links."""
         if not self.is_available:
@@ -93,7 +99,8 @@ class EmailTransportMixin:
             with self._lock:
                 self._failed_count += 1
             return ChannelResponse(  # noqa: F821  # TODO: add import
-                success=False, channel="email",
+                success=False,
+                channel="email",
                 status=DeliveryStatus.FAILED,  # noqa: F821
                 error="No recipient specified for confirmation email",
                 timestamp=time.time(),
@@ -102,7 +109,7 @@ class EmailTransportMixin:
         html_body = self._build_confirmation_html(request)
         text_body = self._build_confirmation_text(request)
 
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             "mode": self._mode,
             "to": recipients,
             "subject": f"Confirmation Required: {request.title}",
@@ -116,8 +123,9 @@ class EmailTransportMixin:
             config["user"] = self._smtp_user
             config["password"] = self._smtp_password
 
-        context: Dict[str, Any] = {
-            "channel": "email", "confirmation": True,
+        context: dict[str, Any] = {
+            "channel": "email",
+            "confirmation": True,
             "action_id": request.action_id,
         }
         result = await executor.execute(config, context)
@@ -131,7 +139,8 @@ class EmailTransportMixin:
                 else:
                     self._sent_count += 1
             return ChannelResponse(  # noqa: F821  # TODO: add import
-                success=True, channel="email",
+                success=True,
+                channel="email",
                 message_id=result.data.get("message_id", ""),
                 status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,  # noqa: F821
                 metadata={"mode": "confirmation", "action_id": request.action_id, "options": list(request.options)},
@@ -141,9 +150,12 @@ class EmailTransportMixin:
             with self._lock:
                 self._failed_count += 1
             return ChannelResponse(  # noqa: F821  # TODO: add import
-                success=False, channel="email",
-                status=DeliveryStatus.FAILED, error=result.error,  # noqa: F821
-                metadata=result.data, timestamp=time.time(),
+                success=False,
+                channel="email",
+                status=DeliveryStatus.FAILED,
+                error=result.error,  # noqa: F821
+                metadata=result.data,
+                timestamp=time.time(),
             )
 
     # ── Internal: Configuration Checks ─────────────────────────────
@@ -155,9 +167,7 @@ class EmailTransportMixin:
     def _is_graph_api_configured(self) -> bool:
         """Check if Microsoft Graph API is configured."""
         return bool(
-            self._graph_client_id
-            and self._graph_client_secret
-            and self._graph_tenant_id,
+            self._graph_client_id and self._graph_client_secret and self._graph_tenant_id,
         )
 
     # ── Internal: Executor Management ──────────────────────────────
@@ -167,29 +177,30 @@ class EmailTransportMixin:
         with self._lock:
             if self._executor is None:
                 from ...executors.email_executor import EmailExecutor
+
                 self._executor = EmailExecutor()
             return self._executor
 
     # ── Internal: Message Mapping ──────────────────────────────────
 
-    def _message_to_config(self, message: ChannelMessage) -> Dict[str, Any]:  # noqa: F821
+    def _message_to_config(self, message: ChannelMessage) -> dict[str, Any]:  # noqa: F821
         """Map a ChannelMessage to an EmailExecutor config dict."""
-        recipients: List[str] = []
+        recipients: list[str] = []
         if message.recipient:
             recipients.append(message.recipient)
         if message.recipients:
             recipients.extend(message.recipients)
         seen: set[str] = set()
-        unique_recipients: List[str] = []
+        unique_recipients: list[str] = []
         for r in recipients:
             if r not in seen:
                 seen.add(r)
                 unique_recipients.append(r)
 
         priority_value = message.priority.value if hasattr(message.priority, "value") else str(message.priority)
-        importance = _PRIORITY_TO_IMPORTANCE.get(priority_value, "normal")  # noqa: F821
+        importance = _PRIORITY_TO_IMPORTANCE.get(priority_value, "normal")
 
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             "mode": self._mode,
             "to": unique_recipients,
             "subject": message.subject or message.title or "(No Subject)",

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from ..._types import ChannelMessage, ChannelResponse, ConfirmationRequest, DeliveryStatus
-from ..._formatter import sanitize_html
-
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
+
+from ..._formatter import sanitize_html
+from ..._types import ChannelMessage, ChannelResponse, ConfirmationRequest, DeliveryStatus
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ def _render_fields_table(fields: Any) -> str:
         f"{rows_html}</table>"
     )
 
+
 # ── Internal: Confirmation Email Rendering ─────────────────────
 
 
@@ -58,14 +59,14 @@ def _build_confirmation_html(request: ConfirmationRequest) -> str:
         HTML string for the email body.
     """
     # Button styles per option
-    button_styles: Dict[str, str] = {
+    button_styles: dict[str, str] = {
         "yes": "background:#28a745;color:#fff;",
         "no": "background:#dc3545;color:#fff;",
         "more_info": "background:#6c757d;color:#fff;",
     }
 
     # Default labels
-    option_labels: Dict[str, str] = {
+    option_labels: dict[str, str] = {
         "yes": "✅ Yes — Confirm",
         "no": "❌ No — Deny",
         "more_info": "ℹ️ More Info",
@@ -91,8 +92,7 @@ def _build_confirmation_html(request: ConfirmationRequest) -> str:
     if request.timeout_seconds > 0:
         minutes = request.timeout_seconds // 60
         timeout_text = (
-            f"<p style='color:#6c757d;font-size:12px;'>"
-            f"This request will expire in {minutes} minute(s).</p>"
+            f"<p style='color:#6c757d;font-size:12px;'>" f"This request will expire in {minutes} minute(s).</p>"
         )
 
     return (
@@ -141,6 +141,7 @@ def _build_confirmation_text(request: ConfirmationRequest) -> str:
         f"Action Type: {request.action_type}"
     )
 
+
 # ── Internal: Dry Run ──────────────────────────────────────────
 
 
@@ -168,7 +169,8 @@ def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:
 
 
 def _dry_run_confirmation(
-    self, request: ConfirmationRequest,
+    self,
+    request: ConfirmationRequest,
 ) -> ChannelResponse:
     """Log confirmation without sending (dry-run mode)."""
     with self._lock:
@@ -188,6 +190,3 @@ def _dry_run_confirmation(
         metadata={"mode": "dry_run", "action_id": request.action_id},
         timestamp=time.time(),
     )
-
-
-

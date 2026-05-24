@@ -1,11 +1,12 @@
 """Re-exports for graph_engine package."""
 
-
 import threading
 from typing import Optional
 
-_instance: Optional[KnowledgeGraphEngine] = None  # noqa: F821  # TODO: verify import
+_instance: KnowledgeGraphEngine | None = None  # noqa: F821  # TODO: verify import
 _instance_lock = threading.Lock()
+
+
 def get_knowledge_graph() -> KnowledgeGraphEngine:  # noqa: F821  # TODO: verify import
     global _instance
     if _instance is None:

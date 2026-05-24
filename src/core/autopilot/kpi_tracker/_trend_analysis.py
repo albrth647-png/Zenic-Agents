@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 from ._helpers import retry_db_operation, row_to_measurement
 from ._types import KPIMeasurement, KPITrend
@@ -40,7 +40,8 @@ def get_trend(
     Returns:
         A KPITrend with direction, rate of change, and projected date.
     """
-    def _fetch_history() -> List[KPIMeasurement]:
+
+    def _fetch_history() -> list[KPIMeasurement]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         try:
@@ -73,7 +74,7 @@ def get_trend(
     except Exception:
         pass
 
-    recent: List[KPIMeasurement] = []
+    recent: list[KPIMeasurement] = []
     for m in measurements:
         try:
             m_dt = datetime.fromisoformat(m.timestamp)
@@ -96,10 +97,7 @@ def get_trend(
     x_mean = sum(x_indices) / n
     y_mean = sum(values) / n
 
-    numerator = sum(
-        (xi - x_mean) * (yi - y_mean)
-        for xi, yi in zip(x_indices, values)
-    )
+    numerator = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x_indices, values, strict=False))
     denominator = sum((xi - x_mean) ** 2 for xi in x_indices)
 
     slope = numerator / denominator if denominator != 0 else 0.0
@@ -154,9 +152,9 @@ def get_trend(
 
 def measure_all_for_objective(
     objective: Any,
-    tracker_measure,       # KPITracker.measure
-    tracker_get_latest,    # KPITracker.get_latest
-) -> List[KPIMeasurement]:
+    tracker_measure,  # KPITracker.measure
+    tracker_get_latest,  # KPITracker.get_latest
+) -> list[KPIMeasurement]:
     """Measure all KPIs for an objective.
 
     For each target in the objective, queries the database for the
@@ -171,7 +169,7 @@ def measure_all_for_objective(
     Returns:
         A list of KPIMeasurements, one per target.
     """
-    results: List[KPIMeasurement] = []
+    results: list[KPIMeasurement] = []
     for target in objective.targets:
         latest = tracker_get_latest(objective.objective_id, target.metric_name)
         if latest is not None:
@@ -193,9 +191,9 @@ def measure_all_for_objective(
 def get_objective_progress(
     db_path: str,
     objective_id: str,
-    tracker_get_latest,    # KPITracker.get_latest
-    tracker_get_trend,     # KPITracker.get_trend
-) -> Dict[str, Any]:
+    tracker_get_latest,  # KPITracker.get_latest
+    tracker_get_trend,  # KPITracker.get_trend
+) -> dict[str, Any]:
     """Get comprehensive progress information for an objective.
 
     Args:
@@ -207,8 +205,9 @@ def get_objective_progress(
     Returns:
         Dictionary with progress percentage, trend, and projected completion.
     """
+
     # Get all distinct metric names for this objective
-    def _get_metrics() -> List[str]:
+    def _get_metrics() -> list[str]:
         conn = sqlite3.connect(db_path)
         try:
             cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -230,9 +229,9 @@ def get_objective_progress(
             "trends": {},
         }
 
-    metric_progress: Dict[str, Any] = {}
-    metric_trends: Dict[str, Any] = {}
-    progress_values: List[float] = []
+    metric_progress: dict[str, Any] = {}
+    metric_trends: dict[str, Any] = {}
+    progress_values: list[float] = []
 
     for metric_name in metrics:
         latest = tracker_get_latest(objective_id, metric_name)

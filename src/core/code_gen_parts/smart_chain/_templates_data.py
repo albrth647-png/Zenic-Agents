@@ -4,8 +4,8 @@ Provides _fallback_class_def and _fallback_method methods for
 template-based fallback code generation.
 """
 
-import re
 import logging
+import re
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
@@ -19,7 +19,7 @@ class SmartChainTemplatesDataMixin:
 
         # Extract class name from description
         class_name = "ModuleService"
-        match = re.search(r'(\w+?)(?:Service|Client|Manager|CRUD)', desc)
+        match = re.search(r"(\w+?)(?:Service|Client|Manager|CRUD)", desc)
         if match:
             class_name = match.group(1) + "Service"
         else:
@@ -69,7 +69,7 @@ class SmartChainTemplatesDataMixin:
             )
 
         # SECURITY: Validate table_name at generation time
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
             raise ValueError(f"Invalid table name for code generation: {table_name!r}")
 
         # Default: CRUD service with real database
@@ -270,9 +270,9 @@ class SmartChainTemplatesDataMixin:
                 "                return []\n"
                 "            days = int(days)  # Ensure integer to prevent injection\n"
                 "            rows = conn.execute(\n"
-                "                f\"SELECT date(created_at) as period, COUNT(*) as {metric} FROM {self._table_name} \"\n"
+                '                f"SELECT date(created_at) as period, COUNT(*) as {metric} FROM {self._table_name} "\n'
                 "                f\"WHERE created_at >= datetime('now', '-' || ? || ' days') \"\n"
-                "                f\"GROUP BY period ORDER BY period\", (days,)\n"
+                '                f"GROUP BY period ORDER BY period", (days,)\n'
                 "            ).fetchall()\n"
                 "            conn.close()\n"
                 "            return [dict(r) for r in rows]\n"

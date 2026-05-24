@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas.types._transport_types import TextChannelInput, TextChannelResult
@@ -33,12 +33,12 @@ from ..schemas.types._transport_types import TextChannelInput, TextChannelResult
 _logger = logging.getLogger("zenic_agents.agents.transport.text_channel")
 
 # Module-level references (resolved on first use)
-_registry_cls = None          # AdapterRegistry
-_router_cls = None            # ChannelRouter
-_channel_message_cls = None   # ChannelMessage
+_registry_cls = None  # AdapterRegistry
+_router_cls = None  # ChannelRouter
+_channel_message_cls = None  # ChannelMessage
 _channel_priority_cls = None  # ChannelPriority
-_delivery_status_cls = None   # DeliveryStatus
-_formatter_text = None        # sanitize_plain_text, truncate, split_message, LIMITS
+_delivery_status_cls = None  # DeliveryStatus
+_formatter_text = None  # sanitize_plain_text, truncate, split_message, LIMITS
 
 
 def _resolve_deps() -> None:
@@ -54,18 +54,28 @@ def _resolve_deps() -> None:
     if _registry_cls is not None:
         return  # Already resolved
 
+    from src.core.channels._formatter import (
+        LIMITS as _L,
+    )
+    from src.core.channels._formatter import (
+        sanitize_plain_text as _spt,
+    )
+    from src.core.channels._formatter import (
+        split_message as _sm,
+    )
+    from src.core.channels._formatter import (
+        truncate as _tr,
+    )
     from src.core.channels._registry import AdapterRegistry as _AR
     from src.core.channels._registry import ChannelRouter as _CR
     from src.core.channels._types import (
         ChannelMessage as _CM,
-        ChannelPriority as _CP,
-        DeliveryStatus as _DS,
     )
-    from src.core.channels._formatter import (
-        sanitize_plain_text as _spt,
-        truncate as _tr,
-        split_message as _sm,
-        LIMITS as _L,
+    from src.core.channels._types import (
+        ChannelPriority as _CP,
+    )
+    from src.core.channels._types import (
+        DeliveryStatus as _DS,
     )
 
     _registry_cls = _AR
@@ -73,12 +83,16 @@ def _resolve_deps() -> None:
     _channel_message_cls = _CM
     _channel_priority_cls = _CP
     _delivery_status_cls = _DS
-    _formatter_text = type("_Fmt", (), {
-        "sanitize_plain_text": staticmethod(_spt),
-        "truncate": staticmethod(_tr),
-        "split_message": staticmethod(_sm),
-        "LIMITS": _L,
-    })()
+    _formatter_text = type(
+        "_Fmt",
+        (),
+        {
+            "sanitize_plain_text": staticmethod(_spt),
+            "truncate": staticmethod(_tr),
+            "split_message": staticmethod(_sm),
+            "LIMITS": _L,
+        },
+    )()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -86,7 +100,7 @@ def _resolve_deps() -> None:
 # ──────────────────────────────────────────────────────────────
 
 # Maps channel name → PlatformLimits attribute name
-_CHANNEL_LIMIT_ATTR: Dict[str, str] = {
+_CHANNEL_LIMIT_ATTR: dict[str, str] = {
     "telegram": "telegram_text",
     "discord": "discord_text",
     "slack": "slack_text",
@@ -96,10 +110,10 @@ _CHANNEL_LIMIT_ATTR: Dict[str, str] = {
 }
 
 # Fallback limits for channels not in PlatformLimits
-_FALLBACK_LIMITS: Dict[str, int] = {
-    "email": 50_000,     # No practical limit for email body
-    "push": 4_096,       # Typical push notification limit
-    "log": 1_000_000,    # No limit for log provider
+_FALLBACK_LIMITS: dict[str, int] = {
+    "email": 50_000,  # No practical limit for email body
+    "push": 4_096,  # Typical push notification limit
+    "log": 1_000_000,  # No limit for log provider
 }
 
 _DEFAULT_CHAR_LIMIT = 4_096  # Safe default for unknown channels
@@ -141,6 +155,7 @@ def _parse_priority(priority_str: str) -> Any:
 #  ASYNC BRIDGE
 # ──────────────────────────────────────────────────────────────
 
+
 def _run_async(coro: Any, timeout: float = 30.0) -> Any:
     """Bridge an async coroutine to synchronous execution.
 
@@ -168,6 +183,7 @@ def _run_async(coro: Any, timeout: float = 30.0) -> Any:
 #  A53 TEXT CHANNEL AGENT
 # ──────────────────────────────────────────────────────────────
 
+
 class TextChannelAgent(BaseAgent[TextChannelResult]):
     """A53: Deterministic text transport agent.
 
@@ -187,14 +203,14 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A53_TextChannelAgent", **kwargs)
-        self._registry: Optional[Any] = None   # AdapterRegistry — wired at startup
-        self._router: Optional[Any] = None      # ChannelRouter — wired at startup
+        self._registry: Any | None = None  # AdapterRegistry — wired at startup
+        self._router: Any | None = None  # ChannelRouter — wired at startup
 
     # ── Dependency Wiring ─────────────────────────────────────
 
     def wire(
         self,
-        registry: Any,       # AdapterRegistry
+        registry: Any,  # AdapterRegistry
         router: Any = None,  # ChannelRouter (optional)
     ) -> None:
         """Wire channel infrastructure dependencies.
@@ -328,7 +344,7 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
             chunks = _formatter_text.split_message(sanitized, max_len)
             # Enforce max_chunks safety limit
             if len(chunks) > data.max_chunks:
-                chunks = chunks[:data.max_chunks]
+                chunks = chunks[: data.max_chunks]
                 # Truncate the last chunk to fit
                 chunks[-1] = _formatter_text.truncate(chunks[-1], max_len)
                 truncated = True
@@ -343,8 +359,8 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
 
         # ── Step 5: Send each chunk ──
         priority = _parse_priority(data.priority)
-        results: List[Any] = []
-        message_ids: List[str] = []
+        results: list[Any] = []
+        message_ids: list[str] = []
 
         for i, chunk in enumerate(chunks):
             msg = _channel_message_cls(
@@ -370,9 +386,7 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
 
         # ── Step 6: Aggregate results ──
         all_success = all(r.success for r in results)
-        any_fallback = any(
-            r.status == _delivery_status_cls.FALLBACK for r in results
-        )
+        any_fallback = any(r.status == _delivery_status_cls.FALLBACK for r in results)
         actual_channel = results[-1].channel if results else channel
         delivered_len = sum(len(c) for c in chunks)
 
@@ -404,7 +418,7 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
     # ── Helpers ───────────────────────────────────────────────
 
     @staticmethod
-    def _add_part_indicators(chunks: List[str], max_len: int) -> List[str]:
+    def _add_part_indicators(chunks: list[str], max_len: int) -> list[str]:
         """Add [N/M] part indicators to split messages.
 
         Adds a part indicator at the beginning of each chunk,
@@ -415,7 +429,7 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
         if total <= 1:
             return chunks
 
-        result: List[str] = []
+        result: list[str] = []
         for i, chunk in enumerate(chunks, start=1):
             indicator = f"[{i}/{total}] "
             # Only add indicator if it fits (with safety margin)
@@ -432,7 +446,7 @@ class TextChannelAgent(BaseAgent[TextChannelResult]):
         channel_used: str = "",
         original_channel: str = "",
         messages_sent: int = 0,
-        message_ids: Optional[List[str]] = None,
+        message_ids: list[str] | None = None,
         status: str = "pending",
         truncated: bool = False,
         split_count: int = 0,

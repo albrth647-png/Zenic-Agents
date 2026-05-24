@@ -1,12 +1,15 @@
 """Core logic for engine."""
 
 from __future__ import annotations
+
 import logging
 import threading
-from typing import Any, Dict, List, Optional, Tuple
-from ..types import RiskLevel, BlastRadiusReport, RiskPropagationReport, CriticalPathReport, CompositeRiskReport
+from typing import Any
+
+from ..types import BlastRadiusReport, CompositeRiskReport, CriticalPathReport, RiskLevel, RiskPropagationReport
 
 logger = logging.getLogger("zenic_agents.core.risk.engine")
+
 
 class RiskPredictionEngine:
     """Thread-safe risk prediction engine with Rust integration."""
@@ -15,9 +18,7 @@ class RiskPredictionEngine:
         self._lock = threading.RLock()
         self._analysis_count = 0
 
-    def analyze_node(
-        self, node_id: str, edges: List[Tuple[str, str]]
-    ) -> BlastRadiusReport:
+    def analyze_node(self, node_id: str, edges: list[tuple[str, str]]) -> BlastRadiusReport:
         """Single node blast radius analysis."""
         with self._lock:
             self._analysis_count += 1
@@ -40,15 +41,16 @@ class RiskPredictionEngine:
             except Exception as exc:
                 logger.error("Blast radius analysis failed for %s: %s", node_id, exc)
                 return BlastRadiusReport(
-                    source_node=node_id, risk_level=RiskLevel.HIGH,
+                    source_node=node_id,
+                    risk_level=RiskLevel.HIGH,
                     recommendations=["Analysis failed — treat as high risk"],
                 )
 
     def analyze_propagation(
         self,
-        nodes: List[str],
-        edges: List[Tuple[str, str]],
-        base_risks: Dict[str, float],
+        nodes: list[str],
+        edges: list[tuple[str, str]],
+        base_risks: dict[str, float],
         decay: float = 0.7,
     ) -> RiskPropagationReport:
         """Analyze risk propagation through the DAG."""
@@ -70,9 +72,9 @@ class RiskPredictionEngine:
 
     def find_critical(
         self,
-        nodes: List[str],
-        edges: List[Tuple[str, str]],
-        durations: Dict[str, int],
+        nodes: list[str],
+        edges: list[tuple[str, str]],
+        durations: dict[str, int],
     ) -> CriticalPathReport:
         """Find the critical path in the DAG."""
         with self._lock:
@@ -92,10 +94,10 @@ class RiskPredictionEngine:
 
     def composite_analysis(
         self,
-        failed_nodes: List[str],
-        edges: List[Tuple[str, str]],
-        base_risks: Dict[str, float],
-        durations: Dict[str, int],
+        failed_nodes: list[str],
+        edges: list[tuple[str, str]],
+        base_risks: dict[str, float],
+        durations: dict[str, int],
         decay: float = 0.7,
     ) -> CompositeRiskReport:
         """Full composite risk analysis."""
@@ -147,32 +149,34 @@ class RiskPredictionEngine:
 
     def get_risk_hotspots(
         self,
-        edges: List[Tuple[str, str]],
-        base_risks: Dict[str, float],
+        edges: list[tuple[str, str]],
+        base_risks: dict[str, float],
         threshold: float = 0.7,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Find high-risk nodes above the threshold."""
         with self._lock:
-            hotspots: List[Dict[str, Any]] = []
+            hotspots: list[dict[str, Any]] = []
             for node_id, risk in base_risks.items():
                 if risk >= threshold:
                     blast = self.analyze_node(node_id, edges)
-                    hotspots.append({
-                        "node_id": node_id,
-                        "risk_score": risk,
-                        "blast_radius_size": blast.blast_radius_size,
-                        "risk_level": blast.risk_level.value,
-                    })
+                    hotspots.append(
+                        {
+                            "node_id": node_id,
+                            "risk_score": risk,
+                            "blast_radius_size": blast.blast_radius_size,
+                            "risk_level": blast.risk_level.value,
+                        }
+                    )
             hotspots.sort(key=lambda x: x["risk_score"], reverse=True)
             return hotspots
 
     def simulate_mitigation(
         self,
         node_id: str,
-        edges: List[Tuple[str, str]],
-        base_risks: Dict[str, float],
+        edges: list[tuple[str, str]],
+        base_risks: dict[str, float],
         mitigation_factor: float = 0.5,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Simulate reducing a node's risk."""
         with self._lock:
             original = base_risks.get(node_id, 0.0)
@@ -180,9 +184,7 @@ class RiskPredictionEngine:
             mitigated_risks[node_id] = original * (1.0 - mitigation_factor)
 
             # Get all node IDs from edges
-            all_nodes = list(set(
-                [src for src, _ in edges] + [dst for _, dst in edges] + list(base_risks.keys())
-            ))
+            all_nodes = list(set([src for src, _ in edges] + [dst for _, dst in edges] + list(base_risks.keys())))
 
             before = self.analyze_propagation(all_nodes, edges, base_risks)
             after = self.analyze_propagation(all_nodes, edges, mitigated_risks)
@@ -199,7 +201,7 @@ class RiskPredictionEngine:
                 "after_high_risk_count": len(after.high_risk_nodes),
             }
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "analysis_count": self._analysis_count,
@@ -217,8 +219,8 @@ class RiskPredictionEngine:
             return RiskLevel.HIGH
         return RiskLevel.CRITICAL
 
-    def _generate_recommendations(self, report: BlastRadiusReport) -> List[str]:
-        recs: List[str] = []
+    def _generate_recommendations(self, report: BlastRadiusReport) -> list[str]:
+        recs: list[str] = []
         if report.blast_radius_size == 0:
             recs.append("Node has no downstream dependents — low priority")
             return recs
@@ -232,9 +234,7 @@ class RiskPredictionEngine:
             recs.append("Implement fallback paths for critical dependents")
         return recs
 
-    def _multi_node_blast(
-        self, failed_nodes: List[str], edges: List[Tuple[str, str]]
-    ) -> BlastRadiusReport:
+    def _multi_node_blast(self, failed_nodes: list[str], edges: list[tuple[str, str]]) -> BlastRadiusReport:
         """Blast radius for multiple failing nodes."""
         try:
             if HAS_NATIVE and multi_node_blast_radius is not None:  # noqa: F821
@@ -251,10 +251,8 @@ class RiskPredictionEngine:
 
     # ── Pure Python fallbacks ──
 
-    def _py_blast_radius(
-        self, node_id: str, edges: List[Tuple[str, str]]
-    ) -> BlastRadiusReport:
-        forward: Dict[str, List[str]] = {}
+    def _py_blast_radius(self, node_id: str, edges: list[tuple[str, str]]) -> BlastRadiusReport:
+        forward: dict[str, list[str]] = {}
         for src, dst in edges:
             forward.setdefault(src, []).append(dst)
 
@@ -282,17 +280,17 @@ class RiskPredictionEngine:
 
     def _py_propagate_risks(
         self,
-        nodes: List[str],
-        edges: List[Tuple[str, str]],
-        base_risks: Dict[str, float],
+        nodes: list[str],
+        edges: list[tuple[str, str]],
+        base_risks: dict[str, float],
         decay: float,
     ) -> RiskPropagationReport:
-        reverse_adj: Dict[str, List[str]] = {}
+        reverse_adj: dict[str, list[str]] = {}
         for src, dst in edges:
             reverse_adj.setdefault(dst, []).append(src)
 
-        effective: Dict[str, float] = {}
-        risk_paths: Dict[str, List[str]] = {}
+        effective: dict[str, float] = {}
+        risk_paths: dict[str, list[str]] = {}
         for node in nodes:
             own = base_risks.get(node, 0.0)
             incoming = reverse_adj.get(node, [])
@@ -322,17 +320,17 @@ class RiskPredictionEngine:
 
     def _py_find_critical_path(
         self,
-        nodes: List[str],
-        edges: List[Tuple[str, str]],
-        durations: Dict[str, int],
+        nodes: list[str],
+        edges: list[tuple[str, str]],
+        durations: dict[str, int],
     ) -> CriticalPathReport:
-        predecessors: Dict[str, List[str]] = {n: [] for n in nodes}
+        predecessors: dict[str, list[str]] = {n: [] for n in nodes}
         for src, dst in edges:
             if dst in predecessors:
                 predecessors[dst].append(src)
 
-        earliest: Dict[str, int] = {}
-        pred_on_path: Dict[str, Optional[str]] = {}
+        earliest: dict[str, int] = {}
+        pred_on_path: dict[str, str | None] = {}
         for node in nodes:
             dur = durations.get(node, 0)
             max_pred = 0
@@ -347,8 +345,8 @@ class RiskPredictionEngine:
 
         end = max(earliest, key=earliest.get) if earliest else ""
         total = earliest.get(end, 0)
-        path: List[str] = []
-        cur: Optional[str] = end
+        path: list[str] = []
+        cur: str | None = end
         while cur:
             path.append(cur)
             cur = pred_on_path.get(cur)
@@ -360,10 +358,8 @@ class RiskPredictionEngine:
             is_on_critical_path={n: n in crit_set for n in nodes},
         )
 
-    def _py_multi_blast(
-        self, failed_nodes: List[str], edges: List[Tuple[str, str]]
-    ) -> BlastRadiusReport:
-        forward: Dict[str, List[str]] = {}
+    def _py_multi_blast(self, failed_nodes: list[str], edges: list[tuple[str, str]]) -> BlastRadiusReport:
+        forward: dict[str, list[str]] = {}
         for src, dst in edges:
             forward.setdefault(src, []).append(dst)
 
@@ -386,5 +382,3 @@ class RiskPredictionEngine:
             blast_radius_size=size,
             risk_level=self._determine_risk_level(size),
         )
-
-

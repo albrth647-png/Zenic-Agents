@@ -10,13 +10,15 @@ Phase 8 Intelligence API mixin for BaseOrchestrator.
 class Phase8Mixin:
     """Phase 8: Intelligence API methods for BaseOrchestrator."""
 
-    async def reason(self, query: str, mode: str = "auto",
-                     context: str = "") -> dict:
+    async def reason(self, query: str, mode: str = "auto", context: str = "") -> dict:
         """Razonamiento avanzado usando ReasoningAgent (F3) o ReasoningEngine (Legacy)."""
         if self._reasoning_agent:
             actual_mode = mode if mode != "auto" else "step_by_step"
             output = self._reasoning_agent.reason_with_runner(
-                self._agent_runner, query, mode=actual_mode, context=context,
+                self._agent_runner,
+                query,
+                mode=actual_mode,
+                context=context,
             )
             return {
                 "answer": output.answer,
@@ -50,18 +52,23 @@ class Phase8Mixin:
         """Valida una cadena de logica antes de ejecutarla."""
         if self._validation_agent:
             output = self._validation_agent.validate_with_runner(
-                self._agent_runner, target="chain", content=description,
-                rules=["compatibility", "completeness"], language="python",
+                self._agent_runner,
+                target="chain",
+                content=description,
+                rules=["compatibility", "completeness"],
+                language="python",
             )
             result = {
                 "is_valid": output.is_valid,
-                "can_execute": output.is_valid or not any(
-                    i.severity == "error" for i in output.issues
-                ),
+                "can_execute": output.is_valid or not any(i.severity == "error" for i in output.issues),
                 "issues": [
-                    {"severity": i.severity, "code": i.code,
-                     "message": i.message, "line": i.line,
-                     "suggestion": i.suggestion}
+                    {
+                        "severity": i.severity,
+                        "code": i.code,
+                        "message": i.message,
+                        "line": i.line,
+                        "suggestion": i.suggestion,
+                    }
                     for i in output.issues
                 ],
                 "suggestions": output.suggestions,
@@ -82,18 +89,22 @@ class Phase8Mixin:
             "is_valid": None,
             "can_execute": None,
             "errors": [],
-            "warnings": [{"code": "DEPRECATED", "message": "ChainValidator removed — legacy validation unavailable", "block": ""}],
+            "warnings": [
+                {"code": "DEPRECATED", "message": "ChainValidator removed — legacy validation unavailable", "block": ""}
+            ],
             "block_count": len(chain.blocks),
         }
 
-    async def execute_logic_chain(self, description: str,
-                                   data=None, recovery: str = "skip") -> dict:
+    async def execute_logic_chain(self, description: str, data=None, recovery: str = "skip") -> dict:
         """Ejecuta una cadena de logica con validacion, rollback y recovery."""
         if not self._logic_builder:
             return {"error": "LogicBuilder not available"}
 
         # ChainExecutor/RecoveryAction removed — module deleted
-        return {"error": "ChainExecutor removed — logic chain execution is no longer available. Use ValidationAgent instead.", "status": "unavailable"}
+        return {
+            "error": "ChainExecutor removed — logic chain execution is no longer available. Use ValidationAgent instead.",
+            "status": "unavailable",
+        }
 
     async def get_intelligence_status(self) -> dict:
         """Obtiene estado del sistema de inteligencia (Phase 8)."""
@@ -146,8 +157,10 @@ class Phase8Mixin:
             },
             "agent_framework": {
                 "runner_stats": self._agent_runner.stats if self._agent_runner else {},
-                "cache_stats": self._agent_runner._cache.stats if self._agent_runner and self._agent_runner._cache else {},
-                "intent_agent": getattr(getattr(self, '_surgical_agent', None), 'stats', {}),
+                "cache_stats": self._agent_runner._cache.stats
+                if self._agent_runner and self._agent_runner._cache
+                else {},
+                "intent_agent": getattr(getattr(self, "_surgical_agent", None), "stats", {}),
                 "reasoning_agent": self._reasoning_agent.stats if self._reasoning_agent else {},
                 "business_logic_agent": self._business_logic_agent.stats if self._business_logic_agent else {},
                 "code_agent": self._code_agent.stats if self._code_agent else {},

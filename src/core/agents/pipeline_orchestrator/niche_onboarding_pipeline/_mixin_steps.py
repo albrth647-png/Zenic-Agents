@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ._types import PipelineState, PipelineStep
 
@@ -15,24 +15,24 @@ class NicheOnboardingStepsMixin:
 
     # ── Step 3: GENERATE_QUESTIONS ────────────────────────────
 
-    def get_questions(self, state: PipelineState) -> List[Dict[str, Any]]:  # noqa: F821
+    def get_questions(self, state: PipelineState) -> list[dict[str, Any]]:
         """Get questions for missing required fields."""
         if state.template_dict is None:
             return []
         missing = self._bridge.all_missing_fields(state.template_dict)
         state.questions = missing
-        state.advance(PipelineStep.GENERATE_QUESTIONS)  # noqa: F821
+        state.advance(PipelineStep.GENERATE_QUESTIONS)
         return missing
 
     # ── Step 4: COLLECT_ANSWERS ───────────────────────────────
 
     def submit_answer(
         self,
-        state: PipelineState,  # noqa: F821
+        state: PipelineState,
         field_name: str,
         value: str,
         section_id: str = "",
-    ) -> PipelineState:  # noqa: F821
+    ) -> PipelineState:
         """Submit a single answer for a missing field."""
         if state.template_dict is None:
             state.add_error("No template available")
@@ -48,14 +48,14 @@ class NicheOnboardingStepsMixin:
         else:
             state.add_warning(f"Field '{field_name}' could not be set")
 
-        state.advance(PipelineStep.COLLECT_ANSWERS)  # noqa: F821
+        state.advance(PipelineStep.COLLECT_ANSWERS)
         return state
 
     def submit_answers(
         self,
-        state: PipelineState,  # noqa: F821
-        answers: Dict[str, str],
-    ) -> PipelineState:  # noqa: F821
+        state: PipelineState,
+        answers: dict[str, str],
+    ) -> PipelineState:
         """Submit batch answers for missing fields."""
         for field_name, value in answers.items():
             self.submit_answer(state, field_name, value)
@@ -63,11 +63,11 @@ class NicheOnboardingStepsMixin:
 
     # ── Step 5: VALIDATE_TEMPLATE ─────────────────────────────
 
-    def validate(self, state: PipelineState) -> PipelineState:  # noqa: F821
+    def validate(self, state: PipelineState) -> PipelineState:
         """Validate template completeness."""
         if state.template_dict is None:
             state.add_error("No template to validate")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         validation = self._bridge.validate_template(state.template_dict)
@@ -79,7 +79,8 @@ class NicheOnboardingStepsMixin:
             if validation.get("valid", False):
                 logger.info(
                     "Pipeline %s: Template validation passed (%.1f%% complete)",
-                    state.pipeline_id, validation.get("completion_pct", 0.0),
+                    state.pipeline_id,
+                    validation.get("completion_pct", 0.0),
                 )
             else:
                 missing = validation.get("missing_field_names", [])
@@ -88,20 +89,20 @@ class NicheOnboardingStepsMixin:
                     f"{', '.join(missing[:5])}{'...' if len(missing) > 5 else ''}"
                 )
 
-        state.advance(PipelineStep.VALIDATE_TEMPLATE)  # noqa: F821
+        state.advance(PipelineStep.VALIDATE_TEMPLATE)
         return state
 
     # ── Step 6: SAFETY_CHECK ──────────────────────────────────
 
     def safety_check(
         self,
-        state: PipelineState,  # noqa: F821
+        state: PipelineState,
         action_type: str = "niche_onboarding",
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
         data_sensitivity: str = "low",
-    ) -> PipelineState:  # noqa: F821
+    ) -> PipelineState:
         """Run domain safety + compliance check."""
-        if state.current_step == PipelineStep.FAILED:  # noqa: F821
+        if state.current_step == PipelineStep.FAILED:
             return state
 
         config = config or {}
@@ -110,7 +111,8 @@ class NicheOnboardingStepsMixin:
             config.setdefault("niche_category", state.niche_category)
 
         safety_result = self._domain_gate.check(
-            action_type=action_type, config=config,
+            action_type=action_type,
+            config=config,
             niche_category=state.niche_category,
             data_sensitivity=data_sensitivity,
         )
@@ -119,7 +121,7 @@ class NicheOnboardingStepsMixin:
 
         if not safety_result.can_proceed:
             state.add_error(f"Safety gate BLOCKED: {safety_result.reason}")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             logger.warning("Pipeline %s: Safety check FAILED — %s", state.pipeline_id, safety_result.reason)
             return state
 
@@ -134,19 +136,19 @@ class NicheOnboardingStepsMixin:
                 f"Sensitivity escalation applied: {safety_result.base_verdict} → {safety_result.final_verdict}"
             )
 
-        state.advance(PipelineStep.SAFETY_CHECK)  # noqa: F821
+        state.advance(PipelineStep.SAFETY_CHECK)
         logger.info("Pipeline %s: Safety check PASSED (verdict=%s)", state.pipeline_id, safety_result.final_verdict)
         return state
 
     # ── Step 7: CERTIFY_BLUEPRINT ─────────────────────────────
 
-    def certify(self, state: PipelineState, private_key: str) -> PipelineState:  # noqa: F821
+    def certify(self, state: PipelineState, private_key: str) -> PipelineState:
         """Certify the blueprint with ECDSA signing."""
-        if state.current_step == PipelineStep.FAILED:  # noqa: F821
+        if state.current_step == PipelineStep.FAILED:
             return state
         if state.template_dict is None:
             state.add_error("No template to certify")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         cert_result = self._certifier.certify_template(state.template_dict, private_key)
@@ -154,14 +156,16 @@ class NicheOnboardingStepsMixin:
 
         if not cert_result.success:
             state.add_error(f"Certification failed: {'; '.join(cert_result.errors)}")
-            state.advance(PipelineStep.FAILED)  # noqa: F821
+            state.advance(PipelineStep.FAILED)
             return state
 
         state.add_warning(f"Blueprint certified: {cert_result.blueprint_id}")
-        state.advance(PipelineStep.CERTIFY_BLUEPRINT)  # noqa: F821
+        state.advance(PipelineStep.CERTIFY_BLUEPRINT)
         logger.info(
             "Pipeline %s: Blueprint certified (id=%s, hash=%s)",
-            state.pipeline_id, cert_result.blueprint_id, cert_result.content_hash[:16],
+            state.pipeline_id,
+            cert_result.blueprint_id,
+            cert_result.content_hash[:16],
         )
         return state
 
@@ -176,12 +180,9 @@ class NicheOnboardingStepsMixin:
         elif state.template_dict is not None:
             yaml_output = self._bridge.template_to_yaml(state.template_dict) or ""
 
-        state.advance(PipelineStep.COMPLETED)  # noqa: F821
+        state.advance(PipelineStep.COMPLETED)
 
-        success = (
-            state.current_step == PipelineStep.COMPLETED  # noqa: F821
-            and len(state.errors) == 0
-        )
+        success = state.current_step == PipelineStep.COMPLETED and len(state.errors) == 0
 
         logger.info(
             "Pipeline %s: %s (niche=%s, safety=%s, certified=%s)",
@@ -211,20 +212,20 @@ class NicheOnboardingStepsMixin:
     def run_full(
         self,
         niche_id: str,
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
-        answers: Optional[Dict[str, str]] = None,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
+        answers: dict[str, str] | None = None,
         private_key: str = "",
         data_sensitivity: str = "low",
     ) -> PipelineResult:  # noqa: F821
         """Run the full pipeline from start to finish."""
         state = self.start(niche_id)
-        if state.current_step == PipelineStep.FAILED:  # noqa: F821
+        if state.current_step == PipelineStep.FAILED:
             return self.export(state)
 
         if files or texts:
             state = self.upload_documents(state, files=files, texts=texts)
-            if state.current_step == PipelineStep.FAILED:  # noqa: F821
+            if state.current_step == PipelineStep.FAILED:
                 return self.export(state)
 
         if answers:
@@ -233,12 +234,12 @@ class NicheOnboardingStepsMixin:
         state = self.validate(state)
 
         state = self.safety_check(state, data_sensitivity=data_sensitivity)
-        if state.current_step == PipelineStep.FAILED:  # noqa: F821
+        if state.current_step == PipelineStep.FAILED:
             return self.export(state)
 
         if private_key:
             state = self.certify(state, private_key)
-            if state.current_step == PipelineStep.FAILED:  # noqa: F821
+            if state.current_step == PipelineStep.FAILED:
                 return self.export(state)
 
         return self.export(state)

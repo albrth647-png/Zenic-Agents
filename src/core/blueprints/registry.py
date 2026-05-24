@@ -13,15 +13,16 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .types import (
-    BlueprintStats, BlueprintTier,
-)
-from .schema import CertifiedBlueprint
-from .loader import BlueprintLoaderV2
-from .converter import NicheConverter
 from .composer import BlueprintComposer, CompositionResult
+from .converter import NicheConverter
+from .loader import BlueprintLoaderV2
+from .schema import CertifiedBlueprint
+from .types import (
+    BlueprintStats,
+    BlueprintTier,
+)
 from .validator import BlueprintValidatorV2
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT REGISTRY
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintRegistry:
     """Central registry for CertifiedBlueprints.
@@ -61,17 +63,17 @@ class BlueprintRegistry:
 
     def __init__(
         self,
-        loader: Optional[BlueprintLoaderV2] = None,
-        composer: Optional[BlueprintComposer] = None,
-        validator: Optional[BlueprintValidatorV2] = None,
+        loader: BlueprintLoaderV2 | None = None,
+        composer: BlueprintComposer | None = None,
+        validator: BlueprintValidatorV2 | None = None,
     ) -> None:
         self._loader = loader or BlueprintLoaderV2()
         self._composer = composer or BlueprintComposer()
         self._validator = validator or BlueprintValidatorV2()
 
-        self._blueprints: Dict[str, CertifiedBlueprint] = {}
-        self._tenant_blueprints: Dict[str, CertifiedBlueprint] = {}
-        self._stats: Dict[str, BlueprintStats] = {}
+        self._blueprints: dict[str, CertifiedBlueprint] = {}
+        self._tenant_blueprints: dict[str, CertifiedBlueprint] = {}
+        self._stats: dict[str, BlueprintStats] = {}
 
         self._lock = threading.RLock()
 
@@ -120,38 +122,32 @@ class BlueprintRegistry:
 
     # ── Lookup ─────────────────────────────────────────────
 
-    def get(self, name: str) -> Optional[CertifiedBlueprint]:
+    def get(self, name: str) -> CertifiedBlueprint | None:
         """Get a Blueprint by name."""
         with self._lock:
             return self._blueprints.get(name)
 
-    def get_by_domain(self, domain: str) -> List[CertifiedBlueprint]:
+    def get_by_domain(self, domain: str) -> list[CertifiedBlueprint]:
         """Get all Blueprints for a domain."""
         with self._lock:
-            return [
-                bp for bp in self._blueprints.values()
-                if bp.metadata.domain == domain
-            ]
+            return [bp for bp in self._blueprints.values() if bp.metadata.domain == domain]
 
-    def get_by_tier(self, tier: BlueprintTier) -> List[CertifiedBlueprint]:
+    def get_by_tier(self, tier: BlueprintTier) -> list[CertifiedBlueprint]:
         """Get all Blueprints for a tier."""
         with self._lock:
-            return [
-                bp for bp in self._blueprints.values()
-                if bp.metadata.tier == tier
-            ]
+            return [bp for bp in self._blueprints.values() if bp.metadata.tier == tier]
 
-    def get_certified(self) -> List[CertifiedBlueprint]:
+    def get_certified(self) -> list[CertifiedBlueprint]:
         """Get all certified Blueprints."""
         with self._lock:
             return [bp for bp in self._blueprints.values() if bp.is_certified]
 
-    def list_all(self) -> List[str]:
+    def list_all(self) -> list[str]:
         """List all registered Blueprint names."""
         with self._lock:
             return list(self._blueprints.keys())
 
-    def list_domains(self) -> List[str]:
+    def list_domains(self) -> list[str]:
         """List all available domains."""
         with self._lock:
             domains = set()
@@ -161,8 +157,11 @@ class BlueprintRegistry:
             return sorted(domains)
 
     def search(
-        self, query: str, domain: str = "", tier: str = "",
-    ) -> List[CertifiedBlueprint]:
+        self,
+        query: str,
+        domain: str = "",
+        tier: str = "",
+    ) -> list[CertifiedBlueprint]:
         """Search Blueprints by name, description, or tags."""
         query_lower = query.lower()
         with self._lock:
@@ -175,10 +174,14 @@ class BlueprintRegistry:
                 # Search in name, description, tags
                 searchable = (
                     bp.metadata.name.lower()
-                    + " " + bp.metadata.description.lower()
-                    + " " + " ".join(bp.metadata.tags).lower()
-                    + " " + bp.metadata.domain.lower()
-                    + " " + bp.metadata.subdomain.lower()
+                    + " "
+                    + bp.metadata.description.lower()
+                    + " "
+                    + " ".join(bp.metadata.tags).lower()
+                    + " "
+                    + bp.metadata.domain.lower()
+                    + " "
+                    + bp.metadata.subdomain.lower()
                 )
                 if query_lower in searchable:
                     results.append(bp)
@@ -189,7 +192,7 @@ class BlueprintRegistry:
     def compose_for_tenant(
         self,
         tenant_id: str,
-        blueprint_names: List[str],
+        blueprint_names: list[str],
         certify: bool = False,
     ) -> CompositionResult:
         """Compose multiple Blueprints for a specific tenant.
@@ -202,7 +205,8 @@ class BlueprintRegistry:
             if bp is None:
                 logger.warning(
                     "BlueprintRegistry: Blueprint '%s' not found for tenant %s",
-                    name, tenant_id,
+                    name,
+                    tenant_id,
                 )
                 continue
             bps.append(bp)
@@ -230,8 +234,9 @@ class BlueprintRegistry:
         return result
 
     def get_tenant_blueprint(
-        self, tenant_id: str,
-    ) -> Optional[CertifiedBlueprint]:
+        self,
+        tenant_id: str,
+    ) -> CertifiedBlueprint | None:
         """Get the composed Blueprint for a tenant."""
         with self._lock:
             return self._tenant_blueprints.get(tenant_id)
@@ -246,12 +251,12 @@ class BlueprintRegistry:
 
     # ── Statistics ─────────────────────────────────────────
 
-    def get_stats(self, name: str) -> Optional[BlueprintStats]:
+    def get_stats(self, name: str) -> BlueprintStats | None:
         """Get statistics for a specific Blueprint."""
         return self._stats.get(name)
 
     @property
-    def overview(self) -> Dict[str, Any]:
+    def overview(self) -> dict[str, Any]:
         """Get registry overview statistics."""
         with self._lock:
             return {
@@ -263,7 +268,7 @@ class BlueprintRegistry:
             }
 
     @property
-    def detailed_stats(self) -> Dict[str, Any]:
+    def detailed_stats(self) -> dict[str, Any]:
         """Get detailed registry statistics."""
         with self._lock:
             bp_stats = {}
@@ -273,10 +278,7 @@ class BlueprintRegistry:
             return {
                 "overview": self.overview,
                 "blueprints": bp_stats,
-                "tenants": {
-                    tid: bp.metadata.name
-                    for tid, bp in self._tenant_blueprints.items()
-                },
+                "tenants": {tid: bp.metadata.name for tid, bp in self._tenant_blueprints.items()},
             }
 
 
@@ -284,7 +286,7 @@ class BlueprintRegistry:
 #  GLOBAL INSTANCE
 # ──────────────────────────────────────────────────────────────
 
-_default_registry: Optional[BlueprintRegistry] = None
+_default_registry: BlueprintRegistry | None = None
 _registry_lock = threading.Lock()
 
 

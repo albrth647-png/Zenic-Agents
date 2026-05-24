@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -17,6 +17,7 @@ class KPIMeasurement:
     Records the current value of a metric along with the target and
     the delta from the previous measurement, enabling trend analysis.
     """
+
     measurement_id: str = ""
     objective_id: str = ""
     metric_name: str = ""
@@ -60,7 +61,7 @@ class KPIMeasurement:
         # If target is lower than current, decreasing value = improving
         return self.delta_from_last < 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "measurement_id": self.measurement_id,
@@ -82,14 +83,15 @@ class KPITrend:
     Includes linear regression slope for trend direction and
     projected achievement date based on rate of change.
     """
+
     metric_name: str = ""
-    values: List[float] = field(default_factory=list)
-    timestamps: List[str] = field(default_factory=list)
+    values: list[float] = field(default_factory=list)
+    timestamps: list[str] = field(default_factory=list)
     trend_direction: str = "stable"  # "improving" | "stable" | "declining"
     avg_rate_of_change: float = 0.0
     projected_achievement_date: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "metric_name": self.metric_name,
@@ -99,4 +101,6 @@ class KPITrend:
             "avg_rate_of_change": self.avg_rate_of_change,
             "projected_achievement_date": self.projected_achievement_date,
         }
+
+
 __all__ = ["KPIMeasurement", "KPITrend"]

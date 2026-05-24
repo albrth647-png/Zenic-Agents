@@ -5,7 +5,7 @@ Enqueue, dequeue, and lifecycle methods for DistributedTaskQueue.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import TaskMessage
 
@@ -55,22 +55,21 @@ class CoreMixin:
         )
 
         if not success:
-            raise ValueError(
-                f"Failed to enqueue task {message.task_id} "
-                f"(queue={message.queue_name})"
-            )
+            raise ValueError(f"Failed to enqueue task {message.task_id} " f"(queue={message.queue_name})")
 
         with self._stats_lock:
             self._total_enqueued += 1
 
         logger.info(
             "TaskQueue: Enqueued %s (queue=%s, type=%s, priority=%d)",
-            message.task_id[:8], message.queue_name,
-            message.task_type, message.priority,
+            message.task_id[:8],
+            message.queue_name,
+            message.task_type,
+            message.priority,
         )
         return message.task_id
 
-    async def enqueue_batch(self: Any, messages: List[TaskMessage]) -> List[str]:
+    async def enqueue_batch(self: Any, messages: list[TaskMessage]) -> list[str]:
         """
         Enqueue multiple tasks.
 
@@ -80,7 +79,7 @@ class CoreMixin:
         Returns:
             List of task_ids for successfully enqueued tasks.
         """
-        task_ids: List[str] = []
+        task_ids: list[str] = []
         for msg in messages:
             try:
                 tid = await self.enqueue(msg)
@@ -88,7 +87,8 @@ class CoreMixin:
             except Exception as exc:
                 logger.error(
                     "TaskQueue: Batch enqueue failed for %s: %s",
-                    msg.task_id[:8], exc,
+                    msg.task_id[:8],
+                    exc,
                 )
         return task_ids
 
@@ -96,10 +96,10 @@ class CoreMixin:
         self: Any,
         queue_name: str,
         worker_id: str,
-        lease_seconds: Optional[float] = None,
-        task_types: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        lease_seconds: float | None = None,
+        task_types: list[str] | None = None,
+        tenant_id: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Claim the highest-priority available task.
 
@@ -128,7 +128,8 @@ class CoreMixin:
                 self._total_dequeued += 1
             logger.debug(
                 "TaskQueue: Dequeued %s by worker %s",
-                task.get("task_id", "")[:8], worker_id,
+                task.get("task_id", "")[:8],
+                worker_id,
             )
 
         return task

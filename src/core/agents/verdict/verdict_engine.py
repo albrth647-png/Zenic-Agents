@@ -22,10 +22,10 @@ import os
 import re
 import threading
 import time
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import Verdict, VerdictInput, VerdictOutput, ConsensusResult
+from ..schemas import ConsensusResult, Verdict, VerdictInput, VerdictOutput
 
 # ──────────────────────────────────────────────────────────────
 # VERDICT CONFIGURATION
@@ -37,7 +37,9 @@ VERDICT_TIMEOUT_S = 5.0
 VERDICT_MAX_RETRIES = 3
 VERDICT_BASE_DELAY = 1.0
 VERDICT_MAX_DELAY = 10.0
-VERDICT_CONSENSUS_ATTEMPTS = int(os.environ.get("ZENIC_VERDICT_CONSENSUS", "1"))  # ARM: 1 attempt (was 3, too many LLM timeouts)
+VERDICT_CONSENSUS_ATTEMPTS = int(
+    os.environ.get("ZENIC_VERDICT_CONSENSUS", "1")
+)  # ARM: 1 attempt (was 3, too many LLM timeouts)
 VERDICT_CONSENSUS_THRESHOLD = 2  # Minimum YES count for verdict YES
 
 VERDICT_SYSTEM_PROMPT = (
@@ -110,7 +112,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
         start_time = time.monotonic()
 
         # Check if model is loaded
-        if not self._mini_ai or not getattr(self._mini_ai, 'is_loaded', False):
+        if not self._mini_ai or not getattr(self._mini_ai, "is_loaded", False):
             return VerdictOutput(
                 verdict=Verdict.NO,
                 confidence=0.1,
@@ -191,7 +193,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
             duration_ms=(time.monotonic() - start_time) * 1000,
         )
 
-    def _call_llm(self, user_prompt: str) -> Optional[str]:
+    def _call_llm(self, user_prompt: str) -> str | None:
         """Call LLM via MiniAIEngine.
 
         H-88: All AI output is validated through _validate_ai_verdict()
@@ -199,6 +201,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
         """
         try:
             from src.core.verdict_engine_module import _validate_ai_verdict
+
             raw = self._mini_ai._call_llm(
                 system_prompt=VERDICT_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
@@ -212,7 +215,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
             return None
 
     @staticmethod
-    def _parse_verdict_response(response: Optional[str]) -> Optional[str]:
+    def _parse_verdict_response(response: str | None) -> str | None:
         """
         Strict parser: ONLY accept YES or NO.
         Strip think blocks, take first word, validate.
@@ -222,14 +225,14 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
             return None
 
         # Strip Qwen3 <think...> blocks
-        cleaned = re.sub(r'<think[^>]*>.*?</think\s*>', '', response, flags=re.DOTALL)
+        cleaned = re.sub(r"<think[^>]*>.*?</think\s*>", "", response, flags=re.DOTALL)
         cleaned = cleaned.strip()
 
         if not cleaned:
             return None
 
         # Take first word only
-        first_word = cleaned.split()[0].upper().rstrip('.,;:!?')
+        first_word = cleaned.split()[0].upper().rstrip(".,;:!?")
 
         # SECURITY (H-88): Only exact "YES" or "NO" accepted.
         # "SI"/"SÍ" removed — violates VALID_VERDICTS = {"YES", "NO"} invariant.
@@ -259,11 +262,11 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
         # Format evidence (truncated to 200 chars each)
         for_items = []
         for e in evidence_for[:3]:
-            for_items.append(e.detail[:200] if hasattr(e, 'detail') else str(e)[:200])
+            for_items.append(e.detail[:200] if hasattr(e, "detail") else str(e)[:200])
 
         against_items = []
         for e in evidence_against[:3]:
-            against_items.append(e.detail[:200] if hasattr(e, 'detail') else str(e)[:200])
+            against_items.append(e.detail[:200] if hasattr(e, "detail") else str(e)[:200])
 
         prompt = f"Evidence FOR: {'; '.join(for_items) or 'None'}\n"
         prompt += f"Evidence AGAINST: {'; '.join(against_items) or 'None'}\n"

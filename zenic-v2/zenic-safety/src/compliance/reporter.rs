@@ -3,7 +3,7 @@
 //! Contains the integration tests for the compliance engine and
 //! a utility for formatting compliance results into a human-readable report.
 
-use super::checker::ComplianceEngine;
+use super::engine_impl::ComplianceEngine;
 use super::types::{ComplianceResult, ComplianceStandard};
 use crate::categories::NicheCategory;
 

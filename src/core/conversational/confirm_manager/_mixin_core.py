@@ -5,15 +5,15 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ._types import (
-    DEFAULT_TTL_SECONDS,
     DEFAULT_DB_PATH,
-    STATUS_PENDING,
+    DEFAULT_TTL_SECONDS,
     STATUS_CONFIRMED,
     STATUS_DENIED,
     STATUS_EXPIRED,
+    STATUS_PENDING,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.confirm_manager")
@@ -28,9 +28,9 @@ class ConfirmManagerCoreMixin:
 
     def __init__(
         self,
-        db_path: Optional[str] = None,
+        db_path: str | None = None,
         ttl_seconds: int = DEFAULT_TTL_SECONDS,
-        safety_gate: Optional[Any] = None,
+        safety_gate: Any | None = None,
     ) -> None:
         """
         Args:
@@ -62,11 +62,11 @@ class ConfirmManagerCoreMixin:
         self,
         action_id: str,
         action_type: str,
-        config: Dict,
+        config: dict,
         verdict: str,
         channel: str = "cli",
         session_id: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Create a confirmation request for a SafetyGate-flagged action.
 
         Args:
@@ -134,7 +134,7 @@ class ConfirmManagerCoreMixin:
         self,
         action_id: str,
         user_response: str,
-    ) -> Dict:
+    ) -> dict:
         """Handle user's yes/no/more_info response to a confirmation.
 
         Args:
@@ -222,9 +222,7 @@ class ConfirmManagerCoreMixin:
                 config = json.loads(row["config"]) if row["config"] else {}
                 return {
                     "status": STATUS_PENDING,
-                    "message": self._format_detailed_info(
-                        row["action_type"], config, row["verdict"]
-                    ),
+                    "message": self._format_detailed_info(row["action_type"], config, row["verdict"]),
                     "action_id": action_id,
                     "options": ["yes", "no"],
                 }
@@ -233,8 +231,7 @@ class ConfirmManagerCoreMixin:
                 return {
                     "status": STATUS_PENDING,
                     "message": (
-                        f"Unrecognized response '{user_response}'. "
-                        f"Please reply with 'yes', 'no', or 'more_info'."
+                        f"Unrecognized response '{user_response}'. " f"Please reply with 'yes', 'no', or 'more_info'."
                     ),
                     "action_id": action_id,
                     "options": ["yes", "no", "more_info"],
@@ -246,11 +243,11 @@ class ConfirmManagerCoreMixin:
         self,
         action_id: str,
         action_type: str,
-        config: Dict,
+        config: dict,
         required_role: str,
         channel: str = "cli",
         session_id: str = "",
-    ) -> Dict:
+    ) -> dict:
         """Create an approval request for role-based flow.
 
         Args:
@@ -296,8 +293,7 @@ class ConfirmManagerCoreMixin:
             message = self._format_approve_message(action_type, config, required_role)
 
             logger.info(
-                f"Approval requested: action_id={action_id}, "
-                f"type={action_type}, required_role={required_role}"
+                f"Approval requested: action_id={action_id}, " f"type={action_type}, required_role={required_role}"
             )
 
             return {
@@ -310,5 +306,3 @@ class ConfirmManagerCoreMixin:
                 "expires_at": expires_at,
                 "ttl_seconds": self._ttl * 2,
             }
-
-

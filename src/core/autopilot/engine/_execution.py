@@ -9,13 +9,13 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
-from ._status import AutopilotStatus
-
+from src.core.autopilot.feedback import FeedbackAction
 from src.core.autopilot.objective import Objective, ObjectiveStatus
 from src.core.autopilot.planner import PlanStep
-from src.core.autopilot.feedback import FeedbackAction
+
+from ._status import AutopilotStatus
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class _ExecutionMixin:
 
     # ── Main Execution Cycle ────────────────────────────────
 
-    def execute_cycle(self, objective_id: str) -> Dict[str, Any]:
+    def execute_cycle(self, objective_id: str) -> dict[str, Any]:
         """Execute one autopilot cycle for an objective.
 
         Main autopilot loop:
@@ -94,9 +94,9 @@ class _ExecutionMixin:
             )
 
             # 5. Process planned steps
-            executed_actions: List[Dict[str, Any]] = []
-            pending_approvals: List[Dict[str, Any]] = []
-            skipped_actions: List[Dict[str, Any]] = []
+            executed_actions: list[dict[str, Any]] = []
+            pending_approvals: list[dict[str, Any]] = []
+            skipped_actions: list[dict[str, Any]] = []
             approval_needed = False
 
             for step in plan.steps:
@@ -105,8 +105,7 @@ class _ExecutionMixin:
 
                 # Check if dependencies are met
                 deps_met = all(
-                    any(s.step_id == dep_id and s.status == "completed"
-                        for s in plan.steps)
+                    any(s.step_id == dep_id and s.status == "completed" for s in plan.steps)
                     for dep_id in step.depends_on
                 )
                 if not deps_met:
@@ -122,7 +121,8 @@ class _ExecutionMixin:
                 except Exception as exc:
                     logger.warning(
                         "AutopilotEngine: Impact preview failed for step %s: %s",
-                        step.step_id, exc,
+                        step.step_id,
+                        exc,
                     )
                     risk_score = 0.5  # Conservative default
 
@@ -135,19 +135,24 @@ class _ExecutionMixin:
                     safety_verdict = getattr(safety_result, "verdict", None)
                     if safety_verdict is not None and str(safety_verdict) == "DENY":
                         self.planner.update_step_status(  # type: ignore[attr-defined]
-                            plan.plan_id, step.step_id, "blocked",
+                            plan.plan_id,
+                            step.step_id,
+                            "blocked",
                         )
-                        skipped_actions.append({
-                            "step_id": step.step_id,
-                            "name": step.name,
-                            "reason": "Safety gate denied",
-                        })
+                        skipped_actions.append(
+                            {
+                                "step_id": step.step_id,
+                                "name": step.name,
+                                "reason": "Safety gate denied",
+                            }
+                        )
                         self._stats["actions_skipped"] += 1  # type: ignore[attr-defined]
                         continue
                 except Exception as exc:
                     logger.warning(
                         "AutopilotEngine: Safety gate check failed for step %s: %s",
-                        step.step_id, exc,
+                        step.step_id,
+                        exc,
                     )
 
                 # c. Check autonomy - can auto-execute?
@@ -157,40 +162,51 @@ class _ExecutionMixin:
                     # Execute the action
                     try:
                         result = self._execute_step(step, objective)
-                        executed_actions.append({
-                            "step_id": step.step_id,
-                            "name": step.name,
-                            "result": result,
-                        })
+                        executed_actions.append(
+                            {
+                                "step_id": step.step_id,
+                                "name": step.name,
+                                "result": result,
+                            }
+                        )
                         self.planner.update_step_status(  # type: ignore[attr-defined]
-                            plan.plan_id, step.step_id, "completed",
+                            plan.plan_id,
+                            step.step_id,
+                            "completed",
                         )
                         self._stats["actions_executed"] += 1  # type: ignore[attr-defined]
                     except Exception as exc:
                         logger.error(
                             "AutopilotEngine: Step %s execution failed: %s",
-                            step.step_id, exc,
+                            step.step_id,
+                            exc,
                         )
                         self.planner.update_step_status(  # type: ignore[attr-defined]
-                            plan.plan_id, step.step_id, "failed",
+                            plan.plan_id,
+                            step.step_id,
+                            "failed",
                         )
-                        executed_actions.append({
-                            "step_id": step.step_id,
-                            "name": step.name,
-                            "error": str(exc),
-                        })
+                        executed_actions.append(
+                            {
+                                "step_id": step.step_id,
+                                "name": step.name,
+                                "error": str(exc),
+                            }
+                        )
                         if autonomy_config.pause_on_exception:
                             self._objective_statuses[objective_id] = AutopilotStatus.PAUSED  # type: ignore[attr-defined]
                             break
                 else:
                     # Needs approval
                     approval_needed = True
-                    pending_approvals.append({
-                        "step_id": step.step_id,
-                        "name": step.name,
-                        "risk_score": risk_score,
-                        "reason": "Requires human approval",
-                    })
+                    pending_approvals.append(
+                        {
+                            "step_id": step.step_id,
+                            "name": step.name,
+                            "risk_score": risk_score,
+                            "reason": "Requires human approval",
+                        }
+                    )
                     self._stats["actions_approved"] += 1  # type: ignore[attr-defined]
 
                     # Check max actions per cycle
@@ -248,8 +264,10 @@ class _ExecutionMixin:
     # ── Internal Helpers ────────────────────────────────────
 
     def _execute_step(
-        self, step: PlanStep, objective: Objective,
-    ) -> Dict[str, Any]:
+        self,
+        step: PlanStep,
+        objective: Objective,
+    ) -> dict[str, Any]:
         """Execute a single plan step via the ActionDispatcher.
 
         Uses lazy-loaded ActionDispatcher to dispatch the step's
@@ -264,6 +282,7 @@ class _ExecutionMixin:
         """
         try:
             from ..executors.dispatch_action import DispatchRequest
+
             request = DispatchRequest(
                 action_type=step.action_type,
                 config=step.action_config,

@@ -14,11 +14,12 @@ FASE 1.1 Performance Fix:
 """
 
 import os
-import time
 import sqlite3
+import time
 
+from .pool import SMART_MEMORY_DB, smart_memory_pool
 from .types import DB_PATH, logger
-from .pool import smart_memory_pool, SMART_MEMORY_DB
+
 
 class DatabaseMixin:
     """
@@ -36,11 +37,17 @@ class DatabaseMixin:
     DEFAULT_TENANT_ID = "__anonymous__"
 
     # Whitelist of allowed table names to prevent SQL injection
-    _VALID_TABLES = frozenset({
-        "semantic_cache", "long_term_memory", "working_memory",
-        "episodic_memory", "procedural_memory", "project_memory",
-        "conversation_sessions",
-    })
+    _VALID_TABLES = frozenset(
+        {
+            "semantic_cache",
+            "long_term_memory",
+            "working_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
+        }
+    )
 
     def _enable_wal_mode(self):
         """Habilita WAL mode para mejor rendimiento concurrente en móvil.
@@ -88,9 +95,7 @@ class DatabaseMixin:
 
             self._last_vacuum_time = now
             new_size_mb = os.path.getsize(DB_PATH) / (1024 * 1024)
-            logger.info(
-                f"SmartMemory: VACUUM complete ({db_size_mb:.1f}MB → {new_size_mb:.1f}MB)"
-            )
+            logger.info(f"SmartMemory: VACUUM complete ({db_size_mb:.1f}MB → {new_size_mb:.1f}MB)")
         except Exception as e:
             logger.debug(f"SmartMemory: VACUUM failed (will retry later): {e}")
 
@@ -128,7 +133,8 @@ class DatabaseMixin:
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__',
                 UNIQUE(query_hash, tenant_id)
-            )""")
+            )"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE TABLE IF NOT EXISTS long_term_memory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,20 +150,25 @@ class DatabaseMixin:
                 tags TEXT DEFAULT '[]',
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__'
-            )""")
+            )"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_cache_hash
-                ON semantic_cache(query_hash)""")
+                ON semantic_cache(query_hash)"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_ltm_importance
-                ON long_term_memory(importance DESC)""")
+                ON long_term_memory(importance DESC)"""
+            )
             # Additional indexes for common mobile query patterns
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_cache_client_time
-                ON semantic_cache(client_id, created_at DESC)""")
+                ON semantic_cache(client_id, created_at DESC)"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_ltm_client_success
-                ON long_term_memory(client_id, success, importance DESC)""")
+                ON long_term_memory(client_id, success, importance DESC)"""
+            )
 
             # === Episodic Memory ===
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -173,13 +184,16 @@ class DatabaseMixin:
                 tags TEXT DEFAULT '[]',
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__'
-            )""")
+            )"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_episodic_type
-                ON episodic_memory(event_type)""")
+                ON episodic_memory(event_type)"""
+            )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """CREATE INDEX IF NOT EXISTS idx_episodic_time
-                ON episodic_memory(created_at DESC)""")
+                ON episodic_memory(created_at DESC)"""
+            )
 
             # === Procedural Memory ===
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -197,7 +211,8 @@ class DatabaseMixin:
                 last_used REAL DEFAULT 0,
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__'
-            )""")
+            )"""
+            )
 
             # === Project Memory ===
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -216,7 +231,8 @@ class DatabaseMixin:
                 notes TEXT DEFAULT '',
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__'
-            )""")
+            )"""
+            )
 
             # === Conversation Sessions ===
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -229,7 +245,8 @@ class DatabaseMixin:
                 exchange_count INTEGER DEFAULT 0,
                 client_id TEXT DEFAULT 'default',
                 tenant_id TEXT DEFAULT '__anonymous__'
-            )""")
+            )"""
+            )
 
             # write() auto-commits on exit — no explicit conn.commit() needed
         # Pool manages connections — no conn.close() needed
@@ -252,8 +269,12 @@ class DatabaseMixin:
         FASE 1.1: Uses smart_memory_pool.write() instead of raw connection.
         """
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         # FASE 1.1: Use pool's write() for migration DDL (auto-commit, write-locked)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
@@ -261,7 +282,7 @@ class DatabaseMixin:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 try:
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'ALTER TABLE "{table}" ADD COLUMN client_id TEXT DEFAULT \'default\''
+                        f"ALTER TABLE \"{table}\" ADD COLUMN client_id TEXT DEFAULT 'default'"
                     )
                 except sqlite3.OperationalError:
                     # Column already exists, ignore
@@ -274,8 +295,12 @@ class DatabaseMixin:
         FASE 1.1: Uses smart_memory_pool.write() instead of raw connection.
         """
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         # FASE 1.1: Use pool's write() for index creation (auto-commit)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
@@ -296,14 +321,18 @@ class DatabaseMixin:
         FASE 1.1: Uses smart_memory_pool.write() instead of raw connection.
         """
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         # FASE 1.1: Use pool's write() for migration DDL (auto-commit, write-locked)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
             # Validate DEFAULT_TENANT_ID contains no SQL-injectable characters
             _safe_default = self.DEFAULT_TENANT_ID
-            if not _safe_default.isidentifier() and not all(c.isalnum() or c == '_' for c in _safe_default):
+            if not _safe_default.isidentifier() and not all(c.isalnum() or c == "_" for c in _safe_default):
                 raise ValueError(f"DEFAULT_TENANT_ID contains unsafe characters: {_safe_default!r}")
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
@@ -326,8 +355,12 @@ class DatabaseMixin:
         FASE 1.1: Uses smart_memory_pool.write() instead of raw connection.
         """
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         # FASE 1.1: Use pool's write() for index creation (auto-commit)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
@@ -358,7 +391,12 @@ class DatabaseMixin:
         # row limit uses ? parameterization
         # FASE 1.1: Use pool's write() for read + delete (auto-commit)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
-            count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[
+                0
+            ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             if count > max_entries:
-                conn.execute(f'DELETE FROM "{table_name}" WHERE id IN (SELECT id FROM "{table_name}" ORDER BY importance ASC, created_at ASC LIMIT ?)', (count - max_entries + 10,))  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                conn.execute(
+                    f'DELETE FROM "{table_name}" WHERE id IN (SELECT id FROM "{table_name}" ORDER BY importance ASC, created_at ASC LIMIT ?)',
+                    (count - max_entries + 10,),
+                )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             # write() auto-commits on exit

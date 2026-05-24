@@ -27,7 +27,8 @@ import logging
 import os
 import secrets
 import time
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 logger = logging.getLogger("zenic_agents.ipc_auth")
 
@@ -45,6 +46,7 @@ _MAX_CLOCK_SKEW: int = 30
 #  Token Verification
 # ──────────────────────────────────────────────────────────────
 
+
 def _get_expected_token() -> str:
     """Get the expected IPC token from environment.
 
@@ -59,15 +61,14 @@ def _get_expected_token() -> str:
     if os.environ.get("NODE_ENV") == "production" or os.environ.get("ZENIC_ENV") == "production":
         raise RuntimeError(
             "ZENIC_IPC_TOKEN is required in production. "
-            "Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            'Generate with: python -c "import secrets; print(secrets.token_hex(32))"'
         )
 
     # Development: generate a random token per process
     if not hasattr(_get_expected_token, "_dev_token"):
         _get_expected_token._dev_token = secrets.token_hex(32)  # type: ignore[attr-defined]
         logger.warning(
-            "ipc_auth: ZENIC_IPC_TOKEN not set — using ephemeral dev token. "
-            "Only same-process IPC will work."
+            "ipc_auth: ZENIC_IPC_TOKEN not set — using ephemeral dev token. " "Only same-process IPC will work."
         )
 
     return _get_expected_token._dev_token  # type: ignore[attr-defined]
@@ -129,7 +130,8 @@ def verify_ipc_token_with_timestamp(token: str, timestamp: str) -> bool:
     if age > _IPC_TOKEN_TTL + _MAX_CLOCK_SKEW:
         logger.warning(
             "ipc_auth: Token expired (age=%ds, ttl=%ds)",
-            age, _IPC_TOKEN_TTL,
+            age,
+            _IPC_TOKEN_TTL,
         )
         return False
 
@@ -159,6 +161,7 @@ def require_ipc_auth(func: Callable[..., Any]) -> Callable[..., Any]:
     Raises:
         PermissionError: If the IPC token is invalid or missing.
     """
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         token = kwargs.pop("token", None) or kwargs.pop("ipc_token", None)
@@ -170,8 +173,7 @@ def require_ipc_auth(func: Callable[..., Any]) -> Callable[..., Any]:
                 func.__qualname__,
             )
             raise PermissionError(
-                f"IPC authentication required for {func.__qualname__}. "
-                "Provide 'token' keyword argument."
+                f"IPC authentication required for {func.__qualname__}. " "Provide 'token' keyword argument."
             )
 
         if not verify_ipc_token(token):
@@ -180,9 +182,7 @@ def require_ipc_auth(func: Callable[..., Any]) -> Callable[..., Any]:
                 getattr(func, "__module__", "?"),
                 func.__qualname__,
             )
-            raise PermissionError(
-                f"Invalid IPC token for {func.__qualname__}."
-            )
+            raise PermissionError(f"Invalid IPC token for {func.__qualname__}.")
 
         return func(*args, **kwargs)
 
@@ -197,6 +197,7 @@ def require_ipc_auth_with_timestamp(func: Callable[..., Any]) -> Callable[..., A
     Raises:
         PermissionError: If the IPC token is invalid, missing, or expired.
     """
+
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         token = kwargs.pop("token", None) or kwargs.pop("ipc_token", None)
@@ -209,9 +210,7 @@ def require_ipc_auth_with_timestamp(func: Callable[..., Any]) -> Callable[..., A
             )
 
         if not verify_ipc_token_with_timestamp(token, str(timestamp)):
-            raise PermissionError(
-                f"Invalid or expired IPC token for {func.__qualname__}."
-            )
+            raise PermissionError(f"Invalid or expired IPC token for {func.__qualname__}.")
 
         return func(*args, **kwargs)
 
@@ -221,6 +220,7 @@ def require_ipc_auth_with_timestamp(func: Callable[..., Any]) -> Callable[..., A
 # ──────────────────────────────────────────────────────────────
 #  Convenience: Generate Token
 # ──────────────────────────────────────────────────────────────
+
 
 def generate_ipc_token() -> str:
     """Generate a new random IPC token (for setup scripts).
@@ -232,9 +232,9 @@ def generate_ipc_token() -> str:
 
 
 __all__ = [
-    "verify_ipc_token",
-    "verify_ipc_token_with_timestamp",
+    "generate_ipc_token",
     "require_ipc_auth",
     "require_ipc_auth_with_timestamp",
-    "generate_ipc_token",
+    "verify_ipc_token",
+    "verify_ipc_token_with_timestamp",
 ]

@@ -10,9 +10,9 @@ Ported from:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
-from ..resilience import BaseAgent, AuditLogger, AuditEntry
+from ..resilience import AuditEntry, AuditLogger, BaseAgent
 from ..schemas import AgentResult
 
 
@@ -27,7 +27,7 @@ class AuditLoggerAgent(BaseAgent[AgentResult]):
 
     def __init__(
         self,
-        audit_logger: Optional[AuditLogger] = None,
+        audit_logger: AuditLogger | None = None,
         **kwargs,
     ) -> None:
         super().__init__(name="A46_AuditLogger", **kwargs)
@@ -147,22 +147,24 @@ class AuditLoggerAgent(BaseAgent[AgentResult]):
         input_hash = AuditLogger.hash_data(input_data) if input_data else ""
         output_hash = AuditLogger.hash_data(output_data) if output_data else ""
 
-        self._logger.record(AuditEntry(
-            agent=agent_name,
-            input_hash=input_hash,
-            output_hash=output_hash,
-            source=source,
-            duration_ms=duration_ms,
-            retry_count=retry_count,
-            circuit_breaker_state=circuit_breaker_state,
-            evidence_summary=evidence_summary[:200],
-        ))
+        self._logger.record(
+            AuditEntry(
+                agent=agent_name,
+                input_hash=input_hash,
+                output_hash=output_hash,
+                source=source,
+                duration_ms=duration_ms,
+                retry_count=retry_count,
+                circuit_breaker_state=circuit_breaker_state,
+                evidence_summary=evidence_summary[:200],
+            )
+        )
 
-    def get_recent(self, agent_name: Optional[str] = None, count: int = 20) -> list[AuditEntry]:
+    def get_recent(self, agent_name: str | None = None, count: int = 20) -> list[AuditEntry]:
         """Get recent entries directly."""
         return self._logger.get_recent(agent_name, count)
 
-    def get_failure_pattern(self, agent_name: Optional[str] = None) -> dict[str, Any]:
+    def get_failure_pattern(self, agent_name: str | None = None) -> dict[str, Any]:
         """Analyze failure patterns directly."""
         return self._logger.get_failure_pattern(agent_name)
 

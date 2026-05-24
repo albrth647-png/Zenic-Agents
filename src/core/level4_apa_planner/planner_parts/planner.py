@@ -8,14 +8,21 @@ broader action set. Also added retry for solver transient failures.
 import time
 
 from src.core.shared.deterministic import DeterministicUUID
+
 from ._imports import (
-    logger, HAS_Z3,
-    ExecutionPlan, RoutePath, MCTSPlanner,
-    load_settings, get_solver_timeout_ms, get_solver_fast_timeout_ms,
-    get_mcts_config, get_governor
+    HAS_Z3,
+    ExecutionPlan,
+    MCTSPlanner,
+    RoutePath,
+    get_governor,
+    get_mcts_config,
+    get_solver_fast_timeout_ms,
+    get_solver_timeout_ms,
+    load_settings,
+    logger,
 )
-from .solver import SolverMixin
 from .mcts import MCTSMixin
+from .solver import SolverMixin
 from .steps import StepsMixin
 
 
@@ -50,8 +57,12 @@ class APAPlanner(
         self._uuid_gen = DeterministicUUID("apa_planner")
 
         solver_name = "Z3" if HAS_Z3 else "AC-3"
-        logger.info("APA Planner: Solver=%s, MCTS depth=%d, Solver timeout=%dms",
-                     solver_name, self.MCTS_MAX_DEPTH, self.solver_timeout_ms)
+        logger.info(
+            "APA Planner: Solver=%s, MCTS depth=%d, Solver timeout=%dms",
+            solver_name,
+            self.MCTS_MAX_DEPTH,
+            self.solver_timeout_ms,
+        )
 
     def generate_plan(self, routing):
         intent = routing.intent
@@ -67,17 +78,15 @@ class APAPlanner(
         # still ran wastefully inside generate_plan(). This saves ~15-20s
         # per request for ~80% of all requests.
         import os as _os
-        crit_level = getattr(routing, 'criticality', 2)
+
+        crit_level = getattr(routing, "criticality", 2)
         crit_path = {1: "low_crit", 2: "standard", 3: "high_crit"}.get(crit_level, "standard")
         skip_solver = _os.environ.get("ZENIC_SKIP_SOLVER", "0") == "1"
         skip_mcts = _os.environ.get("ZENIC_SKIP_MCTS", "0") == "1"
 
         if crit_path in ("low_crit", "standard") and not skip_solver and not skip_mcts:
             # low_crit/standard: skip expensive Z3+MCTS, use heuristic steps only
-            logger.info(
-                "APAPlanner: SKIP solver+MCTS for %s (crit=%d) — heuristic steps only",
-                crit_path, crit_level
-            )
+            logger.info("APAPlanner: SKIP solver+MCTS for %s (crit=%d) — heuristic steps only", crit_path, crit_level)
             steps = self._build_steps(intent, routing, best_action=None)
             return ExecutionPlan(
                 plan_id=self._uuid_gen.next(),
@@ -85,7 +94,7 @@ class APAPlanner(
                 solver_status="SKIPPED_" + crit_path.upper(),
                 solver_proof=None,
                 mcts_simulations=0,
-                mcts_depth_reached=0
+                mcts_depth_reached=0,
             )
 
         # ── HIGH_CRIT or env-var override: Run full solver + MCTS ──
@@ -94,9 +103,7 @@ class APAPlanner(
 
         # Ejecutar solver si la ruta lo requiere (and not globally skipped)
         if not skip_solver:
-            solver_result = self._run_solver_with_retry(
-                routing, intent, adaptive_solver_timeout
-            )
+            solver_result = self._run_solver_with_retry(routing, intent, adaptive_solver_timeout)
         else:
             logger.info("APAPlanner: Solver SKIPPED by ZENIC_SKIP_SOLVER=1")
 
@@ -104,9 +111,7 @@ class APAPlanner(
         if not skip_mcts:
             adaptive_sims = governor.get_adaptive_mcts_simulations(self.MCTS_MAX_SIMULATIONS)
             adaptive_mcts_timeout = governor.get_adaptive_solver_timeout(self.mcts_timeout_ms)
-            best_action = self._run_mcts_with_retry(
-                intent, adaptive_sims, adaptive_mcts_timeout
-            )
+            best_action = self._run_mcts_with_retry(intent, adaptive_sims, adaptive_mcts_timeout)
         else:
             logger.info("APAPlanner: MCTS SKIPPED by ZENIC_SKIP_MCTS=1")
             self._last_mcts_simulations = 0
@@ -124,7 +129,7 @@ class APAPlanner(
             solver_status=solver_status,
             solver_proof=solver_result,
             mcts_simulations=self._last_mcts_simulations,
-            mcts_depth_reached=self._last_mcts_depth
+            mcts_depth_reached=self._last_mcts_depth,
         )
 
     def _run_solver_with_retry(self, routing, intent, adaptive_timeout):
@@ -150,7 +155,10 @@ class APAPlanner(
                     delay = 0.5 * (2 ** (attempt - 1))
                     logger.warning(
                         "APAPlanner: Solver attempt %d/%d failed: %s — retrying in %.1fs",
-                        attempt, max_solver_attempts, e, delay
+                        attempt,
+                        max_solver_attempts,
+                        e,
+                        delay,
                     )
                     time.sleep(delay)
                 else:
@@ -164,11 +172,7 @@ class APAPlanner(
         found for the initial state), retry once with a broader action
         generator that includes a fallback 'QUICK_ANALYSIS' action.
         """
-        mcts = MCTSPlanner(
-            max_depth=self.MCTS_MAX_DEPTH,
-            max_simulations=adaptive_sims,
-            timeout_ms=adaptive_timeout
-        )
+        mcts = MCTSPlanner(max_depth=self.MCTS_MAX_DEPTH, max_simulations=adaptive_sims, timeout_ms=adaptive_timeout)
 
         initial_state = {
             "target": intent.target,
@@ -179,9 +183,7 @@ class APAPlanner(
         }
 
         best_action = mcts.search(
-            initial_state,
-            action_generator=self._action_generator,
-            reward_function=self._reward_function
+            initial_state, action_generator=self._action_generator, reward_function=self._reward_function
         )
 
         # Store MCTS stats for ExecutionPlan
@@ -194,7 +196,7 @@ class APAPlanner(
             mcts2 = MCTSPlanner(
                 max_depth=max(2, self.MCTS_MAX_DEPTH - 1),
                 max_simulations=max(10, adaptive_sims // 2),
-                timeout_ms=max(2000, adaptive_timeout // 2)
+                timeout_ms=max(2000, adaptive_timeout // 2),
             )
 
             def _broad_action_generator(state, depth):
@@ -205,9 +207,7 @@ class APAPlanner(
                 return actions
 
             best_action = mcts2.search(
-                initial_state,
-                action_generator=_broad_action_generator,
-                reward_function=self._reward_function
+                initial_state, action_generator=_broad_action_generator, reward_function=self._reward_function
             )
 
             # Update stats from retry

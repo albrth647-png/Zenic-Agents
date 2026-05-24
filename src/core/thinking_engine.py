@@ -7,6 +7,6 @@ NO solo un copiloto. ThinkingEngine coordina:
   Qwen (PIENSA)  →  SemanticEngine (ENTIENDE)  →  SmartMemory (RECUERDA)
 """
 
-from .thinking_parts import ThinkingEngine, GenerationPlan, ThinkingResult  # explicit
+from .thinking_parts import GenerationPlan, ThinkingEngine, ThinkingResult  # explicit
 
-__all__ = ["ThinkingEngine", "GenerationPlan", "ThinkingResult"]
+__all__ = ["GenerationPlan", "ThinkingEngine", "ThinkingResult"]

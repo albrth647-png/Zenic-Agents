@@ -3,8 +3,6 @@ Professional glossary API mixin for DNALoader.
 """
 
 import re
-from typing import Dict
-
 
 
 class GlossaryMixin:
@@ -44,7 +42,7 @@ class GlossaryMixin:
                 re.escape(entry.from_term),
                 lambda m: self._preserve_case_replace(m, entry.to_term),
                 result,
-                flags=re.IGNORECASE
+                flags=re.IGNORECASE,
             )
 
         return result
@@ -66,7 +64,7 @@ class GlossaryMixin:
 
         return error_message
 
-    def describe_feature(self, technical_name: str) -> Dict[str, str]:
+    def describe_feature(self, technical_name: str) -> dict[str, str]:
         """Obtiene la descripción de marketing de una feature."""
         if not self._loaded:
             self.load_all()

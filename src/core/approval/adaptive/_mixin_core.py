@@ -8,13 +8,13 @@ import logging
 import sqlite3
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from ._types import (
-    AdaptiveApprovalRecord,
     _FINANCIAL_KEYWORDS,
     _MAX_RETRIES,
     _RETRY_DELAY,
+    AdaptiveApprovalRecord,
     _hash_config,
 )
 
@@ -37,6 +37,7 @@ class AdaptiveApprovalEngine:
         self._db_path = db_path
         self._auto_approve_threshold = auto_approve_threshold
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -44,6 +45,7 @@ class AdaptiveApprovalEngine:
 
     def _init_db(self) -> None:
         """Create the adaptive_approval table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -74,7 +76,7 @@ class AdaptiveApprovalEngine:
         self,
         user_id: int,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         was_auto: bool = False,
     ) -> AdaptiveApprovalRecord:
         """Record that an approval was granted."""
@@ -102,9 +104,11 @@ class AdaptiveApprovalEngine:
                 self._persist_record(record, insert=False)
 
         logger.info(
-            "AdaptiveApproval: Recorded approval for user=%d action='%s' "
-            "consecutive=%d was_auto=%s",
-            user_id, action_type, record.consecutive_approvals, was_auto,
+            "AdaptiveApproval: Recorded approval for user=%d action='%s' " "consecutive=%d was_auto=%s",
+            user_id,
+            action_type,
+            record.consecutive_approvals,
+            was_auto,
         )
         return record
 
@@ -112,7 +116,7 @@ class AdaptiveApprovalEngine:
         self,
         user_id: int,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         reason: str = "",
     ) -> None:
         """Record a rejection — resets consecutive_approvals to 0."""
@@ -124,17 +128,18 @@ class AdaptiveApprovalEngine:
                 record.consecutive_approvals = 0
                 self._persist_record(record, insert=False)
                 logger.info(
-                    "AdaptiveApproval: Rejection reset consecutive_approvals "
-                    "for user=%d action='%s' reason='%s'",
-                    user_id, action_type, reason[:80],
+                    "AdaptiveApproval: Rejection reset consecutive_approvals " "for user=%d action='%s' reason='%s'",
+                    user_id,
+                    action_type,
+                    reason[:80],
                 )
 
     def check_auto_approve(
         self,
         user_id: int,
         action_type: str,
-        action_config: Dict[str, Any],
-    ) -> Tuple[bool, str]:
+        action_config: dict[str, Any],
+    ) -> tuple[bool, str]:
         """Check whether the given action should be auto-approved."""
         # Safety guard: financial actions
         action_lower = action_type.lower()
@@ -162,23 +167,26 @@ class AdaptiveApprovalEngine:
 
         return (
             False,
-            f"Only {record.consecutive_approvals}/{self._auto_approve_threshold} "
-            f"consecutive approvals",
+            f"Only {record.consecutive_approvals}/{self._auto_approve_threshold} " f"consecutive approvals",
         )
 
     # ── Query Methods ──────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return aggregate statistics across all adaptive records."""
-        def _do_query() -> Dict[str, Any]:
+
+        def _do_query() -> dict[str, Any]:
             conn = sqlite3.connect(self._db_path)
             try:
                 total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM adaptive_approval_records"
                 ).fetchone()[0]
-                auto_approved = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT SUM(total_auto_approvals) FROM adaptive_approval_records"
-                ).fetchone()[0] or 0
+                auto_approved = (
+                    conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                        "SELECT SUM(total_auto_approvals) FROM adaptive_approval_records"
+                    ).fetchone()[0]
+                    or 0
+                )
                 avg_consecutive_row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT AVG(consecutive_approvals) FROM adaptive_approval_records"
                 ).fetchone()[0]
@@ -196,6 +204,7 @@ class AdaptiveApprovalEngine:
 
     def reset_user(self, user_id: int) -> None:
         """Reset (delete) all adaptive records for a user."""
+
         def _do_reset() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -212,10 +221,14 @@ class AdaptiveApprovalEngine:
     # ── Private Helpers ────────────────────────────────────
 
     def _find_record(
-        self, user_id: int, action_type: str, config_hash: str,
-    ) -> Optional[AdaptiveApprovalRecord]:
+        self,
+        user_id: int,
+        action_type: str,
+        config_hash: str,
+    ) -> AdaptiveApprovalRecord | None:
         """Look up an existing adaptive record."""
-        def _do_find() -> Optional[AdaptiveApprovalRecord]:
+
+        def _do_find() -> AdaptiveApprovalRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -242,6 +255,7 @@ class AdaptiveApprovalEngine:
 
     def _persist_record(self, record: AdaptiveApprovalRecord, *, insert: bool) -> None:
         """Insert or update a record in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -252,10 +266,15 @@ class AdaptiveApprovalEngine:
                         total_auto_approvals, total_manual_approvals, created_at)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
-                        record.record_id, record.user_id, record.action_type,
-                        record.action_config_hash, record.consecutive_approvals,
-                        record.last_auto_approved, record.total_auto_approvals,
-                        record.total_manual_approvals, record.created_at,
+                        record.record_id,
+                        record.user_id,
+                        record.action_type,
+                        record.action_config_hash,
+                        record.consecutive_approvals,
+                        record.last_auto_approved,
+                        record.total_auto_approvals,
+                        record.total_manual_approvals,
+                        record.created_at,
                     ),
                 )
             else:
@@ -265,8 +284,10 @@ class AdaptiveApprovalEngine:
                        total_auto_approvals=?, total_manual_approvals=?
                        WHERE record_id=?""",
                     (
-                        record.consecutive_approvals, record.last_auto_approved,
-                        record.total_auto_approvals, record.total_manual_approvals,
+                        record.consecutive_approvals,
+                        record.last_auto_approved,
+                        record.total_auto_approvals,
+                        record.total_manual_approvals,
                         record.record_id,
                     ),
                 )
@@ -282,14 +303,17 @@ class AdaptiveApprovalEngine:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
             except sqlite3.OperationalError as exc:
                 last_exc = exc
                 logger.warning(
-                    "AdaptiveApproval: DB retry %d/%d — %s", attempt, max_retries, exc,
+                    "AdaptiveApproval: DB retry %d/%d — %s",
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)
@@ -298,6 +322,7 @@ class AdaptiveApprovalEngine:
                 logger.error("AdaptiveApproval: DB error — %s", exc)
                 break
         logger.error(
-            "AdaptiveApproval: All retries exhausted — %s", last_exc,
+            "AdaptiveApproval: All retries exhausted — %s",
+            last_exc,
         )
         return fallback

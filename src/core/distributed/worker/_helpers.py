@@ -6,6 +6,7 @@ import threading
 # Phase 5: Observability wiring
 try:
     from src.core.observability.metrics import get_metrics_collector
+
     _METRICS_AVAILABLE = True
 except ImportError:
     get_metrics_collector = None  # type: ignore
@@ -37,4 +38,6 @@ def _run_async(coro):
     """Run an async coroutine on the current thread's persistent event loop."""
     loop = _get_thread_loop()
     return loop.run_until_complete(coro)
+
+
 __all__ = ["_get_thread_loop", "_local", "_run_async"]

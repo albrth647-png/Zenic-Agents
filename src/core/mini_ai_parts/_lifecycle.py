@@ -2,21 +2,26 @@
 MiniAIEngine model lifecycle mixin: load_model, unload_model, stats, _call_llm, _extract_answer.
 """
 
-import re
-import time
-import threading
 import concurrent.futures
-from typing import Optional, Dict, Any
+import re
+import threading
+import time
+from typing import Any
 
 from ._imports import (
-    MODEL_PATH, N_CTX, N_THREADS, TEMPERATURE, LLM_TIMEOUT_S, logger,
+    LLM_TIMEOUT_S,
+    MODEL_PATH,
+    N_CTX,
+    N_THREADS,
+    TEMPERATURE,
+    logger,
 )
 
 
 class ModelLifecycleMixin:
     """Model lifecycle and LLM call helper methods."""
 
-    def _init_lifecycle(self, model_path: Optional[str] = None, auto_load: bool = True):
+    def _init_lifecycle(self, model_path: str | None = None, auto_load: bool = True):
         self._llm = None
         self._model_path = model_path or MODEL_PATH
         self._loaded = False
@@ -47,6 +52,7 @@ class ModelLifecycleMixin:
 
         try:
             from llama_cpp import Llama  # type: ignore[import-unresolved]
+
             start = time.time()
             self._llm = Llama(
                 model_path=self._model_path,
@@ -59,7 +65,9 @@ class ModelLifecycleMixin:
             )
             self._load_time = time.time() - start
             self._loaded = True
-            logger.info(f"MiniAI: Qwen3-0.6B loaded in {self._load_time:.1f}s (n_ctx={N_CTX}, n_threads={N_THREADS}, n_batch={os.environ.get('ZENIC_LLM_BATCH', '512')})")
+            logger.info(
+                f"MiniAI: Qwen3-0.6B loaded in {self._load_time:.1f}s (n_ctx={N_CTX}, n_threads={N_THREADS}, n_batch={os.environ.get('ZENIC_LLM_BATCH', '512')})"
+            )
             # Warm-up inference: first call is 2-5x slower (KV cache init, buffer allocation).
             # Doing it here means the first real request won't timeout.
             self._warm_up()
@@ -85,6 +93,7 @@ class ModelLifecycleMixin:
             return
         try:
             import time as _t
+
             t0 = _t.time()
             _ = self._llm.create_chat_completion(
                 messages=[
@@ -110,12 +119,12 @@ class ModelLifecycleMixin:
                     self._executor.shutdown(wait=False)
                     self._executor = None  # Lazy re-creation on next use
                 # Also shut down the verdict executor to prevent thread leak
-                if hasattr(self, '_verdict_executor') and self._verdict_executor is not None:
+                if hasattr(self, "_verdict_executor") and self._verdict_executor is not None:
                     self._verdict_executor.shutdown(wait=False)
                     self._verdict_executor = None
                 logger.info("MiniAI: Model unloaded from memory")
 
-    def chat(self, message: str, max_tokens: int = 256) -> Optional[str]:
+    def chat(self, message: str, max_tokens: int = 256) -> str | None:
         """Conversational LLM call for chat mode responses.
 
         Simple wrapper around _call_llm that uses a conversational system prompt.
@@ -132,7 +141,7 @@ class ModelLifecycleMixin:
         return self._loaded and self._llm is not None
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas de uso del motor."""
         return {
             "model_loaded": self.is_loaded,
@@ -148,7 +157,7 @@ class ModelLifecycleMixin:
     #  INTERNAL: LLM CALL HELPER
     # ================================================================
 
-    def _call_llm(self, system_prompt: str, user_prompt: str, max_tokens: int) -> Optional[str]:
+    def _call_llm(self, system_prompt: str, user_prompt: str, max_tokens: int) -> str | None:
         """
         Llama al LLM con timeout enforcement y manejo de errores.
         Returns raw response text or None on failure.
@@ -165,7 +174,10 @@ class ModelLifecycleMixin:
             return self._llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt + "\n/no_think"},  # /no_think disables Qwen3 thinking mode (saves 50-100 tokens on ARM)
+                    {
+                        "role": "user",
+                        "content": user_prompt + "\n/no_think",
+                    },  # /no_think disables Qwen3 thinking mode (saves 50-100 tokens on ARM)
                 ],
                 max_tokens=max_tokens,
                 temperature=TEMPERATURE,
@@ -217,15 +229,15 @@ class ModelLifecycleMixin:
     def _extract_answer(text: str) -> str:
         """Extrae la respuesta limpia del output de Qwen3 (maneja thinking mode)."""
         # Qwen3 outputs <think...</think then the answer
-        match = re.search(r'</think\s*>(.*)', text, re.DOTALL)
+        match = re.search(r"</think\s*>(.*)", text, re.DOTALL)
         if match:
             answer = match.group(1).strip()
         else:
             # No think block - try to get last meaningful line
-            lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
+            lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
             answer = lines[-1] if lines else text.strip()
 
         # Clean markdown fences
-        answer = re.sub(r'```(?:json|python)?\s*', '', answer)
-        answer = re.sub(r'\s*```', '', answer)
+        answer = re.sub(r"```(?:json|python)?\s*", "", answer)
+        answer = re.sub(r"\s*```", "", answer)
         return answer.strip()

@@ -2,16 +2,18 @@
 
 import enum
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
-
+from typing import Any
 
 # ============================================================
 #  ENUMS
 # ============================================================
 
+
 class WorkerState(str, enum.Enum):
     """Worker lifecycle states."""
+
     IDLE = "idle"
     RUNNING = "running"
     PAUSED = "paused"
@@ -23,6 +25,7 @@ class WorkerState(str, enum.Enum):
 # ============================================================
 #  CONFIGURATION
 # ============================================================
+
 
 @dataclass
 class WorkerConfig:
@@ -42,10 +45,11 @@ class WorkerConfig:
         lease_renewal_threshold: Renew lease when this fraction remains.
         graceful_shutdown_timeout: Seconds to wait for tasks during shutdown.
     """
+
     worker_id: str = ""
-    queue_names: List[str] = field(default_factory=lambda: ["default"])
-    task_types: Optional[List[str]] = None
-    tenant_id: Optional[str] = None
+    queue_names: list[str] = field(default_factory=lambda: ["default"])
+    task_types: list[str] | None = None
+    tenant_id: str | None = None
     lease_seconds: float = 120.0
     lease_renewal_interval: float = 30.0
     heartbeat_interval: float = 10.0
@@ -63,5 +67,5 @@ class WorkerConfig:
 #  TASK HANDLER TYPE
 # ============================================================
 
-TaskHandler = Callable[[Dict[str, Any]], Any]
+TaskHandler = Callable[[dict[str, Any]], Any]
 __all__ = ["TaskHandler", "WorkerConfig", "WorkerState"]

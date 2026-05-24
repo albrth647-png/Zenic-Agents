@@ -21,7 +21,11 @@ import threading
 from typing import Any
 
 from ..types.events import (
-    Event, EventType, Subscription, EventHandler, AsyncEventHandler,
+    AsyncEventHandler,
+    Event,
+    EventHandler,
+    EventType,
+    Subscription,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.events")
@@ -82,14 +86,9 @@ class EventBus:
                 self._subscriptions[event_type] = []
             self._subscriptions[event_type].append(sub)
             # Ordenar por prioridad descendente
-            self._subscriptions[event_type].sort(
-                key=lambda s: s.priority, reverse=True
-            )
+            self._subscriptions[event_type].sort(key=lambda s: s.priority, reverse=True)
 
-        logger.debug(
-            f"Suscripcion: {event_type.value} "
-            f"(priority={priority})"
-        )
+        logger.debug(f"Suscripcion: {event_type.value} " f"(priority={priority})")
         return sub
 
     def unsubscribe(self, sub: Subscription) -> bool:
@@ -111,9 +110,7 @@ class EventBus:
                 self._subscriptions[event_type] = []
                 return count
 
-            total = sum(
-                len(subs) for subs in self._subscriptions.values()
-            )
+            total = sum(len(subs) for subs in self._subscriptions.values())
             self._subscriptions.clear()
             return total
 
@@ -166,9 +163,7 @@ class EventBus:
 
             except Exception as e:
                 self._stats["total_errors"] += 1
-                logger.error(
-                    f"Error en handler de {event_type.value}: {e}"
-                )
+                logger.error(f"Error en handler de {event_type.value}: {e}")
 
         return event
 
@@ -192,10 +187,7 @@ class EventBus:
     def stats(self) -> dict[str, Any]:
         """Estadisticas del event bus."""
         with self._lock:
-            sub_counts = {
-                et.value: len(subs)
-                for et, subs in self._subscriptions.items()
-            }
+            sub_counts = {et.value: len(subs) for et, subs in self._subscriptions.items()}
         return {
             **self._stats,
             "subscriptions": sub_counts,
@@ -209,12 +201,10 @@ class EventBus:
         with self._lock:
             self._event_log.append(event)
             if len(self._event_log) > self._max_log:
-                self._event_log = self._event_log[-self._max_log:]
+                self._event_log = self._event_log[-self._max_log :]
 
     @staticmethod
-    def _schedule_async(
-        handler: AsyncEventHandler, event: Event
-    ) -> None:
+    def _schedule_async(handler: AsyncEventHandler, event: Event) -> None:
         """Programa un handler asincrono en el event loop."""
         try:
             loop = asyncio.get_event_loop()

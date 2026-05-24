@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -17,13 +17,11 @@ class ExpiryConfig:
     """Configuration for approval expiration behavior."""
 
     default_ttl_seconds: int = 3600  # 1 hour
-    notification_schedule: List[int] = field(
-        default_factory=lambda: [60, 30, 10, 5]
-    )  # minutes before expiry
+    notification_schedule: list[int] = field(default_factory=lambda: [60, 30, 10, 5])  # minutes before expiry
     auto_revert_enabled: bool = True
-    revert_action: Optional[Dict[str, Any]] = None
+    revert_action: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "default_ttl_seconds": self.default_ttl_seconds,
@@ -39,16 +37,16 @@ class ExpiryRecord:
 
     request_id: str = ""
     expires_at: str = ""
-    reverted_at: Optional[str] = None
-    revert_result: Optional[Dict[str, Any]] = None
-    notification_sent_at: List[str] = field(default_factory=list)
+    reverted_at: str | None = None
+    revert_result: dict[str, Any] | None = None
+    notification_sent_at: list[str] = field(default_factory=list)
     status: str = "active"  # active/expired/reverted/cancelled
 
     def __post_init__(self) -> None:
         if not self.request_id:
             raise ValueError("request_id is required")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "request_id": self.request_id,
@@ -81,4 +79,6 @@ class ExpiryRecord:
             return max(0.0, delta.total_seconds() / 60.0)
         except (ValueError, TypeError):
             return 0.0
-__all__ = ["ExpiryConfig", "ExpiryRecord", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_DELAY", "ExpiryConfig", "ExpiryRecord"]

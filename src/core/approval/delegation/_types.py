@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.1
@@ -45,7 +45,7 @@ class DelegationRule:
         except (ValueError, TypeError):
             return self.active
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "rule_id": self.rule_id,
@@ -78,7 +78,7 @@ class DelegationRecord:
         if not self.delegated_at:
             self.delegated_at = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "record_id": self.record_id,
@@ -89,4 +89,6 @@ class DelegationRecord:
             "delegated_at": self.delegated_at,
             "acknowledged": self.acknowledged,
         }
-__all__ = ["DelegationRecord", "DelegationRule", "_MAX_RETRIES", "_RETRY_DELAY"]
+
+
+__all__ = ["_MAX_RETRIES", "_RETRY_DELAY", "DelegationRecord", "DelegationRule"]

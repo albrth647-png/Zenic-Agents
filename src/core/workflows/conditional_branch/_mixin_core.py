@@ -10,7 +10,6 @@ from typing import Any
 
 from .chain_composer import ChainStep
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +79,8 @@ class ConditionalBranching:
                     if safe_evaluate(condition.expression, context):  # noqa: F821
                         logger.debug(
                             "Branch rule '%s' matched condition '%s' → %s",
-                            rule.name, condition.description or condition.expression,
+                            rule.name,
+                            condition.description or condition.expression,
                             condition.target_step_id,
                         )
                         return condition.target_step_id
@@ -108,7 +108,9 @@ class ConditionalBranching:
             self._rules[rule.rule_id] = rule
             logger.info(
                 "Registered branch rule %s: %s (%d conditions)",
-                rule.rule_id, rule.name, len(rule.conditions),
+                rule.rule_id,
+                rule.name,
+                len(rule.conditions),
             )
             return rule.rule_id
 

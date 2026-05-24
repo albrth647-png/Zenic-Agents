@@ -10,36 +10,39 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class SafetyVerdict(str, Enum):
     """Safety gate verdict."""
+
     ALLOW = "ALLOW"
-    CONFIRM = "CONFIRM"       # Requires user confirmation before proceeding
-    APPROVE = "APPROVE"       # Requires higher-role approval
-    DENY = "DENY"             # Absolutely denied — no override
+    CONFIRM = "CONFIRM"  # Requires user confirmation before proceeding
+    APPROVE = "APPROVE"  # Requires higher-role approval
+    DENY = "DENY"  # Absolutely denied — no override
     RATE_LIMITED = "RATE_LIMITED"  # Too many actions, slow down
 
 
 class ActionCategory(str, Enum):
     """Classification of action risk level."""
-    SAFE = "safe"               # Read-only, non-destructive
-    MODERATE = "moderate"       # Write operations, single record
+
+    SAFE = "safe"  # Read-only, non-destructive
+    MODERATE = "moderate"  # Write operations, single record
     DESTRUCTIVE = "destructive"  # Delete, drop, bulk operations
-    FINANCIAL = "financial"      # Involves money, invoices, payments
-    SYSTEM = "system"           # System-level changes
+    FINANCIAL = "financial"  # Involves money, invoices, payments
+    SYSTEM = "system"  # System-level changes
 
 
 @dataclass
 class SafetyRule:
     """A deterministic safety rule."""
+
     name: str
     category: ActionCategory
-    pattern: str                           # Regex pattern to detect
+    pattern: str  # Regex pattern to detect
     verdict: SafetyVerdict
     message: str
-    compiled: Optional[re.Pattern] = field(default=None, repr=False)
+    compiled: re.Pattern | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.pattern:
@@ -49,22 +52,23 @@ class SafetyRule:
 @dataclass
 class SafetyCheckResult:
     """Result of a safety gate check."""
+
     verdict: SafetyVerdict
     category: ActionCategory
     reason: str
     rule_name: str
-    action_id: str = ""                                  # FIX A2: unique action ID for DENY tracking
+    action_id: str = ""  # FIX A2: unique action ID for DENY tracking
     requires_confirmation: bool = False
     requires_approval: bool = False
     risk_score: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 # ──────────────────────────────────────────────────────────────
 #  DETERMINISTIC SAFETY RULES
 # ──────────────────────────────────────────────────────────────
 
-SAFETY_RULES: List[SafetyRule] = [
+SAFETY_RULES: list[SafetyRule] = [
     # ── DESTRUCTIVE: Shell commands & injection (checked first) ─
     SafetyRule(
         name="shell_destructive",
@@ -168,4 +172,4 @@ SAFETY_RULES: List[SafetyRule] = [
         message="Scheduling operation — requires confirmation to avoid spam",
     ),
 ]
-__all__ = ["ActionCategory", "SAFETY_RULES", "SafetyCheckResult", "SafetyRule", "SafetyVerdict"]
+__all__ = ["SAFETY_RULES", "ActionCategory", "SafetyCheckResult", "SafetyRule", "SafetyVerdict"]

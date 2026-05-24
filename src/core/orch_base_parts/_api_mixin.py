@@ -3,7 +3,6 @@ Shared public API methods for BaseOrchestrator — app, automation, schema, thin
 """
 
 
-
 class APIMixin:
     """Shared public API methods for BaseOrchestrator."""
 
@@ -12,15 +11,11 @@ class APIMixin:
         """Project directory (preferred over deprecated p_dir)."""
         return self.p_dir
 
-    async def resume_from_partial(self, resumption_token: str,
-                                   subtask_index=None) -> dict:
+    async def resume_from_partial(self, resumption_token: str, subtask_index=None) -> dict:
         """Resume execution from a partial reasoning state."""
-        return await self._partial_reasoning.resume_from_partial(
-            resumption_token, subtask_index
-        )
+        return await self._partial_reasoning.resume_from_partial(resumption_token, subtask_index)
 
-    async def generate_app(self, request: str, project_name: str = "",
-                           output_dir: str = "") -> dict:
+    async def generate_app(self, request: str, project_name: str = "", output_dir: str = "") -> dict:
         """Genera una aplicacion completa a partir de una descripcion."""
         result = self._app_gen.generate_app(request, project_name, output_dir)
 
@@ -45,8 +40,7 @@ class APIMixin:
                 pattern_name=f"gen_{result.template_type}",
                 pattern_type="app_generation",
                 description=f"Generated {result.template_type} app from request",
-                steps=[f"Used template: {result.template_type}",
-                       f"Generated {len(result.files)} files"],
+                steps=[f"Used template: {result.template_type}", f"Generated {len(result.files)} files"],
                 success=result.status == "generated",
             )
 
@@ -62,13 +56,13 @@ class APIMixin:
             "error": result.error,
         }
 
-    async def generate_automation(self, description: str,
-                                   output_dir: str = "") -> dict:
+    async def generate_automation(self, description: str, output_dir: str = "") -> dict:
         """Genera un proyecto de automatizacion a partir de una descripcion."""
         automation_design = None
         if self._automation_agent:
             automation_design = self._automation_agent.design_with_runner(
-                self._agent_runner, description,
+                self._agent_runner,
+                description,
             )
 
         result = self._automation.generate_automation_project(description, output_dir)

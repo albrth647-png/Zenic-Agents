@@ -6,11 +6,13 @@ CodeAssembler to produce REAL CRUD/analytics/notification logic instead
 of the stub: return {"processed": True, "input": payload}
 """
 
-import re
 import logging
-from src.core.shared.contracts import OperationType, GoalType
+import re
+
+from src.core.shared.contracts import GoalType, OperationType
 
 from ._other_lang_mixin import OtherLangMixin
+
 logger = logging.getLogger("core.code_gen_parts._contextual_mixin._core")
 
 
@@ -27,7 +29,11 @@ class ContextualMixin(OtherLangMixin):
             return self.generate_pipeline_driven_code(intent, ast_analysis, plan, lang)
 
         target = intent.target
-        safe_target = re.sub(r'[^\w]', '_', target.replace('.py', '').replace('.kt', '').replace('.go', '').replace('.js', '')) if target != "unknown" else "module"
+        safe_target = (
+            re.sub(r"[^\w]", "_", target.replace(".py", "").replace(".kt", "").replace(".go", "").replace(".js", ""))
+            if target != "unknown"
+            else "module"
+        )
 
         existing_functions = ast_analysis.get("function_names", []) if ast_analysis else []
         existing_classes = ast_analysis.get("class_names", []) if ast_analysis else []
@@ -44,25 +50,44 @@ class ContextualMixin(OtherLangMixin):
                 needed_imports.add(conn_str)
 
         if lang == "python":
-            return self.generate_python_contextual(intent, ast_analysis, safe_target,
-                                                     existing_functions, existing_classes,
-                                                     existing_connections, needed_imports,
-                                                     max_complexity)
+            return self.generate_python_contextual(
+                intent,
+                ast_analysis,
+                safe_target,
+                existing_functions,
+                existing_classes,
+                existing_connections,
+                needed_imports,
+                max_complexity,
+            )
         elif lang == "kotlin":
             return self.generate_kotlin_contextual(intent, safe_target, existing_classes)
         elif lang == "go":
             return self.generate_go_contextual(intent, safe_target)
         elif lang == "javascript":
             return self.generate_javascript_contextual(intent, safe_target)
-        return self.generate_python_contextual(intent, ast_analysis, safe_target,
-                                                 existing_functions, existing_classes,
-                                                 existing_connections, needed_imports,
-                                                 max_complexity)
+        return self.generate_python_contextual(
+            intent,
+            ast_analysis,
+            safe_target,
+            existing_functions,
+            existing_classes,
+            existing_connections,
+            needed_imports,
+            max_complexity,
+        )
 
-    def generate_python_contextual(self, intent, ast_analysis, safe_target,
-                                     existing_functions, existing_classes,
-                                     existing_connections, needed_imports,
-                                     max_complexity):
+    def generate_python_contextual(
+        self,
+        intent,
+        ast_analysis,
+        safe_target,
+        existing_functions,
+        existing_classes,
+        existing_connections,
+        needed_imports,
+        max_complexity,
+    ):
         """Genera codigo Python contextual.
 
         M1 FIX: Tries CodeAssembler for real project generation first.
@@ -70,13 +95,12 @@ class ContextualMixin(OtherLangMixin):
         orch = self._orchestrator
 
         # M1 FIX: Try CodeAssembler for CREATE operations first
-        if intent.op == OperationType.CREATE and hasattr(self, '_assembler') and self._assembler:
+        if intent.op == OperationType.CREATE and hasattr(self, "_assembler") and self._assembler:
             description = str(intent) if intent else safe_target
             try:
                 entities = self._extract_entities_from_intent(intent, safe_target)
                 result = self._assembler.assemble_project(
-                    description, niche_plan=None,
-                    project_name=safe_target, entities=entities
+                    description, niche_plan=None, project_name=safe_target, entities=entities
                 )
                 if result and len(result) > 2:
                     # Return the main service module
@@ -95,17 +119,16 @@ class ContextualMixin(OtherLangMixin):
             if intent.goal == GoalType.SECURITY_HARDEN:
                 return self.generate_security_module(safe_target)
             else:
-                return self.generate_feature_module(safe_target, existing_functions,
-                                                      existing_classes, needed_imports)
+                return self.generate_feature_module(safe_target, existing_functions, existing_classes, needed_imports)
         elif intent.op in [OperationType.REFACTOR, OperationType.OPTIMIZE]:
             if intent.raw_code:
                 return orch._code_transform.refactor_python(intent.raw_code, ast_analysis)
-            return f'# ZENIC-AGENTS - Optimized version of {safe_target}\n# No original code provided\n'
+            return f"# ZENIC-AGENTS - Optimized version of {safe_target}\n# No original code provided\n"
         elif intent.op == OperationType.DEBUG:
             if intent.raw_code:
                 return orch._code_transform.fix_python(intent.raw_code, ast_analysis)
-            return f'# ZENIC-AGENTS - Debug suggestions for {safe_target}\n# Provide code to analyze errors\n'
-        return f'# ZENIC-AGENTS - {intent.op} operation on {safe_target}\n'
+            return f"# ZENIC-AGENTS - Debug suggestions for {safe_target}\n# Provide code to analyze errors\n"
+        return f"# ZENIC-AGENTS - {intent.op} operation on {safe_target}\n"
 
     @staticmethod
     def generate_security_module(safe_target):
@@ -157,8 +180,7 @@ if __name__ == "__main__":
     print(f"Token generated: {{token}}")
 '''
 
-    def generate_feature_module(self, safe_target, existing_functions,
-                                 existing_classes, needed_imports):
+    def generate_feature_module(self, safe_target, existing_functions, existing_classes, needed_imports):
         """Genera modulo de feature contextual con REAL _process().
 
         M1 FIX: No more stubs. Generates real CRUD logic.
@@ -175,11 +197,11 @@ if __name__ == "__main__":
         if existing_functions:
             fn_list = ", ".join(existing_functions[:5])
             cls_list = ", ".join(existing_classes[:5]) if existing_classes else "none"
-            extra_methods = f'''
+            extra_methods = f"""
     # Contextual integration with existing code
     # Detected functions: {fn_list}
     # Detected classes: {cls_list}
-'''
+"""
 
         # M1 FIX: Generate REAL _process() instead of stub
         real_process = self._build_contextual_process(safe_target)
@@ -246,7 +268,7 @@ if __name__ == "__main__":
         M1 FIX: No more stubs. Generates actual CRUD logic.
         """
         # Try CodeAssembler first
-        if hasattr(self, '_assembler') and self._assembler:
+        if hasattr(self, "_assembler") and self._assembler:
             entity = {
                 "name": safe_target.capitalize(),
                 "fields": [
@@ -314,9 +336,10 @@ if __name__ == "__main__":
             ],
         }
 
-        raw_code = getattr(intent, 'raw_code', None) or ""
+        raw_code = getattr(intent, "raw_code", None) or ""
         if raw_code and "class " in raw_code:
             import ast
+
             try:
                 tree = ast.parse(raw_code)
                 for node in ast.walk(tree):
@@ -328,8 +351,12 @@ if __name__ == "__main__":
                                 field_type = "str"
                                 if isinstance(item.annotation, ast.Name):
                                     type_map = {
-                                        "int": "int", "str": "str", "float": "float",
-                                        "bool": "bool", "list": "list", "dict": "dict",
+                                        "int": "int",
+                                        "str": "str",
+                                        "float": "float",
+                                        "bool": "bool",
+                                        "list": "list",
+                                        "dict": "dict",
                                     }
                                     field_type = type_map.get(item.annotation.id, "str")
                                 fields.append({"name": field_name, "type": field_type})

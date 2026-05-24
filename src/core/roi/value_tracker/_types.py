@@ -12,7 +12,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class ValueCategory(str, Enum):
     COMPLIANCE_MAINTAINED = "compliance_maintained"
 
 
-DEFAULT_UNIT_VALUES: Dict[ValueCategory, float] = {
+DEFAULT_UNIT_VALUES: dict[ValueCategory, float] = {
     ValueCategory.HOURS_SAVED: 25.0,
     ValueCategory.ERRORS_AVOIDED: 150.0,
     ValueCategory.REVENUE_RECOVERED: 1.0,
@@ -51,7 +51,7 @@ class ValueEntry:
     currency: str = "USD"
     timestamp: str = ""
     tenant_id: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.entry_id:
@@ -61,7 +61,7 @@ class ValueEntry:
         if self.total_value == 0.0 and (self.quantity != 0.0 or self.unit_value != 0.0):
             self.total_value = round(self.quantity * self.unit_value, 6)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dict."""
         return {
             "entry_id": self.entry_id,
@@ -85,23 +85,40 @@ _RETRY_BASE_DELAY = 0.1
 
 def _with_retry(fn, label: str = "ValueTracker DB op"):
     """Execute *fn* with exponential-backoff retry (3 attempts)."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, _MAX_RETRIES + 1):
         try:
             return fn()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last_exc = exc
             if attempt < _MAX_RETRIES:
                 delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                 logger.debug(
                     "%s error (attempt %d/%d): %s — retrying in %.2fs",
-                    label, attempt, _MAX_RETRIES, exc, delay,
+                    label,
+                    attempt,
+                    _MAX_RETRIES,
+                    exc,
+                    delay,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
-                    "%s failed after %d attempts: %s", label, _MAX_RETRIES, exc,
+                    "%s failed after %d attempts: %s",
+                    label,
+                    _MAX_RETRIES,
+                    exc,
                 )
     if last_exc is not None:
         raise last_exc  # type: ignore[misc]
-__all__ = ["DEFAULT_UNIT_VALUES", "ValueCategory", "ValueEntry", "_MAX_RETRIES", "_RETRY_BASE_DELAY", "_with_retry", "logger"]
+
+
+__all__ = [
+    "DEFAULT_UNIT_VALUES",
+    "_MAX_RETRIES",
+    "_RETRY_BASE_DELAY",
+    "ValueCategory",
+    "ValueEntry",
+    "_with_retry",
+    "logger",
+]

@@ -1,16 +1,19 @@
 """Types and constants for state_tracker."""
 
 from __future__ import annotations
+
 import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)  # noqa: F821  # TODO: Phase3 - verify import
 
+
 class PipelineStatus(str, Enum):
     """Overall pipeline status."""
+
     CREATED = "created"
     RUNNING = "running"
     PAUSED = "paused"
@@ -20,16 +23,15 @@ class PipelineStatus(str, Enum):
     ROLLING_BACK = "rolling_back"
 
 
-
 class StepExecutionStatus(str, Enum):
     """Status of an individual step."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"
     BLOCKED = "blocked"
-
 
 
 @dataclass
@@ -50,22 +52,22 @@ class StepState:
         attempts: Number of execution attempts.
         metadata: Additional metadata.
     """
+
     step_id: str
     name: str = ""
     status: StepExecutionStatus = StepExecutionStatus.PENDING
     input_data: Any = None
     output_data: Any = None
-    error: Optional[str] = None
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
+    error: str | None = None
+    started_at: float | None = None
+    completed_at: float | None = None
     duration_ms: float = 0.0
     attempts: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.name:
             self.name = self.step_id
-
 
 
 @dataclass
@@ -83,14 +85,15 @@ class PipelineState:
         completed_at: Timestamp when execution completed.
         metadata: Additional pipeline-level metadata.
     """
+
     pipeline_id: str = ""
     name: str = ""
     status: PipelineStatus = PipelineStatus.CREATED
-    steps: Dict[str, StepState] = field(default_factory=dict)
+    steps: dict[str, StepState] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: float | None = None
+    completed_at: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.pipeline_id:
@@ -110,24 +113,19 @@ class PipelineState:
         if not self.steps:
             return 0.0
         completed = sum(
-            1 for s in self.steps.values()
-            if s.status in (StepExecutionStatus.COMPLETED, StepExecutionStatus.SKIPPED)
+            1 for s in self.steps.values() if s.status in (StepExecutionStatus.COMPLETED, StepExecutionStatus.SKIPPED)
         )
         return (completed / len(self.steps)) * 100
 
     @property
-    def failed_steps(self) -> List[str]:
+    def failed_steps(self) -> list[str]:
         """List of step IDs that have failed."""
-        return [
-            sid for sid, s in self.steps.items()
-            if s.status == StepExecutionStatus.FAILED
-        ]
+        return [sid for sid, s in self.steps.items() if s.status == StepExecutionStatus.FAILED]
 
     @property
-    def completed_steps(self) -> List[str]:
+    def completed_steps(self) -> list[str]:
         """List of step IDs that have completed successfully."""
-        return [
-            sid for sid, s in self.steps.items()
-            if s.status == StepExecutionStatus.COMPLETED
-        ]
+        return [sid for sid, s in self.steps.items() if s.status == StepExecutionStatus.COMPLETED]
+
+
 __all__ = ["PipelineState", "PipelineStatus", "StepExecutionStatus", "StepState", "logger"]

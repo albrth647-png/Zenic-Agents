@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 DB_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "db")
 DB_PATH = os.path.join(DB_DIR, "replay_queue.sqlite")
 
@@ -25,8 +24,10 @@ BACKOFF_BASE = 1.0  # seconds — yields 1s, 2s, 4s
 
 # ─── Enums ──────────────────────────────────────────────────────
 
+
 class DeadLetterStatus(str, Enum):
     """Status of a dead-letter event."""
+
     PENDING = "pending"
     RETRYING = "retrying"
     SUCCEEDED = "succeeded"
@@ -34,6 +35,7 @@ class DeadLetterStatus(str, Enum):
 
 
 # ─── Dataclasses ────────────────────────────────────────────────
+
 
 @dataclass
 class DeadLetterEvent:
@@ -52,6 +54,7 @@ class DeadLetterEvent:
         created_at: Unix timestamp when enqueued.
         status: Current status.
     """
+
     dlq_id: str
     event_type: str
     event_data: dict[str, Any]
@@ -77,6 +80,7 @@ class RetryResult:
         status: Updated status.
         error: Error message if retry failed, empty string otherwise.
     """
+
     success: bool
     dlq_id: str
     event_type: str
@@ -97,6 +101,7 @@ class BatchRetryResult:
         exhausted: Number that hit max retries.
         details: Per-event RetryResult list.
     """
+
     total_attempted: int = 0
     succeeded: int = 0
     failed: int = 0
@@ -105,6 +110,7 @@ class BatchRetryResult:
 
 
 # ─── Serialization ──────────────────────────────────────────────
+
 
 def event_from_row(row: sqlite3.Row) -> DeadLetterEvent:
     """Deserialize a DeadLetterEvent from a SQLite row."""
@@ -126,4 +132,16 @@ def event_from_row(row: sqlite3.Row) -> DeadLetterEvent:
         created_at=row["created_at"],
         status=DeadLetterStatus(row["status"]),
     )
-__all__ = ["BACKOFF_BASE", "BatchRetryResult", "DB_DIR", "DB_PATH", "DEFAULT_MAX_RETRIES", "DeadLetterEvent", "DeadLetterStatus", "RetryResult", "event_from_row"]
+
+
+__all__ = [
+    "BACKOFF_BASE",
+    "DB_DIR",
+    "DB_PATH",
+    "DEFAULT_MAX_RETRIES",
+    "BatchRetryResult",
+    "DeadLetterEvent",
+    "DeadLetterStatus",
+    "RetryResult",
+    "event_from_row",
+]

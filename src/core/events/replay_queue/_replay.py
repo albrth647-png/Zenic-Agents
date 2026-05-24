@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING
 
 from ._types import (
     BACKOFF_BASE,
@@ -16,9 +15,6 @@ from ._types import (
     DeadLetterStatus,
     RetryResult,
 )
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger("zenic_agents.events.replay_queue")
 
@@ -110,14 +106,17 @@ class ReplayMixin:
             if not matches:
                 logger.debug(
                     "ReplayQueue: no automations matched event %s on retry %d",
-                    evt.event_type, evt.retry_count,
+                    evt.event_type,
+                    evt.retry_count,
                 )
         except Exception as exc:
             dispatch_ok = False
             dispatch_error = str(exc)
             logger.warning(
                 "ReplayQueue: dispatch error for %s on retry %d: %s",
-                evt.dlq_id, evt.retry_count, exc,
+                evt.dlq_id,
+                evt.retry_count,
+                exc,
             )
 
         if dispatch_ok:
@@ -126,7 +125,8 @@ class ReplayMixin:
             self._persist_event(evt)  # type: ignore[attr-defined]
             logger.info(
                 "ReplayQueue: retry succeeded for %s after %d attempt(s)",
-                dlq_id, evt.retry_count,
+                dlq_id,
+                evt.retry_count,
             )
             return RetryResult(
                 success=True,
@@ -144,7 +144,8 @@ class ReplayMixin:
                 self._persist_event(evt)  # type: ignore[attr-defined]
                 logger.warning(
                     "ReplayQueue: %s exhausted after %d retries",
-                    dlq_id, evt.retry_count,
+                    dlq_id,
+                    evt.retry_count,
                 )
                 return RetryResult(
                     success=False,
@@ -204,9 +205,12 @@ class ReplayMixin:
         logger.info(
             "ReplayQueue: batch retry for tenant=%s event_type=%s — "
             "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
-            tenant_id, event_type,
-            result.total_attempted, result.succeeded,
-            result.failed, result.exhausted,
+            tenant_id,
+            event_type,
+            result.total_attempted,
+            result.succeeded,
+            result.failed,
+            result.exhausted,
         )
         return result
 
@@ -230,7 +234,8 @@ class ReplayMixin:
         """
         with self._lock:  # type: ignore[attr-defined]
             candidates = [
-                evt for evt in self._events.values()  # type: ignore[attr-defined]
+                evt
+                for evt in self._events.values()  # type: ignore[attr-defined]
                 if evt.created_at >= since_timestamp
                 and evt.status in (DeadLetterStatus.PENDING, DeadLetterStatus.RETRYING)
                 and (tenant_id is None or evt.tenant_id == tenant_id)
@@ -250,10 +255,12 @@ class ReplayMixin:
                     result.exhausted += 1
 
         logger.info(
-            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — "
-            "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
-            since_timestamp, tenant_id,
-            result.total_attempted, result.succeeded,
-            result.failed, result.exhausted,
+            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — " "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
+            since_timestamp,
+            tenant_id,
+            result.total_attempted,
+            result.succeeded,
+            result.failed,
+            result.exhausted,
         )
         return result

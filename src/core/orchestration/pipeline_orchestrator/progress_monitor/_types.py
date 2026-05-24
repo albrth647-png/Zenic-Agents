@@ -1,22 +1,25 @@
 """Types and constants for progress_monitor."""
 
 from __future__ import annotations
+
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class ProgressStatus(str, Enum):
     """Status of progress monitoring."""
+
     IDLE = "idle"
     RUNNING = "running"
     PAUSED = "paused"
     COMPLETED = "completed"
     FAILED = "failed"
-
 
 
 @dataclass
@@ -38,6 +41,7 @@ class ProgressSnapshot:
         step_details: Per-step progress details.
         timestamp: Snapshot timestamp.
     """
+
     pipeline_id: str = ""
     total_steps: int = 0
     completed_steps: int = 0
@@ -45,12 +49,11 @@ class ProgressSnapshot:
     skipped_steps: int = 0
     progress_pct: float = 0.0
     elapsed_ms: float = 0.0
-    estimated_remaining_ms: Optional[float] = None
+    estimated_remaining_ms: float | None = None
     current_step: str = ""
     status: ProgressStatus = ProgressStatus.IDLE
-    step_details: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    step_details: dict[str, dict[str, Any]] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-
 
 
 class ProgressMonitor:
@@ -82,7 +85,7 @@ class ProgressMonitor:
     def __init__(
         self,
         history_limit: int = 100,
-        callback: Optional[Callable[[ProgressSnapshot], None]] = None,
+        callback: Callable[[ProgressSnapshot], None] | None = None,
     ) -> None:
         """
         Initialize the ProgressMonitor.
@@ -91,8 +94,8 @@ class ProgressMonitor:
             history_limit: Maximum number of progress snapshots to retain.
             callback: Optional callback invoked on every progress update.
         """
-        self._pipelines: Dict[str, _PipelineProgress] = {}  # noqa: F821  # TODO: verify import
-        self._history: Dict[str, List[ProgressSnapshot]] = {}
+        self._pipelines: dict[str, _PipelineProgress] = {}  # noqa: F821  # TODO: verify import
+        self._history: dict[str, list[ProgressSnapshot]] = {}
         self._history_limit = history_limit
         self._callback = callback
 
@@ -102,7 +105,7 @@ class ProgressMonitor:
         self,
         pipeline_id: str,
         total_steps: int = 0,
-        step_weights: Optional[Dict[str, float]] = None,
+        step_weights: dict[str, float] | None = None,
     ) -> None:
         """
         Start monitoring a pipeline.
@@ -121,7 +124,8 @@ class ProgressMonitor:
         self._history[pipeline_id] = []
         logger.debug(
             "ProgressMonitor: Started monitoring pipeline '%s' (%d steps)",
-            pipeline_id, total_steps,
+            pipeline_id,
+            total_steps,
         )
         self._notify(pipeline_id)
 
@@ -143,7 +147,8 @@ class ProgressMonitor:
             pp.finished_at = time.monotonic()
             logger.debug(
                 "ProgressMonitor: Pipeline '%s' finished with status '%s'",
-                pipeline_id, status.value,
+                pipeline_id,
+                status.value,
             )
             self._notify(pipeline_id)
 
@@ -259,7 +264,7 @@ class ProgressMonitor:
         progress_pct = self._compute_progress(pp)
         eta = self._estimate_remaining(pp, elapsed, progress_pct)
 
-        step_details: Dict[str, Dict[str, Any]] = {}
+        step_details: dict[str, dict[str, Any]] = {}
         for sid, sp in pp.step_states.items():
             step_details[sid] = {
                 "status": sp.status,
@@ -281,7 +286,7 @@ class ProgressMonitor:
             step_details=step_details,
         )
 
-    def get_history(self, pipeline_id: str) -> List[ProgressSnapshot]:
+    def get_history(self, pipeline_id: str) -> list[ProgressSnapshot]:
         """Get progress history for a pipeline."""
         return list(self._history.get(pipeline_id, []))
 
@@ -311,7 +316,7 @@ class ProgressMonitor:
         pp: _PipelineProgress,  # noqa: F821  # TODO: Phase3 - verify import
         elapsed_ms: float,
         progress_pct: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Estimate remaining time based on progress rate."""
         if progress_pct <= 0 or progress_pct >= 100:
             return None
@@ -341,12 +346,12 @@ class ProgressMonitor:
     # ── Accessors ────────────────────────────────────────────
 
     @property
-    def monitored_pipelines(self) -> List[str]:
+    def monitored_pipelines(self) -> list[str]:
         """List of pipeline IDs being monitored."""
         return list(self._pipelines.keys())
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
         return {
             "monitored_count": len(self._pipelines),
@@ -367,14 +372,14 @@ class ProgressMonitor:
 class _StepProgress:
     """Internal step progress tracker."""
 
-    __slots__ = ("step_id", "status", "started_at", "finished_at", "duration_ms", "error")
+    __slots__ = ("duration_ms", "error", "finished_at", "started_at", "status", "step_id")
 
     def __init__(
         self,
         step_id: str,
         status: str = "pending",
-        started_at: Optional[float] = None,
-        finished_at: Optional[float] = None,
+        started_at: float | None = None,
+        finished_at: float | None = None,
         duration_ms: float = 0.0,
         error: str = "",
     ) -> None:
@@ -384,4 +389,6 @@ class _StepProgress:
         self.finished_at = finished_at
         self.duration_ms = duration_ms
         self.error = error
+
+
 __all__ = ["ProgressMonitor", "ProgressSnapshot", "ProgressStatus", "_StepProgress", "logger"]

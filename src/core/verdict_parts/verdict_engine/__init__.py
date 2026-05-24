@@ -1,45 +1,69 @@
 """VerdictEngine - AI only says YES or NO."""
 
+import concurrent.futures
+import logging
 import os
 import re
-import time
-import logging
 import threading
-import concurrent.futures
-from typing import Optional, Dict, Any, List
+import time
+from typing import Any, Dict, List, Optional
 
-from ..types import (
-    EvidenceType, Verdict, Evidence, VerdictInput, VerdictOutput,
-    ConsensusResult, VerdictConfidence,
-)
-from ..evidence_collector import EvidenceCollector
 from ..consensus_resolver import ConsensusResolver
 from ..deterministic_pipeline import DeterministicPipeline
+from ..evidence_collector import EvidenceCollector
+from ..types import (
+    ConsensusResult,
+    Evidence,
+    EvidenceType,
+    Verdict,
+    VerdictConfidence,
+    VerdictInput,
+    VerdictOutput,
+)
 
 try:
     from ..resilience import (
-        VerdictCircuitBreaker, VerdictRetryConfig, VerdictHealthMonitor,
-        VerdictAuditor, VerdictAuditEntry, VerdictResilienceOrchestrator,
+        VerdictAuditEntry,
+        VerdictAuditor,
+        VerdictCircuitBreaker,
+        VerdictHealthMonitor,
+        VerdictResilienceOrchestrator,
+        VerdictRetryConfig,
     )
+
     _RESILIENCE_AVAILABLE = True
 except ImportError:
     _RESILIENCE_AVAILABLE = False
 
-from ._config import VERDICT_TIMEOUT_S, VERDICT_MAX_TOKENS, VERDICT_TEMPERATURE, VERDICT_MAX_RETRIES, VERDICT_CONSENSUS_ATTEMPTS, VERDICT_CONSENSUS_THRESHOLD
-from ._llm_mixin import VerdictLLMMixin
+from ._config import (
+    VERDICT_CONSENSUS_ATTEMPTS,
+    VERDICT_CONSENSUS_THRESHOLD,
+    VERDICT_MAX_RETRIES,
+    VERDICT_MAX_TOKENS,
+    VERDICT_TEMPERATURE,
+    VERDICT_TIMEOUT_S,
+)
 from ._helpers_mixin import VerdictHelpersMixin
+from ._llm_mixin import VerdictLLMMixin
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
-__all__ = ["VerdictEngine", "os", "re", "ConsensusResult", "VerdictAuditEntry", "VERDICT_MAX_TOKENS", "VERDICT_TEMPERATURE", "VERDICT_CONSENSUS_THRESHOLD"]
+__all__ = [
+    "VERDICT_CONSENSUS_THRESHOLD",
+    "VERDICT_MAX_TOKENS",
+    "VERDICT_TEMPERATURE",
+    "ConsensusResult",
+    "VerdictAuditEntry",
+    "VerdictEngine",
+    "os",
+    "re",
+]
 
 
 class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     """Motor de Veredicto: la IA solo dice SI o NO."""
 
-
-    def __init__(self, mini_ai=None, semantic_engine=None,
-                 smart_memory=None, auto_load: bool = True):
+    def __init__(self, mini_ai=None, semantic_engine=None, smart_memory=None, auto_load: bool = True):
         """
         Args:
             mini_ai: Instancia de MiniAIEngine (Qwen3-0.6B) - OPCIONAL
@@ -106,7 +130,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         Call this when the VerdictEngine is no longer needed (e.g. on server
         shutdown).  Without this the executor's worker thread keeps running.
         """
-        executor = getattr(self, '_executor', None)
+        executor = getattr(self, "_executor", None)
         if executor is not None:
             executor.shutdown(wait=False)
             self._executor = None
@@ -127,10 +151,14 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     #  MAIN API: Full verdict pipeline
     # ================================================================
 
-    def verdict(self, text: str, code: str = "",
-                language: str = "python",
-                question: str = "Should this code be approved?",
-                context: Optional[Dict[str, Any]] = None) -> VerdictOutput:
+    def verdict(
+        self,
+        text: str,
+        code: str = "",
+        language: str = "python",
+        question: str = "Should this code be approved?",
+        context: dict[str, Any] | None = None,
+    ) -> VerdictOutput:
         """
         Ejecuta el pipeline completo de veredicto con resiliencia.
 
@@ -169,7 +197,8 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                     if has_veto:
                         logger.warning(
                             "Memory chip cache hit for '%s' overridden by veto evidence — "
-                            "falling through to full pipeline", text[:80]
+                            "falling through to full pipeline",
+                            text[:80],
                         )
                         # Fall through to normal pipeline below
                     else:
@@ -183,16 +212,23 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                         elapsed_cache = time.time() - start_time
                         # Audit the cache-hit result (was missing — every other path audits)
                         self._audit_result(
-                            text[:200], "YES", "memory_chip_cache",
-                            False, confidence, int(elapsed_cache * 1000), 0,
-                            0, 0, 0.0,
+                            text[:200],
+                            "YES",
+                            "memory_chip_cache",
+                            False,
+                            confidence,
+                            int(elapsed_cache * 1000),
+                            0,
+                            0,
+                            0,
+                            0.0,
                         )
                         return VerdictOutput(
                             verdict=Verdict.YES,
                             confidence=confidence,
                             source="memory_chip_cache",
                             evidence_summary=f"Memory chip cache hit: '{text}' → '{mapping.get('destination', '?')}' "
-                                             f"(mechanism: {mapping.get('mechanism', 'unknown')})",
+                            f"(mechanism: {mapping.get('mechanism', 'unknown')})",
                             llm_used=False,
                             llm_raw_response="",
                             retry_count=0,
@@ -205,7 +241,9 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
 
         # === PASO 2: Recolectar evidencia ===
         evidence = self._evidence_collector.collect_all_evidence(
-            text, code, language,
+            text,
+            code,
+            language,
             memory_chip=self._memory_chip,
             tenant_id=ctx.get("tenant_id", "__anonymous__"),
         )
@@ -213,13 +251,15 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         # Agregar evidencia de los resultados del pipeline
         for task_name, result in pipeline_results.items():
             if result.confidence >= 0.8:
-                evidence.append(Evidence(
-                    evidence_type=EvidenceType.RULE_ENGINE,
-                    favors=Verdict.YES,
-                    weight=result.confidence,
-                    source=f"pipeline_{task_name}",
-                    detail=f"Pipeline task {task_name} succeeded with confidence {result.confidence:.2f}",
-                ))
+                evidence.append(
+                    Evidence(
+                        evidence_type=EvidenceType.RULE_ENGINE,
+                        favors=Verdict.YES,
+                        weight=result.confidence,
+                        source=f"pipeline_{task_name}",
+                        detail=f"Pipeline task {task_name} succeeded with confidence {result.confidence:.2f}",
+                    )
+                )
 
         # === PASO 3: Resolver consenso ===
         consensus = self._consensus_resolver.resolve(evidence, question)
@@ -246,10 +286,16 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
 
             # Audit consensus verdict
             self._audit_result(
-                question, consensus.verdict.value, "consensus",
-                False, abs(consensus.score), int(elapsed * 1000), 0,
-                len(consensus.evidence_for), len(consensus.evidence_against),
-                consensus.score
+                question,
+                consensus.verdict.value,
+                "consensus",
+                False,
+                abs(consensus.score),
+                int(elapsed * 1000),
+                0,
+                len(consensus.evidence_for),
+                len(consensus.evidence_against),
+                consensus.score,
             )
 
             return VerdictOutput(
@@ -279,10 +325,13 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     #  DIRECT API: Ask LLM directly (only YES/NO)
     # ================================================================
 
-    def ask_yes_no(self, question: str,
-                   context: str = "",
-                   evidence_for: Optional[List[Evidence]] = None,
-                   evidence_against: Optional[List[Evidence]] = None) -> VerdictOutput:
+    def ask_yes_no(
+        self,
+        question: str,
+        context: str = "",
+        evidence_for: list[Evidence] | None = None,
+        evidence_against: list[Evidence] | None = None,
+    ) -> VerdictOutput:
         """
         Pregunta directamente a la IA una pregunta de SÍ o NO.
 
@@ -307,7 +356,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     # ================================================================
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas del VerdictEngine con resiliencia."""
         with self._stats_lock:
             total_verdicts = self._total_verdicts
@@ -343,7 +392,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         return base_stats
 
     @property
-    def health(self) -> Dict[str, Any]:
+    def health(self) -> dict[str, Any]:
         """Health status of the verdict system."""
         if self._resilience:
             snap = self._resilience.health_snapshot
@@ -364,8 +413,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     #  LIFECYCLE
     # ================================================================
 
-    def update_engines(self, mini_ai=None, semantic_engine=None,
-                       smart_memory=None, memory_chip=None) -> None:
+    def update_engines(self, mini_ai=None, semantic_engine=None, smart_memory=None, memory_chip=None) -> None:
         """Actualiza las referencias a los motores."""
         if mini_ai is not None:
             self._mini_ai = mini_ai
@@ -389,7 +437,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
             self._resilience.circuit_breaker.reset()
             logger.info("VerdictEngine: Circuit breaker reset to CLOSED")
 
-    def get_audit_trail(self, count: int = 20) -> List[Dict[str, Any]]:
+    def get_audit_trail(self, count: int = 20) -> list[dict[str, Any]]:
         """Get recent audit entries as dictionaries."""
         if self._resilience and _RESILIENCE_AVAILABLE:
             entries = self._resilience.auditor.get_recent(count)
@@ -408,7 +456,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
             ]
         return []
 
-    def get_failure_pattern(self) -> Dict[str, Any]:
+    def get_failure_pattern(self) -> dict[str, Any]:
         """Analyze recent verdicts for failure patterns."""
         if self._resilience:
             return self._resilience.auditor.get_failure_pattern()

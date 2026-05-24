@@ -7,22 +7,39 @@ Tenant isolation, multi-client management, and usage tracking.
 import logging
 import os
 import sqlite3
-from typing import List, Optional
 
 from ..types import DB_PATH
+
 # Tenant module removed — use fallback from parent module
 # from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext
 # These are provided by _core.py via the fallback context
 try:
-    from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext  # type: ignore[import-unresolved]
+    from src.core.tenant._context import (  # type: ignore[import-unresolved]
+        TenantContext,
+        get_current_tenant,
+        set_current_tenant,
+    )
 except ImportError:
-    from src.core.shared.tenant_utils import ANONYMOUS_TENANT, set_tenant_context as _set_tenant_context
+    from src.core.shared.tenant_utils import ANONYMOUS_TENANT
+    from src.core.shared.tenant_utils import set_tenant_context as _set_tenant_context
 
     class TenantContext:
         """Minimal fallback for removed TenantContext."""
-        def __init__(self, tenant_id=ANONYMOUS_TENANT, user_id=0, username="",
-                     role="viewer", plan="free", quotas=None, features=None,
-                     permissions=None, auth_method="", is_authenticated=False, extra=None):
+
+        def __init__(
+            self,
+            tenant_id=ANONYMOUS_TENANT,
+            user_id=0,
+            username="",
+            role="viewer",
+            plan="free",
+            quotas=None,
+            features=None,
+            permissions=None,
+            auth_method="",
+            is_authenticated=False,
+            extra=None,
+        ):
             self.tenant_id = tenant_id
             self.effective_tenant_id = tenant_id
             self.user_id = user_id
@@ -46,6 +63,7 @@ except ImportError:
         except ValueError:
             # Anonymous tenant in production — silently skip
             pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +102,7 @@ class TenantMixin:
             logger.warning(
                 "SmartMemory: Cannot set tenant_utils context to '%s' "
                 "(likely anonymous in production). Instance tenant_id is set.",
-                self._tenant_id
+                self._tenant_id,
             )
 
         # Also update the TenantContext so nested code using
@@ -108,7 +126,7 @@ class TenantMixin:
 
         logger.info(f"SmartMemory: tenant_id set to '{_sanitize_tenant(self._tenant_id)}'")
 
-    def list_clients(self, tenant_id: Optional[str] = None) -> List[str]:
+    def list_clients(self, tenant_id: str | None = None) -> list[str]:
         """Returns distinct client_ids, optionally scoped by tenant_id.
 
         Args:
@@ -118,12 +136,11 @@ class TenantMixin:
         tid = tenant_id or self._tenant_id
         with sqlite3.connect(DB_PATH) as conn:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT DISTINCT client_id FROM semantic_cache WHERE tenant_id=?",
-                (tid,)
+                "SELECT DISTINCT client_id FROM semantic_cache WHERE tenant_id=?", (tid,)
             ).fetchall()
         return [r[0] for r in rows]
 
-    def clear_client_data(self, client_id: str, tenant_id: Optional[str] = None):
+    def clear_client_data(self, client_id: str, tenant_id: str | None = None):
         """Deletes all data for a specific client, scoped by tenant_id.
 
         Args:
@@ -135,26 +152,25 @@ class TenantMixin:
             raise ValueError("client_id must be a non-empty string")
         tid = tenant_id or self._tenant_id
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         with sqlite3.connect(DB_PATH) as conn:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?',
-                    (client_id, tid)
+                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?', (client_id, tid)
                 )
         # Also remove from working memory (thread-safe)
         with self._working_lock:
             self._working_memory = [
-                e for e in self._working_memory
-                if not (e.client_id == client_id and e.tenant_id == tid)
+                e for e in self._working_memory if not (e.client_id == client_id and e.tenant_id == tid)
             ]
-        logger.info(
-            f"SmartMemory: Cleared all data for client_id='{client_id}', "
-            f"tenant_id='{tid}'"
-        )
+        logger.info(f"SmartMemory: Cleared all data for client_id='{client_id}', " f"tenant_id='{tid}'")
 
     def purge_tenant_data(self, tenant_id: str) -> int:
         """Delete ALL data for a tenant across all tables.
@@ -172,27 +188,25 @@ class TenantMixin:
             raise ValueError("tenant_id must be a non-empty string")
         tid = tenant_id.strip()
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         total_deleted = 0
         with sqlite3.connect(DB_PATH) as conn:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE tenant_id=?',
-                    (tid,)
+                    f'DELETE FROM "{table}" WHERE tenant_id=?', (tid,)
                 )
                 total_deleted += cursor.rowcount
         # Also remove from working memory (thread-safe)
         with self._working_lock:
-            self._working_memory = [
-                e for e in self._working_memory if e.tenant_id != tid
-            ]
-        logger.info(
-            f"SmartMemory: Purged all data for tenant_id='{tid}' "
-            f"({total_deleted} rows deleted)"
-        )
+            self._working_memory = [e for e in self._working_memory if e.tenant_id != tid]
+        logger.info(f"SmartMemory: Purged all data for tenant_id='{tid}' " f"({total_deleted} rows deleted)")
         return total_deleted
 
     def get_tenant_usage_mb(self, tenant_id: str) -> float:
@@ -214,8 +228,12 @@ class TenantMixin:
 
         total_bytes = 0
         tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
 
         with sqlite3.connect(DB_PATH) as conn:
@@ -231,8 +249,7 @@ class TenantMixin:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 try:
                     tenant_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?',
-                        (tid,)
+                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?', (tid,)
                     ).fetchone()[0]
                     total_tenant_rows += tenant_count
 
@@ -247,8 +264,5 @@ class TenantMixin:
                 total_bytes = (total_tenant_rows / total_all_rows) * db_size_bytes
 
         usage_mb = total_bytes / (1024 * 1024)
-        logger.debug(
-            f"SmartMemory: Tenant '{tid}' usage: {usage_mb:.2f}MB "
-            f"({total_tenant_rows} rows)"
-        )
+        logger.debug(f"SmartMemory: Tenant '{tid}' usage: {usage_mb:.2f}MB " f"({total_tenant_rows} rows)")
         return usage_mb

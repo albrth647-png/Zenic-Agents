@@ -5,8 +5,10 @@ Reason with context mixin for ReasoningEngine.
 import time
 
 from ._imports import (
-    ReasoningStep, ReasoningResult, ReasoningMode,
     MAX_TOKENS_PER_STEP,
+    ReasoningMode,
+    ReasoningResult,
+    ReasoningStep,
 )
 
 
@@ -48,9 +50,7 @@ class ContextMixin:
         if self._memory and self._semantic and self._semantic.is_loaded:
             similar = self._memory.find_similar_solutions(problem, top_k=2)
             for sol in similar:
-                context_parts.append(
-                    f"Past solution (sim={sol['similarity']:.2f}): {sol['solution'][:150]}"
-                )
+                context_parts.append(f"Past solution (sim={sol['similarity']:.2f}): {sol['solution'][:150]}")
                 memory_hits += 1
 
         # Layer 3: Working memory context
@@ -103,19 +103,24 @@ class ContextMixin:
 
         # Track in working memory
         if self._memory:
-            self._memory.add_working(problem, answer[:500],
-                                     semantic_info.get("operation", "UNKNOWN"),
-                                     semantic_info.get("goal", "UNKNOWN"),
-                                     confidence)
+            self._memory.add_working(
+                problem,
+                answer[:500],
+                semantic_info.get("operation", "UNKNOWN"),
+                semantic_info.get("goal", "UNKNOWN"),
+                confidence,
+            )
 
-        steps = [ReasoningStep(
-            step_number=1,
-            thought="Full context reasoning with semantic + memory injection",
-            conclusion=answer[:300],
-            confidence=confidence,
-            duration_ms=total_ms,
-            source="llm" if answer and confidence > 0.3 else "fallback",
-        )]
+        steps = [
+            ReasoningStep(
+                step_number=1,
+                thought="Full context reasoning with semantic + memory injection",
+                conclusion=answer[:300],
+                confidence=confidence,
+                duration_ms=total_ms,
+                source="llm" if answer and confidence > 0.3 else "fallback",
+            )
+        ]
 
         return ReasoningResult(
             answer=answer,

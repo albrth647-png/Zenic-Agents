@@ -1,14 +1,14 @@
 """Persistence mixin for PolicyCodeEngine."""
 
 from __future__ import annotations
+
 import json
 import logging
 import sqlite3
 import time
-from typing import Optional
 
-from ._types import DB_DIR, PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffect, PolicyOperator
 from ._helpers import _retry
+from ._types import DB_DIR, PolicyCondition, PolicyDocument, PolicyEffect, PolicyOperator, PolicyStatement
 
 logger = logging.getLogger("zenic_agents.core.policy_code.engine")
 
@@ -86,7 +86,7 @@ class PolicyPersistenceMixin:
         }
         return json.dumps(data)
 
-    def _json_to_policy(self, raw: str) -> Optional[PolicyDocument]:
+    def _json_to_policy(self, raw: str) -> PolicyDocument | None:
         try:
             data = json.loads(raw)
             statements = []
@@ -100,15 +100,17 @@ class PolicyPersistenceMixin:
                     )
                     for c in s.get("conditions", [])
                 ]
-                statements.append(PolicyStatement(
-                    id=s["id"],
-                    effect=PolicyEffect(s["effect"]),
-                    resource=s["resource"],
-                    action=s["action"],
-                    conditions=conditions,
-                    priority=s.get("priority", 0),
-                    description=s.get("description", ""),
-                ))
+                statements.append(
+                    PolicyStatement(
+                        id=s["id"],
+                        effect=PolicyEffect(s["effect"]),
+                        resource=s["resource"],
+                        action=s["action"],
+                        conditions=conditions,
+                        priority=s.get("priority", 0),
+                        description=s.get("description", ""),
+                    )
+                )
             return PolicyDocument(
                 id=data["id"],
                 name=data["name"],
@@ -143,7 +145,9 @@ class PolicyPersistenceMixin:
     def _delete_from_db(self, policy_id: str) -> None:
         def _del() -> None:
             conn = sqlite3.connect(self._db_path)
-            conn.execute("DELETE FROM policies WHERE policy_id = ?", (policy_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            conn.execute(
+                "DELETE FROM policies WHERE policy_id = ?", (policy_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             conn.commit()
             conn.close()
 

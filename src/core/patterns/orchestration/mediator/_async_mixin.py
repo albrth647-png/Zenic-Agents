@@ -4,7 +4,8 @@ ZENIC-AGENTS - Mediator Pattern: Async Dispatch Mixin
 
 import asyncio
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from ._types import AsyncPipelineBehavior, PipelineBehavior, Request, Response
 
@@ -29,15 +30,14 @@ class AsyncDispatchMixin:
             async_pipelines = list(self._async_pipelines)
 
         logger.info(
-            "Mediator[async]: Dispatching request_type='%s' "
-            "(sync_pipelines=%d, async_pipelines=%d)",
-            request.request_type, len(pipelines), len(async_pipelines),
+            "Mediator[async]: Dispatching request_type='%s' " "(sync_pipelines=%d, async_pipelines=%d)",
+            request.request_type,
+            len(pipelines),
+            len(async_pipelines),
         )
 
         if handler is None:
-            error_msg = (
-                f"No handler registered for request_type '{request.request_type}'"
-            )
+            error_msg = f"No handler registered for request_type '{request.request_type}'"
             logger.warning("Mediator[async]: %s", error_msg)
             self._error_count_inc()
             return Response(
@@ -82,9 +82,8 @@ class AsyncDispatchMixin:
                     # Wrap the async next in a sync-compatible way
                     def _sync_next(r: Request) -> Response:
                         import concurrent.futures
-                        with concurrent.futures.ThreadPoolExecutor(
-                            max_workers=1
-                        ) as pool:
+
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                             future = pool.submit(asyncio.run, _next(r))
                             return future.result()
 
@@ -99,7 +98,8 @@ class AsyncDispatchMixin:
             self._error_count_inc()
             logger.error(
                 "Mediator[async]: Handler failed for request_type '%s': %s",
-                request.request_type, exc,
+                request.request_type,
+                exc,
                 exc_info=True,
             )
             return Response(

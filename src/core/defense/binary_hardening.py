@@ -20,28 +20,30 @@ import sys
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class HardeningLevel(str, Enum):
     """Level of binary hardening achieved."""
-    NONE = "none"           # Pure Python, no compilation
-    PARTIAL = "partial"     # Some components compiled (Rust FFI)
-    FULL = "full"           # Nuitka-compiled binary + Rust FFI
-    MAXIMUM = "maximum"     # Full + stripped + UPX + code signing
+
+    NONE = "none"  # Pure Python, no compilation
+    PARTIAL = "partial"  # Some components compiled (Rust FFI)
+    FULL = "full"  # Nuitka-compiled binary + Rust FFI
+    MAXIMUM = "maximum"  # Full + stripped + UPX + code signing
 
 
 @dataclass
 class HardeningStatus:
     """Current hardening status."""
+
     level: HardeningLevel
     nuitka_compiled: bool
     rust_ffi_available: bool
     binary_signed: bool
     environment_hardened: bool
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 class BinaryHardeningLayer:
@@ -57,7 +59,7 @@ class BinaryHardeningLayer:
     """
 
     def __init__(self) -> None:
-        self._rust_lib: Optional[Any] = None
+        self._rust_lib: Any | None = None
         self._rust_checked = False
 
     def check_nuitka_compiled(self) -> bool:
@@ -72,6 +74,7 @@ class BinaryHardeningLayer:
         # Check for Nuitka-specific attributes
         try:
             import __main__
+
             if hasattr(__main__, "__compiled__"):
                 return True
         except (ImportError, AttributeError):
@@ -90,7 +93,7 @@ class BinaryHardeningLayer:
         self._rust_checked = True
 
         # Check feature flag first
-        if not os.environ.get("ZENIC_USE_RUST_DAG", "0") == "1":
+        if os.environ.get("ZENIC_USE_RUST_DAG", "0") != "1":
             return False
 
         # Try loading the shared library
@@ -142,9 +145,11 @@ class BinaryHardeningLayer:
         if sys.platform == "darwin":
             try:
                 import subprocess
+
                 result = subprocess.run(
                     ["codesign", "-v", exe_path],
-                    capture_output=True, timeout=5,
+                    capture_output=True,
+                    timeout=5,
                 )
                 return result.returncode == 0
             except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -165,9 +170,15 @@ class BinaryHardeningLayer:
         # SECURITY: None (unset) is treated as insecure — the secret MUST be
         # explicitly configured. No default fallback is provided.
         weak_secrets = {
-            None, "", "changeme", "secret", "jwt_secret",
+            None,
+            "",
+            "changeme",
+            "secret",
+            "jwt_secret",
             "CHANGE_ME_GENERATE_A_SECURE_JWT_SECRET",
-            "change-this-in-production", "password", "default",
+            "change-this-in-production",
+            "password",
+            "default",
         }
         checks = {
             "production_env": os.environ.get("ZENIC_ENV") == "production",
@@ -215,14 +226,14 @@ class BinaryHardeningLayer:
             },
         )
 
-    def get_rust_lib(self) -> Optional[Any]:
+    def get_rust_lib(self) -> Any | None:
         """Get the loaded Rust FFI library, if available."""
         return self._rust_lib
 
 
 # ── Singleton ─────────────────────────────────────────────
 
-_binary_hardening: Optional[BinaryHardeningLayer] = None
+_binary_hardening: BinaryHardeningLayer | None = None
 _lock = threading.Lock()
 
 

@@ -32,13 +32,15 @@ Sin dependencias externas. Compatible con Android.
 """
 
 import hashlib
+import logging
 import sqlite3
 import time
-import logging
 from pathlib import Path
-from src.core.shared.db_initializer import get_data_dir, get_connection
+
+from src.core.shared.db_initializer import get_connection, get_data_dir
 from src.core.shared.retry import with_retry
 from src.core.shared.tenant_utils import resolve_tenant_id
+
 logger = logging.getLogger("core.level7_merkle_ledger.ledger._hash_helpers")
 
 # ── BLAKE3 hash — canonical hash, matches Rust hash.rs ──────────────
@@ -48,6 +50,7 @@ logger = logging.getLogger("core.level7_merkle_ledger.ledger._hash_helpers")
 
 try:
     from src.core.native._zenic_native import blake3_hash as _native_blake3_hash  # type: ignore[import-unresolved]
+
     _HAS_NATIVE_BLAKE3 = True
 except ImportError:
     _HAS_NATIVE_BLAKE3 = False
@@ -69,6 +72,7 @@ def _blake3_hash(data: bytes) -> str:
     # Fallback: try pure-Python blake3 package
     try:
         import blake3 as _blake3_pure  # type: ignore[import-unresolved]
+
         return _blake3_pure.blake3(data).hexdigest()
     except ImportError:
         pass
@@ -82,6 +86,7 @@ def _blake3_hash(data: bytes) -> str:
 
 class MerkleLedgerHelpersMixin:
     """Mixin providing hash computation, Merkle root, and DB helpers."""
+
     """Ledger con arbol Merkle para integridad criptografica. Tenant-aware + sandbox-isolated."""
 
     def __init__(self):
@@ -111,8 +116,12 @@ class MerkleLedgerHelpersMixin:
             operation TEXT NOT NULL,
             timestamp REAL NOT NULL,
             tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
         conn.commit()
         # Migrate: add tenant_id column if it doesn't exist (for existing databases)
         try:
@@ -139,7 +148,7 @@ class MerkleLedgerHelpersMixin:
         """
         if isinstance(content, bytes):
             return _blake3_hash(content)
-        return _blake3_hash(content.encode('utf-8'))
+        return _blake3_hash(content.encode("utf-8"))
 
     def _merkle_root(self, hashes):
         """Compute Merkle root hash from a list of leaf hashes.
@@ -163,7 +172,7 @@ class MerkleLedgerHelpersMixin:
             Single root hash string, or hash of b'empty' if no hashes.
         """
         if not hashes:
-            return _blake3_hash(b'empty')
+            return _blake3_hash(b"empty")
         if len(hashes) == 1:
             return hashes[0]
 
@@ -172,13 +181,15 @@ class MerkleLedgerHelpersMixin:
         # Previously, hex strings were concatenated and re-encoded as UTF-8,
         # producing different results than Rust.
         try:
-            current_level: list[bytes] = [
-                bytes.fromhex(h.removeprefix("sha256:")) for h in hashes
-            ]
+            current_level: list[bytes] = [bytes.fromhex(h.removeprefix("sha256:")) for h in hashes]
         except ValueError:
             # Fallback: if a hash is not valid hex, hash it first
-            current_level = [_blake3_hash(h.encode('utf-8')).encode() if not h.startswith("sha256:") else bytes.fromhex(h.removeprefix("sha256:"))
-                             for h in hashes]
+            current_level = [
+                _blake3_hash(h.encode("utf-8")).encode()
+                if not h.startswith("sha256:")
+                else bytes.fromhex(h.removeprefix("sha256:"))
+                for h in hashes
+            ]
 
         # Hash each leaf with BLAKE3 (matches Rust: blake3::hash(leaf))
         current_level = [bytes.fromhex(_blake3_hash(leaf)) for leaf in current_level]
@@ -216,7 +227,7 @@ class MerkleLedgerHelpersMixin:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT file_path, hash_sha256 FROM ledger WHERE tenant_id=? AND id IN "
                 "(SELECT MAX(id) FROM ledger WHERE tenant_id=? GROUP BY file_path)",
-                (tid, tid)
+                (tid, tid),
             ).fetchall()
             return {row[0]: row[1] for row in rows}
         except Exception as e:
@@ -244,7 +255,8 @@ class MerkleLedgerHelpersMixin:
                 conn = get_connection("merkle_ledger.sqlite")
             r = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT hash_sha256 FROM ledger WHERE file_path=? AND tenant_id=? ORDER BY id DESC LIMIT 1",
-                (file_path, tid)).fetchone()
+                (file_path, tid),
+            ).fetchone()
             return r[0] if r else "GENESIS"
         except Exception as e:
             logger.warning("Ledger: Error getting last hash: %s", e)
@@ -275,7 +287,8 @@ class MerkleLedgerHelpersMixin:
                 conn = get_connection("merkle_ledger.sqlite")
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "INSERT INTO ledger (file_path, hash_sha256, parent_hash, operation, timestamp, tenant_id) VALUES (?,?,?,?,?,?)",
-                (file_path, content_hash, parent_hash, operation, time.time(), tid))
+                (file_path, content_hash, parent_hash, operation, time.time(), tid),
+            )
             conn.commit()
 
         try:
@@ -301,7 +314,6 @@ class MerkleLedgerHelpersMixin:
         base_resolved = base_dir.resolve()
         if not resolved.is_relative_to(base_resolved):
             raise ValueError(
-                f"Path traversal detected: '{rel_path}' resolves to "
-                f"'{resolved}' which is outside '{base_resolved}'"
+                f"Path traversal detected: '{rel_path}' resolves to " f"'{resolved}' which is outside '{base_resolved}'"
             )
         return resolved

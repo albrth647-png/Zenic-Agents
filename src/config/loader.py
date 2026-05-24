@@ -16,15 +16,15 @@ Funciones exportadas:
 - get_setting(): Acceso generico por clave punto
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Default settings (fallback if YAML is not available)
-_DEFAULTS: Dict[str, Any] = {
+_DEFAULTS: dict[str, Any] = {
     "project_dir": ".",
     "engine_limits": {
         "solver_timeout_ms": 15000,
@@ -41,30 +41,74 @@ _DEFAULTS: Dict[str, Any] = {
         "preferred_source": "auto",
     },
     "critical_nodes": [
-        "auth", "login", "signin", "signup", "password", "token",
-        "crypto", "cipher", "encrypt", "decrypt", "hash", "salt",
-        "payment", "stripe", "paypal", "transaction", "billing",
-        "db", "database", "sql", "migration", "schema",
-        "session", "cookie", "jwt", "oauth", "saml",
+        "auth",
+        "login",
+        "signin",
+        "signup",
+        "password",
+        "token",
+        "crypto",
+        "cipher",
+        "encrypt",
+        "decrypt",
+        "hash",
+        "salt",
+        "payment",
+        "stripe",
+        "paypal",
+        "transaction",
+        "billing",
+        "db",
+        "database",
+        "sql",
+        "migration",
+        "schema",
+        "session",
+        "cookie",
+        "jwt",
+        "oauth",
+        "saml",
     ],
     "critical_patterns": [
-        "*auth*", "*login*", "*signin*", "*signup*", "*password*",
-        "*token*", "*crypto*", "*cipher*", "*encrypt*", "*decrypt*",
-        "*hash*", "*salt*", "*payment*", "*stripe*", "*paypal*",
-        "*transaction*", "*billing*", "*db*", "*database*", "*sql*",
-        "*migration*", "*schema*", "*session*", "*cookie*",
-        "*jwt*", "*oauth*", "*saml*",
+        "*auth*",
+        "*login*",
+        "*signin*",
+        "*signup*",
+        "*password*",
+        "*token*",
+        "*crypto*",
+        "*cipher*",
+        "*encrypt*",
+        "*decrypt*",
+        "*hash*",
+        "*salt*",
+        "*payment*",
+        "*stripe*",
+        "*paypal*",
+        "*transaction*",
+        "*billing*",
+        "*db*",
+        "*database*",
+        "*sql*",
+        "*migration*",
+        "*schema*",
+        "*session*",
+        "*cookie*",
+        "*jwt*",
+        "*oauth*",
+        "*saml*",
     ],
 }
 
-_settings_cache: Optional[Dict[str, Any]] = None
+_settings_cache: dict[str, Any] | None = None
 
 
-def _load_yaml(filepath: Path) -> Dict[str, Any]:
+def _load_yaml(filepath: Path) -> dict[str, Any]:
     """Carga un archivo YAML de forma segura (sin dependencias externas)."""
     try:
         import yaml
-        with open(filepath, "r", encoding="utf-8") as f:
+
+        with open(filepath, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except ImportError:
         # Fallback: parser YAML minimalista si no hay PyYAML
@@ -74,16 +118,16 @@ def _load_yaml(filepath: Path) -> Dict[str, Any]:
         return {}
 
 
-def _parse_yaml_simple(filepath: Path) -> Dict[str, Any]:
+def _parse_yaml_simple(filepath: Path) -> dict[str, Any]:
     """
     Parser YAML minimalista para settings.yaml.
     Solo soporta el formato plano usado por el proyecto.
     """
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     current_section = result
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             for line in f:
                 stripped = line.rstrip()
                 if not stripped or stripped.startswith("#"):
@@ -146,7 +190,7 @@ def _parse_value(value: str) -> Any:
     return value
 
 
-def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     """Fusiona dos diccionarios recursivamente (override gana)."""
     result = base.copy()
     for key, value in override.items():
@@ -157,7 +201,7 @@ def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
     return result
 
 
-def load_settings(force: bool = False) -> Dict[str, Any]:
+def load_settings(force: bool = False) -> dict[str, Any]:
     """
     Carga la configuracion del sistema.
 
@@ -212,7 +256,8 @@ def get_setting(key: str, default: Any = None) -> Any:
 #  ENGINE LIMITS - Accessores tipados para limits del solver
 # ============================================================
 
-def get_solver_timeout_ms(settings: Optional[Dict[str, Any]] = None) -> int:
+
+def get_solver_timeout_ms(settings: dict[str, Any] | None = None) -> int:
     """
     Obtiene el timeout quirurgico del solver en milisegundos.
 
@@ -231,7 +276,7 @@ def get_solver_timeout_ms(settings: Optional[Dict[str, Any]] = None) -> int:
     return int(limits.get("solver_timeout_ms", 15000))
 
 
-def get_solver_fast_timeout_ms(settings: Optional[Dict[str, Any]] = None) -> int:
+def get_solver_fast_timeout_ms(settings: dict[str, Any] | None = None) -> int:
     """
     Obtiene el timeout rapido del solver en milisegundos.
 
@@ -250,7 +295,7 @@ def get_solver_fast_timeout_ms(settings: Optional[Dict[str, Any]] = None) -> int
     return int(limits.get("solver_fast_timeout_ms", 5000))
 
 
-def get_mcts_config(settings: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
+def get_mcts_config(settings: dict[str, Any] | None = None) -> dict[str, int]:
     """
     Obtiene la configuracion de MCTS (Monte Carlo Tree Search).
 
@@ -273,7 +318,7 @@ def get_mcts_config(settings: Optional[Dict[str, Any]] = None) -> Dict[str, int]
     }
 
 
-def get_k_path_limit(settings: Optional[Dict[str, Any]] = None) -> int:
+def get_k_path_limit(settings: dict[str, Any] | None = None) -> int:
     """
     Obtiene el limite de K-Paths para analisis de caminos.
 
@@ -292,7 +337,7 @@ def get_k_path_limit(settings: Optional[Dict[str, Any]] = None) -> int:
     return int(limits.get("max_k_paths", 10))
 
 
-def get_sandbox_timeout_s(settings: Optional[Dict[str, Any]] = None) -> float:
+def get_sandbox_timeout_s(settings: dict[str, Any] | None = None) -> float:
     """
     Obtiene el timeout del sandbox en segundos.
 
@@ -315,7 +360,8 @@ def get_sandbox_timeout_s(settings: Optional[Dict[str, Any]] = None) -> float:
 #  CRITICAL NODES & PATTERNS - Seguridad
 # ============================================================
 
-def get_critical_nodes(settings: Optional[Dict[str, Any]] = None) -> List[str]:
+
+def get_critical_nodes(settings: dict[str, Any] | None = None) -> list[str]:
     """
     Obtiene la lista de nodos criticos desde la configuracion.
 
@@ -333,7 +379,7 @@ def get_critical_nodes(settings: Optional[Dict[str, Any]] = None) -> List[str]:
     return settings.get("critical_nodes", _DEFAULTS["critical_nodes"])
 
 
-def get_critical_patterns(settings: Optional[Dict[str, Any]] = None) -> List[str]:
+def get_critical_patterns(settings: dict[str, Any] | None = None) -> list[str]:
     """
     Obtiene los patrones criticos para validacion de seguridad.
 

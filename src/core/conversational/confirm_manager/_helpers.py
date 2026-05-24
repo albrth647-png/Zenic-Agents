@@ -1,18 +1,19 @@
 """Confirm Manager — Helper methods (DB, formatting, integration)."""
+
 from __future__ import annotations
 
 import json
 import logging
 import sqlite3
 import time
-from typing import Dict
 
 from ._types import (
-    STATUS_PENDING,
     STATUS_EXPIRED,
+    STATUS_PENDING,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.confirm_manager")
+
 
 def _init_db(self) -> None:
     """Initialize the SQLite database schema."""
@@ -62,6 +63,7 @@ def _get_conn(self) -> sqlite3.Connection:
     conn.execute("PRAGMA busy_timeout=5000")  # nosemgrep: sqlalchemy-execute-raw-query
     return conn
 
+
 # ─── Public API: Confirmation Flow ─────────────────────────
 
 
@@ -106,7 +108,7 @@ def _expire_entries(self) -> None:
 
 def _format_confirm_message(
     action_type: str,
-    config: Dict,
+    config: dict,
     verdict: str,
 ) -> str:
     """Format user-facing confirmation request message."""
@@ -125,20 +127,22 @@ def _format_confirm_message(
             val_str = str(value)[:100]
             lines.append(f"  • {key}: {val_str}")
 
-    lines.extend([
-        "",
-        "Do you want to proceed?",
-        "  • Reply **yes** to confirm",
-        "  • Reply **no** to deny",
-        "  • Reply **more_info** for details",
-    ])
+    lines.extend(
+        [
+            "",
+            "Do you want to proceed?",
+            "  • Reply **yes** to confirm",
+            "  • Reply **no** to deny",
+            "  • Reply **more_info** for details",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def _format_approve_message(
     action_type: str,
-    config: Dict,
+    config: dict,
     required_role: str,
 ) -> str:
     """Format approval request message."""
@@ -156,17 +160,19 @@ def _format_approve_message(
             val_str = str(value)[:100]
             lines.append(f"  • {key}: {val_str}")
 
-    lines.extend([
-        "",
-        f"This action requires approval from a user with the **{required_role}** role.",
-    ])
+    lines.extend(
+        [
+            "",
+            f"This action requires approval from a user with the **{required_role}** role.",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def _format_detailed_info(
     action_type: str,
-    config: Dict,
+    config: dict,
     verdict: str,
 ) -> str:
     """Format detailed information about a pending action."""
@@ -186,12 +192,15 @@ def _format_detailed_info(
             config_str = config_str[:1000] + "\n... (truncated)"
         lines.append(f"```json\n{config_str}\n```")
 
-    lines.extend([
-        "",
-        "Do you want to proceed? (yes/no)",
-    ])
+    lines.extend(
+        [
+            "",
+            "Do you want to proceed? (yes/no)",
+        ]
+    )
 
     return "\n".join(lines)
+
 
 # ─── Internal Helpers ──────────────────────────────────────
 
@@ -200,7 +209,7 @@ def _safety_gate_confirm(self, action_id: str) -> None:
     """Integrate confirmation with SafetyGate."""
     if self._safety_gate is not None:
         try:
-            if hasattr(self._safety_gate, 'confirm_action'):
+            if hasattr(self._safety_gate, "confirm_action"):
                 self._safety_gate.confirm_action(action_id)
                 logger.debug(f"SafetyGate confirmed: {action_id}")
         except Exception as e:
@@ -211,11 +220,12 @@ def _safety_gate_approve(self, action_id: str, role: str) -> None:
     """Integrate approval with SafetyGate."""
     if self._safety_gate is not None:
         try:
-            if hasattr(self._safety_gate, 'approve_action'):
+            if hasattr(self._safety_gate, "approve_action"):
                 self._safety_gate.approve_action(action_id, role)
                 logger.debug(f"SafetyGate approved: {action_id} by {role}")
         except Exception as e:
             logger.warning(f"SafetyGate approve_action failed: {e}")
+
 
 # ─── Cleanup ───────────────────────────────────────────────
 
@@ -246,5 +256,18 @@ def cleanup(self, max_age_hours: int = 24) -> int:
     finally:
         conn.close()
 
+
 # ─── Properties ────────────────────────────────────────────
-__all__ = ["_expire_entries", "_format_approve_message", "_format_confirm_message", "_format_detailed_info", "_get_conn", "_init_db", "_safety_gate_approve", "_safety_gate_confirm", "_update_status", "cleanup", "logger"]
+__all__ = [
+    "_expire_entries",
+    "_format_approve_message",
+    "_format_confirm_message",
+    "_format_detailed_info",
+    "_get_conn",
+    "_init_db",
+    "_safety_gate_approve",
+    "_safety_gate_confirm",
+    "_update_status",
+    "cleanup",
+    "logger",
+]

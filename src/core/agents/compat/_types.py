@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 
-from src.core.shared.constants import VALID_INTENT_OPERATIONS, VALID_INTENT_GOALS
+from src.core.shared.constants import VALID_INTENT_GOALS, VALID_INTENT_OPERATIONS
 
 logger = logging.getLogger(__name__)
 

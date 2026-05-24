@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict
-
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.exceptions.routing")
 
@@ -13,10 +12,11 @@ logger = logging.getLogger("zenic_agents.exceptions.routing")
 class RoutingActionHelpers:
     """Individual action implementations for ExceptionRouter."""
 
-    def _action_escalate_human(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_escalate_human(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """ESCALATE_HUMAN: create an approval request."""
         try:
             from src.core.approval.chain import get_approval_chain
+
             chain = get_approval_chain()
             req = chain.create_request(
                 action_type="exception_escalation",
@@ -38,15 +38,14 @@ class RoutingActionHelpers:
                 "approval_request_id": req.request_id,
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: approval.chain not available, logging escalation"
-            )
+            logger.warning("ExceptionRouter: approval.chain not available, logging escalation")
             return {"status": "escalated_log_only", "detail": "ApprovalChain unavailable"}
 
-    def _action_pause_automation(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_pause_automation(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """PAUSE_AUTOMATION: toggle off automation."""
         try:
             from src.core.automation_engine import AutomationEngine  # noqa: F401
+
             logger.warning(
                 "ExceptionRouter: PAUSE_AUTOMATION requested for signal %s",
                 signal.signal_id,
@@ -56,15 +55,14 @@ class RoutingActionHelpers:
                 "detail": "Automation pause requested (AutomationEngine integration)",
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: automation_engine not available, logging pause request"
-            )
+            logger.warning("ExceptionRouter: automation_engine not available, logging pause request")
             return {"status": "paused_log_only", "detail": "AutomationEngine unavailable"}
 
-    def _action_degrade_system(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_degrade_system(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """DEGRADE_SYSTEM: enter degraded mode."""
         try:
             from src.core.degraded_mode.manager import get_degraded_mode_manager
+
             mgr = get_degraded_mode_manager()
             mgr.enter_degraded(
                 reason="exception_triggered",
@@ -76,12 +74,10 @@ class RoutingActionHelpers:
                 "detail": "System entered degraded mode",
             }
         except ImportError:
-            logger.warning(
-                "ExceptionRouter: degraded_mode.manager not available, logging degrade request"
-            )
+            logger.warning("ExceptionRouter: degraded_mode.manager not available, logging degrade request")
             return {"status": "degraded_log_only", "detail": "DegradedModeManager unavailable"}
 
-    def _action_retry_with_backoff(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_retry_with_backoff(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """RETRY_WITH_BACKOFF: return retry configuration."""
         config = {
             "max_retries": 3,
@@ -96,7 +92,7 @@ class RoutingActionHelpers:
             "retry_config": config,
         }
 
-    def _action_notify_admin(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_notify_admin(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """NOTIFY_ADMIN: create a notification record."""
         notification = {
             "type": "admin_notification",
@@ -117,23 +113,25 @@ class RoutingActionHelpers:
             "notification": notification,
         }
 
-    def _action_abort(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_abort(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """ABORT_ACTION: return an abort signal."""
         return {
             "status": "aborted",
             "detail": f"Action aborted due to {signal.category.value}",
         }
 
-    def _action_log_and_continue(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_log_and_continue(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """LOG_AND_CONTINUE: just log."""
         logger.info(
             "ExceptionRouter: LOG_AND_CONTINUE for signal %s [%s:%s] – %s",
-            signal.signal_id, signal.category.value, signal.severity.value,
+            signal.signal_id,
+            signal.category.value,
+            signal.severity.value,
             signal.message[:120],
         )
         return {"status": "logged", "detail": "Logged and continued"}
 
-    def _action_reroute(self, signal: ExceptionSignal) -> Dict[str, Any]:  # noqa: F821
+    def _action_reroute(self, signal: ExceptionSignal) -> dict[str, Any]:  # noqa: F821
         """REROUTE: find the next matching rule (skip current match)."""
         with self._lock:
             matched = False
@@ -142,7 +140,9 @@ class RoutingActionHelpers:
                     if matched:
                         logger.info(
                             "ExceptionRouter: rerouted signal %s to rule %s → %s",
-                            signal.signal_id, rule.rule_id, rule.action.value,
+                            signal.signal_id,
+                            rule.rule_id,
+                            rule.action.value,
                         )
                         return {
                             "status": "rerouted",
@@ -156,4 +156,6 @@ class RoutingActionHelpers:
             "status": "no_alternative_route",
             "detail": "No alternative rule found for rerouting",
         }
+
+
 __all__ = ["RoutingActionHelpers", "logger"]

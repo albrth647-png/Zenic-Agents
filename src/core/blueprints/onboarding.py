@@ -15,16 +15,19 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
+from .composer import BlueprintComposer, CompositionResult
+from .converter import NicheConverter
+from .loader import BlueprintLoaderV2
+from .schema import CertifiedBlueprint
 from .types import (
     MonitorHook,
-    OnboardingSession, OnboardingStep, OnboardingStepType,
+    OnboardingSession,
+    OnboardingStep,
+    OnboardingStepType,
 )
-from .schema import CertifiedBlueprint
-from .composer import BlueprintComposer, CompositionResult
-from .loader import BlueprintLoaderV2
-from .converter import NicheConverter
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +36,8 @@ logger = logging.getLogger(__name__)
 #  STEP BUILDER
 # ──────────────────────────────────────────────────────────────
 
-def build_default_steps() -> List[OnboardingStep]:
+
+def build_default_steps() -> list[OnboardingStep]:
     """Build the default onboarding step sequence."""
     return [
         OnboardingStep(
@@ -79,6 +83,7 @@ def build_default_steps() -> List[OnboardingStep]:
 #  ONBOARDING ENGINE
 # ──────────────────────────────────────────────────────────────
 
+
 class OnboardingEngine:
     """Guides users through Blueprint selection and configuration.
 
@@ -92,33 +97,37 @@ class OnboardingEngine:
 
     def __init__(
         self,
-        loader: Optional[BlueprintLoaderV2] = None,
-        composer: Optional[BlueprintComposer] = None,
+        loader: BlueprintLoaderV2 | None = None,
+        composer: BlueprintComposer | None = None,
     ) -> None:
         self._loader = loader or BlueprintLoaderV2()
         self._composer = composer or BlueprintComposer()
-        self._available_blueprints: Dict[str, CertifiedBlueprint] = {}
-        self._sessions: Dict[str, OnboardingSession] = {}
-        self._hooks: Dict[str, List[Callable]] = {}
+        self._available_blueprints: dict[str, CertifiedBlueprint] = {}
+        self._sessions: dict[str, OnboardingSession] = {}
+        self._hooks: dict[str, list[Callable]] = {}
 
     # ── Session Management ─────────────────────────────────
 
     def start_session(
-        self, tenant_id: str = "", user_id: str = "",
+        self,
+        tenant_id: str = "",
+        user_id: str = "",
     ) -> OnboardingSession:
         """Start a new onboarding session."""
         session = OnboardingSession(
-            tenant_id=tenant_id, user_id=user_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
             steps=build_default_steps(),
         )
         self._sessions[session.session_id] = session
         logger.info(
             "OnboardingEngine: Started session %s for tenant=%s",
-            session.session_id, tenant_id,
+            session.session_id,
+            tenant_id,
         )
         return session
 
-    def get_session(self, session_id: str) -> Optional[OnboardingSession]:
+    def get_session(self, session_id: str) -> OnboardingSession | None:
         """Get an existing onboarding session."""
         return self._sessions.get(session_id)
 
@@ -132,7 +141,9 @@ class OnboardingEngine:
     # ── Blueprint Selection ────────────────────────────────
 
     def load_available_blueprints(
-        self, blueprints_dir: str = "", niches_dir: str = "",
+        self,
+        blueprints_dir: str = "",
+        niches_dir: str = "",
     ) -> int:
         """Load available Blueprints from directories and niche conversion."""
         count = 0
@@ -154,30 +165,34 @@ class OnboardingEngine:
         return count
 
     def list_available_blueprints(
-        self, domain: str = "", tier: str = "",
-    ) -> List[Dict[str, Any]]:
+        self,
+        domain: str = "",
+        tier: str = "",
+    ) -> list[dict[str, Any]]:
         """List available Blueprints with optional filtering."""
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for bp in self._available_blueprints.values():
             if domain and bp.metadata.domain != domain:
                 continue
             if tier and bp.metadata.tier.value != tier:
                 continue
-            results.append({
-                "name": bp.metadata.name,
-                "domain": bp.metadata.domain,
-                "subdomain": bp.metadata.subdomain,
-                "description": bp.metadata.description,
-                "tier": bp.metadata.tier.value,
-                "scale": bp.metadata.scale,
-                "entities": len(bp.db_schema.entities),
-                "monitors": len(bp.monitor_hooks),
-                "is_certified": bp.is_certified,
-                "icon": bp.metadata.icon,
-            })
+            results.append(
+                {
+                    "name": bp.metadata.name,
+                    "domain": bp.metadata.domain,
+                    "subdomain": bp.metadata.subdomain,
+                    "description": bp.metadata.description,
+                    "tier": bp.metadata.tier.value,
+                    "scale": bp.metadata.scale,
+                    "entities": len(bp.db_schema.entities),
+                    "monitors": len(bp.monitor_hooks),
+                    "is_certified": bp.is_certified,
+                    "icon": bp.metadata.icon,
+                }
+            )
         return results
 
-    def list_domains(self) -> List[str]:
+    def list_domains(self) -> list[str]:
         """List all available Blueprint domains."""
         domains = set()
         for bp in self._available_blueprints.values():
@@ -186,7 +201,9 @@ class OnboardingEngine:
         return sorted(domains)
 
     def select_blueprints(
-        self, session: OnboardingSession, blueprint_names: List[str],
+        self,
+        session: OnboardingSession,
+        blueprint_names: list[str],
     ) -> bool:
         """Select Blueprints for the onboarding session."""
         for name in blueprint_names:
@@ -194,16 +211,16 @@ class OnboardingEngine:
                 logger.warning("OnboardingEngine: Blueprint '%s' not found", name)
                 return False
 
-        selected_bps = [
-            self._available_blueprints[n] for n in blueprint_names
-        ]
+        selected_bps = [self._available_blueprints[n] for n in blueprint_names]
         if len(selected_bps) > 1:
             from .validator import BlueprintValidatorV2
+
             validator = BlueprintValidatorV2()
             result = validator.validate_compatibility(selected_bps)
             if not result.is_valid:
                 logger.warning(
-                    "OnboardingEngine: Compatibility issues: %s", result.errors,
+                    "OnboardingEngine: Compatibility issues: %s",
+                    result.errors,
                 )
 
         session.blueprint_names = blueprint_names
@@ -220,8 +237,10 @@ class OnboardingEngine:
         return session
 
     def go_to_step(
-        self, session: OnboardingSession, step_type: OnboardingStepType,
-    ) -> Optional[OnboardingStep]:
+        self,
+        session: OnboardingSession,
+        step_type: OnboardingStepType,
+    ) -> OnboardingStep | None:
         """Jump to a specific step type."""
         for i, step in enumerate(session.steps):
             if step.step_type == step_type:
@@ -230,7 +249,9 @@ class OnboardingEngine:
         return None
 
     def complete_current_step(
-        self, session: OnboardingSession, config: Dict[str, Any],
+        self,
+        session: OnboardingSession,
+        config: dict[str, Any],
     ) -> OnboardingSession:
         """Complete the current step with configuration data."""
         if session.current_step < len(session.steps):
@@ -244,13 +265,12 @@ class OnboardingEngine:
     # ── Completion ─────────────────────────────────────────
 
     def complete_onboarding(
-        self, session: OnboardingSession,
+        self,
+        session: OnboardingSession,
     ) -> CompositionResult:
         """Complete the onboarding and compose the final Blueprint."""
         bps = [
-            self._available_blueprints[name]
-            for name in session.blueprint_names
-            if name in self._available_blueprints
+            self._available_blueprints[name] for name in session.blueprint_names if name in self._available_blueprints
         ]
 
         if not bps:
@@ -288,7 +308,9 @@ class OnboardingEngine:
     # ── Private Helpers ────────────────────────────────────
 
     def _complete_step(
-        self, session: OnboardingSession, step_type: OnboardingStepType,
+        self,
+        session: OnboardingSession,
+        step_type: OnboardingStepType,
     ) -> None:
         """Mark a step as completed."""
         for step in session.steps:
@@ -296,10 +318,12 @@ class OnboardingEngine:
                 step.completed = True
 
     def _update_monitor_step(
-        self, session: OnboardingSession, selected_bps: List[CertifiedBlueprint],
+        self,
+        session: OnboardingSession,
+        selected_bps: list[CertifiedBlueprint],
     ) -> None:
         """Update the monitor configuration step with selected Blueprint monitors."""
-        monitor_config: Dict[str, Any] = {}
+        monitor_config: dict[str, Any] = {}
         for bp in selected_bps:
             for hook in bp.monitor_hooks:
                 monitor_config[hook.monitor_id] = {
@@ -314,7 +338,9 @@ class OnboardingEngine:
                 step.config["monitors"] = monitor_config
 
     def _apply_user_config(
-        self, blueprint: CertifiedBlueprint, session: OnboardingSession,
+        self,
+        blueprint: CertifiedBlueprint,
+        session: OnboardingSession,
     ) -> None:
         """Apply user configuration from onboarding steps to the Blueprint."""
         for step in session.steps:
@@ -330,7 +356,9 @@ class OnboardingEngine:
                     )
 
     def _apply_monitor_config(
-        self, blueprint: CertifiedBlueprint, config: Dict[str, Any],
+        self,
+        blueprint: CertifiedBlueprint,
+        config: dict[str, Any],
     ) -> None:
         """Apply monitor threshold overrides."""
         monitors_config = config.get("monitors", {})
@@ -340,22 +368,27 @@ class OnboardingEngine:
                 if hook.monitor_id == monitor_id:
                     hook.thresholds = mc.get("thresholds", hook.thresholds)
                     hook.notification_channel = mc.get(
-                        "notification_channel", hook.notification_channel,
+                        "notification_channel",
+                        hook.notification_channel,
                     )
                     hook.enabled = mc.get("enabled", hook.enabled)
                     found = True
                     break
             if not found:
-                blueprint.add_monitor_hook(MonitorHook(
-                    monitor_id=monitor_id,
-                    weight=mc.get("weight", "lightweight"),
-                    interval_seconds=mc.get("interval_seconds", 300),
-                    thresholds=mc.get("thresholds", []),
-                    notification_channel=mc.get("notification_channel", "log"),
-                ))
+                blueprint.add_monitor_hook(
+                    MonitorHook(
+                        monitor_id=monitor_id,
+                        weight=mc.get("weight", "lightweight"),
+                        interval_seconds=mc.get("interval_seconds", 300),
+                        thresholds=mc.get("thresholds", []),
+                        notification_channel=mc.get("notification_channel", "log"),
+                    )
+                )
 
     def _apply_notification_config(
-        self, blueprint: CertifiedBlueprint, config: Dict[str, Any],
+        self,
+        blueprint: CertifiedBlueprint,
+        config: dict[str, Any],
     ) -> None:
         """Apply notification channel overrides."""
         channels = config.get("channels", {})

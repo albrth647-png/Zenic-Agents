@@ -18,14 +18,15 @@ from typing import Any
 from ..types.intent import IntentCategory
 from .state import ConversationPhase
 
-
 # ─── Turno registrado ─────────────────────────────────────────
+
 
 @dataclass
 class TurnRecord:
     """Registro de un turno de conversacion."""
+
     turn_number: int = 0
-    role: str = "user"          # user, assistant, system
+    role: str = "user"  # user, assistant, system
     content: str = ""
     intent: IntentCategory = IntentCategory.UNKNOWN
     confidence: float = 0.0
@@ -47,15 +48,27 @@ class TurnRecord:
 # ─── Deteccion de topic shift ─────────────────────────────────
 
 _SHIFT_INDICATORS_ES: list[str] = [
-    "ahora", "cambiando de tema", "por otro lado",
-    "tambien necesito", "otra cosa", "hablando de",
-    "volviendo a", "antes decias", "y sobre",
+    "ahora",
+    "cambiando de tema",
+    "por otro lado",
+    "tambien necesito",
+    "otra cosa",
+    "hablando de",
+    "volviendo a",
+    "antes decias",
+    "y sobre",
 ]
 
 _SHIFT_INDICATORS_EN: list[str] = [
-    "now", "changing topic", "on another note",
-    "also need", "another thing", "speaking of",
-    "going back to", "you mentioned earlier", "what about",
+    "now",
+    "changing topic",
+    "on another note",
+    "also need",
+    "another thing",
+    "speaking of",
+    "going back to",
+    "you mentioned earlier",
+    "what about",
 ]
 
 _REFERENCE_PATTERNS: list[re.Pattern[str]] = [
@@ -124,7 +137,7 @@ class TurnTracker:
 
         # Truncar historial
         if len(self._turns) > self._max_history:
-            self._turns = self._turns[-self._max_history:]
+            self._turns = self._turns[-self._max_history :]
 
         return turn
 
@@ -149,10 +162,7 @@ class TurnTracker:
 
     def find_referencing_turns(self, turn_number: int) -> list[TurnRecord]:
         """Busca turnos que referencian a un turno especifico."""
-        return [
-            t for t in self._turns
-            if str(turn_number) in t.references
-        ]
+        return [t for t in self._turns if str(turn_number) in t.references]
 
     def compute_coherence(self, window: int = 5) -> float:
         """
@@ -188,9 +198,12 @@ class TurnTracker:
 
         # Si hay turnos de codigo o trabajo
         working_cats = {
-            IntentCategory.CODE_CREATE, IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR, IntentCategory.CODE_OPTIMIZE,
-            IntentCategory.AUTOMATION, IntentCategory.BUSINESS,
+            IntentCategory.CODE_CREATE,
+            IntentCategory.CODE_DEBUG,
+            IntentCategory.CODE_REFACTOR,
+            IntentCategory.CODE_OPTIMIZE,
+            IntentCategory.AUTOMATION,
+            IntentCategory.BUSINESS,
         }
         if any(i in working_cats for i in recent_intents):
             return ConversationPhase.WORKING
@@ -246,11 +259,7 @@ class TurnTracker:
         # Shift de categoria de intencion
         if self._turns:
             last_intent = self._turns[-1].intent
-            if (
-                intent != last_intent
-                and intent != IntentCategory.UNKNOWN
-                and last_intent != IntentCategory.UNKNOWN
-            ):
+            if intent != last_intent and intent != IntentCategory.UNKNOWN and last_intent != IntentCategory.UNKNOWN:
                 # Solo es shift si las categorias son muy diferentes
                 if intent.is_conversational != last_intent.is_conversational:
                     return True
