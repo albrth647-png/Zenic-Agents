@@ -73,3 +73,7 @@ notification.sqlite
 # Upload dir
 upload/
 download/
+
+# Project separation: user/ deliverable and admin/ tools
+user/
+admin/
