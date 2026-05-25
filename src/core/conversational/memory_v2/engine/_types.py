@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from .types import MemoryTier
+from ..types import MemoryTier
 
 logger = logging.getLogger(__name__)
 

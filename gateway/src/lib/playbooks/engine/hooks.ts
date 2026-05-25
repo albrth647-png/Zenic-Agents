@@ -1,8 +1,22 @@
-   */
-  private invalidateCache(playbookId: string): void {
-    this.cache.delete(playbookId);
-  }
-}
+// ─── Zenic-Agents v3 — Playbook Engine Hooks ───────────────────────────
+// DB record mapping, ROI calculation, lazy module loaders, and singleton.
+
+import { db } from "@/lib/db";
+import type {
+  PlaybookDocument,
+  PlaybookCapability,
+  PolicyReference,
+  PlaybookRoiConfig,
+  RoiBaseline,
+  RoiProjected,
+  RoiCalculation,
+  PlaybookPricing,
+  PricingTierName,
+  PlaybookEngineConfig,
+} from "./types";
+import { PlaybookCompilationError } from "./yaml-loader";
+import { PlaybookEngine } from "./types";
+
 
 // ─── DB Record Mapping ───────────────────────────────────────────────
 

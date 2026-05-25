@@ -19,6 +19,9 @@ from typing import Any
 # E-13 FIX: These types now live in shared/agent_schemas.py to break
 # the circular dependency (agents/ → agents/).
 from src.core.shared.agent_schemas import (
+    TriggerSpec,
+    ActionSpec,
+    ScheduleSpec,
     ValidationIssue,
 )
 

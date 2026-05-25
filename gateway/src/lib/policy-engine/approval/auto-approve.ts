@@ -1,3 +1,10 @@
+import { db } from "@/lib/db";
+import type { PolicyApprovalRequest, ApprovalDecision, PolicyDocument, ApprovalListOptions } from "./types";
+import { validateTransition, ApprovalStatus as ApprovalStatusEnum } from "./types";
+import { mapDbToApprovalRequest } from "./workflow";
+import { rollbackToVersion } from "../versioning";
+
+/**
  * Cancel an approval request.
  * Can cancel from draft, pending_review, or approved states.
  */
@@ -233,7 +240,7 @@ export async function listApprovalRequests(
  * Validate a proposed policy document has all required fields.
  * @throws Error if the document is invalid
  */
-function validateProposedDocument(document: PolicyDocument): void {
+export function validateProposedDocument(document: PolicyDocument): void {
   if (!document.apiVersion) {
     throw new Error("Proposed document must have an apiVersion");
   }

@@ -9,18 +9,18 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, Set
 
-__all__ = ["Any", "Dict", "List", "Set", "hashlib", "json", "logging", "sqlite3", "time", "uuid"]
+from ._mixin_core import MemoryEngineV2
 
-_instance: MemoryEngineV2 | None = None  # noqa: F821  # TODO: verify import
+_instance: MemoryEngineV2 | None = None
 _instance_lock = threading.Lock()
 
 
-def get_memory_engine_v2() -> MemoryEngineV2:  # noqa: F821  # TODO: verify import
+def get_memory_engine_v2() -> MemoryEngineV2:
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
-                _instance = MemoryEngineV2()  # noqa: F821  # TODO: Phase3 - verify import
+                _instance = MemoryEngineV2()
     return _instance
 
 
@@ -28,3 +28,10 @@ def reset_memory_engine_v2() -> None:
     global _instance
     with _instance_lock:
         _instance = None
+
+
+__all__ = [
+    "MemoryEngineV2",
+    "get_memory_engine_v2",
+    "reset_memory_engine_v2",
+]

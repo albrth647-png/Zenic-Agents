@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ._mixin_query import MemoryQueryMixin
-from .types import ContextWindow, MemoryRecord, MemoryTier, MemoryType
+from ..types import ContextWindow, MemoryRecord, MemoryTier, MemoryType
 
 logger = logging.getLogger(__name__)
 

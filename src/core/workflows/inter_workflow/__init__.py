@@ -8,6 +8,8 @@ import sqlite3
 import threading
 import time
 import uuid
+from ._mixin_core import InterWorkflowHandoff
+from ._types import FieldMapping, HandoffRule, HandoffResult
 
 _instance: InterWorkflowHandoff | None = None  # noqa: F821  # TODO: verify import
 _instance_lock = threading.Lock()

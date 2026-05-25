@@ -7,7 +7,7 @@ import logging
 import sqlite3
 from typing import Any
 
-from .types import MemoryQuery, MemoryRecord, MemorySearchResult, MemoryTier, MemoryType
+from ..types import MemoryQuery, MemoryRecord, MemorySearchResult, MemoryTier, MemoryType
 
 logger = logging.getLogger(__name__)
 

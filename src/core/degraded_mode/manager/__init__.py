@@ -5,6 +5,7 @@ import threading
 import time
 from collections.abc import Callable
 from typing import Any, Dict, List, Optional
+from ._mixin_core import DegradedModeManager
 
 __all__ = ["Callable", "Dict", "List", "Optional", "logging", "time"]
 

@@ -6,17 +6,21 @@ import threading
 import time
 import uuid
 
-_instance: ConditionalBranching | None = None  # noqa: F821  # TODO: verify import
+from ._mixin_core import ConditionalBranching
+from ._types import BranchCondition, BranchRule
+from ._helpers import safe_evaluate
+
+_instance: ConditionalBranching | None = None
 _instance_lock = threading.Lock()
 
 
-def get_conditional_branching() -> ConditionalBranching:  # noqa: F821  # TODO: verify import
-    """Return the ConditionalBranching singleton (thread-safe)."""  # TODO: verify import
+def get_conditional_branching() -> ConditionalBranching:
+    """Return the ConditionalBranching singleton (thread-safe)."""
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
-                _instance = ConditionalBranching()  # noqa: F821  # TODO: Phase3 - verify import
+                _instance = ConditionalBranching()
     return _instance
 
 
@@ -30,4 +34,4 @@ __all__ = [
     "safe_evaluate",
     "time",
     "uuid",
-]  # TODO: verify import
+]

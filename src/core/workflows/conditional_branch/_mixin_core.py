@@ -8,7 +8,7 @@ import time
 import uuid
 from typing import Any
 
-from .chain_composer import ChainStep
+from ...chain_composer._types import ChainStep
 
 logger = logging.getLogger(__name__)
 

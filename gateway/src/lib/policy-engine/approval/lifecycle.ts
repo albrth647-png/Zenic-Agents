@@ -1,3 +1,28 @@
+import { db } from "@/lib/db";
+import type { PolicyDocument, PolicyApprovalRequest, ApprovalDecision, AutoApproveRule } from "../types";
+import { ApprovalStatus as ApprovalStatusEnum } from "../types/approval";
+import { validateTransition } from "./types";
+import { mapDbToApprovalRequest, loadExistingDocument, evaluateAutoApproveRules } from "./workflow";
+import { createVersion } from "../versioning";
+import { computeContentHash } from "../yaml-loader";
+
+// ─── Internal: Create Approval Record in DB ───────────────────────────
+
+async function createApprovalRecord(
+  approvalId: string,
+  targetPolicyId: string | null,
+  previousVersion: string | null,
+  proposedDocument: PolicyDocument,
+  simulationId: string | null,
+  requestedBy: string,
+  requiredApprovals: number,
+  reviewerRoles: string[],
+  rules: AutoApproveRule[],
+  expiresAt: Date | null,
+): Promise<PolicyApprovalRequest> {
+  const record = await db.policyApproval.create({
+    data: {
+      approvalId,
       targetPolicyId: targetPolicyId ?? null,
       previousVersion: previousVersion ?? null,
       proposedDocument: JSON.stringify(proposedDocument),
@@ -25,7 +50,6 @@
 export async function submitForReview(
   approvalId: string,
 ): Promise<PolicyApprovalRequest> {
-  // Load current request
   const record = await db.policyApproval.findUnique({
     where: { approvalId },
   });
@@ -33,15 +57,12 @@ export async function submitForReview(
     throw new Error(`Approval request "${approvalId}" not found`);
   }
 
-  // Validate state transition
   validateTransition(record.status, ApprovalStatusEnum.PENDING_REVIEW);
 
-  // Validate required fields for submission
   if (!record.title || !record.proposedDocument || !record.requestedBy) {
     throw new Error("Cannot submit for review: missing required fields (title, proposedDocument, requestedBy)");
   }
 
-  // Check auto-approve rules
   const proposedDocument = JSON.parse(record.proposedDocument) as PolicyDocument;
   const existingDocument = await loadExistingDocument(record.targetPolicyId);
   const autoApproveRules = JSON.parse(record.autoApproveRules) as AutoApproveRule[];
@@ -52,7 +73,6 @@ export async function submitForReview(
     ? ApprovalStatusEnum.APPROVED
     : ApprovalStatusEnum.PENDING_REVIEW;
 
-  // Update the record
   const updated = await db.policyApproval.update({
     where: { approvalId },
     data: {
@@ -70,18 +90,11 @@ export async function submitForReview(
 
 /**
  * Add an approval or rejection decision to an approval request.
- * Command pattern: ApprovalDecision is the command object.
- *
- * - If rejection → set status to "rejected"
- * - If approval → increment currentApprovals
- * - If currentApprovals >= requiredApprovals → set status to "approved"
- * - Validate reviewer has required role
  */
 export async function approveRequest(
   approvalId: string,
   decision: ApprovalDecision,
 ): Promise<PolicyApprovalRequest> {
-  // Load current request
   const record = await db.policyApproval.findUnique({
     where: { approvalId },
   });
@@ -89,7 +102,6 @@ export async function approveRequest(
     throw new Error(`Approval request "${approvalId}" not found`);
   }
 
-  // Only pending_review requests can receive decisions
   if (record.status !== ApprovalStatusEnum.PENDING_REVIEW) {
     throw new Error(
       `Cannot add decision to approval request in "${record.status}" status. ` +
@@ -97,7 +109,6 @@ export async function approveRequest(
     );
   }
 
-  // Validate reviewer has a required role
   const requiredRoles = JSON.parse(record.requiredReviewerRoles) as string[];
   if (requiredRoles.length > 0 && !requiredRoles.includes(decision.role)) {
     throw new Error(
@@ -106,7 +117,6 @@ export async function approveRequest(
     );
   }
 
-  // Check for duplicate reviewer
   const existingApprovals = JSON.parse(record.approvals) as ApprovalDecision[];
   const alreadyReviewed = existingApprovals.some((a) => a.reviewerId === decision.reviewerId);
   if (alreadyReviewed) {
@@ -115,31 +125,22 @@ export async function approveRequest(
     );
   }
 
-  // Apply the decision (Command pattern)
   const updatedApprovals = [...existingApprovals, decision];
-  let newStatus: string = record.status;
+  let newStatus = record.status;
   let newCurrentApprovals = record.currentApprovals;
 
   if (decision.decision === "rejected") {
-    // Rejection → set status to "rejected"
     validateTransition(record.status, ApprovalStatusEnum.REJECTED);
     newStatus = ApprovalStatusEnum.REJECTED;
   } else {
-    // Approval → increment currentApprovals
-    // BUG #12 FIX: Atomic increment inside transaction to prevent race condition
-    // where two concurrent reviewers both read the same count and both increment by 1
-    // but one increment is lost.
     newCurrentApprovals = record.currentApprovals + 1;
     if (newCurrentApprovals >= record.requiredApprovals) {
-      // Enough approvals → set status to "approved"
       validateTransition(record.status, ApprovalStatusEnum.APPROVED);
       newStatus = ApprovalStatusEnum.APPROVED;
     }
   }
 
-  // BUG #12 FIX: Use $transaction to ensure atomic read-modify-write
   const updated = await db.$transaction(async (tx) => {
-    // Re-read inside transaction to get the latest state
     const freshRecord = await tx.policyApproval.findUnique({
       where: { approvalId },
     });
@@ -147,14 +148,12 @@ export async function approveRequest(
       throw new Error(`Approval request "${approvalId}" not found during transaction`);
     }
 
-    // Re-validate: still in pending_review?
     if (freshRecord.status !== ApprovalStatusEnum.PENDING_REVIEW) {
       throw new Error(
         `Approval request "${approvalId}" status changed to "${freshRecord.status}" during review. Please retry.`
       );
     }
 
-    // Merge approvals from concurrent reviewers
     const freshApprovals = JSON.parse(freshRecord.approvals) as ApprovalDecision[];
     const mergedApprovals = [...freshApprovals, decision];
 
@@ -186,17 +185,10 @@ export async function approveRequest(
 
 /**
  * Deploy an approved policy change.
- *
- * - Only if status is "approved"
- * - Use versioning.ts createVersion to create a new version
- * - Update DeclPolicy with new content
- * - Set status to "deployed"
- * - Record deployment timestamp
  */
 export async function deployApproval(
   approvalId: string,
 ): Promise<PolicyApprovalRequest> {
-  // Load current request
   const record = await db.policyApproval.findUnique({
     where: { approvalId },
   });
@@ -204,13 +196,11 @@ export async function deployApproval(
     throw new Error(`Approval request "${approvalId}" not found`);
   }
 
-  // Validate state transition
   validateTransition(record.status, ApprovalStatusEnum.DEPLOYED);
 
   const proposedDocument = JSON.parse(record.proposedDocument) as PolicyDocument;
   const policyId = record.targetPolicyId ?? proposedDocument.metadata.id;
 
-  // Use versioning.ts createVersion to create a new version
   await createVersion({
     policyId,
     document: proposedDocument,
@@ -218,8 +208,6 @@ export async function deployApproval(
     createdBy: record.requestedBy,
   });
 
-  // Update DeclPolicy with new content (createVersion already does this,
-  // but we also update the contentHash explicitly)
   const newContentHash = computeContentHash(proposedDocument);
   await db.declPolicy.update({
     where: { policyId },
@@ -234,7 +222,6 @@ export async function deployApproval(
     },
   });
 
-  // Update the approval record
   const updated = await db.policyApproval.update({
     where: { approvalId },
     data: {
@@ -246,5 +233,3 @@ export async function deployApproval(
 
   return mapDbToApprovalRequest(updated);
 }
-
-/**

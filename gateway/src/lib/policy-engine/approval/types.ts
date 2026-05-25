@@ -7,9 +7,9 @@
 //   - Command: ApprovalDecision as a command object for approval/rejection actions
 
 import { db } from "@/lib/db";
-import { createVersion, rollbackToVersion } from "./versioning";
-import { computeContentHash } from "./yaml-loader";
-import type { PolicyDocument } from "./types";
+import { createVersion, rollbackToVersion } from "../versioning";
+import { computeContentHash } from "../yaml-loader";
+import type { PolicyDocument } from "../types/core";
 import type {
   PolicyApprovalRequest,
   ApprovalStatus,
@@ -17,11 +17,11 @@ import type {
   ApprovalDecision,
   AutoApproveRule,
   AutoApproveCondition,
-} from "./types";
+} from "../types/approval";
 import {
   ApprovalStatus as ApprovalStatusEnum,
   ApprovalPriority as ApprovalPriorityEnum,
-} from "./types";
+} from "../types/approval";
 
 // ─── State Machine: Valid Transitions ─────────────────────────────────
 
@@ -103,7 +103,7 @@ export interface ApprovalListOptions {
  * If any checker fails, the rule does not pass.
  * Chain of Responsibility: checkers are invoked sequentially; all must pass.
  */
-interface AutoApproveRuleChecker {
+export interface AutoApproveRuleChecker {
   /** The condition field this checker handles */
   field: keyof AutoApproveCondition;
   /** Evaluate the condition against the proposed and existing documents */
@@ -115,7 +115,7 @@ interface AutoApproveRuleChecker {
 }
 
 /** Label match checker: proposed policy labels must match */
-const labelMatchChecker: AutoApproveRuleChecker = {
+export const labelMatchChecker: AutoApproveRuleChecker = {
   field: "labelMatch",
   check(condition, proposedDocument, _existingDocument): boolean {
     const requiredLabels = condition as Record<string, string>;
@@ -130,7 +130,7 @@ const labelMatchChecker: AutoApproveRuleChecker = {
 };
 
 /** Max statements changed checker: number of changed statements must be below threshold */
-const maxStatementsChangedChecker: AutoApproveRuleChecker = {
+export const maxStatementsChangedChecker: AutoApproveRuleChecker = {
   field: "maxStatementsChanged",
   check(condition, proposedDocument, existingDocument): boolean {
     const maxChanged = condition as number;
@@ -147,4 +147,85 @@ const maxStatementsChangedChecker: AutoApproveRuleChecker = {
 };
 
 /** Allowed effect changes checker: effect changes must be in the allowed set */
-const allowedEffectChangesChecker: AutoApproveRuleChecker = {
+export const allowedEffectChangesChecker: AutoApproveRuleChecker = {
+  field: "allowedEffectChanges",
+  check(condition, proposedDocument, existingDocument): boolean {
+    const allowedEffects = condition as string[];
+    if (!existingDocument) return true;
+    const existingMap = new Map(existingDocument.statements.map((s) => [s.id, s.effect]));
+    for (const stmt of proposedDocument.statements) {
+      const existingEffect = existingMap.get(stmt.id);
+      if (existingEffect !== undefined && existingEffect !== stmt.effect) {
+        if (!allowedEffects.includes(stmt.effect)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  },
+};
+
+/** Exclude compliance standards checker: no changes to listed compliance standards */
+export const excludeComplianceStandardsChecker: AutoApproveRuleChecker = {
+  field: "excludeComplianceStandards",
+  check(condition, proposedDocument, existingDocument): boolean {
+    const excludedStandards = condition as string[];
+    if (excludedStandards.length === 0) return true;
+
+    const proposedCompliance = proposedDocument.metadata.compliance ?? [];
+    const proposedStandards = new Set(proposedCompliance.map((c) => c.standard));
+
+    if (!existingDocument) {
+      for (const std of excludedStandards) {
+        if (proposedStandards.has(std)) return false;
+      }
+      return true;
+    }
+
+    const existingCompliance = existingDocument.metadata.compliance ?? [];
+    const existingStandards = new Set(existingCompliance.map((c) => c.standard));
+
+    for (const std of excludedStandards) {
+      const wasPresent = existingStandards.has(std);
+      const isPresent = proposedStandards.has(std);
+      if (wasPresent !== isPresent) return false;
+    }
+    return true;
+  },
+};
+
+/** Max new denials checker: new denials must be below threshold */
+export const maxNewDenialsChecker: AutoApproveRuleChecker = {
+  field: "maxNewDenials",
+  check(condition, proposedDocument, existingDocument): boolean {
+    const maxNewDenials = condition as number;
+    if (!existingDocument) {
+      const denials = proposedDocument.statements.filter(
+        (s) => s.effect === "deny"
+      ).length;
+      return denials <= maxNewDenials;
+    }
+    const existingDenyIds = new Set(
+      existingDocument.statements
+        .filter((s) => s.effect === "deny")
+        .map((s) => s.id)
+    );
+    const newDenials = proposedDocument.statements.filter(
+      (s) => s.effect === "deny" && !existingDenyIds.has(s.id)
+    ).length;
+    return newDenials <= maxNewDenials;
+  },
+};
+
+/** All auto-approve rule checkers, ordered */
+export const AUTO_APPROVE_CHECKERS: AutoApproveRuleChecker[] = [
+  labelMatchChecker,
+  maxStatementsChangedChecker,
+  allowedEffectChangesChecker,
+  excludeComplianceStandardsChecker,
+  maxNewDenialsChecker,
+];
+
+// Also re-export types needed by other files
+export { validateTransition, VALID_TRANSITIONS };
+export type { AutoApproveRuleChecker };

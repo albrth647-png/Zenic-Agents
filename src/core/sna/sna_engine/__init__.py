@@ -4,18 +4,27 @@ import asyncio
 import logging
 import time
 
-__all__ = ["asyncio", "logging", "time"]
+from ._mixin_core import SNAEngine
+
+_default_engine: SNAEngine | None = None
 
 
-def get_sna_engine() -> SNAEngine:  # noqa: F821  # TODO: verify import
-    """Get or create the global SNAEngine instance."""  # TODO: verify import
+def get_sna_engine() -> SNAEngine:
+    """Get or create the global SNAEngine instance."""
     global _default_engine
     if _default_engine is None:
-        _default_engine = SNAEngine()  # noqa: F821  # TODO: Phase3 - verify import
+        _default_engine = SNAEngine()
     return _default_engine
 
 
 def reset_sna_engine() -> None:
-    """Reset the global SNAEngine (for testing)."""  # TODO: verify import
+    """Reset the global SNAEngine (for testing)."""
     global _default_engine
     _default_engine = None
+
+
+__all__ = [
+    "SNAEngine",
+    "get_sna_engine",
+    "reset_sna_engine",
+]

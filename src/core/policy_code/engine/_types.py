@@ -1,4 +1,6 @@
 """Types and constants for engine."""
+from ..types import PolicyCondition
+
 
 from __future__ import annotations
 
@@ -50,4 +52,4 @@ class PolicyEvaluationResult:
         }
 
 
-__all__ = ["DB_DIR", "DB_PATH", "PolicyEvaluationResult", "logger"]
+__all__ = ["DB_DIR", "DB_PATH", "PolicyCondition", "PolicyEvaluationResult", "logger"]

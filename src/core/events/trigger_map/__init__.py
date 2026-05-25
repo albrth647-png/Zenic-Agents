@@ -8,6 +8,8 @@ import sqlite3
 import threading
 import time
 import uuid
+from ._mixin_core import TriggerMap
+from ._types import TriggerMapping, TriggerCondition, ConditionOperator
 
 _instance: TriggerMap | None = None  # noqa: F821  # TODO: verify import
 _instance_lock = threading.Lock()

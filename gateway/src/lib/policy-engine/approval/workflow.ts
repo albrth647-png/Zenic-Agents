@@ -1,88 +1,19 @@
-  field: "allowedEffectChanges",
-  check(condition, proposedDocument, existingDocument): boolean {
-    const allowedEffects = condition as string[];
-    if (!existingDocument) return true; // No existing doc = no effect changes
-    const existingMap = new Map(existingDocument.statements.map((s) => [s.id, s.effect]));
-    for (const stmt of proposedDocument.statements) {
-      const existingEffect = existingMap.get(stmt.id);
-      if (existingEffect !== undefined && existingEffect !== stmt.effect) {
-        if (!allowedEffects.includes(stmt.effect)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  },
-};
+import { db } from "@/lib/db";
+import type { PolicyDocument, PolicyApprovalRequest, ApprovalStatus, ApprovalPriority, ApprovalDecision, AutoApproveRule, AutoApproveCondition } from "../types";
+import {
+  ApprovalStatus as ApprovalStatusEnum,
+  ApprovalPriority as ApprovalPriorityEnum,
+} from "../types/approval";
+import { AUTO_APPROVE_CHECKERS, AutoApproveRuleChecker } from "./types";
+import type { CreateApprovalRequestInput, ApprovalListOptions } from "./types";
+import { validateProposedDocument } from "./auto-approve";
 
-/** Exclude compliance standards checker: no changes to listed compliance standards */
-const excludeComplianceStandardsChecker: AutoApproveRuleChecker = {
-  field: "excludeComplianceStandards",
-  check(condition, proposedDocument, existingDocument): boolean {
-    const excludedStandards = condition as string[];
-    if (excludedStandards.length === 0) return true;
-
-    const proposedCompliance = proposedDocument.metadata.compliance ?? [];
-    const proposedStandards = new Set(proposedCompliance.map((c) => c.standard));
-
-    if (!existingDocument) {
-      // New policy — check if it touches excluded standards
-      for (const std of excludedStandards) {
-        if (proposedStandards.has(std)) return false;
-      }
-      return true;
-    }
-
-    const existingCompliance = existingDocument.metadata.compliance ?? [];
-    const existingStandards = new Set(existingCompliance.map((c) => c.standard));
-
-    // Check if any excluded standard is affected (added or removed)
-    for (const std of excludedStandards) {
-      const wasPresent = existingStandards.has(std);
-      const isPresent = proposedStandards.has(std);
-      if (wasPresent !== isPresent) return false;
-    }
-    return true;
-  },
-};
-
-/** Max new denials checker: new denials must be below threshold */
-const maxNewDenialsChecker: AutoApproveRuleChecker = {
-  field: "maxNewDenials",
-  check(condition, proposedDocument, existingDocument): boolean {
-    const maxNewDenials = condition as number;
-    if (!existingDocument) {
-      // New policy — count all deny statements
-      const denials = proposedDocument.statements.filter(
-        (s) => s.effect === "deny"
-      ).length;
-      return denials <= maxNewDenials;
-    }
-    const existingDenyIds = new Set(
-      existingDocument.statements
-        .filter((s) => s.effect === "deny")
-        .map((s) => s.id)
-    );
-    const newDenials = proposedDocument.statements.filter(
-      (s) => s.effect === "deny" && !existingDenyIds.has(s.id)
-    ).length;
-    return newDenials <= maxNewDenials;
-  },
-};
-
-/** All auto-approve rule checkers, ordered */
-const AUTO_APPROVE_CHECKERS: AutoApproveRuleChecker[] = [
-  labelMatchChecker,
-  maxStatementsChangedChecker,
-  allowedEffectChangesChecker,
-  excludeComplianceStandardsChecker,
-  maxNewDenialsChecker,
-];
+// ─── Auto-Approve Rule Evaluation ────────────────────────────────────
 
 /**
  * Evaluate all auto-approve rules against the proposed change.
  * Chain of Responsibility: each rule is evaluated; all enabled rules must pass.
- * Returns true if all active rules pass → auto-approve.
+ * Returns true if all active rules pass — auto-approve.
  */
 function evaluateAutoApproveRules(
   rules: AutoApproveRule[],
@@ -185,7 +116,7 @@ function calculateRequiredReviewerRoles(
   return roles;
 }
 
-// ─── DB ↔ Domain Mapping ─────────────────────────────────────────────
+// ─── DB Domain Mapping ─────────────────────────────────────────────
 
 /**
  * Map a Prisma PolicyApproval record to the domain PolicyApprovalRequest.
@@ -250,8 +181,6 @@ async function loadExistingDocument(
   if (!policy) return null;
 
   try {
-    // The statements field is JSON; try to reconstruct the full document
-    // First check if versions exist with full document snapshots
     const activeVersion = await db.declPolicyVersion.findFirst({
       where: { declPolicyId: policy.id, status: "active" },
       orderBy: { createdAt: "desc" },
@@ -261,7 +190,6 @@ async function loadExistingDocument(
       return JSON.parse(activeVersion.document) as PolicyDocument;
     }
 
-    // Fallback: reconstruct from policy fields
     return {
       apiVersion: policy.apiVersion as "policy.zenic.dev/v1",
       kind: "PolicyDocument" as const,
@@ -322,25 +250,14 @@ export async function createApprovalRequest(
     expiryHours = 72,
   } = input;
 
-  // 1. Validate proposed document
   validateProposedDocument(proposedDocument);
 
-  // 2. Calculate required approvals based on policy risk
   const requiredApprovals = calculateRequiredApprovals(proposedDocument, priority);
-
-  // 3. Calculate required reviewer roles
   const reviewerRoles = requiredReviewerRoles ?? calculateRequiredReviewerRoles(proposedDocument, priority);
-
-  // 4. Resolve auto-approve rules (use provided or default empty)
   const rules = autoApproveRules ?? [];
-
-  // 5. Set expiry date
   const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
-
-  // 6. Generate unique approval ID
   const approvalId = generateApprovalId();
 
-  // 7. Persist to database with initial status "draft"
   const record = await db.policyApproval.create({
     data: {
       approvalId,
@@ -348,3 +265,21 @@ export async function createApprovalRequest(
       description,
       status: ApprovalStatusEnum.DRAFT,
       priority,
+      targetPolicyId: targetPolicyId ?? null,
+      previousVersion: previousVersion ?? null,
+      proposedDocument: JSON.stringify(proposedDocument),
+      simulationId: simulationId ?? null,
+      requestedBy,
+      requiredApprovals,
+      currentApprovals: 0,
+      approvals: "[]",
+      requiredReviewerRoles: JSON.stringify(reviewerRoles),
+      autoApproveRules: JSON.stringify(rules),
+      autoApproved: false,
+      expiresAt,
+      deployedAt: null,
+    },
+  });
+
+  return mapDbToApprovalRequest(record);
+}

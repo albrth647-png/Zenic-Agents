@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from .types import DegradationLevel
+from ..types import DegradationLevel
 
 # Modes: NORMAL(0) -> DEGRADED(1) -> PARALYSIS_1(2) -> PARALYSIS_2(3)
 

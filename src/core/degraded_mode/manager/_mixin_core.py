@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from .persistence import DegradationPersistence
+from ..persistence import DegradationPersistence
 from .types import DegradationLevel, DegradationReason, DegradationState
 
 logger = logging.getLogger(__name__)

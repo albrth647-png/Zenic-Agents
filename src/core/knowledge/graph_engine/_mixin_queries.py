@@ -9,7 +9,7 @@ from collections import deque
 from typing import Any
 
 from ._helpers import _new_id, _now_iso, _retry
-from .types import KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
+from ..types import KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
 
 logger = logging.getLogger(__name__)
 
