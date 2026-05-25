@@ -1,0 +1,54 @@
+# ============================================================
+#  ZENIC-AGENTS v3 - Core Dependencies (Standalone Agent)
+#  External API connections removed — local agent only.
+# ============================================================
+
+# Database
+aiosqlite>=0.19.0
+
+# Database — PostgreSQL (production)
+asyncpg>=0.29.0
+
+# Cache — Redis (production)
+redis[hiredis]>=5.0.0
+
+# AI / NLP
+# llama-cpp-python>=0.3.0  # Qwen3-0.6B - uncomment if model available
+numpy>=1.24.0
+
+# Semantic Embeddings (Phase 4.1: Vector Store)
+fastembed>=0.2.0
+
+# Benchmarking (Phase 4.3: CI Benchmarks)
+pytest-benchmark>=4.0.0
+
+# Scheduling
+apscheduler>=3.10.0
+
+# Configuration (YAML parsing)
+pyyaml>=6.0
+
+# File operations
+aiofiles>=23.0.0
+
+# ============================================================
+#  Optional Dependencies
+# ============================================================
+
+# Z3 SMT Solver (formal verification)
+# pip install z3-solver>=4.12.0
+
+# Semantic Embeddings (SemanticEngine)
+# pip install fastembed>=0.2.0
+
+# Textual TUI (Terminal UI)
+# textual>=2.0.0
+
+# ============================================================
+#  Testing Dependencies
+# ============================================================
+
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-timeout>=2.1.0

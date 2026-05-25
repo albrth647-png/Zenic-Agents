@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+*.whl
+.pytest_cache/
+
+# Rust build artifacts
+target/
+**/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Agent context (session artifacts)
+agent-ctx/
+
+# PDFs (code-only repo)
+*.pdf
+
+# Next.js
+.next/
+node_modules/
+*.sqlite
+rollback.sqlite
+escalation.sqlite
+expiry.sqlite
+evidence.sqlite
+justification.sqlite
+audit_merkle.sqlite
+approval_chain.sqlite
+notification.sqlite
+
+# Upload dir
+upload/
+download/

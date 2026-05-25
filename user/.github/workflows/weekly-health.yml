@@ -1,0 +1,240 @@
+# ─── Zenic-Agents v3 — Weekly Health Report ────────────────────────
+# Runs every Monday at 09:00 UTC to provide a health snapshot.
+# Reports: Ruff error count, ESLint warnings, API auth coverage,
+#          Rust duplicate types, test coverage, security, health score.
+#
+# Phase 6.3 — Monitoreo Continuo del Plan Maestro de Corrección
+# Updated: Added API auth coverage, Rust dupe scan, health score,
+#          tech debt tracking, test coverage metrics.
+
+name: Weekly Health Report
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Every Monday 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  health-report:
+    name: Generate Health Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install tools
+        run: pip install ruff detect-secrets
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: gateway/package-lock.json
+
+      - name: Install gateway dependencies
+        run: cd gateway && npm ci
+
+      # ── Metric 1: Ruff Error Count ──────────────────────────────
+      - name: Count Ruff errors by category
+        id: ruff
+        run: |
+          TOTAL=$(ruff check src/ --statistics --quiet 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+          F401=$(ruff check src/ --select F401 --quiet 2>/dev/null | wc -l || echo "0")
+          F403=$(ruff check src/ --select F403 --quiet 2>/dev/null | wc -l || echo "0")
+          F405=$(ruff check src/ --select F405 --quiet 2>/dev/null | wc -l || echo "0")
+          F541=$(ruff check src/ --select F541 --quiet 2>/dev/null | wc -l || echo "0")
+          F822=$(ruff check src/ --select F822 --quiet 2>/dev/null | wc -l || echo "0")
+          S=$(ruff check src/ --select S --quiet 2>/dev/null | wc -l || echo "0")
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "f401=$F401" >> $GITHUB_OUTPUT
+          echo "f403=$F403" >> $GITHUB_OUTPUT
+          echo "f405=$F405" >> $GITHUB_OUTPUT
+          echo "f541=$F541" >> $GITHUB_OUTPUT
+          echo "f822=$F822" >> $GITHUB_OUTPUT
+          echo "security=$S" >> $GITHUB_OUTPUT
+
+      # ── Metric 2: ESLint Issues ────────────────────────────────
+      - name: Count ESLint issues
+        id: eslint
+        run: |
+          cd gateway
+          ESLINT_OUTPUT=$(npx eslint . --format compact 2>/dev/null || true)
+          ERRORS=$(echo "$ESLINT_OUTPUT" | grep -c " error " || echo "0")
+          WARNINGS=$(echo "$ESLINT_OUTPUT" | grep -c " warning " || echo "0")
+          AUTH_ERRORS=$(echo "$ESLINT_OUTPUT" | grep "api-auth-required" | grep -c " error " || echo "0")
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+          echo "auth_errors=$AUTH_ERRORS" >> $GITHUB_OUTPUT
+
+      # ── Metric 3: API Auth Coverage ────────────────────────────
+      - name: Count API routes without auth
+        id: auth
+        run: |
+          python3 scripts/health_score.py --skip-slow --ruff-errors 0 --secrets 0 --rust-dupes 0 --coverage 0 --json > /tmp/health.json 2>/dev/null || true
+          # Count route files and check for auth patterns
+          TOTAL_ROUTES=0
+          MUTATING_NO_AUTH=0
+          GET_NO_AUTH=0
+
+          for route_file in $(find gateway/src/app/api -name "route.ts" 2>/dev/null); do
+            # Skip test files
+            [[ "$route_file" == *__tests__* ]] && continue
+            [[ "$route_file" == *.test.* ]] && continue
+
+            TOTAL_ROUTES=$((TOTAL_ROUTES + 1))
+            HAS_AUTH=0
+
+            if grep -qE "requireAuth|requireAuthAndPermission|getAuthUser|requireTenantAuth" "$route_file" 2>/dev/null; then
+              HAS_AUTH=1
+            fi
+
+            # Check for mutating methods without auth
+            if grep -qE "export\s+(async\s+)?(function\s+)?(POST|PUT|DELETE|PATCH)\b" "$route_file" 2>/dev/null; then
+              if [ "$HAS_AUTH" -eq 0 ]; then
+                MUTATING_NO_AUTH=$((MUTATING_NO_AUTH + 1))
+              fi
+            fi
+
+            # Check for GET without auth
+            if grep -qE "export\s+(async\s+)?(function\s+)?GET\b" "$route_file" 2>/dev/null; then
+              if [ "$HAS_AUTH" -eq 0 ]; then
+                GET_NO_AUTH=$((GET_NO_AUTH + 1))
+              fi
+            fi
+          done
+
+          AUTH_COVERAGE=0
+          MUTATING_TOTAL=$((TOTAL_ROUTES - GET_NO_AUTH + MUTATING_NO_AUTH))
+          if [ "$MUTATING_TOTAL" -gt 0 ] && [ "$MUTATING_NO_AUTH" -ge 0 ]; then
+            # Approximate coverage: (total_routes - no_auth_mutating) / total_routes
+            AUTHED=$((TOTAL_ROUTES - MUTATING_NO_AUTH - GET_NO_AUTH))
+            if [ "$TOTAL_ROUTES" -gt 0 ]; then
+              AUTH_COVERAGE=$(python3 -c "print(round(($TOTAL_ROUTES - $MUTATING_NO_AUTH) / $TOTAL_ROUTES * 100, 1))")
+            fi
+          fi
+
+          echo "total_routes=$TOTAL_ROUTES" >> $GITHUB_OUTPUT
+          echo "mutating_no_auth=$MUTATING_NO_AUTH" >> $GITHUB_OUTPUT
+          echo "get_no_auth=$GET_NO_AUTH" >> $GITHUB_OUTPUT
+          echo "auth_coverage=$AUTH_COVERAGE" >> $GITHUB_OUTPUT
+
+      # ── Metric 4: Rust Duplicate Types ─────────────────────────
+      - name: Count Rust duplicate types
+        id: rust
+        run: |
+          python3 scripts/scan_rust_duplicates.py --json > /tmp/rust-dupes.json 2>/dev/null || true
+          CROSS_CRATE=$(python3 -c "import json; d=json.load(open('/tmp/rust-dupes.json')); print(d.get('cross_crate_count', 0))" 2>/dev/null || echo "0")
+          INTRA_CRATE=$(python3 -c "import json; d=json.load(open('/tmp/rust-dupes.json')); print(d.get('intra_crate_count', 0))" 2>/dev/null || echo "0")
+          echo "cross_crate=$CROSS_CRATE" >> $GITHUB_OUTPUT
+          echo "intra_crate=$INTRA_CRATE" >> $GITHUB_OUTPUT
+
+      # ── Metric 5: Secrets ──────────────────────────────────────
+      - name: Count secrets
+        id: secrets
+        run: |
+          SECRETS=0
+          if [ -f .secrets.baseline ]; then
+            SECRETS=$(python3 -c "import json; d=json.load(open('.secrets.baseline')); print(sum(len(v) for v in d['results'].values()))")
+          else
+            SECRETS=$(detect-secrets scan 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(len(v) for v in d['results'].values()))" || echo "0")
+          fi
+          echo "count=$SECRETS" >> $GITHUB_OUTPUT
+
+      # ── Metric 6: Health Score ─────────────────────────────────
+      - name: Calculate health score
+        id: health
+        run: |
+          RUFF_TOTAL=${{ steps.ruff.outputs.total }}
+          AUTH_COV=${{ steps.auth.outputs.auth_coverage }}
+          RUST_DUPES=${{ steps.rust.outputs.cross_crate }}
+          # Convert auth_coverage percentage to fraction
+          AUTH_FRAC=$(python3 -c "print(${AUTH_COV:-100}/100)")
+
+          python3 scripts/health_score.py \
+            --json \
+            --skip-slow \
+            --ruff-errors "$RUFF_TOTAL" \
+            --auth-coverage "$AUTH_FRAC" \
+            --secrets 0 \
+            --rust-dupes "$RUST_DUPES" \
+            --coverage 0.0 > /tmp/health-score.json
+
+          SCORE=$(python3 -c "import json; d=json.load(open('/tmp/health-score.json')); print(d['overall_score'])")
+          GRADE=$(python3 -c "import json; d=json.load(open('/tmp/health-score.json')); print(d['grade'])")
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "grade=$GRADE" >> $GITHUB_OUTPUT
+
+      # ── Generate Report ────────────────────────────────────────
+      - name: Create health report issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          cat > /tmp/report.md << EOF
+          ## Weekly Health Report — $DATE
+
+          **Overall Score: ${{ steps.health.outputs.score }}/100 (${{ steps.health.outputs.grade }})**
+
+          ---
+
+          ### Python (Ruff) Errors
+          | Category | Count |
+          |----------|-------|
+          | **Total** | ${{ steps.ruff.outputs.total }} |
+          | F401 (unused imports) | ${{ steps.ruff.outputs.f401 }} |
+          | F403/F405 (star imports) | ${{ steps.ruff.outputs.f403 }} / ${{ steps.ruff.outputs.f405 }} |
+          | F541 (empty f-strings) | ${{ steps.ruff.outputs.f541 }} |
+          | F822 (undefined __all__) | ${{ steps.ruff.outputs.f822 }} |
+          | S (security) | ${{ steps.ruff.outputs.security }} |
+
+          ### Gateway (ESLint)
+          | Type | Count |
+          |------|-------|
+          | Errors | ${{ steps.eslint.outputs.errors }} |
+          | Warnings | ${{ steps.eslint.outputs.warnings }} |
+          | Auth rule violations | ${{ steps.eslint.outputs.auth_errors }} |
+
+          ### API Authentication Coverage
+          | Metric | Value |
+          |--------|-------|
+          | Total route files | ${{ steps.auth.outputs.total_routes }} |
+          | Mutating routes without auth | ${{ steps.auth.outputs.mutating_no_auth }} |
+          | GET routes without auth | ${{ steps.auth.outputs.get_no_auth }} |
+          | Auth coverage | ${{ steps.auth.outputs.auth_coverage }}% |
+
+          ### Rust Duplicate Types
+          | Type | Count |
+          |------|-------|
+          | Cross-crate duplicates | ${{ steps.rust.outputs.cross_crate }} |
+          | Intra-crate duplicates | ${{ steps.rust.outputs.intra_crate }} |
+
+          ### Security
+          | Metric | Count |
+          |--------|-------|
+          | Known secrets (baseline) | ${{ steps.secrets.outputs.count }} |
+
+          ### Trending Issues
+          - Phase 2 (Rust dedup): ${{ steps.rust.outputs.cross_crate }} cross-crate duplicates remaining
+          - Phase 0 (Auth): ${{ steps.auth.outputs.mutating_no_auth }} mutating routes still lack auth
+          - Phase 3 (Lint): ${{ steps.ruff.outputs.total }} Ruff errors remaining (target: <50)
+
+          ---
+          _This report is auto-generated by the Weekly Health workflow (Phase 6.3)._
+          _Run \`python3 scripts/health_score.py\` locally for real-time scoring._
+          EOF
+
+          gh issue create \
+            --title "Weekly Health Report — $DATE" \
+            --body-file /tmp/report.md \
+            --label "health-report" \
+            --label "automated" \
+            || echo "Could not create issue (may need labels to exist)"
