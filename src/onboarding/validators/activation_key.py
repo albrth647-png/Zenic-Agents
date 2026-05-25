@@ -235,33 +235,17 @@ def validate_confirmation_code(raw: str) -> ValidationResult:
     return ConfirmationCodeValidator().validate(raw)
 
 
-# ── Key Generation (Admin-side, for testing) ────────────────
-
-
-def generate_activation_key() -> str:
-    """Generate a valid ZENIC-xxxx activation key with correct checksum.
-
-    This is intended for admin/testing use only. The production
-    key generation happens in the Rust zenic-license crate.
-    """
-    # Generate 3 random data groups
-    groups: list[str] = []
-    for _ in range(3):
-        group = "".join(secrets.choice(_CHECKSUM_ALPHABET) for _ in range(4))
-        groups.append(group)
-
-    combined = "".join(groups)
-    digest = hashlib.sha256(combined.encode()).digest()
-    seed = int.from_bytes(digest[:3], "big")
-    check = ""
-    for i in range(4):
-        idx = (seed >> (6 * i)) & 0x3F
-        check += _CHECKSUM_ALPHABET[idx % len(_CHECKSUM_ALPHABET)]
-
-    return f"ZENIC-{groups[0]}-{groups[1]}-{groups[2]}-{check}"
+# ── Confirmation Code Generation (for offline activation) ────
 
 
 def generate_confirmation_code() -> str:
-    """Generate a CONF-xxxxxxxx confirmation code."""
+    """Generate a CONF-xxxxxxxx confirmation code for offline activation.
+
+    Used by OfflineActivationStrategy when no Firebase broker is available.
+    The user validates this code as proof of activation.
+
+    For admin-side bulk key generation, see:
+        admin/keygen/key_generator.py
+    """
     payload = "".join(secrets.choice(_CHECKSUM_ALPHABET) for _ in range(8))
     return f"CONF-{payload}"
