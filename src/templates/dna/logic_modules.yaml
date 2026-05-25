@@ -1,8 +1,0 @@
-# =============================================================================
-# Zenic-Agents — Repository of Atomic Functions
-# =============================================================================
-# This file has been modularized for maintainability.
-# The modules are now split across sub-files in: logic_modules/
-# Use the Python loader: from src.templates.dna.logic_modules import load_logic_modules
-# =============================================================================
-modules: []  # Empty — load from logic_modules/ subdirectory via loader

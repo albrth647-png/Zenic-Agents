@@ -1,8 +1,0 @@
-# ============================================================================
-# professional_glossary.yaml — El Pulidor del Escritor
-# ============================================================================
-# This file has been modularized for maintainability.
-# The transformation rules are now split across sub-files in: professional_glossary/
-# Use the Python loader: from src.templates.dna.professional_glossary import load_all_rules
-# ============================================================================
-transformation_rules: {}  # Empty — load from professional_glossary/ subdirectory via loader

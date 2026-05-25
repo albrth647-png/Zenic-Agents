@@ -39,7 +39,7 @@ class DBAccess:
         Orden de prioridad:
         1. DATABASE_URL en entorno (formato file:/path/to/db)
         2. DATABASE_PATH en entorno
-        3. Default: /home/z/my-project/db/custom.db
+        3. Default: ~/.zenic_agents/data/custom.db (portable, no hardcodeado)
         """
         url = os.environ.get("DATABASE_URL", "")
         if url.startswith("file:"):
@@ -49,7 +49,8 @@ class DBAccess:
         if path:
             return path
 
-        default = "/home/z/my-project/db/custom.db"
+        # Ruta portable basada en el home del usuario (no hardcodeada)
+        default = os.path.join(os.path.expanduser("~"), ".zenic_agents", "data", "custom.db")
         os.makedirs(os.path.dirname(default), exist_ok=True)
         return default
 
@@ -237,12 +238,23 @@ class DBAccess:
     def get_sales_trend(
         self, table: str = "ventas", date_column: str = "fecha", amount_column: str = "monto", days: int = 30
     ) -> list[dict[str, Any]]:
-        """Obtiene tendencia de ventas de los últimos N días."""
+        """Obtiene tendencia de ventas de los últimos N días.
+
+        El parámetro ``days`` se pasa como argumento parametrizado (?)
+        para evitar inyección SQL. Los nombres de tabla y columnas
+        siguen usando f-string porque son identificadores de esquema,
+        no valores de datos.
+        """
         try:
+            # Validar que days sea un entero positivo (defensa en profundidad)
+            if not isinstance(days, int) or days < 0:
+                logger.warning("get_sales_trend: days=%r no es un entero positivo, usando 30", days)
+                days = 30
             return self.execute_query(
                 f"SELECT date([{date_column}]) as dia, SUM([{amount_column}]) as total "
-                f"FROM [{table}] WHERE [{date_column}] >= date('now', '-{days} days') "
-                f"GROUP BY date([{date_column}]) ORDER BY dia ASC"
+                f"FROM [{table}] WHERE [{date_column}] >= date('now', ? || ' days') "
+                f"GROUP BY date([{date_column}]) ORDER BY dia ASC",
+                (f"-{days}",),
             )
         except Exception:
             return []
@@ -250,10 +262,22 @@ class DBAccess:
     def get_stale_inventory(
         self, table: str = "productos", last_sold_column: str = "ultima_venta", days: int = 90
     ) -> list[dict[str, Any]]:
-        """Busca productos sin venta en los últimos N días."""
+        """Busca productos sin venta en los últimos N días.
+
+        El parámetro ``days`` se pasa como argumento parametrizado (?)
+        para evitar inyección SQL. Los nombres de tabla y columnas
+        siguen usando f-string porque son identificadores de esquema,
+        no valores de datos.
+        """
         try:
+            # Validar que days sea un entero positivo (defensa en profundidad)
+            if not isinstance(days, int) or days < 0:
+                logger.warning("get_stale_inventory: days=%r no es un entero positivo, usando 90", days)
+                days = 90
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{last_sold_column}] < date('now', '-{days} days') OR [{last_sold_column}] IS NULL"
+                f"SELECT * FROM [{table}] WHERE [{last_sold_column}] < date('now', ? || ' days') "
+                f"OR [{last_sold_column}] IS NULL",
+                (f"-{days}",),
             )
         except Exception:
             return []

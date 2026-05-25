@@ -1,9 +1,0 @@
-# ============================================================================
-# validation_gates.yaml — The Quality Judge
-# ============================================================================
-# This file has been modularized for maintainability.
-# The validation rules are now split across sub-files in: validation_gates/
-# Use the Python loader: from src.templates.dna.validation_gates import load_all_gates
-# ============================================================================
-global_checks: []
-domain_specific_checks: []

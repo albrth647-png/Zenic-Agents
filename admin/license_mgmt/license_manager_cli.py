@@ -45,6 +45,7 @@ class ManagedLicense:
     status: str = "active"  # active | revoked | expired
     max_users: int = 1
     notes: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 # ── License Database ─────────────────────────────────────────
@@ -97,8 +98,8 @@ class AdminLicenseDB:
         conn.execute(
             "INSERT INTO licenses "
             "(license_id, activation_key, confirmation_code, tier, issued_to, "
-            "issued_at, expires_at, status, max_users, notes) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "issued_at, expires_at, status, max_users, notes, metadata) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 lic.license_id,
                 lic.activation_key,
@@ -110,6 +111,7 @@ class AdminLicenseDB:
                 lic.status,
                 lic.max_users,
                 lic.notes,
+                json.dumps(lic.metadata) if lic.metadata else "{}",
             ),
         )
         conn.commit()
@@ -128,7 +130,20 @@ class AdminLicenseDB:
                 "SELECT * FROM licenses ORDER BY issued_at DESC"
             ).fetchall()
         conn.close()
-        return [ManagedLicense(**dict(r)) for r in rows]
+        licenses: list[ManagedLicense] = []
+        for r in rows:
+            d = dict(r)
+            # Deserialize JSON metadata column
+            meta = d.pop("metadata", "{}")
+            if isinstance(meta, str):
+                try:
+                    d["metadata"] = json.loads(meta)
+                except (json.JSONDecodeError, TypeError):
+                    d["metadata"] = {}
+            else:
+                d["metadata"] = meta if isinstance(meta, dict) else {}
+            licenses.append(ManagedLicense(**d))
+        return licenses
 
     def update_status(self, license_id: str, status: str) -> bool:
         conn = sqlite3.connect(self._db_path)

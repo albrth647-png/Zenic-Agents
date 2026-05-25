@@ -1,8 +1,7 @@
 """Types and constants for engine."""
-from ..types import PolicyCondition
-
-
 from __future__ import annotations
+
+from ..types import PolicyCondition
 
 import logging
 from pathlib import Path

@@ -9,11 +9,11 @@
   "reportIncompatibleVariableOverride": false,
   "pythonVersion": "3.10",
   "pythonPlatform": "Linux",
-  "extraPaths": ["/root/Zenic-Agents"],
+  "extraPaths": ["."],
   "executionEnvironments": [
     {
       "root": "src",
-      "extraPaths": ["/root/Zenic-Agents"]
+      "extraPaths": ["."]
     }
   ],
   "reportMissingImports": true,

@@ -124,6 +124,11 @@ function mapDbToRecord(row: {
   };
 }
 
+// ─── Constants ────────────────────────────────────────────────────────
+
+const NS_API_VERSION = "policy.zenic.dev/v1";
+const NS_KIND = "Namespace";
+
 // ─── Helper: Map DB Record to PolicyNamespace ─────────────────────────
 
 function mapRecordToPolicyNamespace(rec: NamespaceDbRecord): PolicyNamespace {
@@ -135,12 +140,23 @@ function mapRecordToPolicyNamespace(rec: NamespaceDbRecord): PolicyNamespace {
       name: rec.name,
       description: rec.description,
       tenantId: rec.tenantId,
-
+      parentNamespaceId: rec.parentNamespaceId ?? undefined,
+      path: rec.path,
+      labels: rec.labels,
+      createdAt: rec.createdAt.toISOString(),
+      updatedAt: rec.updatedAt.toISOString(),
     },
+    hierarchy: {
+      inheritFromParent: rec.inheritFromParent,
+      maxInheritanceDepth: rec.maxInheritanceDepth,
+      parentChildResolution: rec.parentChildResolution,
+      childCanOverrideParentDeny: rec.childCanOverrideParentDeny,
+      childCanAddAllow: rec.childCanAddAllow,
+    },
+    resolutionStrategy: rec.resolutionStrategy,
+    isolationLevel: rec.isolationLevel,
   };
-/**
- * List namespaces with optional filtering by tenant and/or parent.
- */
+}
 export async function listNamespaces(
   tenantId?: string,
   parentNamespaceId?: string,
@@ -495,6 +511,8 @@ async function evaluateMostRestrictive(
         duration: 0,
         denyByDefault: true,
       },
+      trace,
+    };
   }
 
   // Sort by restrictiveness (deny > conditional > allow) and pick the most restrictive
@@ -707,26 +725,6 @@ export async function getNamespace(namespaceId: string): Promise<PolicyNamespace
   return mapRecordToPolicyNamespace(rec);
 }
 
-/**
-
-      parentNamespaceId: rec.parentNamespaceId ?? undefined,
-      path: rec.path,
-      labels: rec.labels,
-      createdAt: rec.createdAt.toISOString(),
-      updatedAt: rec.updatedAt.toISOString(),
-    },
-    hierarchy: {
-      inheritFromParent: rec.inheritFromParent,
-      maxInheritanceDepth: rec.maxInheritanceDepth,
-      parentChildResolution: rec.parentChildResolution,
-      childCanOverrideParentDeny: rec.childCanOverrideParentDeny,
-      childCanAddAllow: rec.childCanAddAllow,
-    },
-    resolutionStrategy: rec.resolutionStrategy,
-    isolationLevel: rec.isolationLevel,
-  };
-}
-
 // ─── Helper: Load policies for a namespace ────────────────────────────
 
 /** Maximum policies to load per namespace to prevent OOM on 500MB Termux */
@@ -910,6 +908,7 @@ function applyParentChildConstraints(
     return {
       ...parentResult,
       reason: `Parent DENY overrides child ALLOW (childCanOverrideParentDeny=false): ${parentResult.reason}`,
+    };
   }
 
   // If child adds ALLOW but is not allowed to
@@ -921,6 +920,7 @@ function applyParentChildConstraints(
     return {
       ...parentResult,
       reason: `Child cannot add ALLOW rules (childCanAddAllow=false): parent effect ${parentResult.effect} preserved`,
+    };
   }
 
   return childResult;

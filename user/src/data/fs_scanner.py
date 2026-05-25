@@ -26,7 +26,7 @@ class FileSystemScanner:
     """Escanea el filesystem del usuario buscando problemas proactivamente."""
 
     def __init__(self, base_path: str | None = None):
-        self.base_path = Path(base_path or os.environ.get("ZENIC_DATA_PATH", "/home/z/my-project"))
+        self.base_path = Path(base_path or os.environ.get("ZENIC_DATA_PATH", os.path.expanduser("~")))
         logger.info(f"FileSystemScanner inicializado → {self.base_path}")
 
     # ------------------------------------------------------------------ #

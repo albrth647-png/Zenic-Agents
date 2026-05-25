@@ -307,13 +307,14 @@ def main() -> None:
         if not args.request_id:
             print("Error: --request-id is required")
             return
-        # In a real scenario, you'd pass actual license_data from license_mgmt
-        license_data = {
-            "license_id": f"zl-{os.urandom(8).hex()}",
-            "status": "active",
-            "issued_at": time.time(),
-            "approved_by": "admin",
-        }
+        from ..license_mgmt.license_manager_cli import LicenseManagerCLI
+        license_manager = LicenseManagerCLI()
+        lic = license_manager.create_license(
+            tier="starter",
+            issued_to=args.request_id,
+            notes=f"Auto-created for Firebase activation request {args.request_id}",
+        )
+        license_data = lic.__dict__
         success = processor.approve_request(
             args.request_id, license_data, notes=args.notes or ""
         )
