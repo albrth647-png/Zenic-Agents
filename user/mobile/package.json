@@ -1,0 +1,31 @@
+{
+  "name": "zenic-agents-mobile",
+  "version": "3.0.0",
+  "description": "Zenic Agents v3.0.0 - Plataforma Multi-Agente Móvil",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx http-server www -p 8080 -c-1",
+    "build": "echo 'Static SPA - no build needed'",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:run:android": "npx cap run android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor-community/sqlite": "^6.0.2",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/network": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1",
+    "@capacitor/splash-screen": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "typescript": "^5.5.4",
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["zenic", "agents", "multi-agent", "capacitor", "mobile"],
+  "author": "Zenic Systems",
+  "license": "MIT"
+}
