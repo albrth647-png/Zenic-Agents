@@ -795,11 +795,26 @@ const ZenicDB = (function() {
   // PASSWORD HASHING (SHA-256 via SubtleCrypto)
   // ============================================================
   async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + '_zenic_salt_v3');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // NOTA: No usamos crypto.subtle porque en Capacitor WebView (file://) no está disponible.
+    // En su lugar usamos un hash determinista multi-ronda que funciona en todos los contextos.
+    const str = password + '_zenic_salt_v3';
+    let h1 = 0, h2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      h1 = ((h1 << 5) - h1) + code;
+      h1 >>>= 0; // fuerza uint32 positivo
+      h2 = ((h2 << 7) - h2) + (code ^ (i * 31));
+      h2 >>>= 0;
+    }
+    // Tercera ronda con mezcla
+    const combined = h1.toString(16).padStart(8, '0') +
+                     h2.toString(16).padStart(8, '0');
+    let h3 = 0;
+    for (let i = 0; i < combined.length; i++) {
+      h3 = ((h3 << 3) - h3) + combined.charCodeAt(i);
+      h3 >>>= 0;
+    }
+    return combined + h3.toString(16).padStart(8, '0');
   }
 
   // ============================================================
