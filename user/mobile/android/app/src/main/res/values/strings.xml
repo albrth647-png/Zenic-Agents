@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Zenic Agents</string>
+    <string name="title_activity_main">Zenic Agents</string>
+    <string name="package_name">com.zenic.agents</string>
+    <string name="custom_url_scheme">com.zenic.agents</string>
+</resources>

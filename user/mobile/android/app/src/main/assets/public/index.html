@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f23">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Zenic Agents v3.0.0</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+  <!-- ====== SPLASH SCREEN ====== -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <div class="logo-hexagon">
+          <span class="logo-z">Z</span>
+        </div>
+      </div>
+      <h1 class="splash-title">Zenic Agents</h1>
+      <p class="splash-version">v3.0.0</p>
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+      <p class="splash-status">Inicializando plataforma...</p>
+    </div>
+  </div>
+
+  <!-- ====== AUTH SCREEN ====== -->
+  <div id="auth-screen" class="screen auth-screen hidden">
+    <div class="auth-container">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <div class="logo-hexagon small">
+            <span class="logo-z">Z</span>
+          </div>
+        </div>
+        <h1 class="auth-title">Zenic Agents</h1>
+        <p class="auth-subtitle">Plataforma Multi-Agente v3.0.0</p>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-form" class="auth-form">
+        <h2 class="auth-form-title">Iniciar Sesión</h2>
+        <div class="form-group">
+          <label for="login-email">Correo electrónico</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="login-email" placeholder="admin@zenic.io" autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            <button class="toggle-password" onclick="ZenicApp.togglePasswordVisibility('login-password')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="ZenicApp.login()">
+          <span>Iniciar Sesión</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="auth-switch">¿No tienes cuenta? <a href="#" onclick="ZenicApp.showRegister()">Regístrate</a></p>
+        <div class="auth-demo-info">
+          <p>🔑 Demo: <strong>admin@zenic.io</strong> / <strong>admin123</strong></p>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form" class="auth-form hidden">
+        <h2 class="auth-form-title">Crear Cuenta</h2>
+        <div class="form-group">
+          <label for="reg-name">Nombre completo</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="reg-name" placeholder="Tu nombre">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-email">Correo electrónico</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="reg-email" placeholder="tu@email.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Contraseña</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-org">Organización</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <input type="text" id="reg-org" placeholder="Nombre de tu empresa">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="ZenicApp.register()">
+          <span>Crear Cuenta</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </button>
+        <p class="auth-switch">¿Ya tienes cuenta? <a href="#" onclick="ZenicApp.showLogin()">Inicia sesión</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MAIN APP ====== -->
+  <div id="app-screen" class="screen app-screen hidden">
+
+    <!-- ====== TOP HEADER ====== -->
+    <header class="app-header">
+      <div class="header-left">
+        <button class="header-btn" id="drawer-toggle" onclick="ZenicApp.toggleDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="header-brand">
+          <div class="logo-hexagon tiny"><span class="logo-z">Z</span></div>
+          <span class="header-title" id="page-title">Centro de Comando</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" onclick="ZenicApp.showNotifications()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-badge" id="notif-count">0</span>
+        </button>
+        <div class="header-avatar" onclick="ZenicApp.navigate('perfil')">
+          <span id="header-avatar-letter">Z</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====== SIDE DRAWER ====== -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="ZenicApp.closeDrawer()"></div>
+    <nav class="side-drawer" id="side-drawer">
+      <div class="drawer-header">
+        <div class="drawer-user">
+          <div class="drawer-avatar" id="drawer-avatar">Z</div>
+          <div class="drawer-user-info">
+            <span class="drawer-user-name" id="drawer-user-name">Admin</span>
+            <span class="drawer-user-role" id="drawer-user-role">Administrador</span>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-menu">
+        <a class="drawer-item active" data-page="dashboard" onclick="ZenicApp.navigate('dashboard');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Centro de Comando</span>
+        </a>
+        <a class="drawer-item" data-page="arbitraje" onclick="ZenicApp.navigate('arbitraje');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Arbitraje (HITL)</span>
+        </a>
+        <a class="drawer-item" data-page="boveda" onclick="ZenicApp.navigate('boveda');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Bóveda</span>
+        </a>
+        <a class="drawer-item" data-page="nichos" onclick="ZenicApp.navigate('nichos');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Nichos</span>
+        </a>
+        <a class="drawer-item" data-page="apis" onclick="ZenicApp.navigate('apis');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>APIs & MCP</span>
+        </a>
+        <a class="drawer-item" data-page="politicas" onclick="ZenicApp.navigate('politicas');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Políticas</span>
+        </a>
+        <a class="drawer-item" data-page="suscripcion" onclick="ZenicApp.navigate('suscripcion');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Suscripción</span>
+        </a>
+        <a class="drawer-item" data-page="integraciones" onclick="ZenicApp.navigate('integraciones');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Integraciones</span>
+        </a>
+        <a class="drawer-item" data-page="configuracion" onclick="ZenicApp.navigate('configuracion');ZenicApp.closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="drawer-divider"></div>
+        <a class="drawer-item logout" onclick="ZenicApp.logout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
+      <div class="drawer-footer">
+        <span>Zenic Agents v3.0.0</span>
+        <span>100% Local • Zero Cloud</span>
+      </div>
+    </nav>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main class="app-content" id="main-content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section id="page-dashboard" class="page active">
+        <div class="page-scroll">
+          <div class="greeting-bar">
+            <div>
+              <h2 class="greeting-title" id="greeting-text">Buenos días</h2>
+              <p class="greeting-sub">Resumen de tu plataforma</p>
+            </div>
+            <div class="greeting-time" id="greeting-time">00:00</div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card kpi-agents">
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="kpi-value" id="kpi-agents">0</div>
+              <div class="kpi-label">Agentes Activos</div>
+              <div class="kpi-trend up">↑ 12%</div>
+            </div>
+            <div class="kpi-card kpi-tasks">
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+              <div class="kpi-value" id="kpi-tasks">0</div>
+              <div class="kpi-label">Tareas Completadas</div>
+              <div class="kpi-trend up">↑ 8%</div>
+            </div>
+            <div class="kpi-card kpi-hitl">
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="kpi-value" id="kpi-hitl">0</div>
+              <div class="kpi-label">Pendientes HITL</div>
+              <div class="kpi-trend warn">Requiere atención</div>
+            </div>
+            <div class="kpi-card kpi-policies">
+              <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="kpi-value" id="kpi-policies">0</div>
+              <div class="kpi-label">Políticas Activas</div>
+              <div class="kpi-trend neutral">Estable</div>
+            </div>
+          </div>
+
+          <!-- System Status -->
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Estado del Sistema</h3>
+              <span class="badge badge-green">Operativo</span>
+            </div>
+            <div class="status-bars">
+              <div class="status-item">
+                <div class="status-label"><span>Memoria</span><span id="mem-pct">68%</span></div>
+                <div class="status-bar"><div class="status-bar-fill mem" id="mem-bar" style="width:68%"></div></div>
+              </div>
+              <div class="status-item">
+                <div class="status-label"><span>CPU Agente</span><span id="cpu-pct">42%</span></div>
+                <div class="status-bar"><div class="status-bar-fill cpu" id="cpu-bar" style="width:42%"></div></div>
+              </div>
+              <div class="status-item">
+                <div class="status-label"><span>Almacenamiento</span><span id="disk-pct">31%</span></div>
+                <div class="status-bar"><div class="status-bar-fill disk" id="disk-bar" style="width:31%"></div></div>
+              </div>
+              <div class="status-item">
+                <div class="status-label"><span>Red Local</span><span>Activo</span></div>
+                <div class="status-bar"><div class="status-bar-fill net" style="width:100%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Chart -->
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Actividad Semanal</h3>
+              <select class="chart-select" id="chart-period" onchange="ZenicApp.updateChart()">
+                <option value="week">Esta Semana</option>
+                <option value="month">Este Mes</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <div class="chart-bars" id="activity-chart">
+                <div class="chart-bar-group"><div class="chart-bar" style="height:40%"></div><span>L</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:65%"></div><span>M</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:55%"></div><span>X</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:80%"></div><span>J</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:70%"></div><span>V</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:45%"></div><span>S</span></div>
+                <div class="chart-bar-group"><div class="chart-bar" style="height:30%"></div><span>D</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Actividad Reciente</h3>
+              <button class="text-btn" onclick="ZenicApp.navigate('boveda')">Ver todo</button>
+            </div>
+            <div class="activity-list" id="recent-activity">
+              <div class="activity-item">
+                <div class="activity-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="activity-info"><span class="activity-title">Agente de Ventas completó tarea</span><span class="activity-time">Hace 5 min</span></div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div class="activity-info"><span class="activity-title">Solicitud HITL pendiente de aprobación</span><span class="activity-time">Hace 12 min</span></div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div class="activity-info"><span class="activity-title">Política #3 actualizada</span><span class="activity-time">Hace 1 hora</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent Quick View -->
+          <div class="section-card">
+            <div class="section-header">
+              <h3>Agentes Destacados</h3>
+              <button class="text-btn" onclick="ZenicApp.navigate('apis')">Ver todos</button>
+            </div>
+            <div class="agent-cards" id="dashboard-agents"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ARBITRAJE (HITL) ===== -->
+      <section id="page-arbitraje" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>🛡️ Cola de Aprobación HITL</h3>
+              <span class="badge badge-amber" id="hitl-count">0 pendientes</span>
+            </div>
+            <p class="section-desc">Solicitudes que requieren intervención humana antes de proceder.</p>
+            <div class="hitl-list" id="hitl-list">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <p>No hay solicitudes pendientes</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h3>📊 Estadísticas de Arbitraje</h3>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-item"><span class="stat-value" id="hitl-approved">0</span><span class="stat-label">Aprobadas</span></div>
+              <div class="stat-item"><span class="stat-value" id="hitl-rejected">0</span><span class="stat-label">Rechazadas</span></div>
+              <div class="stat-item"><span class="stat-value" id="hitl-avg-time">2.3s</span><span class="stat-label">Tiempo Promedio</span></div>
+              <div class="stat-item"><span class="stat-value" id="hitl-total">0</span><span class="stat-label">Total Procesadas</span></div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>➕ Nueva Solicitud HITL</h3></div>
+            <div class="form-group">
+              <label>Agente solicitante</label>
+              <select id="hitl-agent" class="form-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Acción propuesta</label>
+              <textarea id="hitl-action" class="form-textarea" rows="3" placeholder="Describe la acción que requiere aprobación..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Nivel de riesgo</label>
+              <select id="hitl-risk" class="form-select">
+                <option value="low">🟢 Bajo</option>
+                <option value="medium">🟡 Medio</option>
+                <option value="high">🔴 Alto</option>
+                <option value="critical">⚫ Crítico</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="ZenicApp.createHITLRequest()">Enviar Solicitud</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== BÓVEDA ===== -->
+      <section id="page-boveda" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>🔒 Bóveda de Seguridad</h3>
+              <span class="badge badge-green">Integridad Verificada</span>
+            </div>
+            <div class="vault-status">
+              <div class="vault-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" width="64" height="64"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+              </div>
+              <div class="vault-info">
+                <div class="vault-merkle">
+                  <span class="merkle-label">Raíz Merkle</span>
+                  <code class="merkle-hash" id="merkle-root">Calculando...</code>
+                </div>
+                <div class="vault-stats">
+                  <span>📄 <span id="vault-entries">0</span> entradas</span>
+                  <span>🔍 <span id="vault-audits">0</span> auditorías</span>
+                  <span>✅ 100% integridad</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h3>📋 Registro de Auditoría</h3>
+              <button class="text-btn" onclick="ZenicApp.exportAuditLog()">Exportar</button>
+            </div>
+            <div class="audit-list" id="audit-list">
+              <div class="empty-state"><p>No hay registros de auditoría</p></div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>🔐 Secretos Cifrados</h3></div>
+            <div class="secret-list" id="secret-list">
+              <div class="empty-state"><p>No hay secretos almacenados</p></div>
+            </div>
+            <div class="add-secret-form">
+              <input type="text" id="secret-key" class="form-input" placeholder="Clave">
+              <input type="text" id="secret-value" class="form-input" placeholder="Valor">
+              <button class="btn btn-primary btn-sm" onclick="ZenicApp.addSecret()">Guardar</button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>🧮 Verificación de Integridad</h3></div>
+            <p class="section-desc">Verifica que todos los registros mantienen su hash original.</p>
+            <button class="btn btn-secondary btn-full" onclick="ZenicApp.verifyIntegrity()">
+              🔍 Ejecutar Verificación
+            </button>
+            <div id="integrity-result" class="integrity-result hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== NICHOS ===== -->
+      <section id="page-nichos" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>📚 Nichos & Plantillas</h3>
+            </div>
+            <p class="section-desc">Plantillas de agentes por industria y caso de uso.</p>
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="nicho-search" class="form-input" placeholder="Buscar plantillas..." oninput="ZenicApp.filterNichos()">
+            </div>
+          </div>
+
+          <div class="nicho-categories" id="nicho-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== APIs & MCP ===== -->
+      <section id="page-apis" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>🔧 APIs & MCP</h3>
+              <button class="btn btn-primary btn-sm" onclick="ZenicApp.showAddTool()">+ Herramienta</button>
+            </div>
+            <p class="section-desc">Gestión de herramientas y servidores MCP.</p>
+
+            <div class="tab-bar">
+              <button class="tab active" data-tab="tools" onclick="ZenicApp.switchTab(this,'apis')">Herramientas</button>
+              <button class="tab" data-tab="servers" onclick="ZenicApp.switchTab(this,'apis')">Servidores</button>
+            </div>
+
+            <div id="apis-tools" class="tab-content active">
+              <div class="tool-list" id="tool-list"></div>
+            </div>
+            <div id="apis-servers" class="tab-content">
+              <div class="server-list" id="server-list"></div>
+            </div>
+          </div>
+
+          <div class="section-card" id="add-tool-form" style="display:none">
+            <div class="section-header"><h3>➕ Nueva Herramienta MCP</h3></div>
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="tool-name" class="form-input" placeholder="web_search">
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <textarea id="tool-desc" class="form-textarea" rows="2" placeholder="Buscar en la web..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Parámetros (JSON)</label>
+              <textarea id="tool-params" class="form-textarea" rows="3" placeholder='{"query": "string"}'></textarea>
+            </div>
+            <div class="form-group">
+              <label>Servidor MCP</label>
+              <select id="tool-server" class="form-select"></select>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="ZenicApp.hideAddTool()">Cancelar</button>
+              <button class="btn btn-primary" onclick="ZenicApp.createTool()">Crear</button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>➕ Nuevo Servidor MCP</h3></div>
+            <div class="form-group">
+              <label>Nombre del Servidor</label>
+              <input type="text" id="server-name" class="form-input" placeholder="mi-servidor-mcp">
+            </div>
+            <div class="form-group">
+              <label>URL del Servidor</label>
+              <input type="text" id="server-url" class="form-input" placeholder="http://localhost:3001">
+            </div>
+            <div class="form-group">
+              <label>Tipo de Transporte</label>
+              <select id="server-transport" class="form-select">
+                <option value="stdio">stdio</option>
+                <option value="sse">SSE</option>
+                <option value="streamable">Streamable HTTP</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="ZenicApp.createServer()">Registrar Servidor</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== POLÍTICAS ===== -->
+      <section id="page-politicas" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>📜 Políticas</h3>
+              <button class="btn btn-primary btn-sm" onclick="ZenicApp.showAddPolicy()">+ Nueva</button>
+            </div>
+            <div class="policy-list" id="policy-list"></div>
+          </div>
+
+          <div class="section-card" id="add-policy-form" style="display:none">
+            <div class="section-header"><h3>➕ Nueva Política</h3></div>
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="policy-name" class="form-input" placeholder="Política de seguridad">
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <textarea id="policy-desc" class="form-textarea" rows="2" placeholder="Descripción de la política..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="policy-type" class="form-select">
+                <option value="security">Seguridad</option>
+                <option value="compliance">Cumplimiento</option>
+                <option value="operational">Operativa</option>
+                <option value="access">Control de Acceso</option>
+                <option value="data">Gobierno de Datos</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Severidad</label>
+              <select id="policy-severity" class="form-select">
+                <option value="low">🟢 Baja</option>
+                <option value="medium">🟡 Media</option>
+                <option value="high">🔴 Alta</option>
+                <option value="critical">⚫ Crítica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reglas (JSON)</label>
+              <textarea id="policy-rules" class="form-textarea" rows="3" placeholder='{"max_tokens": 1000, "require_approval": true}'></textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="ZenicApp.hideAddPolicy()">Cancelar</button>
+              <button class="btn btn-primary" onclick="ZenicApp.createPolicy()">Crear Política</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SUSCRIPCIÓN ===== -->
+      <section id="page-suscripcion" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header">
+              <h3>💎 Plan de Suscripción</h3>
+            </div>
+            <div class="current-plan" id="current-plan">
+              <div class="plan-badge" id="plan-badge">Starter</div>
+              <div class="plan-details">
+                <p class="plan-name" id="plan-name">Plan Starter</p>
+                <p class="plan-price">Gratuito • Uso Local</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>📊 Uso Actual</h3></div>
+            <div class="usage-items">
+              <div class="usage-item">
+                <div class="usage-header"><span>Agentes</span><span id="usage-agents">0/5</span></div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-agents-bar" style="width:0%"></div></div>
+              </div>
+              <div class="usage-item">
+                <div class="usage-header"><span>Herramientas MCP</span><span id="usage-tools">0/10</span></div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-tools-bar" style="width:0%"></div></div>
+              </div>
+              <div class="usage-item">
+                <div class="usage-header"><span>Políticas</span><span id="usage-policies">0/20</span></div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-policies-bar" style="width:0%"></div></div>
+              </div>
+              <div class="usage-item">
+                <div class="usage-header"><span>Solicitudes HITL</span><span id="usage-hitl">0/50</span></div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-hitl-bar" style="width:0%"></div></div>
+              </div>
+              <div class="usage-item">
+                <div class="usage-header"><span>Almacenamiento</span><span id="usage-storage">0 MB / 100 MB</span></div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-storage-bar" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-cards">
+            <div class="plan-card active" data-tier="starter">
+              <div class="plan-card-header"><h4>Starter</h4><span class="plan-price-tag">Gratis</span></div>
+              <ul class="plan-features">
+                <li>✓ 5 Agentes</li>
+                <li>✓ 10 Herramientas MCP</li>
+                <li>✓ 20 Políticas</li>
+                <li>✓ 50 HITL/mes</li>
+                <li>✓ 100 MB Almacenamiento</li>
+              </ul>
+              <button class="btn btn-secondary btn-full" disabled>Plan Actual</button>
+            </div>
+            <div class="plan-card" data-tier="business">
+              <div class="plan-card-header"><h4>Business</h4><span class="plan-price-tag">$29/mes</span></div>
+              <ul class="plan-features">
+                <li>✓ 25 Agentes</li>
+                <li>✓ 50 Herramientas MCP</li>
+                <li>✓ 100 Políticas</li>
+                <li>✓ 500 HITL/mes</li>
+                <li>✓ 1 GB Almacenamiento</li>
+                <li>✓ Soporte Prioritario</li>
+              </ul>
+              <button class="btn btn-primary btn-full" onclick="ZenicApp.upgradePlan('business')">Mejorar</button>
+            </div>
+            <div class="plan-card" data-tier="enterprise">
+              <div class="plan-card-header"><h4>Enterprise</h4><span class="plan-price-tag">Contactar</span></div>
+              <ul class="plan-features">
+                <li>✓ Agentes Ilimitados</li>
+                <li>✓ MCP Ilimitado</li>
+                <li>✓ Políticas Ilimitadas</li>
+                <li>✓ HITL Ilimitado</li>
+                <li>✓ Almacenamiento Ilimitado</li>
+                <li>✓ SLA Dedicado</li>
+                <li>✓ Despliegue On-Premise</li>
+              </ul>
+              <button class="btn btn-secondary btn-full" onclick="ZenicApp.upgradePlan('enterprise')">Contactar Ventas</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== INTEGRACIONES ===== -->
+      <section id="page-integraciones" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header"><h3>🔗 Integraciones</h3></div>
+            <p class="section-desc">Conecta tus servicios favoritos con Zenic Agents.</p>
+            <div class="integration-grid" id="integration-grid">
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('slack')">
+                <div class="int-icon" style="background:#4a154b">💬</div>
+                <span class="int-name">Slack</span>
+                <span class="int-status" id="int-slack-status">Desconectado</span>
+              </div>
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('github')">
+                <div class="int-icon" style="background:#333">🐙</div>
+                <span class="int-name">GitHub</span>
+                <span class="int-status" id="int-github-status">Desconectado</span>
+              </div>
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('jira')">
+                <div class="int-icon" style="background:#0052cc">📋</div>
+                <span class="int-name">Jira</span>
+                <span class="int-status" id="int-jira-status">Desconectado</span>
+              </div>
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('teams')">
+                <div class="int-icon" style="background:#6264a7">👥</div>
+                <span class="int-name">Teams</span>
+                <span class="int-status" id="int-teams-status">Desconectado</span>
+              </div>
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('notion')">
+                <div class="int-icon" style="background:#000">📝</div>
+                <span class="int-name">Notion</span>
+                <span class="int-status" id="int-notion-status">Desconectado</span>
+              </div>
+              <div class="integration-card" onclick="ZenicApp.toggleIntegration('zapier')">
+                <div class="int-icon" style="background:#ff4a00">⚡</div>
+                <span class="int-name">Zapier</span>
+                <span class="int-status" id="int-zapier-status">Desconectado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>🌐 Webhooks</h3></div>
+            <div class="webhook-list" id="webhook-list"></div>
+            <div class="form-row">
+              <input type="text" id="webhook-url" class="form-input" placeholder="https://ejemplo.com/webhook">
+              <button class="btn btn-primary btn-sm" onclick="ZenicApp.addWebhook()">Añadir</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CONFIGURACIÓN ===== -->
+      <section id="page-configuracion" class="page">
+        <div class="page-scroll">
+          <div class="section-card">
+            <div class="section-header"><h3>⚙️ Configuración General</h3></div>
+            <div class="settings-list">
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Modo Oscuro</span>
+                  <span class="setting-desc">Tema visual de la aplicación</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="setting-dark" checked onchange="ZenicApp.toggleDarkMode()"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Notificaciones</span>
+                  <span class="setting-desc">Alertas de agentes y HITL</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="setting-notif" checked onchange="ZenicApp.toggleNotifications()"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Auto-aprobación HITL (bajo riesgo)</span>
+                  <span class="setting-desc">Aprobar automáticamente solicitudes de bajo riesgo</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="setting-autohitl" onchange="ZenicApp.saveSettings()"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Auditoría Detallada</span>
+                  <span class="setting-desc">Registrar todas las acciones de agentes</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="setting-audit" checked onchange="ZenicApp.saveSettings()"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>🌍 Idioma & Región</h3></div>
+            <div class="form-group">
+              <label>Idioma</label>
+              <select id="setting-lang" class="form-select" onchange="ZenicApp.saveSettings()">
+                <option value="es" selected>Español</option>
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Zona Horaria</label>
+              <select id="setting-tz" class="form-select" onchange="ZenicApp.saveSettings()">
+                <option value="America/Madrid">Europa/Madrid (CET)</option>
+                <option value="America/Mexico_City">América/Ciudad de México</option>
+                <option value="America/Bogota">América/Bogotá</option>
+                <option value="America/Buenos_Aires">América/Buenos Aires</option>
+                <option value="America/Santiago">América/Santiago</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>💾 Datos & Almacenamiento</h3></div>
+            <div class="settings-list">
+              <div class="setting-item clickable" onclick="ZenicApp.exportData()">
+                <div class="setting-info">
+                  <span class="setting-label">📤 Exportar Datos</span>
+                  <span class="setting-desc">Descargar copia de seguridad</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="setting-item clickable" onclick="ZenicApp.clearCache()">
+                <div class="setting-info">
+                  <span class="setting-label">🗑️ Limpiar Caché</span>
+                  <span class="setting-desc">Eliminar datos temporales</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="setting-item clickable danger" onclick="ZenicApp.resetApp()">
+                <div class="setting-info">
+                  <span class="setting-label">⚠️ Restaurar Fábrica</span>
+                  <span class="setting-desc">Eliminar todos los datos</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>ℹ️ Acerca de</h3></div>
+            <div class="about-info">
+              <div class="about-row"><span>Versión</span><span>3.0.0</span></div>
+              <div class="about-row"><span>Build</span><span>2024.12.20-local</span></div>
+              <div class="about-row"><span>Motor BD</span><span>SQLite (Capacitor)</span></div>
+              <div class="about-row"><span>Modo</span><span>100% Local / Zero Cloud</span></div>
+              <div class="about-row"><span>Licencia</span><span>MIT</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PERFIL ===== -->
+      <section id="page-perfil" class="page">
+        <div class="page-scroll">
+          <div class="section-card profile-header-card">
+            <div class="profile-avatar-large" id="profile-avatar-large">Z</div>
+            <h3 class="profile-name" id="profile-name">Admin</h3>
+            <p class="profile-email" id="profile-email">admin@zenic.io</p>
+            <span class="badge badge-purple" id="profile-role-badge">Administrador</span>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>✏️ Editar Perfil</h3></div>
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="profile-edit-name" class="form-input" placeholder="Tu nombre">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="profile-edit-email" class="form-input" placeholder="tu@email.com" readonly>
+            </div>
+            <div class="form-group">
+              <label>Organización</label>
+              <input type="text" id="profile-edit-org" class="form-input" placeholder="Tu empresa">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="ZenicApp.updateProfile()">Guardar Cambios</button>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>🔑 Cambiar Contraseña</h3></div>
+            <div class="form-group">
+              <label>Contraseña Actual</label>
+              <input type="password" id="profile-current-pw" class="form-input" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label>Nueva Contraseña</label>
+              <input type="password" id="profile-new-pw" class="form-input" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="form-group">
+              <label>Confirmar Nueva Contraseña</label>
+              <input type="password" id="profile-confirm-pw" class="form-input" placeholder="Repetir contraseña">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="ZenicApp.changePassword()">Cambiar Contraseña</button>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h3>📊 Estadísticas de Usuario</h3></div>
+            <div class="stats-grid">
+              <div class="stat-item"><span class="stat-value" id="stat-sessions">0</span><span class="stat-label">Sesiones</span></div>
+              <div class="stat-item"><span class="stat-value" id="stat-actions">0</span><span class="stat-label">Acciones</span></div>
+              <div class="stat-item"><span class="stat-value" id="stat-last-login">—</span><span class="stat-label">Último Acceso</span></div>
+              <div class="stat-item"><span class="stat-value" id="stat-member-since">—</span><span class="stat-label">Miembro Desde</span></div>
+            </div>
+          </div>
+
+          <button class="btn btn-danger btn-full" onclick="ZenicApp.logout()" style="margin:16px">
+            Cerrar Sesión
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ====== BOTTOM NAV ====== -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <a class="nav-item active" data-page="dashboard" onclick="ZenicApp.navigate('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Inicio</span>
+      </a>
+      <a class="nav-item" data-page="apis" onclick="ZenicApp.navigate('apis')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>Agentes</span>
+      </a>
+      <a class="nav-item" data-page="politicas" onclick="ZenicApp.navigate('politicas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Políticas</span>
+      </a>
+      <a class="nav-item" data-page="boveda" onclick="ZenicApp.navigate('boveda')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Bóveda</span>
+      </a>
+      <a class="nav-item" data-page="perfil" onclick="ZenicApp.navigate('perfil')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Perfil</span>
+      </a>
+    </nav>
+
+    <!-- ====== NOTIFICATION PANEL ====== -->
+    <div class="notif-overlay" id="notif-overlay" onclick="ZenicApp.closeNotifications()"></div>
+    <div class="notif-panel" id="notif-panel">
+      <div class="notif-panel-header">
+        <h3>Notificaciones</h3>
+        <button class="text-btn" onclick="ZenicApp.clearNotifications()">Limpiar</button>
+      </div>
+      <div class="notif-list" id="notif-list">
+        <div class="empty-state"><p>Sin notificaciones</p></div>
+      </div>
+    </div>
+
+    <!-- ====== TOAST ====== -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ====== MODAL ====== -->
+    <div class="modal-overlay" id="modal-overlay" onclick="ZenicApp.closeModal()">
+      <div class="modal" id="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="modal-title">Modal</h3>
+          <button class="modal-close" onclick="ZenicApp.closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer" id="modal-footer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ====== SCRIPTS ====== -->
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api-bridge.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
