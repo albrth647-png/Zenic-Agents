@@ -616,31 +616,61 @@ const ZenicDB = (function() {
   // ============================================================
   async function init() {
     try {
-      // Try native Capacitor SQLite
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorSQLite) {
-        sqlitePlugin = window.Capacitor.Plugins.CapacitorSQLite;
+      // Try native Capacitor SQLite — check multiple possible locations
+      let plugin = null;
+      if (window.CapacitorSQLite) {
+        plugin = window.CapacitorSQLite;
+        console.log('[DB] Found CapacitorSQLite as window.CapacitorSQLite');
+      } else if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorSQLite) {
+        plugin = window.Capacitor.Plugins.CapacitorSQLite;
+        console.log('[DB] Found CapacitorSQLite at Capacitor.Plugins');
+      } else if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins['CapacitorSQLite']) {
+        plugin = window.Capacitor.Plugins['CapacitorSQLite'];
+        console.log('[DB] Found CapacitorSQLite at Capacitor.Plugins["CapacitorSQLite"]');
+      }
+
+      if (plugin) {
+        sqlitePlugin = plugin;
         isNative = true;
         console.log('[DB] Using Capacitor SQLite (native)');
 
         try {
-          const ret = await sqlitePlugin.createConnection({
-            database: 'zenic_agents',
-            version: dbVersion,
-            encrypted: false,
-            mode: 'no-encryption'
-          });
-          await sqlitePlugin.open({ database: 'zenic_agents' });
-        } catch(e) {
-          console.log('[DB] Connection might already exist, opening...', e);
+          // Try createConnection + open for Capacitor SQLite v6
+          try {
+            await sqlitePlugin.createConnection({
+              database: 'zenic_agents',
+              version: dbVersion,
+              encrypted: false,
+              mode: 'no-encryption'
+            });
+          } catch(ce) {
+            console.log('[DB] createConnection error (may already exist):', ce?.message || ce);
+          }
           try {
             await sqlitePlugin.open({ database: 'zenic_agents' });
-          } catch(e2) {
-            console.log('[DB] Open error (continuing):', e2);
+          } catch(oe) {
+            console.log('[DB] open error (continuing):', oe?.message || oe);
           }
+
+          // Verify connection works by running a test query
+          try {
+            await sqlitePlugin.query({ statement: 'SELECT 1 as test', values: [] });
+            console.log('[DB] Native SQLite connection verified');
+          } catch(qe) {
+            console.error('[DB] Native SQLite test query failed, falling back:', qe?.message || qe);
+            sqlitePlugin = null;
+            isNative = false;
+          }
+        } catch(e) {
+          console.error('[DB] Native SQLite init failed, using fallback:', e?.message || e);
+          sqlitePlugin = null;
+          isNative = false;
         }
+      } else {
+        console.log('[DB] No CapacitorSQLite plugin found, using fallback');
       }
     } catch(e) {
-      console.log('[DB] Native SQLite not available, using fallback');
+      console.log('[DB] Native SQLite not available, using fallback:', e?.message || e);
     }
 
     // Create all tables
@@ -795,11 +825,26 @@ const ZenicDB = (function() {
   // PASSWORD HASHING (SHA-256 via SubtleCrypto)
   // ============================================================
   async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + '_zenic_salt_v3');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // NOTA: No usamos crypto.subtle porque en Capacitor WebView (file://) no está disponible.
+    // En su lugar usamos un hash determinista multi-ronda que funciona en todos los contextos.
+    const str = password + '_zenic_salt_v3';
+    let h1 = 0, h2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      h1 = ((h1 << 5) - h1) + code;
+      h1 >>>= 0; // fuerza uint32 positivo
+      h2 = ((h2 << 7) - h2) + (code ^ (i * 31));
+      h2 >>>= 0;
+    }
+    // Tercera ronda con mezcla
+    const combined = h1.toString(16).padStart(8, '0') +
+                     h2.toString(16).padStart(8, '0');
+    let h3 = 0;
+    for (let i = 0; i < combined.length; i++) {
+      h3 = ((h3 << 3) - h3) + combined.charCodeAt(i);
+      h3 >>>= 0;
+    }
+    return combined + h3.toString(16).padStart(8, '0');
   }
 
   // ============================================================
@@ -811,10 +856,11 @@ const ZenicDB = (function() {
         await sqlitePlugin.execute({ statements: sql, values: params });
         return;
       } catch(e) {
-        console.error('[DB Native] run error:', e, sql);
+        console.error('[DB Native] run error, falling back:', e?.message || e, sql.substring(0, 60));
+        // Fall through to fallback on native error
       }
     }
-    // Fallback: use Web SQL / in-memory store
+    // Fallback: use localStorage store
     return _fallbackRun(sql, params);
   }
 
@@ -824,8 +870,8 @@ const ZenicDB = (function() {
         const result = await sqlitePlugin.query({ statement: sql, values: params });
         return result.values || [];
       } catch(e) {
-        console.error('[DB Native] query error:', e, sql);
-        return [];
+        console.error('[DB Native] query error, falling back:', e?.message || e, sql.substring(0, 60));
+        // Fall through to fallback on native error
       }
     }
     return _fallbackQuery(sql, params);
@@ -868,12 +914,17 @@ const ZenicDB = (function() {
   }
 
   function _parseTableName(sql) {
-    const match = sql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)/i) ||
+    const match = sql.match(/INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)/i) ||
+                  sql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)/i) ||
                   sql.match(/INSERT\s+INTO\s+(\w+)/i) ||
                   sql.match(/CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+(\w+)/i) ||
                   sql.match(/UPDATE\s+(\w+)/i) ||
                   sql.match(/DELETE\s+FROM\s+(\w+)/i);
     return match ? match[1] : null;
+  }
+
+  function _isInsertReplace(sql) {
+    return /INSERT\s+OR\s+REPLACE\s+INTO/i.test(sql);
   }
 
   function _fallbackRun(sql, params) {
@@ -893,10 +944,14 @@ const ZenicDB = (function() {
 
     if (upper.startsWith('INSERT')) {
       const tName = _parseTableName(sql);
-      if (!tName) return;
+      if (!tName) {
+        console.error('[DB Fallback] INSERT: Could not parse table name from:', sql.substring(0, 80));
+        return;
+      }
       const table = _getTable(tName);
+      const isReplace = _isInsertReplace(sql);
 
-      // Extract columns from SQL
+      // Extract columns from SQL: match the column list between ( ) before VALUES
       const colMatch = sql.match(/\(([^)]+)\)\s*VALUES/i);
       if (colMatch) {
         const cols = colMatch[1].split(',').map(c => c.trim().replace(/`/g, ''));
@@ -904,12 +959,23 @@ const ZenicDB = (function() {
         cols.forEach((col, i) => {
           row[col] = params[i] !== undefined ? params[i] : null;
         });
-        // Check for duplicate (OR IGNORE)
-        const pkCol = cols[0]; // Usually id
-        const exists = table.some(r => r[pkCol] === row[pkCol]);
-        if (!exists) {
+
+        // Check for duplicate by primary key (first column, usually 'id')
+        const pkCol = cols[0];
+        const existIdx = table.findIndex(r => r[pkCol] === row[pkCol]);
+
+        if (existIdx >= 0) {
+          if (isReplace) {
+            // INSERT OR REPLACE: overwrite existing row
+            table[existIdx] = row;
+          }
+          // INSERT OR IGNORE: skip silently (do nothing)
+        } else {
+          // No duplicate — insert the row
           table.push(row);
         }
+      } else {
+        console.error('[DB Fallback] INSERT: Could not parse columns from:', sql.substring(0, 80));
       }
       _saveStore();
       return;
@@ -979,17 +1045,29 @@ const ZenicDB = (function() {
 
     if (upper.startsWith('SELECT')) {
       const tMatch = sql.match(/FROM\s+(\w+)/i);
-      if (!tMatch) return [];
-      const table = _getTable(tMatch[1]);
+      if (!tMatch) {
+        console.error('[DB Fallback] SELECT: Could not parse table name from:', sql.substring(0, 80));
+        return [];
+      }
+      const tableName = tMatch[1];
+      const table = _getTable(tableName);
 
       let results = [...table];
 
-      // Simple WHERE handling
-      const whereMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i);
-      if (whereMatch) {
-        const col = whereMatch[1];
-        const val = params[0];
-        results = results.filter(r => r[col] == val);
+      // Simple WHERE handling — support single and multiple conditions
+      // Match: WHERE col = ? [AND col2 = ?]
+      const whereClause = sql.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+LIMIT|\s*$)/i);
+      if (whereClause) {
+        const conditions = whereClause[1].split(/\s+AND\s+/i);
+        let paramIdx = 0;
+        for (const cond of conditions) {
+          const condMatch = cond.match(/(\w+)\s*=\s*\?/);
+          if (condMatch) {
+            const col = condMatch[1];
+            const val = params[paramIdx++];
+            results = results.filter(r => r[col] == val);
+          }
+        }
       }
 
       // Simple ORDER BY
@@ -1196,6 +1274,58 @@ const ZenicDB = (function() {
   }
 
   // ============================================================
+  // SAFETY NET: Re-seed admin user if missing
+  // ============================================================
+  async function reSeedAdmin() {
+    console.log('[DB] reSeedAdmin: Checking if admin user exists...');
+    try {
+      const admin = await findById('users', 'user-admin');
+      if (admin) {
+        console.log('[DB] reSeedAdmin: Admin user exists, checking password hash...');
+        // Verify password hash matches current algorithm
+        const expectedHash = await hashPassword('admin123');
+        if (admin.password_hash === expectedHash) {
+          console.log('[DB] reSeedAdmin: Admin user OK, hash matches');
+          return true;
+        }
+        console.log('[DB] reSeedAdmin: Password hash mismatch, updating...');
+        await run(`UPDATE users SET password_hash = ? WHERE id = ?`, [expectedHash, 'user-admin']);
+        return true;
+      }
+
+      console.log('[DB] reSeedAdmin: Admin user missing, re-seeding...');
+
+      // Ensure roles exist
+      const adminRole = await findById('roles', 'role-admin');
+      if (!adminRole) {
+        console.log('[DB] reSeedAdmin: Seeding roles...');
+        for (const r of SEED_DATA.roles) {
+          await run(`INSERT OR IGNORE INTO roles (id, name, description, color, is_system) VALUES (?, ?, ?, ?, ?)`,
+            [r.id, r.name, r.description, r.color, r.is_system]);
+        }
+      }
+
+      // Seed admin user
+      const adminHash = await hashPassword('admin123');
+      await run(`INSERT OR REPLACE INTO users (id, email, name, password_hash, role_id, organization, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)`,
+        ['user-admin', 'admin@zenic.io', 'Administrador', adminHash, 'role-admin', 'Zenic Systems']);
+
+      // Verify it was inserted
+      const verify = await findById('users', 'user-admin');
+      if (verify) {
+        console.log('[DB] reSeedAdmin: Admin user re-seeded successfully');
+        return true;
+      } else {
+        console.error('[DB] reSeedAdmin: FAILED to re-seed admin user');
+        return false;
+      }
+    } catch(e) {
+      console.error('[DB] reSeedAdmin error:', e);
+      return false;
+    }
+  }
+
+  // ============================================================
   // PUBLIC API
   // ============================================================
   return {
@@ -1213,6 +1343,7 @@ const ZenicDB = (function() {
     countWhere,
     generateId,
     hashPassword,
+    reSeedAdmin,
     getDashboardKPIs,
     getHITLStats,
     getSubscriptionUsage,

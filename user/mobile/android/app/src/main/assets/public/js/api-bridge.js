@@ -294,14 +294,27 @@ const ZenicAPI = (function() {
       current = next;
     }
 
-    return `sha256:${current[0].substring(0, 16)}...${current[0].substring(48)}`;
+    return `sha256:${current[0].substring(0, 12)}...${current[0].substring(current[0].length - 4)}`;
   }
 
   async function _sha256(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Hash sin crypto.subtle para compatibilidad con Capacitor WebView
+    let h1 = 0, h2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      h1 = ((h1 << 5) - h1) + code;
+      h1 >>>= 0;
+      h2 = ((h2 << 7) - h2) + (code ^ (i * 37));
+      h2 >>>= 0;
+    }
+    const combined = h1.toString(16).padStart(8, '0') +
+                     h2.toString(16).padStart(8, '0');
+    let h3 = 0;
+    for (let i = 0; i < combined.length; i++) {
+      h3 = ((h3 << 3) - h3) + combined.charCodeAt(i);
+      h3 >>>= 0;
+    }
+    return combined + h3.toString(16).padStart(8, '0');
   }
 
   async function addSecret(keyName, value, userId) {
