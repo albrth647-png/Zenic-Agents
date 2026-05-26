@@ -33,15 +33,23 @@ const ALLOWED_ORIGINS = (() => {
   if (envOrigins && envOrigins !== "*") {
     return envOrigins.split(",").map((o) => o.trim()).filter(Boolean);
   }
-  // Defaults seguros — solo localhost en desarrollo
+  // Defaults seguros — localhost en desarrollo + Capacitor origins
   if (process.env.NODE_ENV === "development") {
     return [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
+      "http://localhost",
+      "capacitor://localhost",
+      "https://localhost",
+      "ionic://localhost",
     ];
   }
   // Producción: DEBE configurarse via ZENIC_CORS_ORIGINS
-  return [];
+  // Capacitor usa https://localhost como scheme por defecto
+  return [
+    "https://localhost",
+    "capacitor://localhost",
+  ];
 })();
 
 const CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
@@ -56,7 +64,9 @@ function handleCors(request: NextRequest): NextResponse | null {
 
   // Verificar origin contra allowlist
   const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin) ||
-    (process.env.NODE_ENV === "development" && origin.includes("localhost"));
+    (process.env.NODE_ENV === "development" && origin.includes("localhost")) ||
+    // Permitir Capacitor WebView origins siempre
+    (origin === "capacitor://localhost" || origin === "https://localhost" || origin === "ionic://localhost");
 
   if (!isAllowedOrigin) {
     if (isPreflight) {
@@ -217,8 +227,8 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest): Nex
   // Content-Security-Policy
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; " +
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: blob:; connect-src 'self' http://localhost:* https://localhost:* capacitor://localhost; frame-ancestors 'none'; " +
     "base-uri 'self'; form-action 'self'",
   );
 
@@ -258,7 +268,8 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest): Nex
   const origin = request.headers.get("origin");
   if (origin && (
     ALLOWED_ORIGINS.includes(origin) ||
-    (process.env.NODE_ENV === "development" && origin.includes("localhost"))
+    (process.env.NODE_ENV === "development" && origin.includes("localhost")) ||
+    origin === "capacitor://localhost" || origin === "https://localhost" || origin === "ionic://localhost"
   )) {
     response.headers.set("Access-Control-Allow-Origin", origin);
     response.headers.set("Access-Control-Allow-Credentials", "true");
@@ -469,18 +480,44 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // 7b. Producción: todas las rutas de API requieren X-User-Id
+  // 7b. Producción: rutas de API protegidas requieren auth, PERO auth routes son públicas
   if (process.env.NODE_ENV === "production") {
-    if (pathname.startsWith("/api/")) {
-      const userId = request.headers.get("x-user-id");
-      if (!userId) {
-        return applySecurityHeaders(
-          NextResponse.json(
-            { error: "Acceso denegado. Se requiere autenticación.", code: "UNAUTHENTICATED" },
-            { status: 401 },
-          ),
-          request,
-        );
+    // Rutas de autenticación son públicas (login, register, nextauth)
+    const isAuthRoute = pathname.startsWith("/api/auth/") ||
+      pathname.startsWith("/api/health") ||
+      pathname === "/api/route";
+
+    if (pathname.startsWith("/api/") && !isAuthRoute) {
+      // Verificar JWT para rutas protegidas
+      try {
+        const token = await getToken({
+          req: request,
+          secret: process.env.NEXTAUTH_SECRET,
+        });
+        if (!token) {
+          const userId = request.headers.get("x-user-id");
+          if (!userId) {
+            return applySecurityHeaders(
+              NextResponse.json(
+                { error: "Acceso denegado. Se requiere autenticación.", code: "UNAUTHENTICATED" },
+                { status: 401 },
+              ),
+              request,
+            );
+          }
+        }
+      } catch {
+        // JWT validation failed — check for API key or X-User-Id
+        const userId = request.headers.get("x-user-id");
+        if (!userId) {
+          return applySecurityHeaders(
+            NextResponse.json(
+              { error: "Acceso denegado. Se requiere autenticación.", code: "UNAUTHENTICATED" },
+              { status: 401 },
+            ),
+            request,
+          );
+        }
       }
     }
     return applySecurityHeaders(NextResponse.next(), request);
