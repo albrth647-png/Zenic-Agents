@@ -29,7 +29,7 @@ apscheduler>=3.10.0
 pyyaml>=6.0
 
 # File operations
-aiofiles>=23.0.0
+aiofiles>=25.1.0
 
 # ============================================================
 #  Optional Dependencies
