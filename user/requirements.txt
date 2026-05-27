@@ -10,7 +10,7 @@ aiosqlite>=0.19.0
 asyncpg>=0.29.0
 
 # Cache — Redis (production)
-redis[hiredis]>=5.0.0
+redis[hiredis]>=7.4.0
 
 # AI / NLP
 # llama-cpp-python>=0.3.0  # Qwen3-0.6B - uncomment if model available
