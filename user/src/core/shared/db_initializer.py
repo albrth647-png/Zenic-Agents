@@ -336,6 +336,18 @@ class write_lock:
 _write_locks_fallback: dict[str, threading.Lock] = {}
 
 
+def _ensure_table(
+    conn: sqlite3.Connection,
+    schema: str,
+    indexes: list[str] | None = None,
+) -> None:
+    """Create a table with its indexes in a single transaction."""
+    conn.execute(schema)
+    for idx in (indexes or []):
+        conn.execute(idx)
+    conn.commit()
+
+
 def initialize_databases() -> None:
     """Create all SQLite tables with complete schemas v17 + indexes + PRAGMA.
 
@@ -349,7 +361,7 @@ def initialize_databases() -> None:
 
     # Graph AST (Phase 2: tenant-aware)
     conn = _get_conn("graph_ast.sqlite")
-    conn.execute("""CREATE TABLE IF NOT EXISTS ast_nodes (
+    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS ast_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_path TEXT NOT NULL,
         node_type TEXT NOT NULL,
@@ -361,16 +373,16 @@ def initialize_databases() -> None:
         complexity INTEGER DEFAULT 1,
         connections TEXT DEFAULT '[]',
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        UNIQUE(file_path, name, node_type, tenant_id))""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)")
-    conn.commit()
+        UNIQUE(file_path, name, node_type, tenant_id))""", [
+        "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)",
+        "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)",
+        "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)",
+        "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)",
+    ])
 
     # Theorem Cache
     conn = _get_conn("theorem_cache.sqlite")
-    conn.execute("""CREATE TABLE IF NOT EXISTS theorems (
+    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS theorems (
         structural_hash TEXT NOT NULL,
         operation TEXT NOT NULL,
         goal TEXT NOT NULL,
@@ -381,28 +393,28 @@ def initialize_databases() -> None:
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        PRIMARY KEY (structural_hash, tenant_id))""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)")
-    conn.commit()
+        PRIMARY KEY (structural_hash, tenant_id))""", [
+        "CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)",
+    ])
 
     # Merkle Ledger
     conn = _get_conn("merkle_ledger.sqlite")
-    conn.execute("""CREATE TABLE IF NOT EXISTS ledger (
+    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS ledger (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_path TEXT NOT NULL,
         hash_sha256 TEXT NOT NULL,
         parent_hash TEXT NOT NULL,
         operation TEXT NOT NULL,
         timestamp REAL NOT NULL,
-        tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)")
-    conn.commit()
+        tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""", [
+        "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)",
+        "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)",
+    ])
 
     # Request Log (Phase 2: tenant-aware)
     conn = _get_conn("request_log.sqlite")
-    conn.execute("""CREATE TABLE IF NOT EXISTS requests (
+    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         request_id TEXT NOT NULL,
         model TEXT,
@@ -415,11 +427,11 @@ def initialize_databases() -> None:
         mcts_simulations INTEGER DEFAULT 0,
         cache_hit INTEGER DEFAULT 0,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)")
-    conn.commit()
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""", [
+        "CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)",
+        "CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)",
+    ])
 
     logger.info("Databases initialized with WAL mode + PRAGMA optimizations (via %s)",
                 "FastPool" if pool else "legacy pool")

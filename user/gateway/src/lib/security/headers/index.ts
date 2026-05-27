@@ -175,26 +175,35 @@ function isProduction(): boolean {
  * returns `null` because HSTS should never be applied over plain HTTP
  * or in environments where certificates may be self-signed.
  *
- * Production value: `max-age=63072000; includeSubDomains; preload`
- * - `max-age=63072000`  — ~2 years, per Mozilla recommendations
- * - `includeSubDomains`  — HSTS applies to all subdomains
- * - `preload`            — Eligible for browser HSTS preload lists
+ * Production value (with preload): `max-age=63072000; includeSubDomains; preload`
+ * Production value (without preload): `max-age=63072000; includeSubDomains`
  *
+ * The `preload` directive should be disabled for staging/pre-production
+ * domains that are not eligible for or should not be submitted to
+ * browser HSTS preload lists. Use the `ZENIC_HEADERS_HSTS_PRELOAD`
+ * environment variable to control this at deployment time.
+ *
+ * @param enablePreload - Whether to include the `preload` directive.
+ *                        Defaults to `true`.
  * @returns The HSTS header value string, or `null` in non-production.
  *
  * @example
  * ```ts
- * const hsts = getHstsHeader();
- * if (hsts) {
- *   response.headers.set(SecurityHeaders.StrictTransportSecurity, hsts);
- * }
+ * // With preload (default, for production domains)
+ * const hsts = getHstsHeader(true);
+ * // → "max-age=63072000; includeSubDomains; preload"
+ *
+ * // Without preload (for staging domains not in preload list)
+ * const hsts = getHstsHeader(false);
+ * // → "max-age=63072000; includeSubDomains"
  * ```
  */
-export function getHstsHeader(): string | null {
+export function getHstsHeader(enablePreload: boolean = true): string | null {
   if (!isProduction()) {
     return null;
   }
-  return 'max-age=63072000; includeSubDomains; preload';
+  const base = 'max-age=63072000; includeSubDomains';
+  return enablePreload ? `${base}; preload` : base;
 }
 
 /**

@@ -83,43 +83,40 @@ class ZenicOrchestrator(BaseOrchestrator):
     """
 
     def __init__(self) -> None:
-        # ══════════════════════════════════════════════════════
-        # H-83 NOTE: This __init__ has 8 initialization phases.
-        # Each phase should ideally be an OrchestratorPhase class.
-        # TODO(architecture): Extract each phase into a separate class:
-        #   Phase 1: CommonStatePhase    (_init_common_state)
-        #   Phase 2: PipelinePhase       (_init_pipeline_components)
-        #   Phase 3: AIArchitecturePhase (_init_ai_architecture + VerdictEngine)
-        #   Phase 4: ExtendedPhase       (_init_extended_with_defaults)
-        #   Phase 5: DecomposedPhase     (_init_decomposed_modules)
-        #   Phase 6: AgentFrameworkPhase (_init_agent_framework)
-        #   Phase 7: GodLevelPhase       (_init_god_level_improvements)
-        #   Phase 8: ScanPhase           (_scan_project)
-        # This will reduce coupling and make the orchestrator testable
-        # at each phase boundary.
-        # ══════════════════════════════════════════════════════
-
-        # 1. Common state
         settings = load_settings()
+        self._init_phase_1()
+        self._init_phase_2(settings)
+        self._init_phase_3()
+        self._init_phase_4()
+        self._init_phase_5()
+        self._init_phase_6()
+        self._init_phase_7()
+        self._init_phase_8()
+        self._init_phase_9()
+
+    # ── Initialization Phases ────────────────────────────────────
+
+    def _init_phase_1(self) -> None:
+        """Phase 1: Common state."""
         self._init_common_state()
 
-        # 2. Pipeline components
+    def _init_phase_2(self, settings: dict[str, Any]) -> None:
+        """Phase 2: Pipeline components."""
         self._init_pipeline_components(settings)
 
-        # 3. 4-Layer Verdict Architecture (v17)
+    def _init_phase_3(self) -> None:
+        """Phase 3: 4-Layer Verdict Architecture (v17) + VerdictEngine."""
         semantic = SemanticEngine(auto_load=True)
         ai = MiniAIEngine(auto_load=True)
         memory = SmartMemory(semantic_engine=semantic)
         self._init_ai_architecture(semantic, ai, memory)
 
-        # 3b. VerdictEngine - El pipeline completo de veredicto
         self._verdict_engine = VerdictEngine(
             mini_ai=ai,
             semantic_engine=semantic,
             smart_memory=memory,
         )
 
-        # Log AI status
         sem_status = "ACTIVE" if self._semantic.is_loaded else "fallback"
         ai_status = "ACTIVE" if self._ai.is_loaded else "fallback"
         verdict_status = "READY" if ai.is_loaded else "fallback_only"
@@ -131,23 +128,36 @@ class ZenicOrchestrator(BaseOrchestrator):
             f"VerdictEngine={verdict_status}"
         )
 
-        # 4. Extended architecture (with defaults)
+    def _init_phase_4(self) -> None:
+        """Phase 4: Extended architecture (with defaults)."""
         self._init_extended_with_defaults()
 
-        # 5. Decomposed sub-modules
+    def _init_phase_5(self) -> None:
+        """Phase 5: Decomposed sub-modules."""
         self._init_decomposed_modules()
 
-        # 6. Agent framework (F1-F5)
+    def _init_phase_6(self) -> None:
+        """Phase 6: Agent framework (F1-F5)."""
         self._init_agent_framework()
 
-        # 7. Step dispatcher
+    def _init_phase_7(self) -> None:
+        """Phase 7: Step dispatcher."""
         self._step_dispatcher = StepDispatcher(self)
 
-        # 8. God-level improvements
+    def _init_phase_8(self) -> None:
+        """Phase 8: God-level improvements."""
         self._init_god_level_improvements()
 
-        # 9. Scan project
+    def _init_phase_9(self) -> None:
+        """Phase 9: Scan project."""
         self._scan_project()
+
+    def _release_workspace_block(self, workspace_id: str) -> None:
+        """Safely release an isolation workspace (non-blocking on failure)."""
+        try:
+            self._isolation_manager.release_workspace(workspace_id)
+        except Exception as e:
+            logger.debug("Orchestrator: Failed to release workspace %s: %s", workspace_id, e)
 
     async def execute(self, msg: str) -> dict[str, Any]:
         """
@@ -286,10 +296,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         if verdict_result.verdict.value == "YES" and trial.status == "PASS" and final_code:
             # APPROVED: Veredicto YES + Sandbox PASS
             node = self.ledger.commit(intent.target, final_code, p_dir, workspace=sandbox_workspace)
-            try:
-                self._isolation_manager.release_workspace(sandbox_workspace.sandbox_id)
-            except Exception as e:
-                logger.debug("Orchestrator: Failed to release workspace: %s", e)
+            self._release_workspace_block(sandbox_workspace.sandbox_id)
             self.cache.save(intent, "PROVEN", {"h": node.hash_sha256[:8], "code": final_code}, final_code, lang)
             elapsed = int((time.time() - start_time) * 1000)
             self._analysis.log_request(
@@ -333,10 +340,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         elif verdict_result.verdict.value == "NO":
             # REJECTED: Veredicto NO - No necesita sandbox
             self.ledger.rollback(intent.target, p_dir, workspace=sandbox_workspace)
-            try:
-                self._isolation_manager.release_workspace(sandbox_workspace.sandbox_id)
-            except Exception as e:
-                logger.debug("Orchestrator: Failed to release workspace on NO: %s", e)
+            self._release_workspace_block(sandbox_workspace.sandbox_id)
             elapsed = int((time.time() - start_time) * 1000)
             self._analysis.log_request(intent, "VERDICT_NO", elapsed, solver_status=plan.solver_status)
 
@@ -359,10 +363,7 @@ class ZenicOrchestrator(BaseOrchestrator):
         elif trial.status.startswith("FAIL") and final_code:
             # Sandbox FAIL - Rollback
             self.ledger.rollback(intent.target, p_dir, workspace=sandbox_workspace)
-            try:
-                self._isolation_manager.release_workspace(sandbox_workspace.sandbox_id)
-            except Exception as e:
-                logger.debug("Orchestrator: Failed to release workspace: %s", e)
+            self._release_workspace_block(sandbox_workspace.sandbox_id)
             elapsed = int((time.time() - start_time) * 1000)
             self._analysis.log_request(intent, "ROLLBACK", elapsed, solver_status=plan.solver_status)
 
@@ -392,10 +393,7 @@ class ZenicOrchestrator(BaseOrchestrator):
             }
         else:
             # NO_OP path
-            try:
-                self._isolation_manager.release_workspace(sandbox_workspace.sandbox_id)
-            except Exception as e:
-                logger.debug("Orchestrator: Failed to release workspace on NO_OP: %s", e)
+            self._release_workspace_block(sandbox_workspace.sandbox_id)
 
             elapsed = int((time.time() - start_time) * 1000)
             self._analysis.log_request(intent, "NO_OP", elapsed)

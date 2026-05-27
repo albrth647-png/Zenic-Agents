@@ -129,6 +129,38 @@ def _create_enhanced_safety_gate(
     return EnhancedSafetyGate(safety_gate, approval_chain)
 
 
+def _init_component(
+    results: dict[str, Any],
+    name: str,
+    import_fn: Any,
+    success_fn: Any | None = None,
+) -> Any | None:
+    """Initialize a Phase 6 component with standard try/except/log.
+
+    Args:
+        results: Results dict to populate (mutated in place).
+        name: Component name for result keys and log messages.
+        import_fn: Callable that returns the initialized component.
+        success_fn: Optional post-init callback receiving the component.
+
+    Returns:
+        The initialized component, or None on failure.
+    """
+    try:
+        component = import_fn()
+        results[name] = {"status": "ok"}
+        if success_fn:
+            extra = success_fn(component)
+            if isinstance(extra, dict):
+                results[name].update(extra)
+        logger.info("Phase6: %s initialized", name)
+        return component
+    except Exception as exc:
+        results[name] = {"status": "error", "error": str(exc)}
+        logger.error("Phase6: %s init failed: %s", name, exc)
+        return None
+
+
 def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     """Initialize all Phase 6 components and wire them together.
 
@@ -154,122 +186,47 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     results: dict[str, Any] = {}
 
     # ── 1. Degraded Mode Manager ──────────────────────────
-    try:
-        from src.core.degraded_mode.manager import get_degraded_mode_manager
-
-        dm = get_degraded_mode_manager()
-        results["degraded_mode"] = {"status": "ok", "mode": dm.get_current_mode().value}
-        logger.info("Phase6: DegradedModeManager initialized (mode=%s)", dm.get_current_mode().value)
-    except Exception as exc:
-        results["degraded_mode"] = {"status": "error", "error": str(exc)}
-        logger.error("Phase6: DegradedModeManager init failed: %s", exc)
+    dm = _init_component(results, "degraded_mode", lambda: get_degraded_mode_manager())
 
     # ── 2. License Manager ────────────────────────────────
-    try:
-        from src.core.license.manager import get_license_manager
-
-        lm = get_license_manager()
-        results["license"] = {"status": "ok", "data": lm.get_status()}
-
+    lm = _init_component(results, "license", lambda: get_license_manager())
+    if lm is not None:
         # Wire license events to degraded mode
-        try:
-            from src.core.degraded_mode.manager import get_degraded_mode_manager
-
-            dm = get_degraded_mode_manager()
-
-            def _on_license_event(event_type: str, data: dict[str, Any]) -> None:
-                """React to license events by adjusting operating mode."""
-                if event_type == "kill_switch_activated":
-                    dm.enter_paralysis(level=3, reason=f"Kill switch: {data.get('reason', '')}")
-                elif event_type == "kill_switch_deactivated":
-                    # Only return to normal if license is valid
-                    result = lm.verify()
-                    if result.valid:
-                        dm.return_to_normal(reason="Kill switch deactivated, license valid")
-
-            lm.on_license_event(_on_license_event)
-            logger.info("Phase6: License → DegradedMode wired")
-        except Exception as exc:
-            logger.warning("Phase6: License-DegradedMode wiring failed: %s", exc)
-
-    except Exception as exc:
-        results["license"] = {"status": "error", "error": str(exc)}
-        logger.error("Phase6: LicenseManager init failed: %s", exc)
-
-    # ── 3. Defense Manager ────────────────────────────────
-    try:
-        from src.core.defense import get_defense_manager
-
-        defense = get_defense_manager()
-        defense.initialize_all(start_monitoring=start_defense_monitoring)
-        results["defense"] = {"status": "ok", "active_layers": defense.get_status().active_layers}
-        logger.info("Phase6: DefenseManager initialized (%d active layers)", defense.get_status().active_layers)
-    except Exception as exc:
-        results["defense"] = {"status": "error", "error": str(exc)}
-        logger.error("Phase6: DefenseManager init failed: %s", exc)
-
-    # ── 4. Approval Chain ─────────────────────────────────
-    try:
-        from src.core.approval.chain import get_approval_chain
-        from src.core.approval.workflows import get_workflow_engine
-
-        chain = get_approval_chain()
-        engine = get_workflow_engine()
-        results["approval"] = {
-            "status": "ok",
-            "workflows": len(engine.list_workflows()),
-        }
-        logger.info("Phase6: ApprovalChain + WorkflowEngine initialized")
-    except Exception as exc:
-        results["approval"] = {"status": "error", "error": str(exc)}
-        logger.error("Phase6: ApprovalChain init failed: %s", exc)
-
-    # ── 5. Wire SafetyGate → ApprovalChain (Composition) ──
-    try:
-        from src.core.approval.chain import get_approval_chain
-        from src.core.executors.safety_gate import (
-            get_default_safety_gate,
-            set_default_safety_gate,
+        _init_component(
+            results, "license_degraded_wiring",
+            lambda: _wire_license_events(lm, dm),
         )
 
-        safety_gate = get_default_safety_gate()
-        chain = get_approval_chain()
+        # Auto-create default license if none exists
+        try:
+            if not lm.get_current_license():
+                from src.core.license.types import LicenseTier
+                lm.create_license(
+                    tier=LicenseTier.STARTER,
+                    issued_to="Zenic-Agents Default",
+                    features=["basic_pipeline", "chat_completions"],
+                    max_users=1,
+                    expires_days=0,
+                )
+                logger.info("Phase6: Default starter license created")
+        except Exception as exc:
+            logger.warning("Phase6: Default license creation failed: %s", exc)
 
-        # FASE 4 FIX: Use composition instead of monkey-patching.
-        # Create an EnhancedSafetyGate that wraps the original and
-        # integrates with the ApprovalChain, without mutating the
-        # original instance's check method.
-        enhanced_gate = _create_enhanced_safety_gate(safety_gate, chain)
+    # ── 3. Defense Manager ────────────────────────────────
+    _init_component(
+        results, "defense",
+        lambda: _init_defense(start_defense_monitoring),
+    )
 
-        # Replace the global singleton with the enhanced version
-        # using the official API. This is thread-safe and preserves
-        # denied actions from the original instance.
-        set_default_safety_gate(enhanced_gate)
+    # ── 4. Approval Chain ─────────────────────────────────
+    chain = _init_component(results, "approval", lambda: _init_approval())
 
-        results["safety_gate_wiring"] = {"status": "ok", "pattern": "composition"}
-        logger.info("Phase6: SafetyGate → ApprovalChain wired (composition pattern)")
-    except Exception as exc:
-        results["safety_gate_wiring"] = {"status": "error", "error": str(exc)}
-        logger.warning("Phase6: SafetyGate wiring failed: %s", exc)
-
-    # ── 6. Auto-create default license if none exists ──────
-    try:
-        from src.core.license.manager import get_license_manager
-        from src.core.license.types import LicenseTier
-
-        lm = get_license_manager()
-        if not lm.get_current_license():
-            # Create a starter-tier license by default
-            lm.create_license(
-                tier=LicenseTier.STARTER,
-                issued_to="Zenic-Agents Default",
-                features=["basic_pipeline", "chat_completions"],
-                max_users=1,
-                expires_days=0,  # Perpetual starter license
-            )
-            logger.info("Phase6: Default starter license created")
-    except Exception as exc:
-        logger.warning("Phase6: Default license creation failed: %s", exc)
+    # ── 5. Wire SafetyGate → ApprovalChain (Composition) ──
+    if chain is not None:
+        _init_component(
+            results, "safety_gate_wiring",
+            lambda: _wire_safety_gate(chain),
+        )
 
     # ── Mark as initialized (idempotency guard) ───────────
     with _phase6_lock:
@@ -280,6 +237,48 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     total = len(results)
     logger.info("Phase6: Initialization complete (%d/%d components OK)", ok_count, total)
     return results
+
+
+def _init_defense(start_monitoring: bool) -> Any:
+    """Initialize DefenseManager."""
+    from src.core.defense import get_defense_manager
+    defense = get_defense_manager()
+    defense.initialize_all(start_monitoring=start_monitoring)
+    return defense
+
+
+def _init_approval() -> Any:
+    """Initialize ApprovalChain and WorkflowEngine."""
+    from src.core.approval.chain import get_approval_chain
+    from src.core.approval.workflows import get_workflow_engine
+    return get_approval_chain()
+
+
+def _wire_license_events(lm: Any, dm: Any) -> None:
+    """Wire license events to degraded mode manager."""
+    def _on_license_event(event_type: str, data: dict[str, Any]) -> None:
+        """React to license events by adjusting operating mode."""
+        if event_type == "kill_switch_activated":
+            dm.enter_paralysis(level=3, reason=f"Kill switch: {data.get('reason', '')}")
+        elif event_type == "kill_switch_deactivated":
+            result = lm.verify()
+            if result.valid:
+                dm.return_to_normal(reason="Kill switch deactivated, license valid")
+
+    lm.on_license_event(_on_license_event)
+    logger.info("Phase6: License → DegradedMode wired")
+
+
+def _wire_safety_gate(chain: Any) -> None:
+    """Wire SafetyGate to ApprovalChain via composition."""
+    from src.core.executors.safety_gate import (
+        get_default_safety_gate,
+        set_default_safety_gate,
+    )
+    safety_gate = get_default_safety_gate()
+    enhanced_gate = _create_enhanced_safety_gate(safety_gate, chain)
+    set_default_safety_gate(enhanced_gate)
+    logger.info("Phase6: SafetyGate → ApprovalChain wired (composition pattern)")
 
 
 def get_phase6_status() -> dict[str, Any]:

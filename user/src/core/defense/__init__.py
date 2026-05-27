@@ -42,6 +42,18 @@ from .encryption import (
     get_encryption_manager,
     reset_encryption_manager,
 )
+from .kms_backend import (
+    EnvKeyProvider,
+    KMSManager,
+    KMSStatus,
+    KMSUnavailableError,
+    KeyProvider,
+    KeyringProvider,
+    VaultProvider,
+    create_kms_manager,
+    get_kms_manager,
+    reset_kms_manager,
+)
 from .integrity import (
     IntegrityCheckResult,
     IntegrityStatus,
@@ -171,9 +183,38 @@ class DefenseManager:
         # Layer 6
         l6 = self._server_secrets.get_status()
 
-        # Calculate score (0-100)
+        # Calculate score (0-100) and recommendations
+        score, active, recs = self._compute_score_and_recs(
+            l1, hardening, enc_status, l4, l5, l6,
+        )
+
+        return DefenseStatus(
+            layer1_anti_tampering=l1,
+            layer2_binary_hardening=l2,
+            layer3_encryption=l3,
+            layer4_integrity=l4,
+            layer5_licensing=l5,
+            layer6_server_secrets=l6,
+            overall_score=score,
+            active_layers=active,
+            recommendations=recs,
+        )
+
+    # ── Scoring ────────────────────────────────────────────
+
+    @staticmethod
+    def _compute_score_and_recs(
+        l1: dict[str, Any],
+        hardening: HardeningStatus,
+        enc_status: EncryptionStatus,
+        l4: dict[str, Any],
+        l5: dict[str, Any],
+        l6: dict[str, Any],
+    ) -> tuple[float, int, list[str]]:
+        """Compute overall security score and recommendations from layer statuses."""
         score = 0.0
         active = 0
+
         if l1.get("monitoring_active"):
             score += 15
             active += 1
@@ -193,28 +234,17 @@ class DefenseManager:
             score += 15
             active += 1
 
-        # Recommendations
         recs: list[str] = []
-        if not l2["nuitka_compiled"]:
+        if not hardening.nuitka_compiled:
             recs.append("Compile with Nuitka for binary hardening")
-        if not l2["rust_ffi_available"]:
+        if not hardening.rust_ffi_available:
             recs.append("Enable Rust FFI for performance and security")
-        if not l3["sqlcipher_available"]:
+        if not enc_status.sqlcipher_available:
             recs.append("Install pysqlcipher3 or sqlcipher3-binary for database encryption")
         if l6.get("server_url") == "not configured":
             recs.append("Configure ZENIC_LICENSE_SERVER for server-side verification")
 
-        return DefenseStatus(
-            layer1_anti_tampering=l1,
-            layer2_binary_hardening=l2,
-            layer3_encryption=l3,
-            layer4_integrity=l4,
-            layer5_licensing=l5,
-            layer6_server_secrets=l6,
-            overall_score=score,
-            active_layers=active,
-            recommendations=recs,
-        )
+        return score, active, recs
 
     # ── Event handlers ─────────────────────────────────────
 
@@ -342,12 +372,23 @@ __all__ = [
     "HardeningStatus",
     "get_binary_hardening",
     "reset_binary_hardening",
-    # Layer 3
+    # Layer 3 — Encryption
     "EncryptionManager",
     "EncryptionLevel",
     "EncryptionStatus",
     "get_encryption_manager",
     "reset_encryption_manager",
+    # Layer 3a — KMS Backend
+    "KeyProvider",
+    "EnvKeyProvider",
+    "KeyringProvider",
+    "VaultProvider",
+    "KMSManager",
+    "KMSStatus",
+    "KMSUnavailableError",
+    "create_kms_manager",
+    "get_kms_manager",
+    "reset_kms_manager",
     # Layer 4
     "IntegrityVerifier",
     "IntegrityCheckResult",

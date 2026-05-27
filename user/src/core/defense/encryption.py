@@ -69,10 +69,19 @@ class EncryptionManager:
     - SQLCipher for encrypted database storage
     - Argon2id (preferred) / PBKDF2-SHA256 key derivation with hardware binding
     - Key rotation and re-encryption support
+    - **KMS integration**: Supports multiple key providers with fallback chain
+      (Vault → OS Keychain → Environment Variable)
 
     When SQLCipher is available (via pysqlcipher3 or sqlcipher3),
     all databases are encrypted with AES-256. When not available,
     Fernet provides application-level encryption for sensitive fields.
+
+    KMS Backend:
+    - ``kms_manager``: Optional ``KMSManager`` instance. If not provided,
+      auto-detects the best available provider (Vault → Keyring → Env).
+    - Explicit ``master_passphrase`` still works for backward compatibility
+      and takes precedence over KMS.
+    - ``get_kms_status()`` reports which provider is active.
     """
 
     DEFAULT_PBKDF2_ITERATIONS: int = 600_000
@@ -83,8 +92,33 @@ class EncryptionManager:
         master_passphrase: str = "",
         pbkdf2_iterations: int = 0,
         enable_hardware_binding: bool = True,
+        kms_manager: Any = None,
     ) -> None:
-        self._passphrase = master_passphrase or os.environ.get("ZENIC_DB_PASSPHRASE", "")
+        # Explicit passphrase takes precedence over KMS
+        self._passphrase: str = ""
+        self._kms_manager = kms_manager
+
+        if master_passphrase:
+            self._passphrase = master_passphrase
+        else:
+            # Try KMS first, then env var fallback
+            if self._kms_manager is None:
+                try:
+                    from .kms_backend import create_kms_manager
+                    self._kms_manager = create_kms_manager()
+                except ImportError:
+                    self._kms_manager = None
+
+            if self._kms_manager is not None:
+                kms_key = self._kms_manager.get_key()
+                if kms_key:
+                    self._passphrase = kms_key
+                else:
+                    # Fallback to env var if KMS has no key
+                    self._passphrase = os.environ.get("ZENIC_DB_PASSPHRASE", "")
+            else:
+                self._passphrase = os.environ.get("ZENIC_DB_PASSPHRASE", "")
+
         self._pbkdf2_iterations = pbkdf2_iterations or self.DEFAULT_PBKDF2_ITERATIONS
         self._enable_hw_binding = enable_hardware_binding
         self._fernet = None
@@ -120,11 +154,54 @@ class EncryptionManager:
             logger.debug("EncryptionManager: SQLCipher not available, database encryption disabled")
         return self._sqlcipher_available
 
+    def _derive_key(self, passphrase: str, salt: bytes) -> tuple[bytes, str]:
+        """Derive a Fernet key from a passphrase using KDF.
+
+        Tries Argon2id first (OWASP preferred), falls back to
+        PBKDF2-SHA256 with configured iterations.
+
+        Args:
+            passphrase: The passphrase to derive the key from.
+            salt: Cryptographic salt bytes.
+
+        Returns:
+            Tuple of (base64-encoded key bytes, KDF algorithm name).
+        """
+        try:
+            import argon2
+
+            key_bytes = argon2.low_level.hash_secret_raw(
+                secret=passphrase.encode(),
+                salt=salt,
+                time_cost=3,  # OWASP recommendation
+                memory_cost=65536,  # 64 MB
+                parallelism=4,
+                hash_len=32,
+                type=argon2.low_level.Type.ID,
+            )
+            return base64.urlsafe_b64encode(key_bytes), "Argon2id"
+        except ImportError:
+            pass  # Fall through to PBKDF2
+        except Exception as exc:
+            logger.warning("EncryptionManager: Argon2id failed (%s), falling back to PBKDF2-SHA256", exc)
+
+        # Fallback: PBKDF2-SHA256
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=self._pbkdf2_iterations,
+        )
+        key = base64.urlsafe_b64encode(kdf.derive(passphrase.encode()))
+        return key, "PBKDF2-SHA256"
+
     def _init_fernet(self) -> None:
         """Initialize Fernet encryption with derived key.
 
-        Tries Argon2id first (OWASP preferred), falls back to
-        PBKDF2-SHA256 with 600K iterations (OWASP 2024 minimum).
+        Uses ``_derive_key()`` for Argon2id/PBKDF2 key derivation.
         """
         if not self._fernet_available:
             return
@@ -135,60 +212,16 @@ class EncryptionManager:
         if self._enable_hw_binding:
             salt = self._hardware_bound_salt(salt)
 
-        # Try Argon2id first (OWASP preferred KDF)
-        try:
-            import argon2
-
-            key_bytes = argon2.low_level.hash_secret_raw(
-                secret=self._passphrase.encode(),
-                salt=salt,
-                time_cost=3,  # OWASP recommendation
-                memory_cost=65536,  # 64 MB
-                parallelism=4,
-                hash_len=32,
-                type=argon2.low_level.Type.ID,
-            )
-            key = base64.urlsafe_b64encode(key_bytes)
-            self._kdf_algorithm = "Argon2id"
-            logger.info("EncryptionManager: Fernet initialized with Argon2id")
-        except ImportError:
-            # Fallback to PBKDF2-SHA256 (600K iterations, OWASP 2024 minimum)
-            from cryptography.hazmat.primitives import hashes
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=salt,
-                iterations=self._pbkdf2_iterations,
-            )
-            key = base64.urlsafe_b64encode(kdf.derive(self._passphrase.encode()))
-            self._kdf_algorithm = "PBKDF2-SHA256"
-            logger.info(
-                "EncryptionManager: Fernet initialized with PBKDF2-SHA256 (iterations=%d)",
-                self._pbkdf2_iterations,
-            )
-        except Exception as exc:
-            # Argon2id available but failed — fall back to PBKDF2
-            from cryptography.hazmat.primitives import hashes
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-            logger.warning("EncryptionManager: Argon2id failed (%s), falling back to PBKDF2-SHA256", exc)
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=salt,
-                iterations=self._pbkdf2_iterations,
-            )
-            key = base64.urlsafe_b64encode(kdf.derive(self._passphrase.encode()))
-            self._kdf_algorithm = "PBKDF2-SHA256"
-            logger.info(
-                "EncryptionManager: Fernet initialized with PBKDF2-SHA256 (iterations=%d)",
-                self._pbkdf2_iterations,
-            )
-
+        key, algo = self._derive_key(self._passphrase, salt)
+        self._kdf_algorithm = algo
         self._fernet = Fernet(key)
         self._fernet_key = key
+
+        logger.info(
+            "EncryptionManager: Fernet initialized with %s (iterations=%d)",
+            algo,
+            self._pbkdf2_iterations,
+        )
 
     def reencrypt_with_new_kdf(
         self,
@@ -529,55 +562,13 @@ class EncryptionManager:
         self._previous_fernet: Any | None = self._fernet
 
         try:
-            # Derive new key with new passphrase
             from cryptography.fernet import Fernet
 
             new_salt = secrets.token_bytes(32)
             if self._enable_hw_binding:
                 new_salt = self._hardware_bound_salt(new_salt)
 
-            # H-94 FIX: Try Argon2id first (same as _init_fernet), then PBKDF2 fallback
-            new_key: bytes
-            kdf_used: str = self._kdf_algorithm
-            try:
-                import argon2
-
-                key_bytes = argon2.low_level.hash_secret_raw(
-                    secret=new_passphrase.encode(),
-                    salt=new_salt,
-                    time_cost=3,
-                    memory_cost=65536,  # 64 MB
-                    parallelism=4,
-                    hash_len=32,
-                    type=argon2.low_level.Type.ID,
-                )
-                new_key = base64.urlsafe_b64encode(key_bytes)
-                kdf_used = "Argon2id"
-            except ImportError:
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-                kdf = PBKDF2HMAC(
-                    algorithm=hashes.SHA256(),
-                    length=32,
-                    salt=new_salt,
-                    iterations=self._pbkdf2_iterations,
-                )
-                new_key = base64.urlsafe_b64encode(kdf.derive(new_passphrase.encode()))
-                kdf_used = "PBKDF2-SHA256"
-            except Exception as exc:
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-                logger.warning("EncryptionManager: Argon2id failed during rotation (%s), falling back to PBKDF2", exc)
-                kdf = PBKDF2HMAC(
-                    algorithm=hashes.SHA256(),
-                    length=32,
-                    salt=new_salt,
-                    iterations=self._pbkdf2_iterations,
-                )
-                new_key = base64.urlsafe_b64encode(kdf.derive(new_passphrase.encode()))
-                kdf_used = "PBKDF2-SHA256"
+            new_key, kdf_used = self._derive_key(new_passphrase, new_salt)
 
             with self._lock:
                 self._fernet = Fernet(new_key)
@@ -697,8 +688,32 @@ class EncryptionManager:
         except Exception as exc:
             raise ValueError(f"Tenant decryption failed: {exc}") from exc
 
+    def get_kms_status(self) -> dict[str, Any]:
+        """Get the KMS backend status.
 
-# ── Singleton ─────────────────────────────────────────────
+        Returns:
+            Dict with KMS status information, including active provider,
+            available providers, key availability, and key source.
+        """
+        if self._kms_manager is None:
+            return {
+                "active_provider": "none",
+                "available_providers": ["env"],
+                "key_available": bool(self._passphrase),
+                "key_source": "env-var" if self._passphrase else "none",
+                "error": "",
+            }
+        status = self._kms_manager.get_status()
+        return {
+            "active_provider": status.active_provider,
+            "available_providers": status.available_providers,
+            "key_available": status.key_available,
+            "key_source": status.key_source,
+            "error": status.error,
+        }
+
+
+    # ── Singleton ─────────────────────────────────────────────
 
 _encryption_manager: EncryptionManager | None = None
 _lock = threading.Lock()

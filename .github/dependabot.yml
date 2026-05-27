@@ -1,0 +1,88 @@
+# Dependabot configuration for Zenic-Agents (M3 — Dependency Scanning)
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # ── Gateway (Next.js / Node.js) ─────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/user/gateway"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    # Group non-breaking updates together to reduce PR noise
+    groups:
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+        update-types:
+          - "minor"
+          - "patch"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "vitest"
+          - "@vitejs/*"
+          - "happy-dom"
+          - "jsdom"
+        update-types:
+          - "minor"
+          - "patch"
+      prisma:
+        patterns:
+          - "@prisma/*"
+          - "prisma"
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+    # Security-only updates (patch) get priority reviews
+    reviewers:
+      - "team-lead"
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      # Major updates require manual review
+      - dependency-name: "next"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "next-auth"
+        update-types:
+          - "version-update:semver-major"
+
+  # ── Python Core ────────────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/user"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "security"
+    allow:
+      - dependency-type: "direct"
+
+  # ── GitHub Actions ─────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"

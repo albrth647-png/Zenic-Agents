@@ -109,6 +109,12 @@ export interface AuditConfig {
   logToDb: boolean;
   /** Number of days to retain audit records before pruning. */
   retentionDays: number;
+  /** Whether automated archival of audit logs is enabled. */
+  archiveEnabled: boolean;
+  /** Filesystem path where audit archives are stored. */
+  archivePath: string;
+  /** Archive file format: 'json' | 'jsonl' | 'csv'. */
+  archiveFormat: 'json' | 'jsonl' | 'csv';
 }
 
 /** Input sanitization configuration. */
@@ -127,6 +133,8 @@ export interface SanitizeConfig {
 export interface HeadersConfig {
   /** Whether to send the `Strict-Transport-Security` header. */
   enableHsts: boolean;
+  /** Include the `preload` directive in HSTS. Disable for staging/pre-production domains not in the HSTS preload list. */
+  enableHstsPreload: boolean;
   /** Whether to send the `Content-Security-Policy` header. */
   enableCsp: boolean;
   /** CSP directives as a map of directive name → allowed values. */
@@ -266,6 +274,12 @@ export const SecurityConfig: SecurityConfigType = {
     logToDb: true,
     /** Retain audit records for 90 days. */
     retentionDays: 90,
+    /** Automated archival enabled. */
+    archiveEnabled: true,
+    /** Default archive path relative to project root. */
+    archivePath: './audit-archives',
+    /** Archive format: JSON Lines (one JSON object per line, easy to stream). */
+    archiveFormat: 'jsonl',
   },
 
   sanitize: {
@@ -282,6 +296,8 @@ export const SecurityConfig: SecurityConfigType = {
   headers: {
     /** HSTS enabled by default (requires TLS). */
     enableHsts: true,
+    /** HSTS preload enabled by default — disable for staging domains not in the HSTS preload list. */
+    enableHstsPreload: true,
     /** CSP enabled by default. */
     enableCsp: true,
     cspDirectives: {
@@ -356,8 +372,37 @@ export const INSECURE_DEFAULTS: readonly string[] = [
   'your-api-key',
   'replace-me',
   'insert-key-here',
+  'change-me-in-production',
   'xxx',
 ];
+
+// ─── Structured Redacted Logger ────────────────────────────────────────
+// Replaces raw console.* calls with a redacted logger that:
+// 1. Auto-redacts sensitive data (API keys, tokens, passwords, etc.)
+// 2. In production, only emits warnings and errors (not info)
+
+import { createRedactedLogger } from "@/lib/security/log-redact";
+
+/**
+ * Security-specific logger that redacts sensitive data from all log output.
+ * In production, info-level messages are suppressed to reduce noise and
+ * prevent accidental leakage of internal configuration details.
+ */
+const redactedLogger = createRedactedLogger(console);
+
+const securityLogger = {
+  info: (...args: unknown[]) => {
+    if (!isProduction()) {
+      redactedLogger.info(...args);
+    }
+  },
+  warn: (...args: unknown[]) => {
+    redactedLogger.warn(...args);
+  },
+  error: (...args: unknown[]) => {
+    redactedLogger.error(...args);
+  },
+};
 
 // ─── Environment Variable Mapping ──────────────────────────────────────
 
@@ -530,6 +575,30 @@ const ENV_MAPPINGS: readonly EnvMapping[] = [
       return null;
     },
   },
+  {
+    envVar: 'ZENIC_AUDIT_ARCHIVE_ENABLED',
+    configPath: 'audit.archiveEnabled',
+    parse: (raw) => {
+      const lower = raw.toLowerCase().trim();
+      if (lower === 'true' || lower === '1') return true;
+      if (lower === 'false' || lower === '0') return false;
+      return undefined;
+    },
+  },
+  {
+    envVar: 'ZENIC_AUDIT_ARCHIVE_PATH',
+    configPath: 'audit.archivePath',
+    parse: (raw) => raw.trim() || undefined,
+  },
+  {
+    envVar: 'ZENIC_AUDIT_ARCHIVE_FORMAT',
+    configPath: 'audit.archiveFormat',
+    parse: (raw) => {
+      const lower = raw.toLowerCase().trim();
+      if (lower === 'json' || lower === 'jsonl' || lower === 'csv') return lower;
+      return undefined;
+    },
+  },
 
   // ── Sanitize ───────────────────────────────────────────────────────
   {
@@ -597,6 +666,20 @@ const ENV_MAPPINGS: readonly EnvMapping[] = [
     },
     validate: (parsed) => {
       if (parsed === false) return 'Disabling HSTS is strongly discouraged in production';
+      return null;
+    },
+  },
+  {
+    envVar: 'ZENIC_HEADERS_HSTS_PRELOAD',
+    configPath: 'headers.enableHstsPreload',
+    parse: (raw) => {
+      const lower = raw.toLowerCase().trim();
+      if (lower === 'true' || lower === '1') return true;
+      if (lower === 'false' || lower === '0') return false;
+      return undefined;
+    },
+    validate: (parsed) => {
+      if (parsed === false) return 'Disabling HSTS preload — staging domains should not submit to preload lists. This is expected for non-production.';
       return null;
     },
   },
@@ -834,30 +917,30 @@ export function loadSecurityConfig(): SecurityConfigType {
 
     // Log the successful override for auditability.
     const safeValue = typeof parsed === 'string' ? `"${parsed}"` : String(parsed);
-    console.info(
+    securityLogger.info(
       `[security-config] Override applied: ${mapping.configPath} = ${safeValue} (from ${mapping.envVar})`,
     );
   }
 
   // Emit accumulated warnings.
   for (const warning of warnings) {
-    console.warn(warning);
+    securityLogger.warn(warning);
   }
 
   // Additional runtime checks.
   if (isProduction()) {
     if (config.cors.allowedOrigins.includes('*')) {
-      console.warn(
+      securityLogger.warn(
         '[security-config] CRITICAL: Wildcard CORS origin ("*") is configured in production — this allows any website to make authenticated requests',
       );
     }
     if (config.cors.credentials && config.cors.allowedOrigins.includes('*')) {
-      console.error(
+      securityLogger.error(
         '[security-config] CRITICAL: CORS credentials enabled with wildcard origin — browsers will reject this, but the configuration is insecure',
       );
     }
     if (config.auth.devBypassUserId !== '__DEV_BYPASS__' && config.auth.devBypassUserId !== '') {
-      console.warn(
+      securityLogger.warn(
         `[security-config] devBypassUserId is set to "${config.auth.devBypassUserId}" in production — this should be removed`,
       );
     }
