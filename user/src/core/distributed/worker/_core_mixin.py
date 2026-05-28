@@ -2,12 +2,12 @@
 
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ._types import WorkerState, WorkerConfig, TaskHandler
-from ._helpers import _local
 from ..backend import CoordinationBackend
 from ..task_queue import DistributedTaskQueue
+from ._helpers import _local
+from ._types import TaskHandler, WorkerConfig, WorkerState
 
 logger = logging.getLogger("zenic_agents.distributed.worker")
 
@@ -26,14 +26,14 @@ class DistributedWorkerCoreMixin:
         self._backend = backend
 
         self._state: WorkerState = WorkerState.STOPPED
-        self._handlers: Dict[str, TaskHandler] = {}
-        self._current_task: Optional[Dict[str, Any]] = None
+        self._handlers: dict[str, TaskHandler] = {}
+        self._current_task: dict[str, Any] | None = None
         self._task_start_time: float = 0.0
 
         # Background threads
-        self._main_thread: Optional[threading.Thread] = None
-        self._heartbeat_thread: Optional[threading.Thread] = None
-        self._lease_thread: Optional[threading.Thread] = None
+        self._main_thread: threading.Thread | None = None
+        self._heartbeat_thread: threading.Thread | None = None
+        self._lease_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
         # Stats
@@ -54,7 +54,7 @@ class DistributedWorkerCoreMixin:
             "Worker %s: Registered handler for task type '%s'",
             self._config.worker_id, task_type,
         )
-    def register_handlers(self, handlers: Dict[str, TaskHandler]) -> None:
+    def register_handlers(self, handlers: dict[str, TaskHandler]) -> None:
         """
         Register multiple task handlers.
 

@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..safety_gate import ActionCategory
+if TYPE_CHECKING:
+    from ..safety_gate import ActionCategory
 
 logger = logging.getLogger(__name__)
 

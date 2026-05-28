@@ -14,9 +14,10 @@ from __future__ import annotations
 import logging
 import re
 import time
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from ._types import DiffEntry
+if TYPE_CHECKING:
+    from ._types import DiffEntry
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ def retry(
 
     Delays: base_delay * 2^attempt  →  0.1s, 0.2s, 0.4s.
     """
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return fn()
@@ -61,7 +62,7 @@ def retry(
 # ──────────────────────────────────────────────────────────────
 
 def estimate_risk_from_diffs(
-    diffs: List[DiffEntry],
+    diffs: list[DiffEntry],
     operation: str = "",
 ) -> str:
     """Estimate risk from a list of DiffEntry objects.
@@ -124,7 +125,7 @@ def extract_where_clause(query: str, operation: str) -> str:
     return ""
 
 
-def parse_set_fields(query: str) -> List[tuple]:
+def parse_set_fields(query: str) -> list[tuple]:
     """Parse SET clause from an UPDATE query.
 
     Returns:
@@ -140,7 +141,7 @@ def parse_set_fields(query: str) -> List[tuple]:
         return []
 
     set_clause = m.group(1).strip()
-    fields: List[tuple] = []
+    fields: list[tuple] = []
 
     for assignment in set_clause.split(","):
         assignment = assignment.strip()
@@ -176,7 +177,7 @@ def count_placeholders_in_set(query: str) -> int:
     return m.group(1).count("?")
 
 
-def parse_insert_columns(query: str) -> List[str]:
+def parse_insert_columns(query: str) -> list[str]:
     """Parse column names from an INSERT query.
 
     Returns:
@@ -200,7 +201,7 @@ def build_db_summary(
     operation: str,
     table: str,
     affected_rows: int,
-    diffs: List[DiffEntry],
+    diffs: list[DiffEntry],
 ) -> str:
     """Build a human-readable summary for a DB diff."""
     if not diffs:
@@ -210,7 +211,7 @@ def build_db_summary(
     added = sum(1 for d in diffs if d.change_type == "added")
     modified = sum(1 for d in diffs if d.change_type == "modified")
 
-    parts: List[str] = [f"DB {operation} on {table}:"]
+    parts: list[str] = [f"DB {operation} on {table}:"]
     if added:
         parts.append(f"{added} field(s) added")
     if modified:

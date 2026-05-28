@@ -5,38 +5,38 @@ Re-exports the public API of the structural pattern sub-package.
 """
 
 from src.core.patterns.structural.adapter import (
+    AdapterRegistry,
+    FallbackLLMAdapter,
     LLMAdapter,
     LocalLLMAdapter,
-    FallbackLLMAdapter,
-    AdapterRegistry,
 )
 from src.core.patterns.structural.bridge import (
+    AgentLLMBridge,
     LLMProvider,
     LocalProvider,
-    AgentLLMBridge,
 )
-from src.core.patterns.structural.proxy import LazyProxy, CacheProxy
 from src.core.patterns.structural.decorator import (
-    agent_decorator,
     AgentCapability,
     AgentDecorator,
+    agent_decorator,
 )
+from src.core.patterns.structural.proxy import CacheProxy, LazyProxy
 
 __all__ = [
-    # Adapter
-    "LLMAdapter",
-    "LocalLLMAdapter",
-    "FallbackLLMAdapter",
     "AdapterRegistry",
-    # Bridge
-    "LLMProvider",
-    "LocalProvider",
-    "AgentLLMBridge",
-    # Proxy
-    "LazyProxy",
-    "CacheProxy",
-    # Decorator
-    "agent_decorator",
     "AgentCapability",
     "AgentDecorator",
+    "AgentLLMBridge",
+    "CacheProxy",
+    "FallbackLLMAdapter",
+    # Adapter
+    "LLMAdapter",
+    # Bridge
+    "LLMProvider",
+    # Proxy
+    "LazyProxy",
+    "LocalLLMAdapter",
+    "LocalProvider",
+    # Decorator
+    "agent_decorator",
 ]

@@ -340,7 +340,7 @@ class ConfidenceEstimator(BaseAgent[ConfidenceResult]):
         return 0.5
 
     def estimate_with_evidence(
-        self, result: Any, evidence_for: list[str] = None, evidence_against: list[str] = None
+        self, result: Any, evidence_for: list[str] | None = None, evidence_against: list[str] | None = None
     ) -> ConfidenceResult:
         """
         Estimate confidence with explicit evidence lists.

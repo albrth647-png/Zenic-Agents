@@ -8,6 +8,7 @@ NO espera a que el cliente reclame.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
@@ -42,10 +43,8 @@ class OverdueInvoiceMonitor(BaseMonitor):
             client = inv.get("cliente", inv.get("cliente_id", str(inv.get("id", "?"))))
             due = inv.get("fecha_vencimiento", inv.get("due_date", "?"))
             numero = inv.get("numero", inv.get("invoice_number", ""))
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 total_amount += float(amount)
-            except (ValueError, TypeError):
-                pass
             label = f"{numero} " if numero else ""
             findings.append(
                 {

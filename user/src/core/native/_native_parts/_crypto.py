@@ -7,17 +7,25 @@ Provides: pbkdf2_derive_key, argon2id_hash, constant_time_compare,
 
 from __future__ import annotations
 
-from typing import List
-
-from ._loader import HAS_NATIVE
 from .._fallbacks import (
     argon2id_hash as _py_argon2id_hash,
+)
+from .._fallbacks import (
     blake3_hash as _py_blake3_hash,
+)
+from .._fallbacks import (
     constant_time_compare as _py_constant_time_compare,
+)
+from .._fallbacks import (
     merkle_root as _py_merkle_root,
+)
+from .._fallbacks import (
     pbkdf2_derive_key as _py_pbkdf2_derive_key,
+)
+from .._fallbacks import (
     xxhash64 as _py_xxhash64,
 )
+from ._loader import HAS_NATIVE
 
 
 def pbkdf2_derive_key(
@@ -67,7 +75,7 @@ def xxhash64(data: bytes, seed: int = 0) -> int:
     return _py_xxhash64(data, seed)
 
 
-def merkle_root(leaves: List[bytes]) -> str:
+def merkle_root(leaves: list[bytes]) -> str:
     if HAS_NATIVE:
         from ._loader import _rust_merkle_root
         return _rust_merkle_root(leaves)

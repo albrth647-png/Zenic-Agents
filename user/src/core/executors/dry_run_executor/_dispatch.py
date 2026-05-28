@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import DryRunOperation, DryRunResult
 from ._mixin_core import DryRunExecutor
+from ._types import DryRunOperation, DryRunResult
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def dry_run_dispatch(
     context = request_dict.get("context", {})
 
     # ── 1. Get impact preview ────────────────────────────────
-    impact_preview_dict: Dict[str, Any] = {}
+    impact_preview_dict: dict[str, Any] = {}
     try:
         impact_preview_dict = executor.preview_action(
             action_type, config, context,
@@ -61,7 +61,7 @@ def dry_run_dispatch(
         impact_preview_dict = {"error": str(exc)}
 
     # ── 2. Simulate the action ───────────────────────────────
-    simulated_ops: List[DryRunOperation] = []
+    simulated_ops: list[DryRunOperation] = []
     would_succeed = True
 
     try:
@@ -87,7 +87,7 @@ def dry_run_dispatch(
         would_succeed = False
 
     # ── 3. Estimate effects ──────────────────────────────────
-    estimated_effects: Dict[str, Any] = {
+    estimated_effects: dict[str, Any] = {
         "operations_count": len(simulated_ops),
         "types": executor.summary(),
     }
@@ -125,7 +125,7 @@ def dry_run_dispatch(
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: Optional[DryRunExecutor] = None
+_instance: DryRunExecutor | None = None
 _instance_lock = threading.Lock()
 
 

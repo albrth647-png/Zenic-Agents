@@ -388,7 +388,7 @@ class ExecutorRegistry:
         """Get registry statistics."""
         return {
             "registered_types": len(self._executors),
-            "unique_executors": len(set(v.__class__.__name__ for v in self._executors.values())),
+            "unique_executors": len({v.__class__.__name__ for v in self._executors.values()}),
             "safety_enabled": self._safety_enabled,
             "audit_enabled": self._audit_enabled,
             "executors": self.executor_classes,

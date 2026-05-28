@@ -7,10 +7,10 @@ from __future__ import annotations
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import DelegationRule, DelegationRecord
 from ._mixin_persistence import DelegationPersistenceMixin
+from ._types import DelegationRecord, DelegationRule
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class DelegationManager(DelegationPersistenceMixin):
         logger.info("DelegationManager: Revoked rule %s", rule_id)
         return True
 
-    def find_delegate(self, user_id: int, role: str) -> Optional[int]:
+    def find_delegate(self, user_id: int, role: str) -> int | None:
         """Find an active delegate for the given user+role combination."""
         from src.core.auth_service import ROLE_HIERARCHY
 
@@ -119,7 +119,7 @@ class DelegationManager(DelegationPersistenceMixin):
 
     def auto_delegate_pending(
         self, request_id: str, timeout_hours: int = 2,
-    ) -> Optional[int]:
+    ) -> int | None:
         """If an approval request is pending beyond *timeout_hours*, auto-delegate."""
         from ..chain import get_approval_chain
 
@@ -170,9 +170,9 @@ class DelegationManager(DelegationPersistenceMixin):
 
     # ── Query Methods ──────────────────────────────────────
 
-    def get_active_delegations(self, user_id: int = 0) -> List[DelegationRule]:
+    def get_active_delegations(self, user_id: int = 0) -> list[DelegationRule]:
         """Return active delegation rules, optionally filtered by user_id."""
-        def _do_query() -> List[DelegationRule]:
+        def _do_query() -> list[DelegationRule]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             if user_id:
@@ -193,9 +193,9 @@ class DelegationManager(DelegationPersistenceMixin):
 
         return self._with_retry(_do_query, fallback=[])
 
-    def get_delegation_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_delegation_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent delegation records as dictionaries."""
-        def _do_query() -> List[Dict[str, Any]]:
+        def _do_query() -> list[dict[str, Any]]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

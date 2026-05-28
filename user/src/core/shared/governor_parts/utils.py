@@ -1,8 +1,8 @@
 """Utility functions for GC tuning, process priority, and file limits."""
 
-import os
 import gc
 import logging
+import os
 
 from ._imports import resource
 

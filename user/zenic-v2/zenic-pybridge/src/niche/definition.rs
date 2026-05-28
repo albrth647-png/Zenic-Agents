@@ -125,6 +125,51 @@ impl NicheDefinition {
         self.data_sensitivity
     }
 
+    /// Get the name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Get the description.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Get the domain.
+    pub fn domain(&self) -> &str {
+        &self.domain
+    }
+
+    /// Get the subdomain.
+    pub fn subdomain(&self) -> &str {
+        &self.subdomain
+    }
+
+    /// Get the scale.
+    pub fn scale(&self) -> &str {
+        &self.scale
+    }
+
+    /// Get the tags.
+    pub fn tags(&self) -> Vec<String> {
+        self.tags.clone()
+    }
+
+    /// Get the required documents.
+    pub fn required_documents(&self) -> Vec<String> {
+        self.required_documents.clone()
+    }
+
+    /// Get the compliance list.
+    pub fn compliance(&self) -> Vec<String> {
+        self.compliance.clone()
+    }
+
+    /// Get the version.
+    pub fn version(&self) -> &str {
+        &self.version
+    }
+
     /// Get all template sections.
     pub fn template_sections(&self) -> &[TemplateSection] {
         &self.template_sections
@@ -146,63 +191,63 @@ impl NicheDefinition {
 
 #[pymethods]
 impl NicheDefinition {
-    #[getter]
-    fn niche_id(&self) -> &str {
+    #[getter(niche_id)]
+    fn py_get_niche_id(&self) -> &str {
         &self.niche_id
     }
 
-    #[getter]
-    fn name(&self) -> &str {
+    #[getter(name)]
+    fn py_get_name(&self) -> &str {
         &self.name
     }
 
-    #[getter]
-    fn category(&self) -> NicheCategory {
+    #[getter(category)]
+    fn py_get_category(&self) -> NicheCategory {
         self.category
     }
 
-    #[getter]
-    fn description(&self) -> &str {
+    #[getter(description)]
+    fn py_get_description(&self) -> &str {
         &self.description
     }
 
-    #[getter]
-    fn domain(&self) -> &str {
+    #[getter(domain)]
+    fn py_get_domain(&self) -> &str {
         &self.domain
     }
 
-    #[getter]
-    fn subdomain(&self) -> &str {
+    #[getter(subdomain)]
+    fn py_get_subdomain(&self) -> &str {
         &self.subdomain
     }
 
-    #[getter]
-    fn scale(&self) -> &str {
+    #[getter(scale)]
+    fn py_get_scale(&self) -> &str {
         &self.scale
     }
 
-    #[getter]
-    fn tags(&self) -> Vec<String> {
+    #[getter(tags)]
+    fn py_get_tags(&self) -> Vec<String> {
         self.tags.clone()
     }
 
-    #[getter]
-    fn required_documents(&self) -> Vec<String> {
+    #[getter(required_documents)]
+    fn py_get_required_documents(&self) -> Vec<String> {
         self.required_documents.clone()
     }
 
-    #[getter]
-    fn compliance(&self) -> Vec<String> {
+    #[getter(compliance)]
+    fn py_get_compliance(&self) -> Vec<String> {
         self.compliance.clone()
     }
 
-    #[getter]
-    fn data_sensitivity(&self) -> DataSensitivity {
+    #[getter(data_sensitivity)]
+    fn py_get_data_sensitivity(&self) -> DataSensitivity {
         self.data_sensitivity
     }
 
-    #[getter]
-    fn version(&self) -> &str {
+    #[getter(version)]
+    fn py_get_version(&self) -> &str {
         &self.version
     }
 

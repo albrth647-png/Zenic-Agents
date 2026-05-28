@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..base import ActionExecutor, ActionResult, _validate_url
-from ._http import _HttpMixin
 from ._auth import _AuthMixin
+from ._http import _HttpMixin
 from ._operations import _OperationsMixin
 
 logger = logging.getLogger(__name__)
@@ -36,8 +36,8 @@ class JiraExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
         self._success_count: int = 0
         self._failure_count: int = 0
         self._dry_run_count: int = 0
-        self._rate_limit_remaining: Optional[int] = None
-        self._rate_limit_reset_at: Optional[float] = None
+        self._rate_limit_remaining: int | None = None
+        self._rate_limit_reset_at: float | None = None
 
     # ── ActionExecutor Interface ───────────────────────────────
 
@@ -51,8 +51,8 @@ class JiraExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
 
     async def execute(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> ActionResult:
         """Execute a Jira operation.
 

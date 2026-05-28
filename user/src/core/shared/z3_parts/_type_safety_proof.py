@@ -63,10 +63,10 @@ class Z3TypeSafetyProofMixin:
             # Create EnumSort for the type domain
             # Z3 EnumSort requires at least 1 constructor
             if len(all_types) == 1:
-                all_types = all_types + ["__placeholder__"]
+                all_types = [*all_types, "__placeholder__"]
 
             type_sort, type_consts = z3_module.EnumSort(self._unique_sort_name("TypeDomain"), all_types)
-            type_name_to_const = dict(zip(all_types, type_consts))
+            type_name_to_const = dict(zip(all_types, type_consts, strict=False))
 
             # ============================================================
             #  Shared setup: Z3 variables and domain constraints

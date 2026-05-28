@@ -9,7 +9,7 @@ import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import AuditEvent, AuditEventType, AuditSeverity
 
@@ -112,9 +112,9 @@ class AuditLogger:
         description: str,
         severity: AuditSeverity = AuditSeverity.INFO,
         tenant_id: str = "__anonymous__",
-        user_id: Optional[int] = None,
+        user_id: int | None = None,
         ip_address: str = "",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Convenience method: create and log an audit event."""
         event = AuditEvent(
@@ -162,21 +162,21 @@ class AuditLogger:
 
     def query_events(
         self,
-        tenant_id: Optional[str] = None,
-        event_type: Optional[str] = None,
-        user_id: Optional[int] = None,
-        severity: Optional[str] = None,
-        trace_id: Optional[str] = None,
-        since: Optional[float] = None,
-        until: Optional[float] = None,
+        tenant_id: str | None = None,
+        event_type: str | None = None,
+        user_id: int | None = None,
+        severity: str | None = None,
+        trace_id: str | None = None,
+        since: float | None = None,
+        until: float | None = None,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Query audit events with filters."""
         if not self._initialized:
             return []
 
-        conditions: List[str] = []
-        params: List[Any] = []
+        conditions: list[str] = []
+        params: list[Any] = []
 
         if tenant_id is not None:
             conditions.append("tenant_id = ?")
@@ -207,7 +207,7 @@ class AuditLogger:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM audit_events WHERE {where_clause} "
+                f"SELECT * FROM audit_events WHERE {where_clause} "  # noqa: S608
                 f"ORDER BY created_at DESC LIMIT {limit}",
                 params,
             ).fetchall()
@@ -217,7 +217,7 @@ class AuditLogger:
             logger.error("AuditLogger: Query failed: %s", exc)
             return []
 
-    def prune_old_events(self, days: Optional[int] = None) -> int:
+    def prune_old_events(self, days: int | None = None) -> int:
         """Delete events older than the retention period."""
         retention = days or self._retention_days
         cutoff = time.time() - (retention * 86400)
@@ -261,7 +261,7 @@ class AuditLogger:
             logger.error("AuditLogger: Tenant purge failed: %s", exc)
             return 0
 
-    def get_event_count(self, tenant_id: Optional[str] = None) -> int:
+    def get_event_count(self, tenant_id: str | None = None) -> int:
         """Get total event count, optionally filtered by tenant."""
         if not self._initialized:
             return 0

@@ -10,14 +10,17 @@ Nunca genera contenido ni toma decisiones ejecutivas.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.safety.safety_gate import SafetyGate
-from src.data.local_scanner import LocalDataScanner
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 

@@ -60,7 +60,7 @@ class StatementProcessorMixin:
                         if isinstance(sym_val.concrete, int):
                             new_path.z3_conditions.append(z3_var == sym_val.concrete)
 
-            elif isinstance(target, ast.Tuple) or isinstance(target, ast.List):
+            elif isinstance(target, (ast.Tuple, ast.List)):
                 # Tuple/list unpacking: simplified handling
                 for i, elt in enumerate(target.elts):
                     if isinstance(elt, ast.Name):
@@ -219,7 +219,7 @@ class StatementProcessorMixin:
 
         # True branch
         true_path = SymbolicPath(
-            condition=path.condition + [true_str],
+            condition=[*path.condition, true_str],
             variables=dict(path.variables),
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
@@ -236,7 +236,7 @@ class StatementProcessorMixin:
 
         # False branch
         false_path = SymbolicPath(
-            condition=path.condition + [false_str],
+            condition=[*path.condition, false_str],
             variables=dict(path.variables),
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),

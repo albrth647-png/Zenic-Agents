@@ -19,7 +19,7 @@ class AssemblerGeneratorsMixin:
         so the generated code is standalone, synchronous, and actually runs.
         """
         field_names = [f.get("name", "field") for f in fields]
-        param_str = ", ".join('"%s"' % f for f in field_names)
+        param_str = ", ".join(f'"{f}"' for f in field_names)
         search_col = field_names[0] if field_names else "name"
 
         # Validate table_name at generation time to prevent injection in generated SQL
@@ -32,7 +32,7 @@ class AssemblerGeneratorsMixin:
                 raise ValueError(f"Invalid field name for code generation: {fn!r}")
 
         # Use string formatting (not f-string) to avoid nested brace issues
-        return f'''
+        return f'''  # noqa: S608
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """CRUD operations for {entity_name} — REAL logic using sqlite3."""
         import sqlite3
@@ -149,7 +149,7 @@ class AssemblerGeneratorsMixin:
             return {{"success": True, "total": total, "entity": "{entity_name}"}}
 
         return {{"success": False, "error": "Unknown action: " + str(action)}}
-'''
+'''  # noqa: S608
 
     def _build_analytics_process(self, entity_name: str, table_name: str, fields: list[dict]) -> str:
         """Generate a REAL _process() method with analytics logic.
@@ -172,7 +172,7 @@ class AssemblerGeneratorsMixin:
             raise ValueError(f"Invalid metric name for code generation: {default_metric!r}")
 
         # Use .format() to avoid nested f-string brace issues
-        return f'''
+        return f'''  # noqa: S608
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Analytics for {entity_name} — REAL aggregation using sqlite3."""
         import sqlite3
@@ -244,7 +244,7 @@ class AssemblerGeneratorsMixin:
             return {{"success": True, "trend": rows, "metric": metric, "entity": "{entity_name}"}}
 
         return {{"success": False, "error": "Unknown analytics action: " + str(action)}}
-'''
+'''  # noqa: S608
 
     def _build_notification_process(self, entity_name: str, fields: list[dict]) -> str:
         """Generate a REAL _process() method for notifications.

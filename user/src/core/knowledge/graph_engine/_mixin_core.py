@@ -9,10 +9,10 @@ import threading
 from collections import deque
 from typing import Any
 
+from ..types import KnowledgeEdge, KnowledgeNode
 from ._helpers import _new_id, _now_iso, _retry
 from ._mixin_queries import KnowledgeGraphQueriesMixin
 from ._types import DB_PATH
-from ..types import KnowledgeEdge, KnowledgeNode
 
 logger = logging.getLogger(__name__)
 

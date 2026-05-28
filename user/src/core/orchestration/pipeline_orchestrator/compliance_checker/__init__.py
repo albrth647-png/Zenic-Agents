@@ -11,9 +11,10 @@ No external dependencies beyond Python stdlib.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Set  # noqa: UP035
 
 from ._rules import build_all_default_rules
 from ._types import (
@@ -26,11 +27,11 @@ from ._types import (
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "ComplianceStandard",
-    "ComplianceResult",
     "ComplianceChecker",
-    "ComplianceViolation",
+    "ComplianceResult",
     "ComplianceRule",
+    "ComplianceStandard",
+    "ComplianceViolation",
 ]
 
 
@@ -67,9 +68,9 @@ class ComplianceChecker:
     """
 
     def __init__(self) -> None:
-        self._rules: Dict[str, ComplianceRule] = {}
-        self._rules_by_standard: Dict[ComplianceStandard, List[str]] = {}
-        self._audit_trail: List[ComplianceResult] = []
+        self._rules: dict[str, ComplianceRule] = {}
+        self._rules_by_standard: dict[ComplianceStandard, list[str]] = {}
+        self._audit_trail: list[ComplianceResult] = []
 
     # ── Rule Management ──────────────────────────────────────
 
@@ -95,10 +96,8 @@ class ComplianceChecker:
         if rule is None:
             return False
         if rule.standard in self._rules_by_standard:
-            try:
+            with contextlib.suppress(ValueError):
                 self._rules_by_standard[rule.standard].remove(rule_id)
-            except ValueError:
-                pass
         return True
 
     def install_default_rules(self) -> None:
@@ -114,7 +113,7 @@ class ComplianceChecker:
     def check(
         self,
         standard: ComplianceStandard,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> ComplianceResult:
         """
         Check compliance against a specific standard.
@@ -128,8 +127,8 @@ class ComplianceChecker:
         """
         start = time.monotonic()
         rule_ids = self._rules_by_standard.get(standard, [])
-        violations: List[ComplianceViolation] = []
-        warnings: List[str] = []
+        violations: list[ComplianceViolation] = []
+        warnings: list[str] = []
 
         if not rule_ids:
             warnings.append(f"No rules registered for standard '{standard.value}'")
@@ -161,9 +160,9 @@ class ComplianceChecker:
 
     def check_all(
         self,
-        context: Dict[str, Any],
-        standards: Optional[List[ComplianceStandard]] = None,
-    ) -> Dict[ComplianceStandard, ComplianceResult]:
+        context: dict[str, Any],
+        standards: list[ComplianceStandard] | None = None,
+    ) -> dict[ComplianceStandard, ComplianceResult]:
         """
         Check compliance against multiple standards.
 
@@ -177,16 +176,16 @@ class ComplianceChecker:
         if standards is None:
             standards = list(self._rules_by_standard.keys())
 
-        results: Dict[ComplianceStandard, ComplianceResult] = {}
+        results: dict[ComplianceStandard, ComplianceResult] = {}
         for std in standards:
             results[std] = self.check(std, context)
         return results
 
     def check_pipeline(
         self,
-        pipeline_context: Dict[str, Any],
-        required_standards: Optional[List[ComplianceStandard]] = None,
-    ) -> Dict[ComplianceStandard, ComplianceResult]:
+        pipeline_context: dict[str, Any],
+        required_standards: list[ComplianceStandard] | None = None,
+    ) -> dict[ComplianceStandard, ComplianceResult]:
         """
         Check pipeline-level compliance.
 
@@ -207,7 +206,7 @@ class ComplianceChecker:
     # ── Accessors ────────────────────────────────────────────
 
     @property
-    def registered_standards(self) -> Set[ComplianceStandard]:
+    def registered_standards(self) -> set[ComplianceStandard]:
         """Set of standards with registered rules."""
         return set(self._rules_by_standard.keys())
 
@@ -217,12 +216,12 @@ class ComplianceChecker:
         return len(self._rules)
 
     @property
-    def audit_trail(self) -> List[ComplianceResult]:
+    def audit_trail(self) -> list[ComplianceResult]:
         """Compliance check audit trail."""
         return list(self._audit_trail)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
         std_counts = {
             std.value: len(rules)

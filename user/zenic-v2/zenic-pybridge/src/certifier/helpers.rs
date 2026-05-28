@@ -94,6 +94,8 @@ pub(super) fn compute_canonical_hash(config: &BlueprintConfig) -> String {
 
     // Compute SHA-256 using the existing hash module
     crate::hash::blake3_hash(canonical_string.as_bytes())
+        .map_err(|e| format!("Hash failed: {}", e))
+        .unwrap_or_default()
 }
 
 /// Extract a field value from a template dict section.

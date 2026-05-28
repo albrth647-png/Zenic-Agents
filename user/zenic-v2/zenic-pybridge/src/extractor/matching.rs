@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use super::types::*;
 
 /// Normalize a string for comparison: lowercase, replace underscores/spaces with single form.
-pub(crate) fn normalize_for_comparison(s: &str) -> String {
+pub fn normalize_for_comparison(s: &str) -> String {
     s.to_lowercase()
         .replace('_', " ")
         .replace('-', " ")
@@ -15,19 +15,19 @@ pub(crate) fn normalize_for_comparison(s: &str) -> String {
 }
 
 /// Check if two strings match exactly (case-insensitive, normalized).
-pub(crate) fn is_exact_match(a: &str, b: &str) -> bool {
+pub fn is_exact_match(a: &str, b: &str) -> bool {
     normalize_for_comparison(a) == normalize_for_comparison(b)
 }
 
 /// Check if string a contains string b (case-insensitive, normalized).
-pub(crate) fn is_contains_match(haystack: &str, needle: &str) -> bool {
+pub fn is_contains_match(haystack: &str, needle: &str) -> bool {
     let h = normalize_for_comparison(haystack);
     let n = normalize_for_comparison(needle);
     h.contains(&n) || n.contains(&h)
 }
 
 /// Get aliases for a field name.
-pub(crate) fn get_field_aliases(field_name: &str) -> Vec<&'static str> {
+pub fn get_field_aliases(field_name: &str) -> Vec<&'static str> {
     let name_lower = field_name.to_lowercase();
     for (key, aliases) in FIELD_ALIASES {
         if *key == name_lower {
@@ -38,7 +38,7 @@ pub(crate) fn get_field_aliases(field_name: &str) -> Vec<&'static str> {
 }
 
 /// Check if a candidate value looks valid for a given field type.
-pub(crate) fn is_value_type_compatible(field_type: &str, value: &str) -> bool {
+pub fn is_value_type_compatible(field_type: &str, value: &str) -> bool {
     match field_type {
         "email" => value.contains('@') && value.contains('.'),
         "url" => value.starts_with("http://") || value.starts_with("https://") || value.contains('.'),
@@ -72,7 +72,7 @@ pub(crate) fn is_value_type_compatible(field_type: &str, value: &str) -> bool {
 /// 3. Alias match → CONFIDENCE_STEM
 /// 4. Substring match → CONFIDENCE_KEYWORD
 /// 5. Type compatibility → CONFIDENCE_HEURISTIC
-pub(crate) fn score_field_match(
+pub fn score_field_match(
     field_name: &str,
     field_type: &str,
     display_name: &str,
@@ -119,7 +119,7 @@ pub(crate) fn score_field_match(
 }
 
 /// Extract key-value pairs from text using common delimiters.
-pub(crate) fn extract_key_value_pairs_from_text(text: &str) -> HashMap<String, String> {
+pub fn extract_key_value_pairs_from_text(text: &str) -> HashMap<String, String> {
     let mut pairs: HashMap<String, String> = HashMap::new();
 
     let separators = [": ", " = ", " - ", ":  ", " : "];

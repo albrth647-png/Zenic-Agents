@@ -10,14 +10,14 @@ retry logic, and graceful degradation.
 import threading
 from typing import Any, Optional
 
-from ._types import ValueCategory, ValueEntry, DEFAULT_UNIT_VALUES
 from ._mixin_core import ValueTracker
+from ._types import DEFAULT_UNIT_VALUES, ValueCategory, ValueEntry
 
 __all__ = [
+    "DEFAULT_UNIT_VALUES",
     "ValueCategory",
     "ValueEntry",
     "ValueTracker",
-    "DEFAULT_UNIT_VALUES",
     "get_value_tracker",
     "reset_value_tracker",
 ]
@@ -25,7 +25,7 @@ __all__ = [
 
 # ── Singleton ────────────────────────────────────────────
 
-_value_tracker: Optional[ValueTracker] = None
+_value_tracker: ValueTracker | None = None
 _lock = threading.Lock()
 
 

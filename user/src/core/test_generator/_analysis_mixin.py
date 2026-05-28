@@ -71,14 +71,13 @@ class ASTAnalysisMixin:
                         class_methods.add(id(item))
 
         for node in ast.iter_child_nodes(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                if id(node) not in class_methods:
-                    args = [{"name": a.arg, "annotation": annotation_to_str(a.annotation)} for a in node.args.args]
-                    functions.append(
-                        {
-                            "name": node.name,
-                            "args": args,
-                            "is_async": isinstance(node, ast.AsyncFunctionDef),
-                        }
-                    )
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and id(node) not in class_methods:
+                args = [{"name": a.arg, "annotation": annotation_to_str(a.annotation)} for a in node.args.args]
+                functions.append(
+                    {
+                        "name": node.name,
+                        "args": args,
+                        "is_async": isinstance(node, ast.AsyncFunctionDef),
+                    }
+                )
         return functions

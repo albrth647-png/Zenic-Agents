@@ -18,14 +18,16 @@ import hashlib
 import logging
 import os
 import sqlite3
-from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.shared.sqlcipher_helper import (
     HAS_SQLCIPHER,
     get_sqlcipher_connection,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +198,7 @@ class SQLCipherAdapter:
         for conn in self._pool:
             try:
                 conn.close()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         self._pool.clear()
 
@@ -237,11 +239,11 @@ class SQLCipherAdapter:
                 conn.execute("SELECT 1")  # nosemgrep: sqlalchemy-execute-raw-query
                 self._pool.append(conn)
                 return
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         try:
             conn.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     def _setup_sqlcipher_pragmas(self, conn: Any) -> None:

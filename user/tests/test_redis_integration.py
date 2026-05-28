@@ -73,7 +73,7 @@ def redis_client(redis_url: str):
     try:
         for key in client.keys("test:*"):
             client.delete(key)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     client.close()
 
@@ -95,7 +95,7 @@ async def redis_async_client(redis_url: str):
     try:
         async for key in client.scan_iter("atest:*"):
             await client.delete(key)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     await client.close()
 

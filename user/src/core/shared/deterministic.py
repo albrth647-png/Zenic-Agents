@@ -222,7 +222,7 @@ def set_global_seed(seed: int) -> None:
     with _random_patch_lock:
         if _random_patched:
             new_seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(new_seed)
+            _random_global_rng = random.Random(new_seed)  # noqa: S311
 
 
 def get_global_seed() -> int:
@@ -244,7 +244,7 @@ def reset_all_deterministic_state() -> None:
     with _random_patch_lock:
         if _random_patched:
             new_seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(new_seed)
+            _random_global_rng = random.Random(new_seed)  # noqa: S311
 
 
 # ============================================================
@@ -277,7 +277,7 @@ class DeterministicRNG:
             self._seed = seed_override
         else:
             self._seed = SeedManager().derive_seed(module_name)
-        self._rng = random.Random(self._seed)
+        self._rng = random.Random(self._seed)  # noqa: S311
         logger.debug(
             "DeterministicRNG[%s]: seed=%d (0x%X)",
             module_name,
@@ -676,7 +676,7 @@ def _get_global_patched_rng() -> random.Random:
     with _random_patch_lock:
         if _random_global_rng is None:
             seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(seed)
+            _random_global_rng = random.Random(seed)  # noqa: S311
         return _random_global_rng
 
 
@@ -704,7 +704,7 @@ def install_random_patch() -> None:
             return
         # Create a fresh seeded RNG
         seed = SeedManager().derive_seed("__global_random__")
-        _random_global_rng = random.Random(seed)
+        _random_global_rng = random.Random(seed)  # noqa: S311
         # Patch all common random functions
         random.choice = _patched_random_choice
         random.uniform = _patched_random_uniform

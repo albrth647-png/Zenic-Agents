@@ -252,7 +252,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
             self._redis_available = False
             try:
                 await self._redis.close()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             self._redis = None
 

@@ -3,7 +3,7 @@
 use super::types::*;
 
 /// Extract text from a plain text file (UTF-8).
-pub(crate) fn extract_txt(data: &[u8]) -> (String, Vec<String>) {
+pub fn extract_txt(data: &[u8]) -> (String, Vec<String>) {
     let mut errors = Vec::new();
     match std::str::from_utf8(data) {
         Ok(text) => (text.to_string(), errors),
@@ -19,7 +19,7 @@ pub(crate) fn extract_txt(data: &[u8]) -> (String, Vec<String>) {
 ///
 /// Converts CSV rows to a structured text representation:
 /// each row becomes a line with "column_name: value" pairs.
-pub(crate) fn extract_csv(data: &[u8]) -> (String, Vec<String>) {
+pub fn extract_csv(data: &[u8]) -> (String, Vec<String>) {
     let mut errors = Vec::new();
     let text = match std::str::from_utf8(data) {
         Ok(s) => s.to_string(),
@@ -66,7 +66,7 @@ pub(crate) fn extract_csv(data: &[u8]) -> (String, Vec<String>) {
 }
 
 /// Parse a single CSV line, handling quoted fields.
-pub(crate) fn parse_csv_line(line: &str) -> Vec<String> {
+pub fn parse_csv_line(line: &str) -> Vec<String> {
     let mut fields = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -89,7 +89,7 @@ pub(crate) fn parse_csv_line(line: &str) -> Vec<String> {
 /// Extract text from a JSON file.
 ///
 /// Flattens JSON into key-value pairs with dot-notation paths.
-pub(crate) fn extract_json(data: &[u8]) -> (String, Vec<String>) {
+pub fn extract_json(data: &[u8]) -> (String, Vec<String>) {
     let mut errors = Vec::new();
     let text = match std::str::from_utf8(data) {
         Ok(s) => s.to_string(),
@@ -113,7 +113,7 @@ pub(crate) fn extract_json(data: &[u8]) -> (String, Vec<String>) {
 }
 
 /// Recursively flatten a JSON value into dot-notation key-value pairs.
-pub(crate) fn flatten_json_value(value: &serde_json::Value, prefix: &str, pairs: &mut Vec<String>) {
+pub fn flatten_json_value(value: &serde_json::Value, prefix: &str, pairs: &mut Vec<String>) {
     match value {
         serde_json::Value::Object(map) => {
             for (key, val) in map {
@@ -158,12 +158,12 @@ pub(crate) fn flatten_json_value(value: &serde_json::Value, prefix: &str, pairs:
 ///
 /// Treats Markdown as plain text (the extractor will handle
 /// pattern matching regardless of formatting).
-pub(crate) fn extract_markdown(data: &[u8]) -> (String, Vec<String>) {
+pub fn extract_markdown(data: &[u8]) -> (String, Vec<String>) {
     extract_txt(data)
 }
 
 /// Truncate text to MAX_EXTRACTED_TEXT_LENGTH.
-pub(crate) fn truncate_text(text: String) -> (String, Vec<String>) {
+pub fn truncate_text(text: String) -> (String, Vec<String>) {
     let mut errors = Vec::new();
     if text.len() > MAX_EXTRACTED_TEXT_LENGTH {
         errors.push(format!(

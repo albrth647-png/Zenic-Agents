@@ -16,18 +16,19 @@ Sin dependencias externas. Compatible con Android.
 """
 
 import ast
-import re
 import hashlib
 import json
 import logging
+import re
 from functools import lru_cache
 from pathlib import Path
-from src.core.shared.db_initializer import get_connection
+
+from src.core.shared.ast_utils import compute_cyclomatic_complexity, extract_class_connections, extract_function_calls
 from src.core.shared.constants import EXT_LANG_MAP
-from src.core.shared.retry import with_retry
+from src.core.shared.db_initializer import get_connection
 from src.core.shared.db_utils import escape_sql_like, purge_tenant_rows
+from src.core.shared.retry import with_retry
 from src.core.shared.tenant_utils import resolve_tenant_id, set_tenant_context
-from src.core.shared.ast_utils import compute_cyclomatic_complexity, extract_function_calls, extract_class_connections
 
 logger = logging.getLogger(__name__)
 

@@ -360,25 +360,27 @@ pub fn template_set_field(
     let validation = template_validate(template_dict, template_dict.py())?;
     if let Some(completeness) = template_pydict.get_item("completeness").ok().flatten() {
         if let Ok(comp_dict) = completeness.downcast::<PyDict>() {
-            if let Some(filled) = validation.get_item("filled_fields").ok().flatten() {
+            if let Some(filled) = validation.bind(template_dict.py()).get_item("filled_fields").ok().flatten() {
                 comp_dict.set_item("filled_fields", filled)?;
             }
-            if let Some(missing) = validation.get_item("missing_required").ok().flatten() {
+            if let Some(missing) = validation.bind(template_dict.py()).get_item("missing_required").ok().flatten() {
                 comp_dict.set_item("missing_required", missing)?;
             }
-            if let Some(pct) = validation.get_item("completion_pct").ok().flatten() {
+            if let Some(pct) = validation.bind(template_dict.py()).get_item("completion_pct").ok().flatten() {
                 comp_dict.set_item("completion_pct", pct)?;
             }
-            if let Some(status) = validation.get_item("status").ok().flatten() {
-                comp_dict.set_item("status", status)?;
+            if let Some(status_val) = validation.bind(template_dict.py()).get_item("status").ok().flatten() {
+                comp_dict.set_item("status", status_val)?;
             }
             // Also update the top-level metadata status
-            if let Some(meta) = template_pydict.get_item("metadata").ok().flatten() {
-                if let Ok(meta_dict) = meta.downcast::<PyDict>() {
-                    meta_dict.set_item("status", status)?;
+            if let Some(status_val) = validation.bind(template_dict.py()).get_item("status").ok().flatten() {
+                if let Some(meta) = template_pydict.get_item("metadata").ok().flatten() {
+                    if let Ok(meta_dict) = meta.downcast::<PyDict>() {
+                        meta_dict.set_item("status", status_val)?;
                 }
             }
         }
+    }
     }
 
     Ok(true)

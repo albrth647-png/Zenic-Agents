@@ -7,7 +7,7 @@ pause, resume, cancel) for the AutopilotEngine class.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.autopilot.objective import (
     Objective,
@@ -15,9 +15,11 @@ from src.core.autopilot.objective import (
     ObjectiveStatus,
     ObjectiveTarget,
 )
-from src.core.autopilot.planner import PlannedAction
 
 from ._status import AutopilotStatus
+
+if TYPE_CHECKING:
+    from src.core.autopilot.planner import PlannedAction
 
 logger = logging.getLogger(__name__)
 

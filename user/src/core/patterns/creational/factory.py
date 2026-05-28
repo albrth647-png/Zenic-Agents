@@ -10,10 +10,11 @@ Classes:
                 default configs and per-call overrides.
 """
 
-import threading
-import logging
 import copy
-from typing import Any, Callable, Dict, List, Optional, Type
+import logging
+import threading
+from collections.abc import Callable
+from typing import Any
 
 from src.core.agents.resilience import BaseAgent
 
@@ -32,7 +33,7 @@ class FactoryRegistry:
     """
 
     def __init__(self) -> None:
-        self._creators: Dict[str, Callable[..., Any]] = {}
+        self._creators: dict[str, Callable[..., Any]] = {}
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------------
@@ -80,7 +81,7 @@ class FactoryRegistry:
             raise KeyError(f"FactoryRegistry: no creator registered as '{name}'")
         return creator(**kwargs)
 
-    def list_registered(self) -> List[str]:
+    def list_registered(self) -> list[str]:
         """Return a sorted list of all registered creator names."""
         with self._lock:
             return sorted(self._creators.keys())
@@ -107,7 +108,7 @@ class AgentFactory:
     """
 
     def __init__(self) -> None:
-        self._registry: Dict[str, Dict[str, Any]] = {}  # name -> {class, default_config}
+        self._registry: dict[str, dict[str, Any]] = {}  # name -> {class, default_config}
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------------
@@ -117,8 +118,8 @@ class AgentFactory:
     def register_agent(
         self,
         agent_type: str,
-        agent_class: Type[BaseAgent],
-        default_config: Optional[Dict[str, Any]] = None,
+        agent_class: type[BaseAgent],
+        default_config: dict[str, Any] | None = None,
     ) -> None:
         """
         Register an agent type.
@@ -174,7 +175,7 @@ class AgentFactory:
         if entry is None:
             raise KeyError(f"AgentFactory: no agent type registered as '{agent_type}'")
 
-        agent_class: Type[BaseAgent] = entry["class"]
+        agent_class: type[BaseAgent] = entry["class"]
         merged_config = copy.deepcopy(entry["default_config"])
         merged_config.update(overrides)
 
@@ -187,7 +188,7 @@ class AgentFactory:
         )
         return agent
 
-    def create_from_config(self, config: Dict[str, Any]) -> BaseAgent:
+    def create_from_config(self, config: dict[str, Any]) -> BaseAgent:
         """
         Create an agent from a full configuration dict.
 
@@ -219,12 +220,12 @@ class AgentFactory:
     # Introspection
     # ------------------------------------------------------------------
 
-    def list_agent_types(self) -> List[str]:
+    def list_agent_types(self) -> list[str]:
         """Return a sorted list of all registered agent type names."""
         with self._lock:
             return sorted(self._registry.keys())
 
-    def get_default_config(self, agent_type: str) -> Dict[str, Any]:
+    def get_default_config(self, agent_type: str) -> dict[str, Any]:
         """
         Return a **deep copy** of the default config for *agent_type*.
 

@@ -147,7 +147,7 @@ class NicheConverter(NicheConverterLegacyMixin):
                 description=description,
                 author="zenic-agents",
                 tier=_SENSITIVITY_TIER_MAP.get(sensitivity, BlueprintTier.FREE),
-                tags=tags + [domain],
+                tags=[*tags, domain],
                 scale=scale,
             )
 
@@ -251,7 +251,7 @@ class NicheConverter(NicheConverterLegacyMixin):
                         "optional": [],
                         "rate_limits": {},
                     }
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         if "database" not in schemas:

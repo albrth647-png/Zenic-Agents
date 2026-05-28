@@ -10,9 +10,10 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
-from src.core.autopilot.planner._types import PlannedAction
+if TYPE_CHECKING:
+    from src.core.autopilot.planner._types import PlannedAction
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def _retry_db_operation(
     Raises:
         The last exception if all retries fail.
     """
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return func()
@@ -85,7 +86,7 @@ def estimate_plan_impact(plan: PlannedAction) -> float:
         return 0.0
 
     # Count how many steps depend on each step
-    dependency_count: Dict[str, int] = {}
+    dependency_count: dict[str, int] = {}
     for step in plan.steps:
         for dep_id in step.depends_on:
             dependency_count[dep_id] = dependency_count.get(dep_id, 0) + 1

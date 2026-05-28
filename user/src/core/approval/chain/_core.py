@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._types import (
     ApprovalPriority,
@@ -15,6 +14,9 @@ from ._types import (
     MemoryApprovalPayload,
     logger,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class ApprovalChain:

@@ -117,7 +117,7 @@ class SNAEngine:
             # Persist config
             try:
                 self._persistence.save_monitor_config(config)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             loaded += 1
         logger.info("SNAEngine: Loaded %d default monitors", loaded)
@@ -298,7 +298,7 @@ class SNAEngine:
                     duration_ms=result.duration_ms,
                     tenant_id=config.tenant_id,
                 )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         except Exception as e:

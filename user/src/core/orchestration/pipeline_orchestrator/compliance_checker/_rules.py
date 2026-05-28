@@ -4,12 +4,10 @@ Compliance Checker — Built-in rule definitions for all standards.
 
 from __future__ import annotations
 
-from typing import List
-
 from ._types import ComplianceRule, ComplianceSeverity, ComplianceStandard
 
 
-def build_hipaa_rules() -> List[ComplianceRule]:
+def build_hipaa_rules() -> list[ComplianceRule]:
     """Build HIPAA compliance rules."""
     std = ComplianceStandard.HIPAA
     return [
@@ -56,7 +54,7 @@ def build_hipaa_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_pci_dss_rules() -> List[ComplianceRule]:
+def build_pci_dss_rules() -> list[ComplianceRule]:
     """Build PCI-DSS compliance rules."""
     std = ComplianceStandard.PCI_DSS
     return [
@@ -95,7 +93,7 @@ def build_pci_dss_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_soc2_rules() -> List[ComplianceRule]:
+def build_soc2_rules() -> list[ComplianceRule]:
     """Build SOC 2 compliance rules."""
     std = ComplianceStandard.SOC2
     return [
@@ -126,7 +124,7 @@ def build_soc2_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_gdpr_rules() -> List[ComplianceRule]:
+def build_gdpr_rules() -> list[ComplianceRule]:
     """Build GDPR compliance rules."""
     std = ComplianceStandard.GDPR
     return [
@@ -165,7 +163,7 @@ def build_gdpr_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_sox_rules() -> List[ComplianceRule]:
+def build_sox_rules() -> list[ComplianceRule]:
     """Build SOX compliance rules."""
     std = ComplianceStandard.SOX
     return [
@@ -196,7 +194,7 @@ def build_sox_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_iso27001_rules() -> List[ComplianceRule]:
+def build_iso27001_rules() -> list[ComplianceRule]:
     """Build ISO 27001 compliance rules."""
     std = ComplianceStandard.ISO_27001
     return [
@@ -219,7 +217,7 @@ def build_iso27001_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_nist_rules() -> List[ComplianceRule]:
+def build_nist_rules() -> list[ComplianceRule]:
     """Build NIST compliance rules."""
     std = ComplianceStandard.NIST
     return [
@@ -266,9 +264,9 @@ def build_nist_rules() -> List[ComplianceRule]:
     ]
 
 
-def build_all_default_rules() -> List[ComplianceRule]:
+def build_all_default_rules() -> list[ComplianceRule]:
     """Build all built-in compliance rules."""
-    rules: List[ComplianceRule] = []
+    rules: list[ComplianceRule] = []
     rules.extend(build_hipaa_rules())
     rules.extend(build_pci_dss_rules())
     rules.extend(build_soc2_rules())

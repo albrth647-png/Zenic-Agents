@@ -2,14 +2,14 @@
 
 import logging
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import DistributedSagaState, DistributedSagaStep
 from ..task_queue import TaskMessage, TaskPriority
+from ._types import DistributedSagaState, DistributedSagaStep
 
 # Phase 5: Audit logging
 try:
-    from src.core.observability.audit import get_audit_logger, AuditEventType, AuditSeverity
+    from src.core.observability.audit import AuditEventType, AuditSeverity, get_audit_logger
     _AUDIT_AVAILABLE = True
 except ImportError:
     _AUDIT_AVAILABLE = False
@@ -22,10 +22,10 @@ class DistributedSagaCoordinatorCoreMixin:
     async def start_saga(
         self,
         name: str,
-        steps: List[DistributedSagaStep],
-        initial_context: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        steps: list[DistributedSagaStep],
+        initial_context: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        correlation_id: str | None = None,
     ) -> str:
         """
         Create and start a new distributed saga.
@@ -114,7 +114,8 @@ class DistributedSagaCoordinatorCoreMixin:
                     tenant_id=tenant_id or "__anonymous__",
                     metadata={"saga_id": saga_id, "steps": len(steps)},
                 )
-            except Exception:
+            except Exception:  # noqa: S110
+                # Audit failure must not block saga execution
                 pass
         return saga_id
 
@@ -123,8 +124,8 @@ class DistributedSagaCoordinatorCoreMixin:
         saga_id: str,
         step_name: str,
         success: bool,
-        result: Optional[Dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> DistributedSagaState:
         """
         Report the result of a saga step execution.
@@ -214,7 +215,8 @@ class DistributedSagaCoordinatorCoreMixin:
                             tenant_id=saga.get("context_data", {}).get("tenant_id", "__anonymous__"),
                             metadata={"saga_id": saga_id},
                         )
-                    except Exception:
+                    except Exception:  # noqa: S110
+                        # Audit failure must not block saga completion
                         pass
                 return DistributedSagaState.COMPLETED
 
@@ -239,7 +241,7 @@ class DistributedSagaCoordinatorCoreMixin:
     async def _compensate(
         self,
         saga_id: str,
-        saga: Dict[str, Any],
+        saga: dict[str, Any],
         failed_step_name: str,
     ) -> None:
         """
@@ -265,7 +267,7 @@ class DistributedSagaCoordinatorCoreMixin:
             if step.get("status") == "COMPLETED":
                 completed_steps.append(step)
 
-        compensation_errors: List[str] = []
+        compensation_errors: list[str] = []
 
         # Compensate in reverse order
         for step in reversed(completed_steps):
@@ -340,7 +342,8 @@ class DistributedSagaCoordinatorCoreMixin:
                     tenant_id=saga.get("context_data", {}).get("tenant_id", "__anonymous__"),
                     metadata={"saga_id": saga_id, "compensation_errors": compensation_errors},
                 )
-            except Exception:
+            except Exception:  # noqa: S110
+                # Audit failure must not block saga compensation
                 pass
 
         self._active_sagas.pop(saga_id, None)

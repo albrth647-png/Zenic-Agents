@@ -193,7 +193,7 @@ class ValidationAgentCompat:
         self._call_count = 0
 
     def validate_with_runner(
-        self, runner: Any, target: str, content: str, rules: list[str] = None, language: str = "python"
+        self, runner: Any, target: str, content: str, rules: list[str] | None = None, language: str = "python"
     ) -> ValidationOutput:
         """Validate using v2 agents."""
         self._call_count += 1

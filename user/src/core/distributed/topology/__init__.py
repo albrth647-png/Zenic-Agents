@@ -22,12 +22,12 @@ Use Cases:
 import logging
 import socket
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..backend import CoordinationBackend
-from ._types import NodeInfo, NodeState
-from ._lifecycle_mixin import LifecycleMixin
 from ._discovery_mixin import DiscoveryMixin
+from ._lifecycle_mixin import LifecycleMixin
+from ._types import NodeInfo, NodeState
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class ClusterTopology(LifecycleMixin, DiscoveryMixin):
     def __init__(
         self,
         backend: CoordinationBackend,
-        node_info: Optional[NodeInfo] = None,
+        node_info: NodeInfo | None = None,
         heartbeat_interval: float = 10.0,
     ) -> None:
         """
@@ -94,7 +94,7 @@ class ClusterTopology(LifecycleMixin, DiscoveryMixin):
             self._node_info.ip_address = self._get_local_ip()
 
         # Background threads
-        self._heartbeat_thread: Optional[threading.Thread] = None
+        self._heartbeat_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._joined = False
 
@@ -113,7 +113,7 @@ class ClusterTopology(LifecycleMixin, DiscoveryMixin):
         return self._joined
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Topology manager statistics."""
         return {
             "node_id": self._node_info.node_id,

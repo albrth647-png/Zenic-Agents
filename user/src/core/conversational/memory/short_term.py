@@ -17,12 +17,16 @@ import threading
 import time
 from typing import Any
 
-from ..types.base import Result, Ok
-from ..types.memory import (
-    MemoryEntry, MemoryQuery, MemoryResult,
-    MemoryType, MemoryCategory, MemoryStats,
-)
 from ..config.constants import MEMORY_MAX_LONG_TERM
+from ..types.base import Ok, Result
+from ..types.memory import (
+    MemoryCategory,
+    MemoryEntry,
+    MemoryQuery,
+    MemoryResult,
+    MemoryStats,
+    MemoryType,
+)
 
 
 class ShortTermMemory:

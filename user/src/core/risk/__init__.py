@@ -2,8 +2,11 @@ from __future__ import annotations
 
 try:
     from .types import (
-        RiskLevel, BlastRadiusReport, RiskPropagationReport,
-        CriticalPathReport, CompositeRiskReport,
+        BlastRadiusReport,
+        CompositeRiskReport,
+        CriticalPathReport,
+        RiskLevel,
+        RiskPropagationReport,
     )
 except ImportError:
     RiskLevel = None  # type: ignore[assignment,misc]
@@ -24,8 +27,12 @@ except ImportError:
     reset_risk_prediction_engine = None  # type: ignore[assignment,misc]
 
 __all__ = [
-    "RiskLevel", "BlastRadiusReport", "RiskPropagationReport",
-    "CriticalPathReport", "CompositeRiskReport",
-    "RiskPredictionEngine", "get_risk_prediction_engine",
+    "BlastRadiusReport",
+    "CompositeRiskReport",
+    "CriticalPathReport",
+    "RiskLevel",
+    "RiskPredictionEngine",
+    "RiskPropagationReport",
+    "get_risk_prediction_engine",
     "reset_risk_prediction_engine",
 ]

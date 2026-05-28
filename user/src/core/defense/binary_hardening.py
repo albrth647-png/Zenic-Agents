@@ -146,8 +146,9 @@ class BinaryHardeningLayer:
             try:
                 import subprocess
 
-                result = subprocess.run(
-                    ["codesign", "-v", exe_path],
+                # SECURITY: exe_path is sys.executable (trusted), command is hardcoded
+                result = subprocess.run(  # noqa: S603 — trusted args only
+                    ["codesign", "-v", exe_path],  # noqa: S607
                     capture_output=True,
                     timeout=5,
                 )

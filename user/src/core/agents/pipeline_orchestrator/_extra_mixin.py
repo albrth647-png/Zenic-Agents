@@ -19,31 +19,31 @@ class PipelineOrchestratorExtraMixin:
         """Execute an automation workflow: infer trigger → action → schedule → conditions → name → serialize."""
         # Step 1: Infer trigger type
         trigger_result = self._run_agent(self._trigger_inferrer, message)
-        
+
         # Step 2: Infer action type
         action_result = self._run_agent(self._action_inferrer, {
             "description": message,
             "trigger_type": trigger_result.type if trigger_result else "manual",
         })
-        
+
         # Step 3: Parse schedule (if applicable)
         schedule_result = self._run_agent(self._schedule_parser, {
             "description": message,
             "trigger_type": trigger_result.type if trigger_result else "manual",
         })
-        
+
         # Step 4: Extract conditions
         condition_result = self._run_agent(self._condition_extractor, {
             "description": message,
         })
-        
+
         # Step 5: Generate name
         name_result = self._run_agent(self._automation_namer, {
             "description": message,
             "trigger_type": trigger_result.type if trigger_result else "manual",
             "action_type": action_result.type if action_result else "log",
         })
-        
+
         # Step 6: Serialize workflow
         workflow_result = self._run_agent(self._workflow_serializer, {
             "name": name_result.name if name_result else "unnamed_workflow",
@@ -53,7 +53,7 @@ class PipelineOrchestratorExtraMixin:
             "schedule": schedule_result,
             "conditions": condition_result.conditions if condition_result else [],
         })
-        
+
         return workflow_result, "automation"
 
     # ══════════════════════════════════════════════════════════
@@ -68,33 +68,33 @@ class PipelineOrchestratorExtraMixin:
         """Execute a reasoning pipeline: detect problem → decompose → reason → confidence → conclusion."""
         # Step 1: Detect problem type
         problem_result = self._run_agent(self._problem_detector, message)
-        
+
         # Step 2: Decompose into steps
         steps_result = self._run_agent(self._step_decomposer, {
             "query": message,
             "problem_type": problem_result.type if problem_result else "general",
             "complexity": problem_result.complexity if problem_result else 0.5,
         })
-        
+
         # Step 3: Apply template reasoning
         reasoning_result = self._run_agent(self._template_reasoner, {
             "query": message,
             "problem_type": problem_result.type if problem_result else "general",
             "steps": steps_result.steps if steps_result else [],
         })
-        
+
         # Step 4: Estimate confidence
         confidence_result = self._run_agent(self._confidence_estimator, {
             "reasoning_result": reasoning_result,
             "problem_type": problem_result.type if problem_result else "general",
         })
-        
+
         # Step 5: Extract conclusion
         conclusion_result = self._run_agent(self._conclusion_extractor, {
             "reasoning_result": reasoning_result,
             "confidence_score": confidence_result.score if confidence_result else 0.0,
         })
-        
+
         return conclusion_result, "reasoning"
 
     # ══════════════════════════════════════════════════════════

@@ -9,7 +9,7 @@ to keep the main file under 400 lines.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from src.core.blueprints import CertifiedBlueprint

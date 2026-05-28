@@ -216,7 +216,7 @@ class KPITracker:
                 from datetime import timedelta
 
                 cutoff_dt = now - timedelta(days=days)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
             recent: list[KPIMeasurement] = []
@@ -284,7 +284,7 @@ class KPITracker:
                         eta_seconds = steps_to_target * seconds_per_step
                         projected = now + timedelta(seconds=eta_seconds)
                         projected_date = projected.isoformat()
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
 
             return KPITrend(

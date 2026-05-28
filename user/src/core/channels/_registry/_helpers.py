@@ -11,7 +11,6 @@ and ChannelRouter without adding business logic to the core classes.
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from .._types import ChannelPriority, ChannelResponse, DeliveryStatus
 from ._types import _DEFAULT_FALLBACKS, _PRIORITY_CHANNEL_MAP

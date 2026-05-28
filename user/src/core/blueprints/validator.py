@@ -13,11 +13,14 @@ Validates:
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from .schema import CertifiedBlueprint
 from .types import (
     FieldType,
 )
+
+if TYPE_CHECKING:
+    from .schema import CertifiedBlueprint
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +345,6 @@ class BlueprintValidatorV2:
         for key, rules in rule_map.items():
             if len(rules) > 1:
                 # Different actions for same condition = potential conflict
-                actions = set(r.split(":")[-1] for r in rules)
+                actions = {r.split(":")[-1] for r in rules}
                 if len(actions) > 1:
                     result.add_warning(f"Conflicting rules for '{key}': {rules}")

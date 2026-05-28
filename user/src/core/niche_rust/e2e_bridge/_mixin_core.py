@@ -7,7 +7,7 @@ Step-by-step E2E niche onboarding pipeline.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import PipelineProgress
 
@@ -62,8 +62,8 @@ class NichePipeline:
     def upload_documents(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
-        extracted_texts: List[Any],
+        template_dict: dict[str, Any],
+        extracted_texts: list[Any],
     ) -> Any:
         """Upload and ingest documents into the pipeline."""
         native = self._get_native()
@@ -78,8 +78,8 @@ class NichePipeline:
     def get_questions(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
-    ) -> List[Dict[str, Any]]:
+        template_dict: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """Get questions for missing required fields."""
         native = self._get_native()
         if native is not None and state is not None:
@@ -108,7 +108,7 @@ class NichePipeline:
     def submit_answer(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
         field_name: str,
         section_id: str = "",
         value: str = "",
@@ -128,8 +128,8 @@ class NichePipeline:
     def submit_answers(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
-        answers: Dict[str, str],
+        template_dict: dict[str, Any],
+        answers: dict[str, str],
     ) -> tuple:
         """Submit batch answers for missing fields."""
         native = self._get_native()
@@ -144,7 +144,7 @@ class NichePipeline:
     def validate(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
     ) -> tuple:
         """Validate template completeness."""
         native = self._get_native()
@@ -160,7 +160,7 @@ class NichePipeline:
         self,
         state: Any,
         action_type: str = "niche_onboarding",
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ) -> tuple:
         """Run domain safety + compliance check."""
         native = self._get_native()
@@ -176,7 +176,7 @@ class NichePipeline:
     def certify(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
     ) -> tuple:
         """Certify the blueprint."""
         native = self._get_native()
@@ -191,7 +191,7 @@ class NichePipeline:
     def export(
         self,
         state: Any,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
     ) -> tuple:
         """Export the final YAML output."""
         native = self._get_native()

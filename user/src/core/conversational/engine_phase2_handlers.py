@@ -7,13 +7,15 @@ que no estaban en el pipeline_handlers original.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from .types.intent import AssistantIntent
-from .types.session import Session
 from .types.response import AssistantResponse, ResponseFormat, ResponseMetadata
-from .types.personality import PersonalityProfile
-from .tools import ToolManager
+
+if TYPE_CHECKING:
+    from .tools import ToolManager
+    from .types.intent import AssistantIntent
+    from .types.personality import PersonalityProfile
+    from .types.session import Session
 
 
 class Phase2Handlers:
@@ -32,7 +34,7 @@ class Phase2Handlers:
         enriched: Any,
         intent: AssistantIntent,
         session: Session,
-        personality: Optional[PersonalityProfile] = None,
+        personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
         """Maneja el pipeline de ejecucion de herramientas."""
         # Buscar tools relevantes

@@ -24,7 +24,7 @@ rest of the package remains usable.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

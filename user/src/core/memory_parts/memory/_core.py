@@ -177,7 +177,7 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
             ]:
                 try:
                     cursor.execute(f"DROP TABLE IF EXISTS {table}")
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
             conn.commit()
             conn.close()

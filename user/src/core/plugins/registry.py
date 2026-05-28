@@ -8,7 +8,7 @@ import threading
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from .types import PluginCapability, PluginInstance, PluginManifest, PluginState
 
@@ -31,9 +31,9 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 1.0) -> Any:
 class PluginRegistry:
     """Thread-safe plugin registry with SQLite persistence."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._plugins: Dict[str, PluginInstance] = {}
+        self._plugins: dict[str, PluginInstance] = {}
         self._db_path = db_path or str(DB_PATH)
         self._init_db()
 
@@ -134,7 +134,7 @@ class PluginRegistry:
 
         _retry(_del)
 
-    def register(self, manifest: PluginManifest, config: Optional[Dict[str, Any]] = None) -> str:
+    def register(self, manifest: PluginManifest, config: dict[str, Any] | None = None) -> str:
         """Register a plugin and return its ID."""
         with self._lock:
             valid, errors = self.validate_manifest(manifest)
@@ -168,15 +168,15 @@ class PluginRegistry:
             logger.info("Plugin unregistered: %s", plugin_id)
             return True
 
-    def get_plugin(self, plugin_id: str) -> Optional[PluginInstance]:
+    def get_plugin(self, plugin_id: str) -> PluginInstance | None:
         with self._lock:
             return self._plugins.get(plugin_id)
 
     def list_plugins(
         self,
-        state: Optional[PluginState] = None,
-        capability: Optional[PluginCapability] = None,
-    ) -> List[PluginInstance]:
+        state: PluginState | None = None,
+        capability: PluginCapability | None = None,
+    ) -> list[PluginInstance]:
         with self._lock:
             result = list(self._plugins.values())
             if state is not None:
@@ -185,12 +185,12 @@ class PluginRegistry:
                 result = [p for p in result if capability in p.manifest.capabilities]
             return result
 
-    def resolve_dependencies(self, plugin_id: str) -> List[str]:
+    def resolve_dependencies(self, plugin_id: str) -> list[str]:
         """Topological sort of plugin dependencies."""
         with self._lock:
-            visited: Set[str] = set()
-            order: List[str] = []
-            visiting: Set[str] = set()
+            visited: set[str] = set()
+            order: list[str] = []
+            visiting: set[str] = set()
 
             def _visit(pid: str) -> None:
                 if pid in visited:
@@ -210,9 +210,9 @@ class PluginRegistry:
             _visit(plugin_id)
             return order
 
-    def validate_manifest(self, manifest: PluginManifest) -> Tuple[bool, List[str]]:
+    def validate_manifest(self, manifest: PluginManifest) -> tuple[bool, list[str]]:
         """Validate a plugin manifest."""
-        errors: List[str] = []
+        errors: list[str] = []
         if not manifest.id or not re.match(r'^[a-zA-Z0-9_][a-zA-Z0-9_-]*$', manifest.id):
             errors.append("Plugin ID must be non-empty alphanumeric with underscores/hyphens")
         if not manifest.name:
@@ -229,7 +229,7 @@ class PluginRegistry:
         return (len(errors) == 0, errors)
 
     def set_state(
-        self, plugin_id: str, state: PluginState, error: Optional[str] = None
+        self, plugin_id: str, state: PluginState, error: str | None = None
     ) -> bool:
         with self._lock:
             instance = self._plugins.get(plugin_id)
@@ -243,16 +243,16 @@ class PluginRegistry:
             self._save_to_db(instance)
             return True
 
-    def get_plugins_by_capability(self, cap: PluginCapability) -> List[PluginInstance]:
+    def get_plugins_by_capability(self, cap: PluginCapability) -> list[PluginInstance]:
         with self._lock:
             return [p for p in self._plugins.values() if cap in p.manifest.capabilities]
 
     def check_circular_dependencies(
-        self, plugin_id: str, dependencies: List[str]
+        self, plugin_id: str, dependencies: list[str]
     ) -> bool:
         """Return True if circular dependency detected."""
-        visited: Set[str] = set()
-        stack: Set[str] = set()
+        visited: set[str] = set()
+        stack: set[str] = set()
 
         def _visit(pid: str) -> bool:
             if pid in stack:
@@ -276,10 +276,10 @@ class PluginRegistry:
                 return True
         return False
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         with self._lock:
-            state_counts: Dict[str, int] = defaultdict(int)
-            cap_counts: Dict[str, int] = defaultdict(int)
+            state_counts: dict[str, int] = defaultdict(int)
+            cap_counts: dict[str, int] = defaultdict(int)
             for p in self._plugins.values():
                 state_counts[p.state.value] += 1
                 for c in p.manifest.capabilities:
@@ -291,11 +291,11 @@ class PluginRegistry:
             }
 
 
-_registry_instance: Optional[PluginRegistry] = None
+_registry_instance: PluginRegistry | None = None
 _registry_lock = threading.Lock()
 
 
-def get_plugin_registry(db_path: Optional[str] = None) -> PluginRegistry:
+def get_plugin_registry(db_path: str | None = None) -> PluginRegistry:
     global _registry_instance
     with _registry_lock:
         if _registry_instance is None:

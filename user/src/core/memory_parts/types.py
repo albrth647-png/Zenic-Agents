@@ -25,10 +25,10 @@ Optimizado para:
   - ~100KB por sesión de trabajo
 """
 
-import os
 import logging
-from typing import Optional, Any
+import os
 from dataclasses import dataclass
+from typing import Any
 
 try:
     import numpy as np
@@ -56,14 +56,14 @@ MAX_PROJECT_ENTRIES = 50       # Max entries in project memory
 @dataclass
 class MemoryEntry:
     """Una entrada en la memoria."""
-    id: Optional[int] = None
+    id: int | None = None
     query: str = ""
     response: str = ""
     operation: str = ""
     goal: str = ""
     importance: float = 0.5     # 0.0-1.0, higher = more important
     timestamp: float = 0.0
-    embedding: Optional[Any] = None  # np.ndarray when numpy available
+    embedding: Any | None = None  # np.ndarray when numpy available
     access_count: int = 0
     session_id: str = ""
     client_id: str = "default"

@@ -9,7 +9,8 @@ from typing import Any
 
 from src.core.agents.reasoning import TemplateReasoner
 from src.core.agents.schemas import ReasoningResult
-from src.core.agents.schemas._v1_compat_schemas import ReasoningOutput, ReasoningStep as V1ReasoningStep
+from src.core.agents.schemas._v1_compat_schemas import ReasoningOutput
+from src.core.agents.schemas._v1_compat_schemas import ReasoningStep as V1ReasoningStep
 
 logger = logging.getLogger(__name__)
 

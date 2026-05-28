@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 # ── Helpers ───────────────────────────────────────────────
 
 
 def _auto_fill_field(
     self,
-    template_dict: Dict[str, Any],
+    template_dict: dict[str, Any],
     field_name: str,
-    value: str,  # noqa: F821  # TODO: Phase3 - verify import
+    value: str,  # TODO: Phase3 - verify import
 ) -> bool:
     """Auto-fill a field by searching all sections."""
     template = template_dict.get("template", template_dict)

@@ -48,15 +48,15 @@ def _deterministic_test_setup():
       - Resets all deterministic state (clean slate for next test)
     """
     from src.core.shared.deterministic import (
-        set_global_seed,
-        reset_all_deterministic_state,
         ControllableJitter,
-        install_uuid4_patch,
-        uninstall_uuid4_patch,
         install_random_patch,
-        uninstall_random_patch,
         install_time_patch,
+        install_uuid4_patch,
+        reset_all_deterministic_state,
+        set_global_seed,
+        uninstall_random_patch,
         uninstall_time_patch,
+        uninstall_uuid4_patch,
     )
 
     # 1. Set deterministic seed (this also seeds Python's global random)

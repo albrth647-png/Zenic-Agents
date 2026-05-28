@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .alert_manager import AlertManager
-from .types import Alert, MonitorResult
+
+if TYPE_CHECKING:
+    from .types import Alert, MonitorResult
 
 logger = logging.getLogger(__name__)
 

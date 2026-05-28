@@ -8,7 +8,7 @@ renew_lease, expire_leases) and distributed lock operations.
 import copy
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ class TaskLockMixin:
         queue_name: str,
         task_id: str,
         task_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         priority: int = 0,
-        delay_until: Optional[float] = None,
-        tenant_id: Optional[str] = None,
+        delay_until: float | None = None,
+        tenant_id: str | None = None,
     ) -> bool:
         with self._lock:
             if task_id in self._task_index:
@@ -66,9 +66,9 @@ class TaskLockMixin:
         queue_name: str,
         worker_id: str,
         lease_seconds: float = 120.0,
-        task_types: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        task_types: list[str] | None = None,
+        tenant_id: str | None = None,
+    ) -> dict[str, Any] | None:
         now = time.time()
         with self._lock:
             available = []
@@ -95,7 +95,7 @@ class TaskLockMixin:
 
             return copy.deepcopy(task)
 
-    async def complete_task(self, task_id: str, result: Optional[Dict[str, Any]] = None) -> bool:
+    async def complete_task(self, task_id: str, result: dict[str, Any] | None = None) -> bool:
         with self._lock:
             task = self._task_index.get(task_id)
             if task is None:

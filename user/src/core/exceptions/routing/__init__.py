@@ -9,6 +9,7 @@ and DegradedModeManager to avoid circular imports.
 
 from __future__ import annotations
 
+from ._handlers import ExceptionRouterHandlersMixin
 from ._router import (
     ExceptionRouterBase,
     RoutingAction,
@@ -16,7 +17,6 @@ from ._router import (
     get_exception_router,
     reset_exception_router,
 )
-from ._handlers import ExceptionRouterHandlersMixin
 
 
 class ExceptionRouter(ExceptionRouterBase, ExceptionRouterHandlersMixin):
@@ -35,9 +35,9 @@ class ExceptionRouter(ExceptionRouterBase, ExceptionRouterHandlersMixin):
 
 
 __all__ = [
+    "ExceptionRouter",
     "RoutingAction",
     "RoutingRule",
-    "ExceptionRouter",
     "get_exception_router",
     "reset_exception_router",
 ]

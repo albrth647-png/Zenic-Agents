@@ -63,7 +63,7 @@ def get_hardware_fingerprint() -> str:
         import subprocess
 
         result = subprocess.run(
-            ["lsblk", "-ndo", "SERIAL"],
+            ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
             capture_output=True,
             text=True,
             timeout=3,

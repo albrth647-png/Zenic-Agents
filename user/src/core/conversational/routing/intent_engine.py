@@ -16,12 +16,15 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from ..input.enricher import EnrichedInput
-from ..input.parser import ParsedInput
 from ..types.base import Ok, Result
 from ..types.intent import AssistantIntent, ConversationMode, IntentCategory
-from ..types.session import Session
+
+if TYPE_CHECKING:
+    from ..input.enricher import EnrichedInput
+    from ..input.parser import ParsedInput
+    from ..types.session import Session
 
 # ─── Score por capa ──────────────────────────────────────────
 

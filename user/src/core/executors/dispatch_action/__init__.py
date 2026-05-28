@@ -12,14 +12,14 @@ Blueprint Registry when blueprint_name is provided.
 Phase C1: Supports dry_run mode — simulate execution without real effects.
 """
 
-from ._types import DispatchRequest, DispatchResult
-from ._mixin_core import ActionDispatcher
 from ._dag import exec_dispatch_action, get_default_dispatcher, reset_dispatcher
+from ._mixin_core import ActionDispatcher
+from ._types import DispatchRequest, DispatchResult
 
 __all__ = [
+    "ActionDispatcher",
     "DispatchRequest",
     "DispatchResult",
-    "ActionDispatcher",
     "exec_dispatch_action",
     "get_default_dispatcher",
     "reset_dispatcher",

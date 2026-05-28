@@ -9,8 +9,8 @@ import threading
 from datetime import datetime, timedelta
 from typing import Any
 
-from ._mixin_query import MemoryQueryMixin
 from ..types import ContextWindow, MemoryRecord, MemoryTier, MemoryType
+from ._mixin_query import MemoryQueryMixin
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +262,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 for rec in records:
                     hash_groups.setdefault(rec.embedding_hash, []).append(rec)
 
-                for ehash, group in hash_groups.items():
+                for _ehash, group in hash_groups.items():
                     if len(group) < 2:
                         continue
                     best = max(group, key=lambda r: r.importance)

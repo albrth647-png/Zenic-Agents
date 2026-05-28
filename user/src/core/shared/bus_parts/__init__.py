@@ -15,17 +15,17 @@ from .shared_state import SharedState
 from .types import BusMessage, MessageType, Priority
 
 __all__ = [
-    # Enums
-    "MessageType",
-    "Priority",
+    "AgentMailbox",
     # Data classes
     "BusMessage",
+    "BusMetrics",
+    # Enums
+    "MessageType",
+    "PersistenceLayer",
+    "Priority",
     # Components
     "RingBuffer",
-    "AgentMailbox",
-    "SharedState",
-    "PersistenceLayer",
-    "BusMetrics",
     # Main class
     "SharedMemoryBus",
+    "SharedState",
 ]

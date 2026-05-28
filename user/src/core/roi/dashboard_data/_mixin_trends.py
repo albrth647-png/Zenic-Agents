@@ -6,12 +6,12 @@ Contains get_trend, get_comparison, and export_data methods.
 
 from __future__ import annotations
 
+import logging
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from ._types import TrendPoint
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -22,14 +22,14 @@ class DashboardTrendsMixin:
         self,
         metric: str,
         days: int = 30,
-    ) -> List[TrendPoint]:
+    ) -> list[TrendPoint]:
         """Return trend data for a specific metric over the given period.
 
         Available metrics: ``cost``, ``value``, ``roi``,
         ``hours_saved``, ``errors_avoided``.
         """
         with self._lock:
-            points: List[TrendPoint] = []
+            points: list[TrendPoint] = []
             metric_lower = metric.lower()
 
             if metric_lower == "cost":
@@ -80,7 +80,7 @@ class DashboardTrendsMixin:
                 vt = self._get_value_tracker()
                 if vt is not None:
                     try:
-                        from ..value_tracker import ValueCategory, DEFAULT_UNIT_VALUES
+                        from ..value_tracker import DEFAULT_UNIT_VALUES, ValueCategory
                         uv = DEFAULT_UNIT_VALUES.get(ValueCategory.HOURS_SAVED, 25.0)
                         for d in vt.get_daily_value(days=days):
                             points.append(TrendPoint(
@@ -95,7 +95,7 @@ class DashboardTrendsMixin:
                 vt = self._get_value_tracker()
                 if vt is not None:
                     try:
-                        from ..value_tracker import ValueCategory, DEFAULT_UNIT_VALUES
+                        from ..value_tracker import DEFAULT_UNIT_VALUES, ValueCategory
                         uv = DEFAULT_UNIT_VALUES.get(ValueCategory.ERRORS_AVOIDED, 150.0)
                         for d in vt.get_daily_value(days=days):
                             points.append(TrendPoint(
@@ -115,7 +115,7 @@ class DashboardTrendsMixin:
         self,
         period_a_days: int,
         period_b_days: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare two time periods for ROI trends.
 
         Period A is the more recent period, Period B is the older one.

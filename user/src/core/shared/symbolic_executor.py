@@ -18,6 +18,6 @@ This module is now a thin facade that re-exports all public symbols from
 the symbolic_parts sub-package for 100% backward compatibility.
 """
 
-from .symbolic_parts import SymbolicValue, SymbolicPath, SymbolicExecutor, HAS_Z3
+from .symbolic_parts import HAS_Z3, SymbolicExecutor, SymbolicPath, SymbolicValue
 
-__all__ = ["SymbolicValue", "SymbolicPath", "SymbolicExecutor", "HAS_Z3"]
+__all__ = ["HAS_Z3", "SymbolicExecutor", "SymbolicPath", "SymbolicValue"]

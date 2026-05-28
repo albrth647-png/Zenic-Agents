@@ -5,16 +5,24 @@ DEPRECATED: This agent violates the SRP invariant (7 tasks in 1 agent).
 Individual A01-A04 agents should be used instead.
 """
 
-from ._core import DeterministicPipeline
 from ._constants import (
-    EXT_LANG_MAP, OP_KEYWORDS, GOAL_KEYWORDS,
-    PATTERN_HEURISTICS, PATTERN_LIBRARY,
-    VIOLATION_CATALOG, GAP_DEFAULTS,
+    EXT_LANG_MAP,
+    GAP_DEFAULTS,
+    GOAL_KEYWORDS,
+    OP_KEYWORDS,
+    PATTERN_HEURISTICS,
+    PATTERN_LIBRARY,
+    VIOLATION_CATALOG,
 )
+from ._core import DeterministicPipeline
 
 __all__ = [
+    "EXT_LANG_MAP",
+    "GAP_DEFAULTS",
+    "GOAL_KEYWORDS",
+    "OP_KEYWORDS",
+    "PATTERN_HEURISTICS",
+    "PATTERN_LIBRARY",
+    "VIOLATION_CATALOG",
     "DeterministicPipeline",
-    "EXT_LANG_MAP", "OP_KEYWORDS", "GOAL_KEYWORDS",
-    "PATTERN_HEURISTICS", "PATTERN_LIBRARY",
-    "VIOLATION_CATALOG", "GAP_DEFAULTS",
 ]

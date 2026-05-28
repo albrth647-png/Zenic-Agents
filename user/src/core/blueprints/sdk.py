@@ -9,17 +9,24 @@ workflow, and revenue tracking.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from .types import (
-    ActionTemplateDef, BlueprintMetadataV2, BlueprintTier,
-    BusinessRuleDef, DBEntitySchema,
-    DBSchema, MonitorHook,
-)
-from .schema import CertifiedBlueprint
-from .validator import BlueprintValidatorV2, ValidationResult
 from .certifier import BlueprintCertifier, certify_blueprint
 from .partner_registry import PartnerRegistry
+from .schema import CertifiedBlueprint
+from .types import (
+    ActionTemplateDef,
+    BlueprintMetadataV2,
+    BlueprintTier,
+    BusinessRuleDef,
+    DBEntitySchema,
+    DBSchema,
+    MonitorHook,
+)
+from .validator import BlueprintValidatorV2, ValidationResult
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -43,21 +50,21 @@ class BlueprintSDK:
 
     def __init__(
         self,
-        certifier: Optional[BlueprintCertifier] = None,
-        partner_registry: Optional[PartnerRegistry] = None,
+        certifier: BlueprintCertifier | None = None,
+        partner_registry: PartnerRegistry | None = None,
     ) -> None:
         self._certifier = certifier or BlueprintCertifier()
         self._registry = partner_registry or PartnerRegistry()
         self._validator = BlueprintValidatorV2()
-        self._published: Dict[str, CertifiedBlueprint] = {}
-        self._submission_hooks: List[Callable] = []
+        self._published: dict[str, CertifiedBlueprint] = {}
+        self._submission_hooks: list[Callable] = []
 
     # ── Blueprint Creation ─────────────────────────────────
 
     def create_blueprint(
         self, name: str, domain: str = "", subdomain: str = "",
         description: str = "", author: str = "", tier: str = "partner",
-    ) -> "BlueprintBuilder":
+    ) -> BlueprintBuilder:
         """Create a new Blueprint using the builder pattern."""
         return BlueprintBuilder(
             sdk=self, name=name, domain=domain, subdomain=subdomain,
@@ -74,7 +81,7 @@ class BlueprintSDK:
 
     def submit_for_certification(
         self, blueprint: CertifiedBlueprint, partner_id: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Submit a Blueprint for certification."""
         validation = self._validator.validate(blueprint)
         if not validation.is_valid:
@@ -142,11 +149,11 @@ class BlueprintSDK:
             return True
         return False
 
-    def get_published(self, name: str) -> Optional[CertifiedBlueprint]:
+    def get_published(self, name: str) -> CertifiedBlueprint | None:
         """Get a published Blueprint by name."""
         return self._published.get(name)
 
-    def list_published(self, domain: str = "") -> List[Dict[str, Any]]:
+    def list_published(self, domain: str = "") -> list[dict[str, Any]]:
         """List all published Blueprints."""
         results = []
         for bp in self._published.values():
@@ -209,46 +216,46 @@ class BlueprintBuilder:
             tier=BlueprintTier(tier),
         )
         self._db_schema = DBSchema()
-        self._executor_schemas: Dict[str, Any] = {}
-        self._rules: List[BusinessRuleDef] = []
-        self._actions: List[ActionTemplateDef] = []
-        self._monitors: List[MonitorHook] = []
+        self._executor_schemas: dict[str, Any] = {}
+        self._rules: list[BusinessRuleDef] = []
+        self._actions: list[ActionTemplateDef] = []
+        self._monitors: list[MonitorHook] = []
 
-    def with_description(self, description: str) -> "BlueprintBuilder":
+    def with_description(self, description: str) -> BlueprintBuilder:
         self._metadata.description = description
         return self
 
-    def with_author(self, author: str) -> "BlueprintBuilder":
+    def with_author(self, author: str) -> BlueprintBuilder:
         self._metadata.author = author
         return self
 
-    def with_tags(self, tags: List[str]) -> "BlueprintBuilder":
+    def with_tags(self, tags: list[str]) -> BlueprintBuilder:
         self._metadata.tags = tags
         return self
 
-    def with_scale(self, scale: str) -> "BlueprintBuilder":
+    def with_scale(self, scale: str) -> BlueprintBuilder:
         self._metadata.scale = scale
         return self
 
-    def add_entity(self, entity: DBEntitySchema) -> "BlueprintBuilder":
+    def add_entity(self, entity: DBEntitySchema) -> BlueprintBuilder:
         self._db_schema.entities.append(entity)
         return self
 
     def add_executor_schema(
-        self, executor_type: str, schema: Dict[str, Any],
-    ) -> "BlueprintBuilder":
+        self, executor_type: str, schema: dict[str, Any],
+    ) -> BlueprintBuilder:
         self._executor_schemas[executor_type] = schema
         return self
 
-    def add_rule(self, rule: BusinessRuleDef) -> "BlueprintBuilder":
+    def add_rule(self, rule: BusinessRuleDef) -> BlueprintBuilder:
         self._rules.append(rule)
         return self
 
-    def add_action(self, action: ActionTemplateDef) -> "BlueprintBuilder":
+    def add_action(self, action: ActionTemplateDef) -> BlueprintBuilder:
         self._actions.append(action)
         return self
 
-    def add_monitor(self, monitor: MonitorHook) -> "BlueprintBuilder":
+    def add_monitor(self, monitor: MonitorHook) -> BlueprintBuilder:
         self._monitors.append(monitor)
         return self
 
@@ -260,7 +267,7 @@ class BlueprintBuilder:
         """Build the final CertifiedBlueprint."""
         return self._build_internal()
 
-    def build_and_certify(self) -> Dict[str, Any]:
+    def build_and_certify(self) -> dict[str, Any]:
         """Build and submit for certification in one step."""
         return self._sdk.submit_for_certification(
             self._build_internal(), partner_id=self._metadata.author,

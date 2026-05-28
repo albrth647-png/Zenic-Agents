@@ -10,40 +10,37 @@ Modes:
 - PARALYSIS L2: Emergency lockdown (admin-only access)
 """
 
+from .manager import (
+    DegradedModeManager,
+    ModeTransition,
+    SystemMode,
+    get_degraded_mode_manager,
+    reset_degraded_mode_manager,
+)
+from .mode_parts.capabilities import (
+    MODE_CAPABILITIES,
+    ModeCapabilities,
+)
+from .persistence import DegradationPersistence
 from .types import (
     DegradationLevel,
     DegradationReason,
     DegradationState,
 )
 
-from .persistence import DegradationPersistence
-
-from .manager import (
-    DegradedModeManager,
-    SystemMode,
-    ModeTransition,
-    get_degraded_mode_manager,
-    reset_degraded_mode_manager,
-)
-
-from .mode_parts.capabilities import (
-    ModeCapabilities,
-    MODE_CAPABILITIES,
-)
-
 __all__ = [
+    "MODE_CAPABILITIES",
     # Types
     "DegradationLevel",
-    "DegradationReason",
-    "DegradationState",
     # Persistence
     "DegradationPersistence",
+    "DegradationReason",
+    "DegradationState",
     # Manager
     "DegradedModeManager",
-    "SystemMode",
     "ModeCapabilities",
     "ModeTransition",
-    "MODE_CAPABILITIES",
+    "SystemMode",
     # Singleton helpers
     "get_degraded_mode_manager",
     "reset_degraded_mode_manager",

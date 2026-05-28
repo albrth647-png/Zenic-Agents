@@ -7,7 +7,7 @@ Query interface for the Rust-compiled niche catalog.
 from __future__ import annotations
 
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 from ._native import NATIVE_AVAILABLE, _native
 
@@ -41,14 +41,14 @@ class NicheCatalog:
         ids = catalog.ids()
     """
 
-    def get_all(self) -> List[Any]:
+    def get_all(self) -> list[Any]:
         """Get all niche definitions from the compiled catalog."""
         if not NATIVE_AVAILABLE:
             logger.warning("NicheCatalog.get_all: Rust extension not available")
             return []
         return _native.catalog_get_all()
 
-    def get_by_id(self, niche_id: str) -> Optional[Any]:
+    def get_by_id(self, niche_id: str) -> Any | None:
         """Get a niche definition by its niche_id."""
         if not niche_id or not isinstance(niche_id, str):
             logger.error("NicheCatalog.get_by_id: niche_id must be a non-empty string")
@@ -58,7 +58,7 @@ class NicheCatalog:
             return None
         return _native.catalog_get_by_id(niche_id)
 
-    def get_by_category(self, category: str) -> List[Any]:
+    def get_by_category(self, category: str) -> list[Any]:
         """Get all niches in a given category."""
         if not NATIVE_AVAILABLE:
             logger.warning("NicheCatalog.get_by_category: Rust extension not available")
@@ -85,7 +85,7 @@ class NicheCatalog:
             logger.error("NicheCatalog.get_by_category: %s", e)
             return []
 
-    def search(self, query: str) -> List[Any]:
+    def search(self, query: str) -> list[Any]:
         """Search niches by text query."""
         if not query or not isinstance(query, str):
             return []
@@ -100,19 +100,19 @@ class NicheCatalog:
             return 0
         return _native.catalog_count()
 
-    def ids(self) -> List[str]:
+    def ids(self) -> list[str]:
         """Get all niche_id strings from the catalog."""
         if not NATIVE_AVAILABLE:
             return []
         return _native.catalog_ids()
 
-    def categories(self) -> List[str]:
+    def categories(self) -> list[str]:
         """Get all available niche category strings."""
         if not NATIVE_AVAILABLE:
             return []
         return _native.get_niche_categories()
 
-    def category_display_names(self) -> List[str]:
+    def category_display_names(self) -> list[str]:
         """Get human-readable display names for all categories."""
         if not NATIVE_AVAILABLE:
             return []

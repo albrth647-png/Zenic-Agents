@@ -8,12 +8,12 @@ Cada evento tiene tipo, payload, y metadata de trazabilidad.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from .base import EventId, SessionId, new_id
-
 
 # ─── Tipos de evento ─────────────────────────────────────────
 
@@ -102,9 +102,7 @@ class Subscription:
             return False
         if event.event_type != self.event_type:
             return False
-        if self.filter_fn and not self.filter_fn(event):
-            return False
-        return True
+        return not (self.filter_fn and not self.filter_fn(event))
 
 
 # ─── Evento especificos del pipeline ─────────────────────────

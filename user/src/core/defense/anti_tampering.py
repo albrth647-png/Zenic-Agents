@@ -24,7 +24,10 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class TamperEvent:
     detection_method: str
     description: str
     timestamp: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.timestamp:
@@ -78,15 +81,15 @@ class AntiTamperingLayer:
         self._enable_code_integrity = enable_code_integrity
         self._timing_threshold_ms = timing_threshold_ms
         self._check_interval = check_interval_seconds
-        self._callbacks: List[Callable[[TamperEvent], None]] = []
-        self._baseline_hashes: Dict[str, str] = {}
+        self._callbacks: list[Callable[[TamperEvent], None]] = []
+        self._baseline_hashes: dict[str, str] = {}
         self._running = False
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
         self._detection_count = 0
 
     # ── Detection Methods ──────────────────────────────────
 
-    def check_ptrace(self) -> Optional[TamperEvent]:
+    def check_ptrace(self) -> TamperEvent | None:
         """Check if a debugger is attached via ptrace (Linux only).
 
         Reads /proc/self/status for TracerPid. If non-zero,
@@ -99,7 +102,7 @@ class AntiTamperingLayer:
             return None
 
         try:
-            with open("/proc/self/status", "r") as f:
+            with open("/proc/self/status") as f:
                 for line in f:
                     if line.startswith("TracerPid:"):
                         pid = int(line.split(":")[1].strip())
@@ -116,7 +119,7 @@ class AntiTamperingLayer:
 
         return None
 
-    def check_debug_flags(self) -> Optional[TamperEvent]:
+    def check_debug_flags(self) -> TamperEvent | None:
         """Check Python sys.flags for debug mode indicators."""
         if sys.flags.debug:
             return TamperEvent(
@@ -127,7 +130,7 @@ class AntiTamperingLayer:
             )
         return None
 
-    def check_timing_anomaly(self) -> Optional[TamperEvent]:
+    def check_timing_anomaly(self) -> TamperEvent | None:
         """Detect timing anomalies that suggest debugging.
 
         Measures execution time of a known-duration operation.
@@ -156,7 +159,7 @@ class AntiTamperingLayer:
             )
         return None
 
-    def check_code_integrity(self, file_path: str) -> Optional[TamperEvent]:
+    def check_code_integrity(self, file_path: str) -> TamperEvent | None:
         """Verify the integrity of a source file by comparing its hash.
 
         Compares current SHA-256 hash against a previously stored baseline.
@@ -188,12 +191,12 @@ class AntiTamperingLayer:
             )
         return None
 
-    def run_all_checks(self) -> List[TamperEvent]:
+    def run_all_checks(self) -> list[TamperEvent]:
         """Run all tampering detection checks.
 
         Returns a list of detected events (empty if clean).
         """
-        events: List[TamperEvent] = []
+        events: list[TamperEvent] = []
 
         # Check ptrace
         evt = self.check_ptrace()
@@ -286,11 +289,11 @@ class AntiTamperingLayer:
             with open(file_path, "rb") as f:
                 for chunk in iter(lambda: f.read(8192), b""):
                     h.update(chunk)
-        except (OSError, IOError):
+        except OSError:
             return ""
         return h.hexdigest()
 
-    def _get_critical_files(self) -> List[str]:
+    def _get_critical_files(self) -> list[str]:
         """Get list of critical source files to monitor for integrity."""
         base = os.environ.get("ZENIC_ROOT", "")
         if not base:
@@ -314,7 +317,7 @@ class AntiTamperingLayer:
         ]
         return [f for f in critical if os.path.exists(f)]
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current anti-tampering status."""
         return {
             "monitoring_active": self._running,
@@ -330,7 +333,7 @@ class AntiTamperingLayer:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_anti_tampering: Optional[AntiTamperingLayer] = None
+_anti_tampering: AntiTamperingLayer | None = None
 _lock = threading.Lock()
 
 

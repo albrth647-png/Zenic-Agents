@@ -10,9 +10,8 @@ import logging
 import re
 import sqlite3
 import threading
-from typing import List, Tuple
 
-from .types import BusMessage, _DB_CACHE_SIZE, _DB_MMAP_SIZE, _FLUSH_BATCH_SIZE
+from .types import _DB_CACHE_SIZE, _DB_MMAP_SIZE, _FLUSH_BATCH_SIZE, BusMessage
 
 # SQL Injection protection: validate identifiers before interpolation
 _SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
@@ -76,9 +75,9 @@ class PersistenceLayer:
         self._write_lock = threading.Lock()  # guards pending queues
         self._db_lock = threading.Lock()  # guards SQLite connection
         # Pending batches
-        self._pending_messages: List[BusMessage] = []
-        self._pending_state: List[Tuple[str, str, str, str, float, float]] = []
-        self._pending_ring: List[Tuple[int, bytes, str, float]] = []
+        self._pending_messages: list[BusMessage] = []
+        self._pending_state: list[tuple[str, str, str, str, float, float]] = []
+        self._pending_ring: list[tuple[int, bytes, str, float]] = []
         self._conn = self._open()
         self._init_schema()
 
@@ -111,12 +110,12 @@ class PersistenceLayer:
         with self._write_lock:
             self._pending_messages.append(msg)
 
-    def enqueue_state(self, entry: Tuple[str, str, str, str, float, float]) -> None:
+    def enqueue_state(self, entry: tuple[str, str, str, str, float, float]) -> None:
         """Stage a state entry for batched write."""
         with self._write_lock:
             self._pending_state.append(entry)
 
-    def enqueue_ring(self, entry: Tuple[int, bytes, str, float]) -> None:
+    def enqueue_ring(self, entry: tuple[int, bytes, str, float]) -> None:
         """Stage a ring-buffer slot for batched write."""
         with self._write_lock:
             self._pending_ring.append(entry)
@@ -215,7 +214,7 @@ class PersistenceLayer:
                 assert table in _SAFE_TABLES, f"Invalid table name: {table}"
                 try:
                     cursor = self._conn.execute(
-                        f'DELETE FROM "{table}" WHERE tenant_id=?', (tenant_id,)
+                        f'DELETE FROM "{table}" WHERE tenant_id=?', (tenant_id,)  # noqa: S608
                     )
                     total += cursor.rowcount
                 except Exception:

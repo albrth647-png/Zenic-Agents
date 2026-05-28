@@ -1,10 +1,11 @@
 """DeterministicPipeline — Tasks 5-7."""
 
-import re
 import logging
-from typing import Any, Dict, List, Optional
+import re
+from typing import Any
+
 from ..types import DeterministicResult
-from ._types import PATTERN_LIBRARY, VIOLATION_CATALOG, PATTERN_HEURISTICS
+from ._types import PATTERN_HEURISTICS, PATTERN_LIBRARY, VIOLATION_CATALOG
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class DeterministicTasks5To7Mixin:
 
     def generate_pattern(self, pattern_desc: str,
                          language: str = "python",
-                         context: Optional[Dict[str, Any]] = None) -> DeterministicResult:
+                         context: dict[str, Any] | None = None) -> DeterministicResult:
         """
         Genera un snippet de código desde la librería de templates.
 
@@ -73,7 +74,7 @@ class DeterministicTasks5To7Mixin:
     # ================================================================
 
     def explain_violation(self, code: str,
-                          violations: List[str]) -> DeterministicResult:
+                          violations: list[str]) -> DeterministicResult:
         """
         Explica violaciones usando el catálogo de mensajes.
 

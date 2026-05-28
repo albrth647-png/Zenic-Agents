@@ -5,12 +5,12 @@ autopilot.planner._templates — Plan template definitions and matching.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-_PLAN_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
+_PLAN_TEMPLATES: dict[str, list[dict[str, Any]]] = {
     "reduce_overdue_invoices": [
         {"name": "monitor_overdue", "description": "Monitor overdue invoice rate from billing system", "action_type": "database", "action_config": {"operation": "query", "query": "SELECT COUNT(*) FILTER (WHERE due_date < NOW()) * 100.0 / COUNT(*) FROM invoices"}, "depends_on": [], "estimated_impact": 0.2, "risk_level": "low"},
         {"name": "notify_clients", "description": "Send payment reminders to clients with overdue invoices", "action_type": "email", "action_config": {"template": "payment_reminder", "recipients": "overdue_clients"}, "depends_on": ["monitor_overdue"], "estimated_impact": 0.4, "risk_level": "low"},
@@ -37,7 +37,7 @@ _PLAN_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     ],
 }
 
-_GENERIC_PLAN_TEMPLATE: List[Dict[str, Any]] = [
+_GENERIC_PLAN_TEMPLATE: list[dict[str, Any]] = [
     {"name": "monitor_metric", "description": "Monitor the objective metric from data source", "action_type": "database", "action_config": {"operation": "query"}, "depends_on": [], "estimated_impact": 0.2, "risk_level": "low"},
     {"name": "notify_on_threshold", "description": "Send notification when metric crosses threshold", "action_type": "notification", "action_config": {"channel": "manager_alert", "template": "threshold_alert"}, "depends_on": ["monitor_metric"], "estimated_impact": 0.3, "risk_level": "low"},
     {"name": "create_task", "description": "Create a corrective task based on metric analysis", "action_type": "database", "action_config": {"operation": "insert"}, "depends_on": ["notify_on_threshold"], "estimated_impact": 0.3, "risk_level": "medium"},
@@ -45,22 +45,22 @@ _GENERIC_PLAN_TEMPLATE: List[Dict[str, Any]] = [
 ]
 
 
-def match_template(objective: Any) -> List[Dict[str, Any]]:
+def match_template(objective: Any) -> list[dict[str, Any]]:
     """Match an objective to the best plan template."""
     name_lower = getattr(objective, "name", "").lower()
     desc_lower = getattr(objective, "description", "").lower()
     tags = getattr(objective, "tags", [])
     tags_lower = [t.lower() for t in tags]
-    search_terms = [name_lower, desc_lower] + tags_lower
+    search_terms = [name_lower, desc_lower, *tags_lower]
 
-    keyword_map: Dict[str, str] = {
+    keyword_map: dict[str, str] = {
         "reduce_overdue_invoices": ["overdue", "invoice", "factura", "moroso", "vencida"],
         "reduce_no_shows": ["no_show", "no show", "ausencia", "cita", "appointment"],
         "reduce_stockouts": ["stockout", "stock", "inventario", "inventory", "agotado"],
         "increase_revenue": ["revenue", "ingreso", "sales", "venta", "revenue"],
     }
 
-    best_match: Optional[str] = None
+    best_match: str | None = None
     best_score = 0
 
     for template_key, keywords in keyword_map.items():

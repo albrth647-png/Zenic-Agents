@@ -7,9 +7,10 @@ from __future__ import annotations
 import logging
 import re
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from src.core.executors.diff_preview._types import DiffEntry
+if TYPE_CHECKING:
+    from src.core.executors.diff_preview._types import DiffEntry
 
 logger = logging.getLogger(__name__)
 

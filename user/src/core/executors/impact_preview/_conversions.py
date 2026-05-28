@@ -7,16 +7,16 @@ unrecognized action types.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from ..safety_gate import ActionCategory
 from ._types import (
-    ImpactRiskLevel,
+    DBImpactPreview,
+    EmailImpactPreview,
+    FileImpactPreview,
     ImpactField,
     ImpactPreview,
-    DBImpactPreview,
-    FileImpactPreview,
-    EmailImpactPreview,
+    ImpactRiskLevel,
 )
 
 
@@ -54,7 +54,7 @@ def file_preview_to_impact(
     file_preview: FileImpactPreview,
 ) -> ImpactPreview:
     """Convert a FileImpactPreview to a generic ImpactPreview."""
-    resources: List[str] = []
+    resources: list[str] = []
     if file_preview.source:
         resources.append(file_preview.source)
     if file_preview.destination and file_preview.destination != file_preview.source:
@@ -111,13 +111,13 @@ def email_preview_to_impact(
 
 def generic_preview(
     action_type: str,
-    config: Dict[str, Any],
-    context: Dict[str, Any],
+    config: dict[str, Any],
+    context: dict[str, Any],
     category: ActionCategory,
 ) -> ImpactPreview:
     """Generate a generic preview for action types without specialized handlers."""
     # Determine risk from category
-    risk_map: Dict[ActionCategory, tuple] = {
+    risk_map: dict[ActionCategory, tuple] = {
         ActionCategory.SAFE: (ImpactRiskLevel.NONE, 0.0),
         ActionCategory.MODERATE: (ImpactRiskLevel.LOW, 0.2),
         ActionCategory.DESTRUCTIVE: (ImpactRiskLevel.HIGH, 0.8),
@@ -127,14 +127,14 @@ def generic_preview(
     risk_level, risk_score = risk_map.get(category, (ImpactRiskLevel.MEDIUM, 0.5))
 
     # Build affected resources from config keys
-    affected: List[str] = []
+    affected: list[str] = []
     for key in ("url", "endpoint", "webhook_url", "channel", "target"):
         val = config.get(key)
         if val:
             affected.append(str(val))
 
     # Build fields from config
-    fields: List[ImpactField] = []
+    fields: list[ImpactField] = []
     for key, value in config.items():
         if isinstance(value, (str, int, float, bool)):
             fields.append(ImpactField(

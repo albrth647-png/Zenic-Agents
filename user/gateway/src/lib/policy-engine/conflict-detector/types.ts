@@ -14,10 +14,25 @@
 import { db } from "@/lib/db";
 import { computeContentHash } from "../yaml-loader";
 import type {
+  ConflictResolution,
+  ConflictReport,
+  PolicyConflict,
+  ConflictStatementRef,
+  PolicyStatement,
+  PolicyCondition,
+} from "../types";
+import {
+  ConflictType,
+  ConflictSeverity,
+  ConflictResolutionStrategy,
+  PolicyEffectV2,
+} from "../types";
 
-  type ConflictResolution,
-  type ConflictReport,
-} from "./types";
+// Re-exported type aliases for naming consistency
+// (the types module exports ConflictType/ConflictSeverity as both values and types)
+type ConflictTypeType = ConflictType;
+type ConflictSeverityType = ConflictSeverity;
+type ConflictResolutionStrategyType = ConflictResolutionStrategy;
 
 // ─── Pattern Matching (shared with evaluator) ─────────────────────────
 

@@ -310,7 +310,7 @@ impl LicenseInfo {
 // ═══════════════════════════════════════════════════════════════
 
 /// Current time as seconds since the Unix epoch.
-pub(crate) fn current_unix_timestamp() -> i64 {
+pub fn current_unix_timestamp() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

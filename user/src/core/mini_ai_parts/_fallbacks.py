@@ -12,10 +12,10 @@ existentes, pero la filosofía ha cambiado:
   AHORA: Determinístico siempre → nunca se usa el LLM
 """
 
-import re
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
+import re
+from typing import Any
 
 from ._imports import IntentResult
 
@@ -88,7 +88,7 @@ class FallbackMethodsMixin:
 
         return best_goal
 
-    def _fallback_extract(self, text: str) -> Dict[str, Any]:
+    def _fallback_extract(self, text: str) -> dict[str, Any]:
         """Deterministic regex-based entity extraction."""
         # File extraction
         file_match = re.search(r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))', text)
@@ -149,7 +149,7 @@ class FallbackMethodsMixin:
 
         return lang_patterns.get("default", patterns["python"]["default"])
 
-    def _match_operation(self, text: str) -> Optional[str]:
+    def _match_operation(self, text: str) -> str | None:
         """Try to find a valid operation in a text response."""
         text_upper = text.upper()
         for op in self.VALID_OPERATIONS:
@@ -157,7 +157,7 @@ class FallbackMethodsMixin:
                 return op
         return None
 
-    def _match_goal(self, text: str) -> Optional[str]:
+    def _match_goal(self, text: str) -> str | None:
         """Try to find a valid goal in a text response."""
         if not text:
             return None

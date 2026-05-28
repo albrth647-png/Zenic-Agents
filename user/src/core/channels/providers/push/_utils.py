@@ -22,7 +22,7 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request
+    import urllib.request  # noqa: F401
 
     _HAS_URLLIB = True
 except ImportError:
@@ -61,7 +61,7 @@ _VAPID_JWT_EXPIRY = 43200  # 12 hours
 
 # FCM HTTP v1 API
 _FCM_BASE_URL = "https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
-_FCM_TOKEN_URL = "https://oauth2.googleapis.com/token"
+_FCM_TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 — URL, not a password
 _FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 
 # Push notification size limits

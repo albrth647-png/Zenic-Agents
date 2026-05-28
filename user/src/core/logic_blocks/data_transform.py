@@ -178,7 +178,7 @@ class DataTransformBlock(LogicBlock):
                 result = DataTransformBlock._safe_eval_arithmetic(expr, item, _re)
                 if result is not None:
                     return result
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # Pattern 4: Function call — "len(field)", "str(field)", etc.
@@ -215,7 +215,7 @@ class DataTransformBlock(LogicBlock):
                             args.append(arg)
                 try:
                     return safe_funcs[func_name](*args)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
         # Pattern 5: Conditional — "field if condition else default"

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from ..._types import (
     ChannelMessage,
@@ -63,7 +63,7 @@ class _SendMixin:
         config = self._message_to_config(message)
 
         # Execute via EmailExecutor
-        context: Dict[str, Any] = {"channel": "email"}
+        context: dict[str, Any] = {"channel": "email"}
         result = await executor.execute(config, context)
 
         # Map ActionResult → ChannelResponse
@@ -140,7 +140,7 @@ class _SendMixin:
         html_body = build_confirmation_html(request)
         text_body = build_confirmation_text(request)
 
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             "mode": self._mode,
             "to": recipients,
             "subject": f"Confirmation Required: {request.title}",
@@ -154,7 +154,7 @@ class _SendMixin:
             config["user"] = self._smtp_user
             config["password"] = self._smtp_password
 
-        context: Dict[str, Any] = {
+        context: dict[str, Any] = {
             "channel": "email",
             "confirmation": True,
             "action_id": request.action_id,

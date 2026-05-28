@@ -391,12 +391,12 @@ class DatabaseMixin:
         # row limit uses ? parameterization
         # FASE 1.1: Use pool's write() for read + delete (auto-commit)
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
-            count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[
+            count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[  # noqa: S608
                 0
             ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             if count > max_entries:
                 conn.execute(
-                    f'DELETE FROM "{table_name}" WHERE id IN (SELECT id FROM "{table_name}" ORDER BY importance ASC, created_at ASC LIMIT ?)',
+                    f'DELETE FROM "{table_name}" WHERE id IN (SELECT id FROM "{table_name}" ORDER BY importance ASC, created_at ASC LIMIT ?)',  # noqa: S608
                     (count - max_entries + 10,),
                 )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             # write() auto-commits on exit

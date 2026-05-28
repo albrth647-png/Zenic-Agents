@@ -12,8 +12,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .context_builder import ContextBuilder
 from .conversation import ConversationManager
@@ -32,16 +31,20 @@ from .routing.intent_engine import IntentEngine
 from .routing.router import Pipeline
 from .session_manager import SessionManager
 from .tools import ToolManager
-from .types.base import Result
 from .types.intent import AssistantIntent, IntentCategory
 from .types.memory import MemoryCategory
-from .types.personality import PersonalityProfile
 from .types.response import (
     AssistantResponse,
     StreamingChunk,
 )
-from .types.session import Session
-from .zenic_bridge import ZenicBridge
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from .types.base import Result
+    from .types.personality import PersonalityProfile
+    from .types.session import Session
+    from .zenic_bridge import ZenicBridge
 
 logger = logging.getLogger("zenic_agents.conversational.conversation")
 

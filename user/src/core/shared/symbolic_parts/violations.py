@@ -68,21 +68,20 @@ class ViolationCheckerMixin:
     def _check_none_dereference(self, path, func_name, violations):
         """Check for potential None dereference on a path."""
         for var_name, sym_val in path.variables.items():
-            if isinstance(sym_val, SymbolicValue):
-                if sym_val.var_type == "None":
-                    # Variable may be None - check if path condition excludes it
-                    for cond in path.condition:
-                        cond_str = str(cond)
-                        if (
-                            f"SYM({var_name})!=" in cond_str
-                            or f"SYM({var_name}) is_not None" in cond_str
-                            or f"SYM({var_name}) is_not None" in cond_str
-                        ):
-                            break
-                    else:
-                        violations.append(
-                            f"Potential None dereference: '{var_name}' may be None " f"in function '{func_name}'"
-                        )
+            if isinstance(sym_val, SymbolicValue) and sym_val.var_type == "None":
+                # Variable may be None - check if path condition excludes it
+                for cond in path.condition:
+                    cond_str = str(cond)
+                    if (
+                        f"SYM({var_name})!=" in cond_str
+                        or f"SYM({var_name}) is_not None" in cond_str
+                        or f"SYM({var_name}) is_not None" in cond_str
+                    ):
+                        break
+                else:
+                    violations.append(
+                        f"Potential None dereference: '{var_name}' may be None " f"in function '{func_name}'"
+                    )
 
     def _check_division_by_zero(self, path, func_name, violations):
         """Check for potential division by zero on a path."""

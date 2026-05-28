@@ -88,13 +88,13 @@ impl BlueprintConfig {
 
 #[pymethods]
 impl BlueprintConfig {
-    #[getter]
-    fn niche_id(&self) -> &str {
+    #[getter(niche_id)]
+    fn py_get_niche_id(&self) -> &str {
         &self.niche_id
     }
 
-    #[getter]
-    fn business_name(&self) -> &str {
+    #[getter(business_name)]
+    fn py_get_business_name(&self) -> &str {
         &self.business_name
     }
 

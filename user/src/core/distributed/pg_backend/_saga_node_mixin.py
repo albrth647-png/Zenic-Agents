@@ -7,7 +7,7 @@ Circuit breaker, saga state, and node topology methods for PgBackend.
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 
@@ -25,7 +25,7 @@ class PgCircuitMixin:
     - update_circuit_state()
     """
 
-    async def get_circuit_state(self, circuit_name: str) -> Optional[Dict[str, Any]]:
+    async def get_circuit_state(self, circuit_name: str) -> dict[str, Any] | None:
         try:
             rows = self._execute_query(
                 """
@@ -51,8 +51,8 @@ class PgCircuitMixin:
     async def update_circuit_state(
         self,
         circuit_name: str,
-        state: Dict[str, Any],
-        expected_version: Optional[int] = None,
+        state: dict[str, Any],
+        expected_version: int | None = None,
     ) -> bool:
         now = time.time()
         state_json = json.dumps({k: v for k, v in state.items() if k not in ("version", "updated_at")})
@@ -108,8 +108,8 @@ class PgSagaMixin:
         self,
         saga_id: str,
         name: str,
-        steps: List[Dict[str, Any]],
-        initial_context: Dict[str, Any],
+        steps: list[dict[str, Any]],
+        initial_context: dict[str, Any],
     ) -> bool:
         now = time.time()
         try:
@@ -160,7 +160,7 @@ class PgSagaMixin:
             logger.error("PgBackend create_saga error: %s", exc)
             return False
 
-    async def get_saga(self, saga_id: str) -> Optional[Dict[str, Any]]:
+    async def get_saga(self, saga_id: str) -> dict[str, Any] | None:
         try:
             rows = self._execute_query(
                 """
@@ -204,8 +204,8 @@ class PgSagaMixin:
         saga_id: str,
         step_name: str,
         status: str,
-        result: Optional[Dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> bool:
         now = time.time()
         try:
@@ -234,7 +234,7 @@ class PgSagaMixin:
         self,
         saga_id: str,
         status: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> bool:
         now = time.time()
         try:
@@ -267,7 +267,7 @@ class PgNodeMixin:
     - list_nodes()
     """
 
-    async def register_node(self, node_info: Dict[str, Any]) -> bool:
+    async def register_node(self, node_info: dict[str, Any]) -> bool:
         now = time.time()
         node_id = node_info.get("node_id", "")
         try:
@@ -298,7 +298,7 @@ class PgNodeMixin:
             logger.error("PgBackend register_node error: %s", exc)
             return False
 
-    async def heartbeat(self, node_id: str, status: Optional[Dict[str, Any]] = None) -> bool:
+    async def heartbeat(self, node_id: str, status: dict[str, Any] | None = None) -> bool:
         now = time.time()
         try:
             if status:
@@ -331,7 +331,7 @@ class PgNodeMixin:
             logger.error("PgBackend deregister_node error: %s", exc)
             return False
 
-    async def list_nodes(self, active_only: bool = True) -> List[Dict[str, Any]]:
+    async def list_nodes(self, active_only: bool = True) -> list[dict[str, Any]]:
         now = time.time()
         hb_cutoff = now - (self._config.heartbeat_interval * 3)
         try:

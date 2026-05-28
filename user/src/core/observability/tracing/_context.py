@@ -35,7 +35,7 @@ def get_current_trace_id() -> str:
             ctx = span.get_span_context()
             if ctx and ctx.trace_id != 0:
                 return format(ctx.trace_id, "032x")
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     trace_id = getattr(_trace_context, "trace_id", None)
@@ -60,7 +60,7 @@ def get_current_span_id() -> str:
             ctx = span.get_span_context()
             if ctx and ctx.span_id != 0:
                 return format(ctx.span_id, "016x")
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     span_id = getattr(_trace_context, "span_id", None)
@@ -112,7 +112,7 @@ def trace_span(
                 for k, v in attrs.items():
                     try:
                         span.set_attribute(k, v)
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
                 ctx = span.get_span_context()
                 _trace_context.trace_id = format(ctx.trace_id, "032x")
@@ -152,7 +152,7 @@ def inject_trace_context(carrier: dict[str, str]) -> dict[str, str]:
 
             propagate.inject(carrier)
             return carrier
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     carrier["x-trace-id"] = get_current_trace_id()
@@ -167,7 +167,7 @@ def extract_trace_context(carrier: dict[str, str]) -> Any | None:
             from opentelemetry import propagate
 
             return propagate.extract(carrier)
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     trace_id = carrier.get("x-trace-id")

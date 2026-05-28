@@ -8,8 +8,10 @@ KnowledgeBase durante la inicializacion.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from .knowledge import KnowledgeBase
+if TYPE_CHECKING:
+    from .knowledge import KnowledgeBase
 
 logger = logging.getLogger("zenic_agents.conversational.engine_knowledge")
 

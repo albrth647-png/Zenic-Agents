@@ -6,6 +6,7 @@ Constants, rate limit tracking, and optional dependency checks.
 
 from __future__ import annotations
 
+import contextlib
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -58,20 +59,14 @@ class _RateLimitState:
         reset = headers.get("RateLimit-Reset", headers.get("x-rate-reset", ""))
 
         if remaining:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 self.remaining = int(remaining)
-            except (ValueError, TypeError):
-                pass
         if limit:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 self.limit = int(limit)
-            except (ValueError, TypeError):
-                pass
         if reset:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 self.reset_at = time.time() + float(reset)
-            except (ValueError, TypeError):
-                pass
 
         self.last_updated = time.time()
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 
 class DegradationLevel(int, Enum):
@@ -52,8 +52,8 @@ class DegradationState:
     reason: DegradationReason = DegradationReason.NONE
     message: str = ""
     entered_at: float = 0.0
-    restricted_features: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    restricted_features: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_normal(self) -> bool:
@@ -63,7 +63,7 @@ class DegradationState:
     def is_paralysis(self) -> bool:
         return self.level.value >= DegradationLevel.PARALYSIS_1.value
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "level": self.level.value,
             "level_name": self.level.name,

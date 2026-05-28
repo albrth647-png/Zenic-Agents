@@ -146,14 +146,13 @@ class SafetyGate:
 
         # Verificar contexto
         step = context.get("step")
-        if step and hasattr(step, "action_type"):
-            if step.action_type == "delete":
-                return SafetyResult(
-                    approved=False,
-                    verdict=SafetyVerdict.DENY,
-                    reason="Acción DELETE bloqueada por regla determinística",
-                    rule_id="deny_delete",
-                )
+        if step and hasattr(step, "action_type") and step.action_type == "delete":
+            return SafetyResult(
+                approved=False,
+                verdict=SafetyVerdict.DENY,
+                reason="Acción DELETE bloqueada por regla determinística",
+                rule_id="deny_delete",
+            )
 
         return None
 

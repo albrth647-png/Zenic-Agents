@@ -26,9 +26,8 @@ import logging
 import os
 import sqlite3
 import threading
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ __all__ = [
 ]
 
 # Environment variable for enabling SQLCipher encryption on all connections
-_ZENIC_DB_PASSPHRASE_ENV = "ZENIC_DB_PASSPHRASE"
+_ZENIC_DB_PASSPHRASE_ENV = "ZENIC_DB_PASSPHRASE"  # noqa: S105
 
 # Track whether the old pool is still needed (for backward compat during migration)
 _legacy_connections: dict[str, sqlite3.Connection] = {}

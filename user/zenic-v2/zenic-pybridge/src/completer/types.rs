@@ -166,13 +166,13 @@ impl CompletionSession {
 
 #[pymethods]
 impl CompletionSession {
-    #[getter]
-    fn session_id(&self) -> &str {
+    #[getter(session_id)]
+    fn py_get_session_id(&self) -> &str {
         &self.session_id
     }
 
-    #[getter]
-    fn niche_id(&self) -> &str {
+    #[getter(niche_id)]
+    fn py_get_niche_id(&self) -> &str {
         &self.niche_id
     }
 
@@ -196,8 +196,8 @@ impl CompletionSession {
         self.round_count
     }
 
-    #[getter]
-    fn documents_ingested(&self) -> usize {
+    #[getter(documents_ingested)]
+    fn py_get_documents_ingested(&self) -> usize {
         self.documents_ingested
     }
 
@@ -338,8 +338,8 @@ impl CompletionQuestion {
 
 #[pymethods]
 impl CompletionQuestion {
-    #[getter]
-    fn field_name(&self) -> &str {
+    #[getter(field_name)]
+    fn py_get_q_field_name(&self) -> &str {
         &self.field_name
     }
 
@@ -353,8 +353,8 @@ impl CompletionQuestion {
         &self.field_type
     }
 
-    #[getter]
-    fn section_id(&self) -> &str {
+    #[getter(section_id)]
+    fn py_get_q_section_id(&self) -> &str {
         &self.section_id
     }
 

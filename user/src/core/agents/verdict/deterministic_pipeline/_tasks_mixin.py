@@ -15,12 +15,17 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ._constants import (
-    EXT_LANG_MAP, OP_KEYWORDS, GOAL_KEYWORDS,
-    PATTERN_HEURISTICS, PATTERN_LIBRARY,
-    VIOLATION_CATALOG, GAP_DEFAULTS,
+    EXT_LANG_MAP,
+    GAP_DEFAULTS,
+    GOAL_KEYWORDS,
+    OP_KEYWORDS,
+    PATTERN_HEURISTICS,
+    PATTERN_LIBRARY,
+    VIOLATION_CATALOG,
 )
 
 
@@ -144,7 +149,7 @@ class DeterministicTasksMixin:
     # ──────────────────────────────────────────────────────────
 
     def _fill_template_gaps(
-        self, template: str, context: Any
+        self, template: str, context: dict[str, str] | None = None
     ) -> dict[str, Any]:
         """Fill template gaps with context and defaults."""
         if not template:
@@ -186,7 +191,7 @@ class DeterministicTasksMixin:
 
     def _generate_pattern(
         self, pattern_desc: str, language: str = "python",
-        context: Any = None,
+        context: dict[str, str | int | list | dict] | None = None,
     ) -> dict[str, Any]:
         """Generate code snippet from template library."""
         ctx = context if isinstance(context, dict) else {}
@@ -296,16 +301,16 @@ class DeterministicTasksMixin:
         """Public API: Task 3 — suggest pattern."""
         return self._suggest_pattern(target, description)
 
-    def fill_template_gaps(self, template: str, context: Any = None) -> dict[str, Any]:
+    def fill_template_gaps(self, template: str, context: dict[str, str] | None = None) -> dict[str, Any]:
         """Public API: Task 4 — fill template gaps."""
         return self._fill_template_gaps(template, context or {})
 
     def generate_pattern(self, pattern_desc: str, language: str = "python",
-                         context: Any = None) -> dict[str, Any]:
+                         context: dict[str, str | int | list | dict] | None = None) -> dict[str, Any]:
         """Public API: Task 5 — generate pattern."""
         return self._generate_pattern(pattern_desc, language, context)
 
-    def explain_violation(self, code: str, violations: list[str] = None) -> dict[str, Any]:
+    def explain_violation(self, code: str, violations: list[str] | None = None) -> dict[str, Any]:
         """Public API: Task 6 — explain violation."""
         return self._explain_violation(code, violations or [])
 

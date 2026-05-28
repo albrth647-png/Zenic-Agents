@@ -13,7 +13,7 @@ import unicodedata
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import AutoDescription, TriggerSpec, ActionSpec, NameResult
+from ..schemas import ActionSpec, AutoDescription, NameResult, TriggerSpec
 
 # ──────────────────────────────────────────────────────────────
 # STOP WORDS — EN + ES (removed from name generation)
@@ -25,7 +25,7 @@ STOP_WORDS = {
     "en", "por", "para", "con", "que", "se", "su", "al",
     "lo", "le", "les", "y", "o", "es", "son", "fue", "ser",
     # English
-    "the", "a", "an", "is", "are", "was", "were", "be",
+    "the", "an", "is", "are", "was", "were", "be",
     "create", "make", "generate", "build", "automate", "set",
     "get", "put", "do", "run", "go", "has", "have", "had",
     "this", "that", "these", "those", "it", "its",

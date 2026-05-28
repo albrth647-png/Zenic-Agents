@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..base import ActionResult
 
@@ -19,8 +19,8 @@ class _TransitionsMixin:
 
     async def _transition_issue(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Transition an issue to a new status.
@@ -73,7 +73,7 @@ class _TransitionsMixin:
                 )
             transition_id = found_id
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "transition": {"id": transition_id},
         }
 
@@ -123,8 +123,8 @@ class _TransitionsMixin:
 
     async def _get_transitions(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Get available transitions for an issue.
@@ -187,9 +187,9 @@ class _TransitionsMixin:
     @staticmethod
 
     def _find_transition_by_name(
-        transitions: List[Dict[str, Any]],
+        transitions: list[dict[str, Any]],
         name: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Find a transition ID by its name (case-insensitive).
 
         Args:

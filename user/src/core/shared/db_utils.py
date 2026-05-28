@@ -56,7 +56,7 @@ def purge_tenant_rows(conn, table: str, tenant_id: str) -> int:
         # SECURITY: table name validated by _SAFE_TABLE_RE regex above;
         # tenant_id uses ? parameterization to prevent injection
         cursor = conn.execute(
-            f"DELETE FROM {table} WHERE tenant_id=?", (tenant_id,)
+            f"DELETE FROM {table} WHERE tenant_id=?", (tenant_id,)  # noqa: S608
         )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
         conn.commit()
         count = cursor.rowcount

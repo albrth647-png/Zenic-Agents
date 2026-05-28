@@ -98,7 +98,7 @@ pub fn completer_submit_answer(
         template_dict,
         section_id_trimmed,
         field_name_trimmed,
-        value_sanitized.as_str().into(),
+        pyo3::types::PyString::new_bound(py, value_sanitized.as_str()).into_any(),
     )?;
 
     result_dict.set_item("applied", applied)?;
@@ -154,7 +154,7 @@ pub fn completer_submit_answers(
 
     for item in answers.iter() {
         let field_name: String = match item.get_item("field_name") {
-            Ok(Some(v)) => match v.extract() {
+            Ok(v) => match v.extract() {
                 Ok(s) => s,
                 Err(_) => {
                     rejected_count += 1;
@@ -163,12 +163,12 @@ pub fn completer_submit_answers(
             },
             _ => {
                 rejected_count += 1;
-                continue;
+                    continue;
             }
         };
 
         let section_id: String = match item.get_item("section_id") {
-            Ok(Some(v)) => match v.extract() {
+            Ok(v) => match v.extract() {
                 Ok(s) => s,
                 Err(_) => {
                     rejected_count += 1;
@@ -177,12 +177,12 @@ pub fn completer_submit_answers(
             },
             _ => {
                 rejected_count += 1;
-                continue;
+                    continue;
             }
         };
 
         let value: String = match item.get_item("value") {
-            Ok(Some(v)) => match v.extract() {
+            Ok(v) => match v.extract() {
                 Ok(s) => s,
                 Err(_) => {
                     rejected_count += 1;
@@ -191,7 +191,7 @@ pub fn completer_submit_answers(
             },
             _ => {
                 rejected_count += 1;
-                continue;
+                    continue;
             }
         };
 

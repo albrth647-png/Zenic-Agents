@@ -12,8 +12,10 @@ Design invariants:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # ────────────────────────────── A53: Text Channel ──────────────────────────────
 
@@ -36,7 +38,7 @@ class TextChannelInput:
     priority: str = "normal"                    # Priority: low|normal|high|urgent|emergency
     reply_to: str = ""                          # Message ID to reply to (if supported)
     thread_id: str = ""                         # Thread/conversation ID (if supported)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     max_chunks: int = 10                        # Safety limit: max message splits allowed
     fallback_channels: Sequence[str] = ()       # Override default fallback chain
 
@@ -55,7 +57,7 @@ class TextChannelResult:
     channel_used: str = ""                      # Actual channel that delivered the last chunk
     original_channel: str = ""                  # Originally requested channel
     messages_sent: int = 0                      # Number of chunks successfully sent
-    message_ids: List[str] = field(default_factory=list)  # Platform message IDs
+    message_ids: list[str] = field(default_factory=list)  # Platform message IDs
     status: str = "pending"                     # pending|sent|delivered|failed|fallback|dry_run
     truncated: bool = False                     # Was any chunk truncated?
     split_count: int = 0                        # Total number of chunks (1 = no split)
@@ -87,7 +89,7 @@ class VoiceChannelInput:
     channel: str = ""                           # Source channel name
     sender: str = ""                            # Sender identifier
     duration_seconds: float = 0.0               # Audio duration (if known)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

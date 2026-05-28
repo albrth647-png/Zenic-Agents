@@ -16,14 +16,16 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..types.base import Ok, Result
 from ..types.intent import ConversationMode, IntentCategory
-from ..types.session import Session
 from .state import ConversationPhase, ConversationState, ConversationTopic
 from .summarizer import ContextSummarizer, SummarizerConfig
 from .turn_tracker import TurnTracker
+
+if TYPE_CHECKING:
+    from ..types.session import Session
 
 logger = logging.getLogger("zenic_agents.conversational.conversation.manager")
 

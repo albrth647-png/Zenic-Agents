@@ -5,14 +5,14 @@ DomainSafetyGate — Core class and global instance.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._helpers import (
-    ComplianceResult,
-    DomainSafetyCheckResult,
     _COMPILED_DOMAIN_RULES,
     _COMPLIANCE_CHECKERS,
     _PYTHON_DOMAIN_RULES,
+    ComplianceResult,
+    DomainSafetyCheckResult,
     _escalate_verdict,
     _sensitivity_escalate,
 )
@@ -32,7 +32,7 @@ class DomainSafetyGate:
     """
 
     # Compliance standards per niche category
-    CATEGORY_COMPLIANCE: Dict[str, List[str]] = {
+    CATEGORY_COMPLIANCE: dict[str, list[str]] = {
         "ai_data": ["gdpr", "iso_27001", "soc2"],
         "fintech": ["pci_dss", "aml_kyc", "sox", "gdpr"],
         "healthtech": ["hipaa", "gdpr", "soc2"],
@@ -66,7 +66,7 @@ class DomainSafetyGate:
     def check(
         self,
         action_type: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         niche_category: str,
         data_sensitivity: str = "low",
     ) -> DomainSafetyCheckResult:
@@ -109,7 +109,7 @@ class DomainSafetyGate:
         self,
         native: Any,
         action_type: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         niche_category: str,
         data_sensitivity: str,
     ) -> DomainSafetyCheckResult:
@@ -144,7 +144,7 @@ class DomainSafetyGate:
     def _python_check(
         self,
         action_type: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         niche_category: str,
         data_sensitivity: str,
     ) -> DomainSafetyCheckResult:
@@ -174,7 +174,7 @@ class DomainSafetyGate:
 
         # ── Layer 2: Domain-specific rules ──────────────────────
         searchable = self._to_searchable(action_type, config)
-        domain_rules_matched: List[str] = []
+        domain_rules_matched: list[str] = []
         domain_verdict = current_verdict
 
         for rule in _COMPILED_DOMAIN_RULES:
@@ -190,7 +190,7 @@ class DomainSafetyGate:
         # ── Layer 3: Compliance validation ──────────────────────
         config_str = searchable.lower()
         standards = self.CATEGORY_COMPLIANCE.get(niche_category, [])
-        compliance_results: List[ComplianceResult] = []
+        compliance_results: list[ComplianceResult] = []
 
         for std in standards:
             checker = _COMPLIANCE_CHECKERS.get(std)
@@ -230,10 +230,10 @@ class DomainSafetyGate:
             can_proceed=can_proceed,
         )
 
-    def _to_searchable(self, action_type: str, config: Dict[str, Any]) -> str:
+    def _to_searchable(self, action_type: str, config: dict[str, Any]) -> str:
         """Convert action_type + config to a searchable string."""
         parts = [action_type]
-        for key, value in config.items():
+        for _key, value in config.items():
             if isinstance(value, str):
                 parts.append(value)
             elif isinstance(value, (list, tuple)):
@@ -242,7 +242,7 @@ class DomainSafetyGate:
                 parts.append(str(value))
         return " ".join(parts)
 
-    def get_domain_rules(self, niche_category: str) -> List[Dict[str, Any]]:
+    def get_domain_rules(self, niche_category: str) -> list[dict[str, Any]]:
         """Get all domain safety rules for a niche category."""
         native = self._get_native()
         if native is not None:
@@ -258,7 +258,7 @@ class DomainSafetyGate:
                     }
                     for r in rules
                 ]
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         # Python fallback
         return [
@@ -272,20 +272,20 @@ class DomainSafetyGate:
             if r["category"] == niche_category
         ]
 
-    def get_compliance_for_category(self, niche_category: str) -> List[str]:
+    def get_compliance_for_category(self, niche_category: str) -> list[str]:
         """Get compliance standards required for a niche category."""
         native = self._get_native()
         if native is not None:
             try:
                 return native.safety_get_compliance_for_category(niche_category)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return self.CATEGORY_COMPLIANCE.get(niche_category, [])
 
 
 # ── Global Instance ──────────────────────────────────────
 
-_default_domain_gate: Optional[DomainSafetyGate] = None
+_default_domain_gate: DomainSafetyGate | None = None
 
 
 def get_default_domain_safety_gate() -> DomainSafetyGate:

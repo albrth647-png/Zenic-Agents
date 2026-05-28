@@ -6,9 +6,9 @@ import threading
 import time
 import uuid
 
+from ._helpers import safe_evaluate
 from ._mixin_core import ConditionalBranching
 from ._types import BranchCondition, BranchRule
-from ._helpers import safe_evaluate
 
 _instance: ConditionalBranching | None = None
 _instance_lock = threading.Lock()

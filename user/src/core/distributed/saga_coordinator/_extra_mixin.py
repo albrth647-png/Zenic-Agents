@@ -1,10 +1,10 @@
 """DistributedSagaCoordinator - Additional methods."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import DistributedSagaStep
 from ..task_queue import TaskMessage
+from ._types import DistributedSagaStep
 
 logger = logging.getLogger("zenic_agents.distributed.saga_coordinator")
 
@@ -16,9 +16,9 @@ class DistributedSagaCoordinatorExtraMixin:
         self,
         saga_id: str,
         step: DistributedSagaStep,
-        context: Dict[str, Any],
-        tenant_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        context: dict[str, Any],
+        tenant_id: str | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         """
         Dispatch a saga step as a task to the queue.
@@ -60,7 +60,7 @@ class DistributedSagaCoordinatorExtraMixin:
     #  RECOVERY
     # ----------------------------------------------------------
 
-    async def recover_sagas(self) -> List[str]:
+    async def recover_sagas(self) -> list[str]:
         """
         Recover sagas that were interrupted by a crash.
 
@@ -72,14 +72,14 @@ class DistributedSagaCoordinatorExtraMixin:
         """
         # This is a simplified recovery — in production, you'd
         # query the backend for sagas in RUNNING/COMPENSATING state
-        recovered: List[str] = []
+        recovered: list[str] = []
 
         logger.info(
             "SagaCoordinator: Recovery scan found %d active sagas",
             len(self._active_sagas),
         )
 
-        for saga_id, saga_data in list(self._active_sagas.items()):
+        for saga_id, _saga_data in list(self._active_sagas.items()):
             try:
                 state = await self._backend.get_saga(saga_id)
                 if state and state.get("status") in ("RUNNING", "COMPENSATING"):
@@ -100,7 +100,7 @@ class DistributedSagaCoordinatorExtraMixin:
     #  QUERY
     # ----------------------------------------------------------
 
-    async def get_saga_status(self, saga_id: str) -> Optional[Dict[str, Any]]:
+    async def get_saga_status(self, saga_id: str) -> dict[str, Any] | None:
         """
         Get the current status of a saga.
 
@@ -112,7 +112,7 @@ class DistributedSagaCoordinatorExtraMixin:
         """
         return await self._backend.get_saga(saga_id)
 
-    async def list_active_sagas(self) -> List[Dict[str, Any]]:
+    async def list_active_sagas(self) -> list[dict[str, Any]]:
         """
         List all currently active sagas.
 

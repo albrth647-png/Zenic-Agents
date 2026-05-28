@@ -6,9 +6,9 @@ External integration blocks (email, HTTP, webhook) have been removed
 as the system operates as a standalone assistant agent.
 """
 
-import os
 import logging
-from typing import Any, Dict
+import os
+from typing import Any
 
 from .chain import LogicBlock
 
@@ -31,7 +31,7 @@ class FileOperationBlock(LogicBlock):
     inputs = ["path", "operation", "content"]
     outputs = ["content", "path", "status"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             path = data.get("path", data.get("file_path", ""))
             operation = data.get("operation", "read")  # read, write, append, exists, delete
@@ -43,13 +43,13 @@ class FileOperationBlock(LogicBlock):
 
             # Security: prevent path traversal
             if ".." in path or path.startswith("/"):
-                base_dir = context.get("base_dir", context.get("upload_dir", "/tmp"))
+                base_dir = context.get("base_dir", context.get("upload_dir", "/tmp"))  # noqa: S108
                 path = os.path.join(base_dir, os.path.basename(path))
 
             if operation == "read":
                 if not os.path.isfile(path):
                     return {"success": False, "error": f"File not found: {path}"}
-                with open(path, "r", encoding=encoding) as f:
+                with open(path, encoding=encoding) as f:
                     file_content = f.read()
                 logger.debug(f"FileOperationBlock: Read {path} ({len(file_content)} bytes)")
                 return {
@@ -102,4 +102,4 @@ class FileOperationBlock(LogicBlock):
 
             return {"success": False, "error": f"Unknown operation: {operation}"}
         except Exception as e:
-            return {"success": False, "error": f"FileOperationBlock: {str(e)}"}
+            return {"success": False, "error": f"FileOperationBlock: {e!s}"}

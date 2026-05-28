@@ -9,20 +9,20 @@ for end-to-end observability.
 import threading
 from typing import Optional
 
-from ._types import AuditEventType, AuditSeverity, AuditEvent
 from ._logger import AuditLogger
+from ._types import AuditEvent, AuditEventType, AuditSeverity
 
 __all__ = [
-    "AuditLogger",
     "AuditEvent",
     "AuditEventType",
+    "AuditLogger",
     "AuditSeverity",
     "get_audit_logger",
 ]
 
 
 # ── Singleton ─────────────────────────────────────────────
-_audit_logger_instance: Optional[AuditLogger] = None
+_audit_logger_instance: AuditLogger | None = None
 _audit_logger_lock = threading.Lock()
 
 

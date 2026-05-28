@@ -13,14 +13,13 @@ from pydub.generators import Sine
 
 from src.core.voice_pipeline._types import AudioFormat, ConversionResult
 from src.core.voice_pipeline.format_adapter import (
-    FormatAdapter,
-    get_format_adapter,
-    _normalize_format,
-    _SUPPORTED_INPUT_FORMATS,
-    _CANONICAL_SAMPLE_RATE,
     _CANONICAL_CHANNELS,
+    _CANONICAL_SAMPLE_RATE,
+    _SUPPORTED_INPUT_FORMATS,
+    FormatAdapter,
+    _normalize_format,
+    get_format_adapter,
 )
-
 
 # ── Audio fixtures: REAL audio bytes ────────────────────────────
 

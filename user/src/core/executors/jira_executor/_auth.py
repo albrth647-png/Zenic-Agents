@@ -4,30 +4,30 @@ from __future__ import annotations
 
 import base64
 import os
-from typing import Any, Dict
+from typing import Any
 
 _ENV_BASE_URL = "JIRA_BASE_URL"
 _ENV_EMAIL = "JIRA_EMAIL"
-_ENV_API_TOKEN = "JIRA_API_TOKEN"
-_ENV_BEARER_TOKEN = "JIRA_BEARER_TOKEN"
+_ENV_API_TOKEN = "JIRA_API_TOKEN"  # noqa: S105
+_ENV_BEARER_TOKEN = "JIRA_BEARER_TOKEN"  # noqa: S105
 
 
 class _AuthMixin:
     """Mixin for Jira authentication methods."""
 
-    def _get_base_url(self, config: Dict[str, Any]) -> str:
+    def _get_base_url(self, config: dict[str, Any]) -> str:
         """Resolve Jira base URL from config or environment."""
         url = config.get("base_url", "") or os.environ.get(_ENV_BASE_URL, "")
         return url.rstrip("/") if url else ""
 
-    def _get_auth_headers(self, config: Dict[str, Any]) -> Dict[str, str]:
+    def _get_auth_headers(self, config: dict[str, Any]) -> dict[str, str]:
         """Build authentication headers from config or environment.
 
         Raises:
             ValueError: If required credentials are missing.
         """
         auth_type = config.get("auth_type", "api_token").lower()
-        headers: Dict[str, str] = {"Content-Type": "application/json"}
+        headers: dict[str, str] = {"Content-Type": "application/json"}
 
         if auth_type == "bearer":
             token = (
@@ -56,7 +56,7 @@ class _AuthMixin:
                     "(config.email/api_token or JIRA_EMAIL/JIRA_API_TOKEN)"
                 )
             credential = base64.b64encode(
-                f"{email}:{api_token}".encode("utf-8")
+                f"{email}:{api_token}".encode()
             ).decode("utf-8")
             headers["Authorization"] = f"Basic {credential}"
 

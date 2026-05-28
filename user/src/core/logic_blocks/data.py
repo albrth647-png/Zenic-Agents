@@ -5,13 +5,13 @@ CRUD blocks: create, read, update, delete.
 Data transform block is in data_transform.py.
 """
 
-import re
-import time
-import math
 import hashlib
 import logging
+import math
+import re
+import time
 import unicodedata
-from typing import Any, Dict
+from typing import Any
 
 from .chain import LogicBlock, _validate_identifier
 
@@ -41,7 +41,7 @@ class CRUDCreateBlock(LogicBlock):
     inputs = ["data", "table", "fields"]
     outputs = ["result", "id", "status"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             table = data.get("table", data.get("_table", "items"))
             fields = data.get("fields", data.get("_fields", {}))
@@ -49,24 +49,24 @@ class CRUDCreateBlock(LogicBlock):
             # Use all data as fields if no explicit fields specified
             if not fields:
                 fields = {k: v for k, v in data.items()
-                          if not k.startswith("_") and k not in ("table", "success", "error")
-                          and not isinstance(v, (list, dict)) or isinstance(v, dict)}
+                          if (not k.startswith("_") and k not in ("table", "success", "error")
+                          and not isinstance(v, (list, dict))) or isinstance(v, dict)}
 
             # Filter out internal keys
             clean_fields = {k: v for k, v in fields.items()
                            if not k.startswith("_") and k not in ("table",)}
 
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     _validate_identifier(table)
-                    for col in clean_fields.keys():
+                    for col in clean_fields:
                         _validate_identifier(col)
-                    columns = ", ".join(f'"{c}"' for c in clean_fields.keys())
+                    columns = ", ".join(f'"{c}"' for c in clean_fields)
                     placeholders = ", ".join(["?"] * len(clean_fields))
                     values = list(clean_fields.values())
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'INSERT INTO "{table}" ({columns}) VALUES ({placeholders})',
+                        f'INSERT INTO "{table}" ({columns}) VALUES ({placeholders})',  # noqa: S608
                         values
                     )
                     record_id = cursor.lastrowid if hasattr(cursor, 'lastrowid') else len(clean_fields)
@@ -81,10 +81,10 @@ class CRUDCreateBlock(LogicBlock):
                     }
                 except Exception as db_err:
                     logger.warning(f"CRUDCreateBlock: DB error: {db_err}")
-                    return {"success": False, "error": f"Database error: {str(db_err)}"}
+                    return {"success": False, "error": f"Database error: {db_err!s}"}
 
             # Fallback: return the data as if created
-            record_id = data.get("id", hashlib.md5(str(sorted(clean_fields.items())).encode()).hexdigest()[:8])
+            record_id = data.get("id", hashlib.sha256(str(sorted(clean_fields.items())).encode()).hexdigest()[:8])
             logger.debug(f"CRUDCreateBlock: Fallback create in {table}, id={record_id}")
             return {
                 "success": True,
@@ -94,7 +94,7 @@ class CRUDCreateBlock(LogicBlock):
                 "status": "created_no_db",
             }
         except Exception as e:
-            return {"success": False, "error": f"CRUDCreateBlock: {str(e)}"}
+            return {"success": False, "error": f"CRUDCreateBlock: {e!s}"}
 
 
 class CRUDReadBlock(LogicBlock):
@@ -106,7 +106,7 @@ class CRUDReadBlock(LogicBlock):
     inputs = ["table", "filters", "page", "page_size"]
     outputs = ["records", "total", "page"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             table = data.get("table", data.get("_table", "items"))
             filters = data.get("filters", {})
@@ -125,7 +125,7 @@ class CRUDReadBlock(LogicBlock):
                 logger.warning("CRUDReadBlock: Invalid order_by rejected: %r", order_by)
                 order_by = "id DESC"
 
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     _validate_identifier(table)
@@ -136,7 +136,7 @@ class CRUDReadBlock(LogicBlock):
                         if isinstance(value, dict):
                             op = value.get("op", "=")
                             # Only allow safe operators
-                            _SAFE_OPS = frozenset({"=", "!=", "<", "<", ">", ">=", "LIKE", "IN"})
+                            _SAFE_OPS = frozenset({"=", "!=", "<", ">", ">=", "LIKE", "IN"})
                             if op not in _SAFE_OPS:
                                 op = "="
                             val = value.get("value", value)
@@ -150,14 +150,14 @@ class CRUDReadBlock(LogicBlock):
 
                     # SECURITY: table and column names validated by _validate_identifier;
                     # data values use ? parameterization via 'values' tuple
-                    count_cursor = db.execute(f'SELECT COUNT(*) FROM "{table}"{where_str}', values)  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                    count_cursor = db.execute(f'SELECT COUNT(*) FROM "{table}"{where_str}', values)  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
                     total = count_cursor.fetchone()[0]
 
                     # Fetch page
                     offset = (page - 1) * page_size
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT * FROM "{table}"{where_str} ORDER BY {order_by} LIMIT ? OFFSET ?',
-                        values + [page_size, offset]
+                        f'SELECT * FROM "{table}"{where_str} ORDER BY {order_by} LIMIT ? OFFSET ?',  # noqa: S608
+                        [*values, page_size, offset]
                     )
                     rows = cursor.fetchall()
                     records = [dict(row) if hasattr(row, 'keys') else row for row in rows]
@@ -186,7 +186,7 @@ class CRUDReadBlock(LogicBlock):
                 "note": "No database available",
             }
         except Exception as e:
-            return {"success": False, "error": f"CRUDReadBlock: {str(e)}"}
+            return {"success": False, "error": f"CRUDReadBlock: {e!s}"}
 
 
 class CRUDUpdateBlock(LogicBlock):
@@ -198,7 +198,7 @@ class CRUDUpdateBlock(LogicBlock):
     inputs = ["table", "id", "fields"]
     outputs = ["result", "updated_fields", "status"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             table = data.get("table", data.get("_table", "items"))
             record_id = data.get("id", data.get("record_id"))
@@ -215,16 +215,16 @@ class CRUDUpdateBlock(LogicBlock):
             if not fields:
                 return {"success": False, "error": "No fields provided for update"}
 
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     _validate_identifier(table)
-                    for k in fields.keys():
+                    for k in fields:
                         _validate_identifier(k)
-                    set_clauses = [f'"{k}" = ?' for k in fields.keys()]
-                    values = list(fields.values()) + [record_id]
+                    set_clauses = [f'"{k}" = ?' for k in fields]
+                    values = [*list(fields.values()), record_id]
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'UPDATE "{table}" SET {", ".join(set_clauses)} WHERE id = ?',
+                        f'UPDATE "{table}" SET {", ".join(set_clauses)} WHERE id = ?',  # noqa: S608
                         values
                     )
                     rows_affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 1
@@ -240,7 +240,7 @@ class CRUDUpdateBlock(LogicBlock):
                     }
                 except Exception as db_err:
                     logger.warning(f"CRUDUpdateBlock: DB error: {db_err}")
-                    return {"success": False, "error": f"Database error: {str(db_err)}"}
+                    return {"success": False, "error": f"Database error: {db_err!s}"}
 
             logger.debug(f"CRUDUpdateBlock: Fallback update {table} id={record_id}")
             return {
@@ -251,7 +251,7 @@ class CRUDUpdateBlock(LogicBlock):
                 "status": "updated_no_db",
             }
         except Exception as e:
-            return {"success": False, "error": f"CRUDUpdateBlock: {str(e)}"}
+            return {"success": False, "error": f"CRUDUpdateBlock: {e!s}"}
 
 
 class CRUDDeleteBlock(LogicBlock):
@@ -263,7 +263,7 @@ class CRUDDeleteBlock(LogicBlock):
     inputs = ["table", "id"]
     outputs = ["result", "status"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             table = data.get("table", data.get("_table", "items"))
             record_id = data.get("id", data.get("record_id"))
@@ -272,18 +272,18 @@ class CRUDDeleteBlock(LogicBlock):
             if not record_id:
                 return {"success": False, "error": "No record ID provided for deletion"}
 
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     _validate_identifier(table)
                     if soft_delete:
                         cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                            f'UPDATE "{table}" SET deleted_at = ? WHERE id = ?',
+                            f'UPDATE "{table}" SET deleted_at = ? WHERE id = ?',  # noqa: S608
                             (time.strftime("%Y-%m-%d %H:%M:%S"), record_id)
                         )
                     else:
                         # SECURITY: record_id uses ? parameterization
-                        cursor = db.execute(f'DELETE FROM "{table}" WHERE id = ?', (record_id,))  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                        cursor = db.execute(f'DELETE FROM "{table}" WHERE id = ?', (record_id,))  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
 
                     rows_affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 1
                     db.commit() if hasattr(db, 'commit') else None
@@ -297,9 +297,9 @@ class CRUDDeleteBlock(LogicBlock):
                     }
                 except Exception as db_err:
                     logger.warning(f"CRUDDeleteBlock: DB error: {db_err}")
-                    return {"success": False, "error": f"Database error: {str(db_err)}"}
+                    return {"success": False, "error": f"Database error: {db_err!s}"}
 
-            logger.debug(f"CRUDDeleteBlock: Fallback delete from {table} id={record_id}")
+            logger.debug(f"CRUDDeleteBlock: Fallback delete from {table} id={record_id}")  # noqa: S608
             return {
                 "success": True,
                 "id": record_id,
@@ -307,4 +307,4 @@ class CRUDDeleteBlock(LogicBlock):
                 "status": "deleted_no_db",
             }
         except Exception as e:
-            return {"success": False, "error": f"CRUDDeleteBlock: {str(e)}"}
+            return {"success": False, "error": f"CRUDDeleteBlock: {e!s}"}

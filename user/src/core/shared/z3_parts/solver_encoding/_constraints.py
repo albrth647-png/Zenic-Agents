@@ -115,7 +115,7 @@ class Z3ConstraintMixin:
                                     cond1 = (v1 == val1) if num_type == "int" else (v1 == z3_module.RealVal(str(val1)))
                                     cond2 = (v2 == val2) if num_type == "int" else (v2 == z3_module.RealVal(str(val2)))
                                     valid_conditions.append(z3_module.And(cond1, cond2))
-                            except Exception:
+                            except Exception:  # noqa: S112
                                 continue
 
                     if valid_conditions:
@@ -138,7 +138,7 @@ class Z3ConstraintMixin:
                                     cond1 = (v1 == val1) if num_type == "int" else (v1 == z3_module.RealVal(str(val1)))
                                     cond2 = (v2 == val2) if num_type == "int" else (v2 == z3_module.RealVal(str(val2)))
                                     valid_conditions.append(z3_module.And(cond1, cond2))
-                            except Exception:
+                            except Exception:  # noqa: S112
                                 continue
 
                     if valid_conditions:
@@ -165,7 +165,7 @@ class Z3ConstraintMixin:
         if len(values) <= max_samples:
             return list(values)
 
-        sorted_vals = sorted(set(v for v in values if isinstance(v, (int, float))))
+        sorted_vals = sorted({v for v in values if isinstance(v, (int, float))})
         if not sorted_vals:
             return values[:max_samples]
 
@@ -173,8 +173,8 @@ class Z3ConstraintMixin:
             return sorted_vals
 
         step = (len(sorted_vals) - 1) / (max_samples - 1)
-        indices = [int(round(i * step)) for i in range(max_samples)]
-        indices = sorted(set(max(0, min(i, len(sorted_vals) - 1)) for i in indices))
+        indices = [round(i * step) for i in range(max_samples)]
+        indices = sorted({max(0, min(i, len(sorted_vals) - 1)) for i in indices})
 
         return [sorted_vals[i] for i in indices]
 

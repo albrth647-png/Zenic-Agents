@@ -123,7 +123,7 @@ class SurgicalAgentCompat:
                     fused.goal,
                     importance,
                 )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         self._last_source = fused.source
@@ -179,7 +179,7 @@ class SurgicalAgentCompat:
                     confidence=result.get("confidence", 0.5),
                     source="semantic",
                 )
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         return None
 

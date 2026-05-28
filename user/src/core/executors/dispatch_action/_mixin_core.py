@@ -237,32 +237,30 @@ class ActionDispatcher(BlueprintBridgeMixin):
                 pipeline_stages=stages,
             )
 
-        if verdict == SafetyVerdict.CONFIRM:
-            if not self._safety_gate.is_confirmed(request.action_id):
-                self._pending_confirmations[request.action_id] = request
-                self._stats["safety_confirmed"] += 1
-                return DispatchResult(
-                    action_id=request.action_id,
-                    success=False,
-                    safety_verdict=verdict,
-                    safety_result=safety_result,
-                    blueprint_errors=blueprint_errors,
-                    total_duration_ms=(time.monotonic() - start) * 1000,
-                    pipeline_stages=stages,
-                )
+        if verdict == SafetyVerdict.CONFIRM and not self._safety_gate.is_confirmed(request.action_id):
+            self._pending_confirmations[request.action_id] = request
+            self._stats["safety_confirmed"] += 1
+            return DispatchResult(
+                action_id=request.action_id,
+                success=False,
+                safety_verdict=verdict,
+                safety_result=safety_result,
+                blueprint_errors=blueprint_errors,
+                total_duration_ms=(time.monotonic() - start) * 1000,
+                pipeline_stages=stages,
+            )
 
-        if verdict == SafetyVerdict.APPROVE:
-            if not self._safety_gate.is_approved(request.action_id):
-                self._pending_approvals[request.action_id] = request
-                return DispatchResult(
-                    action_id=request.action_id,
-                    success=False,
-                    safety_verdict=verdict,
-                    safety_result=safety_result,
-                    blueprint_errors=blueprint_errors,
-                    total_duration_ms=(time.monotonic() - start) * 1000,
-                    pipeline_stages=stages,
-                )
+        if verdict == SafetyVerdict.APPROVE and not self._safety_gate.is_approved(request.action_id):
+            self._pending_approvals[request.action_id] = request
+            return DispatchResult(
+                action_id=request.action_id,
+                success=False,
+                safety_verdict=verdict,
+                safety_result=safety_result,
+                blueprint_errors=blueprint_errors,
+                total_duration_ms=(time.monotonic() - start) * 1000,
+                pipeline_stages=stages,
+            )
 
         return None  # Not blocked
 

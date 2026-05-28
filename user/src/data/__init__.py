@@ -9,8 +9,8 @@ Sin esto, el sistema proactivo es "adivino" porque solo ve lo que llega por cana
 Con esto, el sistema VE los datos del usuario y detecta problemas ANTES de que se manifiesten.
 """
 
-from src.data.local_scanner import LocalDataScanner
 from src.data.db_access import DBAccess
 from src.data.fs_scanner import FileSystemScanner
+from src.data.local_scanner import LocalDataScanner
 
-__all__ = ["LocalDataScanner", "DBAccess", "FileSystemScanner"]
+__all__ = ["DBAccess", "FileSystemScanner", "LocalDataScanner"]

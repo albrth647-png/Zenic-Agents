@@ -6,12 +6,12 @@ basado en la intencion detectada, capacidades del
 sistema y contexto de la sesion.
 """
 
-from .router import AssistantRouter
-from .pipeline_selector import PipelineSelector
 from .fallback_chain import FallbackChain
+from .pipeline_selector import PipelineSelector
+from .router import AssistantRouter
 
 __all__ = [
     "AssistantRouter",
-    "PipelineSelector",
     "FallbackChain",
+    "PipelineSelector",
 ]

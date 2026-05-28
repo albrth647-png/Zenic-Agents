@@ -15,7 +15,7 @@ import logging
 import sqlite3
 import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ._helpers import retry_db_operation, row_to_measurement
 from ._trend_analysis import (

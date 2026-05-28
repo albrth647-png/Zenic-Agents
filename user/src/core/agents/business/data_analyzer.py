@@ -8,11 +8,10 @@ No AI. Pure mathematical operations on data.
 from __future__ import annotations
 
 import math
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import AnalyticsResult
-
 
 # ──────────────────────────────────────────────────────────────
 # CONSTANTS
@@ -149,7 +148,7 @@ class DataAnalyzer(BaseAgent[AnalyticsResult]):
         )
 
     @staticmethod
-    def _extract_numeric_values(dataset: list, field: Optional[str] = None) -> list[float]:
+    def _extract_numeric_values(dataset: list, field: str | None = None) -> list[float]:
         """Extract numeric values from dataset. If field is specified, extract that field only."""
         values = []
 

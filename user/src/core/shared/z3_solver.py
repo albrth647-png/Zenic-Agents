@@ -20,6 +20,6 @@ Cuando Z3 NO esta disponible (Android/Termux):
 - Mismo contrato de interfaz, poder expresivo reducido
 """
 
-from .z3_parts import Z3Solver, HAS_Z3
+from .z3_parts import HAS_Z3, Z3Solver
 
-__all__ = ["Z3Solver", "HAS_Z3"]
+__all__ = ["HAS_Z3", "Z3Solver"]

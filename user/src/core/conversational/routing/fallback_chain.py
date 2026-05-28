@@ -14,11 +14,13 @@ import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..types.base import Ok, PipelineContext, Result
 from ..types.response import AssistantResponse, ResponseFormat, ResponseMetadata
-from .router import Pipeline
+
+if TYPE_CHECKING:
+    from .router import Pipeline
 
 logger = logging.getLogger("zenic_agents.conversational.fallback")
 

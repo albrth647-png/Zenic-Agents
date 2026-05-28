@@ -6,9 +6,8 @@ import json
 import logging
 import sqlite3
 import threading
-from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..taxonomy import (
     ExceptionCategory,
@@ -16,6 +15,9 @@ from ..taxonomy import (
     categorize_error,
     severity_from_confidence,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

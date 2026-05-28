@@ -12,7 +12,7 @@ import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .types import DegradationLevel, DegradationReason, DegradationState
 
@@ -61,7 +61,7 @@ class DegradationPersistence:
     def __init__(self, db_path: str = "degraded_mode.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._conn: Optional[sqlite3.Connection] = None
+        self._conn: sqlite3.Connection | None = None
         self._init_db()
 
     # ── Connection management ─────────────────────────────
@@ -150,7 +150,7 @@ class DegradationPersistence:
         reason: DegradationReason,
         message: str = "",
         operator: str = "system",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Record a degradation transition in the history table."""
         with self._lock:
@@ -176,7 +176,7 @@ class DegradationPersistence:
                 logger.error(
                     "DegradationPersistence: append_history failed: %s", exc)
 
-    def get_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Retrieve recent degradation transition records."""
         with self._lock:
             try:
@@ -217,6 +217,7 @@ class DegradationPersistence:
             if self._conn is not None:
                 try:
                     self._conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
+                    # Close failure is non-critical during shutdown
                     pass
                 self._conn = None

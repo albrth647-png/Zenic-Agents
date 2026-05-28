@@ -197,7 +197,7 @@ class DistributedLockManager:
         """
         released = 0
         with self._lock:
-            for lock_name, lock in list(self._held_locks.items()):
+            for _lock_name, lock in list(self._held_locks.items()):
                 if lock.acquired:
                     success = await lock.release()
                     if success:

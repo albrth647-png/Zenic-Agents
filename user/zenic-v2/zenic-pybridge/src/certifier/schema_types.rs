@@ -83,10 +83,8 @@ pub struct ColumnDef {
     pub(super) indexed: bool,
 }
 
-#[pymethods]
 impl ColumnDef {
-    #[new]
-    fn py_new(name: String, col_type: String) -> Self {
+    pub fn new(name: String, col_type: String) -> Self {
         ColumnDef {
             name,
             col_type,
@@ -94,6 +92,14 @@ impl ColumnDef {
             unique: false,
             indexed: false,
         }
+    }
+}
+
+#[pymethods]
+impl ColumnDef {
+    #[new]
+    fn py_new(name: String, col_type: String) -> Self {
+        Self::new(name, col_type)
     }
 
     #[getter]

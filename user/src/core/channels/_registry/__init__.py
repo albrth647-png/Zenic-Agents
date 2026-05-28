@@ -13,8 +13,8 @@ Design invariants:
   5. send_with_fallback() never fails — at minimum, logs the message.
 """
 
-from ._registry_core import AdapterRegistry, get_default_registry, reset_default_registry
 from ._discovery import ChannelRouter, get_default_router
+from ._registry_core import AdapterRegistry, get_default_registry, reset_default_registry
 
 __all__ = [
     "AdapterRegistry",

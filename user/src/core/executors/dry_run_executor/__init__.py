@@ -13,14 +13,14 @@ backoff (0.1s, 0.2s, 0.4s).
 Singleton: get_dry_run_executor() / reset_dry_run_executor().
 """
 
-from ._types import DryRunOperation, DryRunResult
-from ._mixin_core import DryRunExecutor
 from ._dispatch import dry_run_dispatch, get_dry_run_executor, reset_dry_run_executor
+from ._mixin_core import DryRunExecutor
+from ._types import DryRunOperation, DryRunResult
 
 __all__ = [
+    "DryRunExecutor",
     "DryRunOperation",
     "DryRunResult",
-    "DryRunExecutor",
     "dry_run_dispatch",
     "get_dry_run_executor",
     "reset_dry_run_executor",

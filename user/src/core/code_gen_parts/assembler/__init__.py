@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from ._constants import BLOCK_TEMPLATE_MAP, KEYWORD_BLOCK_MAP
 from ._generators_mixin import AssemblerGeneratorsMixin

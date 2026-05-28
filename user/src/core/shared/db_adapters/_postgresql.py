@@ -7,7 +7,7 @@ with connection pooling. Supports all tenant-aware queries.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._base import DatabaseBackend
 
@@ -30,7 +30,7 @@ class PostgreSQLDatabase(DatabaseBackend):
         )
         # Convert SQLAlchemy-style DSN to asyncpg format
         self._async_dsn = self._convert_dsn(self._dsn)
-        self._pool: Optional[Any] = None
+        self._pool: Any | None = None
 
     @staticmethod
     def _convert_dsn(dsn: str) -> str:
@@ -270,14 +270,14 @@ class PostgreSQLDatabase(DatabaseBackend):
             await self.initialize()
         return self._pool.acquire()
 
-    async def execute(self, conn: Any, query: str, params: Optional[tuple] = None) -> None:
+    async def execute(self, conn: Any, query: str, params: tuple | None = None) -> None:
         query = self.adapt_query(query)
         if params:
             await conn.execute(query, *params)  # nosemgrep: sqlalchemy-execute-raw-query
         else:
             await conn.execute(query)  # nosemgrep: sqlalchemy-execute-raw-query
 
-    async def fetch_one(self, conn: Any, query: str, params: Optional[tuple] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_one(self, conn: Any, query: str, params: tuple | None = None) -> dict[str, Any] | None:
         query = self.adapt_query(query)
         if params:
             row = await conn.fetchrow(query, *params)
@@ -285,7 +285,7 @@ class PostgreSQLDatabase(DatabaseBackend):
             row = await conn.fetchrow(query)
         return dict(row) if row else None
 
-    async def fetch_all(self, conn: Any, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    async def fetch_all(self, conn: Any, query: str, params: tuple | None = None) -> list[dict[str, Any]]:
         query = self.adapt_query(query)
         if params:
             rows = await conn.fetch(query, *params)
@@ -293,7 +293,7 @@ class PostgreSQLDatabase(DatabaseBackend):
             rows = await conn.fetch(query)
         return [dict(r) for r in rows]
 
-    async def fetch_val(self, conn: Any, query: str, params: Optional[tuple] = None) -> Any:
+    async def fetch_val(self, conn: Any, query: str, params: tuple | None = None) -> Any:
         query = self.adapt_query(query)
         if params:
             return await conn.fetchval(query, *params)

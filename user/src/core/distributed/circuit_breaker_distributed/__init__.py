@@ -25,16 +25,16 @@ Integration:
 import logging
 import threading
 import time
-from typing import Any, Dict
+from typing import Any, Dict  # noqa: UP035
 
-from ..backend import CoordinationBackend
 from src.core.patterns.resilience.circuit_breaker import (
     CircuitBreaker,
     CircuitState,
 )
 
-from ._state import SharedCircuitState
+from ..backend import CoordinationBackend
 from ._ops_mixin import BreakerOpsMixin
+from ._state import SharedCircuitState
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
             return CircuitState.CLOSED
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Circuit breaker statistics."""
         self._maybe_sync()
         with self._lock:

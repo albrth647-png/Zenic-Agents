@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..engine import ExceptionSignal
+if TYPE_CHECKING:
+    from ..engine import ExceptionSignal
 
 logger = logging.getLogger(__name__)
 

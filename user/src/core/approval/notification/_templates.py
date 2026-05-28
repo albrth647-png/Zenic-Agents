@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class NotificationChannel(str, Enum):
@@ -57,15 +57,15 @@ class NotificationMessage:
     body: str = ""
     request_id: str = ""
     priority: NotificationPriority = NotificationPriority.NORMAL
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    sent_at: Optional[str] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    sent_at: str | None = None
     status: str = "pending"  # pending/sent/failed
 
     def __post_init__(self) -> None:
         if not self.message_id:
             self.message_id = f"ntf-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "message_id": self.message_id,
@@ -88,9 +88,9 @@ class ChannelConfig:
 
     channel: NotificationChannel = NotificationChannel.IN_APP
     enabled: bool = True
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "channel": self.channel.value,
@@ -100,9 +100,9 @@ class ChannelConfig:
 
 
 __all__ = [
+    "ChannelConfig",
     "NotificationChannel",
-    "NotificationPriority",
     "NotificationEvent",
     "NotificationMessage",
-    "ChannelConfig",
+    "NotificationPriority",
 ]

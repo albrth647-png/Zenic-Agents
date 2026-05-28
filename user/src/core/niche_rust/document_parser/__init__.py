@@ -17,11 +17,11 @@ Fallback:
     empty string with an error message. It never raises exceptions.
 """
 
-from ._mixin_core import DocumentParser, MAX_FILE_SIZE, PYTHON_FORMATS, FORMAT_UNKNOWN
+from ._mixin_core import FORMAT_UNKNOWN, MAX_FILE_SIZE, PYTHON_FORMATS, DocumentParser
 
 __all__ = [
-    "DocumentParser",
+    "FORMAT_UNKNOWN",
     "MAX_FILE_SIZE",
     "PYTHON_FORMATS",
-    "FORMAT_UNKNOWN",
+    "DocumentParser",
 ]

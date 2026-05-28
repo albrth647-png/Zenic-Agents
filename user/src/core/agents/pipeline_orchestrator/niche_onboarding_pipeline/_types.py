@@ -6,12 +6,13 @@ import logging
 import time
 import uuid
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ...executors.safety_gate.domain_gate import (
-    DomainSafetyCheckResult,
-)
-from ...niche_rust.certifier_bridge import CertificationResultPy
+if TYPE_CHECKING:
+    from ...executors.safety_gate.domain_gate import (
+        DomainSafetyCheckResult,
+    )
+    from ...niche_rust.certifier_bridge import CertificationResultPy
 
 logger = logging.getLogger(__name__)
 

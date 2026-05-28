@@ -17,17 +17,16 @@ busy timeout) and retrying prevents false negatives in routing.
 Sin dependencias externas. Compatible con Android.
 """
 
-import json
-import re
 import fnmatch
+import json
 import logging
-from src.core.shared.contracts import (
-    IntentPayload, RoutingPayload, CriticalityLevel, RoutePath, OperationType
-)
-from src.config.loader import load_settings, get_critical_nodes, get_critical_patterns
+import re
+
+from src.config.loader import get_critical_nodes, get_critical_patterns, load_settings
+from src.core.shared.contracts import CriticalityLevel, IntentPayload, OperationType, RoutePath, RoutingPayload
 from src.core.shared.db_initializer import get_connection
-from src.core.shared.retry import with_retry
 from src.core.shared.db_utils import escape_sql_like
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -143,10 +142,7 @@ class MacroRouter:
 
     def _check_critical_patterns(self, target_lower: str) -> bool:
         """Verifica si el target coincide con patrones criticos globales desde YAML."""
-        for pattern in self.critical_patterns:
-            if fnmatch.fnmatch(target_lower, pattern):
-                return True
-        return False
+        return any(fnmatch.fnmatch(target_lower, pattern) for pattern in self.critical_patterns)
 
     def _check_ast_criticality(self, target_name: str) -> bool:
         """

@@ -12,11 +12,14 @@ El bridge es el "cable" que conecta todo.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from src.core.channel.a52_voice import VoiceChannelAgent, VoiceMessage, VoiceResult
 from src.core.channel.a53_text import ChannelType, TextChannelAgent, TextMessage, TextResult
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

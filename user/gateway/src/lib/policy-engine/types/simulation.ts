@@ -1,3 +1,7 @@
+import type { PolicyEvaluationRequest, PolicyEvaluationResult } from './evaluation';
+import type { PolicyDocument, PolicyEffectV2 } from './core';
+import type { PolicyConflict } from './conflict';
+
 // ─── 3. Policy Simulation (What-If Analysis) ────────────────────────────
 
 /** A simulation request */

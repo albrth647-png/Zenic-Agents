@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.email_parts.rate_limiter")
 
@@ -77,7 +77,7 @@ class _SlidingWindowCounter:
     """
 
     def __init__(self) -> None:
-        self._events: List[float] = []
+        self._events: list[float] = []
 
     def add(self, timestamp: float) -> None:
         """Record an event at the given timestamp."""
@@ -132,15 +132,15 @@ class EmailRateLimiter:
                     print(f"Rate limited: {r.reason}, retry after {r.retry_after_seconds}s")
     """
 
-    def __init__(self, config: Optional[RateLimitConfig] = None) -> None:
+    def __init__(self, config: RateLimitConfig | None = None) -> None:
         self._config = config or RateLimitConfig()
-        self._recipient_counters: Dict[str, _SlidingWindowCounter] = {}
+        self._recipient_counters: dict[str, _SlidingWindowCounter] = {}
         self._global_counter = _SlidingWindowCounter()
-        self._burst_counters: Dict[str, _SlidingWindowCounter] = {}
+        self._burst_counters: dict[str, _SlidingWindowCounter] = {}
         self._denied_count: int = 0
         self._allowed_count: int = 0
 
-    def check(self, recipients: List[str]) -> List[RateLimitResult]:
+    def check(self, recipients: list[str]) -> list[RateLimitResult]:
         """Check if emails can be sent to the given recipients.
 
         Evaluates global limits first (short-circuits if exceeded),
@@ -156,7 +156,7 @@ class EmailRateLimiter:
             global limit reason (no per-recipient checks performed).
         """
         now = time.time()
-        results: List[RateLimitResult] = []
+        results: list[RateLimitResult] = []
 
         # ── Global limits (short-circuit if exceeded) ──────────
         global_result = self._check_global(now)
@@ -172,7 +172,7 @@ class EmailRateLimiter:
 
         return results
 
-    def record_send(self, recipients: List[str]) -> None:
+    def record_send(self, recipients: list[str]) -> None:
         """Record that emails were sent to the given recipients.
 
         Call this AFTER successfully sending emails to update the
@@ -222,7 +222,7 @@ class EmailRateLimiter:
         logger.info("EmailRateLimiter: All counters reset")
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get rate limiter statistics.
 
         Returns:
@@ -246,7 +246,7 @@ class EmailRateLimiter:
 
     # ── Private: Global Limit Check ───────────────────────────
 
-    def _check_global(self, now: float) -> Optional[RateLimitResult]:
+    def _check_global(self, now: float) -> RateLimitResult | None:
         """Check global rate limits. Returns None if all pass."""
         count_min = self._global_counter.count_in_window(60, now)
         if count_min >= self._config.max_global_per_minute:

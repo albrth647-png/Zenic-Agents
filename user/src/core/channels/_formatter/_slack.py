@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .._types import ChannelMessage, ConfirmationRequest
 from ._limits import LIMITS
 from ._text import sanitize_html, sanitize_plain_text, truncate
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
 
 
 def escape_slack_text(text: str) -> str:

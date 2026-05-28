@@ -8,10 +8,10 @@ import hashlib
 import logging
 import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from ._types import AuditRecord, AuditEventType, MerkleProof, GENESIS_HASH
 from ._mixin_persistence import AuditMerklePersistenceMixin
+from ._types import GENESIS_HASH, AuditEventType, AuditRecord, MerkleProof
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
         event_type: str,
         actor_id: str,
         actor_name: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
     ) -> AuditRecord:
         """Record an event in the audit Merkle chain."""
         if not request_id:
@@ -74,9 +74,9 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
         )
         return record
 
-    def get_audit_trail(self, request_id: str) -> List[AuditRecord]:
+    def get_audit_trail(self, request_id: str) -> list[AuditRecord]:
         """Get all audit records for a request, in chronological order."""
-        def _do_query() -> List[AuditRecord]:
+        def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -92,7 +92,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def verify_chain_integrity(
         self, request_id: str,
-    ) -> Tuple[bool, Optional[int]]:
+    ) -> tuple[bool, int | None]:
         """Verify all hashes and chain links for a request's audit trail."""
         records = self.get_audit_trail(request_id)
         if not records:
@@ -108,19 +108,18 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
                 )
                 return (False, i)
 
-            if i > 0:
-                if record.previous_hash != records[i - 1].content_hash:
-                    logger.warning(
-                        "ApprovalAuditMerkle: Chain link broken at index %d "
-                        "for request %s", i, request_id,
-                    )
-                    return (False, i)
+            if i > 0 and record.previous_hash != records[i - 1].content_hash:
+                logger.warning(
+                    "ApprovalAuditMerkle: Chain link broken at index %d "
+                    "for request %s", i, request_id,
+                )
+                return (False, i)
 
         return (True, None)
 
-    def verify_global_integrity(self) -> Tuple[bool, Optional[int]]:
+    def verify_global_integrity(self) -> tuple[bool, int | None]:
         """Verify the entire global audit chain."""
-        def _do_query() -> List[AuditRecord]:
+        def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -151,7 +150,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def get_merkle_proof(self, record_id: str) -> MerkleProof:
         """Generate a Merkle proof for a specific record."""
-        def _do_query() -> List[AuditRecord]:
+        def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -175,8 +174,8 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             return MerkleProof(record_id=record_id)
 
         hashes = [r.content_hash for r in all_records]
-        sibling_hashes: List[str] = []
-        direction: List[str] = []
+        sibling_hashes: list[str] = []
+        direction: list[str] = []
 
         idx = target_idx
         while len(hashes) > 1:
@@ -193,7 +192,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
                 sibling_hashes.append(hashes[idx])
                 direction[-1] = "left"
 
-            new_hashes: List[str] = []
+            new_hashes: list[str] = []
             for j in range(0, len(hashes), 2):
                 left = hashes[j]
                 right = hashes[j + 1] if j + 1 < len(hashes) else left
@@ -212,7 +211,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             direction=direction,
         )
 
-    def export_audit_trail(self, request_id: str) -> Dict[str, Any]:
+    def export_audit_trail(self, request_id: str) -> dict[str, Any]:
         """Export complete audit trail with integrity verification result."""
         records = self.get_audit_trail(request_id)
         is_valid, failed_at = self.verify_chain_integrity(request_id)
@@ -228,7 +227,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def compute_root_hash(self) -> str:
         """Compute the current Merkle root from all records."""
-        def _do_query() -> List[str]:
+        def _do_query() -> list[str]:
             conn = sqlite3.connect(self._db_path)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT content_hash FROM audit_records ORDER BY timestamp ASC",
@@ -241,7 +240,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             return GENESIS_HASH
 
         while len(hashes) > 1:
-            new_hashes: List[str] = []
+            new_hashes: list[str] = []
             for i in range(0, len(hashes), 2):
                 left = hashes[i]
                 right = hashes[i + 1] if i + 1 < len(hashes) else left

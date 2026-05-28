@@ -17,15 +17,15 @@ Fallback:
     to a missing native extension.
 """
 
-from ._native import NATIVE_AVAILABLE
 from ._catalog import NicheCatalog
-from ._template import NicheTemplate
 from ._core import NicheBridge, get_bridge
+from ._native import NATIVE_AVAILABLE
+from ._template import NicheTemplate
 
 __all__ = [
+    "NATIVE_AVAILABLE",
+    "NicheBridge",
     "NicheCatalog",
     "NicheTemplate",
-    "NicheBridge",
     "get_bridge",
-    "NATIVE_AVAILABLE",
 ]

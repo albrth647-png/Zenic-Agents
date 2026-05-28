@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .types import PartnerInfo
 
@@ -31,8 +31,8 @@ class PartnerRegistry:
     """
 
     def __init__(self) -> None:
-        self._partners: Dict[str, PartnerInfo] = {}
-        self._revenue: Dict[str, int] = {}  # partner_id → cents earned
+        self._partners: dict[str, PartnerInfo] = {}
+        self._revenue: dict[str, int] = {}  # partner_id → cents earned
 
     def register_partner(
         self,
@@ -52,7 +52,7 @@ class PartnerRegistry:
         logger.info("PartnerRegistry: Registered partner %s", partner_name)
         return info
 
-    def get_partner(self, partner_id: str) -> Optional[PartnerInfo]:
+    def get_partner(self, partner_id: str) -> PartnerInfo | None:
         """Get partner information."""
         return self._partners.get(partner_id)
 
@@ -78,7 +78,7 @@ class PartnerRegistry:
         """Get total revenue for a partner (in cents)."""
         return self._revenue.get(partner_id, 0)
 
-    def list_partners(self) -> List[Dict[str, Any]]:
+    def list_partners(self) -> list[dict[str, Any]]:
         """List all registered partners."""
         results = []
         for pid, info in self._partners.items():

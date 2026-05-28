@@ -13,17 +13,19 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .composer import BlueprintComposer, CompositionResult
 from .converter import NicheConverter
 from .loader import BlueprintLoaderV2
-from .schema import CertifiedBlueprint
 from .types import (
     BlueprintStats,
     BlueprintTier,
 )
 from .validator import BlueprintValidatorV2
+
+if TYPE_CHECKING:
+    from .schema import CertifiedBlueprint
 
 logger = logging.getLogger(__name__)
 

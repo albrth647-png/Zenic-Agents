@@ -196,8 +196,8 @@ class SNAPersistence:
 
         with write_lock(self._db_name):
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"UPDATE sna_alerts SET status = ?{extra_col} WHERE alert_id = ?",
-                [status.value] + extra_val + [alert_id],
+                f"UPDATE sna_alerts SET status = ?{extra_col} WHERE alert_id = ?",  # noqa: S608
+                [status.value, *extra_val, alert_id],
             )
             conn.commit()
 
@@ -263,7 +263,7 @@ class SNAPersistence:
             params.append(tenant_id)
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM sna_thresholds{where}",
+            f"SELECT * FROM sna_thresholds{where}",  # noqa: S608
             params,
         ).fetchall()
         return [self._row_to_threshold(r) for r in rows]

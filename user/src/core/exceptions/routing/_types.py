@@ -6,13 +6,16 @@ import logging
 import sqlite3
 import time
 import uuid
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .engine import ExceptionSignal
 from .taxonomy import ExceptionCategory, ExceptionSeverity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .engine import ExceptionSignal
 
 logger = logging.getLogger(__name__)
 

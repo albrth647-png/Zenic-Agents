@@ -25,15 +25,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-from ..oauth2 import OAuth2TokenManager
-from ._types import _HAS_AIOHTTP, _RateLimitState
 from ._operations import (
     auto_configure,
     is_configured,
     send_email,
 )
+from ._types import _HAS_AIOHTTP, _RateLimitState
+
+if TYPE_CHECKING:
+    from ..oauth2 import OAuth2TokenManager
 
 logger = logging.getLogger("zenic_agents.email_parts.graph_api")
 
@@ -58,7 +60,7 @@ class GraphAPIEmailProvider:
 
     def __init__(
         self,
-        token_manager: Optional[OAuth2TokenManager] = None,
+        token_manager: OAuth2TokenManager | None = None,
         service_name: str = "msgraph",
         from_email: str = "",
     ) -> None:
@@ -91,17 +93,17 @@ class GraphAPIEmailProvider:
 
     async def send_email(
         self,
-        to: List[str],
+        to: list[str],
         subject: str,
         body: str = "",
         html: str = "",
-        cc: Optional[List[str]] = None,
-        bcc: Optional[List[str]] = None,
+        cc: list[str] | None = None,
+        bcc: list[str] | None = None,
         from_email: str = "",
-        attachments: Optional[List[Dict[str, Any]]] = None,
-        reply_to: Optional[List[str]] = None,
+        attachments: list[dict[str, Any]] | None = None,
+        reply_to: list[str] | None = None,
         importance: str = "normal",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send an email via Microsoft Graph API.
 
         Args:
@@ -149,12 +151,12 @@ class GraphAPIEmailProvider:
         return self._is_configured()
 
     @property
-    def rate_limit(self) -> Dict[str, Any]:
+    def rate_limit(self) -> dict[str, Any]:
         """Get current rate limit state."""
         return self._rate_limit.to_dict()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get provider statistics."""
         return {
             "service_name": self._service_name,

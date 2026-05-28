@@ -18,7 +18,10 @@ import time
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Dict, Generator, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class Transaction:
     db_path: str = ""
     status: str = "active"          # active, committed, rolled_back, timed_out
     started_at: float = 0.0
-    savepoints: List[str] = field(default_factory=list)
+    savepoints: list[str] = field(default_factory=list)
     operations_count: int = 0
     last_operation: str = ""
     timeout_seconds: float = 30.0
@@ -84,8 +87,8 @@ class TransactionManager:
 
     def __init__(self, default_timeout: float = 30.0) -> None:
         self._default_timeout = default_timeout
-        self._active_transactions: Dict[str, Transaction] = {}
-        self._connections: Dict[str, Any] = {}  # tx_id → connection
+        self._active_transactions: dict[str, Transaction] = {}
+        self._connections: dict[str, Any] = {}  # tx_id → connection
         self._stats = {
             "begun": 0,
             "committed": 0,
@@ -96,7 +99,7 @@ class TransactionManager:
     def begin(
         self,
         db_path: str = ":memory:",
-        timeout_seconds: Optional[float] = None,
+        timeout_seconds: float | None = None,
     ) -> Transaction:
         """Begin a new transaction.
 
@@ -120,8 +123,8 @@ class TransactionManager:
         tx: Transaction,
         query: str,
         params: tuple = (),
-        adapter: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        adapter: Any | None = None,
+    ) -> dict[str, Any]:
         """Execute a query within a transaction.
 
         Uses the provided adapter or falls back to direct connection.
@@ -132,7 +135,7 @@ class TransactionManager:
             self.rollback(tx)
             raise TimeoutError(f"Transaction {tx.transaction_id} timed out")
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         if adapter:
             result = adapter.execute(query, params, fetch=True)
         else:
@@ -142,7 +145,7 @@ class TransactionManager:
                 cursor = conn.execute(query, params)  # nosemgrep: sqlalchemy-execute-raw-query
                 if query.strip().upper().startswith("SELECT"):
                     columns = [d[0] for d in cursor.description] if cursor.description else []
-                    rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                    rows = [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]
                     result = {"rows": rows, "row_count": len(rows)}
                 else:
                     result = {"affected_rows": cursor.rowcount, "lastrowid": cursor.lastrowid}
@@ -228,8 +231,8 @@ class TransactionManager:
     def transaction(
         self,
         db_path: str = ":memory:",
-        timeout_seconds: Optional[float] = None,
-        adapter: Optional[Any] = None,
+        timeout_seconds: float | None = None,
+        adapter: Any | None = None,
     ) -> Generator[Transaction, None, None]:
         """Context manager for automatic transaction lifecycle.
 
@@ -255,7 +258,7 @@ class TransactionManager:
                 raise
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get transaction manager statistics."""
         return {
             **self._stats,
@@ -291,5 +294,6 @@ class TransactionManager:
         if conn:
             try:
                 conn.close()
-            except Exception:
+            except Exception:  # noqa: S110
+                # Close failure should not prevent cleanup of other resources
                 pass

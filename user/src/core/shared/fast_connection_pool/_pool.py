@@ -4,15 +4,15 @@ FastConnectionPool — FastPool Class.
 Ultra-fast SQLite connection pool with thread-local caching.
 """
 
+import logging
 import sqlite3
 import threading
 import time
-import logging
 from collections import deque
-from typing import Dict, Optional, Any, List
 from contextlib import contextmanager
+from typing import Any
 
-from ._pragmas import _apply_pragmas, PoolStats
+from ._pragmas import PoolStats, _apply_pragmas
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +37,15 @@ class FastPool:
         self._local = threading.local()
 
         # Shared overflow pool: {db_name: deque[sqlite3.Connection]}
-        self._shared: Dict[str, deque] = {}
+        self._shared: dict[str, deque] = {}
         self._shared_lock = threading.Lock()
 
         # Per-database write locks
-        self._write_locks: Dict[str, threading.Lock] = {}
+        self._write_locks: dict[str, threading.Lock] = {}
         self._write_lock_mutex = threading.Lock()
 
         # Per-database stats
-        self._stats: Dict[str, PoolStats] = {}
+        self._stats: dict[str, PoolStats] = {}
         self._stats_lock = threading.Lock()
 
         # Data directory
@@ -67,13 +67,13 @@ class FastPool:
     @staticmethod
     def _get_data_dir() -> str:
         """Get the data directory path."""
-        from pathlib import Path
         import os
+        from pathlib import Path
         if 'ANDROID_ARGUMENT' in os.environ:
             try:
                 from android.storage import app_storage_path  # type: ignore[import-unresolved]
                 return str(Path(app_storage_path()) / "zenic_data")
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return str(Path.home() / ".zenic_agents" / "data")
 
@@ -134,7 +134,7 @@ class FastPool:
             else:
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
                 del local_pool[db_name]
                 stats.reconnections += 1
@@ -154,7 +154,7 @@ class FastPool:
                 else:
                     try:
                         conn.close()
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
                     stats.reconnections += 1
 
@@ -175,7 +175,7 @@ class FastPool:
             else:
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     @contextmanager
@@ -191,14 +191,14 @@ class FastPool:
         except Exception:
             try:
                 conn.rollback()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             raise
         finally:
             lock.release()
 
     @contextmanager
-    def batch_commit(self, db_name: str, batch_size: int = 100):  # noqa: ARG002
+    def batch_commit(self, db_name: str, batch_size: int = 100):
         """Context manager for batch write operations (10-50x faster)."""
         lock = self._get_write_lock(db_name)
         conn = self.get(db_name)
@@ -212,7 +212,7 @@ class FastPool:
         except Exception:
             try:
                 conn.execute("ROLLBACK")  # nosemgrep: sqlalchemy-execute-raw-query
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             raise
         finally:
@@ -226,7 +226,7 @@ class FastPool:
         except sqlite3.Error as e:
             logger.debug("WAL checkpoint failed for %s: %s", db_name, e)
 
-    def stats(self, db_name: Optional[str] = None) -> Dict[str, Any]:
+    def stats(self, db_name: str | None = None) -> dict[str, Any]:
         """Get pool statistics."""
         if db_name:
             s = self._get_stats(db_name)
@@ -261,20 +261,20 @@ class FastPool:
 
         local_pool = getattr(self._local, 'pool', None)
         if local_pool:
-            for name, conn in local_pool.items():
+            for _name, conn in local_pool.items():
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
             local_pool.clear()
 
         with self._shared_lock:
-            for name, pool in self._shared.items():
+            for _name, pool in self._shared.items():
                 while pool:
                     conn = pool.popleft()
                     try:
                         conn.close()
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
             self._shared.clear()
 
@@ -299,10 +299,10 @@ class FastPool:
                         try:
                             conn.close()
                             stats.active_connections -= 1
-                        except Exception:
+                        except Exception:  # noqa: S110
                             pass
 
-    def purge_tenant(self, db_name: str, tenant_id: str, tables: List[str]) -> int:
+    def purge_tenant(self, db_name: str, tenant_id: str, tables: list[str]) -> int:
         """Remove all rows for a tenant from specified tables (GDPR compliance)."""
         _VALID_TABLES = frozenset({
             "ast_nodes", "theorems", "ledger", "requests",
@@ -316,7 +316,7 @@ class FastPool:
                     continue
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM {table} WHERE tenant_id = ?",
+                        f"DELETE FROM {table} WHERE tenant_id = ?",  # noqa: S608
                         (tenant_id,),
                     )
                     total_deleted += cursor.rowcount

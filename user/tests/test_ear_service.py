@@ -7,8 +7,8 @@ Usa DummyBackend (siempre disponible) para STT, y audio real generado con pydub.
 import io
 
 import pytest
-from pydub.generators import Sine
 from pydub import AudioSegment
+from pydub.generators import Sine
 
 from src.core.voice_pipeline._types import (
     AudioFormat,
@@ -17,16 +17,15 @@ from src.core.voice_pipeline._types import (
     VoicePipelineMetrics,
 )
 from src.core.voice_pipeline.ear import (
-    STTBackend,
-    DummyBackend,
-    FasterWhisperBackend,
-    WhisperBackend,
-    CloudBackend,
-    Ear,
     _BACKEND_CLASSES,
     _DEFAULT_FALLBACK_CHAIN,
+    CloudBackend,
+    DummyBackend,
+    Ear,
+    FasterWhisperBackend,
+    STTBackend,
+    WhisperBackend,
 )
-
 
 # ── Audio fixtures ─────────────────────────────────────────────
 

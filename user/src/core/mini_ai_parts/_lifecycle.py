@@ -200,7 +200,7 @@ class ModelLifecycleMixin:
                 # timeouts. By shutting down and recreating, we get a fresh thread.
                 try:
                     self._executor.shutdown(wait=False)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
                 self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
                 with self._lock:

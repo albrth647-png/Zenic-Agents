@@ -30,22 +30,22 @@ Public API (Phase D):
 """
 
 from .bridge import NicheBridge, NicheCatalog, NicheTemplate
-from .document_parser import DocumentParser
-from .ingest_bridge import DocumentIngestor, IngestionResult
 from .certifier_bridge import BlueprintCertifier, CertificationHelper, CertificationResultPy
+from .document_parser import DocumentParser
 from .e2e_bridge import NichePipeline, PipelineProgress, PipelineResult
+from .ingest_bridge import DocumentIngestor, IngestionResult
 
 __all__ = [
-    "NicheBridge",
-    "NicheCatalog",
-    "NicheTemplate",
-    "DocumentParser",
-    "DocumentIngestor",
-    "IngestionResult",
     "BlueprintCertifier",
     "CertificationHelper",
     "CertificationResultPy",
+    "DocumentIngestor",
+    "DocumentParser",
+    "IngestionResult",
+    "NicheBridge",
+    "NicheCatalog",
     "NichePipeline",
+    "NicheTemplate",
     "PipelineProgress",
     "PipelineResult",
 ]

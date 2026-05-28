@@ -9,10 +9,10 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.shared.db_initializer import get_connection, get_data_dir
 from src.core.observability.forensic._types import ForensicEntry
+from src.core.shared.db_initializer import get_connection, get_data_dir
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class QueryMixin:
 
     def _load_audit_events(
         self, entity_id: str, tenant_id: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Load raw audit event rows for an entity from the audit DB."""
         db_path = self._get_audit_db_path()
         if not Path(db_path).exists():
@@ -48,7 +48,7 @@ class QueryMixin:
 
     def _load_ledger_entries(
         self, entity_id: str, tenant_id: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Load raw ledger rows for an entity."""
         conn = get_connection("merkle_ledger.sqlite")
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -61,15 +61,15 @@ class QueryMixin:
 
     @staticmethod
     def _correlate(
-        audit_rows: List[Dict[str, Any]],
-        ledger_rows: List[Dict[str, Any]],
+        audit_rows: list[dict[str, Any]],
+        ledger_rows: list[dict[str, Any]],
         entity_id: str,
         tenant_id: str,
-    ) -> List[ForensicEntry]:
+    ) -> list[ForensicEntry]:
         """Cross-correlate audit events and ledger entries."""
-        entries: List[ForensicEntry] = []
+        entries: list[ForensicEntry] = []
 
-        audit_by_trace: Dict[str, Dict[str, Any]] = {}
+        audit_by_trace: dict[str, dict[str, Any]] = {}
         for row in audit_rows:
             tid = row.get("trace_id") or ""
             if tid:
@@ -79,7 +79,7 @@ class QueryMixin:
 
         for lrow in ledger_rows:
             ledger_ts: float = lrow.get("timestamp", 0.0) or 0.0
-            matched_audit: Optional[Dict[str, Any]] = None
+            matched_audit: dict[str, Any] | None = None
 
             for arow in audit_rows:
                 audit_ts: float = arow.get("created_at", 0.0) or 0.0

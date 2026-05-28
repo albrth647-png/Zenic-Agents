@@ -17,12 +17,12 @@ Si las 9 tareas determinísticas fallan → Capas 2, 3, 4 (VerdictEngine)
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 
+from ..evidence_collector import EvidenceCollector
+from ..types import DeterministicResult, Evidence, EvidenceType, Verdict
 from ._tasks_1to4 import DeterministicTasks1To4Mixin
 from ._tasks_5to7 import DeterministicTasks5To7Mixin
-from ..types import DeterministicResult, Evidence, EvidenceType, Verdict
-from ..evidence_collector import EvidenceCollector
 
 logger = logging.getLogger(__name__)
 
@@ -165,9 +165,9 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         text: str,
         code: str = "",
         language: str = "python",
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
         tenant_id: str = "__anonymous__",
-    ) -> Dict[str, DeterministicResult]:
+    ) -> dict[str, DeterministicResult]:
         """
         Ejecuta las 9 tareas determinísticas en secuencia estricta.
 
@@ -177,7 +177,7 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         GRIETA 2: Pipeline expandido de 7→9 pasos.
         """
         ctx = context or {}
-        results: Dict[str, DeterministicResult] = {}
+        results: dict[str, DeterministicResult] = {}
 
         # ── PASO 1: memory_lookup (NUEVO) ──
         results["memory_lookup"] = self.memory_lookup(text, tenant_id)
@@ -274,8 +274,8 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         text: str,
         code: str = "",
         language: str = "python",
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, DeterministicResult]:
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, DeterministicResult]:
         """Backward-compatible 7-step execution (delegates to 9-step)."""
         full_results = self.execute_all_expanded(text, code, language, context)
         # Return only the original 7 keys for backward compatibility

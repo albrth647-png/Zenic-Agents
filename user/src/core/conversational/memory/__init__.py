@@ -10,16 +10,16 @@ Tres niveles de memoria con scoring, retencion y retrieval:
 Cada nivel tiene su propia politica de retencion y eviction.
 """
 
-from .working_memory import WorkingMemory
-from .short_term import ShortTermMemory
 from .long_term import LongTermMemory
-from .memory_scorer import MemoryScorer
 from .manager import MemoryManager
+from .memory_scorer import MemoryScorer
+from .short_term import ShortTermMemory
+from .working_memory import WorkingMemory
 
 __all__ = [
-    "WorkingMemory",
-    "ShortTermMemory",
     "LongTermMemory",
-    "MemoryScorer",
     "MemoryManager",
+    "MemoryScorer",
+    "ShortTermMemory",
+    "WorkingMemory",
 ]

@@ -150,7 +150,7 @@ async def _post_api_urllib(
 
     def _sync_post() -> ChannelResponse:
         data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
+        req = urllib.request.Request(  # noqa: S310
             validated_url,
             data=data,
             headers={
@@ -160,7 +160,7 @@ async def _post_api_urllib(
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: F821
+            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: F821,S310
                 body = json.loads(resp.read().decode("utf-8"))
                 messages = body.get("messages", [{}])
                 msg_id = messages[0].get("id", "") if messages else ""

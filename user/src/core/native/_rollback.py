@@ -6,20 +6,20 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from src.core.native._bindings import HAS_NATIVE
 
 if HAS_NATIVE:
     from src.core.native._bindings import (
-        _rust_snapshot_file,
-        _rust_restore_file,
-        _rust_verify_rollback_readiness,
         _rust_file_hash,
+        _rust_restore_file,
+        _rust_snapshot_file,
+        _rust_verify_rollback_readiness,
     )
 
 
-def snapshot_file(source_path: str, backup_path: str) -> Dict[str, Any]:
+def snapshot_file(source_path: str, backup_path: str) -> dict[str, Any]:
     """Create a backup snapshot of a file with BLAKE3 checksum."""
     if HAS_NATIVE:
         return _rust_snapshot_file(source_path, backup_path)
@@ -45,7 +45,7 @@ def snapshot_file(source_path: str, backup_path: str) -> Dict[str, Any]:
 
 def restore_file(
     backup_path: str, target_path: str, expected_checksum: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Restore a file from a backup with checksum verification."""
     if HAS_NATIVE:
         return _rust_restore_file(backup_path, target_path, expected_checksum)
@@ -75,15 +75,15 @@ def restore_file(
 
 
 def verify_rollback_readiness(
-    resources: List[Dict[str, Any]],
-) -> Dict[str, Any]:
+    resources: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Verify that all resources needed for rollback are available."""
     if HAS_NATIVE:
         return _rust_verify_rollback_readiness(resources)
     # Pure Python fallback
     total = len(resources)
     verified = 0
-    failed: List[Dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
 
     for res in resources:
         rtype = res.get("resource_type", "")

@@ -12,8 +12,8 @@ No AI. All collection is deterministic keyword/hash/metadata based.
 
 from __future__ import annotations
 
-import time
 import logging
+import time
 from typing import Any
 
 from ..resilience import BaseAgent

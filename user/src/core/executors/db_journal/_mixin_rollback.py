@@ -9,16 +9,15 @@ import logging
 import sqlite3
 from typing import TYPE_CHECKING
 
-from src.core.shared.retry import with_retry
 from src.core.executors.db_journal._helpers import (
     extract_table_and_where_from_delete,
     extract_table_and_where_from_update,
     extract_table_from_insert,
 )
-from src.core.executors.db_journal._types import RollbackResult
+from src.core.shared.retry import with_retry
 
 if TYPE_CHECKING:
-    from src.core.executors.db_journal._types import JournalEntry
+    from src.core.executors.db_journal._types import JournalEntry, RollbackResult
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ class RollbackMixin:
                     col_names = ", ".join(columns)
                     values = [row[c] for c in columns]
                     insert_sql = (
-                        f"INSERT OR REPLACE INTO {table}"
+                        f"INSERT OR REPLACE INTO {table}"  # noqa: S608
                         f" ({col_names}) VALUES ({placeholders})"
                     )
                     conn.execute(insert_sql, values)  # nosemgrep
@@ -103,8 +102,8 @@ class RollbackMixin:
                     values = [row[c] for c in columns]
                     pk_col = columns[0]
                     pk_val = row[pk_col]
-                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"
-                    conn.execute(update_sql, values + [pk_val])  # nosemgrep
+                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
+                    conn.execute(update_sql, [*values, pk_val])  # nosemgrep
                     restored += 1
                 conn.commit()
             except Exception as exc:
@@ -139,7 +138,7 @@ class RollbackMixin:
             conn = sqlite3.connect(entry.db_path)
             try:
                 cursor = conn.execute(  # nosemgrep
-                    f"DELETE FROM {table} WHERE rowid = ?",
+                    f"DELETE FROM {table} WHERE rowid = ?",  # noqa: S608
                     (entry.lastrowid,),
                 )
                 conn.commit()

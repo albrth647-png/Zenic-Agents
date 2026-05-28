@@ -9,28 +9,28 @@ use serde::{Deserialize, Serialize};
 // ═══════════════════════════════════════════════════════════════
 
 /// Minimum confidence to consider a match valid.
-pub(crate) const MIN_CONFIDENCE_THRESHOLD: f64 = 0.3;
+pub const MIN_CONFIDENCE_THRESHOLD: f64 = 0.3;
 
 /// Confidence level for exact name match.
-pub(crate) const CONFIDENCE_EXACT: f64 = 0.95;
+pub const CONFIDENCE_EXACT: f64 = 0.95;
 
 /// Confidence level for display name match.
-pub(crate) const CONFIDENCE_DISPLAY: f64 = 0.85;
+pub const CONFIDENCE_DISPLAY: f64 = 0.85;
 
 /// Confidence level for stem/substring match.
-pub(crate) const CONFIDENCE_STEM: f64 = 0.70;
+pub const CONFIDENCE_STEM: f64 = 0.70;
 
 /// Confidence level for keyword match.
-pub(crate) const CONFIDENCE_KEYWORD: f64 = 0.50;
+pub const CONFIDENCE_KEYWORD: f64 = 0.50;
 
 /// Confidence level for heuristic/type match.
-pub(crate) const CONFIDENCE_HEURISTIC: f64 = 0.30;
+pub const CONFIDENCE_HEURISTIC: f64 = 0.30;
 
 /// Maximum number of candidate values to extract per field.
-pub(crate) const MAX_CANDIDATES_PER_FIELD: usize = 5;
+pub const MAX_CANDIDATES_PER_FIELD: usize = 5;
 
 /// Common field name aliases for fuzzy matching.
-pub(crate) const FIELD_ALIASES: &[(&str, &[&str])] = &[
+pub const FIELD_ALIASES: &[(&str, &[&str])] = &[
     ("business_name", &["company", "organization", "empresa", "negocio", "company_name", "business", "firm"]),
     ("business_type", &["company_type", "entity_type", "tipo_empresa", "organization_type"]),
     ("tax_id", &["ruc", "nit", "cif", "vat", "eIN", "tax_number", "rfc"]),
@@ -112,27 +112,32 @@ impl FieldMatch {
     pub fn confidence(&self) -> f64 {
         self.confidence
     }
+
+    /// Check if this match meets the minimum confidence threshold.
+    pub fn is_reliable(&self) -> bool {
+        self.confidence >= MIN_CONFIDENCE_THRESHOLD
+    }
 }
 
 #[pymethods]
 impl FieldMatch {
-    #[getter]
-    fn field_name(&self) -> &str {
+    #[getter(field_name)]
+    fn py_get_field_name(&self) -> &str {
         &self.field_name
     }
 
-    #[getter]
-    fn section_id(&self) -> &str {
+    #[getter(section_id)]
+    fn py_get_section_id(&self) -> &str {
         &self.section_id
     }
 
-    #[getter]
-    fn value(&self) -> &str {
+    #[getter(value)]
+    fn py_get_value(&self) -> &str {
         &self.value
     }
 
-    #[getter]
-    fn confidence(&self) -> f64 {
+    #[getter(confidence)]
+    fn py_get_confidence(&self) -> f64 {
         self.confidence
     }
 
@@ -142,12 +147,12 @@ impl FieldMatch {
     }
 
     #[getter]
-    fn match_method(&self) -> &str {
+    pub fn match_method(&self) -> &str {
         &self.match_method
     }
 
-    /// Check if this match meets the minimum confidence threshold.
-    fn is_reliable(&self) -> bool {
+    /// Check if this match meets the minimum confidence threshold (Python-facing).
+    fn py_is_reliable(&self) -> bool {
         self.confidence >= MIN_CONFIDENCE_THRESHOLD
     }
 
@@ -169,6 +174,12 @@ impl FieldMatch {
             "FieldMatch(field={:?}, section={:?}, confidence={:.2}, method={:?})",
             self.field_name, self.section_id, self.confidence, self.match_method,
         )
+    }
+}
+
+impl pyo3::ToPyObject for FieldMatch {
+    fn to_object(&self, py: Python<'_>) -> pyo3::PyObject {
+        self.clone().into_py(py)
     }
 }
 
@@ -208,37 +219,61 @@ impl ExtractionResult {
             reliable_count,
         }
     }
+
+    pub fn matches(&self) -> &[FieldMatch] {
+        &self.matches
+    }
+
+    pub fn unmatched_fields(&self) -> &[String] {
+        &self.unmatched_fields
+    }
+
+    pub fn confidence_avg(&self) -> f64 {
+        self.confidence_avg
+    }
+
+    pub fn total_candidates(&self) -> usize {
+        self.total_candidates
+    }
+
+    pub fn matched_count(&self) -> usize {
+        self.matched_count
+    }
+
+    pub fn reliable_count(&self) -> usize {
+        self.reliable_count
+    }
 }
 
 #[pymethods]
 impl ExtractionResult {
-    #[getter]
-    fn matches(&self) -> Vec<FieldMatch> {
+    #[getter(matches)]
+    fn py_matches(&self) -> Vec<FieldMatch> {
         self.matches.clone()
     }
 
-    #[getter]
-    fn unmatched_fields(&self) -> Vec<String> {
+    #[getter(unmatched_fields)]
+    fn py_unmatched_fields(&self) -> Vec<String> {
         self.unmatched_fields.clone()
     }
 
-    #[getter]
-    fn confidence_avg(&self) -> f64 {
+    #[getter(confidence_avg)]
+    fn py_confidence_avg(&self) -> f64 {
         self.confidence_avg
     }
 
-    #[getter]
-    fn total_candidates(&self) -> usize {
+    #[getter(total_candidates)]
+    fn py_total_candidates(&self) -> usize {
         self.total_candidates
     }
 
-    #[getter]
-    fn matched_count(&self) -> usize {
+    #[getter(matched_count)]
+    fn py_matched_count(&self) -> usize {
         self.matched_count
     }
 
-    #[getter]
-    fn reliable_count(&self) -> usize {
+    #[getter(reliable_count)]
+    fn py_reliable_count(&self) -> usize {
         self.reliable_count
     }
 

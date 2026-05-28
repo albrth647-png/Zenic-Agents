@@ -7,7 +7,7 @@ acceptable for observability data.
 """
 
 import threading
-from typing import Any, Dict
+from typing import Any
 
 
 class BusMetrics:
@@ -24,9 +24,9 @@ class BusMetrics:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         # Per-agent counters
-        self._agent_sent: Dict[str, int] = {}
-        self._agent_received: Dict[str, int] = {}
-        self._agent_latency_us: Dict[str, float] = {}
+        self._agent_sent: dict[str, int] = {}
+        self._agent_received: dict[str, int] = {}
+        self._agent_latency_us: dict[str, float] = {}
         # Global counters
         self.total_throughput: int = 0
         self.db_flush_count: int = 0
@@ -52,10 +52,10 @@ class BusMetrics:
         with self._lock:
             self.db_flush_count += 1
 
-    def snapshot(self, buffer_utilization: float = 0.0) -> Dict[str, Any]:
+    def snapshot(self, buffer_utilization: float = 0.0) -> dict[str, Any]:
         """Return a point-in-time metrics snapshot."""
         with self._lock:
-            per_agent: Dict[str, Dict[str, Any]] = {}
+            per_agent: dict[str, dict[str, Any]] = {}
             all_agents = set(self._agent_sent) | set(self._agent_received)
             for aid in all_agents:
                 sent = self._agent_sent.get(aid, 0)

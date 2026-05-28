@@ -16,12 +16,12 @@ Fallback:
     never crashes due to a missing native extension.
 """
 
-from ._types import IngestionResult, NATIVE_AVAILABLE, os_path_exists
 from ._mixin_core import DocumentIngestor
+from ._types import NATIVE_AVAILABLE, IngestionResult, os_path_exists
 
 __all__ = [
-    "IngestionResult",
-    "DocumentIngestor",
     "NATIVE_AVAILABLE",
+    "DocumentIngestor",
+    "IngestionResult",
     "os_path_exists",
 ]

@@ -147,7 +147,7 @@ class HardwareFlow(BaseFlow):
             import subprocess
 
             proc = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"],
+                ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
                 capture_output=True,
                 text=True,
                 timeout=3,
@@ -157,7 +157,7 @@ class HardwareFlow(BaseFlow):
                 if serials:
                     result.disk_serial = serials[0]
                     components_used.append("disk_serial")
-        except (FileNotFoundError, Exception):
+        except (FileNotFoundError, Exception):  # noqa: S110
             pass
 
         # Compute fingerprint via license module
@@ -184,7 +184,7 @@ class HardwareFlow(BaseFlow):
                         result.match_score = 80
                     else:
                         result.match_score = 30
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         except ImportError:

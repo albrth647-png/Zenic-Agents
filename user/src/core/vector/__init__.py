@@ -11,11 +11,11 @@ Components:
 - VectorHealthCheck: Integration with the HealthAggregator
 """
 
-from .vector_store import VectorStore, get_vector_store
 from .hnsw_index import HNSWIndex
+from .vector_store import VectorStore, get_vector_store
 
 __all__ = [
+    "HNSWIndex",
     "VectorStore",
     "get_vector_store",
-    "HNSWIndex",
 ]

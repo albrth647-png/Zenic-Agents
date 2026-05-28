@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class LicenseTier(str, Enum):
@@ -46,7 +46,7 @@ class LicenseTier(str, Enum):
             - ON_PREMISE_ENTERPRISE → "on_premise_enterprise"
             - TRIAL → "business" (trial uses Business tier capabilities)
         """
-        mapping: Dict[LicenseTier, str] = {
+        mapping: dict[LicenseTier, str] = {
             LicenseTier.STARTER: "starter",
             LicenseTier.BUSINESS: "business",
             LicenseTier.ENTERPRISE: "enterprise",
@@ -71,7 +71,7 @@ class LicenseTier(str, Enum):
             default to ``LicenseTier.STARTER``.
         """
         normalized = tier_name.lower().strip()
-        mapping: Dict[str, LicenseTier] = {
+        mapping: dict[str, LicenseTier] = {
             "starter": cls.STARTER,
             "community": cls.STARTER,
             "business": cls.BUSINESS,
@@ -132,12 +132,12 @@ class LicenseInfo:
     issued_to: str = ""
     issued_at: float = 0.0
     expires_at: float = 0.0
-    features: List[str] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
     max_users: int = 1
     hardware_id: str = ""
     binding_strength: HardwareBindingStrength = HardwareBindingStrength.SOFT
     signature: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_expired(self) -> bool:
         """Check if the license has expired."""
@@ -149,7 +149,7 @@ class LicenseInfo:
         """Check if this is a perpetual (non-expiring) license."""
         return self.expires_at == 0
 
-    def days_remaining(self) -> Optional[int]:
+    def days_remaining(self) -> int | None:
         """Get days remaining until expiration. None if perpetual."""
         if self.is_perpetual():
             return None
@@ -181,7 +181,7 @@ class LicenseInfo:
         ]
         return "|".join(parts)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "license_id": self.license_id,
@@ -205,9 +205,9 @@ class LicenseVerificationResult:
     """Result of a license verification check."""
     valid: bool
     status: LicenseStatus
-    license_info: Optional[LicenseInfo] = None
+    license_info: LicenseInfo | None = None
     reason: str = ""
-    checks_performed: List[str] = field(default_factory=list)
+    checks_performed: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -215,5 +215,5 @@ class KillSwitchStatus:
     """Status of the remote kill switch."""
     active: bool
     reason: str = ""
-    activated_at: Optional[float] = None
+    activated_at: float | None = None
     source: str = ""  # 'server', 'local', 'config'

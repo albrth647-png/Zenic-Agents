@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ._types import DAGEdge, DAGNode
+if TYPE_CHECKING:
+    from ._types import DAGEdge, DAGNode
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +69,8 @@ class DAGBuilderGraphMixin:
             List of node IDs forming the critical path.
         """
         order = self.topological_sort()
-        dist: dict[str, float] = {nid: 0.0 for nid in self._nodes}
-        prev: dict[str, str | None] = {nid: None for nid in self._nodes}
+        dist: dict[str, float] = dict.fromkeys(self._nodes, 0.0)
+        prev: dict[str, str | None] = dict.fromkeys(self._nodes)
 
         for nid in order:
             weight = self._nodes[nid].config.get("weight", 1.0)

@@ -7,7 +7,7 @@ without providing any project generation functionality.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +19,17 @@ class ProjectGenMixin:
     class hierarchy without breaking imports.
     """
 
-    def generate_project(self, description: str, **kwargs) -> Optional[Dict[str, Any]]:
+    def generate_project(self, description: str, **kwargs) -> dict[str, Any] | None:
         """Removed: project generation is not part of assistant-agent."""
         logger.warning("ProjectGenMixin.generate_project: feature removed in v3.0.0")
         return None
 
-    def list_project_templates(self) -> List[Dict[str, Any]]:
+    def list_project_templates(self) -> list[dict[str, Any]]:
         """Removed: project generation is not part of assistant-agent."""
         logger.warning("ProjectGenMixin.list_project_templates: feature removed in v3.0.0")
         return []
 
-    def validate_project_spec(self, spec: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_project_spec(self, spec: dict[str, Any]) -> dict[str, Any]:
         """Removed: project generation is not part of assistant-agent."""
         logger.warning("ProjectGenMixin.validate_project_spec: feature removed in v3.0.0")
         return {"valid": False, "errors": ["Project generation removed in v3.0.0"]}

@@ -1,73 +1,71 @@
 """All shared data types for v18 single-responsibility agents."""
 
-from ._core_types import (
-    # Base types
-    AgentResult,
-    AgentMessage,
-    # Layer 1: Understanding
-    LanguageResult,
-    IntentResult,
-    EntityResult,
-    TargetResult,
-    CriticalityResult,
-    # Layer 2: Memory & Context
-    MemoryEntries,
-    ScoredEntry,
-    ScoredEntries,
-    CompressedContext,
-    PrefetchResult,
-    # Layer 3: Business
-    BusinessData,
-    InvoiceResult,
-    InventoryResult,
-    CRMResult,
-    TaskResult,
-    ReportResult,
-    NotificationResult,
-    AnalyticsResult,
-    RoutedOperation,
-)
-
 from ._advanced_types import (
+    ActionSpec,
+    # Layer 6: Automation
+    AutoDescription,
+    ChainResult,
     # Layer 4: Code
     CodeRequest,
     CodeResult,
-    ScaffoldResult,
-    # Layer 5: Validation
-    ValidationIssue,
-    SecurityResult,
-    SyntaxResult,
-    ChainResult,
-    ConfigResult,
-    RiskResult,
-    FixSuggestions,
-    # Layer 6: Automation
-    AutoDescription,
-    TriggerSpec,
-    ActionSpec,
-    ScheduleSpec,
+    Conclusion,
     ConditionResult,
+    ConfidenceResult,
+    ConfigResult,
+    ConsensusResult,
+    DecomposedSteps,
+    Evidence,
+    EvidenceType,
+    FixSuggestions,
+    # Layer 9: Infrastructure
+    HealthSnapshot,
     NameResult,
-    WorkflowSpec,
+    PipelineResult,
     # Layer 7: Reasoning
     ProblemType,
-    ReasoningStep,
     ReasoningResult,
-    DecomposedSteps,
-    ConfidenceResult,
-    Conclusion,
+    ReasoningStep,
+    RiskResult,
+    ScaffoldResult,
+    ScheduleSpec,
+    SecurityResult,
+    SyntaxResult,
+    TriggerSpec,
+    # Layer 5: Validation
+    ValidationIssue,
     # Layer 8: Verdict
     Verdict,
     VerdictInput,
     VerdictOutput,
-    Evidence,
-    EvidenceType,
-    ConsensusResult,
-    PipelineResult,
-    # Layer 9: Infrastructure
-    HealthSnapshot,
+    WorkflowSpec,
 )
-
+from ._core_types import (
+    AgentMessage,
+    # Base types
+    AgentResult,
+    AnalyticsResult,
+    # Layer 3: Business
+    BusinessData,
+    CompressedContext,
+    CriticalityResult,
+    CRMResult,
+    EntityResult,
+    IntentResult,
+    InventoryResult,
+    InvoiceResult,
+    # Layer 1: Understanding
+    LanguageResult,
+    # Layer 2: Memory & Context
+    MemoryEntries,
+    NotificationResult,
+    PrefetchResult,
+    ReportResult,
+    RoutedOperation,
+    ScoredEntries,
+    ScoredEntry,
+    TargetResult,
+    TaskResult,
+)
 from ._transport_types import (
     # Layer 10: Transport
     TextChannelInput,
@@ -77,32 +75,71 @@ from ._transport_types import (
 )
 
 __all__ = [
+    "ActionSpec",
+    "AgentMessage",
     # Base types
-    "AgentResult", "AgentMessage",
-    # Layer 1: Understanding
-    "LanguageResult", "IntentResult", "EntityResult", "TargetResult", "CriticalityResult",
-    # Layer 2: Memory & Context
-    "MemoryEntries", "ScoredEntry", "ScoredEntries", "CompressedContext", "PrefetchResult",
-    # Layer 3: Business
-    "BusinessData", "InvoiceResult", "InventoryResult", "CRMResult", "TaskResult",
-    "ReportResult", "NotificationResult", "AnalyticsResult", "RoutedOperation",
-    # Layer 4: Code
-    "CodeRequest", "CodeResult", "ScaffoldResult",
-    # Layer 5: Validation
-    "ValidationIssue", "SecurityResult", "SyntaxResult", "ChainResult",
-    "ConfigResult", "RiskResult", "FixSuggestions",
+    "AgentResult",
+    "AnalyticsResult",
     # Layer 6: Automation
-    "AutoDescription", "TriggerSpec", "ActionSpec", "ScheduleSpec",
-    "ConditionResult", "NameResult", "WorkflowSpec",
-    # Layer 7: Reasoning
-    "ProblemType", "ReasoningStep", "ReasoningResult", "DecomposedSteps",
-    "ConfidenceResult", "Conclusion",
-    # Layer 8: Verdict
-    "Verdict", "VerdictInput", "VerdictOutput", "Evidence", "EvidenceType",
-    "ConsensusResult", "PipelineResult",
+    "AutoDescription",
+    # Layer 3: Business
+    "BusinessData",
+    "CRMResult",
+    "ChainResult",
+    # Layer 4: Code
+    "CodeRequest",
+    "CodeResult",
+    "CompressedContext",
+    "Conclusion",
+    "ConditionResult",
+    "ConfidenceResult",
+    "ConfigResult",
+    "ConsensusResult",
+    "CriticalityResult",
+    "DecomposedSteps",
+    "EntityResult",
+    "Evidence",
+    "EvidenceType",
+    "FixSuggestions",
     # Layer 9: Infrastructure
     "HealthSnapshot",
+    "IntentResult",
+    "InventoryResult",
+    "InvoiceResult",
+    # Layer 1: Understanding
+    "LanguageResult",
+    # Layer 2: Memory & Context
+    "MemoryEntries",
+    "NameResult",
+    "NotificationResult",
+    "PipelineResult",
+    "PrefetchResult",
+    # Layer 7: Reasoning
+    "ProblemType",
+    "ReasoningResult",
+    "ReasoningStep",
+    "ReportResult",
+    "RiskResult",
+    "RoutedOperation",
+    "ScaffoldResult",
+    "ScheduleSpec",
+    "ScoredEntries",
+    "ScoredEntry",
+    "SecurityResult",
+    "SyntaxResult",
+    "TargetResult",
+    "TaskResult",
     # Layer 10: Transport
-    "TextChannelInput", "TextChannelResult",
-    "VoiceChannelInput", "VoiceChannelResult",
+    "TextChannelInput",
+    "TextChannelResult",
+    "TriggerSpec",
+    # Layer 5: Validation
+    "ValidationIssue",
+    # Layer 8: Verdict
+    "Verdict",
+    "VerdictInput",
+    "VerdictOutput",
+    "VoiceChannelInput",
+    "VoiceChannelResult",
+    "WorkflowSpec",
 ]

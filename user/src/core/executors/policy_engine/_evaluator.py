@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 from ._types import ConditionOperator
 
@@ -36,8 +36,8 @@ class PolicyCondition:
     def evaluate(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> bool:
         """Evaluate this condition against the given action/config/context.
 
@@ -55,8 +55,8 @@ class PolicyCondition:
     def _resolve_field(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """Resolve the field path to an actual value.
 
@@ -80,7 +80,7 @@ class PolicyCondition:
         return val if val is not _SENTINEL else None
 
     @staticmethod
-    def _navigate(obj: Any, keys: List[str]) -> Any:
+    def _navigate(obj: Any, keys: list[str]) -> Any:
         """Navigate nested dicts using a list of keys."""
         current = obj
         for key in keys:
@@ -172,7 +172,7 @@ class PolicyCondition:
         logger.warning("PolicyCondition: Unknown operator '%s'", op)
         return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "field": self.field,

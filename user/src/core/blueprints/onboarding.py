@@ -15,19 +15,22 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .composer import BlueprintComposer, CompositionResult
 from .converter import NicheConverter
 from .loader import BlueprintLoaderV2
-from .schema import CertifiedBlueprint
 from .types import (
     MonitorHook,
     OnboardingSession,
     OnboardingStep,
     OnboardingStepType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .schema import CertifiedBlueprint
 
 logger = logging.getLogger(__name__)
 
@@ -348,12 +351,11 @@ class OnboardingEngine:
                 self._apply_monitor_config(blueprint, step.config)
             elif step.step_type == OnboardingStepType.CONFIGURE_NOTIFICATIONS:
                 self._apply_notification_config(blueprint, step.config)
-            elif step.step_type == OnboardingStepType.IMPORT_DATA:
-                if session.import_data:
-                    logger.info(
-                        "OnboardingEngine: Import data with %d sources",
-                        len(session.import_data),
-                    )
+            elif step.step_type == OnboardingStepType.IMPORT_DATA and session.import_data:
+                logger.info(
+                    "OnboardingEngine: Import data with %d sources",
+                    len(session.import_data),
+                )
 
     def _apply_monitor_config(
         self,

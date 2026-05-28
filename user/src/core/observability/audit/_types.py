@@ -29,8 +29,8 @@ class AuditEventType(str, Enum):
     AUTH_LOGIN_SUCCESS = "auth.login.success"
     AUTH_LOGIN_FAILURE = "auth.login.failure"
     AUTH_LOGOUT = "auth.logout"
-    AUTH_TOKEN_REFRESH = "auth.token.refresh"
-    AUTH_TOKEN_REVOKED = "auth.token.revoked"
+    AUTH_TOKEN_REFRESH = "auth.token.refresh"  # noqa: S105
+    AUTH_TOKEN_REVOKED = "auth.token.revoked"  # noqa: S105
     AUTH_API_KEY_CREATED = "auth.api_key.created"
     AUTH_API_KEY_REVOKED = "auth.api_key.revoked"
     TENANT_CREATED = "tenant.created"

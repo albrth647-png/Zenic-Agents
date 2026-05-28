@@ -24,15 +24,15 @@ import os
 from typing import Optional
 
 from ._base import DatabaseBackend
-from ._sqlite import SQLiteDatabase
 from ._postgresql import PostgreSQLDatabase
+from ._sqlite import SQLiteDatabase
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "DatabaseBackend",
-    "SQLiteDatabase",
     "PostgreSQLDatabase",
+    "SQLiteDatabase",
     "get_db",
     "get_db_backend",
     "is_postgresql",
@@ -40,7 +40,7 @@ __all__ = [
 
 
 # ── Singleton instance ────────────────────────────────────
-_db_instance: Optional[DatabaseBackend] = None
+_db_instance: DatabaseBackend | None = None
 
 
 def is_postgresql() -> bool:

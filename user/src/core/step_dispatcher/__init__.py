@@ -17,7 +17,7 @@ with EventBus integration for step lifecycle events and Retry support.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Tuple  # noqa: UP035
 
 from src.core.patterns.behavioral import StrategyRegistry
 from src.core.patterns.orchestration import EventBus

@@ -8,6 +8,7 @@ NO espera a que el cliente pague espontáneamente.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
@@ -40,10 +41,8 @@ class UnpaidBalanceMonitor(BaseMonitor):
         for client in clients:
             name_val = client.get("nombre", client.get("name", client.get("cliente", str(client.get("id", "?")))))
             balance = client.get("saldo_pendiente", client.get("balance", 0))
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 total_pending += float(balance)
-            except (ValueError, TypeError):
-                pass
             findings.append(
                 {
                     "type": "unpaid_balance",

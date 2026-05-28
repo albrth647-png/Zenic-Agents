@@ -7,12 +7,12 @@ Procesa el mensaje crudo del usuario en tres fases:
   3. Enrich: Enriquecimiento con contexto y memoria
 """
 
-from .sanitizer import InputSanitizer
-from .parser import InputParser
 from .enricher import InputEnricher
+from .parser import InputParser
+from .sanitizer import InputSanitizer
 
 __all__ = [
-    "InputSanitizer",
-    "InputParser",
     "InputEnricher",
+    "InputParser",
+    "InputSanitizer",
 ]

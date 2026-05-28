@@ -6,30 +6,31 @@ All operations are strictly READ-ONLY — this module never modifies data.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import (
-    ImpactRiskLevel,
-    ImpactField,
-    DBImpactPreview,
-)
 from ._retry import _retry_db_operation
 from ._sql_parsing import (
+    count_set_placeholders,
+    extract_insert_columns,
+    extract_set_fields,
     extract_table_name,
     extract_where_clause,
-    extract_set_fields,
-    extract_insert_columns,
-    count_set_placeholders,
+)
+from ._types import (
+    DBImpactPreview,
+    ImpactField,
+    ImpactRiskLevel,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def preview_db_operation(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     db_retry_max: int = 3,
     db_retry_base_delay: float = 0.5,
 ) -> DBImpactPreview:
@@ -98,7 +99,7 @@ def preview_db_operation(
 def _preview_delete(
     db_path: str,
     query: str,
-    params: List[Any],
+    params: list[Any],
     table: str,
     preview: DBImpactPreview,
     db_retry_max: int,
@@ -114,7 +115,7 @@ def _preview_delete(
 
     # Build COUNT query with same WHERE clause
     where_clause = extract_where_clause(query)
-    count_query = f"SELECT COUNT(*) FROM {table}"
+    count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
     if where_clause:
         count_query += f" WHERE {where_clause}"
 
@@ -136,12 +137,12 @@ def _preview_delete(
         preview.estimated_rows = count
         preview.affected_rows = count
         preview.reversible = False
-        preview.summary = f"DELETE from {table}: {count} row(s) would be removed"
+        preview.summary = f"DELETE from {table}: {count} row(s) would be removed"  # noqa: S608
 
         if count == 0:
             preview.risk_level = ImpactRiskLevel.LOW
             preview.risk_score = 0.1
-            preview.summary = f"DELETE from {table}: no rows match the WHERE clause"
+            preview.summary = f"DELETE from {table}: no rows match the WHERE clause"  # noqa: S608
         elif count > 100:
             preview.risk_level = ImpactRiskLevel.CRITICAL
             preview.risk_score = 1.0
@@ -173,7 +174,7 @@ def _preview_delete(
 def _preview_update(
     db_path: str,
     query: str,
-    params: List[Any],
+    params: list[Any],
     table: str,
     preview: DBImpactPreview,
     db_retry_max: int,
@@ -198,7 +199,7 @@ def _preview_update(
     where_params = list(params[set_placeholders:]) if set_placeholders < len(params) else []
 
     # Count affected rows
-    count_query = f"SELECT COUNT(*) FROM {table}"
+    count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
     if where_clause:
         count_query += f" WHERE {where_clause}"
 
@@ -222,12 +223,12 @@ def _preview_update(
 
         # Fetch a sample row to show current values
         if count > 0:
-            sample_query = f"SELECT * FROM {table}"
+            sample_query = f"SELECT * FROM {table}"  # noqa: S608
             if where_clause:
                 sample_query += f" WHERE {where_clause}"
             sample_query += " LIMIT 1"
 
-            def _fetch_sample() -> Optional[Dict[str, Any]]:
+            def _fetch_sample() -> dict[str, Any] | None:
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -292,7 +293,7 @@ def _preview_update(
 def _preview_insert(
     db_path: str,
     query: str,
-    params: List[Any],
+    params: list[Any],
     table: str,
     preview: DBImpactPreview,
     db_retry_max: int,
@@ -314,7 +315,7 @@ def _preview_insert(
         preview.constraints_valid = False
         return preview
 
-    def _inspect_schema() -> List[Dict[str, Any]]:
+    def _inspect_schema() -> list[dict[str, Any]]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         try:
@@ -349,10 +350,8 @@ def _preview_insert(
                 # Try to find column index from query
                 insert_cols = extract_insert_columns(query)
                 if insert_cols:
-                    try:
+                    with contextlib.suppress(ValueError):
                         col_idx = insert_cols.index(col_name)
-                    except ValueError:
-                        pass
 
                 if col_idx is not None and col_idx < len(params):
                     if params[col_idx] is None:
@@ -365,12 +364,12 @@ def _preview_insert(
                     pass
 
         # Check UNIQUE constraints
-        def _get_unique_constraints() -> List[List[str]]:
+        def _get_unique_constraints() -> list[list[str]]:
             conn = sqlite3.connect(db_path)
             try:
                 cursor = conn.execute(f'PRAGMA index_list("{table}")')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 indexes = cursor.fetchall()
-                unique_constraints: List[List[str]] = []
+                unique_constraints: list[list[str]] = []
                 for idx_row in indexes:
                     if idx_row[2]:  # unique flag
                         idx_name = idx_row[1]
@@ -405,7 +404,7 @@ def _preview_insert(
                 if all_present and matching_indices:
                     # Check for existing rows with same unique values
                     where_parts = [f"{unique_cols[i]} = ?" for i in range(len(unique_cols))]
-                    check_query = f"SELECT COUNT(*) FROM {table} WHERE {' AND '.join(where_parts)}"
+                    check_query = f"SELECT COUNT(*) FROM {table} WHERE {' AND '.join(where_parts)}"  # noqa: S608
                     check_params = [params[i] for i in matching_indices if i < len(params)]
 
                     def _check_unique() -> int:
@@ -456,7 +455,7 @@ def _preview_insert(
 def _preview_select(
     db_path: str,
     query: str,
-    params: List[Any],
+    params: list[Any],
     table: str,
     preview: DBImpactPreview,
     db_retry_max: int,
@@ -469,7 +468,7 @@ def _preview_select(
 
     # Try to estimate row count
     if table:
-        count_query = f"SELECT COUNT(*) FROM {table}"
+        count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
         where_clause = extract_where_clause(query)
         if where_clause:
             count_query += f" WHERE {where_clause}"

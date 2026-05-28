@@ -226,14 +226,13 @@ class ECDSASigner:
                 # Legacy: fall through to HMAC attempt
 
         # HMAC verification
-        if algo == self.ALGO_HMAC or algo is None:
-            if self._fallback_key:
-                expected = hmac.new(
-                    self._fallback_key.encode(),
-                    data.encode(),
-                    hashlib.sha256,
-                ).hexdigest()
-                return hmac.compare_digest(expected, sig)
+        if (algo == self.ALGO_HMAC or algo is None) and self._fallback_key:
+            expected = hmac.new(
+                self._fallback_key.encode(),
+                data.encode(),
+                hashlib.sha256,
+            ).hexdigest()
+            return hmac.compare_digest(expected, sig)
 
         return False
 
@@ -247,7 +246,7 @@ class ECDSASigner:
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PublicFormat.SubjectPublicKeyInfo,
                 ).decode()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return ""
 

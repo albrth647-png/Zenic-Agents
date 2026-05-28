@@ -19,10 +19,10 @@ import logging
 from typing import Any, Optional
 
 from ..backend import BackendConfig, CoordinationBackend
+from ._lock_election_mixin import PgLockElectionMixin
+from ._saga_node_mixin import PgCircuitMixin, PgNodeMixin, PgSagaMixin
 from ._schema import PgConnectionMixin
 from ._task_mixin import PgTaskMixin
-from ._lock_election_mixin import PgLockElectionMixin
-from ._saga_node_mixin import PgCircuitMixin, PgSagaMixin, PgNodeMixin
 
 logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 
@@ -52,5 +52,5 @@ class PgBackend(
 
     def __init__(self, config: BackendConfig) -> None:
         super().__init__(config)
-        self._pool: Optional[Any] = None  # psycopg2 connection pool
+        self._pool: Any | None = None  # psycopg2 connection pool
         self._conn = None  # Single connection fallback

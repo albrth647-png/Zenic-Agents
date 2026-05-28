@@ -10,8 +10,8 @@ thread-safe access, retry logic, and graceful degradation.
 import threading
 from typing import Any, Optional
 
-from ._types import ImpactScore
 from ._mixin_core import ImpactScorer
+from ._types import ImpactScore
 
 __all__ = [
     "ImpactScore",
@@ -23,7 +23,7 @@ __all__ = [
 
 # ── Singleton ────────────────────────────────────────────
 
-_impact_scorer: Optional[ImpactScorer] = None
+_impact_scorer: ImpactScorer | None = None
 _lock = threading.Lock()
 
 

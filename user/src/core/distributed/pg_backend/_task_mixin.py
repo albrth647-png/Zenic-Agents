@@ -8,7 +8,7 @@ fail, renew_lease, expire_leases.
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 
@@ -35,10 +35,10 @@ class PgTaskMixin:
         queue_name: str,
         task_id: str,
         task_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         priority: int = 0,
-        delay_until: Optional[float] = None,
-        tenant_id: Optional[str] = None,
+        delay_until: float | None = None,
+        tenant_id: str | None = None,
     ) -> bool:
         try:
             self._execute_modify(
@@ -65,9 +65,9 @@ class PgTaskMixin:
         queue_name: str,
         worker_id: str,
         lease_seconds: float = 120.0,
-        task_types: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        task_types: list[str] | None = None,
+        tenant_id: str | None = None,
+    ) -> dict[str, Any] | None:
         now = time.time()
         lease_expires = now + lease_seconds
 
@@ -96,14 +96,14 @@ class PgTaskMixin:
             try:
                 with conn.cursor() as cur:
                     cur.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"""
+                        f"""  # noqa: S608
                         SELECT t.*
                         FROM coord_tasks t
                         WHERE {where_clause}
                         ORDER BY t.priority DESC, t.created_at ASC
                         LIMIT 1
                         FOR UPDATE SKIP LOCKED
-                        """,
+                        """,  # noqa: S608
                         tuple(params),
                     )
                     row = cur.fetchone()
@@ -114,7 +114,7 @@ class PgTaskMixin:
                         return None
 
                     columns = [desc[0] for desc in cur.description]
-                    task = dict(zip(columns, row))
+                    task = dict(zip(columns, row, strict=False))
                     claimed_task_id = task["task_id"]
 
                     # Claim the task
@@ -148,7 +148,7 @@ class PgTaskMixin:
             logger.error("PgBackend dequeue_task error: %s", exc)
             return None
 
-    async def complete_task(self, task_id: str, result: Optional[Dict[str, Any]] = None) -> bool:
+    async def complete_task(self, task_id: str, result: dict[str, Any] | None = None) -> bool:
         try:
             affected = self._execute_modify(
                 """

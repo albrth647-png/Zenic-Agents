@@ -21,16 +21,16 @@
 
 import { db } from "@/lib/db";
 import { PolicyEffectV2 } from "../types";
-import type {
-  PolicyDocument,
-
+import type { PolicyStatement, PolicyTestCase, PolicyEvaluationRequest, PolicyEvaluationResult } from "../types";
+import type { PolicyDocument } from "../types";
+import {
   SimulationChangeType,
   VerdictChangeCategory,
   SimulationRiskLevel,
   ConflictSeverity,
   ConflictType,
   ConflictResolutionStrategy,
-} from "./types";
+} from "../types";
 import type {
   SimulationRequest,
   SimulationChange,
@@ -41,7 +41,7 @@ import type {
   SimulationTrace,
   PolicyConflict,
   ConflictStatementRef,
-} from "./types";
+} from "../types";
 import { PolicyEvaluator, getPolicyEvaluator } from "./evaluator";
 
 // ─── Local Types ─────────────────────────────────────────────────────
@@ -127,14 +127,14 @@ async function loadActivePoliciesFromDb(): Promise<PolicyDocument[]> {
       name: p.name,
       version: p.version,
       description: p.description,
-      compliance: JSON.parse(p.compliance) as import("./types").ComplianceMapping[],
+      compliance: JSON.parse(p.compliance) as import("../types").ComplianceMapping[],
       labels: JSON.parse(p.labels) as Record<string, string>,
       author: p.author ?? undefined,
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),
     },
     statements: JSON.parse(p.statements) as PolicyStatement[],
-    tests: JSON.parse(p.tests) as import("./types").PolicyTestCase[],
+    tests: JSON.parse(p.tests) as import("../types").PolicyTestCase[],
   }));
 }
 

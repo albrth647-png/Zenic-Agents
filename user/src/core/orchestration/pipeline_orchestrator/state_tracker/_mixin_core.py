@@ -1,13 +1,14 @@
 """Core logic for state_tracker."""
 
 from __future__ import annotations
+
 import copy
 import logging
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import PipelineStatus, StepExecutionStatus, StepState, PipelineState
+from ._types import PipelineState, PipelineStatus, StepExecutionStatus, StepState
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,8 @@ class StateTracker:
         Args:
             max_history: Maximum number of state snapshots to retain.
         """
-        self._pipelines: Dict[str, PipelineState] = {}
-        self._snapshots: Dict[str, List[PipelineState]] = {}
+        self._pipelines: dict[str, PipelineState] = {}
+        self._snapshots: dict[str, list[PipelineState]] = {}
         self._max_history = max_history
 
     # ── Pipeline Management ──────────────────────────────────
@@ -53,8 +54,8 @@ class StateTracker:
     def create_pipeline(
         self,
         name: str = "",
-        pipeline_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        pipeline_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PipelineState:
         """
         Create a new pipeline state.
@@ -80,11 +81,11 @@ class StateTracker:
         )
         return state
 
-    def get_pipeline(self, pipeline_id: str) -> Optional[PipelineState]:
+    def get_pipeline(self, pipeline_id: str) -> PipelineState | None:
         """Retrieve a pipeline state by ID."""
         return self._pipelines.get(pipeline_id)
 
-    def list_pipelines(self) -> List[PipelineState]:
+    def list_pipelines(self) -> list[PipelineState]:
         """List all tracked pipelines."""
         return list(self._pipelines.values())
 
@@ -105,7 +106,7 @@ class StateTracker:
         step_id: str,
         name: str = "",
         input_data: Any = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepState:
         """
         Add a step to a pipeline.
@@ -140,7 +141,7 @@ class StateTracker:
         )
         return step
 
-    def get_step(self, pipeline_id: str, step_id: str) -> Optional[StepState]:
+    def get_step(self, pipeline_id: str, step_id: str) -> StepState | None:
         """Retrieve a step's state."""
         pipeline = self._pipelines.get(pipeline_id)
         if pipeline is None:
@@ -153,7 +154,7 @@ class StateTracker:
         step_id: str,
         status: StepExecutionStatus,
         output_data: Any = None,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> None:
         """
         Update a step's execution status.
@@ -249,7 +250,7 @@ class StateTracker:
         )
         return snap
 
-    def get_snapshots(self, pipeline_id: str) -> List[PipelineState]:
+    def get_snapshots(self, pipeline_id: str) -> list[PipelineState]:
         """Get all snapshots for a pipeline."""
         return list(self._snapshots.get(pipeline_id, []))
 
@@ -282,14 +283,14 @@ class StateTracker:
 
     # ── Queries ──────────────────────────────────────────────
 
-    def get_failed_pipelines(self) -> List[PipelineState]:
+    def get_failed_pipelines(self) -> list[PipelineState]:
         """Get all pipelines with FAILED status."""
         return [
             p for p in self._pipelines.values()
             if p.status == PipelineStatus.FAILED
         ]
 
-    def get_running_pipelines(self) -> List[PipelineState]:
+    def get_running_pipelines(self) -> list[PipelineState]:
         """Get all pipelines with RUNNING status."""
         return [
             p for p in self._pipelines.values()
@@ -297,9 +298,9 @@ class StateTracker:
         ]
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
-        status_counts: Dict[str, int] = {}
+        status_counts: dict[str, int] = {}
         for p in self._pipelines.values():
             key = p.status.value
             status_counts[key] = status_counts.get(key, 0) + 1

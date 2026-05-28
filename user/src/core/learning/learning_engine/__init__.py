@@ -6,11 +6,11 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Set
+from typing import Set  # noqa: UP035
 
+from ._helpers import _new_id, _now_iso, _retry
 from ._mixin_core import LearningEngine
 from ._types import LearningInsight, LearningStrategy
-from ._helpers import _new_id, _now_iso, _retry
 
 _instance: LearningEngine | None = None
 _instance_lock = threading.Lock()

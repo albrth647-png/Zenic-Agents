@@ -7,54 +7,52 @@ Importing this package registers all built-in monitors.
 
 from .base import (
     MonitorBase,
-    register_monitor,
-    get_monitor_class,
-    get_all_monitor_ids,
     create_monitor,
+    get_all_monitor_ids,
+    get_monitor_class,
+    register_monitor,
+)
+from .heavy import (
+    CapacityPlanningMonitor,
+    DemandProjectionMonitor,
+    MultiSourceAnalysisMonitor,
 )
 
 # Import monitor modules to trigger @register_monitor decorators
 from .lightweight import (
+    DiskSpaceMonitor,
     LowStockMonitor,
     OverdueInvoiceMonitor,
-    TomorrowAppointmentMonitor,
-    DiskSpaceMonitor,
     SystemHealthMonitor,
+    TomorrowAppointmentMonitor,
 )
-
 from .medium import (
-    SalesTrendMonitor,
     CRMConversionMonitor,
-    ResponseTimeMonitor,
     ErrorRateMonitor,
-)
-
-from .heavy import (
-    DemandProjectionMonitor,
-    MultiSourceAnalysisMonitor,
-    CapacityPlanningMonitor,
+    ResponseTimeMonitor,
+    SalesTrendMonitor,
 )
 
 __all__ = [
-    # Base
-    "MonitorBase",
-    "register_monitor",
-    "get_monitor_class",
-    "get_all_monitor_ids",
-    "create_monitor",
-    # Lightweight
-    "LowStockMonitor",
-    "OverdueInvoiceMonitor",
-    "TomorrowAppointmentMonitor",
-    "DiskSpaceMonitor",
-    "SystemHealthMonitor",
-    # Medium
-    "SalesTrendMonitor",
     "CRMConversionMonitor",
-    "ResponseTimeMonitor",
-    "ErrorRateMonitor",
+    "CapacityPlanningMonitor",
     # Heavy
     "DemandProjectionMonitor",
+    "DiskSpaceMonitor",
+    "ErrorRateMonitor",
+    # Lightweight
+    "LowStockMonitor",
+    # Base
+    "MonitorBase",
     "MultiSourceAnalysisMonitor",
-    "CapacityPlanningMonitor",
+    "OverdueInvoiceMonitor",
+    "ResponseTimeMonitor",
+    # Medium
+    "SalesTrendMonitor",
+    "SystemHealthMonitor",
+    "TomorrowAppointmentMonitor",
+    "create_monitor",
+    "get_all_monitor_ids",
+    "get_monitor_class",
+    "register_monitor",
 ]

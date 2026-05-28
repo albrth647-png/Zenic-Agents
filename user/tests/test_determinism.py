@@ -22,21 +22,20 @@ import uuid
 import pytest
 
 from src.core.shared.deterministic import (
-    SeedManager,
+    ControllableJitter,
     DeterministicRNG,
     DeterministicUUID,
     FencingTokenGenerator,
-    ControllableJitter,
-    set_global_seed,
+    SeedManager,
     get_global_seed,
-    reset_all_deterministic_state,
-    install_uuid4_patch,
-    uninstall_uuid4_patch,
-    is_uuid4_patched,
     install_random_patch,
+    install_uuid4_patch,
+    is_uuid4_patched,
+    reset_all_deterministic_state,
+    set_global_seed,
     uninstall_random_patch,
+    uninstall_uuid4_patch,
 )
-
 
 # ============================================================
 #  1. SeedManager Tests
@@ -364,9 +363,9 @@ class TestRandomPatch:
         """random.choice is deterministic after patch."""
         set_global_seed(42)
         install_random_patch()
-        v1 = random.choice([1, 2, 3, 4, 5])
+        v1 = random.choice([1, 2, 3, 4, 5])  # noqa: S310,S311
         set_global_seed(42)
-        v2 = random.choice([1, 2, 3, 4, 5])
+        v2 = random.choice([1, 2, 3, 4, 5])  # noqa: S310,S311
         assert v1 == v2
         uninstall_random_patch()
 
@@ -374,9 +373,9 @@ class TestRandomPatch:
         """random.uniform is deterministic after patch."""
         set_global_seed(42)
         install_random_patch()
-        v1 = random.uniform(0, 100)
+        v1 = random.uniform(0, 100)  # noqa: S310,S311
         set_global_seed(42)
-        v2 = random.uniform(0, 100)
+        v2 = random.uniform(0, 100)  # noqa: S310,S311
         assert v1 == v2
         uninstall_random_patch()
 
@@ -384,9 +383,9 @@ class TestRandomPatch:
         """random.random is deterministic after patch."""
         set_global_seed(42)
         install_random_patch()
-        v1 = random.random()
+        v1 = random.random()  # noqa: S310,S311
         set_global_seed(42)
-        v2 = random.random()
+        v2 = random.random()  # noqa: S310,S311
         assert v1 == v2
         uninstall_random_patch()
 
@@ -394,9 +393,9 @@ class TestRandomPatch:
         """After uninstall, random functions are random again."""
         set_global_seed(42)
         install_random_patch()
-        v1 = random.random()
+        v1 = random.random()  # noqa: S310,S311
         uninstall_random_patch()
-        v2 = random.random()
+        v2 = random.random()  # noqa: S310,S311
         # Not guaranteed different but we just verify no crash
 
 
@@ -484,7 +483,7 @@ class TestConstraintSolverDeterminism:
 
     def test_sample_verify_reproducible(self):
         """_sample_verify produces same violations with same seed."""
-        from src.core.shared.constraint_solver import ConstraintSolver, Constraint
+        from src.core.shared.constraint_solver import Constraint, ConstraintSolver
 
         set_global_seed(42)
         solver1 = ConstraintSolver(timeout_ms=5000)
@@ -537,8 +536,9 @@ class TestSmartMemoryReset:
 
     def test_reset_clears_working_memory(self):
         """reset() clears working memory."""
-        from src.core.memory_parts.memory._core import SmartMemory
         import threading
+
+        from src.core.memory_parts.memory._core import SmartMemory
 
         mem = SmartMemory.__new__(SmartMemory)
         mem._working_memory = ["item1", "item2", "item3"]
@@ -600,13 +600,13 @@ class TestFullPipelineDeterminism:
 
         # Simulate a full request pipeline
         uid_1 = str(uuid.uuid4())
-        choice_1 = random.choice(["A", "B", "C"])
+        choice_1 = random.choice(["A", "B", "C"])  # noqa: S310,S311
         jitter_1 = ControllableJitter("pipeline", enabled=True).apply(2.0, 0.3)
 
         # Reset and re-run
         set_global_seed(42)
         uid_2 = str(uuid.uuid4())
-        choice_2 = random.choice(["A", "B", "C"])
+        choice_2 = random.choice(["A", "B", "C"])  # noqa: S310,S311
         jitter_2 = ControllableJitter("pipeline", enabled=True).apply(2.0, 0.3)
 
         assert uid_1 == uid_2
@@ -629,7 +629,7 @@ class TestFullPipelineDeterminism:
         def worker(thread_id):
             try:
                 uid = str(uuid.uuid4())
-                val = random.uniform(0, 100)
+                val = random.uniform(0, 100)  # noqa: S310,S311
                 results[thread_id] = (uid, val)
             except Exception as e:
                 errors.append((thread_id, e))
@@ -665,7 +665,7 @@ class TestFullPipelineDeterminism:
             plan_id = str(uuid.uuid4())
             mcts = MCTSPlanner(max_depth=3, max_simulations=30)
             action = mcts.search({"depth": 0}, action_gen, reward_fn)
-            rand_val = random.uniform(0, 1)
+            rand_val = random.uniform(0, 1)  # noqa: S310,S311
 
             uninstall_uuid4_patch()
             uninstall_random_patch()

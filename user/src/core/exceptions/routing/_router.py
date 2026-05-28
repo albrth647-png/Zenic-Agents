@@ -15,10 +15,14 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from ..engine import ExceptionEngine, ExceptionSignal
 from ..taxonomy import ExceptionCategory, ExceptionSeverity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ..engine import ExceptionEngine, ExceptionSignal
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +34,7 @@ _BASE_DELAY = 0.1
 
 def _retry_db(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """Execute *fn* with exponential-backoff retry on DB errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(_MAX_RETRIES):
         try:
             return fn(*args, **kwargs)
@@ -72,7 +76,7 @@ class RoutingAction(str, Enum):
 
 # ── Severity ordering for rule matching ───────────────────────
 
-_SEVERITY_ORDER: Dict[ExceptionSeverity, int] = {
+_SEVERITY_ORDER: dict[ExceptionSeverity, int] = {
     ExceptionSeverity.INFO: 0,
     ExceptionSeverity.WARNING: 1,
     ExceptionSeverity.ERROR: 2,
@@ -99,7 +103,7 @@ class RoutingRule:
     min_severity: ExceptionSeverity = ExceptionSeverity.INFO
     max_severity: ExceptionSeverity = ExceptionSeverity.FATAL
     action: RoutingAction = RoutingAction.LOG_AND_CONTINUE
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     priority: int = 0
     enabled: bool = True
 
@@ -107,7 +111,7 @@ class RoutingRule:
         if not self.rule_id:
             self.rule_id = f"rule-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dictionary."""
         return {
             "rule_id": self.rule_id,
@@ -173,7 +177,7 @@ class ExceptionRouterBase:
     def __init__(self, db_path: str = "exception_routing.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._rules: List[RoutingRule] = []
+        self._rules: list[RoutingRule] = []
         self._init_db()
         self._load_rules_from_db()
 
@@ -196,13 +200,13 @@ class ExceptionRouterBase:
 
     def _load_rules_from_db(self) -> None:
         """Load persisted rules into the in-memory list."""
-        def _query(conn: sqlite3.Connection) -> List[RoutingRule]:
+        def _query(conn: sqlite3.Connection) -> list[RoutingRule]:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT rule_id, category, min_severity, max_severity, "
                 "action, conditions_json, priority, enabled "
                 "FROM _zenic_routing_rules ORDER BY priority DESC"
             ).fetchall()
-            rules: List[RoutingRule] = []
+            rules: list[RoutingRule] = []
             for row in rows:
                 try:
                     rule = RoutingRule(
@@ -273,7 +277,7 @@ class ExceptionRouterBase:
                 self._rules = [r for r in self._rules if r.rule_id != rule_id]
             return found
 
-    def get_rules(self) -> List[RoutingRule]:
+    def get_rules(self) -> list[RoutingRule]:
         """Return all currently loaded rules (highest priority first)."""
         with self._lock:
             return list(self._rules)
@@ -308,8 +312,8 @@ class ExceptionRouterBase:
         self,
         action: RoutingAction,
         signal: ExceptionSignal,
-        engine: Optional[ExceptionEngine] = None,
-    ) -> Dict[str, Any]:
+        engine: ExceptionEngine | None = None,
+    ) -> dict[str, Any]:
         """Perform the routing action for the given signal.
 
         Uses **lazy** imports for external subsystems to prevent
@@ -317,7 +321,7 @@ class ExceptionRouterBase:
 
         Returns a dictionary describing the outcome.
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "action": action.value,
             "signal_id": signal.signal_id,
             "status": "executed",
@@ -371,7 +375,7 @@ class ExceptionRouterBase:
         Existing rules are not removed; defaults are only added if a
         rule with the same ``rule_id`` does not already exist.
         """
-        defaults: List[RoutingRule] = [
+        defaults: list[RoutingRule] = [
             RoutingRule(
                 rule_id="default-low-confidence-warning",
                 category=ExceptionCategory.LOW_CONFIDENCE,
@@ -442,11 +446,11 @@ class ExceptionRouterBase:
 
 # ── Singleton ─────────────────────────────────────────────────
 
-_router_instance: Optional[ExceptionRouterBase] = None
+_router_instance: ExceptionRouterBase | None = None
 _router_lock = threading.Lock()
 
 
-def get_exception_router(db_path: str = "exception_routing.sqlite") -> "ExceptionRouterBase":
+def get_exception_router(db_path: str = "exception_routing.sqlite") -> ExceptionRouterBase:
     """Get or create the global :class:`ExceptionRouter` instance."""
     global _router_instance
     with _router_lock:
@@ -464,9 +468,9 @@ def reset_exception_router() -> None:
 
 
 __all__ = [
+    "ExceptionRouterBase",
     "RoutingAction",
     "RoutingRule",
-    "ExceptionRouterBase",
     "get_exception_router",
     "reset_exception_router",
 ]

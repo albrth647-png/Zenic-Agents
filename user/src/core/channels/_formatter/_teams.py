@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from ._limits import LIMITS
-from ._text import truncate, sanitize_plain_text, sanitize_html
-from .._types import ChannelMessage, ConfirmationRequest
+from ._text import sanitize_html, sanitize_plain_text, truncate
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
 
 
-def build_teams_adaptive_card(message: ChannelMessage) -> Dict[str, Any]:
+def build_teams_adaptive_card(message: ChannelMessage) -> dict[str, Any]:
     """Build a Microsoft Teams Adaptive Card from a ChannelMessage.
 
     Returns:
         Dict with Adaptive Card schema.
     """
-    body: List[Dict[str, Any]] = []
+    body: list[dict[str, Any]] = []
 
     # Title
     if message.title:
@@ -72,7 +74,7 @@ def build_teams_adaptive_card(message: ChannelMessage) -> Dict[str, Any]:
             "wrap": True,
         })
 
-    card: Dict[str, Any] = {
+    card: dict[str, Any] = {
         "type": "AdaptiveCard",
         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
         "version": "1.4",
@@ -85,7 +87,7 @@ def build_teams_adaptive_card(message: ChannelMessage) -> Dict[str, Any]:
 def build_teams_confirmation_card(
     request: ConfirmationRequest,
     action_id_prefix: str = "confirm",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a Teams Adaptive Card for confirmation requests.
 
     Args:
@@ -95,7 +97,7 @@ def build_teams_confirmation_card(
     Returns:
         Dict with Adaptive Card schema including ActionSet.
     """
-    body: List[Dict[str, Any]] = []
+    body: list[dict[str, Any]] = []
 
     # Title
     if request.title:
@@ -125,7 +127,7 @@ def build_teams_confirmation_card(
             "data": {"action_id": request.action_id, "option": option},
         })
 
-    card: Dict[str, Any] = {
+    card: dict[str, Any] = {
         "type": "AdaptiveCard",
         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
         "version": "1.4",
@@ -138,7 +140,7 @@ def build_teams_confirmation_card(
     return card
 
 
-def format_teams_message(message: ChannelMessage) -> Dict[str, Any]:
+def format_teams_message(message: ChannelMessage) -> dict[str, Any]:
     """Format a ChannelMessage into a Teams Incoming Webhook payload."""
     card = build_teams_adaptive_card(message)
 

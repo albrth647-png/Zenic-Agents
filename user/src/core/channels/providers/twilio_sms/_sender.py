@@ -421,7 +421,7 @@ class TwilioSMSChannelProviderBase:
             credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
 
             encoded = urllib.parse.urlencode(payload).encode("utf-8")
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 url,
                 data=encoded,
                 headers={
@@ -431,7 +431,7 @@ class TwilioSMSChannelProviderBase:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
                     body = json.loads(resp.read().decode("utf-8"))
                     msg_sid = body.get("sid", "")
                     return ChannelResponse(

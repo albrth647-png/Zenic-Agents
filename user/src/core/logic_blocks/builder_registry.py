@@ -6,9 +6,9 @@ These functions support the LogicBuilder by providing keyword mapping,
 template block resolution, and inline code generation for _process().
 """
 
-import re
 import logging
-from typing import Any, Dict, List, Optional
+import re
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # ============================================================
 
 
-def build_keyword_map() -> Dict[str, List[str]]:
+def build_keyword_map() -> dict[str, list[str]]:
     """Construye mapa de keywords -> block names para sugerencias.
 
     Returns:
@@ -86,7 +86,7 @@ def build_keyword_map() -> Dict[str, List[str]]:
 # ============================================================
 
 
-def map_template_block(template_name: str) -> Optional[str]:
+def map_template_block(template_name: str) -> str | None:
     """Mapea nombres de bloques del TemplateEngine a bloques del LogicBuilder.
 
     Args:
@@ -116,7 +116,7 @@ def map_template_block(template_name: str) -> Optional[str]:
     return mapping.get(template_name)
 
 
-def get_block_template_code(template_engine: Optional[Any], block_name: str) -> Optional[str]:
+def get_block_template_code(template_engine: Any | None, block_name: str) -> str | None:
     """Obtiene codigo de template del TemplateEngine si esta disponible.
 
     Args:
@@ -165,7 +165,7 @@ def get_block_template_code(template_engine: Optional[Any], block_name: str) -> 
 # ============================================================
 
 
-def generate_inline_block_code(block_name: str, var_name: str) -> List[str]:
+def generate_inline_block_code(block_name: str, var_name: str) -> list[str]:
     """Genera codigo inline para un bloque especifico.
 
     Args:

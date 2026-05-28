@@ -321,27 +321,26 @@ class OAuth2TokenManager:
             return None
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    token_url,
-                    data=data,
-                    headers={"Accept": "application/json"},
-                    timeout=aiohttp.ClientTimeout(total=30),
-                ) as response:
-                    body = await response.json()
+            async with aiohttp.ClientSession() as session, session.post(
+                token_url,
+                data=data,
+                headers={"Accept": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as response:
+                body = await response.json()
 
-                    if response.status != 200:
-                        error_desc = body.get("error_description", body.get("error", "unknown"))
-                        logger.warning(
-                            "OAuth2TokenManager: Token request failed for '%s': " "status=%d, error=%s",
-                            service_name,
-                            response.status,
-                            error_desc,
-                        )
-                        self._error_count += 1
-                        return None
+                if response.status != 200:
+                    error_desc = body.get("error_description", body.get("error", "unknown"))
+                    logger.warning(
+                        "OAuth2TokenManager: Token request failed for '%s': " "status=%d, error=%s",
+                        service_name,
+                        response.status,
+                        error_desc,
+                    )
+                    self._error_count += 1
+                    return None
 
-                    return self._parse_token_response(body)
+                return self._parse_token_response(body)
 
         except asyncio.TimeoutError:
             logger.warning(

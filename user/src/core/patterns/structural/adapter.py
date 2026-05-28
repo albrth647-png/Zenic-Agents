@@ -10,7 +10,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import logging
 import threading
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class FallbackLLMAdapter(LLMAdapter):
         return self._primary.is_available() or self._secondary.is_available()
 
     @property
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         """Return call counts for primary and secondary adapters."""
         return {
             "primary_calls": self._primary_calls,
@@ -164,7 +164,7 @@ class AdapterRegistry:
     """
 
     def __init__(self) -> None:
-        self._adapters: Dict[str, LLMAdapter] = {}
+        self._adapters: dict[str, LLMAdapter] = {}
         self._lock = threading.RLock()
 
     def register(self, name: str, adapter: LLMAdapter) -> None:
@@ -199,7 +199,7 @@ class AdapterRegistry:
             raise KeyError(f"AdapterRegistry: no adapter registered as '{name}'")
         return adapter
 
-    def get_available(self) -> List[str]:
+    def get_available(self) -> list[str]:
         """Return a sorted list of names whose adapters report ``is_available()``."""
         with self._lock:
             return sorted(

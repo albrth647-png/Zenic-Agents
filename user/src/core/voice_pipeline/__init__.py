@@ -47,33 +47,29 @@ from __future__ import annotations
 from typing import Any
 
 # ── Internal Types ────────────────────────────────────────────
-
 from ._types import (
     AudioFormat,
-    TranscriptionResult,
     ConversionResult,
     STTBackendConfig,
+    TranscriptionResult,
     VoicePipelineMetrics,
 )
 
 # ── Ear (STT Service) ────────────────────────────────────────
-
 from .ear import (
-    STTBackend,
-    DummyBackend,
-    FasterWhisperBackend,
-    WhisperBackend,
     CloudBackend,
+    DummyBackend,
     Ear,
+    FasterWhisperBackend,
+    STTBackend,
+    WhisperBackend,
 )
 
 # ── FormatAdapter ────────────────────────────────────────────
-
 from .format_adapter import (
     FormatAdapter,
     get_format_adapter,
 )
-
 
 # ──────────────────────────────────────────────────────────────
 #  VOICE PIPELINE — UNIFIED ENTRY POINT
@@ -240,20 +236,20 @@ class VoicePipeline:
 __all__ = [
     # Types
     "AudioFormat",
-    "TranscriptionResult",
-    "ConversionResult",
-    "STTBackendConfig",
-    "VoicePipelineMetrics",
-    # Ear (STT)
-    "STTBackend",
-    "DummyBackend",
-    "FasterWhisperBackend",
-    "WhisperBackend",
     "CloudBackend",
+    "ConversionResult",
+    "DummyBackend",
     "Ear",
+    "FasterWhisperBackend",
     # FormatAdapter
     "FormatAdapter",
-    "get_format_adapter",
+    # Ear (STT)
+    "STTBackend",
+    "STTBackendConfig",
+    "TranscriptionResult",
     # Unified Pipeline
     "VoicePipeline",
+    "VoicePipelineMetrics",
+    "WhisperBackend",
+    "get_format_adapter",
 ]

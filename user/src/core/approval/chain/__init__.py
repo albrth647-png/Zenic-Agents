@@ -13,6 +13,11 @@ Persistence: SQLite via chain_parts/persistence.py.
 Timeout: Auto-escalation to higher authority after configurable delay.
 """
 
+from ._chain import (
+    ApprovalChain,
+    get_approval_chain,
+    reset_approval_chain,
+)
 from ._validation import (
     ApprovalPriority,
     ApprovalRequest,
@@ -20,19 +25,14 @@ from ._validation import (
     ApprovalStatus,
     MemoryApprovalPayload,
 )
-from ._chain import (
-    ApprovalChain,
-    get_approval_chain,
-    reset_approval_chain,
-)
 
 __all__ = [
-    "ApprovalStatus",
+    "ApprovalChain",
     "ApprovalPriority",
     "ApprovalRequest",
     "ApprovalResult",
+    "ApprovalStatus",
     "MemoryApprovalPayload",
-    "ApprovalChain",
     "get_approval_chain",
     "reset_approval_chain",
 ]

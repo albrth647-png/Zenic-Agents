@@ -8,7 +8,6 @@ via memoryview slices.
 import struct
 import threading
 import time
-from typing import Dict, List, Optional, Tuple
 
 from .types import (
     _DEFAULT_RING_SIZE,
@@ -43,7 +42,7 @@ class RingBuffer:
         # Per-slot write locks to avoid global contention
         self._slot_locks = [threading.Lock() for _ in range(ring_size)]
         # Track which slots are occupied: slot→(timestamp, tenant_id)
-        self._slot_meta: Dict[int, Tuple[float, str]] = {}
+        self._slot_meta: dict[int, tuple[float, str]] = {}
 
     # ── Write ──
 
@@ -88,7 +87,7 @@ class RingBuffer:
 
     # ── Read ──
 
-    def read(self, slot_index: int) -> Optional[bytes]:
+    def read(self, slot_index: int) -> bytes | None:
         """Read data from a slot by absolute index.
 
         Returns:
@@ -98,7 +97,7 @@ class RingBuffer:
         offset = slot_idx * self._slot_size
 
         with self._slot_locks[slot_idx]:
-            data_len, tenant_hash = struct.unpack_from(
+            data_len, _tenant_hash = struct.unpack_from(
                 _SLOT_HEADER_FMT, self._buffer, offset
             )
             if data_len == 0:
@@ -106,7 +105,7 @@ class RingBuffer:
             start = offset + _SLOT_HEADER_SIZE
             return bytes(self._view[start:start + data_len])
 
-    def read_memoryview(self, slot_index: int) -> Optional[memoryview]:
+    def read_memoryview(self, slot_index: int) -> memoryview | None:
         """Zero-copy read via memoryview slice.
 
         The caller **must not** modify the returned view.
@@ -135,13 +134,13 @@ class RingBuffer:
         """Current absolute write index."""
         return self._write_idx
 
-    def snapshot_dirty_slots(self) -> List[Tuple[int, bytes, str, float]]:
+    def snapshot_dirty_slots(self) -> list[tuple[int, bytes, str, float]]:
         """Return all occupied slots for persistence.
 
         Returns:
             List of (slot_index, data_blob, tenant_id, timestamp).
         """
-        result: List[Tuple[int, bytes, str, float]] = []
+        result: list[tuple[int, bytes, str, float]] = []
         for slot_idx, (ts, tenant_id) in list(self._slot_meta.items()):
             offset = slot_idx * self._slot_size
             data_len, _ = struct.unpack_from(

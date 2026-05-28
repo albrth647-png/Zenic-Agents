@@ -5,16 +5,14 @@ Planificador con MCTS real (UCB1, backpropagation, depth limiting)
 y Solver real (Z3 con fallback AC-3, timeout enforcement).
 """
 
+from ._imports import HAS_Z3, ExecutionPlan, OperationType, PlanStep, RoutePath
 from .planner import APAPlanner
-from ._imports import (
-    ExecutionPlan, PlanStep, OperationType, RoutePath, HAS_Z3
-)
 
 __all__ = [
+    "HAS_Z3",
     "APAPlanner",
     "ExecutionPlan",
-    "PlanStep",
     "OperationType",
+    "PlanStep",
     "RoutePath",
-    "HAS_Z3",
 ]

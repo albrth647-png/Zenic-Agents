@@ -27,6 +27,7 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import io
 import logging
 import os
@@ -341,10 +342,8 @@ class FormatAdapter:
             return wav_bytes, duration
 
         finally:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
 
     # ── Convenience Methods ───────────────────────────────────
 
@@ -394,14 +393,12 @@ class FormatAdapter:
                     # If we got here, it loaded successfully
                     # but we don't know the exact format from pydub alone
                     return AudioFormat.UNKNOWN
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
                 finally:
-                    try:
+                    with contextlib.suppress(OSError):
                         os.unlink(tmp_path)
-                    except OSError:
-                        pass
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         return AudioFormat.UNKNOWN
@@ -464,10 +461,8 @@ class FormatAdapter:
                 except Exception as e:
                     errors.append(f"Cannot determine duration: {e}")
                 finally:
-                    try:
+                    with contextlib.suppress(OSError):
                         os.unlink(tmp_path)
-                    except OSError:
-                        pass
             except Exception as e:
                 errors.append(f"Duration check failed: {e}")
 

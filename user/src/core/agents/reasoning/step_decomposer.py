@@ -13,7 +13,7 @@ Ported from:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import DecomposedSteps, ProblemType, ReasoningStep
@@ -151,7 +151,7 @@ class StepDecomposer(BaseAgent[DecomposedSteps]):
             source="deterministic",
         )
 
-    def _extract_problem_type(self, input_data: Any) -> Optional[ProblemType]:
+    def _extract_problem_type(self, input_data: Any) -> ProblemType | None:
         """Extract ProblemType from input."""
         if isinstance(input_data, ProblemType):
             return input_data

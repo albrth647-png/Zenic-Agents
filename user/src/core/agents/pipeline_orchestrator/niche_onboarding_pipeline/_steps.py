@@ -10,11 +10,11 @@ from __future__ import annotations
 import time
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from ...executors.safety_gate.domain_gate import DomainSafetyCheckResult
-from ...niche_rust.certifier_bridge import CertificationResultPy
-
+if TYPE_CHECKING:
+    from ...executors.safety_gate.domain_gate import DomainSafetyCheckResult
+    from ...niche_rust.certifier_bridge import CertificationResultPy
 
 # ──────────────────────────────────────────────────────────────
 # PIPELINE STEPS
@@ -43,24 +43,24 @@ class PipelineState:
     """Mutable state for an ongoing pipeline execution."""
 
     __slots__ = (
-        "pipeline_id",
-        "niche_id",
-        "niche_category",
+        "cert_result",
+        "created_at",
         "current_step",
-        "template_dict",
-        "session_id",
         "documents_ingested",
+        "errors",
         "fields_auto_filled",
         "fields_manual_filled",
-        "total_fields",
-        "required_fields",
+        "niche_category",
+        "niche_id",
+        "pipeline_id",
         "questions",
+        "required_fields",
         "safety_result",
-        "cert_result",
-        "errors",
-        "warnings",
-        "created_at",
+        "session_id",
+        "template_dict",
+        "total_fields",
         "updated_at",
+        "warnings",
     )
 
     def __init__(self, niche_id: str = "") -> None:
@@ -68,18 +68,18 @@ class PipelineState:
         self.niche_id = niche_id
         self.niche_category = ""
         self.current_step = PipelineStep.NOT_STARTED
-        self.template_dict: Optional[Dict[str, Any]] = None
+        self.template_dict: dict[str, Any] | None = None
         self.session_id = ""
         self.documents_ingested = 0
         self.fields_auto_filled = 0
         self.fields_manual_filled = 0
         self.total_fields = 0
         self.required_fields = 0
-        self.questions: List[Dict[str, Any]] = []
-        self.safety_result: Optional[DomainSafetyCheckResult] = None
-        self.cert_result: Optional[CertificationResultPy] = None
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.questions: list[dict[str, Any]] = []
+        self.safety_result: DomainSafetyCheckResult | None = None
+        self.cert_result: CertificationResultPy | None = None
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
         self.created_at = time.time()
         self.updated_at = time.time()
 
@@ -117,4 +117,4 @@ class PipelineState:
         return 0.0
 
 
-__all__ = ["PipelineStep", "PipelineState"]
+__all__ = ["PipelineState", "PipelineStep"]

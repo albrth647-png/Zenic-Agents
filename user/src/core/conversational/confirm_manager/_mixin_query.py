@@ -70,7 +70,7 @@ class ConfirmManagerQueryMixin:
             if approved:
                 self._update_status(action_id, STATUS_APPROVED, responder_id=approver_id, reason=reason)
                 self._stats["total_approvals"] += 1
-                required_role = row["required_role"] if "required_role" in row.keys() else ""
+                required_role = row.get("required_role", "")
                 self._safety_gate_approve(action_id, required_role)
                 __import__("logging").getLogger("zenic_agents.conversational.confirm_manager").info(
                     f"Action {action_id} approved by {approver_id}"

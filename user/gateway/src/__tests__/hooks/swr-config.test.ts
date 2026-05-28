@@ -42,7 +42,7 @@ describe('swrFetcher', () => {
 // ─── defaultSWRConfig.shouldRetryOnError ─────────────────────────────
 
 describe('defaultSWRConfig.shouldRetryOnError', () => {
-  const shouldRetry = defaultSWRConfig.shouldRetryOnError!;
+  const shouldRetry = defaultSWRConfig.shouldRetryOnError as (err: unknown) => boolean;
 
   it('retorna false para errores 4xx (no reintentar)', () => {
     expect(shouldRetry({ status: 400, message: 'Bad Request' })).toBe(false);

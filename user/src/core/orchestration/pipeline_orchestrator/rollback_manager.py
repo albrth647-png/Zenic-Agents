@@ -15,14 +15,17 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "RollbackAction",
-    "RollbackResult",
     "RollbackManager",
+    "RollbackResult",
 ]
 
 
@@ -58,8 +61,8 @@ class RollbackAction:
     description: str = ""
     priority: int = 0
     status: RollbackStatus = RollbackStatus.PENDING
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -81,7 +84,7 @@ class RollbackResult:
     actions_completed: int = 0
     actions_failed: int = 0
     actions_skipped: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     duration_ms: float = 0.0
 
 
@@ -125,10 +128,10 @@ class RollbackManager:
             continue_on_failure: If True, continue executing remaining
                 rollback actions even if one fails.
         """
-        self._actions: Dict[str, RollbackAction] = {}
-        self._completion_order: List[str] = []
+        self._actions: dict[str, RollbackAction] = {}
+        self._completion_order: list[str] = []
         self._continue_on_failure = continue_on_failure
-        self._rollback_history: List[RollbackResult] = []
+        self._rollback_history: list[RollbackResult] = []
 
     # ── Registration ─────────────────────────────────────────
 
@@ -138,7 +141,7 @@ class RollbackManager:
         action_fn: Callable[..., Any],
         description: str = "",
         priority: int = 0,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Register a compensating action for a step.
@@ -254,13 +257,13 @@ class RollbackManager:
             )
         return self._execute_rollback([step_id])
 
-    def _execute_rollback(self, step_ids: List[str]) -> RollbackResult:
+    def _execute_rollback(self, step_ids: list[str]) -> RollbackResult:
         """Execute rollback for the given step IDs."""
         start_time = time.monotonic()
         result = RollbackResult(actions_total=len(step_ids))
 
         # Sort by priority (lower = first) within the given order
-        ordered_actions: List[RollbackAction] = []
+        ordered_actions: list[RollbackAction] = []
         for sid in step_ids:
             if sid in self._actions:
                 ordered_actions.append(self._actions[sid])
@@ -304,17 +307,17 @@ class RollbackManager:
     # ── Accessors ────────────────────────────────────────────
 
     @property
-    def registered_steps(self) -> List[str]:
+    def registered_steps(self) -> list[str]:
         """List of step IDs with registered rollback actions."""
         return list(self._actions.keys())
 
     @property
-    def completion_order(self) -> List[str]:
+    def completion_order(self) -> list[str]:
         """List of step IDs in completion order."""
         return list(self._completion_order)
 
     @property
-    def history(self) -> List[RollbackResult]:
+    def history(self) -> list[RollbackResult]:
         """History of all rollback operations."""
         return list(self._rollback_history)
 

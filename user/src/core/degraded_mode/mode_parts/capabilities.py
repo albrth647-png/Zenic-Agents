@@ -8,7 +8,6 @@ Extracted from manager.py for the 400-line limit.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 from ..manager import SystemMode
 
@@ -32,8 +31,8 @@ class ModeCapabilities:
     can_use_api: bool = True
     can_access_dashboard: bool = True
     max_actions_per_hour: int = 0
-    allowed_endpoints: List[str] = field(default_factory=list)
-    blocked_actions: List[str] = field(default_factory=list)
+    allowed_endpoints: list[str] = field(default_factory=list)
+    blocked_actions: list[str] = field(default_factory=list)
 
 
 # ── Mode capability definitions ───────────────────────────

@@ -10,23 +10,33 @@ El scheduler es el latido del sistema nervioso autónomo.
 
 from __future__ import annotations
 
-import time
-import logging
 import heapq
-from typing import Any
+import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
-from src.data.local_scanner import LocalDataScanner
-from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
+from src.core.sna.alert_manager import Alert, AlertManager
 from src.core.sna.monitors import (
-    LowStockMonitor, OverdueInvoiceMonitor, TomorrowAppointmentMonitor,
-    DiskSpaceMonitor, SalesTrendMonitor, StaleInventoryMonitor,
-    UnpaidBalanceMonitor, DuplicateRecordsMonitor, ConfigDriftMonitor,
-    BackupStatusMonitor, DataIntegrityMonitor, APIHealthMonitor,
+    APIHealthMonitor,
+    BackupStatusMonitor,
+    ConfigDriftMonitor,
+    DataIntegrityMonitor,
+    DiskSpaceMonitor,
+    DuplicateRecordsMonitor,
+    LowStockMonitor,
+    OverdueInvoiceMonitor,
+    SalesTrendMonitor,
+    StaleInventoryMonitor,
+    TomorrowAppointmentMonitor,
+    UnpaidBalanceMonitor,
 )
-from src.core.sna.alert_manager import AlertManager, Alert
+from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 from src.core.sna.thresholds import ThresholdEngine
+
+if TYPE_CHECKING:
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +50,7 @@ class ScheduledCheck:
     interval: int = field(compare=False)
 
     @classmethod
-    def create(cls, monitor: BaseMonitor, next_run: float | None = None) -> "ScheduledCheck":
+    def create(cls, monitor: BaseMonitor, next_run: float | None = None) -> ScheduledCheck:
         return cls(
             next_run=next_run or time.time(),
             weight=-monitor.weight,  # Negativo para que CRITICAL (3) tenga mayor prioridad

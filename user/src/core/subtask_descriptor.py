@@ -7,7 +7,7 @@ subtarea, permitiendo que cada subtarea se ejecute con conocimiento
 del análisis previo en vez de empezar desde cero.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class SubtaskDescriptor:
@@ -32,9 +32,9 @@ class SubtaskDescriptor:
     """
 
     def __init__(self, message: str, target: str = "", operation: str = "", goal: str = "",
-                 solver_insights: Optional[Dict[str, Any]] = None, mcts_hints: Optional[List[Any]] = None,
-                 parent_violations: Optional[List[Any]] = None,
-                 parent_context: Optional[Dict[str, Any]] = None, depth: int = 0):
+                 solver_insights: dict[str, Any] | None = None, mcts_hints: list[Any] | None = None,
+                 parent_violations: list[Any] | None = None,
+                 parent_context: dict[str, Any] | None = None, depth: int = 0):
         self.message = message
         self.target = target
         self.operation = operation

@@ -11,27 +11,27 @@ import base64
 import json
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ._utils import (
     _HAS_CRYPTOGRAPHY,
     _HAS_PYJWT,
     _VAPID_JWT_EXPIRY,
-    _base64url_encode,
     _base64url_decode,
+    _base64url_encode,
     _pem_to_base64url,
 )
 
 # Conditional imports for type hints
 if _HAS_CRYPTOGRAPHY:
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives.asymmetric.ec import (
         ECDSA,
-        EllipticCurvePrivateKey,
         SECP256R1,
+        EllipticCurvePrivateKey,
     )
-    from cryptography.hazmat.backends import default_backend
 
 
 logger = logging.getLogger("zenic_agents.channels.push")
@@ -40,7 +40,7 @@ logger = logging.getLogger("zenic_agents.channels.push")
 class _VapidMixin:
     """Mixin for VAPID authentication methods."""
 
-    def _generate_vapid_jwt(self, aud: str) -> Optional[str]:
+    def _generate_vapid_jwt(self, aud: str) -> str | None:
         """Generate a VAPID JWT token for Web Push authentication.
 
         The JWT uses ES256 algorithm:
@@ -103,7 +103,7 @@ class _VapidMixin:
         return None
 
     def _sign_vapid_jwt_manual(
-        self, header: Dict[str, Any], payload: Dict[str, Any],
+        self, header: dict[str, Any], payload: dict[str, Any],
     ) -> str:
         """Manually sign a VAPID JWT using the cryptography package.
 
@@ -230,7 +230,7 @@ class _VapidMixin:
             )
             self._vapid_private_key_obj = None
 
-    def _get_vapid_headers(self, endpoint: str) -> Dict[str, str]:
+    def _get_vapid_headers(self, endpoint: str) -> dict[str, str]:
         """Generate VAPID authentication headers for a push endpoint.
 
         Args:

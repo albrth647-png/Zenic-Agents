@@ -5,18 +5,18 @@ compat._surgical — SurgicalAgentCompat v1→v2 wrapper.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
-from src.core.agents.understanding import IntentClassifier, EntityExtractor, TargetResolver, CriticalityScorer
 from src.core.agents.schemas._v1_compat_schemas import IntentOutput
+from src.core.agents.understanding import CriticalityScorer, EntityExtractor, IntentClassifier, TargetResolver
 from src.core.agents.understanding.intent_utils import (
     extract_code_block,
-    extract_target_and_language,
     extract_entities,
+    extract_target_and_language,
     infer_criticality,
     infer_template_type,
 )
-from src.core.shared.constants import VALID_INTENT_OPERATIONS, VALID_INTENT_GOALS
+from src.core.shared.constants import VALID_INTENT_GOALS, VALID_INTENT_OPERATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class SurgicalAgentCompat:
                     message, f"{fused.operation}/{fused.goal}",
                     fused.operation, fused.goal, importance,
                 )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         self._last_source = fused.source
@@ -93,7 +93,7 @@ class SurgicalAgentCompat:
 
     def to_intent_payload(self, output: IntentOutput, context: str = "") -> Any:
         """Convert IntentOutput -> IntentPayload for the pipeline."""
-        from src.core.shared.contracts import IntentPayload, OperationType, GoalType
+        from src.core.shared.contracts import GoalType, IntentPayload, OperationType
 
         op = output.operation if output.operation in VALID_OPERATIONS else OperationType.SEARCH
         goal = output.goal if output.goal in VALID_GOALS else GoalType.FEATURE_ADD
@@ -113,7 +113,7 @@ class SurgicalAgentCompat:
     def _extract_code_block(message: str) -> tuple[str, str]:
         return extract_code_block(message)
 
-    def _cable_semantic(self, message: str) -> Optional[IntentOutput]:
+    def _cable_semantic(self, message: str) -> IntentOutput | None:
         """Cable 2: SemanticEngine embedding-based classification."""
         if not self._semantic or not self._semantic.is_loaded:
             return None
@@ -127,7 +127,7 @@ class SurgicalAgentCompat:
                     confidence=result.get("confidence", 0.5),
                     source="semantic",
                 )
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         return None
 

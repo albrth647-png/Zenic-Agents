@@ -12,7 +12,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class RollbackStatus(str, Enum):
@@ -42,14 +42,14 @@ class CompensationAction:
 
     action_id: str = ""
     action_type: str = ""
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
     def __post_init__(self) -> None:
         if not self.action_id:
             self.action_id = f"cmp-{uuid.uuid4().hex[:12]}"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "action_id": self.action_id,
@@ -59,7 +59,7 @@ class CompensationAction:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "CompensationAction":
+    def from_dict(cls, data: dict[str, Any]) -> CompensationAction:
         """Deserialize from dictionary."""
         return cls(
             action_id=data.get("action_id", ""),
@@ -80,10 +80,10 @@ class RollbackRecord:
     rollback_id: str = ""
     request_id: str = ""
     trigger: RollbackTrigger = RollbackTrigger.MANUAL_UNDO
-    compensation_actions: List[CompensationAction] = field(default_factory=list)
+    compensation_actions: list[CompensationAction] = field(default_factory=list)
     status: RollbackStatus = RollbackStatus.PENDING
-    executed_at: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
+    executed_at: str | None = None
+    result: dict[str, Any] | None = None
     created_at: str = ""
     merkle_hash: str = ""
 
@@ -106,7 +106,7 @@ class RollbackRecord:
         }, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(payload.encode()).hexdigest()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "rollback_id": self.rollback_id,
@@ -122,8 +122,8 @@ class RollbackRecord:
 
 
 __all__ = [
-    "RollbackStatus",
-    "RollbackTrigger",
     "CompensationAction",
     "RollbackRecord",
+    "RollbackStatus",
+    "RollbackTrigger",
 ]

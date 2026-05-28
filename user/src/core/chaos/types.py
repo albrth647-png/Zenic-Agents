@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 class ChaosExperimentState(str, Enum):
@@ -30,7 +30,7 @@ class FaultInjection:
     magnitude: float = 1.0
     duration_seconds: int = 30
     probability: float = 1.0
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -38,12 +38,12 @@ class ChaosExperiment:
     id: str
     name: str
     description: str = ""
-    injections: List[FaultInjection] = field(default_factory=list)
-    steady_state_hypothesis: Dict[str, Any] = field(default_factory=dict)
+    injections: list[FaultInjection] = field(default_factory=list)
+    steady_state_hypothesis: dict[str, Any] = field(default_factory=dict)
     state: ChaosExperimentState = ChaosExperimentState.DRAFT
-    scheduled_at: Optional[str] = None
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
-    rollback_plan: Dict[str, Any] = field(default_factory=dict)
-    tags: Set[str] = field(default_factory=set)
+    scheduled_at: str | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    result: dict[str, Any] | None = None
+    rollback_plan: dict[str, Any] = field(default_factory=dict)
+    tags: set[str] = field(default_factory=set)

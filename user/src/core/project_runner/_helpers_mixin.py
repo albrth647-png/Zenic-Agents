@@ -5,16 +5,15 @@ Virtualenv creation, dependency installation, database initialization,
 server startup, health checks, and port discovery.
 """
 
+import ipaddress
 import logging
 import os
 import socket
 import subprocess
 import sys
-from typing import List, Optional, Tuple
 from urllib.parse import urlparse
-import ipaddress
 
-from ._types import INSTALL_TIMEOUT, HEALTH_TIMEOUT
+from ._types import HEALTH_TIMEOUT, INSTALL_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class HelpersMixin:
     def _create_venv(self, venv_dir: str) -> bool:
         """Create a Python virtual environment."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 [sys.executable, "-m", "venv", venv_dir],
                 capture_output=True, text=True, timeout=60,
             )
@@ -54,7 +53,7 @@ class HelpersMixin:
             logger.error(f"venv creation error: {e}")
             return False
 
-    def _install_deps(self, project_dir: str, venv_dir: str) -> Tuple[List[str], List[str]]:
+    def _install_deps(self, project_dir: str, venv_dir: str) -> tuple[list[str], list[str]]:
         """Install dependencies from requirements.txt.
 
         Returns:
@@ -102,7 +101,7 @@ class HelpersMixin:
                 else:
                     cmd = [pip_path, "install", "-q", req]
 
-                result = subprocess.run(
+                result = subprocess.run(  # noqa: S603
                     cmd, capture_output=True, text=True,
                     timeout=INSTALL_TIMEOUT,
                 )
@@ -137,7 +136,7 @@ class HelpersMixin:
             python_path = sys.executable
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 [python_path, "-c",
                  "import sys; sys.path.insert(0, '.'); "
                  "from database import init_db; init_db()"],
@@ -150,7 +149,7 @@ class HelpersMixin:
             return False
 
     def _start_server(self, project_dir: str, venv_dir: str,
-                       port: int) -> Optional[int]:
+                       port: int) -> int | None:
         """Start the project server as a background process."""
         # Determine python path
         if os.name == "nt":
@@ -177,7 +176,7 @@ class HelpersMixin:
         env["PORT"] = str(port)
 
         try:
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # noqa: S603
                 [python_path, main_file],
                 cwd=project_dir,
                 env=env,
@@ -208,16 +207,16 @@ class HelpersMixin:
         try:
             import urllib.request
             url = f"http://localhost:{port}/health"
-            req = urllib.request.Request(url, method="GET")
-            with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:
+            req = urllib.request.Request(url, method="GET")  # noqa: S310
+            with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
                 return resp.status == 200
         except Exception:
             # Try / root as fallback
             try:
                 import urllib.request
                 url = f"http://localhost:{port}/"
-                req = urllib.request.Request(url, method="GET")
-                with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:
+                req = urllib.request.Request(url, method="GET")  # noqa: S310
+                with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
                     return resp.status in (200, 404)  # 404 means server is running
             except Exception:
                 return False

@@ -14,8 +14,15 @@ import type {
   PolicyEvaluationResult,
   PolicyEffectV2,
   PolicyStatement,
-
-} from "./types";
+  PolicyNamespace,
+  NamespaceResolutionResult,
+  NamespaceHierarchy,
+} from "../types";
+import type {
+  ConflictResolutionStrategy,
+  NamespaceResolutionStrategy,
+  NamespaceIsolationLevel,
+} from "../types";
 import { PolicyEvaluator, getPolicyEvaluator } from "./evaluator";
 
 // ─── Namespace Engine Error Types ─────────────────────────────────────

@@ -221,7 +221,7 @@ class DAGBuilder(DAGBuilderGraphMixin):
     def _detect_cycles(self) -> list[list[str]]:
         """Detect cycles using DFS with recursion stack."""
         WHITE, GRAY, BLACK = 0, 1, 2
-        color: dict[str, int] = {nid: WHITE for nid in self._nodes}
+        color: dict[str, int] = dict.fromkeys(self._nodes, WHITE)
         cycles: list[list[str]] = []
         path: list[str] = []
 
@@ -234,7 +234,7 @@ class DAGBuilder(DAGBuilderGraphMixin):
                 if color[neighbor] == GRAY:
                     # Found a cycle — extract it
                     cycle_start = path.index(neighbor)
-                    cycles.append(path[cycle_start:] + [neighbor])
+                    cycles.append([*path[cycle_start:], neighbor])
                 elif color[neighbor] == WHITE:
                     dfs(neighbor)
             path.pop()
@@ -262,7 +262,7 @@ class DAGBuilder(DAGBuilderGraphMixin):
         if not result.is_valid:
             raise ValueError("Cannot topologically sort a DAG with cycles")
 
-        in_degree: dict[str, int] = {nid: 0 for nid in self._nodes}
+        in_degree: dict[str, int] = dict.fromkeys(self._nodes, 0)
         for edge in self._edges:
             in_degree[edge.target_id] = in_degree.get(edge.target_id, 0) + 1
 

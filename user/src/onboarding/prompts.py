@@ -15,10 +15,13 @@ from __future__ import annotations
 
 import getpass
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from .validators.user_input import InvalidResult, ValidationResult
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 try:
     from rich.console import Console

@@ -5,61 +5,64 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from ._helpers import _new_id, _now_iso
+from ._types import LearningInsight
+
 logger = logging.getLogger(__name__)
 
 
 class PatternDetectionMixin:
     """Mixin providing pattern detection methods for LearningEngine."""
 
-    def _detect_failure_patterns(self, tracker: Any, action_type: str | None = None) -> list[LearningInsight]:  # noqa: F821
-        insights: list[LearningInsight] = []  # noqa: F821
+    def _detect_failure_patterns(self, tracker: Any, action_type: str | None = None) -> list[LearningInsight]:
+        insights: list[LearningInsight] = []
         analysis = tracker.analyze_failures(action_type, hours=168)
 
         for error_msg, count in analysis.get("top_errors", {}).items():
             if count >= 2:
                 insights.append(
-                    LearningInsight(  # noqa: F821
-                        id=_new_id("ins"),  # noqa: F821
+                    LearningInsight(
+                        id=_new_id("ins"),
                         insight_type="failure_pattern",
                         pattern=f"Recurring error: {error_msg[:100]}",
                         recommendation=f"Investigate and fix root cause of: {error_msg[:80]}",
                         confidence=0.0,
                         supporting_outcomes=[],
-                        created_at=_now_iso(),  # noqa: F821
+                        created_at=_now_iso(),
                     )
                 )
 
         for atype, count in analysis.get("failure_by_type", {}).items():
             if count >= 3:
                 insights.append(
-                    LearningInsight(  # noqa: F821
-                        id=_new_id("ins"),  # noqa: F821
+                    LearningInsight(
+                        id=_new_id("ins"),
                         insight_type="failure_pattern",
                         pattern=f"High failure count for {atype}: {count} failures",
                         recommendation=f"Review {atype} implementation for reliability issues",
                         confidence=0.0,
                         supporting_outcomes=[],
-                        created_at=_now_iso(),  # noqa: F821
+                        created_at=_now_iso(),
                     )
                 )
 
         if analysis.get("avg_failure_duration_ms", 0) > 5000:
             insights.append(
-                LearningInsight(  # noqa: F821
-                    id=_new_id("ins"),  # noqa: F821
+                LearningInsight(
+                    id=_new_id("ins"),
                     insight_type="performance_degradation",
                     pattern=f"Slow failures averaging {analysis['avg_failure_duration_ms']:.0f}ms",
                     recommendation="Add timeout controls and circuit breakers",
                     confidence=0.0,
                     supporting_outcomes=[],
-                    created_at=_now_iso(),  # noqa: F821
+                    created_at=_now_iso(),
                 )
             )
 
         return insights
 
-    def _detect_success_patterns(self, tracker: Any, action_type: str | None = None) -> list[LearningInsight]:  # noqa: F821
-        insights: list[LearningInsight] = []  # noqa: F821
+    def _detect_success_patterns(self, tracker: Any, action_type: str | None = None) -> list[LearningInsight]:
+        insights: list[LearningInsight] = []
 
         stats = tracker.get_stats()
         for atype, count in stats.get("type_counts", {}).items():
@@ -68,14 +71,14 @@ class PatternDetectionMixin:
             rate = tracker.get_success_rate(atype, hours=168)
             if rate >= 0.95 and count >= 10:
                 insights.append(
-                    LearningInsight(  # noqa: F821
-                        id=_new_id("ins"),  # noqa: F821
+                    LearningInsight(
+                        id=_new_id("ins"),
                         insight_type="success_pattern",
                         pattern=f"High success rate for {atype}: {rate*100:.1f}%",
                         recommendation=f"Use {atype} approach as template for similar operations",
                         confidence=0.0,
                         supporting_outcomes=[],
-                        created_at=_now_iso(),  # noqa: F821
+                        created_at=_now_iso(),
                     )
                 )
 
@@ -84,7 +87,7 @@ class PatternDetectionMixin:
     def _compute_confidence(
         self,
         insight: LearningInsight,
-        tracker: Any,  # noqa: F821  # TODO: Phase3 - verify import
+        tracker: Any,  # TODO: Phase3 - verify import
     ) -> float:
         base = 0.3
 

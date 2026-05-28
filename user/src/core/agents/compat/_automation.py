@@ -8,14 +8,21 @@ import logging
 from typing import Any
 
 from src.core.agents.automation import (
-    TriggerInferrer, ActionInferrer, ScheduleParser,
-    AutomationNamer, WorkflowSerializer,
+    ActionInferrer,
+    AutomationNamer,
+    ScheduleParser,
+    TriggerInferrer,
+    WorkflowSerializer,
 )
 from src.core.agents.schemas._v1_compat_schemas import AutomationOutput
 from src.core.shared.agent_schemas import (
-    TriggerSpec as SharedTriggerSpec,
     ActionSpec as SharedActionSpec,
+)
+from src.core.shared.agent_schemas import (
     ScheduleSpec as SharedScheduleSpec,
+)
+from src.core.shared.agent_schemas import (
+    TriggerSpec as SharedTriggerSpec,
 )
 
 logger = logging.getLogger(__name__)

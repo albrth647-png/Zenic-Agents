@@ -123,7 +123,7 @@ class HNSWIndex:
         self._M_max0 = M * 2  # Layer 0 gets 2x connections
         self._ef_construction = ef_construction
         self._max_level_mult = max_level_mult
-        self._rng = random.Random(seed)
+        self._rng = random.Random(seed)  # noqa: S311
 
         self._nodes: dict[str, HNSWNode] = {}
         self._entry_point: str | None = None
@@ -330,7 +330,7 @@ class HNSWIndex:
                         if nid in self._nodes
                     ]
                     neighbor_vecs.sort(key=lambda x: x[0], reverse=True)
-                    neighbor.neighbors[layer] = set(nid for _, nid in neighbor_vecs[:M_max])
+                    neighbor.neighbors[layer] = {nid for _, nid in neighbor_vecs[:M_max]}
 
             if results:
                 current_id = results[0][1]

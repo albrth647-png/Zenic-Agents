@@ -9,13 +9,15 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.autopilot.feedback import FeedbackAction
 from src.core.autopilot.objective import Objective, ObjectiveStatus
-from src.core.autopilot.planner import PlanStep
 
 from ._status import AutopilotStatus
+
+if TYPE_CHECKING:
+    from src.core.autopilot.planner import PlanStep
 
 logger = logging.getLogger(__name__)
 

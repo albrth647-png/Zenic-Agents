@@ -112,10 +112,15 @@ impl SafetyVerdict {
         canonical.can_proceed()
     }
 
-    /// Delegate escalate() to zenic-safety canonical implementation.
+    /// Escalate verdict one level.
     pub fn escalate(self) -> Self {
-        let canonical: zenic_safety::SafetyVerdict = self.into();
-        canonical.escalate().into()
+        match self {
+            SafetyVerdict::Allow => SafetyVerdict::Confirm,
+            SafetyVerdict::Confirm => SafetyVerdict::Approve,
+            SafetyVerdict::Approve => SafetyVerdict::Deny,
+            SafetyVerdict::Deny => SafetyVerdict::Deny,
+            SafetyVerdict::RateLimited => SafetyVerdict::Deny,
+        }
     }
 
     /// Delegate is_blocked() to zenic-safety canonical implementation.
@@ -156,24 +161,23 @@ impl SafetyVerdict {
     }
 
     /// Severity level (0=Allow .. 4=Deny). Delegates to zenic-safety.
-    #[getter]
-    fn severity(&self) -> u8 {
+    #[getter(severity)]
+    fn py_get_severity(&self) -> u8 {
         SafetyVerdict::severity(self)
     }
 
     /// Whether action can proceed. Delegates to zenic-safety.
-    fn can_proceed(&self) -> bool {
+    fn py_can_proceed(&self) -> bool {
         SafetyVerdict::can_proceed(self)
     }
 
     /// Escalate verdict one level. Delegates to zenic-safety.
-    fn escalate(me: &Bound<'_, Self>) -> PyResult<Self> {
-        let val: SafetyVerdict = me.extract()?;
-        Ok(val.escalate())
+    fn py_escalate(&self) -> Self {
+        self.escalate()
     }
 
     /// Whether verdict is blocked (Deny or RateLimited).
-    fn is_blocked(&self) -> bool {
+    fn py_is_blocked(&self) -> bool {
         SafetyVerdict::is_blocked(self)
     }
 }
@@ -213,42 +217,42 @@ impl SafetyCheckResult {
     // ── Read-only getters ──────────────────────────────────────
 
     #[getter]
-    fn action_id(&self) -> &str {
+    pub fn action_id(&self) -> &str {
         &self.action_id
     }
 
     #[getter]
-    fn verdict(&self) -> SafetyVerdict {
-        self.verdict.clone()
+    pub fn verdict(&self) -> SafetyVerdict {
+        self.verdict
     }
 
     #[getter]
-    fn category(&self) -> ActionCategory {
-        self.category.clone()
+    pub fn category(&self) -> ActionCategory {
+        self.category
     }
 
     #[getter]
-    fn reason(&self) -> &str {
+    pub fn reason(&self) -> &str {
         &self.reason
     }
 
     #[getter]
-    fn rule_name(&self) -> &str {
+    pub fn rule_name(&self) -> &str {
         &self.rule_name
     }
 
     #[getter]
-    fn requires_confirmation(&self) -> bool {
+    pub fn requires_confirmation(&self) -> bool {
         self.requires_confirmation
     }
 
     #[getter]
-    fn requires_approval(&self) -> bool {
+    pub fn requires_approval(&self) -> bool {
         self.requires_approval
     }
 
     #[getter]
-    fn risk_score(&self) -> f64 {
+    pub fn risk_score(&self) -> f64 {
         self.risk_score
     }
 
@@ -350,26 +354,26 @@ impl From<SafetyVerdict> for zenic_safety::SafetyVerdict {
     }
 }
 
-impl From<zenic_safety::ActionCategory> for ActionCategory {
-    fn from(c: zenic_safety::ActionCategory) -> Self {
+impl From<zenic_safety::verdict::ActionCategory> for ActionCategory {
+    fn from(c: zenic_safety::verdict::ActionCategory) -> Self {
         match c {
-            zenic_safety::ActionCategory::Safe => ActionCategory::Safe,
-            zenic_safety::ActionCategory::Moderate => ActionCategory::Moderate,
-            zenic_safety::ActionCategory::Destructive => ActionCategory::Destructive,
-            zenic_safety::ActionCategory::Financial => ActionCategory::Financial,
-            zenic_safety::ActionCategory::System => ActionCategory::System,
+            zenic_safety::verdict::ActionCategory::Safe => ActionCategory::Safe,
+            zenic_safety::verdict::ActionCategory::Moderate => ActionCategory::Moderate,
+            zenic_safety::verdict::ActionCategory::Destructive => ActionCategory::Destructive,
+            zenic_safety::verdict::ActionCategory::Financial => ActionCategory::Financial,
+            zenic_safety::verdict::ActionCategory::System => ActionCategory::System,
         }
     }
 }
 
-impl From<ActionCategory> for zenic_safety::ActionCategory {
+impl From<ActionCategory> for zenic_safety::verdict::ActionCategory {
     fn from(c: ActionCategory) -> Self {
         match c {
-            ActionCategory::Safe => zenic_safety::ActionCategory::Safe,
-            ActionCategory::Moderate => zenic_safety::ActionCategory::Moderate,
-            ActionCategory::Destructive => zenic_safety::ActionCategory::Destructive,
-            ActionCategory::Financial => zenic_safety::ActionCategory::Financial,
-            ActionCategory::System => zenic_safety::ActionCategory::System,
+            ActionCategory::Safe => zenic_safety::verdict::ActionCategory::Safe,
+            ActionCategory::Moderate => zenic_safety::verdict::ActionCategory::Moderate,
+            ActionCategory::Destructive => zenic_safety::verdict::ActionCategory::Destructive,
+            ActionCategory::Financial => zenic_safety::verdict::ActionCategory::Financial,
+            ActionCategory::System => zenic_safety::verdict::ActionCategory::System,
         }
     }
 }

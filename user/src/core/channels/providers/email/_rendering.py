@@ -5,10 +5,12 @@ and confirmation emails.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from ..._formatter import sanitize_html
-from ..._types import ConfirmationRequest
+
+if TYPE_CHECKING:
+    from ..._types import ConfirmationRequest
 
 
 def render_fields_table(fields: Any) -> str:
@@ -55,14 +57,14 @@ def build_confirmation_html(request: ConfirmationRequest) -> str:
         HTML string for the email body.
     """
     # Button styles per option
-    button_styles: Dict[str, str] = {
+    button_styles: dict[str, str] = {
         "yes": "background:#28a745;color:#fff;",
         "no": "background:#dc3545;color:#fff;",
         "more_info": "background:#6c757d;color:#fff;",
     }
 
     # Default labels
-    option_labels: Dict[str, str] = {
+    option_labels: dict[str, str] = {
         "yes": "✅ Yes — Confirm",
         "no": "❌ No — Deny",
         "more_info": "ℹ️ More Info",

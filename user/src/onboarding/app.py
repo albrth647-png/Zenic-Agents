@@ -161,7 +161,7 @@ class OnboardingTUI:
                 if count > 0:
                     self._state = OnboardingState.ACTIVATED
                     return
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # Check registration
@@ -237,21 +237,20 @@ class OnboardingTUI:
         self._log_event("register_start", username=username, interactive=interactive)
 
         # Interactive mode: prompt for missing fields
-        if interactive and not self._no_interactive:
-            if not username or not email:
-                prompt_result = prompt_registration()
-                if not prompt_result:
-                    self._log_event("register_cancelled")
-                    return FlowResult(
-                        success=False,
-                        state=FlowState.CANCELLED,
-                        message="Registration cancelled by user",
-                        flow_name="registration",
-                    )
-                username = username or prompt_result.get("username")
-                email = email or prompt_result.get("email")
-                device_name = device_name or prompt_result.get("device_name", "My Device")
-                tier = tier if tier != "starter" else prompt_result.get("tier", "starter")
+        if interactive and not self._no_interactive and (not username or not email):
+            prompt_result = prompt_registration()
+            if not prompt_result:
+                self._log_event("register_cancelled")
+                return FlowResult(
+                    success=False,
+                    state=FlowState.CANCELLED,
+                    message="Registration cancelled by user",
+                    flow_name="registration",
+                )
+            username = username or prompt_result.get("username")
+            email = email or prompt_result.get("email")
+            device_name = device_name or prompt_result.get("device_name", "My Device")
+            tier = tier if tier != "starter" else prompt_result.get("tier", "starter")
 
         # Validate required fields
         if not username or not email:
@@ -303,19 +302,18 @@ class OnboardingTUI:
         self._log_event("activate_start", key_provided=bool(key), interactive=interactive)
 
         # Interactive mode
-        if interactive and not self._no_interactive:
-            if not key:
-                prompt_result = prompt_activation()
-                if not prompt_result:
-                    self._log_event("activate_cancelled")
-                    return FlowResult(
-                        success=False,
-                        state=FlowState.CANCELLED,
-                        message="Activation cancelled by user",
-                        flow_name="activation",
-                    )
-                key = key or prompt_result.get("key")
-                username = username or prompt_result.get("username")
+        if interactive and not self._no_interactive and not key:
+            prompt_result = prompt_activation()
+            if not prompt_result:
+                self._log_event("activate_cancelled")
+                return FlowResult(
+                    success=False,
+                    state=FlowState.CANCELLED,
+                    message="Activation cancelled by user",
+                    flow_name="activation",
+                )
+            key = key or prompt_result.get("key")
+            username = username or prompt_result.get("username")
 
         if not key:
             return FlowResult(

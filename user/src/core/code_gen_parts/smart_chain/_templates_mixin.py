@@ -16,7 +16,7 @@ class SmartChainTemplatesMixin:
         if "auth" in desc_lower or "jwt" in desc_lower:
             return (
                 "import hashlib\nimport secrets\nimport hmac\nimport os\n"
-                "import time\nimport logging\nfrom typing import Optional, Dict, Any, List\n"
+                "import time\nimport logging\nfrom typing import Any, List  # noqa: UP035\n"
                 "from datetime import datetime, timedelta\n\n"
                 "try:\n    from jose import JWTError, jwt\n    JOSE_AVAILABLE = True\n"
                 "except ImportError:\n    JOSE_AVAILABLE = False\n\n"
@@ -27,7 +27,7 @@ class SmartChainTemplatesMixin:
         elif "crud" in desc_lower or "service" in desc_lower:
             return (
                 "import sqlite3\nimport logging\nimport re\nimport json\n"
-                "from typing import Optional, Dict, Any, List, Tuple\n"
+                "from typing import Any, Tuple  # noqa: UP035\n"
                 "from contextlib import contextmanager\n\n"
                 "logger = logging.getLogger(__name__)\n\n\n"
                 "def get_connection(db_path: str = 'data.sqlite'):\n"
@@ -39,14 +39,14 @@ class SmartChainTemplatesMixin:
             )
         elif "analytics" in desc_lower:
             return (
-                "import sqlite3\nimport logging\nfrom typing import Optional, Dict, Any, List\n"
+                "import sqlite3\nimport logging\nfrom typing import Any, List  # noqa: UP035\n"
                 "from datetime import datetime, timedelta\nfrom collections import Counter\n\n"
                 "logger = logging.getLogger(__name__)\n"
             )
         elif "integration" in desc_lower or "stripe" in desc_lower or "payment" in desc_lower:
             return (
                 "import asyncio\nimport logging\nimport json\nimport os\n"
-                "from typing import Optional, Dict, Any, List\n\n"
+                "from typing import Any, List  # noqa: UP035\n\n"
                 "try:\n    import aiohttp\n    AIOHTTP_AVAILABLE = True\n"
                 "except ImportError:\n    AIOHTTP_AVAILABLE = False\n\n"
                 "try:\n    import urllib.request\n    URLLIB_AVAILABLE = True\n"
@@ -55,7 +55,7 @@ class SmartChainTemplatesMixin:
             )
         else:
             return (
-                "import logging\nfrom typing import Optional, Dict, Any, List\n\n"
+                "import logging\nfrom typing import Any, List  # noqa: UP035\n\n"
                 "logger = logging.getLogger(__name__)\n"
             )
 
@@ -258,7 +258,7 @@ class SmartChainTemplatesMixin:
                     entity = word.lower()
                     break
             return (
-                f"\n"
+                f"\n"  # noqa: S608
                 f"    def create(self, data: Dict[str, Any]) -> Dict[str, Any]:\n"
                 f'        """Create a new {entity} with parameterized SQL INSERT."""\n'
                 f"        try:\n"

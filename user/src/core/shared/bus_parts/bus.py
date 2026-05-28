@@ -10,7 +10,8 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .mailbox import AgentMailbox
 from .metrics import BusMetrics
@@ -18,11 +19,11 @@ from .persistence import PersistenceLayer
 from .ring_buffer import RingBuffer
 from .shared_state import SharedState
 from .types import (
+    _DEFAULT_RING_SIZE,
+    _FLUSH_INTERVAL_S,
     BusMessage,
     MessageType,
     Priority,
-    _DEFAULT_RING_SIZE,
-    _FLUSH_INTERVAL_S,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class SharedMemoryBus:
     across 42+ agents with tenant isolation.
     """
 
-    def __init__(self, db_path: Optional[str] = None,
+    def __init__(self, db_path: str | None = None,
                  ring_size: int = _DEFAULT_RING_SIZE,
                  tenant_id: str = "default") -> None:
         self._tenant_id = tenant_id
@@ -49,11 +50,11 @@ class SharedMemoryBus:
         self._persistence = PersistenceLayer(self._db_path)
 
         # Agent mailboxes: agent_id → AgentMailbox
-        self._mailboxes: Dict[str, AgentMailbox] = {}
+        self._mailboxes: dict[str, AgentMailbox] = {}
         self._mailboxes_lock = threading.Lock()
 
         # Registered agents for broadcast
-        self._registered_agents: Dict[str, str] = {}  # agent_id → tenant_id
+        self._registered_agents: dict[str, str] = {}  # agent_id → tenant_id
         self._agents_lock = threading.Lock()
 
         # Background flush thread
@@ -111,7 +112,7 @@ class SharedMemoryBus:
         self._metrics.record_send(sender, latency_us)
         return True
 
-    def receive(self, agent_id: str, timeout_ms: float = 0) -> Optional[BusMessage]:
+    def receive(self, agent_id: str, timeout_ms: float = 0) -> BusMessage | None:
         """Non-blocking (or timed) receive from agent's mailbox.
 
         Returns the highest-priority message first. Uses a while-loop
@@ -154,7 +155,7 @@ class SharedMemoryBus:
                 count += 1
         return count
 
-    def register_agent(self, agent_id: str, tenant_id: Optional[str] = None) -> None:
+    def register_agent(self, agent_id: str, tenant_id: str | None = None) -> None:
         """Register an agent for broadcast delivery."""
         tid = tenant_id or self._tenant_id
         with self._agents_lock:
@@ -206,7 +207,7 @@ class SharedMemoryBus:
         """Delete a key from shared state."""
         self._state.delete(namespace, key, tenant_id=self._tenant_id)
 
-    def list_keys(self, namespace: str, prefix: str = "") -> List[str]:
+    def list_keys(self, namespace: str, prefix: str = "") -> list[str]:
         """List keys in a namespace with optional prefix filter."""
         return self._state.list_keys(namespace, prefix=prefix,
                                       tenant_id=self._tenant_id)
@@ -221,17 +222,17 @@ class SharedMemoryBus:
 
     # ── Ring Buffer API ──
 
-    def write_ring(self, data: bytes, tenant_id: Optional[str] = None) -> int:
+    def write_ring(self, data: bytes, tenant_id: str | None = None) -> int:
         """Write data to the ring buffer. Returns absolute slot index. O(1)."""
         tid = tenant_id or self._tenant_id
         idx = self._ring.write(data, tenant_id=tid)
         return idx
 
-    def read_ring(self, slot_index: int) -> Optional[bytes]:
+    def read_ring(self, slot_index: int) -> bytes | None:
         """Read data from a ring buffer slot. O(1)."""
         return self._ring.read(slot_index)
 
-    def read_ring_zero_copy(self, slot_index: int) -> Optional[memoryview]:
+    def read_ring_zero_copy(self, slot_index: int) -> memoryview | None:
         """Zero-copy read via memoryview. Caller must not modify the view."""
         return self._ring.read_memoryview(slot_index)
 
@@ -251,7 +252,7 @@ class SharedMemoryBus:
 
     # ── Metrics ──
 
-    def metrics(self) -> Dict[str, Any]:
+    def metrics(self) -> dict[str, Any]:
         """Get bus performance metrics snapshot."""
         return self._metrics.snapshot(buffer_utilization=self._ring.utilization)
 
@@ -272,15 +273,14 @@ class SharedMemoryBus:
 
         Returns the number of database rows deleted.
         """
-        with self._mailboxes_lock:
-            with self._agents_lock:
-                to_remove = [
-                    aid for aid, tid in self._registered_agents.items()
-                    if tid == tenant_id
-                ]
-                for aid in to_remove:
-                    self._registered_agents.pop(aid, None)
-                    self._mailboxes.pop(aid, None)
+        with self._mailboxes_lock, self._agents_lock:
+            to_remove = [
+                aid for aid, tid in self._registered_agents.items()
+                if tid == tenant_id
+            ]
+            for aid in to_remove:
+                self._registered_agents.pop(aid, None)
+                self._mailboxes.pop(aid, None)
         return self._persistence.purge_tenant(tenant_id)
 
     # ── Internals ──

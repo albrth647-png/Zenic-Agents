@@ -11,7 +11,7 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 from ._snapshots import (
     CompensationAction,
@@ -34,7 +34,7 @@ def with_retry(
     max_retries: int = _MAX_RETRIES,
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, max_retries + 1):
         try:
             return fn()
@@ -228,9 +228,9 @@ def persist_rollback_record(
 
 # ── Queries ────────────────────────────────────────────────
 
-def get_compensations(db_path: str, request_id: str) -> List[CompensationAction]:
+def get_compensations(db_path: str, request_id: str) -> list[CompensationAction]:
     """Get all compensation actions for a request."""
-    def _do_query() -> List[CompensationAction]:
+    def _do_query() -> list[CompensationAction]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -245,9 +245,9 @@ def get_compensations(db_path: str, request_id: str) -> List[CompensationAction]
     return with_retry(_do_query, fallback=[])
 
 
-def get_rollback_record_by_id(db_path: str, rollback_id: str) -> Optional[RollbackRecord]:
+def get_rollback_record_by_id(db_path: str, rollback_id: str) -> RollbackRecord | None:
     """Get a rollback record by ID."""
-    def _do_find() -> Optional[RollbackRecord]:
+    def _do_find() -> RollbackRecord | None:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -262,9 +262,9 @@ def get_rollback_record_by_id(db_path: str, rollback_id: str) -> Optional[Rollba
     return with_retry(_do_find, fallback=None)
 
 
-def get_rollback_history(db_path: str, request_id: str) -> List[RollbackRecord]:
+def get_rollback_history(db_path: str, request_id: str) -> list[RollbackRecord]:
     """Get all rollback records for a request."""
-    def _do_query() -> List[RollbackRecord]:
+    def _do_query() -> list[RollbackRecord]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

@@ -7,9 +7,9 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Any, List, Optional
+from typing import Any
 
-from ._types import DelegationRule, DelegationRecord, _MAX_RETRIES, _RETRY_DELAY
+from ._types import _MAX_RETRIES, _RETRY_DELAY, DelegationRecord, DelegationRule
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class DelegationPersistenceMixin:
 
     def _list_active_rules_for(
         self, from_user_id: int, from_role: str,
-    ) -> List[DelegationRule]:
+    ) -> list[DelegationRule]:
         """List active delegation rules for a user+role."""
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
@@ -80,9 +80,9 @@ class DelegationPersistenceMixin:
         rules = [self._row_to_rule(r) for r in rows]
         return [r for r in rules if r.is_active()]
 
-    def _find_rule(self, rule_id: str) -> Optional[DelegationRule]:
+    def _find_rule(self, rule_id: str) -> DelegationRule | None:
         """Find a delegation rule by ID."""
-        def _do_find() -> Optional[DelegationRule]:
+        def _do_find() -> DelegationRule | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -96,9 +96,9 @@ class DelegationPersistenceMixin:
 
         return self._with_retry(_do_find, fallback=None)
 
-    def _find_record(self, record_id: str) -> Optional[DelegationRecord]:
+    def _find_record(self, record_id: str) -> DelegationRecord | None:
         """Find a delegation record by ID."""
-        def _do_find() -> Optional[DelegationRecord]:
+        def _do_find() -> DelegationRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -198,7 +198,7 @@ class DelegationPersistenceMixin:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()

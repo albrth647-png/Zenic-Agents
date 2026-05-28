@@ -4,10 +4,11 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
+
+from src.core.shared.deterministic import ControllableJitter
 
 from ._types import VerdictCircuitState
-from src.core.shared.deterministic import ControllableJitter
 
 logger = logging.getLogger("zenic_agents.verdict_parts.resilience")
 
@@ -46,8 +47,8 @@ class VerdictCircuitBreaker:
         self._failure_count = 0
         self._success_count = 0
         self._half_open_calls = 0
-        self._opened_at: Optional[float] = None
-        self._last_failure_time: Optional[float] = None
+        self._opened_at: float | None = None
+        self._last_failure_time: float | None = None
 
         # Stats
         self._total_calls = 0
@@ -70,7 +71,7 @@ class VerdictCircuitBreaker:
         return self.state == VerdictCircuitState.OPEN
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Snapshot of circuit breaker statistics."""
         with self._lock:
             self._maybe_transition_to_half_open()
@@ -237,7 +238,7 @@ class VerdictHealthSnapshot:
     total_failures: int
     total_timeouts: int
     total_ambiguous: int
-    last_call_time: Optional[float]
+    last_call_time: float | None
     circuit_breaker_state: str
 
 

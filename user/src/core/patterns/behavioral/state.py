@@ -9,8 +9,9 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 
 import logging
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,9 @@ class State:
         allowed_transitions: List of state names this state can transition to.
     """
     name: str
-    on_enter: Optional[Callable[[str], None]] = None
-    on_exit: Optional[Callable[[str], None]] = None
-    allowed_transitions: List[str] = field(default_factory=list)
+    on_enter: Callable[[str], None] | None = None
+    on_exit: Callable[[str], None] | None = None
+    allowed_transitions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -53,8 +54,8 @@ class Transition:
     """
     from_state: str
     to_state: str
-    condition: Optional[Callable[[], bool]] = None
-    action: Optional[Callable[[], None]] = None
+    condition: Callable[[], bool] | None = None
+    action: Callable[[], None] | None = None
 
 
 # ======================================================================
@@ -93,8 +94,8 @@ class StateMachine:
     def __init__(
         self,
         initial_state: str,
-        transitions: List[Transition],
-        states: Optional[Dict[str, State]] = None,
+        transitions: list[Transition],
+        states: dict[str, State] | None = None,
     ) -> None:
         """
         Args:
@@ -107,11 +108,11 @@ class StateMachine:
         Raises:
             ValueError: If *initial_state* is not in the states dict.
         """
-        self._states: Dict[str, State] = dict(states) if states else {}
-        self._transitions: List[Transition] = list(transitions)
+        self._states: dict[str, State] = dict(states) if states else {}
+        self._transitions: list[Transition] = list(transitions)
         self._initial_state = initial_state
         self._current_state = initial_state
-        self._history: List[Dict[str, Any]] = []
+        self._history: list[dict[str, Any]] = []
         self._lock = threading.RLock()
 
         # Infer states from transitions if not explicitly provided
@@ -232,7 +233,7 @@ class StateMachine:
             logger.debug("StateMachine: reset to initial state '%s'", self._initial_state)
 
     @property
-    def history(self) -> List[Dict[str, Any]]:
+    def history(self) -> list[dict[str, Any]]:
         """Return a copy of the transition history."""
         with self._lock:
             return list(self._history)
@@ -253,11 +254,9 @@ class StateMachine:
         trans = self._find_transition(from_state, to_state)
         if trans is None:
             return False
-        if trans.condition and not trans.condition():
-            return False
-        return True
+        return not (trans.condition and not trans.condition())
 
-    def _find_transition(self, from_state: str, to_state: str) -> Optional[Transition]:
+    def _find_transition(self, from_state: str, to_state: str) -> Transition | None:
         """Find the first matching transition definition."""
         for t in self._transitions:
             if t.from_state == from_state and t.to_state == to_state:

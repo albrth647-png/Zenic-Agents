@@ -8,6 +8,7 @@ import io
 import pytest
 from pydub.generators import Sine
 
+from src.core.voice_pipeline import VoicePipeline
 from src.core.voice_pipeline._types import (
     AudioFormat,
     STTBackendConfig,
@@ -15,8 +16,6 @@ from src.core.voice_pipeline._types import (
 )
 from src.core.voice_pipeline.ear import DummyBackend, Ear
 from src.core.voice_pipeline.format_adapter import FormatAdapter
-from src.core.voice_pipeline import VoicePipeline
-
 
 # ── Audio fixtures ─────────────────────────────────────────────
 

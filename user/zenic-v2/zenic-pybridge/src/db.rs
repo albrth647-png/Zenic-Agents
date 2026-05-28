@@ -218,10 +218,13 @@ impl EncryptedDb {
         Ok(guard.is_some())
     }
 
-    // -----------------------------------------------------------------------
-    // Inner execution (GIL-free)
-    // -----------------------------------------------------------------------
+}
 
+// -----------------------------------------------------------------------
+// Inner execution (GIL-free) — NOT exposed to Python
+// -----------------------------------------------------------------------
+
+impl EncryptedDb {
     /// Internal execution that does NOT hold the GIL.
     ///
     /// E-02 FIX: All SQLite operations run without the GIL to prevent

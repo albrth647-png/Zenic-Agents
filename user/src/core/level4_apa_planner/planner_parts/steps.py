@@ -9,8 +9,7 @@ Previously, best_action_hint was received but completely ignored,
 wasting hundreds of MCTS simulations.
 """
 
-from ._imports import PlanStep, OperationType, RoutePath
-
+from ._imports import OperationType, PlanStep, RoutePath
 
 # Mapping from MCTS action names to step properties
 _MCTS_ACTION_MAP = {

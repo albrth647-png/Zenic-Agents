@@ -1,7 +1,7 @@
 """CoordinationBackend - Core methods."""
 
 import logging
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..backend import CoordinationBackend
@@ -79,7 +79,7 @@ class CoordinationBackendCoreMixin:
         """
     async def disconnect(self) -> None:
         """Close the backend connection and release resources."""
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Check backend health.
 
@@ -94,10 +94,10 @@ class CoordinationBackendCoreMixin:
         queue_name: str,
         task_id: str,
         task_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         priority: int = 0,
-        delay_until: Optional[float] = None,
-        tenant_id: Optional[str] = None,
+        delay_until: float | None = None,
+        tenant_id: str | None = None,
     ) -> bool:
         """
         Add a task to the named queue.
@@ -119,9 +119,9 @@ class CoordinationBackendCoreMixin:
         queue_name: str,
         worker_id: str,
         lease_seconds: float = 120.0,
-        task_types: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        task_types: list[str] | None = None,
+        tenant_id: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Atomically claim the highest-priority available task from the queue.
 
@@ -139,7 +139,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             Dict with task details, or None if no task is available.
         """
-    async def complete_task(self, task_id: str, result: Optional[Dict[str, Any]] = None) -> bool:
+    async def complete_task(self, task_id: str, result: dict[str, Any] | None = None) -> bool:
         """
         Mark a task as completed.
 

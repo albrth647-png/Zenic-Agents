@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Dict, List
+from typing import Any
 
 from ._types import (
-    ImpactRiskLevel,
     EmailImpactPreview,
+    ImpactRiskLevel,
 )
 
 
-def preview_email(config: Dict[str, Any]) -> EmailImpactPreview:
+def preview_email(config: dict[str, Any]) -> EmailImpactPreview:
     """Preview an email operation WITHOUT sending it.
 
     Shows recipients, subject, whether it would actually send.
@@ -75,7 +75,7 @@ def preview_email(config: Dict[str, Any]) -> EmailImpactPreview:
         risk_level = ImpactRiskLevel.MEDIUM
         risk_score = 0.4
 
-    summary_parts: List[str] = []
+    summary_parts: list[str] = []
     if would_send:
         summary_parts.append(f"Would send email to {len(to_emails)} recipient(s)")
     else:
@@ -86,7 +86,7 @@ def preview_email(config: Dict[str, Any]) -> EmailImpactPreview:
         summary_parts.append(f"{len(bcc)} BCC")
     summary = "; ".join(summary_parts)
 
-    warnings: List[str] = []
+    warnings: list[str] = []
     if invalid:
         warnings.append(f"Invalid email addresses: {invalid}")
     if not to_emails:

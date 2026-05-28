@@ -11,10 +11,10 @@ CAMBIO TECNOLÓGICO v16 - ARM-Optimized Defaults:
 - Resultado: MCTS consume ~50% menos CPU/RAM en el teléfono
 """
 
-import math
-import time
-import os
 import logging
+import math
+import os
+import time
 
 from .deterministic import DeterministicRNG
 
@@ -145,7 +145,7 @@ class MCTSPlanner:
         self.simulations_run = 0
         self.depth_reached = 0
 
-        for i in range(self.max_simulations):
+        for _i in range(self.max_simulations):
             # Verificar timeout
             elapsed_ms = (time.time() - start_time) * 1000
             if elapsed_ms >= self.timeout_ms:

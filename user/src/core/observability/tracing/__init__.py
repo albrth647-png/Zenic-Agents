@@ -6,22 +6,22 @@ Provides request-level and operation-level tracing with
 correlation IDs that flow through the entire pipeline.
 """
 
-from ._config import TracingConfig, init_tracing, get_tracer
+from ._config import TracingConfig, get_tracer, init_tracing
 from ._context import (
-    trace_span,
-    get_current_trace_id,
-    get_current_span_id,
-    inject_trace_context,
     extract_trace_context,
+    get_current_span_id,
+    get_current_trace_id,
+    inject_trace_context,
+    trace_span,
 )
 
 __all__ = [
     "TracingConfig",
-    "init_tracing",
-    "get_tracer",
-    "trace_span",
-    "get_current_trace_id",
-    "get_current_span_id",
-    "inject_trace_context",
     "extract_trace_context",
+    "get_current_span_id",
+    "get_current_trace_id",
+    "get_tracer",
+    "init_tracing",
+    "inject_trace_context",
+    "trace_span",
 ]

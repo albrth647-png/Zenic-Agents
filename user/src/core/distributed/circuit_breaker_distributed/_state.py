@@ -5,7 +5,7 @@ Contains the SharedCircuitState class that represents a snapshot
 of circuit breaker state shared across distributed nodes.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class SharedCircuitState:
@@ -22,8 +22,13 @@ class SharedCircuitState:
         version: Optimistic concurrency version number.
     """
     __slots__ = (
-        "name", "state", "failure_count", "success_count",
-        "half_open_call_count", "opened_at", "version",
+        "failure_count",
+        "half_open_call_count",
+        "name",
+        "opened_at",
+        "state",
+        "success_count",
+        "version",
     )
 
     def __init__(
@@ -33,7 +38,7 @@ class SharedCircuitState:
         failure_count: int = 0,
         success_count: int = 0,
         half_open_call_count: int = 0,
-        opened_at: Optional[float] = None,
+        opened_at: float | None = None,
         version: int = 0,
     ) -> None:
         self.name = name
@@ -44,7 +49,7 @@ class SharedCircuitState:
         self.opened_at = opened_at
         self.version = version
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dict for backend storage."""
         return {
             "name": self.name,
@@ -56,7 +61,7 @@ class SharedCircuitState:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], version: int = 0) -> "SharedCircuitState":
+    def from_dict(cls, data: dict[str, Any], version: int = 0) -> "SharedCircuitState":
         """Deserialize from backend dict."""
         return cls(
             name=data.get("name", ""),

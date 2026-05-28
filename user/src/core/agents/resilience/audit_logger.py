@@ -12,16 +12,23 @@ import json
 import threading
 import time
 from collections import deque
-from typing import Any, Optional
+from typing import Any
 
 
 class AuditEntry:
     """A single audit log entry."""
 
     __slots__ = (
-        "timestamp", "agent", "input_hash", "output_hash",
-        "source", "confidence", "duration_ms", "retry_count",
-        "circuit_breaker_state", "evidence_summary",
+        "agent",
+        "circuit_breaker_state",
+        "confidence",
+        "duration_ms",
+        "evidence_summary",
+        "input_hash",
+        "output_hash",
+        "retry_count",
+        "source",
+        "timestamp",
     )
 
     def __init__(
@@ -35,7 +42,7 @@ class AuditEntry:
         retry_count: int = 0,
         circuit_breaker_state: str = "CLOSED",
         evidence_summary: str = "",
-        timestamp: Optional[float] = None,
+        timestamp: float | None = None,
     ) -> None:
         self.timestamp = timestamp or time.monotonic()
         self.agent = agent
@@ -93,7 +100,7 @@ class AuditLogger:
             # Global buffer
             self._global.append(entry)
 
-    def get_recent(self, agent_name: Optional[str] = None, count: int = 20) -> list[AuditEntry]:
+    def get_recent(self, agent_name: str | None = None, count: int = 20) -> list[AuditEntry]:
         """Get recent entries, optionally filtered by agent."""
         with self._lock:
             if agent_name:
@@ -102,7 +109,7 @@ class AuditLogger:
                 entries = list(self._global)
             return entries[-count:]
 
-    def get_failure_pattern(self, agent_name: Optional[str] = None) -> dict[str, Any]:
+    def get_failure_pattern(self, agent_name: str | None = None) -> dict[str, Any]:
         """Analyze audit log for failure patterns."""
         entries = self.get_recent(agent_name, count=100)
         if not entries:

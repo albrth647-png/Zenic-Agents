@@ -46,9 +46,9 @@ pub fn completer_start_session(
         return Ok((session, None));
     }
 
-    let niche = match catalog_get_by_id(niche_id_trimmed) {
-        Some(n) => n,
-        None => {
+    let niche = match catalog_get_by_id(py, niche_id_trimmed) {
+        Ok(Some(n)) => n,
+        Ok(None) => {
             let mut session = CompletionSession::new(
                 generate_session_id(),
                 niche_id_trimmed.to_string(),
@@ -62,6 +62,7 @@ pub fn completer_start_session(
             session.set_status("error");
             return Ok((session, None));
         }
+        Err(e) => return Err(e),
     };
 
     let total_fields = niche.total_field_count();
@@ -78,7 +79,7 @@ pub fn completer_start_session(
     );
 
     // Generate the template using the Fase A function
-    let template_dict = crate::template::template_generate(niche_id_trimmed, py);
+    let template_dict = crate::template::template_generate(niche_id_trimmed, py)?;
 
     Ok((session, template_dict))
 }
@@ -151,6 +152,7 @@ pub fn completer_ingest_documents(
     let applied = crate::extractor::extractor_apply_matches(
         template_dict,
         &matches_list,
+        py,
     )?;
 
     let auto_filled = if applied { auto_count } else { 0 };

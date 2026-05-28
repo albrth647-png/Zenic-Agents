@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .._types import ChannelMessage, ConfirmationRequest
 from ._limits import LIMITS
 from ._text import sanitize_plain_text, truncate
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
 
 
 def format_whatsapp_text(message: ChannelMessage) -> dict[str, Any]:
@@ -33,7 +35,7 @@ def build_whatsapp_interactive_buttons(
         Dict with WhatsApp interactive message payload.
     """
     buttons = []
-    for i, option in enumerate(request.options[:3]):  # WhatsApp allows max 3 buttons
+    for _i, option in enumerate(request.options[:3]):  # WhatsApp allows max 3 buttons
         label = option.replace("_", " ").title()
         buttons.append(
             {

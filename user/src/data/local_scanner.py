@@ -18,8 +18,8 @@ Con LocalDataScanner, el sistema proactivo VE todo:
 from __future__ import annotations
 
 import logging
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from src.data.db_access import DBAccess
 from src.data.fs_scanner import FileSystemScanner

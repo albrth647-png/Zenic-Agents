@@ -195,8 +195,8 @@ mod tests {
     #[test]
     fn test_db_table_def_creation() {
         let mut table = DbTableDef::new("users".to_string(), "id".to_string());
-        table.add_column(ColumnDef::py_new("id".to_string(), "uuid".to_string()));
-        table.add_column(ColumnDef::py_new("email".to_string(), "text".to_string()));
+        table.add_column(ColumnDef::new("id".to_string(), "uuid".to_string()));
+        table.add_column(ColumnDef::new("email".to_string(), "text".to_string()));
         table.set_encrypted(true);
         assert_eq!(table.table_name, "users");
         assert_eq!(table.columns.len(), 2);
@@ -246,7 +246,7 @@ mod tests {
 
     #[test]
     fn test_column_def_creation() {
-        let mut col = ColumnDef::py_new("email".to_string(), "text".to_string());
+        let mut col = ColumnDef::new("email".to_string(), "text".to_string());
         col.set_unique(true);
         col.set_indexed(true);
         col.set_nullable(false);

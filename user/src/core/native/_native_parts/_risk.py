@@ -8,25 +8,25 @@ Provides: calculate_blast_radius, propagate_risks, find_critical_path,
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from ._loader import HAS_NATIVE
 
 
 def calculate_blast_radius(
-    node_id: str, edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    node_id: str, edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Calculate the blast radius of a node failure."""
     if HAS_NATIVE:
         from ._loader import _rust_calculate_blast_radius
         return _rust_calculate_blast_radius(node_id, edges)
     # Pure Python fallback
-    forward: Dict[str, List[str]] = defaultdict(list)
+    forward: dict[str, list[str]] = defaultdict(list)
     for src, dst in edges:
         forward[src].append(dst)
 
     direct = set(forward.get(node_id, []))
-    visited: Set[str] = set()
+    visited: set[str] = set()
     queue = deque([node_id])
 
     while queue:
@@ -50,11 +50,11 @@ def calculate_blast_radius(
 
 
 def propagate_risks(
-    nodes: List[str],
-    edges: List[Tuple[str, str]],
-    base_risks: Dict[str, float],
+    nodes: list[str],
+    edges: list[tuple[str, str]],
+    base_risks: dict[str, float],
     decay: float,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Propagate risk scores through the DAG."""
     if HAS_NATIVE:
         from ._loader import _rust_propagate_risks
@@ -63,12 +63,12 @@ def propagate_risks(
     if not (0.0 <= decay <= 1.0):
         raise ValueError("decay must be between 0.0 and 1.0")
 
-    reverse_adj: Dict[str, List[str]] = defaultdict(list)
+    reverse_adj: dict[str, list[str]] = defaultdict(list)
     for src, dst in edges:
         reverse_adj[dst].append(src)
 
-    effective: Dict[str, float] = {}
-    risk_paths: Dict[str, List[str]] = {}
+    effective: dict[str, float] = {}
+    risk_paths: dict[str, list[str]] = {}
 
     for node in nodes:
         own_risk = base_risks.get(node, 0.0)
@@ -100,23 +100,23 @@ def propagate_risks(
 
 
 def find_critical_path(
-    nodes: List[str],
-    edges: List[Tuple[str, str]],
-    durations: Dict[str, int],
-) -> Dict[str, Any]:
+    nodes: list[str],
+    edges: list[tuple[str, str]],
+    durations: dict[str, int],
+) -> dict[str, Any]:
     """Identify the critical path in the DAG."""
     if HAS_NATIVE:
         from ._loader import _rust_find_critical_path
         return _rust_find_critical_path(nodes, edges, durations)
     # Pure Python fallback
-    predecessors: Dict[str, List[str]] = defaultdict(list)
+    predecessors: dict[str, list[str]] = defaultdict(list)
     for node in nodes:
         predecessors[node] = []
     for src, dst in edges:
         predecessors[dst].append(src)
 
-    earliest_finish: Dict[str, int] = {}
-    pred_on_path: Dict[str, Optional[str]] = {}
+    earliest_finish: dict[str, int] = {}
+    pred_on_path: dict[str, str | None] = {}
 
     for node in nodes:
         node_dur = durations.get(node, 0)
@@ -133,8 +133,8 @@ def find_critical_path(
     end_node = max(earliest_finish, key=earliest_finish.get) if earliest_finish else ""
     total_duration = earliest_finish.get(end_node, 0)
 
-    critical_path: List[str] = []
-    current: Optional[str] = end_node
+    critical_path: list[str] = []
+    current: str | None = end_node
     while current:
         critical_path.append(current)
         current = pred_on_path.get(current)
@@ -149,22 +149,22 @@ def find_critical_path(
 
 
 def compute_reachability(
-    source_nodes: List[str], edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    source_nodes: list[str], edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Compute reachability from source nodes."""
     if HAS_NATIVE:
         from ._loader import _rust_compute_reachability
         return _rust_compute_reachability(source_nodes, edges)
     # Pure Python fallback
-    forward: Dict[str, List[str]] = defaultdict(list)
+    forward: dict[str, list[str]] = defaultdict(list)
     for src, dst in edges:
         forward[src].append(dst)
 
-    all_reachable: Set[str] = set()
-    by_source: Dict[str, List[str]] = {}
+    all_reachable: set[str] = set()
+    by_source: dict[str, list[str]] = {}
 
     for source in source_nodes:
-        visited: Set[str] = set()
+        visited: set[str] = set()
         queue = deque([source])
         while queue:
             current = queue.popleft()
@@ -184,19 +184,19 @@ def compute_reachability(
 
 
 def multi_node_blast_radius(
-    failed_nodes: List[str], edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    failed_nodes: list[str], edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Calculate combined blast radius for multiple node failures."""
     if HAS_NATIVE:
         from ._loader import _rust_multi_node_blast_radius
         return _rust_multi_node_blast_radius(failed_nodes, edges)
     # Pure Python fallback
-    forward: Dict[str, List[str]] = defaultdict(list)
+    forward: dict[str, list[str]] = defaultdict(list)
     for src, dst in edges:
         forward[src].append(dst)
 
     failed_set = set(failed_nodes)
-    visited: Set[str] = set()
+    visited: set[str] = set()
     queue = deque(failed_nodes)
 
     while queue:
@@ -212,7 +212,7 @@ def multi_node_blast_radius(
     blast_size = len(blast_radius)
     risk_level = "low" if blast_size == 0 else "medium" if blast_size <= 5 else "high" if blast_size <= 15 else "critical"
 
-    per_node: Dict[str, Dict[str, Any]] = {}
+    per_node: dict[str, dict[str, Any]] = {}
     for node in failed_nodes:
         node_result = calculate_blast_radius(node, edges)
         per_node[node] = node_result

@@ -1,4 +1,4 @@
 """Degraded mode sub-components."""
-from .capabilities import ModeCapabilities, MODE_CAPABILITIES
+from .capabilities import MODE_CAPABILITIES, ModeCapabilities
 
-__all__ = ["ModeCapabilities", "MODE_CAPABILITIES"]
+__all__ = ["MODE_CAPABILITIES", "ModeCapabilities"]

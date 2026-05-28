@@ -10,9 +10,9 @@ import json
 import logging
 import sqlite3
 import threading
-from typing import Any, Dict, List
+from typing import Any
 
-from ._types import ImpactScore, _with_retry, _row_to_score
+from ._types import ImpactScore, _row_to_score, _with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class ImpactScorer:
 
     # ── Scoring ─────────────────────────────────────────
 
-    def score_alert(self, alert_data: Dict[str, Any]) -> ImpactScore:
+    def score_alert(self, alert_data: dict[str, Any]) -> ImpactScore:
         """Score a business alert based on severity and type."""
         severity = str(alert_data.get("severity", "INFO")).upper()
         alert_type = str(alert_data.get("type", "unknown"))
@@ -144,7 +144,7 @@ class ImpactScorer:
         )
         return score
 
-    def score_exception(self, exception_data: Dict[str, Any]) -> ImpactScore:
+    def score_exception(self, exception_data: dict[str, Any]) -> ImpactScore:
         """Score a system exception."""
         exc_type = str(exception_data.get("exception_type", "unknown"))
         source_id = str(exception_data.get("exception_id", exception_data.get("id", "")))
@@ -196,7 +196,7 @@ class ImpactScorer:
     def score_action(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
     ) -> ImpactScore:
         """Score an action based on its type and configuration."""
         source_id = str(action_config.get("action_id", action_config.get("id", "")))
@@ -248,11 +248,11 @@ class ImpactScorer:
 
     # ── Queries ─────────────────────────────────────────
 
-    def get_top_impacts(self, limit: int = 10) -> List[ImpactScore]:
+    def get_top_impacts(self, limit: int = 10) -> list[ImpactScore]:
         """Return the top *limit* impact scores ordered by impact_score descending."""
         with self._lock:
             try:
-                def _query() -> List[ImpactScore]:
+                def _query() -> list[ImpactScore]:
                     conn = sqlite3.connect(self._db_path)
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT score_id, source, source_id, impact_type, "
@@ -274,11 +274,11 @@ class ImpactScorer:
         self,
         from_time: str = "",
         to_time: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return aggregate impact summary: total potential loss/gain, average urgency."""
         with self._lock:
             try:
-                def _query() -> Dict[str, Any]:
+                def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     sql = (
                         "SELECT COALESCE(SUM(estimated_loss_if_no_action), 0), "
@@ -316,11 +316,11 @@ class ImpactScorer:
     def get_urgent_actions(
         self,
         max_urgency_hours: float = 24,
-    ) -> List[ImpactScore]:
+    ) -> list[ImpactScore]:
         """Return impacts with urgency ≤ *max_urgency_hours*, ordered by urgency ascending."""
         with self._lock:
             try:
-                def _query() -> List[ImpactScore]:
+                def _query() -> list[ImpactScore]:
                     conn = sqlite3.connect(self._db_path)
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT score_id, source, source_id, impact_type, "

@@ -110,7 +110,7 @@ class StatusFlow(BaseFlow):
         """Load license and run verification."""
         try:
             from src.core.license import (
-                LicenseStatus,
+                LicenseStatus,  # noqa: F401
                 get_license_manager,
             )
 

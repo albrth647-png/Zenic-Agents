@@ -6,7 +6,8 @@ with_retry (sync) and with_retry_async (async) functions.
 
 import asyncio
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ._config import RetryConfig, _compute_delay
 
@@ -36,7 +37,7 @@ def with_retry(
     """
     import time
 
-    last_exception: Optional[Exception] = None
+    last_exception: Exception | None = None
 
     for attempt in range(1, config.max_attempts + 1):
         try:
@@ -105,7 +106,7 @@ async def with_retry_async(
     Raises:
         The last exception encountered after all attempts are exhausted.
     """
-    last_exception: Optional[Exception] = None
+    last_exception: Exception | None = None
 
     for attempt in range(1, config.max_attempts + 1):
         try:

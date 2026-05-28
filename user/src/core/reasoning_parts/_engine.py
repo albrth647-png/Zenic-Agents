@@ -2,16 +2,16 @@
 ReasoningEngine — main class inheriting from mixins.
 """
 
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ._imports import ReasoningResult
 
-from ._imports import ReasoningMode
-from ._step_mixin import StepByStepMixin
-from ._reflect_mixin import SelfReflectMixin
 from ._context_mixin import ContextMixin
 from ._helpers_mixin import HelpersMixin
+from ._imports import ReasoningMode
+from ._reflect_mixin import SelfReflectMixin
+from ._step_mixin import StepByStepMixin
 
 
 class ReasoningEngine(HelpersMixin, ContextMixin, SelfReflectMixin, StepByStepMixin):
@@ -31,7 +31,7 @@ class ReasoningEngine(HelpersMixin, ContextMixin, SelfReflectMixin, StepByStepMi
       Capa 3: SmartMemory → experiencia previa
     """
 
-    def __init__(self, mini_ai: Optional[Any] = None, semantic_engine: Optional[Any] = None, smart_memory: Optional[Any] = None) -> None:
+    def __init__(self, mini_ai: Any | None = None, semantic_engine: Any | None = None, smart_memory: Any | None = None) -> None:
         self._ai = mini_ai
         self._semantic = semantic_engine
         self._memory = smart_memory
@@ -98,7 +98,7 @@ class ReasoningEngine(HelpersMixin, ContextMixin, SelfReflectMixin, StepByStepMi
     # ================================================================
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadísticas del ReasoningEngine."""
         return {
             "total_calls": self._call_count,

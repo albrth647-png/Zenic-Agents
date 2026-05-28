@@ -17,9 +17,8 @@ from __future__ import annotations
 
 import logging
 import threading
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .anti_tampering import (
     AntiTamperingLayer,
@@ -42,24 +41,24 @@ from .encryption import (
     get_encryption_manager,
     reset_encryption_manager,
 )
-from .kms_backend import (
-    EnvKeyProvider,
-    KMSManager,
-    KMSStatus,
-    KMSUnavailableError,
-    KeyProvider,
-    KeyringProvider,
-    VaultProvider,
-    create_kms_manager,
-    get_kms_manager,
-    reset_kms_manager,
-)
 from .integrity import (
     IntegrityCheckResult,
     IntegrityStatus,
     IntegrityVerifier,
     get_integrity_verifier,
     reset_integrity_verifier,
+)
+from .kms_backend import (
+    EnvKeyProvider,
+    KeyProvider,
+    KeyringProvider,
+    KMSManager,
+    KMSStatus,
+    KMSUnavailableError,
+    VaultProvider,
+    create_kms_manager,
+    get_kms_manager,
+    reset_kms_manager,
 )
 from .server_secrets import (
     SecretType,
@@ -68,6 +67,9 @@ from .server_secrets import (
     get_server_secrets,
     reset_server_secrets,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -362,48 +364,48 @@ def reset_defense_manager() -> None:
 __all__ = [
     # Layer 1
     "AntiTamperingLayer",
-    "TamperEvent",
-    "TamperSeverity",
-    "get_anti_tampering",
-    "reset_anti_tampering",
     # Layer 2
     "BinaryHardeningLayer",
-    "HardeningLevel",
-    "HardeningStatus",
-    "get_binary_hardening",
-    "reset_binary_hardening",
-    # Layer 3 — Encryption
-    "EncryptionManager",
-    "EncryptionLevel",
-    "EncryptionStatus",
-    "get_encryption_manager",
-    "reset_encryption_manager",
-    # Layer 3a — KMS Backend
-    "KeyProvider",
-    "EnvKeyProvider",
-    "KeyringProvider",
-    "VaultProvider",
-    "KMSManager",
-    "KMSStatus",
-    "KMSUnavailableError",
-    "create_kms_manager",
-    "get_kms_manager",
-    "reset_kms_manager",
-    # Layer 4
-    "IntegrityVerifier",
-    "IntegrityCheckResult",
-    "IntegrityStatus",
-    "get_integrity_verifier",
-    "reset_integrity_verifier",
-    # Layer 6
-    "ServerSecretsLayer",
-    "SecretType",
-    "SecretVerification",
-    "get_server_secrets",
-    "reset_server_secrets",
     # Manager
     "DefenseManager",
     "DefenseStatus",
+    "EncryptionLevel",
+    # Layer 3 — Encryption
+    "EncryptionManager",
+    "EncryptionStatus",
+    "EnvKeyProvider",
+    "HardeningLevel",
+    "HardeningStatus",
+    "IntegrityCheckResult",
+    "IntegrityStatus",
+    # Layer 4
+    "IntegrityVerifier",
+    "KMSManager",
+    "KMSStatus",
+    "KMSUnavailableError",
+    # Layer 3a — KMS Backend
+    "KeyProvider",
+    "KeyringProvider",
+    "SecretType",
+    "SecretVerification",
+    # Layer 6
+    "ServerSecretsLayer",
+    "TamperEvent",
+    "TamperSeverity",
+    "VaultProvider",
+    "create_kms_manager",
+    "get_anti_tampering",
+    "get_binary_hardening",
     "get_defense_manager",
+    "get_encryption_manager",
+    "get_integrity_verifier",
+    "get_kms_manager",
+    "get_server_secrets",
+    "reset_anti_tampering",
+    "reset_binary_hardening",
     "reset_defense_manager",
+    "reset_encryption_manager",
+    "reset_integrity_verifier",
+    "reset_kms_manager",
+    "reset_server_secrets",
 ]

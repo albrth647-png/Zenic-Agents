@@ -10,14 +10,13 @@ from __future__ import annotations
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
-from typing import Optional
 
-from ..config.constants import LOG_FORMAT, LOG_LEVEL_DEFAULT, LOG_MAX_BYTES, LOG_BACKUP_COUNT
+from ..config.constants import LOG_BACKUP_COUNT, LOG_FORMAT, LOG_LEVEL_DEFAULT, LOG_MAX_BYTES
 
 
 def setup_logging(
     level: str = LOG_LEVEL_DEFAULT,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
 ) -> None:
     """
     Configura el logging global del asistente.

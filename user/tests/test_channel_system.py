@@ -5,26 +5,25 @@ Rigor: sin mocks, datos reales, cubre normal + vacío + extremos + error.
 
 import pytest
 
-from src.core.channels._types import (
-    ChannelCapability,
-    ChannelPriority,
-    DeliveryStatus,
-    ChannelMessage,
-    ChannelResponse,
-    ProviderConfig,
-    RateLimitInfo,
-)
-from src.core.channels._formatter._limits import PlatformLimits, LIMITS
+from src.core.channels._formatter._limits import LIMITS, PlatformLimits
 from src.core.channels._protocol import (
     ChannelProvider,
     InboundChannelProvider,
+    can_receive_voice,
+    can_send_confirmation,
+    can_send_voice,
     has_capability,
     requires_inbound,
-    can_send_confirmation,
-    can_receive_voice,
-    can_send_voice,
 )
-
+from src.core.channels._types import (
+    ChannelCapability,
+    ChannelMessage,
+    ChannelPriority,
+    ChannelResponse,
+    DeliveryStatus,
+    ProviderConfig,
+    RateLimitInfo,
+)
 
 # ════════════════════════════════════════════════════════════════
 #  ChannelCapability enum

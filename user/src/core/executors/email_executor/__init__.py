@@ -24,16 +24,16 @@ Design invariants:
   5. Thread-safe counters via threading.Lock.
 """
 
-from ._executor import EmailExecutor
 from ._composer import (
+    build_dry_run_result,
     build_mime_message,
     resolve_recipients,
-    build_dry_run_result,
 )
+from ._executor import EmailExecutor
 
 __all__ = [
     "EmailExecutor",
+    "build_dry_run_result",
     "build_mime_message",
     "resolve_recipients",
-    "build_dry_run_result",
 ]

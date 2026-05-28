@@ -24,24 +24,61 @@ Principios:
   - Compatible con TemplateEngine para resolucion de templates
 """
 
-from .logic_blocks.chain import LogicBlock, LogicChain, _validate_identifier
-from .logic_blocks.flow import (ConditionalBlock, LoopBlock, ParallelBlock, SwitchBlock, TryCatchBlock)
-from .logic_blocks.validation import (ValidateRequiredBlock, ValidateTypesBlock, ValidateRangesBlock, ValidateUniqueBlock, SanitizeBlock)
-from .logic_blocks.business_logic import (InvoiceCalculatorBlock, InventoryTrackerBlock, CRMPipelineBlock, TaskSchedulerBlock)
-from .logic_blocks.business_analytics import (ReportGeneratorBlock, NotificationDispatchBlock, DataAnalyzerBlock)
-from .logic_blocks.data import (CRUDCreateBlock, CRUDReadBlock, CRUDUpdateBlock, CRUDDeleteBlock)
-from .logic_blocks.data_transform import DataTransformBlock
-from .logic_blocks.integration import (EmailSendBlock, HTTPRequestBlock, WebhookCallBlock, FileOperationBlock)
-from .logic_blocks.auth import (AuthLoginBlock, AuthRegisterBlock, AuthVerifyBlock, AuthRBACBlock)
+from .logic_blocks.auth import AuthLoginBlock, AuthRBACBlock, AuthRegisterBlock, AuthVerifyBlock
 from .logic_blocks.builder import LogicBuilder
+from .logic_blocks.business_analytics import DataAnalyzerBlock, NotificationDispatchBlock, ReportGeneratorBlock
+from .logic_blocks.business_logic import (
+    CRMPipelineBlock,
+    InventoryTrackerBlock,
+    InvoiceCalculatorBlock,
+    TaskSchedulerBlock,
+)
+from .logic_blocks.chain import LogicBlock, LogicChain, _validate_identifier
+from .logic_blocks.data import CRUDCreateBlock, CRUDDeleteBlock, CRUDReadBlock, CRUDUpdateBlock
+from .logic_blocks.data_transform import DataTransformBlock
+from .logic_blocks.flow import ConditionalBlock, LoopBlock, ParallelBlock, SwitchBlock, TryCatchBlock
+from .logic_blocks.integration import EmailSendBlock, FileOperationBlock, HTTPRequestBlock, WebhookCallBlock
+from .logic_blocks.validation import (
+    SanitizeBlock,
+    ValidateRangesBlock,
+    ValidateRequiredBlock,
+    ValidateTypesBlock,
+    ValidateUniqueBlock,
+)
 
 __all__ = [
-    'LogicBlock', 'LogicChain', '_validate_identifier',
-    'ConditionalBlock', 'LoopBlock', 'ParallelBlock', 'SwitchBlock', 'TryCatchBlock',
-    'ValidateRequiredBlock', 'ValidateTypesBlock', 'ValidateRangesBlock', 'ValidateUniqueBlock', 'SanitizeBlock',
-    'InvoiceCalculatorBlock', 'InventoryTrackerBlock', 'CRMPipelineBlock', 'TaskSchedulerBlock', 'ReportGeneratorBlock', 'NotificationDispatchBlock', 'DataAnalyzerBlock',
-    'CRUDCreateBlock', 'CRUDReadBlock', 'CRUDUpdateBlock', 'CRUDDeleteBlock', 'DataTransformBlock',
-    'EmailSendBlock', 'HTTPRequestBlock', 'WebhookCallBlock', 'FileOperationBlock',
-    'AuthLoginBlock', 'AuthRegisterBlock', 'AuthVerifyBlock', 'AuthRBACBlock',
+    'AuthLoginBlock',
+    'AuthRBACBlock',
+    'AuthRegisterBlock',
+    'AuthVerifyBlock',
+    'CRMPipelineBlock',
+    'CRUDCreateBlock',
+    'CRUDDeleteBlock',
+    'CRUDReadBlock',
+    'CRUDUpdateBlock',
+    'ConditionalBlock',
+    'DataAnalyzerBlock',
+    'DataTransformBlock',
+    'EmailSendBlock',
+    'FileOperationBlock',
+    'HTTPRequestBlock',
+    'InventoryTrackerBlock',
+    'InvoiceCalculatorBlock',
+    'LogicBlock',
     'LogicBuilder',
+    'LogicChain',
+    'LoopBlock',
+    'NotificationDispatchBlock',
+    'ParallelBlock',
+    'ReportGeneratorBlock',
+    'SanitizeBlock',
+    'SwitchBlock',
+    'TaskSchedulerBlock',
+    'TryCatchBlock',
+    'ValidateRangesBlock',
+    'ValidateRequiredBlock',
+    'ValidateTypesBlock',
+    'ValidateUniqueBlock',
+    'WebhookCallBlock',
+    '_validate_identifier',
 ]

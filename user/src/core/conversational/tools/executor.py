@@ -16,12 +16,14 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..config.constants import TOOL_EXECUTION_TIMEOUT, TOOL_MAX_CONCURRENT
 from ..types.base import Err, Ok, Result
 from ..types.tool_use import ToolCall, ToolResult
-from .registry import ToolRegistry
+
+if TYPE_CHECKING:
+    from .registry import ToolRegistry
 
 logger = logging.getLogger("zenic_agents.conversational.tools.executor")
 

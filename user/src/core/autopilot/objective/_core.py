@@ -268,8 +268,8 @@ class ObjectiveStore:
                         params.append(f'%"{tag}"%')
                     where = " WHERE " + " AND ".join(conditions) if conditions else ""
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM _zenic_objectives{where} " f"ORDER BY created_at DESC LIMIT ?",
-                        params + [limit],
+                        f"SELECT * FROM _zenic_objectives{where} " f"ORDER BY created_at DESC LIMIT ?",  # noqa: S608
+                        [*params, limit],
                     ).fetchall()
                     return [self._row_to_objective(r) for r in rows]
                 finally:

@@ -122,7 +122,7 @@ impl DataSensitivity {
     /// Delegate escalate_verdict() to zenic-safety.
     pub fn escalate_verdict(&self) -> crate::safety_gate::types::SafetyVerdict {
         let canonical: zenic_safety::DataSensitivity = (*self).into();
-        canonical.escalate_verdict().into()
+        canonical.escalate_verdict(zenic_safety::verdict::SafetyVerdict::Allow).into()
     }
 }
 
@@ -157,13 +157,13 @@ impl DataSensitivity {
     }
 
     /// Numeric level (0=Low .. 3=Critical). Delegates to zenic-safety.
-    #[getter]
-    fn level(&self) -> u8 {
+    #[getter(level)]
+    fn py_get_level(&self) -> u8 {
         DataSensitivity::level(self)
     }
 
     /// Whether escalation is required. Delegates to zenic-safety.
-    fn requires_escalation(&self) -> bool {
+    fn py_requires_escalation(&self) -> bool {
         DataSensitivity::requires_escalation(self)
     }
 }

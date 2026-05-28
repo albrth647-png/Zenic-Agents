@@ -33,7 +33,7 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request
+    import urllib.request  # noqa: F401
 
     _HAS_URLLIB = True
 except ImportError:

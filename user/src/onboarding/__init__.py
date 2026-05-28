@@ -46,79 +46,103 @@ Usage (CLI)::
     zenic-onboard quickstart
 """
 
-from .app import OnboardingTUI, OnboardingState
+from .app import OnboardingState, OnboardingTUI
+from .cli import VERSION
+from .cli import main as cli_main
 from .flows import (
-    BaseFlow, FlowState, FlowResult, FlowContext, FlowRegistry,
-    RegistrationFlow, RegistrationData,
-    ActivationFlow, ActivationResult,
-    StatusFlow, StatusResult,
-    HardwareFlow, HardwareResult,
-)
-from .validators import (
-    ActivationKeyValidator, ConfirmationCodeValidator,
-    validate_activation_key, validate_confirmation_code,
-    UsernameValidator, EmailValidator, PaymentRefValidator,
-    validate_username, validate_email, validate_payment_ref,
-    ValidationResult, ValidResult, InvalidResult, ValidatorChain,
-)
-from .renderers import (
-    WelcomeRenderer, render_welcome,
-    StatusRenderer, render_status_panel,
-    ProgressRenderer, StepIndicator, render_progress,
+    ActivationFlow,
+    ActivationResult,
+    BaseFlow,
+    FlowContext,
+    FlowRegistry,
+    FlowResult,
+    FlowState,
+    HardwareFlow,
+    HardwareResult,
+    RegistrationData,
+    RegistrationFlow,
+    StatusFlow,
+    StatusResult,
 )
 from .prompts import (
-    PromptBuilder, PromptResult,
-    prompt_registration, prompt_activation,
+    PromptBuilder,
+    PromptResult,
+    prompt_activation,
+    prompt_registration,
 )
-from .cli import main as cli_main, VERSION
+from .renderers import (
+    ProgressRenderer,
+    StatusRenderer,
+    StepIndicator,
+    WelcomeRenderer,
+    render_progress,
+    render_status_panel,
+    render_welcome,
+)
+from .validators import (
+    ActivationKeyValidator,
+    ConfirmationCodeValidator,
+    EmailValidator,
+    InvalidResult,
+    PaymentRefValidator,
+    UsernameValidator,
+    ValidationResult,
+    ValidatorChain,
+    ValidResult,
+    validate_activation_key,
+    validate_confirmation_code,
+    validate_email,
+    validate_payment_ref,
+    validate_username,
+)
 
 __all__ = [
-    # Facade
-    "OnboardingTUI",
-    "OnboardingState",
-    # Flows
-    "BaseFlow",
-    "FlowState",
-    "FlowResult",
-    "FlowContext",
-    "FlowRegistry",
-    "RegistrationFlow",
-    "RegistrationData",
+    "VERSION",
     "ActivationFlow",
-    "ActivationResult",
-    "StatusFlow",
-    "StatusResult",
-    "HardwareFlow",
-    "HardwareResult",
     # Validators
     "ActivationKeyValidator",
+    "ActivationResult",
+    # Flows
+    "BaseFlow",
     "ConfirmationCodeValidator",
-    "validate_activation_key",
-    "validate_confirmation_code",
-    "UsernameValidator",
     "EmailValidator",
-    "PaymentRefValidator",
-    "validate_username",
-    "validate_email",
-    "validate_payment_ref",
-    "ValidationResult",
-    "ValidResult",
+    "FlowContext",
+    "FlowRegistry",
+    "FlowResult",
+    "FlowState",
+    "HardwareFlow",
+    "HardwareResult",
     "InvalidResult",
-    "ValidatorChain",
-    # Renderers
-    "WelcomeRenderer",
-    "render_welcome",
-    "StatusRenderer",
-    "render_status_panel",
+    "OnboardingState",
+    # Facade
+    "OnboardingTUI",
+    "PaymentRefValidator",
     "ProgressRenderer",
-    "StepIndicator",
-    "render_progress",
     # Prompts
     "PromptBuilder",
     "PromptResult",
-    "prompt_registration",
-    "prompt_activation",
+    "RegistrationData",
+    "RegistrationFlow",
+    "StatusFlow",
+    "StatusRenderer",
+    "StatusResult",
+    "StepIndicator",
+    "UsernameValidator",
+    "ValidResult",
+    "ValidationResult",
+    "ValidatorChain",
+    # Renderers
+    "WelcomeRenderer",
     # CLI
     "cli_main",
-    "VERSION",
+    "prompt_activation",
+    "prompt_registration",
+    "render_progress",
+    "render_status_panel",
+    "render_welcome",
+    "validate_activation_key",
+    "validate_confirmation_code",
+    "validate_email",
+    "validate_payment_ref",
+    "validate_username",
 ]

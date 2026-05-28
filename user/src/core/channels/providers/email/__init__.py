@@ -29,7 +29,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, FrozenSet, List, Optional
+from typing import Any, Optional
 
 from ..._formatter import MessageFormatter, sanitize_html, truncate
 from ..._protocol import ChannelProvider

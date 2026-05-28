@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .._types import ChannelMessage, ConfirmationRequest
 from ._helpers import _store_and_replace
 from ._limits import LIMITS
 from ._text import sanitize_html, sanitize_plain_text, truncate
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
 
 # Characters that need escaping in Telegram MarkdownV2
 _TELEGRAM_ESCAPE_CHARS = set("_*[]()~`>#+-=|{}.!")

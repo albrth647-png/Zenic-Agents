@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from .._types import ChannelCapability, ChannelMessage, ChannelResponse, ConfirmationRequest, DeliveryStatus
 from ._types import _PRIORITY_TO_IMPORTANCE
 
 
@@ -19,15 +20,15 @@ class EmailTransportMixin:
         return "email"
 
     @property
-    def capabilities(self) -> frozenset[ChannelCapability]:  # noqa: F821
+    def capabilities(self) -> frozenset[ChannelCapability]:
         """Set of capabilities this provider supports."""
         return frozenset(
             {
-                ChannelCapability.SEND_TEXT,  # noqa: F821
-                ChannelCapability.SEND_RICH,  # noqa: F821
-                ChannelCapability.SEND_HTML,  # noqa: F821
-                ChannelCapability.SEND_FILE,  # noqa: F821
-                ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_RICH,
+                ChannelCapability.SEND_HTML,
+                ChannelCapability.SEND_FILE,
+                ChannelCapability.SEND_CONFIRMATION,
             }
         )
 
@@ -36,7 +37,7 @@ class EmailTransportMixin:
         """Whether this provider is currently operational."""
         return self._is_smtp_configured() or self._is_graph_api_configured()
 
-    async def send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F821
+    async def send(self, message: ChannelMessage) -> ChannelResponse:
         """Send an email via SMTP or Graph API.
 
         Never raises — always returns a ChannelResponse.
@@ -57,11 +58,11 @@ class EmailTransportMixin:
                     self._dry_run_count += 1
                 else:
                     self._sent_count += 1
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+            return ChannelResponse(  # TODO: add import
                 success=True,
                 channel="email",
                 message_id=result.data.get("message_id", ""),
-                status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,  # noqa: F821
+                status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,
                 metadata={
                     "mode": result.data.get("mode", self._mode),
                     "recipients": result.data.get("recipients", []),
@@ -72,10 +73,10 @@ class EmailTransportMixin:
             with self._lock:
                 self._failed_count += 1
             if result.data.get("rate_limited"):
-                status = DeliveryStatus.RATE_LIMITED  # noqa: F821
+                status = DeliveryStatus.RATE_LIMITED
             else:
-                status = DeliveryStatus.FAILED  # noqa: F821
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+                status = DeliveryStatus.FAILED
+            return ChannelResponse(  # TODO: add import
                 success=False,
                 channel="email",
                 status=status,
@@ -86,8 +87,8 @@ class EmailTransportMixin:
 
     async def send_confirmation(
         self,
-        request: ConfirmationRequest,  # noqa: F821
-    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
+        request: ConfirmationRequest,
+    ) -> ChannelResponse:  # TODO: add import
         """Send a confirmation email with YES/NO/MORE_INFO action links."""
         if not self.is_available:
             return self._dry_run_confirmation(request)
@@ -98,10 +99,10 @@ class EmailTransportMixin:
         if not recipients:
             with self._lock:
                 self._failed_count += 1
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+            return ChannelResponse(  # TODO: add import
                 success=False,
                 channel="email",
-                status=DeliveryStatus.FAILED,  # noqa: F821
+                status=DeliveryStatus.FAILED,
                 error="No recipient specified for confirmation email",
                 timestamp=time.time(),
             )
@@ -138,22 +139,22 @@ class EmailTransportMixin:
                     self._dry_run_count += 1
                 else:
                     self._sent_count += 1
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+            return ChannelResponse(  # TODO: add import
                 success=True,
                 channel="email",
                 message_id=result.data.get("message_id", ""),
-                status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,  # noqa: F821
+                status=DeliveryStatus.DRY_RUN if is_dry_run else DeliveryStatus.SENT,
                 metadata={"mode": "confirmation", "action_id": request.action_id, "options": list(request.options)},
                 timestamp=time.time(),
             )
         else:
             with self._lock:
                 self._failed_count += 1
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+            return ChannelResponse(  # TODO: add import
                 success=False,
                 channel="email",
                 status=DeliveryStatus.FAILED,
-                error=result.error,  # noqa: F821
+                error=result.error,
                 metadata=result.data,
                 timestamp=time.time(),
             )
@@ -183,7 +184,7 @@ class EmailTransportMixin:
 
     # ── Internal: Message Mapping ──────────────────────────────────
 
-    def _message_to_config(self, message: ChannelMessage) -> dict[str, Any]:  # noqa: F821
+    def _message_to_config(self, message: ChannelMessage) -> dict[str, Any]:
         """Map a ChannelMessage to an EmailExecutor config dict."""
         recipients: list[str] = []
         if message.recipient:

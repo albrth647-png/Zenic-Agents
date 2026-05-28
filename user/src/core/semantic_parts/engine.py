@@ -2,10 +2,10 @@
 SemanticEngine: main class inheriting all mixins.
 """
 
-from ._imports import INTENT_PROTOTYPES, GOAL_PROTOTYPES
-from ._mixin_lifecycle import LifecycleMixin
-from ._mixin_embed import EmbedMixin
+from ._imports import GOAL_PROTOTYPES, INTENT_PROTOTYPES
 from ._mixin_classify import ClassifyMixin
+from ._mixin_embed import EmbedMixin
+from ._mixin_lifecycle import LifecycleMixin
 from ._mixin_search import SearchMixin
 
 

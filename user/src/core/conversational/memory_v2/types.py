@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 class MemoryTier(str, Enum):
@@ -28,30 +28,30 @@ class MemoryRecord:
     mem_type: MemoryType = MemoryType.CONVERSATION
     content: str = ""
     session_id: str = ""
-    user_id: Optional[int] = None
+    user_id: int | None = None
     importance: float = 0.5
     access_count: int = 0
     decay_factor: float = 1.0
     created_at: str = ""
     last_accessed: str = ""
-    expires_at: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    expires_at: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     embedding_hash: str = ""
 
 
 @dataclass
 class MemoryQuery:
     query_text: str = ""
-    tiers: Set[MemoryTier] = field(default_factory=set)
-    types: Set[MemoryType] = field(default_factory=set)
-    session_id: Optional[str] = None
+    tiers: set[MemoryTier] = field(default_factory=set)
+    types: set[MemoryType] = field(default_factory=set)
+    session_id: str | None = None
     min_importance: float = 0.0
     max_results: int = 20
 
 
 @dataclass
 class MemorySearchResult:
-    records: List[MemoryRecord] = field(default_factory=list)
+    records: list[MemoryRecord] = field(default_factory=list)
     total: int = 0
     best_score: float = 0.0
 
@@ -60,7 +60,7 @@ class MemorySearchResult:
 class ContextWindow:
     id: str = ""
     session_id: str = ""
-    records: List[MemoryRecord] = field(default_factory=list)
+    records: list[MemoryRecord] = field(default_factory=list)
     token_count: int = 0
     max_tokens: int = 4096
     summary: str = ""

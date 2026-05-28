@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any
 
 from ._loader import HAS_NATIVE
 
@@ -62,7 +62,7 @@ def chain_hash(parent_hash: str, entry_hash: str) -> str:
         return hashlib.sha256(combined).hexdigest()
 
 
-def verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Verify Merkle chain integrity for a list of ledger entries."""
     if HAS_NATIVE:
         from ._loader import _rust_verify_merkle_chain
@@ -74,10 +74,10 @@ def verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     total = len(entries)
     valid_count = 0
-    broken_links: List[Dict[str, Any]] = []
+    broken_links: list[dict[str, Any]] = []
 
     # Group by file_path
-    file_groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    file_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in entries:
         fp = r.get("file_path", "__unknown__")
         file_groups[fp].append(r)
@@ -131,8 +131,8 @@ def verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def merkle_proof(
-    entry_hash: str, all_hashes: List[str],
-) -> Dict[str, Any]:
+    entry_hash: str, all_hashes: list[str],
+) -> dict[str, Any]:
     """Generate a Merkle inclusion proof for an entry."""
     if HAS_NATIVE:
         from ._loader import _rust_merkle_proof
@@ -158,7 +158,7 @@ def merkle_proof(
                 "proof_path": [], "leaf_index": 0, "verified": True}
 
     current_level = [_hash_func(h.encode()) for h in all_hashes]
-    proof_path: List[str] = []
+    proof_path: list[str] = []
     current_idx = idx
 
     while len(current_level) > 1:
@@ -171,7 +171,7 @@ def merkle_proof(
         else:
             proof_path.append(current_level[current_idx - 1])
 
-        next_level: List[str] = []
+        next_level: list[str] = []
         for i in range(0, len(current_level), 2):
             combined = (current_level[i] + current_level[i + 1]).encode()
             next_level.append(_hash_func(combined))
@@ -184,8 +184,8 @@ def merkle_proof(
 
 
 def batch_verify_chains(
-    chains: Dict[str, List[Dict[str, Any]]],
-) -> Dict[str, Dict[str, Any]]:
+    chains: dict[str, list[dict[str, Any]]],
+) -> dict[str, dict[str, Any]]:
     """Batch-verify multiple Merkle chains."""
     if HAS_NATIVE:
         from ._loader import _rust_batch_verify_chains

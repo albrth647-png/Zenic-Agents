@@ -9,8 +9,12 @@ NO espera a que el usuario note la caída.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
-from src.data.local_scanner import LocalDataScanner
+
+if TYPE_CHECKING:
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 

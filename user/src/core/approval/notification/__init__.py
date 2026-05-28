@@ -19,6 +19,11 @@ Events:
 Persistence: SQLite with retry logic.
 """
 
+from ._notifier import (
+    NotificationDispatcher,
+    get_notification_dispatcher,
+    reset_notification_dispatcher,
+)
 from ._templates import (
     ChannelConfig,
     NotificationChannel,
@@ -26,19 +31,14 @@ from ._templates import (
     NotificationMessage,
     NotificationPriority,
 )
-from ._notifier import (
-    NotificationDispatcher,
-    get_notification_dispatcher,
-    reset_notification_dispatcher,
-)
 
 __all__ = [
+    "ChannelConfig",
     "NotificationChannel",
-    "NotificationPriority",
+    "NotificationDispatcher",
     "NotificationEvent",
     "NotificationMessage",
-    "ChannelConfig",
-    "NotificationDispatcher",
+    "NotificationPriority",
     "get_notification_dispatcher",
     "reset_notification_dispatcher",
 ]

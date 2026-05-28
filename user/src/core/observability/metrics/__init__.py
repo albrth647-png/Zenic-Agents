@@ -9,8 +9,8 @@ counters, gauges, histograms, and summaries.
 import time
 from typing import Any, Optional
 
-from ._config import MetricsConfig, _instance, _instance_lock
 from ._collector import MetricsCollector
+from ._config import MetricsConfig, _instance, _instance_lock
 
 __all__ = [
     "MetricsCollector",
@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-def get_metrics_collector(config: Optional[MetricsConfig] = None) -> MetricsCollector:
+def get_metrics_collector(config: MetricsConfig | None = None) -> MetricsCollector:
     """Get or create the singleton MetricsCollector.
 
     Args:

@@ -19,7 +19,7 @@ import asyncio
 import logging
 import secrets
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Tuple  # noqa: UP035
 
 from ._helpers import (
     build_authorization_url,
@@ -42,15 +42,15 @@ except ImportError:
     _HAS_AIOHTTP = False
 
 __all__ = [
-    "OAuth2GrantType",
     "OAuth2Config",
+    "OAuth2GrantType",
     "OAuth2Token",
     "OAuth2TokenManager",
-    "generate_pkce_pair",
     "build_authorization_url",
     "config_from_env",
-    "register_service_from_env",
+    "generate_pkce_pair",
     "get_default_token_manager",
+    "register_service_from_env",
     "reset_default_token_manager",
 ]
 
@@ -70,9 +70,9 @@ class OAuth2TokenManager:
     """
 
     def __init__(self) -> None:
-        self._configs: Dict[str, OAuth2Config] = {}
-        self._tokens: Dict[str, OAuth2Token] = {}
-        self._pkce_verifiers: Dict[str, str] = {}  # state → code_verifier
+        self._configs: dict[str, OAuth2Config] = {}
+        self._tokens: dict[str, OAuth2Token] = {}
+        self._pkce_verifiers: dict[str, str] = {}  # state → code_verifier
         self._lock = asyncio.Lock()
         self._refresh_count: int = 0
         self._request_count: int = 0
@@ -151,7 +151,7 @@ class OAuth2TokenManager:
             )
             return token if token else OAuth2Token()
 
-    def get_token_status(self, service_name: str) -> Dict[str, Any]:
+    def get_token_status(self, service_name: str) -> dict[str, Any]:
         """Get the current token status for a service.
 
         Returns:
@@ -178,8 +178,8 @@ class OAuth2TokenManager:
     def get_authorization_url(
         self,
         service_name: str,
-        extra_params: Optional[Dict[str, str]] = None,
-    ) -> Tuple[str, str]:
+        extra_params: dict[str, str] | None = None,
+    ) -> tuple[str, str]:
         """Get an authorization URL for the authorization code flow.
 
         Generates PKCE parameters automatically.
@@ -241,7 +241,7 @@ class OAuth2TokenManager:
             return OAuth2Token()
 
         # Build token request
-        data: Dict[str, str] = {
+        data: dict[str, str] = {
             "grant_type": "authorization_code",
             "code": code,
             "client_id": config.client_id,
@@ -287,7 +287,7 @@ class OAuth2TokenManager:
     # ── Stats ─────────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get token manager statistics."""
         return {
             "registered_services": list(self._configs.keys()),
@@ -307,9 +307,9 @@ class OAuth2TokenManager:
         self,
         service_name: str,
         config: OAuth2Config,
-    ) -> Optional[OAuth2Token]:
+    ) -> OAuth2Token | None:
         """Acquire token using client_credentials grant."""
-        data: Dict[str, str] = {
+        data: dict[str, str] = {
             "grant_type": "client_credentials",
             "client_id": config.client_id,
             "client_secret": config.client_secret,
@@ -326,9 +326,9 @@ class OAuth2TokenManager:
         service_name: str,
         config: OAuth2Config,
         refresh_token: str,
-    ) -> Optional[OAuth2Token]:
+    ) -> OAuth2Token | None:
         """Refresh an expired token using refresh_token grant."""
-        data: Dict[str, str] = {
+        data: dict[str, str] = {
             "grant_type": "refresh_token",
             "client_id": config.client_id,
             "client_secret": config.client_secret,
@@ -345,8 +345,8 @@ class OAuth2TokenManager:
         self,
         service_name: str,
         token_url: str,
-        data: Dict[str, str],
-    ) -> Optional[OAuth2Token]:
+        data: dict[str, str],
+    ) -> OAuth2Token | None:
         """Make a token request to the OAuth2 endpoint.
 
         Uses aiohttp if available, otherwise returns None (dry-run).
@@ -362,26 +362,25 @@ class OAuth2TokenManager:
             return None
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    token_url,
-                    data=data,
-                    headers={"Accept": "application/json"},
-                    timeout=aiohttp.ClientTimeout(total=30),
-                ) as response:
-                    body = await response.json()
+            async with aiohttp.ClientSession() as session, session.post(
+                token_url,
+                data=data,
+                headers={"Accept": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as response:
+                body = await response.json()
 
-                    if response.status != 200:
-                        error_desc = body.get("error_description", body.get("error", "unknown"))
-                        logger.warning(
-                            "OAuth2TokenManager: Token request failed for '%s': "
-                            "status=%d, error=%s",
-                            service_name, response.status, error_desc,
-                        )
-                        self._error_count += 1
-                        return None
+                if response.status != 200:
+                    error_desc = body.get("error_description", body.get("error", "unknown"))
+                    logger.warning(
+                        "OAuth2TokenManager: Token request failed for '%s': "
+                        "status=%d, error=%s",
+                        service_name, response.status, error_desc,
+                    )
+                    self._error_count += 1
+                    return None
 
-                    return self._parse_token_response(body)
+                return self._parse_token_response(body)
 
         except asyncio.TimeoutError:
             logger.warning(
@@ -398,7 +397,7 @@ class OAuth2TokenManager:
             return None
 
     @staticmethod
-    def _parse_token_response(body: Dict[str, Any]) -> OAuth2Token:
+    def _parse_token_response(body: dict[str, Any]) -> OAuth2Token:
         """Parse an OAuth2 token response into an OAuth2Token."""
         expires_in = body.get("expires_in", 3600)
         # Handle both numeric and string expires_in
@@ -421,7 +420,7 @@ class OAuth2TokenManager:
 #  GLOBAL SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_default_token_manager: Optional[OAuth2TokenManager] = None
+_default_token_manager: OAuth2TokenManager | None = None
 
 
 def get_default_token_manager() -> OAuth2TokenManager:

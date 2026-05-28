@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..audit_logger import AuditEntry
-from ..base import ActionResult
-from ..safety_gate import SafetyCheckResult, SafetyVerdict
+if TYPE_CHECKING:
+    from ..audit_logger import AuditEntry
+    from ..base import ActionResult
+    from ..safety_gate import SafetyCheckResult, SafetyVerdict
 
 
 @dataclass

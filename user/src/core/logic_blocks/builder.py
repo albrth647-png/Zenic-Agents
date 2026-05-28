@@ -6,37 +6,56 @@ Replaces the _process() placeholder with real business logic.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .chain import LogicBlock, LogicChain
-from .flow import (
-    ConditionalBlock, LoopBlock, ParallelBlock, SwitchBlock, TryCatchBlock,
-)
-from .validation import (
-    ValidateRequiredBlock, ValidateTypesBlock, ValidateRangesBlock,
-    ValidateUniqueBlock, SanitizeBlock,
-)
-from .business_logic import (
-    InvoiceCalculatorBlock, InventoryTrackerBlock, CRMPipelineBlock,
-    TaskSchedulerBlock,
-)
-from .business_analytics import (
-    ReportGeneratorBlock, NotificationDispatchBlock,
-    DataAnalyzerBlock,
-)
-from .data import (
-    CRUDCreateBlock, CRUDReadBlock, CRUDUpdateBlock, CRUDDeleteBlock,
-)
-from .data_transform import DataTransformBlock
-from .integration import (
-    EmailSendBlock, HTTPRequestBlock, WebhookCallBlock, FileOperationBlock,
-)
 from .auth import (
-    AuthLoginBlock, AuthRegisterBlock, AuthVerifyBlock, AuthRBACBlock,
+    AuthLoginBlock,
+    AuthRBACBlock,
+    AuthRegisterBlock,
+    AuthVerifyBlock,
 )
 from .builder_registry import (
     build_keyword_map,
     map_template_block,
+)
+from .business_analytics import (
+    DataAnalyzerBlock,
+    NotificationDispatchBlock,
+    ReportGeneratorBlock,
+)
+from .business_logic import (
+    CRMPipelineBlock,
+    InventoryTrackerBlock,
+    InvoiceCalculatorBlock,
+    TaskSchedulerBlock,
+)
+from .chain import LogicBlock, LogicChain
+from .data import (
+    CRUDCreateBlock,
+    CRUDDeleteBlock,
+    CRUDReadBlock,
+    CRUDUpdateBlock,
+)
+from .data_transform import DataTransformBlock
+from .flow import (
+    ConditionalBlock,
+    LoopBlock,
+    ParallelBlock,
+    SwitchBlock,
+    TryCatchBlock,
+)
+from .integration import (
+    EmailSendBlock,
+    FileOperationBlock,
+    HTTPRequestBlock,
+    WebhookCallBlock,
+)
+from .validation import (
+    SanitizeBlock,
+    ValidateRangesBlock,
+    ValidateRequiredBlock,
+    ValidateTypesBlock,
+    ValidateUniqueBlock,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,22 +73,22 @@ class LogicBuilder:
     ejecutables, reemplazando el _process() placeholder.
     """
 
-    def __init__(self, template_engine: Optional[Any] = None) -> None:
+    def __init__(self, template_engine: Any | None = None) -> None:
         """Inicializa el LogicBuilder con bloques pre-construidos.
 
         Args:
             template_engine: Instancia de TemplateEngine para resolucion de templates
         """
         self._template_engine = template_engine
-        self._blocks: Dict[str, LogicBlock] = {}
-        self._chains: Dict[str, LogicChain] = {}
-        self._keyword_map: Dict[str, List[str]] = {}
+        self._blocks: dict[str, LogicBlock] = {}
+        self._chains: dict[str, LogicChain] = {}
+        self._keyword_map: dict[str, list[str]] = {}
 
         # Register all built-in blocks
         self._register_builtin_blocks()
         self._keyword_map = build_keyword_map()
 
-        logger.info(f"LogicBuilder: Initialized with {len(self._blocks)} blocks in {len(set(b.category for b in self._blocks.values()))} categories")
+        logger.info(f"LogicBuilder: Initialized with {len(self._blocks)} blocks in {len({b.category for b in self._blocks.values()})} categories")
 
     # ============================================================
     #  BUILD METHODS
@@ -132,7 +151,7 @@ class LogicBuilder:
         logger.info(f"LogicBuilder: Built chain from description with {len(chain.blocks)} blocks: {chain.block_names}")
         return chain
 
-    def build_from_blocks(self, block_names: List[str]) -> LogicChain:
+    def build_from_blocks(self, block_names: list[str]) -> LogicChain:
         """Construye una LogicChain desde una lista de nombres de bloques.
 
         Args:
@@ -152,7 +171,7 @@ class LogicBuilder:
         logger.info(f"LogicBuilder: Built chain from blocks: {chain.block_names}")
         return chain
 
-    def build_for_template(self, template_type: str, entities: List[Dict]) -> LogicChain:
+    def build_for_template(self, template_type: str, entities: list[dict]) -> LogicChain:
         """Construye una LogicChain optimizada para un tipo de template.
 
         Args:
@@ -209,13 +228,13 @@ class LogicBuilder:
                 self._keyword_map[kw].append(block.name)
         logger.debug(f"LogicBuilder: Registered block '{block.name}' ({block.category})")
 
-    def list_blocks(self, category: str = "") -> List[LogicBlock]:
+    def list_blocks(self, category: str = "") -> list[LogicBlock]:
         """Lista bloques disponibles, opcionalmente filtrados por categoria."""
         if category:
             return [b for b in self._blocks.values() if b.category == category]
         return list(self._blocks.values())
 
-    def get_block(self, name: str) -> Optional[LogicBlock]:
+    def get_block(self, name: str) -> LogicBlock | None:
         """Obtiene un bloque por nombre."""
         return self._blocks.get(name)
 
@@ -272,7 +291,7 @@ class LogicBuilder:
     # ============================================================
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Estadisticas del LogicBuilder."""
         categories = {}
         for block in self._blocks.values():

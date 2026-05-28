@@ -11,8 +11,13 @@ from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import (
-    Evidence, EvidenceType, SecurityResult, SyntaxResult,
-    CriticalityResult, IntentResult, CodeResult,
+    CodeResult,
+    CriticalityResult,
+    Evidence,
+    EvidenceType,
+    IntentResult,
+    SecurityResult,
+    SyntaxResult,
 )
 
 
@@ -61,7 +66,7 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
                 # Might be a raw list of results — try to build evidence from items
                 return self.fallback(input_data)
             elif hasattr(input_data, '__dict__'):
-                input_data = {k: v for k, v in input_data.__dict__.items() 
+                input_data = {k: v for k, v in input_data.__dict__.items()
                              if not k.startswith('_')}
             else:
                 return self.fallback(input_data)

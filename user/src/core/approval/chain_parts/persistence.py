@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..chain import ApprovalRequest, ApprovalStatus, ApprovalPriority
+from ..chain import ApprovalPriority, ApprovalRequest, ApprovalStatus
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class ApprovalChainDB:
         except Exception as exc:
             logger.error("ApprovalChainDB: Update failed: %s", exc)
 
-    def get_request(self, request_id: str) -> Optional[ApprovalRequest]:
+    def get_request(self, request_id: str) -> ApprovalRequest | None:
         """Get a single request by ID."""
         try:
             conn = sqlite3.connect(self._db_path)
@@ -137,14 +137,14 @@ class ApprovalChainDB:
 
     def query_requests(
         self,
-        status: Optional[ApprovalStatus] = None,
-        required_role: Optional[str] = None,
-        requested_by: Optional[int] = None,
-        tenant_id: Optional[str] = None,
-    ) -> List[ApprovalRequest]:
+        status: ApprovalStatus | None = None,
+        required_role: str | None = None,
+        requested_by: int | None = None,
+        tenant_id: str | None = None,
+    ) -> list[ApprovalRequest]:
         """Query approval requests with optional filters."""
-        conditions: List[str] = []
-        params: List[Any] = []
+        conditions: list[str] = []
+        params: list[Any] = []
 
         if status is not None:
             conditions.append("status = ?")
@@ -164,7 +164,7 @@ class ApprovalChainDB:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",
+                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",  # noqa: S608
                 params,
             ).fetchall()
             conn.close()
@@ -173,7 +173,7 @@ class ApprovalChainDB:
             logger.error("ApprovalChainDB: Query failed: %s", exc)
             return []
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get approval chain statistics."""
         try:
             conn = sqlite3.connect(self._db_path)

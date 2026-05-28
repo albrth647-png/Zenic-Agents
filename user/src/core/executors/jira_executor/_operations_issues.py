@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..base import ActionResult
 
@@ -17,8 +17,8 @@ class _IssuesMixin:
 
     async def _create_issue(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Create a new Jira issue.
@@ -47,7 +47,7 @@ class _IssuesMixin:
         additional = config.get("additional_fields", {})
 
         # Build fields dict
-        fields: Dict[str, Any] = {
+        fields: dict[str, Any] = {
             "project": {"key": project_key},
             "summary": summary,
             "issuetype": {"name": issue_type},
@@ -111,8 +111,8 @@ class _IssuesMixin:
 
     async def _update_issue(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Update fields on an existing Jira issue.
@@ -126,7 +126,7 @@ class _IssuesMixin:
                 "Missing required config key: issue_key",
             )
 
-        fields: Dict[str, Any] = {}
+        fields: dict[str, Any] = {}
 
         # Optional updatable fields
         for key in ("summary", "description"):
@@ -191,8 +191,8 @@ class _IssuesMixin:
 
     async def _get_issue(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Retrieve a single Jira issue by key.
@@ -207,7 +207,7 @@ class _IssuesMixin:
             )
 
         fields_param = config.get("fields", [])
-        params: Optional[Dict[str, Any]] = None
+        params: dict[str, Any] | None = None
         if fields_param and isinstance(fields_param, list):
             params = {"fields": ",".join(fields_param)}
 
@@ -246,8 +246,8 @@ class _IssuesMixin:
 
     async def _search_issues(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Search for issues using JQL.
@@ -265,7 +265,7 @@ class _IssuesMixin:
         fields_param = config.get("fields", ["summary", "status", "priority"])
         start_at = config.get("start_at", 0)
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "jql": jql,
             "maxResults": max_results,
             "startAt": start_at,

@@ -6,9 +6,10 @@ import logging
 import threading
 import time
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ...chain_composer._types import ChainStep
+if TYPE_CHECKING:
+    from ...chain_composer._types import ChainStep
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class ConditionalBranching:
 
             # 2. Check registered branch rules
             matching_rules = sorted(
-                [r for r in self._rules.values()],
+                self._rules.values(),
                 key=lambda r: r.priority,
                 reverse=True,
             )
@@ -128,7 +129,7 @@ class ConditionalBranching:
         """List all registered branch rules."""
         with self._lock:
             return sorted(
-                list(self._rules.values()),
+                self._rules.values(),
                 key=lambda r: (r.priority, r.name),
                 reverse=True,
             )

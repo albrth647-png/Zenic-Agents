@@ -8,7 +8,8 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 
 import logging
 import threading
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,9 @@ class StrategyRegistry:
     """
 
     def __init__(self) -> None:
-        self._strategies: Dict[str, Callable[..., Any]] = {}
-        self._metadata: Dict[str, Dict[str, Any]] = {}
-        self._defaults: Dict[str, str] = {}  # category → strategy name
+        self._strategies: dict[str, Callable[..., Any]] = {}
+        self._metadata: dict[str, dict[str, Any]] = {}
+        self._defaults: dict[str, str] = {}  # category → strategy name
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------------
@@ -43,7 +44,7 @@ class StrategyRegistry:
         self,
         name: str,
         strategy: Callable[..., Any],
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Register a strategy callable under *name*.
@@ -108,12 +109,12 @@ class StrategyRegistry:
     # Introspection
     # ------------------------------------------------------------------
 
-    def list_strategies(self) -> List[str]:
+    def list_strategies(self) -> list[str]:
         """Return a sorted list of all registered strategy names."""
         with self._lock:
             return sorted(self._strategies.keys())
 
-    def get_metadata(self, name: str) -> Dict[str, Any]:
+    def get_metadata(self, name: str) -> dict[str, Any]:
         """
         Return metadata for a registered strategy.
 
@@ -152,7 +153,7 @@ class StrategyRegistry:
                 category, name,
             )
 
-    def get_default(self, category: str = "__default__") -> Optional[Callable[..., Any]]:
+    def get_default(self, category: str = "__default__") -> Callable[..., Any] | None:
         """
         Return the default strategy callable for *category*, or None.
         """

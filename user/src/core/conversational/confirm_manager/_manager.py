@@ -17,7 +17,7 @@ import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._flow import ConfirmFlowMixin
 from ._types import (
@@ -40,9 +40,9 @@ class ConfirmManager(ConfirmFlowMixin):
 
     def __init__(
         self,
-        db_path: Optional[str] = None,
+        db_path: str | None = None,
         ttl_seconds: int = DEFAULT_TTL_SECONDS,
-        safety_gate: Optional[Any] = None,
+        safety_gate: Any | None = None,
     ) -> None:
         """
         Args:
@@ -119,7 +119,7 @@ class ConfirmManager(ConfirmFlowMixin):
 
     # ─── Public API: Query ─────────────────────────────────────
 
-    def get_pending(self, session_id: str = "") -> List[Dict]:
+    def get_pending(self, session_id: str = "") -> list[dict]:
         """Return pending confirmations for a session.
 
         Args:
@@ -146,7 +146,7 @@ class ConfirmManager(ConfirmFlowMixin):
             finally:
                 conn.close()
 
-            results: List[Dict] = []
+            results: list[dict] = []
             for row in rows:
                 config = json.loads(row["config"]) if row["config"] else {}
                 results.append({
@@ -263,7 +263,7 @@ class ConfirmManager(ConfirmFlowMixin):
     # ─── Properties ────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Manager statistics."""
         with self._lock:
             return {**self._stats}

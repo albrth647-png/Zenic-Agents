@@ -11,8 +11,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  ENUMS
@@ -55,7 +54,7 @@ class ObjectiveTarget:
 
     def is_met(self) -> bool:
         """Check if the target condition is satisfied."""
-        ops: Dict[str, Any] = {
+        ops: dict[str, Any] = {
             "<": lambda c, t: c < t,
             ">": lambda c, t: c > t,
             "<=": lambda c, t: c <= t,
@@ -69,7 +68,7 @@ class ObjectiveTarget:
         except (TypeError, ValueError):
             return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "metric_name": self.metric_name,
@@ -92,13 +91,13 @@ class Objective:
     description: str = ""
     priority: ObjectivePriority = ObjectivePriority.NORMAL
     status: ObjectiveStatus = ObjectiveStatus.DRAFT
-    targets: List[ObjectiveTarget] = field(default_factory=list)
+    targets: list[ObjectiveTarget] = field(default_factory=list)
     deadline: str = ""
     created_at: str = ""
     updated_at: str = ""
     tenant_id: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Auto-generate ID and timestamps if not provided."""
@@ -118,7 +117,7 @@ class Objective:
         """
         if not self.targets:
             return 0.0
-        progresses: List[float] = []
+        progresses: list[float] = []
         for target in self.targets:
             if target.is_met():
                 progresses.append(100.0)
@@ -143,7 +142,7 @@ class Objective:
         except (ValueError, TypeError):
             return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "objective_id": self.objective_id,
@@ -161,7 +160,7 @@ class Objective:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Objective:
+    def from_dict(cls, data: dict[str, Any]) -> Objective:
         """Deserialize from dictionary.
 
         Args:
@@ -194,8 +193,8 @@ class Objective:
 
 
 __all__ = [
-    "ObjectiveStatus",
-    "ObjectivePriority",
-    "ObjectiveTarget",
     "Objective",
+    "ObjectivePriority",
+    "ObjectiveStatus",
+    "ObjectiveTarget",
 ]

@@ -25,40 +25,36 @@ import time
 import uuid
 from typing import Any
 
-# Re-export types so they are importable from this package
-from ._types import (  # noqa: F401 — re-exports
-    ChainTemplate,
-    TemplateStep,
-    TemplateVariable,
-    TemplateCategory,
-    _substitute_value,
-    _DB_DIR,
-    _DB_PATH,
-)
-
-from ._loader import (  # noqa: F401 — used internally
+from ._loader import (
+    delete_template_from_db,
+    deserialize_steps,
+    deserialize_variables,
     init_db,
     load_templates_from_db,
     save_template_to_db,
-    delete_template_from_db,
     serialize_steps,
-    deserialize_steps,
     serialize_variables,
-    deserialize_variables,
 )
-
-from ._renderer import (  # noqa: F401 — used internally
+from ._renderer import (
     get_builtin_definitions,
     instantiate_template,
 )
 
-from ._validator import (  # noqa: F401 — used internally
+# Re-export types so they are importable from this package
+from ._types import (
+    _DB_DIR,
+    _DB_PATH,
+    ChainTemplate,
+    TemplateCategory,
+    TemplateStep,
+    TemplateVariable,
+    _substitute_value,
+    logger,
+)
+from ._validator import (
     find_templates_for_event,
     find_templates_for_intent,
 )
-
-from ._types import logger  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 #  ChainTemplateLibrary
@@ -196,9 +192,9 @@ def get_template_library() -> ChainTemplateLibrary:
 
 __all__ = [
     "ChainTemplate",
+    "ChainTemplateLibrary",
+    "TemplateCategory",
     "TemplateStep",
     "TemplateVariable",
-    "TemplateCategory",
-    "ChainTemplateLibrary",
     "get_template_library",
 ]

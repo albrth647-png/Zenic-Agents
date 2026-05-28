@@ -2,8 +2,10 @@
 
 import logging
 import threading
-from typing import Any, Optional
+from typing import Any
+
 from ..backend import CoordinationBackend
+
 logger = logging.getLogger("core.distributed.lock_manager._lock")
 
 class DistributedLock:
@@ -36,7 +38,7 @@ class DistributedLock:
         self._ttl_seconds = ttl_seconds
         self._backend = backend
         self._acquired = False
-        self._extension_thread: Optional[threading.Thread] = None
+        self._extension_thread: threading.Thread | None = None
         self._stop_extension = threading.Event()
 
     @property

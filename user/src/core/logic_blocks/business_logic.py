@@ -6,7 +6,7 @@ Report, notification, and analyzer blocks are in business_analytics.py.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .chain import LogicBlock
 
@@ -27,7 +27,7 @@ class InvoiceCalculatorBlock(LogicBlock):
     inputs = ["items", "tax_rate", "discount"]
     outputs = ["subtotal", "tax_amount", "discount_amount", "total"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             items = data.get("items", [])
             tax_rate = float(data.get("tax_rate", data.get("tax", 0.16)))
@@ -77,7 +77,7 @@ class InvoiceCalculatorBlock(LogicBlock):
                 "items": processed_items,
             }
         except Exception as e:
-            return {"success": False, "error": f"InvoiceCalculatorBlock: {str(e)}"}
+            return {"success": False, "error": f"InvoiceCalculatorBlock: {e!s}"}
 
 
 class InventoryTrackerBlock(LogicBlock):
@@ -89,7 +89,7 @@ class InventoryTrackerBlock(LogicBlock):
     inputs = ["product_id", "quantity_change", "operation"]
     outputs = ["new_quantity", "alerts"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             product_id = data.get("product_id")
             quantity_change = int(data.get("quantity_change", data.get("quantity", 0)))
@@ -99,7 +99,7 @@ class InventoryTrackerBlock(LogicBlock):
             # Get current quantity from DB or data
             current_quantity = int(data.get("current_quantity", data.get("stock", 0)))
 
-            db = context.get("db", None)
+            db = context.get("db")
             if db is not None:
                 try:
                     cursor = db.execute("SELECT quantity FROM inventory WHERE product_id = ?", (product_id,))  # nosemgrep: sqlalchemy-execute-raw-query
@@ -147,7 +147,7 @@ class InventoryTrackerBlock(LogicBlock):
                 "low_stock": new_quantity <= low_stock_threshold,
             }
         except Exception as e:
-            return {"success": False, "error": f"InventoryTrackerBlock: {str(e)}"}
+            return {"success": False, "error": f"InventoryTrackerBlock: {e!s}"}
 
 
 class CRMPipelineBlock(LogicBlock):
@@ -159,7 +159,7 @@ class CRMPipelineBlock(LogicBlock):
     inputs = ["lead_data", "stage", "action"]
     outputs = ["updated_lead", "next_action"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             stages = data.get("stages", [
                 "new", "contacted", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"
@@ -209,7 +209,7 @@ class CRMPipelineBlock(LogicBlock):
                 "next_action": next_action,
             }
         except Exception as e:
-            return {"success": False, "error": f"CRMPipelineBlock: {str(e)}"}
+            return {"success": False, "error": f"CRMPipelineBlock: {e!s}"}
 
 
 class TaskSchedulerBlock(LogicBlock):
@@ -221,7 +221,7 @@ class TaskSchedulerBlock(LogicBlock):
     inputs = ["tasks", "resources"]
     outputs = ["schedule", "assignments"]
 
-    def execute(self, data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
             tasks = data.get("tasks", [])
             resources = data.get("resources", [])
@@ -282,4 +282,4 @@ class TaskSchedulerBlock(LogicBlock):
                 "total_resources": len(resources),
             }
         except Exception as e:
-            return {"success": False, "error": f"TaskSchedulerBlock: {str(e)}"}
+            return {"success": False, "error": f"TaskSchedulerBlock: {e!s}"}

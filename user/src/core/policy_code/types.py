@@ -7,14 +7,18 @@ which is the single source of truth.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 # ─── Canonical enums (re-exported from executors) ──────────────────────
 # Avoid duplication: import from the single source of truth.
-from src.core.executors.policy_engine import (
-    ConditionOperator as PolicyOperator,  # Re-aliased for backward compat
-    PolicyAction as PolicyEffect,          # Re-aliased for backward compat
-)
+
+if TYPE_CHECKING:
+    from src.core.executors.policy_engine import (
+        ConditionOperator as PolicyOperator,  # Re-aliased for backward compat
+    )
+    from src.core.executors.policy_engine import (
+        PolicyAction as PolicyEffect,  # Re-aliased for backward compat
+    )
 
 # Backward-compatible aliases:
 # - PolicyOperator = ConditionOperator (same operators, different name)
@@ -39,7 +43,7 @@ class PolicyStatement:
     effect: PolicyEffect
     resource: str
     action: str
-    conditions: List[PolicyCondition] = field(default_factory=list)
+    conditions: list[PolicyCondition] = field(default_factory=list)
     priority: int = 0
     description: str = ""
 
@@ -49,8 +53,8 @@ class PolicyDocument:
     id: str
     name: str
     version: str = "1.0"
-    statements: List[PolicyStatement] = field(default_factory=list)
+    statements: list[PolicyStatement] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
     enabled: bool = True
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)

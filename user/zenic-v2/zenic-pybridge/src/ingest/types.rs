@@ -10,13 +10,13 @@ use std::collections::HashMap;
 // ═══════════════════════════════════════════════════════════════
 
 /// Maximum document size in bytes (50 MB).
-pub(crate) const MAX_DOCUMENT_SIZE: usize = 50 * 1024 * 1024;
+pub const MAX_DOCUMENT_SIZE: usize = 50 * 1024 * 1024;
 
 /// Maximum text length after extraction (5 MB chars).
-pub(crate) const MAX_EXTRACTED_TEXT_LENGTH: usize = 5 * 1024 * 1024;
+pub const MAX_EXTRACTED_TEXT_LENGTH: usize = 5 * 1024 * 1024;
 
 /// Supported file extensions mapped to DocumentFormat variants.
-pub(crate) const FORMAT_MAP: &[(&str, DocumentFormat)] = &[
+pub const FORMAT_MAP: &[(&str, DocumentFormat)] = &[
     ("pdf", DocumentFormat::Pdf),
     ("docx", DocumentFormat::Docx),
     ("doc", DocumentFormat::Docx),
@@ -158,15 +158,15 @@ impl DocumentFormat {
 #[pyclass(name = "ExtractedText")]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExtractedText {
-    filename: String,
-    format: DocumentFormat,
+    pub(crate) filename: String,
+    pub(crate) format: DocumentFormat,
     pub(crate) text: String,
-    page_count: usize,
-    char_count: usize,
-    word_count: usize,
-    extraction_method: String,
+    pub(crate) page_count: usize,
+    pub(crate) char_count: usize,
+    pub(crate) word_count: usize,
+    pub(crate) extraction_method: String,
     pub(crate) errors: Vec<String>,
-    metadata: HashMap<String, String>,
+    pub(crate) metadata: HashMap<String, String>,
 }
 
 impl ExtractedText {
@@ -209,22 +209,27 @@ impl ExtractedText {
             self.text.split_whitespace().count()
         };
     }
+
+    /// Check if the extracted text is empty.
+    pub fn is_empty(&self) -> bool {
+        self.text.trim().is_empty()
+    }
 }
 
 #[pymethods]
 impl ExtractedText {
-    #[getter]
-    fn filename(&self) -> &str {
+    #[getter(filename)]
+    fn py_get_filename(&self) -> &str {
         &self.filename
     }
 
-    #[getter]
-    fn format(&self) -> DocumentFormat {
+    #[getter(format)]
+    fn py_get_format(&self) -> DocumentFormat {
         self.format
     }
 
-    #[getter]
-    fn text(&self) -> &str {
+    #[getter(text)]
+    fn py_get_text(&self) -> &str {
         &self.text
     }
 
@@ -258,8 +263,8 @@ impl ExtractedText {
         !self.errors.is_empty()
     }
 
-    #[getter]
-    fn is_empty(&self) -> bool {
+    #[getter(is_empty)]
+    fn py_is_empty(&self) -> bool {
         self.text.trim().is_empty()
     }
 

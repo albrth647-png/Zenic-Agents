@@ -4,26 +4,34 @@ native._crypto — Crypto/Hash API functions.
 
 from __future__ import annotations
 
-from typing import List
-
 from src.core.native._bindings import HAS_NATIVE
 from src.core.native._fallbacks import (
     argon2id_hash as _py_argon2id_hash,
+)
+from src.core.native._fallbacks import (
     blake3_hash as _py_blake3_hash,
+)
+from src.core.native._fallbacks import (
     constant_time_compare as _py_constant_time_compare,
+)
+from src.core.native._fallbacks import (
     merkle_root as _py_merkle_root,
+)
+from src.core.native._fallbacks import (
     pbkdf2_derive_key as _py_pbkdf2_derive_key,
+)
+from src.core.native._fallbacks import (
     xxhash64 as _py_xxhash64,
 )
 
 if HAS_NATIVE:
     from src.core.native._bindings import (
-        _rust_pbkdf2_derive_key,
         _rust_argon2id_hash,
-        _rust_constant_time_compare,
         _rust_blake3_hash,
-        _rust_xxhash64,
+        _rust_constant_time_compare,
         _rust_merkle_root,
+        _rust_pbkdf2_derive_key,
+        _rust_xxhash64,
     )
 
 
@@ -69,7 +77,7 @@ def xxhash64(data: bytes, seed: int = 0) -> int:
     return _py_xxhash64(data, seed)
 
 
-def merkle_root(leaves: List[bytes]) -> str:
+def merkle_root(leaves: list[bytes]) -> str:
     if HAS_NATIVE:
         return _rust_merkle_root(leaves)
     return _py_merkle_root(leaves)

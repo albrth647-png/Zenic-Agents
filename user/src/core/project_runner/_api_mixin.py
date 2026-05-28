@@ -4,10 +4,11 @@ ProjectRunner — Public API Mixin
 run_project, stop_project, and list_running methods.
 """
 
+import contextlib
 import logging
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from ._types import RunResult
 
@@ -130,7 +131,7 @@ class PublicAPIMixin:
             logger.warning(f"ProjectRunner: No PID file for {project_name}")
             return False
 
-    def list_running(self) -> List[Dict[str, Any]]:
+    def list_running(self) -> list[dict[str, Any]]:
         """List all running projects.
 
         Returns:
@@ -167,9 +168,7 @@ class PublicAPIMixin:
                     # Process is dead, clean up
                     for f in [pid_file, port_file]:
                         if os.path.exists(f):
-                            try:
+                            with contextlib.suppress(OSError):
                                 os.unlink(f)
-                            except OSError:
-                                pass
 
         return running

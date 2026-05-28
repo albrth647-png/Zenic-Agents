@@ -37,6 +37,7 @@ pub use types::theorem_cache_serialize;
 
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use std::sync::{Arc, Mutex};
 
 use types::{mem_err_to_py, parse_tier, MemoryChipBuilder, MemoryChipInner};

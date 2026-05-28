@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from ..types.base import Result, Ok, Err, PipelineContext
+from ..types.base import Err, Ok, PipelineContext, Result
 from .router import Pipeline
 
 logger = logging.getLogger("zenic_agents.conversational.pipeline")

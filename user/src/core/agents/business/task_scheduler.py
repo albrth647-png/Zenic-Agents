@@ -12,7 +12,6 @@ from typing import Any
 from ..resilience import BaseAgent
 from ..schemas import TaskResult
 
-
 # ──────────────────────────────────────────────────────────────
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────

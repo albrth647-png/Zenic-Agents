@@ -18,12 +18,13 @@ Public API:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import re
 import shutil
 import sqlite3
-from typing import Any, Optional
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  SQL INJECTION PROTECTION: Identifier validation regex
@@ -49,7 +50,7 @@ logger = logging.getLogger("zenic_agents.shared.sqlcipher")
 # ──────────────────────────────────────────────────────────────
 
 sqlcipher_module: Any = None          # Will hold whichever module loaded
-_LOADED_LIBRARY: Optional[str] = None # "pysqlcipher3" | "sqlcipher3" | None
+_LOADED_LIBRARY: str | None = None # "pysqlcipher3" | "sqlcipher3" | None
 
 try:
     from pysqlcipher3 import dbapi2 as _pysqlcipher  # type: ignore[import-untyped]
@@ -226,7 +227,7 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
             # SECURITY: Validate table_name from sqlite_master to prevent injection
             _validate_identifier(table_name, "in encrypt_database table copy")
             enc_conn.execute(
-                f"CREATE TABLE IF NOT EXISTS [{table_name}] AS SELECT * FROM plain_db.[{table_name}]"
+                f"CREATE TABLE IF NOT EXISTS [{table_name}] AS SELECT * FROM plain_db.[{table_name}]"  # noqa: S608
             )
         enc_conn.execute("DETACH DATABASE plain_db")
         enc_conn.commit()
@@ -250,10 +251,8 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
     finally:
         # Clean up backup only on success
         if os.path.isfile(backup_path) and os.path.isfile(source_path):
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(backup_path)
-            except OSError:
-                pass
 
 
 # ──────────────────────────────────────────────────────────────

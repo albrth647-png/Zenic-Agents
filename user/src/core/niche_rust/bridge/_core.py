@@ -7,11 +7,11 @@ Unified facade combining NicheCatalog and NicheTemplate.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._catalog import NicheCatalog
-from ._template import NicheTemplate
 from ._native import NATIVE_AVAILABLE
+from ._template import NicheTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -48,27 +48,27 @@ class NicheBridge:
 
     # ── Catalog Operations ────────────────────────────────
 
-    def list_niches(self) -> List[Any]:
+    def list_niches(self) -> list[Any]:
         """List all available niches from the catalog."""
         return self._catalog.get_all()
 
-    def list_niche_ids(self) -> List[str]:
+    def list_niche_ids(self) -> list[str]:
         """List all niche_id strings."""
         return self._catalog.ids()
 
-    def list_categories(self) -> List[str]:
+    def list_categories(self) -> list[str]:
         """List all niche categories."""
         return self._catalog.categories()
 
-    def get_niche(self, niche_id: str) -> Optional[Any]:
+    def get_niche(self, niche_id: str) -> Any | None:
         """Get a specific niche by ID."""
         return self._catalog.get_by_id(niche_id)
 
-    def search_niches(self, query: str) -> List[Any]:
+    def search_niches(self, query: str) -> list[Any]:
         """Search niches by text."""
         return self._catalog.search(query)
 
-    def niches_by_category(self, category: str) -> List[Any]:
+    def niches_by_category(self, category: str) -> list[Any]:
         """Get niches filtered by category."""
         return self._catalog.get_by_category(category)
 
@@ -78,17 +78,17 @@ class NicheBridge:
 
     # ── Template Operations ───────────────────────────────
 
-    def create_template(self, niche_id: str) -> Optional[Dict[str, Any]]:
+    def create_template(self, niche_id: str) -> dict[str, Any] | None:
         """Generate a YAML template from a niche_id."""
         return self._template.generate(niche_id)
 
-    def validate_template(self, template_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_template(self, template_dict: dict[str, Any]) -> dict[str, Any]:
         """Validate a template for completeness."""
         return self._template.validate(template_dict)
 
     def fill_field(
         self,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
         section_id: str,
         field_name: str,
         value: Any,
@@ -98,22 +98,22 @@ class NicheBridge:
             template_dict, section_id, field_name, value
         )
 
-    def template_status(self, template_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def template_status(self, template_dict: dict[str, Any]) -> dict[str, Any]:
         """Get validation status of a template."""
         return self._template.validate(template_dict)
 
-    def next_missing_field(self, template_dict: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def next_missing_field(self, template_dict: dict[str, Any]) -> dict[str, Any] | None:
         """Get the next missing required field for the interactive agent."""
         missing = self._template.missing_fields(template_dict)
         if not missing:
             return None
         return missing[0]
 
-    def all_missing_fields(self, template_dict: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def all_missing_fields(self, template_dict: dict[str, Any]) -> list[dict[str, Any]]:
         """Get all missing required fields."""
         return self._template.missing_fields(template_dict)
 
-    def template_to_yaml(self, template_dict: Dict[str, Any]) -> Optional[str]:
+    def template_to_yaml(self, template_dict: dict[str, Any]) -> str | None:
         """Export template to YAML string."""
         return self._template.to_yaml(template_dict)
 
@@ -122,10 +122,10 @@ class NicheBridge:
 #  Factory Function
 # ──────────────────────────────────────────────────────────────
 
-_bridge_instance: Optional[NicheBridge] = None
+_bridge_instance: NicheBridge | None = None
 
 
-def get_bridge() -> Optional[NicheBridge]:
+def get_bridge() -> NicheBridge | None:
     """Get or create the singleton NicheBridge instance.
 
     Returns None if the Rust extension is not available.

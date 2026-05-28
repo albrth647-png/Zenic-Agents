@@ -5,16 +5,16 @@ Contains ARM-optimized SQLite PRAGMA settings and the PoolStats
 dataclass for per-database pool statistics.
 """
 
-import sqlite3
 import logging
+import sqlite3
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "_ARM_PRAGMAS",
-    "_apply_pragmas",
     "PoolStats",
+    "_apply_pragmas",
 ]
 
 

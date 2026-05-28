@@ -1,3 +1,8 @@
+import { ConflictResolutionStrategy } from './conflict';
+import type { PolicyEvaluationResult } from './evaluation';
+import { SolverType } from './constraints';
+import { ImpactAnalysisDepth } from './impact';
+
 // ─── 8. Policy Namespace & Multi-tenant Scoping ─────────────────────────
 
 /** Namespace API version */

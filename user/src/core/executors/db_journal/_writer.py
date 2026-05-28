@@ -11,18 +11,18 @@ import json
 import logging
 import sqlite3
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.shared.retry import with_retry
 from src.core.shared.db_initializer import get_data_dir
+from src.core.shared.retry import with_retry
 
-from ._types import JournalEntry
 from ._sql_helpers import (
+    _count_placeholders,
+    _extract_set_clause_from_update,
     _extract_table_and_where_from_delete,
     _extract_table_and_where_from_update,
-    _extract_set_clause_from_update,
-    _count_placeholders,
 )
+from ._types import JournalEntry
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class _WriterMixin:
         db_path: str,
         operation: str,
         query: str,
-        params: List[Any],
+        params: list[Any],
         tenant_id: str,
     ) -> str:
         """Capture the current row state *before* a write operation.
@@ -118,7 +118,7 @@ class _WriterMixin:
         )
 
         # Capture before-state
-        before_data: List[Dict[str, Any]] = []
+        before_data: list[dict[str, Any]] = []
         if op in ("DELETE", "UPDATE"):
             before_data = self._capture_before_state(db_path, op, query, params)
         # For INSERT, before_data stays [] (no prior data existed)
@@ -138,7 +138,7 @@ class _WriterMixin:
         self,
         journal_id: str,
         affected_rows: int,
-        lastrowid: Optional[int],
+        lastrowid: int | None,
     ) -> None:
         """Record the result *after* the write operation has executed.
 
@@ -181,27 +181,27 @@ class _WriterMixin:
         db_path: str,
         operation: str,
         query: str,
-        params: List[Any],
-    ) -> List[Dict[str, Any]]:
+        params: list[Any],
+    ) -> list[dict[str, Any]]:
         """Execute a SELECT to capture affected rows before the write.
 
         For DELETE and UPDATE statements this constructs a SELECT query
         using the same WHERE clause as the original statement.
         """
 
-        def _do_capture() -> List[Dict[str, Any]]:
+        def _do_capture() -> list[dict[str, Any]]:
             if db_path == ":memory:":
                 # Cannot capture from in-memory DB in a different connection
                 return []
 
             select_query = ""
-            select_params: List[Any] = []
+            select_params: list[Any] = []
 
             if operation == "DELETE":
                 table, where_clause = _extract_table_and_where_from_delete(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     select_params = list(params)
@@ -209,7 +209,7 @@ class _WriterMixin:
                 table, where_clause = _extract_table_and_where_from_update(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     # For UPDATE, params correspond to SET values first, then WHERE values.

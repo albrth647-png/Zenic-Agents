@@ -124,7 +124,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
                     return parsed, issues
             except ImportError:
                 pass
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
             issues.append(
@@ -242,16 +242,15 @@ class ConfigValidator(BaseAgent[ConfigResult]):
             import re
 
             pattern = rules.get("pattern")
-            if pattern and isinstance(value, str):
-                if not re.match(pattern, value):
-                    issues.append(
-                        ValidationIssue(
-                            severity="warning",
-                            code="pattern_mismatch",
-                            message=f"Key '{key}' value '{value}' does not match expected pattern",
-                            suggestion=f"Update '{key}' to match the expected format",
-                        )
+            if pattern and isinstance(value, str) and not re.match(pattern, value):
+                issues.append(
+                    ValidationIssue(
+                        severity="warning",
+                        code="pattern_mismatch",
+                        message=f"Key '{key}' value '{value}' does not match expected pattern",
+                        suggestion=f"Update '{key}' to match the expected format",
                     )
+                )
 
         return issues
 
@@ -287,18 +286,17 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         # Check for DEBUG mode enabled
         for key in SECURITY_SENSITIVE_KEYS["debug_keys"]:
-            if key in config:
-                if config[key] is True or (
-                    isinstance(config[key], str) and config[key].lower() in ("true", "1", "yes")
-                ):
-                    issues.append(
-                        ValidationIssue(
-                            severity="info",
-                            code="debug_enabled",
-                            message="DEBUG mode is enabled — disable in production",
-                            suggestion="Set DEBUG=false for production environments",
-                        )
+            if key in config and (config[key] is True or (
+                isinstance(config[key], str) and config[key].lower() in ("true", "1", "yes")
+            )):
+                issues.append(
+                    ValidationIssue(
+                        severity="info",
+                        code="debug_enabled",
+                        message="DEBUG mode is enabled — disable in production",
+                        suggestion="Set DEBUG=false for production environments",
                     )
+                )
 
         # Check for weak SECRET_KEY
         secret_key = config.get("SECRET_KEY") or config.get("secret_key")
@@ -350,7 +348,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
         # Check for missing TLS in server config
         host = config.get("host", "")
         config.get("port", 0)
-        if isinstance(host, str) and host == "0.0.0.0":
+        if isinstance(host, str) and host == "0.0.0.0":  # noqa: S104
             issues.append(
                 ValidationIssue(
                     severity="info",

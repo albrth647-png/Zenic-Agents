@@ -16,7 +16,6 @@ from ..schemas import AgentResult
 # Local compat types
 from ._types import logger
 
-
 # ══════════════════════════════════════════════════════════════
 #  AgentRunnerCompat
 # ══════════════════════════════════════════════════════════════

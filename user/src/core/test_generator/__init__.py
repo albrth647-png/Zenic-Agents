@@ -18,7 +18,7 @@ M9 Implementation: Pure Python, no external APIs. Uses ast module.
 
 import ast
 import logging
-from typing import Dict, List
+from typing import List  # noqa: UP035
 
 from ._analysis_mixin import ASTAnalysisMixin
 from ._codegen_mixin import CodeGenMixin

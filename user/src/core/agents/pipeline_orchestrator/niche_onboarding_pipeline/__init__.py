@@ -26,11 +26,11 @@ INVARIANTS:
     3. All operations are deterministic and auditable.
 """
 
-from ._steps import PipelineStep, PipelineState
 from ._pipeline import NicheOnboardingPipeline
+from ._steps import PipelineState, PipelineStep
 
 __all__ = [
-    "PipelineStep",
-    "PipelineState",
     "NicheOnboardingPipeline",
+    "PipelineState",
+    "PipelineStep",
 ]

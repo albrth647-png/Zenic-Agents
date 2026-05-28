@@ -6,21 +6,23 @@ Base types + Layer 1 (Understanding) + Layer 2 (Memory & Context)
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Generic, TypeVar
 
+T = TypeVar("T", covariant=True)
 
 # ────────────────────────────── Base Types ──────────────────────────────
 
 @dataclass
-class AgentResult:
+class AgentResult(Generic[T]):
     """Universal result wrapper for all agents.
 
     Unified type — single source of truth for both legacy (agents/)
     and v2 (agents/) code paths.
     """
     success: bool = False
-    data: Any = None
+    data: T | None = None
     source: str = "deterministic"  # "deterministic", "cached", "fallback", "llm"
     duration_ms: float = 0.0
     confidence: float = 0.0
@@ -89,7 +91,7 @@ class CriticalityResult:
     path: str = "fast_standard"
     reason: str = ""
     confidence: float = 0.0
-    adjustments: dict[str, Any] = field(default_factory=dict)
+    adjustments: dict[str, float | str | bool] = field(default_factory=dict)
     source: str = "deterministic"
 
 
@@ -98,10 +100,10 @@ class CriticalityResult:
 @dataclass
 class MemoryEntries:
     """A05 MemoryCollector output."""
-    working: list[dict[str, Any]] = field(default_factory=list)
-    long_term: list[dict[str, Any]] = field(default_factory=list)
-    episodic: list[dict[str, Any]] = field(default_factory=list)
-    procedural: list[dict[str, Any]] = field(default_factory=list)
+    working: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    long_term: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    episodic: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    procedural: list[Mapping[str, str | float | bool]] = field(default_factory=list)
     source: str = "deterministic"
 
 
@@ -138,7 +140,7 @@ class CompressedContext:
 @dataclass
 class PrefetchResult:
     """A08 ContextPrefetcher output."""
-    prefetched: list[dict[str, Any]] = field(default_factory=list)
+    prefetched: list[Mapping[str, str | float | bool]] = field(default_factory=list)
     hints: list[str] = field(default_factory=list)
     source: str = "deterministic"
 
@@ -176,16 +178,16 @@ class InventoryResult:
 @dataclass
 class CRMResult:
     """A11 CRMPipeline output."""
-    stages: list[dict[str, Any]] = field(default_factory=list)
+    stages: list[Mapping[str, str | float | int]] = field(default_factory=list)
     conversions: dict[str, float] = field(default_factory=dict)
-    forecasts: dict[str, Any] = field(default_factory=dict)
+    forecasts: dict[str, float | str] = field(default_factory=dict)
     source: str = "deterministic"
 
 
 @dataclass
 class TaskResult:
     """A12 TaskScheduler output."""
-    schedule: list[dict[str, Any]] = field(default_factory=list)
+    schedule: list[Mapping[str, str | int | float]] = field(default_factory=list)
     conflicts: list[str] = field(default_factory=list)
     priorities: dict[str, int] = field(default_factory=dict)
     source: str = "deterministic"
@@ -237,7 +239,7 @@ class InteractiveCollectionResult:
     """
     session_id: str = ""
     niche_id: str = ""
-    questions: list[dict[str, Any]] = field(default_factory=list)
+    questions: list[Mapping[str, str | bool | int]] = field(default_factory=list)
     answers_applied: int = 0
     answers_rejected: int = 0
     still_missing: int = 0

@@ -9,9 +9,10 @@ import logging
 import sqlite3
 import time
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ._types import SimulationResult
+if TYPE_CHECKING:
+    from ._types import SimulationResult
 
 logger = logging.getLogger(__name__)
 

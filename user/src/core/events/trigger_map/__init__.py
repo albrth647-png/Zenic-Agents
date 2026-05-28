@@ -8,20 +8,21 @@ import sqlite3
 import threading
 import time
 import uuid
-from ._mixin_core import TriggerMap
-from ._types import TriggerMapping, TriggerCondition, ConditionOperator
 
-_instance: TriggerMap | None = None  # noqa: F821  # TODO: verify import
+from ._mixin_core import TriggerMap
+from ._types import ConditionOperator, TriggerCondition, TriggerMapping
+
+_instance: TriggerMap | None = None  # TODO: verify import
 _instance_lock = threading.Lock()
 
 
-def get_trigger_map() -> TriggerMap:  # noqa: F821  # TODO: verify import
+def get_trigger_map() -> TriggerMap:  # TODO: verify import
     """Return the singleton TriggerMap instance."""  # TODO: verify import
     global _instance
     if _instance is None:
         with _instance_lock:
             if _instance is None:
-                _instance = TriggerMap()  # noqa: F821  # TODO: Phase3 - verify import
+                _instance = TriggerMap()  # TODO: Phase3 - verify import
     return _instance
 
 

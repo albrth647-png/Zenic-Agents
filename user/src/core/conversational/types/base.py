@@ -15,7 +15,11 @@ from __future__ import annotations
 
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import (
+    Callable,
+    Coroutine,
+    Mapping,
+)
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
@@ -32,6 +36,7 @@ from src.core.shared.deterministic import FencingTokenGenerator
 # ─── Result Monad ─────────────────────────────────────────────
 
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 E = TypeVar("E", bound=Exception)
 
 
@@ -68,7 +73,7 @@ class Err(Generic[E]):
     def is_err(self) -> bool:
         return True
 
-    def unwrap(self) -> Any:
+    def unwrap(self) -> T_co:
         raise self.error
 
 
@@ -135,7 +140,7 @@ class Severity(str, Enum):
 class Processor(Protocol):
     """Protocolo base para cualquier procesador del pipeline."""
 
-    async def process(self, data: Any) -> Result[Any, Exception]:
+    async def process(self, data: T) -> Result[T, Exception]:
         """Procesa datos y retorna Result."""
         ...
 
@@ -144,7 +149,7 @@ class Processor(Protocol):
 class Classifier(Protocol):
     """Protocolo para clasificadores (intencion, categoria, etc)."""
 
-    def classify(self, text: str, context: dict[str, Any] | None = None) -> Result[Any, Exception]:
+    def classify(self, text: str, context: Mapping[str, str | int | float | bool] | None = None) -> Result[str, Exception]:
         """Clasifica texto con contexto opcional."""
         ...
 
@@ -153,7 +158,7 @@ class Classifier(Protocol):
 class Router(Protocol):
     """Protocolo para routers (seleccion de pipeline)."""
 
-    def route(self, intent: Any, context: dict[str, Any]) -> Result[str, Exception]:
+    def route(self, intent: str, context: Mapping[str, str | int | float | bool]) -> Result[str, Exception]:
         """Rutea basado en intencion y contexto."""
         ...
 
@@ -162,7 +167,7 @@ class Router(Protocol):
 class Generator(Protocol):
     """Protocolo para generadores de respuesta."""
 
-    async def generate(self, prompt: str, context: dict[str, Any]) -> Result[Any, Exception]:
+    async def generate(self, prompt: str, context: Mapping[str, str | int | float | bool]) -> Result[str, Exception]:
         """Genera respuesta basada en prompt y contexto."""
         ...
 
@@ -171,11 +176,11 @@ class Generator(Protocol):
 class Store(Protocol):
     """Protocolo para almacenamiento (memoria, cache, etc)."""
 
-    async def store(self, key: str, value: Any, ttl: float | None = None) -> Result[bool, Exception]:
+    async def store(self, key: str, value: str | int | float | bool | list | dict, ttl: float | None = None) -> Result[bool, Exception]:
         """Almacena un valor con TTL opcional."""
         ...
 
-    async def retrieve(self, key: str) -> Result[Any, Exception]:
+    async def retrieve(self, key: str) -> Result[str | int | float | bool | list | dict, Exception]:
         """Recupera un valor por clave."""
         ...
 
@@ -188,7 +193,7 @@ class Store(Protocol):
 class Emitter(Protocol):
     """Protocolo para emisores de eventos."""
 
-    def emit(self, event_type: str, payload: dict[str, Any]) -> None:
+    def emit(self, event_type: str, payload: Mapping[str, str | int | float | bool]) -> None:
         """Emite un evento."""
         ...
 
@@ -209,12 +214,12 @@ class PipelineContext:
     message_id: MessageId = field(default_factory=lambda: new_id("msg"))
     user_message: str = ""
     normalized_message: str = ""
-    intent: Any | None = None
+    intent: str | None = None
     route: str = ""
-    personality: Any | None = None
-    memory_context: list[dict[str, Any]] = field(default_factory=list)
-    tool_results: list[dict[str, Any]] = field(default_factory=list)
-    metadata: dict[str, Any] = field(default_factory=dict)
+    personality: str | None = None
+    memory_context: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    tool_results: list[Mapping[str, str | int | float | bool]] = field(default_factory=list)
+    metadata: Mapping[str, str | int | float | bool] = field(default_factory=dict)
     start_time: float = field(default_factory=time.time)
     priority: Priority = Priority.NORMAL
 
@@ -223,7 +228,7 @@ class PipelineContext:
         """Milisegundos transcurridos desde la creacion."""
         return (time.time() - self.start_time) * 1000
 
-    def with_field(self, **kwargs: Any) -> PipelineContext:
+    def with_field(self, **kwargs: str | int | float | bool | list | dict | None) -> PipelineContext:
         """Crea una copia con campos actualizados."""
         data = {
             "session_id": self.session_id,
@@ -245,6 +250,6 @@ class PipelineContext:
 
 # ─── Callbacks ────────────────────────────────────────────────
 
-AsyncCallback = Callable[..., Any]
+AsyncCallback = Callable[..., Coroutine[Any, Any, Any]]
 StreamCallback = Callable[[str], None]
 ErrorCallback = Callable[[Exception], None]

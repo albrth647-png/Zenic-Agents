@@ -10,13 +10,13 @@ avoid circular imports.
 import threading
 from typing import Any, Optional
 
-from ._types import TrendPoint, DashboardWidget
 from ._mixin_core import ROIDashboardData
+from ._types import DashboardWidget, TrendPoint
 
 __all__ = [
-    "TrendPoint",
     "DashboardWidget",
     "ROIDashboardData",
+    "TrendPoint",
     "get_roi_dashboard_data",
     "reset_roi_dashboard_data",
 ]
@@ -24,7 +24,7 @@ __all__ = [
 
 # ── Singleton ────────────────────────────────────────────
 
-_roi_dashboard_data: Optional[ROIDashboardData] = None
+_roi_dashboard_data: ROIDashboardData | None = None
 _lock = threading.Lock()
 
 

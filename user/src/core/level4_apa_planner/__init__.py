@@ -16,13 +16,13 @@ Usage::
     plan = planner.generate_plan(routing)
 """
 
-from .planner_parts import APAPlanner, ExecutionPlan, PlanStep, OperationType, RoutePath, HAS_Z3
+from .planner_parts import HAS_Z3, APAPlanner, ExecutionPlan, OperationType, PlanStep, RoutePath
 
 __all__ = [
+    "HAS_Z3",
     "APAPlanner",
     "ExecutionPlan",
-    "PlanStep",
     "OperationType",
+    "PlanStep",
     "RoutePath",
-    "HAS_Z3",
 ]

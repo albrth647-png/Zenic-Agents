@@ -2,7 +2,7 @@
 ZENIC-AGENTS v16 - Database Backend Abstract Base Class
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class DatabaseBackend:
@@ -27,19 +27,19 @@ class DatabaseBackend:
         """Get a database connection/context manager."""
         raise NotImplementedError
 
-    async def execute(self, conn: Any, query: str, params: Optional[tuple] = None) -> None:
+    async def execute(self, conn: Any, query: str, params: tuple | None = None) -> None:
         """Execute a write query (INSERT, UPDATE, DELETE, DDL)."""
         raise NotImplementedError
 
-    async def fetch_one(self, conn: Any, query: str, params: Optional[tuple] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_one(self, conn: Any, query: str, params: tuple | None = None) -> dict[str, Any] | None:
         """Fetch a single row as a dict."""
         raise NotImplementedError
 
-    async def fetch_all(self, conn: Any, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    async def fetch_all(self, conn: Any, query: str, params: tuple | None = None) -> list[dict[str, Any]]:
         """Fetch all rows as a list of dicts."""
         raise NotImplementedError
 
-    async def fetch_val(self, conn: Any, query: str, params: Optional[tuple] = None) -> Any:
+    async def fetch_val(self, conn: Any, query: str, params: tuple | None = None) -> Any:
         """Fetch a single scalar value."""
         raise NotImplementedError
 

@@ -9,10 +9,10 @@ import threading
 from collections import Counter
 from typing import Any
 
+from ..outcome_tracker import OutcomeStatus, get_outcome_tracker
 from ._helpers import _retry
 from ._mixin_patterns import PatternDetectionMixin
 from ._types import DB_PATH, LearningInsight, LearningStrategy
-from ..outcome_tracker import OutcomeStatus, get_outcome_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class LearningEngine(PatternDetectionMixin):
 
     def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._db_path = db_path or str(DB_PATH)  # noqa: F821
+        self._db_path = db_path or str(DB_PATH)
         self._init_db()
 
     def _init_db(self) -> None:
@@ -46,11 +46,11 @@ class LearningEngine(PatternDetectionMixin):
             conn.commit()
             conn.close()
 
-        _retry(_create)  # noqa: F821
+        _retry(_create)
 
-    def analyze_patterns(self, action_type: str | None = None) -> list[LearningInsight]:  # noqa: F821
+    def analyze_patterns(self, action_type: str | None = None) -> list[LearningInsight]:
         tracker = get_outcome_tracker()
-        insights: list[LearningInsight] = []  # noqa: F821
+        insights: list[LearningInsight] = []
 
         failure_insights = self._detect_failure_patterns(tracker, action_type)
         insights.extend(failure_insights)
@@ -64,7 +64,7 @@ class LearningEngine(PatternDetectionMixin):
 
         return insights
 
-    def generate_recommendation(self, insight: LearningInsight) -> dict[str, Any]:  # noqa: F821
+    def generate_recommendation(self, insight: LearningInsight) -> dict[str, Any]:
         if insight.insight_type == "failure_pattern":
             return {
                 "action": "investigate_and_fix",
@@ -123,16 +123,16 @@ class LearningEngine(PatternDetectionMixin):
                 finally:
                     conn.close()
 
-            return _retry(_apply)  # noqa: F821
+            return _retry(_apply)
 
     def get_insights(
         self,
         min_confidence: float = 0.0,
         applied: bool | None = None,
-    ) -> list[LearningInsight]:  # noqa: F821
+    ) -> list[LearningInsight]:
         with self._lock:
 
-            def _fetch() -> list[LearningInsight]:  # noqa: F821
+            def _fetch() -> list[LearningInsight]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     conditions: list[str] = ["confidence >= ?"]
@@ -143,18 +143,18 @@ class LearningEngine(PatternDetectionMixin):
 
                     where = " AND ".join(conditions)
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM learning_insights WHERE {where} " f"ORDER BY confidence DESC",
+                        f"SELECT * FROM learning_insights WHERE {where} " f"ORDER BY confidence DESC",  # noqa: S608
                         params,
                     )
                     return [self._insight_from_row(row) for row in cursor.fetchall()]
                 finally:
                     conn.close()
 
-            return _retry(_fetch)  # noqa: F821
+            return _retry(_fetch)
 
     def auto_learn(
         self,
-        strategy: LearningStrategy = LearningStrategy.MODERATE,  # noqa: F821
+        strategy: LearningStrategy = LearningStrategy.MODERATE,
     ) -> dict[str, Any]:
         get_outcome_tracker()
         insights = self.analyze_patterns()
@@ -166,9 +166,9 @@ class LearningEngine(PatternDetectionMixin):
         }
 
         thresholds = {
-            LearningStrategy.CONSERVATIVE: 0.8,  # noqa: F821
-            LearningStrategy.MODERATE: 0.6,  # noqa: F821
-            LearningStrategy.AGGRESSIVE: 0.4,  # noqa: F821
+            LearningStrategy.CONSERVATIVE: 0.8,
+            LearningStrategy.MODERATE: 0.6,
+            LearningStrategy.AGGRESSIVE: 0.4,
         }
         threshold = thresholds.get(strategy, 0.6)
 
@@ -176,7 +176,7 @@ class LearningEngine(PatternDetectionMixin):
             if insight.confidence >= threshold:
                 rec = self.generate_recommendation(insight)
                 result["recommendations"].append(rec)
-                if strategy == LearningStrategy.AGGRESSIVE:  # noqa: F821
+                if strategy == LearningStrategy.AGGRESSIVE:
                     self.apply_insight(insight.id)
                 result["applied"] += 1
             else:
@@ -290,9 +290,9 @@ class LearningEngine(PatternDetectionMixin):
                 finally:
                     conn.close()
 
-            return _retry(_calc)  # noqa: F821
+            return _retry(_calc)
 
-    def _persist_insight(self, insight: LearningInsight) -> None:  # noqa: F821
+    def _persist_insight(self, insight: LearningInsight) -> None:
         with self._lock:
 
             def _insert() -> None:
@@ -318,11 +318,11 @@ class LearningEngine(PatternDetectionMixin):
                 finally:
                     conn.close()
 
-            _retry(_insert)  # noqa: F821
+            _retry(_insert)
 
     @staticmethod
-    def _insight_from_row(row: Any) -> LearningInsight:  # noqa: F821
-        return LearningInsight(  # noqa: F821  # TODO: Phase3 - verify import
+    def _insight_from_row(row: Any) -> LearningInsight:
+        return LearningInsight(  # TODO: Phase3 - verify import
             id=row[0],
             insight_type=row[1],
             pattern=row[2],

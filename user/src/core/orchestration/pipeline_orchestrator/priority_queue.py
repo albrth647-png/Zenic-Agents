@@ -15,7 +15,7 @@ import heapq
 import logging
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class PrioritizedItem:
     data: Any = None
     priority: float = 0.0
     category: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.item_id:
@@ -94,9 +94,9 @@ class PriorityQueue:
     """
 
     def __init__(self) -> None:
-        self._heap: List[PrioritizedItem] = []
-        self._items: Dict[str, PrioritizedItem] = {}
-        self._cancelled: Set[str] = set()
+        self._heap: list[PrioritizedItem] = []
+        self._items: dict[str, PrioritizedItem] = {}
+        self._cancelled: set[str] = set()
         self._total_enqueued: int = 0
         self._total_dequeued: int = 0
 
@@ -122,7 +122,7 @@ class PriorityQueue:
             item.item_id, item.priority, item.category,
         )
 
-    def dequeue(self) -> Optional[PrioritizedItem]:
+    def dequeue(self) -> PrioritizedItem | None:
         """
         Remove and return the highest-priority (lowest value) item.
 
@@ -149,7 +149,7 @@ class PriorityQueue:
 
         return None
 
-    def peek(self) -> Optional[PrioritizedItem]:
+    def peek(self) -> PrioritizedItem | None:
         """
         Look at the highest-priority item without removing it.
 
@@ -233,7 +233,7 @@ class PriorityQueue:
 
     # ── Batch Operations ─────────────────────────────────────
 
-    def enqueue_batch(self, items: List[PrioritizedItem]) -> None:
+    def enqueue_batch(self, items: list[PrioritizedItem]) -> None:
         """
         Add multiple items to the queue.
 
@@ -243,7 +243,7 @@ class PriorityQueue:
         for item in items:
             self.enqueue(item)
 
-    def dequeue_batch(self, max_items: int = 10) -> List[PrioritizedItem]:
+    def dequeue_batch(self, max_items: int = 10) -> list[PrioritizedItem]:
         """
         Dequeue up to max_items from the queue.
 
@@ -253,7 +253,7 @@ class PriorityQueue:
         Returns:
             List of dequeued PrioritizedItem instances.
         """
-        result: List[PrioritizedItem] = []
+        result: list[PrioritizedItem] = []
         while len(result) < max_items:
             item = self.dequeue()
             if item is None:
@@ -261,7 +261,7 @@ class PriorityQueue:
             result.append(item)
         return result
 
-    def dequeue_by_category(self, category: str, max_items: int = 10) -> List[PrioritizedItem]:
+    def dequeue_by_category(self, category: str, max_items: int = 10) -> list[PrioritizedItem]:
         """
         Dequeue items matching a specific category.
 
@@ -275,8 +275,8 @@ class PriorityQueue:
         Returns:
             List of matching PrioritizedItem instances.
         """
-        result: List[PrioritizedItem] = []
-        remaining: List[PrioritizedItem] = []
+        result: list[PrioritizedItem] = []
+        remaining: list[PrioritizedItem] = []
 
         while self._heap:
             item = heapq.heappop(self._heap)
@@ -315,14 +315,14 @@ class PriorityQueue:
         """Check if an item is in the queue (and not cancelled)."""
         return item_id in self._items and item_id not in self._cancelled
 
-    def get_item(self, item_id: str) -> Optional[PrioritizedItem]:
+    def get_item(self, item_id: str) -> PrioritizedItem | None:
         """Get an item by ID without removing it."""
         if item_id in self._items and item_id not in self._cancelled:
             return self._items[item_id]
         return None
 
     @property
-    def categories(self) -> Set[str]:
+    def categories(self) -> set[str]:
         """Set of all categories currently in the queue."""
         return {
             item.category
@@ -331,7 +331,7 @@ class PriorityQueue:
         }
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
         return {
             "size": self.size,

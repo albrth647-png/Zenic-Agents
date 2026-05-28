@@ -16,6 +16,7 @@ FASE 1.1/1.2 Performance Fix:
 """
 
 import os
+
 from src.core.shared.fast_connection_pool import FastPool
 
 # SmartMemory uses ~/.zenic_agents/db/ as its data directory

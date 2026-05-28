@@ -98,55 +98,11 @@ Organization:
 # ---------------------------------------------------------------------------
 # Creational
 # ---------------------------------------------------------------------------
-from src.core.patterns.creational import (
-    AgentFactory,
-    FactoryRegistry,
-    OrchestratorBuilder,
-    AgentPrototype,
+from src.core.patterns.architectural import (
+    Command as CQRSCommand,
 )
-
-# ---------------------------------------------------------------------------
-# Structural
-# ---------------------------------------------------------------------------
-from src.core.patterns.structural import (
-    LLMAdapter,
-    LocalLLMAdapter,
-    FallbackLLMAdapter,
-    AdapterRegistry,
-    LLMProvider,
-    LocalProvider,
-    AgentLLMBridge,
-    LazyProxy,
-    CacheProxy,
-    agent_decorator,
-    AgentCapability,
-    AgentDecorator,
-)
-
-# ---------------------------------------------------------------------------
-# Behavioral
-# ---------------------------------------------------------------------------
-from src.core.patterns.behavioral import (
-    StateMachine,
-    State,
-    Transition,
-    StrategyRegistry,
-    ASTNode,
-    ASTVisitor,
-    TokenCountVisitor,
-    ComplexityVisitor,
-    RefactorVisitor,
-    VisitableAST,
-)
-
-# ---------------------------------------------------------------------------
-# Concurrency
-# ---------------------------------------------------------------------------
-from src.core.patterns.concurrency import (
-    WorkerPool,
-    WorkerPoolConfig,
-    ProducerConsumer,
-    ReadWriteLock,
+from src.core.patterns.architectural import (
+    CommandHandler as CQRSCommandHandler,
 )
 
 # ---------------------------------------------------------------------------
@@ -154,121 +110,173 @@ from src.core.patterns.concurrency import (
 # ---------------------------------------------------------------------------
 from src.core.patterns.architectural import (
     CQRSBus,
-    Command as CQRSCommand,
     Query,
-    CommandHandler as CQRSCommandHandler,
     QueryHandler,
 )
 
 # ---------------------------------------------------------------------------
-# Resilience
+# Behavioral
 # ---------------------------------------------------------------------------
-from src.core.patterns.resilience import (
-    CircuitBreaker,
-    CircuitState,
-    CircuitOpenError,
-    RetryConfig,
-    retry,
-    retry_async,
-    with_retry,
-    with_retry_async,
-    RetryScope,
-    Bulkhead,
-    BulkheadFullError,
-    Sidecar,
-    sidecar_decorator,
+from src.core.patterns.behavioral import (
+    ASTNode,
+    ASTVisitor,
+    ComplexityVisitor,
+    RefactorVisitor,
+    State,
+    StateMachine,
+    StrategyRegistry,
+    TokenCountVisitor,
+    Transition,
+    VisitableAST,
+)
+
+# ---------------------------------------------------------------------------
+# Concurrency
+# ---------------------------------------------------------------------------
+from src.core.patterns.concurrency import (
+    ProducerConsumer,
+    ReadWriteLock,
+    WorkerPool,
+    WorkerPoolConfig,
+)
+from src.core.patterns.creational import (
+    AgentFactory,
+    AgentPrototype,
+    FactoryRegistry,
+    OrchestratorBuilder,
+)
+from src.core.patterns.orchestration import (
+    Command as OrchCommand,
 )
 
 # ---------------------------------------------------------------------------
 # Orchestration (rename Command/CommandHandler to avoid clash with CQRS)
 # ---------------------------------------------------------------------------
 from src.core.patterns.orchestration import (
-    EventBus,
+    CommandBus,
+    CommandResult,
     Event,
+    EventBus,
     EventHandler,
     Mediator,
     Request,
-    Response,
     RequestHandler,
-    CommandBus,
-    Command as OrchCommand,
-    CommandHandler as OrchCommandHandler,
-    CommandResult,
+    Response,
     Saga,
-    SagaStep,
     SagaContext,
     SagaStatus,
+    SagaStep,
+)
+from src.core.patterns.orchestration import (
+    CommandHandler as OrchCommandHandler,
+)
+
+# ---------------------------------------------------------------------------
+# Resilience
+# ---------------------------------------------------------------------------
+from src.core.patterns.resilience import (
+    Bulkhead,
+    BulkheadFullError,
+    CircuitBreaker,
+    CircuitOpenError,
+    CircuitState,
+    RetryConfig,
+    RetryScope,
+    Sidecar,
+    retry,
+    retry_async,
+    sidecar_decorator,
+    with_retry,
+    with_retry_async,
+)
+
+# ---------------------------------------------------------------------------
+# Structural
+# ---------------------------------------------------------------------------
+from src.core.patterns.structural import (
+    AdapterRegistry,
+    AgentCapability,
+    AgentDecorator,
+    AgentLLMBridge,
+    CacheProxy,
+    FallbackLLMAdapter,
+    LazyProxy,
+    LLMAdapter,
+    LLMProvider,
+    LocalLLMAdapter,
+    LocalProvider,
+    agent_decorator,
 )
 
 __all__ = [
-    # Creational
-    "AgentFactory",
-    "FactoryRegistry",
-    "OrchestratorBuilder",
-    "AgentPrototype",
-    # Structural
-    "LLMAdapter",
-    "LocalLLMAdapter",
-    "FallbackLLMAdapter",
-    "AdapterRegistry",
-    "LLMProvider",
-    "LocalProvider",
-    "AgentLLMBridge",
-    "LazyProxy",
-    "CacheProxy",
-    "agent_decorator",
-    "AgentCapability",
-    "AgentDecorator",
-    # Behavioral
-    "StateMachine",
-    "State",
-    "Transition",
-    "StrategyRegistry",
     "ASTNode",
     "ASTVisitor",
-    "TokenCountVisitor",
+    "AdapterRegistry",
+    "AgentCapability",
+    "AgentDecorator",
+    # Creational
+    "AgentFactory",
+    "AgentLLMBridge",
+    "AgentPrototype",
+    "Bulkhead",
+    "BulkheadFullError",
+    # Architectural
+    "CQRSBus",
+    "CQRSCommand",
+    "CQRSCommandHandler",
+    "CacheProxy",
+    # Resilience
+    "CircuitBreaker",
+    "CircuitOpenError",
+    "CircuitState",
+    "CommandBus",
+    "CommandResult",
     "ComplexityVisitor",
+    "Event",
+    # Orchestration
+    "EventBus",
+    "EventHandler",
+    "FactoryRegistry",
+    "FallbackLLMAdapter",
+    # Structural
+    "LLMAdapter",
+    "LLMProvider",
+    "LazyProxy",
+    "LocalLLMAdapter",
+    "LocalProvider",
+    "Mediator",
+    "OrchCommand",
+    "OrchCommandHandler",
+    "OrchestratorBuilder",
+    "ProducerConsumer",
+    "Query",
+    "QueryHandler",
+    "ReadWriteLock",
     "RefactorVisitor",
+    "Request",
+    "RequestHandler",
+    "Response",
+    "RetryConfig",
+    "RetryScope",
+    "Saga",
+    "SagaContext",
+    "SagaStatus",
+    "SagaStep",
+    "Sidecar",
+    "State",
+    # Behavioral
+    "StateMachine",
+    "StrategyRegistry",
+    "TokenCountVisitor",
+    "Transition",
     "VisitableAST",
     # Concurrency
     "WorkerPool",
     "WorkerPoolConfig",
-    "ProducerConsumer",
-    "ReadWriteLock",
-    # Architectural
-    "CQRSBus",
-    "CQRSCommand",
-    "Query",
-    "CQRSCommandHandler",
-    "QueryHandler",
-    # Resilience
-    "CircuitBreaker",
-    "CircuitState",
-    "CircuitOpenError",
-    "RetryConfig",
+    "agent_decorator",
     "retry",
     "retry_async",
+    "sidecar_decorator",
     "with_retry",
     "with_retry_async",
-    "RetryScope",
-    "Bulkhead",
-    "BulkheadFullError",
-    "Sidecar",
-    "sidecar_decorator",
-    # Orchestration
-    "EventBus",
-    "Event",
-    "EventHandler",
-    "Mediator",
-    "Request",
-    "Response",
-    "RequestHandler",
-    "CommandBus",
-    "OrchCommand",
-    "OrchCommandHandler",
-    "CommandResult",
-    "Saga",
-    "SagaStep",
-    "SagaContext",
-    "SagaStatus",
 ]

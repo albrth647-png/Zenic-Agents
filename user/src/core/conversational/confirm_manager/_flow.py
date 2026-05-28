@@ -439,7 +439,7 @@ class ConfirmFlowMixin:
                 self._stats["total_approvals"] += 1  # type: ignore[attr-defined]
 
                 # Integrate with SafetyGate
-                required_role = row["required_role"] if "required_role" in row.keys() else ""
+                required_role = row.get("required_role", "")
                 safety_gate_approve(self._safety_gate, action_id, required_role)  # type: ignore[attr-defined]
 
                 logger.info(f"Action {action_id} approved by {approver_id}")

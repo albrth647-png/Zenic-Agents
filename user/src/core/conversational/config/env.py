@@ -21,15 +21,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .constants import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     LOG_LEVEL_DEFAULT,
     MAX_SESSIONS,
-    RATE_LIMIT_RPM,
     PERSONALITY_DEFAULT,
+    RATE_LIMIT_RPM,
 )
 
 # Prefijo para variables de entorno
@@ -133,7 +132,7 @@ def load_agents_config() -> AgentsConfig:
 
 # ─── Singleton ────────────────────────────────────────────────
 
-_config: Optional[AgentsConfig] = None
+_config: AgentsConfig | None = None
 
 
 def get_config() -> AgentsConfig:

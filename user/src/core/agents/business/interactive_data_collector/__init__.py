@@ -19,10 +19,10 @@ a working deterministic implementation that:
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from collections.abc import Callable, Mapping
+from typing import Any, Dict  # noqa: UP035
 
 from ...resilience.base_agent import BaseAgent
-
 from ._constants import FIELD_SUGGESTIONS, MAX_ANSWER_LENGTH, MAX_QUESTIONS_PER_ROUND
 from ._helpers import (
     apply_answer_to_template,
@@ -64,7 +64,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A51_InteractiveDataCollector", **kwargs)
         self._native = None
-        self._python_sessions: Dict[str, CompletionSession] = {}
+        self._python_sessions: dict[str, CompletionSession] = {}
 
     def _get_native(self):
         """Lazy-load the zenic Rust extension (if available)."""
@@ -87,7 +87,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
                 self._native = None
         return self._native
 
-    def execute(self, input_data: Any) -> InteractiveCollectionResult:
+    def execute(self, input_data: dict[str, Any] | object) -> InteractiveCollectionResult:
         """
         Execute interactive data collection.
 
@@ -142,8 +142,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
 
     # ── Rust-backed methods ────────────────────────────────────
 
-    def _start_session(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
-        session, template_dict = native["completer_start_session"](data.get("niche_id", ""))
+    def _start_session(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
+        session, _template_dict = native["completer_start_session"](data.get("niche_id", ""))
         return InteractiveCollectionResult(
             session_id=session.session_id,
             niche_id=session.niche_id,
@@ -153,7 +153,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="deterministic",
         )
 
-    def _get_questions(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _get_questions(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         if session is None or template_dict is None:
@@ -180,7 +180,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             round_number=session.round_count, source="deterministic",
         )
 
-    def _submit_answer(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _submit_answer(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         field_name = data.get("field_name", "")
@@ -198,7 +198,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             round_number=updated_session.round_count, source="deterministic",
         )
 
-    def _submit_answers(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _submit_answers(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         answers = data.get("answers", {})
@@ -215,7 +215,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             round_number=updated_session.round_count, source="deterministic",
         )
 
-    def _validate_answer(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _validate_answer(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         field_type = data.get("field_type", "text")
         value = str(data.get("value", ""))
         is_valid, _ = native["completer_validate_answer"](field_type, value)
@@ -225,7 +225,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             is_complete=False, source="deterministic",
         )
 
-    def _get_progress(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _get_progress(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         if session is None or template_dict is None:
@@ -239,7 +239,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             round_number=session.round_count, source="deterministic",
         )
 
-    def _is_complete(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _is_complete(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         if session is None or template_dict is None:
@@ -251,7 +251,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="deterministic",
         )
 
-    def _finalize(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _finalize(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         session = data.get("session")
         template_dict = data.get("template_dict")
         if session is None or template_dict is None:
@@ -263,7 +263,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             round_number=result.total_rounds, source="deterministic",
         )
 
-    def _get_suggestions(self, native: Any, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _get_suggestions(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
         field_name = data.get("field_name", "")
         field_type = data.get("field_type", "text")
         if not field_name:
@@ -276,7 +276,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
 
     # ── Python Fallback ────────────────────────────────────────
 
-    def _python_fallback(self, data: Dict[str, Any], action: str) -> InteractiveCollectionResult:
+    def _python_fallback(self, data: dict[str, Any], action: str) -> InteractiveCollectionResult:  # noqa: PLR0911
         """Full deterministic Python fallback when Rust extension is not available."""
         if action == "start":
             return self._py_start(data)
@@ -298,7 +298,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return self._py_suggestions(data)
         return InteractiveCollectionResult(source="python_fallback")
 
-    def _py_start(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_start(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         niche_id = data.get("niche_id", "unknown")
         session = CompletionSession(niche_id)
         self._python_sessions[session.session_id] = session
@@ -308,7 +308,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_get_questions(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_get_questions(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         template_dict = data.get("template_dict", {})
         session_id = data.get("session_id", "")
         session = self._python_sessions.get(session_id)
@@ -331,7 +331,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_submit_answer(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_submit_answer(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         session_id = data.get("session_id", "")
         template_dict = data.get("template_dict", {})
         field_name = data.get("field_name", "")
@@ -365,7 +365,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_submit_answers(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_submit_answers(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         session_id = data.get("session_id", "")
         template_dict = data.get("template_dict", {})
         answers = data.get("answers", {})
@@ -397,7 +397,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_validate(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_validate(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         field_type = data.get("field_type", "text")
         value = str(data.get("value", ""))
         is_valid = validate_field_value(field_type, value, data.get("enum_variants", []))
@@ -407,7 +407,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             is_complete=False, source="python_fallback",
         )
 
-    def _py_progress(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_progress(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         template_dict = data.get("template_dict", {})
         session_id = data.get("session_id", "")
         session = self._python_sessions.get(session_id)
@@ -423,7 +423,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_is_complete(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_is_complete(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         template_dict = data.get("template_dict", {})
         session_id = data.get("session_id", "")
         session = self._python_sessions.get(session_id)
@@ -437,7 +437,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_finalize(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_finalize(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         template_dict = data.get("template_dict", {})
         session_id = data.get("session_id", "")
         session = self._python_sessions.get(session_id)
@@ -452,7 +452,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def _py_suggestions(self, data: Dict[str, Any]) -> InteractiveCollectionResult:
+    def _py_suggestions(self, data: dict[str, Any]) -> InteractiveCollectionResult:
         field_name = data.get("field_name", "")
         field_type = data.get("field_type", "text")
         if not field_name:
@@ -467,7 +467,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             source="python_fallback",
         )
 
-    def fallback(self, input_data: Any) -> InteractiveCollectionResult:
+    def fallback(self, input_data: dict[str, Any] | object = None) -> InteractiveCollectionResult:
         """Safe fallback: empty collection result."""
         return InteractiveCollectionResult(
             is_complete=False,

@@ -347,10 +347,9 @@ class WorkflowEngine:
                 router = get_risk_router()
                 assessment = router.assess_risk(action_type, action_config, {})
                 for step in workflow.steps:
-                    if step.step_type == WorkflowStepType.APPROVAL:
-                        if assessment.recommended_role:
-                            step.required_role = assessment.recommended_role
-            except Exception:
+                    if step.step_type == WorkflowStepType.APPROVAL and assessment.recommended_role:
+                        step.required_role = assessment.recommended_role
+            except Exception:  # noqa: S110
                 pass
 
         return execution
@@ -380,7 +379,7 @@ class WorkflowEngine:
                             "delegated_to": delegate_id,
                         }
                     )
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         return delegated
 

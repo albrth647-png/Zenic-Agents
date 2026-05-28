@@ -11,15 +11,16 @@ State machine:
     HALF_OPEN → OPEN     (any failure in half-open)
 """
 
+import logging
 import threading
 import time
-import logging
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["CircuitBreaker", "CircuitState", "CircuitOpenError"]
+__all__ = ["CircuitBreaker", "CircuitOpenError", "CircuitState"]
 
 
 # ============================================================
@@ -93,8 +94,8 @@ class CircuitBreaker:
         self._failure_count = 0
         self._success_count = 0
         self._half_open_call_count = 0
-        self._last_failure_time: Optional[float] = None
-        self._opened_at: Optional[float] = None
+        self._last_failure_time: float | None = None
+        self._opened_at: float | None = None
 
         # Cumulative stats
         self._total_calls = 0
@@ -123,7 +124,7 @@ class CircuitBreaker:
             return self._state
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Snapshot of circuit breaker statistics."""
         with self._lock:
             self._maybe_transition_to_half_open()

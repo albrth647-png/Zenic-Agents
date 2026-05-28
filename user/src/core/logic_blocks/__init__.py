@@ -34,12 +34,45 @@ Modules:
                       generate_inline_block_code, safe_var_name
 """
 
+from .auth import (
+    AuthLoginBlock,
+    AuthRBACBlock,
+    AuthRegisterBlock,
+    AuthVerifyBlock,
+)
+from .builder import LogicBuilder
+from .builder_registry import (
+    build_keyword_map,
+    generate_inline_block_code,
+    get_block_template_code,
+    map_template_block,
+    safe_var_name,
+)
+from .business_analytics import (
+    DataAnalyzerBlock,
+    NotificationDispatchBlock,
+    ReportGeneratorBlock,
+)
+from .business_logic import (
+    CRMPipelineBlock,
+    InventoryTrackerBlock,
+    InvoiceCalculatorBlock,
+    TaskSchedulerBlock,
+)
 from .chain import (
     LogicBlock,
     LogicChain,
     _validate_identifier,
 )
-
+from .data import (
+    CRUDCreateBlock,
+    CRUDDeleteBlock,
+    CRUDReadBlock,
+    CRUDUpdateBlock,
+)
+from .data_transform import (
+    DataTransformBlock,
+)
 from .flow import (
     ConditionalBlock,
     LoopBlock,
@@ -47,110 +80,67 @@ from .flow import (
     SwitchBlock,
     TryCatchBlock,
 )
-
-from .validation import (
-    ValidateRequiredBlock,
-    ValidateTypesBlock,
-    ValidateRangesBlock,
-    ValidateUniqueBlock,
-    SanitizeBlock,
-)
-
-from .business_logic import (
-    InvoiceCalculatorBlock,
-    InventoryTrackerBlock,
-    CRMPipelineBlock,
-    TaskSchedulerBlock,
-)
-
-from .business_analytics import (
-    ReportGeneratorBlock,
-    NotificationDispatchBlock,
-    DataAnalyzerBlock,
-)
-
-from .data import (
-    CRUDCreateBlock,
-    CRUDReadBlock,
-    CRUDUpdateBlock,
-    CRUDDeleteBlock,
-)
-
-from .data_transform import (
-    DataTransformBlock,
-)
-
 from .integration import (
     EmailSendBlock,
+    FileOperationBlock,
     HTTPRequestBlock,
     WebhookCallBlock,
-    FileOperationBlock,
 )
-
-from .auth import (
-    AuthLoginBlock,
-    AuthRegisterBlock,
-    AuthVerifyBlock,
-    AuthRBACBlock,
-)
-
-from .builder import LogicBuilder
-
-from .builder_registry import (
-    build_keyword_map,
-    map_template_block,
-    get_block_template_code,
-    generate_inline_block_code,
-    safe_var_name,
+from .validation import (
+    SanitizeBlock,
+    ValidateRangesBlock,
+    ValidateRequiredBlock,
+    ValidateTypesBlock,
+    ValidateUniqueBlock,
 )
 
 __all__ = [
-    # Chain module
-    'LogicBlock',
-    'LogicChain',
-    '_validate_identifier',
-    # Flow blocks
-    'ConditionalBlock',
-    'LoopBlock',
-    'ParallelBlock',
-    'SwitchBlock',
-    'TryCatchBlock',
-    # Validation blocks
-    'ValidateRequiredBlock',
-    'ValidateTypesBlock',
-    'ValidateRangesBlock',
-    'ValidateUniqueBlock',
-    'SanitizeBlock',
-    # Business logic blocks
-    'InvoiceCalculatorBlock',
-    'InventoryTrackerBlock',
+    # Auth blocks
+    'AuthLoginBlock',
+    'AuthRBACBlock',
+    'AuthRegisterBlock',
+    'AuthVerifyBlock',
     'CRMPipelineBlock',
-    'TaskSchedulerBlock',
-    'ReportGeneratorBlock',
-    'NotificationDispatchBlock',
-    'DataAnalyzerBlock',
     # Data blocks
     'CRUDCreateBlock',
+    'CRUDDeleteBlock',
     'CRUDReadBlock',
     'CRUDUpdateBlock',
-    'CRUDDeleteBlock',
+    # Flow blocks
+    'ConditionalBlock',
+    'DataAnalyzerBlock',
     'DataTransformBlock',
     # Integration blocks
     'EmailSendBlock',
-    'HTTPRequestBlock',
-    'WebhookCallBlock',
     'FileOperationBlock',
-    # Auth blocks
-    'AuthLoginBlock',
-    'AuthRegisterBlock',
-    'AuthVerifyBlock',
-    'AuthRBACBlock',
+    'HTTPRequestBlock',
+    'InventoryTrackerBlock',
+    # Business logic blocks
+    'InvoiceCalculatorBlock',
+    # Chain module
+    'LogicBlock',
     # Builder
     'LogicBuilder',
+    'LogicChain',
+    'LoopBlock',
+    'NotificationDispatchBlock',
+    'ParallelBlock',
+    'ReportGeneratorBlock',
+    'SanitizeBlock',
+    'SwitchBlock',
+    'TaskSchedulerBlock',
+    'TryCatchBlock',
+    'ValidateRangesBlock',
+    # Validation blocks
+    'ValidateRequiredBlock',
+    'ValidateTypesBlock',
+    'ValidateUniqueBlock',
+    'WebhookCallBlock',
+    '_validate_identifier',
     # Builder registry helpers
     'build_keyword_map',
-    'map_template_block',
-    'get_block_template_code',
     'generate_inline_block_code',
+    'get_block_template_code',
+    'map_template_block',
     'safe_var_name',
 ]

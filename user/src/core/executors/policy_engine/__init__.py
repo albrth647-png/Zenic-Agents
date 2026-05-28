@@ -9,15 +9,15 @@ from ._evaluator import PolicyCondition
 from ._types import ConditionOperator, PolicyAction, PolicyDecision, PolicyRule
 
 __all__ = [
+    "ConditionOperator",
     # Enums
     "PolicyAction",
-    "ConditionOperator",
     # Dataclasses
     "PolicyCondition",
-    "PolicyRule",
     "PolicyDecision",
     # Engine
     "PolicyEngine",
+    "PolicyRule",
     # Singleton
     "get_policy_engine",
     "reset_policy_engine",

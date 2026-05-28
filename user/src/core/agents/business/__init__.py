@@ -16,24 +16,24 @@ Agents:
     A51 InteractiveDataCollector — Interactive Q&A for missing template fields (Phase D)
 """
 
-from .invoice_processor import InvoiceProcessor
-from .inventory_manager import InventoryManager
 from .crm_pipeline import CRMPipeline
-from .task_scheduler import TaskScheduler
-from .report_generator import ReportGenerator
-from .notification_dispatcher import NotificationDispatcher
 from .data_analyzer import DataAnalyzer
-from .operation_router import OperationRouter
 from .interactive_data_collector import InteractiveDataCollector
+from .inventory_manager import InventoryManager
+from .invoice_processor import InvoiceProcessor
+from .notification_dispatcher import NotificationDispatcher
+from .operation_router import OperationRouter
+from .report_generator import ReportGenerator
+from .task_scheduler import TaskScheduler
 
 __all__ = [
-    "InvoiceProcessor",
-    "InventoryManager",
     "CRMPipeline",
-    "TaskScheduler",
-    "ReportGenerator",
-    "NotificationDispatcher",
     "DataAnalyzer",
-    "OperationRouter",
     "InteractiveDataCollector",
+    "InventoryManager",
+    "InvoiceProcessor",
+    "NotificationDispatcher",
+    "OperationRouter",
+    "ReportGenerator",
+    "TaskScheduler",
 ]

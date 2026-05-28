@@ -245,7 +245,7 @@ class RedisSessionStore:
                                     session = self._deserialize_session(data)
                                     if not session.is_expired:
                                         sessions.append(session)
-                                except Exception:
+                                except Exception:  # noqa: S110
                                     pass
                         if cursor == 0:
                             break

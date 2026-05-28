@@ -100,10 +100,9 @@ class SlackChannelProvider:
         payload = format_slack_message(message)
         payload["channel"] = message.recipient
 
-        if message.fields:
-            if "blocks" not in payload:
-                payload["blocks"] = build_slack_blocks(message)
-                payload["channel"] = message.recipient
+        if message.fields and "blocks" not in payload:
+            payload["blocks"] = build_slack_blocks(message)
+            payload["channel"] = message.recipient
 
         response = await self._post_api("chat.postMessage", payload)
 

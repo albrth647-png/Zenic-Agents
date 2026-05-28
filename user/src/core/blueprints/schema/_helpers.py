@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..types import ActionTemplateDef, BlueprintMetadataV2, BusinessRuleDef, DBSchema, MonitorHook
+if TYPE_CHECKING:
+    from ..types import ActionTemplateDef, BlueprintMetadataV2, BusinessRuleDef, DBSchema, MonitorHook
 
 logger = logging.getLogger(__name__)
 

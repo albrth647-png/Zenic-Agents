@@ -9,19 +9,19 @@ Integrates with the Merkle Ledger for tamper-proof audit trails.
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from ._types import AuditEntry, AuditQuery
 from ._merkle import AuditMerkleChain
 from ._persistence import AuditPersistence
+from ._types import AuditEntry, AuditQuery
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "AuditEntry",
-    "AuditQuery",
     "AuditMerkleChain",
     "AuditPersistence",
+    "AuditQuery",
     "ExecutorAuditLogger",
     "get_default_audit_logger",
     "reset_audit_logger",
@@ -56,7 +56,7 @@ class ExecutorAuditLogger:
     ) -> None:
         self._merkle = AuditMerkleChain() if enable_merkle else None
         self._persistence = AuditPersistence(db_path) if enable_persistence else None
-        self._buffer: List[AuditEntry] = []
+        self._buffer: list[AuditEntry] = []
         self._buffer_size = 50
         self._total_logged = 0
 
@@ -75,7 +75,7 @@ class ExecutorAuditLogger:
         risk_score: float = 0.0,
         category: str = "",
         error: str = "",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> AuditEntry:
         """Log an executor action with full audit trail."""
         entry = AuditEntry(
@@ -128,7 +128,7 @@ class ExecutorAuditLogger:
                 logger.error("ExecutorAuditLogger: Failed to persist entry %s: %s", entry.entry_id, e)
         self._buffer.clear()
 
-    def query(self, q: AuditQuery) -> List[AuditEntry]:
+    def query(self, q: AuditQuery) -> list[AuditEntry]:
         """Query audit entries."""
         if self._persistence:
             return self._persistence.query(q)
@@ -149,7 +149,7 @@ class ExecutorAuditLogger:
         return self._persistence.prune(cutoff)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get audit logger statistics."""
         return {
             "total_logged": self._total_logged,
@@ -164,7 +164,7 @@ class ExecutorAuditLogger:
 #  GLOBAL INSTANCE
 # ──────────────────────────────────────────────────────────────
 
-_default_audit_logger: Optional[ExecutorAuditLogger] = None
+_default_audit_logger: ExecutorAuditLogger | None = None
 _audit_logger_lock = threading.Lock()
 
 

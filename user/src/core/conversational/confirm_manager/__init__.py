@@ -17,7 +17,6 @@ from ._types import (
 )
 
 __all__ = [
-    "ConfirmManager",
     "DEFAULT_DB_PATH",
     "DEFAULT_TTL_SECONDS",
     "STATUS_APPROVED",
@@ -26,4 +25,5 @@ __all__ = [
     "STATUS_DENIED",
     "STATUS_EXPIRED",
     "STATUS_PENDING",
+    "ConfirmManager",
 ]

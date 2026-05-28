@@ -16,7 +16,6 @@ from src.core.agents.schemas.types._transport_types import (
 )
 from src.core.agents.transport.text_channel_agent import TextChannelAgent
 
-
 # ════════════════════════════════════════════════════════════════
 #  A53 — Construction & Wiring
 # ════════════════════════════════════════════════════════════════

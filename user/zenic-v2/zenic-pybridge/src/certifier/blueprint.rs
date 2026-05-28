@@ -41,8 +41,8 @@ impl CertifiedBlueprint {
     }
 
     #[getter]
-    fn config(&self) -> &BlueprintConfig {
-        &self.config
+    fn config(&self) -> BlueprintConfig {
+        self.config.clone()
     }
 
     #[getter]

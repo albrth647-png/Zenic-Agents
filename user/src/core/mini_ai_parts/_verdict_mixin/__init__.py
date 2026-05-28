@@ -14,8 +14,8 @@ v17.1 RESILIENCE IMPROVEMENTS:
   - Timeout cascade: If the LLM is slow, it adapts
 """
 
-from ._core_mixin import VerdictCoreMixin
 from ._attempts_mixin import VerdictAttemptsMixin
+from ._core_mixin import VerdictCoreMixin
 from ._helpers_mixin import VerdictHelpersMixin
 
 __all__ = ["VerdictMixin"]

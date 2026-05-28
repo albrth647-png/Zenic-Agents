@@ -12,7 +12,8 @@ ad-hoc global + lock patterns.
 
 import logging
 import threading
-from typing import Callable, Generic, Optional, TypeVar
+from collections.abc import Callable
+from typing import Generic, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class Singleton(Generic[T]):
     def __init__(self, factory: Callable[[], T], name: str = "") -> None:
         self._factory = factory
         self._name = name or getattr(factory, "__qualname__", "Singleton")
-        self._instance: Optional[T] = None
+        self._instance: T | None = None
         self._lock = threading.Lock()
 
     def get(self) -> T:

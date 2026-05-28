@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
-from .base import MonitorBase, register_monitor
 from ..types import MonitorResult, MonitorWeight
-
+from .base import MonitorBase, register_monitor
 
 # ──────────────────────────────────────────────────────────────
 #  LOW STOCK MONITOR
@@ -39,7 +38,7 @@ class LowStockMonitor(MonitorBase):
     def description(self) -> str:
         return "Detecta productos con inventario por debajo del minimo configurado"
 
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         threshold = params.get("min_stock", 5)
@@ -48,7 +47,7 @@ class LowStockMonitor(MonitorBase):
 
         try:
             rows = self._execute_query(
-                f"SELECT name, quantity FROM {table} WHERE quantity < ?",
+                f"SELECT name, quantity FROM {table} WHERE quantity < ?",  # noqa: S608
                 (threshold,),
                 db_name=db_name,
             )
@@ -97,7 +96,7 @@ class OverdueInvoiceMonitor(MonitorBase):
     def description(self) -> str:
         return "Detecta facturas vencidas sin pagar"
 
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
@@ -108,7 +107,7 @@ class OverdueInvoiceMonitor(MonitorBase):
             now_ts = time.time()
             overdue_cutoff = now_ts - (days_overdue * 86400)
             rows = self._execute_query(
-                f"SELECT id, client, amount, due_date FROM {table} "
+                f"SELECT id, client, amount, due_date FROM {table} "  # noqa: S608
                 f"WHERE status = 'pending' AND due_date < ?",
                 (overdue_cutoff,),
                 db_name=db_name,
@@ -162,7 +161,7 @@ class TomorrowAppointmentMonitor(MonitorBase):
     def description(self) -> str:
         return "Notifica sobre citas programadas para manana"
 
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
@@ -173,7 +172,7 @@ class TomorrowAppointmentMonitor(MonitorBase):
             tomorrow_start = now_ts + 86400
             tomorrow_end = now_ts + (2 * 86400)
             rows = self._execute_query(
-                f"SELECT id, client, date, description FROM {table} "
+                f"SELECT id, client, date, description FROM {table} "  # noqa: S608
                 f"WHERE date >= ? AND date < ?",
                 (tomorrow_start, tomorrow_end),
                 db_name=db_name,
@@ -226,7 +225,7 @@ class DiskSpaceMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea espacio disponible en disco"
 
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         min_free_mb = params.get("min_free_mb", 500)
@@ -281,7 +280,7 @@ class SystemHealthMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea uso de CPU y RAM del sistema"
 
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         cpu_threshold = params.get("cpu_threshold_pct", 90)

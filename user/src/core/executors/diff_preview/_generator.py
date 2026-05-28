@@ -10,7 +10,14 @@ import logging
 import os
 import sqlite3
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from src.core.executors.db_journal import DBTransactionJournal
+
+# ── Row data type ─────────────────────────────────────────────
+RowData = dict[str, str | int | float | None]
+SQLParams = list[str | int | float | None]
 
 from ._comparator import (
     build_db_summary,
@@ -40,13 +47,13 @@ class DiffPreviewEngine:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._db_journal: Any | None = None  # lazy
+        self._db_journal: DBTransactionJournal | None = None  # lazy
         self._preview_count: int = 0
 
     # ── Lazy dependencies ──────────────────────────────────────
 
     @property
-    def db_journal(self) -> Any:
+    def db_journal(self) -> DBTransactionJournal:
         """Lazy-load the DBTransactionJournal singleton."""
         if self._db_journal is None:
             from ..db_journal import get_db_journal
@@ -96,23 +103,24 @@ class DiffPreviewEngine:
         operation = str(config.get("operation", "query")).upper()
         query = config.get("query", "")
         table = config.get("table", "")
-        params = config.get("params", [])
+        raw_params = config.get("params", [])
 
-        if not isinstance(params, (list, tuple)):
-            params = [params] if params else []
+        if not isinstance(raw_params, (list, tuple)):
+            raw_params = [raw_params] if raw_params else []
+        params: SQLParams = list(raw_params)
 
         if table:
             affected_tables.append(table)
 
         # ── Get current snapshot via journal ──────────────────
-        current_rows: list[dict[str, Any]] = []
+        current_rows: list[RowData] = []
         if table and db_path != ":memory:" and operation in ("DELETE", "UPDATE"):
             try:
                 current_rows = self._fetch_current_rows(
                     db_path,
                     operation,
                     query,
-                    list(params),
+                    params,
                     table,
                 )
             except Exception as exc:
@@ -188,19 +196,19 @@ class DiffPreviewEngine:
         db_path: str,
         operation: str,
         query: str,
-        params: list[Any],
+        params: SQLParams,
         table: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[RowData]:
         """Fetch current rows that would be affected (wrapped in retry)."""
 
-        def _do_fetch() -> list[dict[str, Any]]:
+        def _do_fetch() -> list[RowData]:
             if db_path == ":memory:":
                 return []
 
             # Build a SELECT query
             where_clause = extract_where_clause(query, operation)
-            select_query = f"SELECT * FROM {table}"
-            select_params: list[Any] = []
+            select_query = f"SELECT * FROM {table}"  # noqa: S608
+            select_params: SQLParams = []
 
             if where_clause:
                 select_query += f" WHERE {where_clause}"

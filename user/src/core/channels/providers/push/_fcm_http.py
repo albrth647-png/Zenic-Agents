@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..._types import (
     ChannelResponse,
@@ -17,12 +17,12 @@ from ..._types import (
     RateLimitInfo,
 )
 from ._utils import (
+    _FCM_BASE_URL,
     _HAS_AIOHTTP,
     _HAS_URLLIB,
-    _FCM_BASE_URL,
+    _HTTP_TIMEOUT,
     _MAX_RETRIES,
     _RETRY_BASE_DELAY,
-    _HTTP_TIMEOUT,
     _validate_url,
 )
 
@@ -33,7 +33,7 @@ class _FcmHttpMixin:
     """Mixin for FCM HTTP request methods."""
 
     async def _post_fcm(
-        self, payload: Dict[str, Any],
+        self, payload: dict[str, Any],
     ) -> ChannelResponse:
         """POST a message to the FCM HTTP v1 API.
 
@@ -106,7 +106,7 @@ class _FcmHttpMixin:
         )
 
     async def _post_fcm_aiohttp(
-        self, url: str, data: bytes, headers: Dict[str, str],
+        self, url: str, data: bytes, headers: dict[str, str],
     ) -> ChannelResponse:
         """Send FCM message via aiohttp."""
         assert self._session is not None
@@ -163,21 +163,21 @@ class _FcmHttpMixin:
                 )
 
     async def _post_fcm_urllib(
-        self, url: str, data: bytes, headers: Dict[str, str],
+        self, url: str, data: bytes, headers: dict[str, str],
     ) -> ChannelResponse:
         """Send FCM message via urllib (sync, wrapped in asyncio.to_thread)."""
         import asyncio
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         validated_url = _validate_url(url)
 
         def _sync_post() -> ChannelResponse:
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 validated_url, data=data, headers=headers, method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
                     body = resp.read().decode("utf-8", errors="replace")
                     try:
                         resp_data = json.loads(body)
@@ -227,8 +227,8 @@ class _FcmHttpMixin:
         return await asyncio.to_thread(_sync_post)
 
     async def _http_post_form(
-        self, url: str, data: Dict[str, str],
-    ) -> Optional[Dict[str, Any]]:
+        self, url: str, data: dict[str, str],
+    ) -> dict[str, Any] | None:
         """POST form-encoded data and return parsed JSON response.
 
         Used for OAuth2 token exchange.
@@ -241,9 +241,9 @@ class _FcmHttpMixin:
             Dict with 'success', 'body', 'status' or None on failure.
         """
         import asyncio
-        import urllib.request
         import urllib.error
         import urllib.parse
+        import urllib.request
 
         encoded = urllib.parse.urlencode(data).encode("utf-8") if _HAS_URLLIB else b""
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -271,11 +271,11 @@ class _FcmHttpMixin:
                 elif _HAS_URLLIB:
                     validated_url = _validate_url(url)
 
-                    def _sync_post() -> Dict[str, Any]:
-                        req = urllib.request.Request(
+                    def _sync_post() -> dict[str, Any]:
+                        req = urllib.request.Request(  # noqa: S310
                             validated_url, data=encoded, headers=headers, method="POST",
                         )
-                        with urllib.request.urlopen(
+                        with urllib.request.urlopen(  # noqa: S310
                             req, timeout=_HTTP_TIMEOUT,
                         ) as resp:
                             body = resp.read().decode("utf-8")

@@ -6,7 +6,7 @@ Provides status query and statistics methods for the AutopilotEngine class.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from ._status import AutopilotStatus
 
@@ -18,7 +18,7 @@ class _QueriesMixin:
 
     # ── Status Queries ──────────────────────────────────────
 
-    def get_status(self, objective_id: str) -> Dict[str, Any]:
+    def get_status(self, objective_id: str) -> dict[str, Any]:
         """Get comprehensive status for an objective.
 
         Args:
@@ -38,7 +38,7 @@ class _QueriesMixin:
         plan = self._active_plans.get(objective_id)  # type: ignore[attr-defined]
         latest_feedback = self.feedback.get_latest_cycle(objective_id)  # type: ignore[attr-defined]
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "objective_id": objective_id,
             "name": objective.name,
             "status": objective.status.value,
@@ -56,7 +56,7 @@ class _QueriesMixin:
 
         return result
 
-    def get_all_objectives_status(self) -> List[Dict[str, Any]]:
+    def get_all_objectives_status(self) -> list[dict[str, Any]]:
         """Get status for all objectives.
 
         Returns:
@@ -65,7 +65,7 @@ class _QueriesMixin:
         objectives = self.objective_store.list_objectives()  # type: ignore[attr-defined]
         return [self.get_status(o.objective_id) for o in objectives]
 
-    def check_and_execute(self) -> List[Dict[str, Any]]:
+    def check_and_execute(self) -> list[dict[str, Any]]:
         """Run one cycle for all active objectives.
 
         Iterates over all active objectives and executes a cycle
@@ -75,7 +75,7 @@ class _QueriesMixin:
             A list of cycle result dictionaries.
         """
         active = self.objective_store.get_active_objectives()  # type: ignore[attr-defined]
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
 
         for objective in active:
             try:
@@ -94,7 +94,7 @@ class _QueriesMixin:
 
         return results
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get engine statistics.
 
         Returns:

@@ -378,11 +378,11 @@ def reset_schema_registry() -> None:
 
 
 __all__ = [
-    "EventSchemaRegistry",
     "EventSchema",
-    "ValidationResult",
-    "ValidationIssue",
+    "EventSchemaRegistry",
     "IssueType",
+    "ValidationIssue",
+    "ValidationResult",
     "get_schema_registry",
     "reset_schema_registry",
 ]

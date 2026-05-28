@@ -9,13 +9,14 @@ with validation middleware for commands and caching middleware for queries.
 Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 """
 
+import copy
 import logging
 import threading
 import time
-import copy
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class Command:
         payload: Dict of command-specific data.
     """
     command_type: str
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -47,7 +48,7 @@ class Query:
         params: Dict of query-specific parameters.
     """
     query_type: str
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
 
 # ======================================================================
@@ -58,7 +59,7 @@ class CommandHandler(ABC):
     """Abstract handler for :class:`Command` objects."""
 
     @abstractmethod
-    def handle(self, command: Command) -> Dict[str, Any]:
+    def handle(self, command: Command) -> dict[str, Any]:
         """
         Process a command and return a result dict.
 
@@ -75,7 +76,7 @@ class QueryHandler(ABC):
     """Abstract handler for :class:`Query` objects."""
 
     @abstractmethod
-    def handle(self, query: Query) -> Dict[str, Any]:
+    def handle(self, query: Query) -> dict[str, Any]:
         """
         Process a query and return a result dict.
 
@@ -120,10 +121,10 @@ class CQRSBus:
         Args:
             query_cache_ttl: Default TTL (seconds) for cached query results.
         """
-        self._command_handlers: Dict[str, CommandHandler] = {}
-        self._query_handlers: Dict[str, QueryHandler] = {}
-        self._command_validators: Dict[str, List[Callable[[Command], bool]]] = {}
-        self._query_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
+        self._command_handlers: dict[str, CommandHandler] = {}
+        self._query_handlers: dict[str, QueryHandler] = {}
+        self._command_validators: dict[str, list[Callable[[Command], bool]]] = {}
+        self._query_cache: dict[str, tuple[dict[str, Any], float]] = {}
         self._query_cache_ttl = query_cache_ttl
         self._lock = threading.RLock()
         # Stats
@@ -216,7 +217,7 @@ class CQRSBus:
     # Execution
     # ------------------------------------------------------------------
 
-    def execute_command(self, command: Command) -> Dict[str, Any]:
+    def execute_command(self, command: Command) -> dict[str, Any]:
         """
         Dispatch a command to its registered handler.
 
@@ -279,7 +280,7 @@ class CQRSBus:
             )
             return {"success": False, "error": str(exc)}
 
-    def execute_query(self, query: Query) -> Dict[str, Any]:
+    def execute_query(self, query: Query) -> dict[str, Any]:
         """
         Dispatch a query to its registered handler.
 
@@ -341,7 +342,7 @@ class CQRSBus:
     # Cache management
     # ------------------------------------------------------------------
 
-    def invalidate_query_cache(self, query_type: Optional[str] = None) -> None:
+    def invalidate_query_cache(self, query_type: str | None = None) -> None:
         """
         Clear cached query results.
 
@@ -370,7 +371,7 @@ class CQRSBus:
     # ------------------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return bus statistics."""
         with self._lock:
             total_queries = max(self._queries_executed, 1)

@@ -5,15 +5,15 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..base import _HAS_AIOHTTP, _validate_url_ssrf
 
 logger = logging.getLogger(__name__)
 
 try:
-    import urllib.request
     import urllib.error
+    import urllib.request
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -30,10 +30,10 @@ class _HttpMixin:
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute an HTTP request against the Jira REST API.
 
         Uses aiohttp when available, falls back to urllib.
@@ -92,59 +92,58 @@ class _HttpMixin:
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]],
-        params: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None,
+        params: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         """Execute request via aiohttp."""
         import aiohttp
 
         timeout = aiohttp.ClientTimeout(total=_HTTP_TIMEOUT)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.request(
-                method,
-                url,
-                headers=headers,
-                json=json_data,
-                params=params,
-            ) as resp:
-                # Track rate limits from response headers
-                remaining = resp.headers.get("X-RateLimit-Remaining")
-                if remaining is not None:
-                    with self._lock:
-                        self._rate_limit_remaining = int(remaining)
-                        reset_val = resp.headers.get("X-RateLimit-Reset", "0")
-                        try:
-                            self._rate_limit_reset_at = float(reset_val)
-                        except (ValueError, TypeError):
-                            self._rate_limit_reset_at = None
+        async with aiohttp.ClientSession(timeout=timeout) as session, session.request(
+            method,
+            url,
+            headers=headers,
+            json=json_data,
+            params=params,
+        ) as resp:
+            # Track rate limits from response headers
+            remaining = resp.headers.get("X-RateLimit-Remaining")
+            if remaining is not None:
+                with self._lock:
+                    self._rate_limit_remaining = int(remaining)
+                    reset_val = resp.headers.get("X-RateLimit-Reset", "0")
+                    try:
+                        self._rate_limit_reset_at = float(reset_val)
+                    except (ValueError, TypeError):
+                        self._rate_limit_reset_at = None
 
-                # Handle 429 rate limiting
-                if resp.status == 429:
-                    retry_after = float(resp.headers.get("Retry-After", "5"))
-                    logger.warning(
-                        "JiraExecutor: rate limited, retry after %.1fs",
-                        retry_after,
-                    )
-                    await asyncio.sleep(retry_after)
-                    # Raise to trigger retry
-                    raise RuntimeError(f"Rate limited, retry after {retry_after}s")
+            # Handle 429 rate limiting
+            if resp.status == 429:
+                retry_after = float(resp.headers.get("Retry-After", "5"))
+                logger.warning(
+                    "JiraExecutor: rate limited, retry after %.1fs",
+                    retry_after,
+                )
+                await asyncio.sleep(retry_after)
+                # Raise to trigger retry
+                raise RuntimeError(f"Rate limited, retry after {retry_after}s")
 
-                body = await resp.json()
-                return {
-                    "status": resp.status,
-                    "body": body,
-                    "headers": dict(resp.headers),
-                }
+            body = await resp.json()
+            return {
+                "status": resp.status,
+                "body": body,
+                "headers": dict(resp.headers),
+            }
 
     async def _jira_request_urllib(
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        json_data: Optional[Dict[str, Any]],
-        params: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        headers: dict[str, str],
+        json_data: dict[str, Any] | None,
+        params: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         """Execute request via urllib (sync, wrapped in asyncio.to_thread)."""
 
         # Append query params to URL
@@ -157,18 +156,18 @@ class _HttpMixin:
 
         validated_url = _validate_url_ssrf(url)
 
-        def _sync_request() -> Dict[str, Any]:
+        def _sync_request() -> dict[str, Any]:
             data = (
                 json.dumps(json_data).encode("utf-8") if json_data else None
             )
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 validated_url,
                 data=data,
                 headers=headers,
                 method=method.upper(),
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
                     body_text = resp.read().decode("utf-8")
                     body = json.loads(body_text) if body_text else {}
                     return {
@@ -180,9 +179,9 @@ class _HttpMixin:
                 body_text = ""
                 try:
                     body_text = exc.read().decode("utf-8")[:2000]
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
-                body: Dict[str, Any] = {}
+                body: dict[str, Any] = {}
                 try:
                     body = json.loads(body_text) if body_text else {}
                 except json.JSONDecodeError:

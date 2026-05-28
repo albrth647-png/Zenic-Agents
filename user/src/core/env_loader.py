@@ -96,7 +96,7 @@ def _find_env_file() -> Path | None:
             if parent == current:
                 break
             current = parent
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     # 3. ~/.zenic_agents/.env (global config)
@@ -148,7 +148,7 @@ def load_env(force: bool = False) -> bool:
         loaded_count = 0
         skipped_count = 0
 
-        for line_num, line in enumerate(lines, 1):
+        for _line_num, line in enumerate(lines, 1):
             parsed = _parse_env_line(line)
             if parsed is None:
                 continue

@@ -21,7 +21,7 @@ Designed for PostgreSQL (production) and MemoryBackend (dev/testing).
 
 import logging
 import threading
-from typing import Any, Optional
+from typing import Optional
 
 from src.core.patterns.resilience.retry import RetryConfig, with_retry
 

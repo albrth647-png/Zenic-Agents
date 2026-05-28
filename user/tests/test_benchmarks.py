@@ -57,7 +57,7 @@ def sample_embeddings():
     """Generate random sample embeddings for benchmarking."""
     if not HAS_NUMPY:
         pytest.skip("numpy not installed")
-    rng = random.Random(42)
+    rng = random.Random(42)  # noqa: S310,S311
     embeddings = []
     for i in range(1000):
         vec = [rng.gauss(0, 1) for _ in range(384)]

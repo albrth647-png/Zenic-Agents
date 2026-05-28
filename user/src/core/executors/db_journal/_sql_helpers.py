@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 
-
 # Matches common SQL DML keywords at the start of a statement
 _OP_PATTERN = re.compile(r"^\s*(INSERT|UPDATE|DELETE)", re.IGNORECASE)
 

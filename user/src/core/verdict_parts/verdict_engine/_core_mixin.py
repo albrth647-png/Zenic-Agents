@@ -117,7 +117,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin, VerdictStatsMixin):
         """Ensure executor is cleaned up on garbage collection."""
         try:
             self.shutdown()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # NOTE: Do NOT log here — __del__ runs during garbage collection and

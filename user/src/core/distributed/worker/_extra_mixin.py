@@ -2,13 +2,13 @@
 
 import asyncio
 import logging
-import socket
 import platform
+import socket
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
+from ._helpers import _METRICS_AVAILABLE, _run_async, get_metrics_collector
 from ._types import WorkerState
-from ._helpers import _run_async, _METRICS_AVAILABLE, get_metrics_collector
 
 logger = logging.getLogger("zenic_agents.distributed.worker")
 
@@ -16,10 +16,10 @@ logger = logging.getLogger("zenic_agents.distributed.worker")
 class DistributedWorkerExtraMixin:
     """Additional methods."""
 
-    def current_task(self) -> Optional[Dict[str, Any]]:
+    def current_task(self) -> dict[str, Any] | None:
         """Currently executing task, if any."""
         return self._current_task
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Worker statistics."""
         with self._lock:
             return {
@@ -80,7 +80,7 @@ class DistributedWorkerExtraMixin:
             self._execute_task(task)
 
         self._state = WorkerState.STOPPED
-    def _execute_task(self, task: Dict[str, Any]) -> None:
+    def _execute_task(self, task: dict[str, Any]) -> None:
         """
         Execute a single task with the appropriate handler.
 
@@ -160,7 +160,7 @@ class DistributedWorkerExtraMixin:
                             worker_id=self._config.worker_id,
                             duration=time.time() - self._task_start_time if self._task_start_time else 0.0,
                         )
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
     def _report_failure(self, task_id: str, error: str) -> None:
         """Report a failed task."""
@@ -182,7 +182,7 @@ class DistributedWorkerExtraMixin:
                             task_type=self._current_task.get("task_type", "unknown") if self._current_task else "unknown",
                             worker_id=self._config.worker_id,
                         )
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
     def _heartbeat_loop(self) -> None:
         """Send periodic heartbeats to the cluster topology."""

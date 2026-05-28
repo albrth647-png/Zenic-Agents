@@ -7,10 +7,10 @@ from __future__ import annotations
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from ._types import ExpiryConfig, ExpiryRecord
 from ._mixin_persistence import ExpiryPersistenceMixin
+from ._types import ExpiryConfig, ExpiryRecord
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
     def __init__(
         self,
         db_path: str = "expiry.sqlite",
-        config: Optional[ExpiryConfig] = None,
+        config: ExpiryConfig | None = None,
     ) -> None:
         self._db_path = db_path
         self._config = config or ExpiryConfig()
@@ -39,9 +39,9 @@ class ExpiryManager(ExpiryPersistenceMixin):
     def set_expiry(
         self,
         request_id: str,
-        ttl_seconds: Optional[int] = None,
-        config: Optional[ExpiryConfig] = None,
-        revert_action: Optional[Dict[str, Any]] = None,
+        ttl_seconds: int | None = None,
+        config: ExpiryConfig | None = None,
+        revert_action: dict[str, Any] | None = None,
     ) -> ExpiryRecord:
         """Set an expiry for an approval request."""
         if not request_id:
@@ -89,10 +89,10 @@ class ExpiryManager(ExpiryPersistenceMixin):
         )
         return record
 
-    def check_expired(self) -> List[ExpiryRecord]:
+    def check_expired(self) -> list[ExpiryRecord]:
         """Check for newly expired records and process them."""
         active_records = self._get_active_records()
-        newly_expired: List[ExpiryRecord] = []
+        newly_expired: list[ExpiryRecord] = []
 
         for record in active_records:
             if record.is_expired():
@@ -114,7 +114,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
         return newly_expired
 
-    def execute_revert(self, request_id: str) -> Dict[str, Any]:
+    def execute_revert(self, request_id: str) -> dict[str, Any]:
         """Execute the revert action for an expired request."""
         record = self.get_expiry_record(request_id)
         if record is None:
@@ -129,7 +129,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
             return {"success": False, "error": f"Request is {record.status}"}
 
         try:
-            from ..rollback import get_rollback_manager, RollbackTrigger
+            from ..rollback import RollbackTrigger, get_rollback_manager
             rm = get_rollback_manager()
             rollback_record = rm.execute_rollback(
                 request_id=request_id,
@@ -181,9 +181,9 @@ class ExpiryManager(ExpiryPersistenceMixin):
         logger.info("ExpiryManager: Cancelled expiry for request %s", request_id)
         return True
 
-    def get_expiry_record(self, request_id: str) -> Optional[ExpiryRecord]:
+    def get_expiry_record(self, request_id: str) -> ExpiryRecord | None:
         """Get the expiry record for a request."""
-        def _do_find() -> Optional[ExpiryRecord]:
+        def _do_find() -> ExpiryRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -197,14 +197,14 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
         return self._with_retry(_do_find, fallback=None)
 
-    def get_notification_schedule(self, request_id: str) -> List[int]:
+    def get_notification_schedule(self, request_id: str) -> list[int]:
         """Get the notification schedule (minutes before expiry thresholds)."""
         return list(self._config.notification_schedule)
 
-    def check_notifications_due(self) -> List[Tuple[str, int]]:
+    def check_notifications_due(self) -> list[tuple[str, int]]:
         """Check which requests need expiry warning notifications."""
         active_records = self._get_active_records()
-        notifications_due: List[Tuple[str, int]] = []
+        notifications_due: list[tuple[str, int]] = []
 
         for record in active_records:
             minutes = record.minutes_remaining()
@@ -222,9 +222,9 @@ class ExpiryManager(ExpiryPersistenceMixin):
         """Send an expiry notification via NotificationDispatcher."""
         try:
             from ..notification import (
-                get_notification_dispatcher,
                 NotificationEvent,
                 NotificationPriority,
+                get_notification_dispatcher,
             )
             dispatcher = get_notification_dispatcher()
             dispatcher.dispatch(

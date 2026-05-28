@@ -8,16 +8,16 @@ and the _setup_exporter() helper.
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from src.core.shared._version import ZENIC_VERSION
 
 logger = logging.getLogger(__name__)
 
 # ── Global state ──────────────────────────────────────────
-_tracer: Optional[Any] = None
+_tracer: Any | None = None
 _tracing_enabled: bool = False
-_provider: Optional[Any] = None
+_provider: Any | None = None
 
 
 @dataclass
@@ -51,7 +51,7 @@ class TracingConfig:
         )
 
 
-def init_tracing(config: Optional[TracingConfig] = None) -> bool:
+def init_tracing(config: TracingConfig | None = None) -> bool:
     """Initialize the distributed tracing subsystem.
 
     Attempts to set up OpenTelemetry SDK. Falls back to
@@ -76,9 +76,9 @@ def init_tracing(config: Optional[TracingConfig] = None) -> bool:
 
     try:
         from opentelemetry import trace
+        from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
-        from opentelemetry.sdk.resources import Resource
 
         resource = Resource.create({
             "service.name": config.service_name,
@@ -123,8 +123,7 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
 
     if config.exporter == "console":
         try:
-            from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-            from opentelemetry.sdk.trace.export import BatchSpanProcessor
+            from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
             provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
         except ImportError:
             pass
@@ -162,6 +161,6 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
             logger.warning("Tracing: Exporter '%s' not available (%s)", config.exporter, exc)
 
 
-def get_tracer() -> Optional[Any]:
+def get_tracer() -> Any | None:
     """Get the OpenTelemetry tracer (or None if not initialized)."""
     return _tracer

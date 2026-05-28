@@ -4,6 +4,7 @@ SmartMemory — Tenant Management Mixin.
 Tenant isolation, multi-client management, and usage tracking.
 """
 
+import contextlib
 import logging
 import os
 import sqlite3
@@ -163,7 +164,7 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?', (client_id, tid)
+                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?', (client_id, tid)  # noqa: S608
                 )
         # Also remove from working memory (thread-safe)
         with self._working_lock:
@@ -200,7 +201,7 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE tenant_id=?', (tid,)
+                    f'DELETE FROM "{table}" WHERE tenant_id=?', (tid,)  # noqa: S608
                 )
                 total_deleted += cursor.rowcount
         # Also remove from working memory (thread-safe)
@@ -238,10 +239,8 @@ class TenantMixin:
 
         with sqlite3.connect(DB_PATH) as conn:
             db_size_bytes = 0
-            try:
+            with contextlib.suppress(OSError):
                 db_size_bytes = os.path.getsize(DB_PATH)
-            except OSError:
-                pass
 
             total_tenant_rows = 0
             total_all_rows = 0
@@ -249,12 +248,12 @@ class TenantMixin:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 try:
                     tenant_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?', (tid,)
+                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?', (tid,)  # noqa: S608
                     ).fetchone()[0]
                     total_tenant_rows += tenant_count
 
                     all_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}"'
+                        f'SELECT COUNT(*) FROM "{table}"'  # noqa: S608
                     ).fetchone()[0]
                     total_all_rows += all_count
                 except sqlite3.OperationalError:

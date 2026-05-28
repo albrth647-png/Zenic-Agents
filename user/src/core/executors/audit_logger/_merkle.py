@@ -8,7 +8,7 @@ import hashlib
 import json
 import logging
 import threading
-from typing import Callable, List, Optional
+from collections.abc import Callable
 
 from ._types import AuditEntry
 
@@ -26,14 +26,14 @@ class AuditMerkleChain:
 
     def __init__(
         self,
-        persist_callback: Optional[Callable[[List["AuditEntry"], str], None]] = None,
+        persist_callback: Callable[[list["AuditEntry"], str], None] | None = None,
         flush_interval: int = 100,
         hash_algorithm: str = "sha256",
     ) -> None:
         self._last_hash: str = self.GENESIS_HASH
         self._lock = threading.Lock()
         self._persist_callback = persist_callback
-        self._pending_entries: List = []
+        self._pending_entries: list = []
         self._flush_interval = flush_interval
         self._hash_algorithm = hash_algorithm
         self._hash_fn = self._init_hash_fn(hash_algorithm)
@@ -107,7 +107,7 @@ class AuditMerkleChain:
         with self._lock:
             self._flush()
 
-    def verify(self, entries: List[AuditEntry]) -> bool:
+    def verify(self, entries: list[AuditEntry]) -> bool:
         """Verify integrity of a list of audit entries."""
         prev = self.GENESIS_HASH
         for entry in entries:

@@ -1,24 +1,24 @@
 """VerdictMixin helper methods: retry, recording, auditing, parsing, stats."""
 
+import logging
 import re
 import time
-import logging
-from typing import Dict, Any, Optional
-
-from ._constants import (
-    VERDICT_BASE_DELAY,
-    VERDICT_MAX_DELAY,
-    VERDICT_MAX_RETRIES,
-    VERDICT_SYSTEM_PROMPT,
-    VERDICT_CONSENSUS_ATTEMPTS,
-    _RESILIENCE_AVAILABLE,
-)
+from typing import Any
 
 from src.core.shared.deterministic import ControllableJitter
 from src.core.verdict_engine_module import _validate_ai_verdict  # H-88: AI output validation
 
+from ._constants import (
+    _RESILIENCE_AVAILABLE,
+    VERDICT_BASE_DELAY,
+    VERDICT_CONSENSUS_ATTEMPTS,
+    VERDICT_MAX_DELAY,
+    VERDICT_MAX_RETRIES,
+    VERDICT_SYSTEM_PROMPT,
+)
+
 if _RESILIENCE_AVAILABLE:
-    from ._constants import (  # noqa: F401 — conditional import
+    from ._constants import (
         VerdictAuditEntry,
     )
 
@@ -86,7 +86,7 @@ class VerdictHelpersMixin:
             )
             self._verdict_resilience.audit_verdict(entry)
 
-    def _verdict_llm_call(self, user_prompt: str) -> Optional[str]:
+    def _verdict_llm_call(self, user_prompt: str) -> str | None:
         """LLM call specific for verdicts.
 
         H-88: All AI output is validated through _validate_ai_verdict()
@@ -107,7 +107,7 @@ class VerdictHelpersMixin:
             return None
 
     @staticmethod
-    def _parse_verdict_response(response: str) -> Optional[str]:
+    def _parse_verdict_response(response: str) -> str | None:
         """
         Parse the LLM response. Only accepts YES or NO.
 
@@ -143,10 +143,10 @@ class VerdictHelpersMixin:
         return None
 
     @property
-    def verdict_stats(self) -> Dict[str, Any]:
+    def verdict_stats(self) -> dict[str, Any]:
         """Verdict statistics with resilience."""
         total = max(self._verdict_count, 1)
-        base_stats: Dict[str, Any] = {
+        base_stats: dict[str, Any] = {
             "total_verdicts": self._verdict_count,
             "yes_count": self._verdict_yes,
             "no_count": self._verdict_no,

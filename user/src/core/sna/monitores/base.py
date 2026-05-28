@@ -11,7 +11,7 @@ import logging
 import re
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..types import MonitorConfig, MonitorResult, MonitorWeight
 
@@ -67,7 +67,7 @@ class MonitorBase(ABC):
         return ""
 
     @abstractmethod
-    async def check(self, params: Dict[str, Any],
+    async def check(self, params: dict[str, Any],
                     tenant_id: str = "") -> MonitorResult:
         """Execute the monitoring check.
 
@@ -85,8 +85,8 @@ class MonitorBase(ABC):
         triggered: bool,
         value: Any = None,
         detail: str = "",
-        severity: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        severity: str | None = None,
+        metadata: dict[str, Any] | None = None,
         start_time: float = 0.0,
     ) -> MonitorResult:
         """Helper to construct a MonitorResult with timing."""
@@ -137,7 +137,7 @@ class MonitorBase(ABC):
         if not _SAFE_TABLE_RE.match(table):
             logger.warning("Monitor %s: Invalid table name rejected: %s", self.monitor_id, table)
             return 0
-        sql = f"SELECT COUNT(*) FROM {table}"
+        sql = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
         if where:
             sql += f" WHERE {where}"
         try:
@@ -183,7 +183,7 @@ class MonitorBase(ABC):
 #  MONITOR REGISTRY
 # ──────────────────────────────────────────────────────────────
 
-_MONITOR_REGISTRY: Dict[str, type] = {}
+_MONITOR_REGISTRY: dict[str, type] = {}
 
 
 def register_monitor(cls: type) -> type:
@@ -194,7 +194,7 @@ def register_monitor(cls: type) -> type:
     return cls
 
 
-def get_monitor_class(monitor_id: str) -> Optional[type]:
+def get_monitor_class(monitor_id: str) -> type | None:
     """Get a monitor class by its ID."""
     return _MONITOR_REGISTRY.get(monitor_id)
 
@@ -204,7 +204,7 @@ def get_all_monitor_ids() -> list:
     return list(_MONITOR_REGISTRY.keys())
 
 
-def create_monitor(monitor_id: str) -> Optional[MonitorBase]:
+def create_monitor(monitor_id: str) -> MonitorBase | None:
     """Create an instance of a monitor by ID."""
     cls = _MONITOR_REGISTRY.get(monitor_id)
     if cls is None:

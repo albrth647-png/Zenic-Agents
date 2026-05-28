@@ -2,7 +2,8 @@
 
 import asyncio
 import logging
-from typing import Any, Awaitable, Callable, Dict, List
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from ._types import Command, CommandMiddleware, CommandResult
 
@@ -116,7 +117,7 @@ class CommandBusExtraMixin:
     #  BATCH DISPATCH
     # ----------------------------------------------------------
 
-    def dispatch_all(self, commands: List[Command]) -> List[CommandResult]:
+    def dispatch_all(self, commands: list[Command]) -> list[CommandResult]:
         """
         Synchronously dispatch multiple commands in sequence.
 
@@ -132,7 +133,7 @@ class CommandBusExtraMixin:
         if not commands:
             return []
 
-        results: List[CommandResult] = []
+        results: list[CommandResult] = []
         logger.info(
             "CommandBus: Batch dispatching %d commands", len(commands),
         )
@@ -154,7 +155,7 @@ class CommandBusExtraMixin:
     # ----------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """
         Runtime statistics for monitoring and debugging.
 

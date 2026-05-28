@@ -27,7 +27,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class ApprovalEvidence:
 
     evidence_id: str = ""
     evidence_type: EvidenceType = EvidenceType.CUSTOM
-    content: Dict[str, Any] = field(default_factory=dict)
+    content: dict[str, Any] = field(default_factory=dict)
     content_hash: str = ""
     source: str = ""
     timestamp: str = ""
@@ -70,7 +70,7 @@ class ApprovalEvidence:
         if not self.content_hash and self.content:
             self.content_hash = _hash_content(self.content)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "evidence_id": self.evidence_id,
@@ -83,7 +83,7 @@ class ApprovalEvidence:
         }
 
 
-def _hash_content(content: Dict[str, Any]) -> str:
+def _hash_content(content: dict[str, Any]) -> str:
     """Compute a SHA-256 hash of the content dict."""
     canonical = json.dumps(content, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()
@@ -132,8 +132,8 @@ class EvidenceManager:
     def attach_evidence(
         self,
         request_id: str,
-        evidence_type: Union[EvidenceType, str],
-        content: Dict[str, Any],
+        evidence_type: EvidenceType | str,
+        content: dict[str, Any],
         source: str = "",
     ) -> ApprovalEvidence:
         """Attach a new piece of evidence to an approval request.
@@ -175,9 +175,9 @@ class EvidenceManager:
         )
         return evidence
 
-    def get_evidence(self, request_id: str) -> List[ApprovalEvidence]:
+    def get_evidence(self, request_id: str) -> list[ApprovalEvidence]:
         """Get all evidence attached to a request."""
-        def _do_query() -> List[ApprovalEvidence]:
+        def _do_query() -> list[ApprovalEvidence]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -206,12 +206,12 @@ class EvidenceManager:
         return recomputed == evidence.content_hash
 
     def get_evidence_by_type(
-        self, request_id: str, evidence_type: Union[EvidenceType, str],
-    ) -> List[ApprovalEvidence]:
+        self, request_id: str, evidence_type: EvidenceType | str,
+    ) -> list[ApprovalEvidence]:
         """Get evidence of a specific type for a request."""
         if isinstance(evidence_type, str):
             evidence_type = EvidenceType(evidence_type)
-        def _do_query() -> List[ApprovalEvidence]:
+        def _do_query() -> list[ApprovalEvidence]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -252,9 +252,9 @@ class EvidenceManager:
 
     # ── Private Helpers ────────────────────────────────────
 
-    def _find_evidence(self, evidence_id: str) -> Optional[ApprovalEvidence]:
+    def _find_evidence(self, evidence_id: str) -> ApprovalEvidence | None:
         """Find a single evidence record by ID."""
-        def _do_find() -> Optional[ApprovalEvidence]:
+        def _do_find() -> ApprovalEvidence | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -346,7 +346,7 @@ class EvidenceManager:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
@@ -367,7 +367,7 @@ class EvidenceManager:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_evidence_instance: Optional[EvidenceManager] = None
+_evidence_instance: EvidenceManager | None = None
 _evidence_lock = threading.Lock()
 
 
@@ -387,9 +387,9 @@ def reset_evidence_manager() -> None:
 
 
 __all__ = [
-    "EvidenceType",
     "ApprovalEvidence",
     "EvidenceManager",
+    "EvidenceType",
     "get_evidence_manager",
     "reset_evidence_manager",
 ]

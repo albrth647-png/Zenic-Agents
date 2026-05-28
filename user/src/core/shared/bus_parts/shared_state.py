@@ -8,7 +8,8 @@ TTL support, change notification callbacks, and atomic get-and-set.
 import json
 import logging
 import time
-from typing import Any, Callable, Dict, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
 from src.core.patterns.concurrency.read_write_lock import ReadWriteLock
 
@@ -33,9 +34,9 @@ class SharedState:
     def __init__(self) -> None:
         self._rw_lock = ReadWriteLock()
         # namespace → key → (value, updated_at, ttl_seconds)
-        self._data: Dict[str, Dict[str, Tuple[Any, float, float]]] = {}
+        self._data: dict[str, dict[str, tuple[Any, float, float]]] = {}
         # Change callbacks: list of (namespace_pattern, callback)
-        self._callbacks: List[Tuple[str, Callable[[str, str, Any], None]]] = []
+        self._callbacks: list[tuple[str, Callable[[str, str, Any], None]]] = []
 
     # ── Core Operations ──
 
@@ -62,10 +63,9 @@ class SharedState:
             if entry is None:
                 return default
             value, updated_at, ttl = entry
-            if ttl > 0:
-                if time.monotonic() - updated_at > ttl:
-                    # Expired — caller should clean up via delete
-                    return default
+            if ttl > 0 and time.monotonic() - updated_at > ttl:
+                # Expired — caller should clean up via delete
+                return default
             return value
 
     def get_and_set(self, namespace: str, key: str, value: Any,
@@ -94,7 +94,7 @@ class SharedState:
                 del ns[key]
 
     def list_keys(self, namespace: str, prefix: str = "",
-                  tenant_id: str = "default") -> List[str]:
+                  tenant_id: str = "default") -> list[str]:
         """List keys in a namespace, optionally filtered by *prefix*."""
         ns_key = f"{tenant_id}:{namespace}"
         with self._rw_lock.acquire_read():
@@ -102,7 +102,7 @@ class SharedState:
             if ns is None:
                 return []
             if prefix:
-                return [k for k in ns.keys() if k.startswith(prefix)]
+                return [k for k in ns if k.startswith(prefix)]
             return list(ns.keys())
 
     # ── Callbacks ──
@@ -144,13 +144,13 @@ class SharedState:
 
     # ── Snapshot for Persistence ──
 
-    def snapshot(self) -> List[Tuple[str, str, str, str, float, float]]:
+    def snapshot(self) -> list[tuple[str, str, str, str, float, float]]:
         """Return all non-expired entries for persistence.
 
         Returns:
             List of (namespace, key, json_value, tenant_id, updated_at, ttl).
         """
-        result: List[Tuple[str, str, str, str, float, float]] = []
+        result: list[tuple[str, str, str, str, float, float]] = []
         now = time.monotonic()
         with self._rw_lock.acquire_read():
             for ns_key, ns in self._data.items():

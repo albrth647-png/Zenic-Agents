@@ -7,12 +7,12 @@ Separadas para mantener cada archivo ≤ 400 lineas:
   - engine_formatter: Formateo de respuestas del motor
 """
 
+from .engine_formatter import EngineFormatter
 from .intent_classifier import IntentClassifier
 from .response_generator import ResponseGenerator
-from .engine_formatter import EngineFormatter
 
 __all__ = [
+    "EngineFormatter",
     "IntentClassifier",
     "ResponseGenerator",
-    "EngineFormatter",
 ]

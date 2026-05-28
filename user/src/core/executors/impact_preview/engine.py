@@ -10,25 +10,25 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..safety_gate import SafetyGate, ActionCategory, get_default_safety_gate
-from ._types import (
-    ImpactRiskLevel,
-    ImpactField,
-    ImpactPreview,
-    DBImpactPreview,
-    FileImpactPreview,
-    EmailImpactPreview,
-)
-from ._db_preview import preview_db_operation as _preview_db_operation
-from ._file_preview import preview_file_operation as _preview_file_operation
-from ._email_preview import preview_email as _preview_email
+from ..safety_gate import ActionCategory, SafetyGate, get_default_safety_gate
 from ._conversions import (
     db_preview_to_impact,
-    file_preview_to_impact,
     email_preview_to_impact,
+    file_preview_to_impact,
     generic_preview,
+)
+from ._db_preview import preview_db_operation as _preview_db_operation
+from ._email_preview import preview_email as _preview_email
+from ._file_preview import preview_file_operation as _preview_file_operation
+from ._types import (
+    DBImpactPreview,
+    EmailImpactPreview,
+    FileImpactPreview,
+    ImpactField,
+    ImpactPreview,
+    ImpactRiskLevel,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class ImpactPreviewEngine:
 
     def __init__(
         self,
-        safety_gate: Optional[SafetyGate] = None,
+        safety_gate: SafetyGate | None = None,
         db_retry_max: int = 3,
         db_retry_base_delay: float = 0.5,
     ) -> None:
@@ -62,8 +62,8 @@ class ImpactPreviewEngine:
     def preview_action(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> ImpactPreview:
         """Simulate what would happen if the action were executed.
 
@@ -103,7 +103,7 @@ class ImpactPreviewEngine:
             # Generic preview for other action types
             return generic_preview(action_type, config, context, category)
 
-    def preview_db_operation(self, config: Dict[str, Any]) -> DBImpactPreview:
+    def preview_db_operation(self, config: dict[str, Any]) -> DBImpactPreview:
         """Preview a database operation WITHOUT executing it.
 
         Delegates to the _db_preview module for the actual logic.
@@ -116,7 +116,7 @@ class ImpactPreviewEngine:
                 db_retry_base_delay=self._db_retry_base_delay,
             )
 
-    def preview_file_operation(self, config: Dict[str, Any]) -> FileImpactPreview:
+    def preview_file_operation(self, config: dict[str, Any]) -> FileImpactPreview:
         """Preview a file operation WITHOUT executing it.
 
         Delegates to the _file_preview module for the actual logic.
@@ -125,7 +125,7 @@ class ImpactPreviewEngine:
         with self._lock:
             return _preview_file_operation(config)
 
-    def preview_email(self, config: Dict[str, Any]) -> EmailImpactPreview:
+    def preview_email(self, config: dict[str, Any]) -> EmailImpactPreview:
         """Preview an email operation WITHOUT sending it.
 
         Delegates to the _email_preview module for the actual logic.
@@ -137,8 +137,8 @@ class ImpactPreviewEngine:
     def compare_scenarios(
         self,
         action_type: str,
-        configs: List[Dict[str, Any]],
-    ) -> List[ImpactPreview]:
+        configs: list[dict[str, Any]],
+    ) -> list[ImpactPreview]:
         """A/B comparison of multiple approaches for the same action type.
 
         Generates an ImpactPreview for each config, allowing the caller
@@ -152,7 +152,7 @@ class ImpactPreviewEngine:
             A list of ImpactPreview objects, one per config.
         """
         with self._lock:
-            results: List[ImpactPreview] = []
+            results: list[ImpactPreview] = []
             for idx, config in enumerate(configs):
                 try:
                     preview = self.preview_action(
@@ -180,7 +180,7 @@ class ImpactPreviewEngine:
 
     # ── Stats ──────────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get engine statistics."""
         with self._lock:
             return {
@@ -192,7 +192,7 @@ class ImpactPreviewEngine:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_impact_preview_engine: Optional[ImpactPreviewEngine] = None
+_impact_preview_engine: ImpactPreviewEngine | None = None
 _impact_preview_lock = threading.Lock()
 
 
@@ -213,11 +213,11 @@ def reset_impact_preview_engine() -> None:
 
 
 __all__ = [
-    "ImpactRiskLevel",
+    "DBImpactPreview",
+    "EmailImpactPreview",
+    "FileImpactPreview",
     "ImpactField",
     "ImpactPreview",
-    "DBImpactPreview",
-    "FileImpactPreview",
-    "EmailImpactPreview",
     "ImpactPreviewEngine",
+    "ImpactRiskLevel",
 ]

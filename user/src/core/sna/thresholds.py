@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class ThresholdEngine:
                 logger.debug(f"Archivo de umbrales no encontrado: {config_path}")
                 return
 
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 custom = json.load(f)
 
             for monitor_name, thresholds in custom.items():

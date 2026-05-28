@@ -131,7 +131,7 @@ class DocumentIngestor:
             try:
                 fmt = _native.ingest_detect_format(filename)
                 return str(fmt)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # Python fallback
@@ -156,7 +156,7 @@ class DocumentIngestor:
         if NATIVE_AVAILABLE:
             try:
                 return _native.ingest_supported_formats()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return ["pdf", "docx", "txt", "csv", "json", "markdown", "html"]
 
@@ -165,7 +165,7 @@ class DocumentIngestor:
         if NATIVE_AVAILABLE:
             try:
                 return _native.ingest_validate_size(size_bytes)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
         return 0 < size_bytes <= 50 * 1024 * 1024
 

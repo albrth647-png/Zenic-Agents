@@ -345,7 +345,7 @@ class SafetyGate:
     def _config_to_searchable(self, action_type: str, config: dict[str, Any]) -> str:
         """Convert config to a searchable string for rule matching."""
         parts = [action_type]
-        for key, value in config.items():
+        for _key, value in config.items():
             if isinstance(value, str):
                 parts.append(value)
             elif isinstance(value, (list, tuple)):

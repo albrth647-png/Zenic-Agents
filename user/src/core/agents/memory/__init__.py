@@ -13,14 +13,14 @@ Fallback: Each agent returns a safe empty result when SmartMemory is unavailable
 Pipeline: A05 → A06 → A07 (serial), A08 (parallel with A05)
 """
 
-from .memory_collector import MemoryCollector
-from .relevance_scorer import RelevanceScorer
 from .context_compressor import ContextCompressor
 from .context_prefetcher import ContextPrefetcher
+from .memory_collector import MemoryCollector
+from .relevance_scorer import RelevanceScorer
 
 __all__ = [
-    "MemoryCollector",
-    "RelevanceScorer",
     "ContextCompressor",
     "ContextPrefetcher",
+    "MemoryCollector",
+    "RelevanceScorer",
 ]

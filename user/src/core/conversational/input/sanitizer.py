@@ -19,8 +19,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 
-from ..types.base import Result, Ok, Err, Priority
-
+from ..types.base import Err, Ok, Priority, Result
 
 # ─── Config ──────────────────────────────────────────────────
 

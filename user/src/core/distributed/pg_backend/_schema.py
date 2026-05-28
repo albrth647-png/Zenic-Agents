@@ -7,7 +7,7 @@ Auto-creates tables on connect() if they don't exist.
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 
@@ -191,7 +191,7 @@ class PgConnectionMixin:
         self._connected = False
         logger.info("PgBackend: Disconnected")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check PostgreSQL health with a simple query."""
         try:
             start = time.monotonic()
@@ -244,8 +244,8 @@ class PgConnectionMixin:
     def _execute_query(
         self,
         sql: str,
-        params: Optional[tuple] = None,
-    ) -> List[Dict[str, Any]]:
+        params: tuple | None = None,
+    ) -> list[dict[str, Any]]:
         """Execute a query and return results as list of dicts."""
         conn = self._get_conn()
         try:
@@ -255,7 +255,7 @@ class PgConnectionMixin:
                     return []
                 columns = [desc[0] for desc in cur.description]
                 rows = cur.fetchall()
-                return [dict(zip(columns, row)) for row in rows]
+                return [dict(zip(columns, row, strict=False)) for row in rows]
         except Exception:
             if not conn.autocommit:
                 conn.rollback()
@@ -266,7 +266,7 @@ class PgConnectionMixin:
     def _execute_modify(
         self,
         sql: str,
-        params: Optional[tuple] = None,
+        params: tuple | None = None,
     ) -> int:
         """Execute INSERT/UPDATE/DELETE, return affected row count."""
         conn = self._get_conn()

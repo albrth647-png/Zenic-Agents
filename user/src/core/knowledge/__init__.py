@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 try:
-    from .types import KnowledgeNode, KnowledgeEdge, KnowledgeQuery, KnowledgeSearchResult, GraphDomain
+    from .types import GraphDomain, KnowledgeEdge, KnowledgeNode, KnowledgeQuery, KnowledgeSearchResult
 except ImportError:
     KnowledgeNode = None  # type: ignore[misc,assignment]
     KnowledgeEdge = None  # type: ignore[misc,assignment]
@@ -24,15 +24,15 @@ except ImportError:
     reset_cross_agent_bus = None  # type: ignore[misc,assignment]
 
 __all__ = [
-    "KnowledgeNode",
+    "CrossAgentKnowledgeBus",
+    "GraphDomain",
     "KnowledgeEdge",
+    "KnowledgeGraphEngine",
+    "KnowledgeNode",
     "KnowledgeQuery",
     "KnowledgeSearchResult",
-    "GraphDomain",
-    "KnowledgeGraphEngine",
-    "get_knowledge_graph",
-    "reset_knowledge_graph",
-    "CrossAgentKnowledgeBus",
     "get_cross_agent_bus",
+    "get_knowledge_graph",
     "reset_cross_agent_bus",
+    "reset_knowledge_graph",
 ]

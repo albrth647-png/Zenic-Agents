@@ -18,9 +18,13 @@ double-initialization issues.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import threading
 from typing import Any
+
+from src.core.degraded_mode.manager import get_degraded_mode_manager
+from src.core.license.manager import get_license_manager
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +75,8 @@ def _create_enhanced_safety_gate(
             # attribute access patterns like gate.some_property
             for attr_name in dir(original_gate):
                 if not attr_name.startswith("_") and not hasattr(type(self), attr_name):
-                    try:
+                    with contextlib.suppress(AttributeError, TypeError):
                         setattr(self, attr_name, getattr(original_gate, attr_name))
-                    except (AttributeError, TypeError):
-                        pass
 
         def check(
             self,
@@ -250,7 +252,6 @@ def _init_defense(start_monitoring: bool) -> Any:
 def _init_approval() -> Any:
     """Initialize ApprovalChain and WorkflowEngine."""
     from src.core.approval.chain import get_approval_chain
-    from src.core.approval.workflows import get_workflow_engine
     return get_approval_chain()
 
 

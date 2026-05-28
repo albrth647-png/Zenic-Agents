@@ -6,14 +6,15 @@ Tests for MEDIUM (F1-F6) and LOW (G1-G3) security fixes from FASE 3.
 Run: pytest tests/test_phase_fg.py -v
 """
 
+import json
 import os
 import re
 import sys
-import json
 import time
-import pytest
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # ──────────────────────────────────────────────────────────────
 #  Test Configuration
@@ -608,7 +609,7 @@ class TestIPCAuth(unittest.TestCase):
     def test_verify_valid_token(self):
         """Valid IPC token should verify successfully."""
         try:
-            from src.core.ipc_auth import verify_ipc_token, generate_ipc_token
+            from src.core.ipc_auth import generate_ipc_token, verify_ipc_token
             # Generate a token
             token = generate_ipc_token()
             self.assertEqual(len(token), 64)  # 32 bytes = 64 hex chars

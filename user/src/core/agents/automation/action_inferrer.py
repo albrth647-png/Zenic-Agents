@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import AutoDescription, ActionSpec
+from ..schemas import ActionSpec, AutoDescription
 
 # ──────────────────────────────────────────────────────────────
 # ACTION KEYWORDS — EN + ES bilingual
@@ -199,10 +199,7 @@ class ActionInferrer(BaseAgent[ActionSpec]):
             if url_match:
                 base_config["url"] = url_match.group(0)
 
-        elif action_type == "notification":
-            base_config["message"] = description[:100]
-
-        elif action_type == "log":
+        elif action_type == "notification" or action_type == "log":
             base_config["message"] = description[:100]
 
         return base_config

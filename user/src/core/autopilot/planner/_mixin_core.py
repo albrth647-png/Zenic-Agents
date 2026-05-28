@@ -7,11 +7,11 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.core.autopilot.planner._types import PlanStep, PlannedAction
-from src.core.autopilot.planner._templates import match_template
 from src.core.autopilot.planner._helpers import retry_db_operation
+from src.core.autopilot.planner._templates import match_template
+from src.core.autopilot.planner._types import PlannedAction, PlanStep
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +62,8 @@ class CoreMixin:
         """Decompose an objective into an actionable plan."""
         template_steps = match_template(objective)
 
-        step_id_map: Dict[str, str] = {}
-        steps: List[PlanStep] = []
+        step_id_map: dict[str, str] = {}
+        steps: list[PlanStep] = []
 
         for tmpl in template_steps:
             step = PlanStep(
@@ -124,12 +124,12 @@ class CoreMixin:
         )
         return plan
 
-    def get_plan(self, plan_id: str) -> Optional[PlannedAction]:
+    def get_plan(self, plan_id: str) -> PlannedAction | None:
         """Get a plan by ID."""
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> Optional[PlannedAction]:
+            def _fetch() -> PlannedAction | None:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -145,12 +145,12 @@ class CoreMixin:
 
             return retry_db_operation(_fetch)
 
-    def list_plans(self, objective_id: str = "") -> List[PlannedAction]:
+    def list_plans(self, objective_id: str = "") -> list[PlannedAction]:
         """List plans, optionally filtered by objective."""
         self._ensure_schema()
         with self._lock:
 
-            def _list() -> List[PlannedAction]:
+            def _list() -> list[PlannedAction]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -209,7 +209,7 @@ class CoreMixin:
         if not plan.steps:
             return 0.0
 
-        dependency_count: Dict[str, int] = {}
+        dependency_count: dict[str, int] = {}
         for step in plan.steps:
             for dep_id in step.depends_on:
                 dependency_count[dep_id] = dependency_count.get(dep_id, 0) + 1

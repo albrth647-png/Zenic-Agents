@@ -57,7 +57,7 @@ the ``bus_parts`` sub-package.  All implementation lives in:
 """
 
 # Re-export all public symbols from bus_parts for backward compatibility.
-from src.core.shared.bus_parts import (  # noqa: F401
+from src.core.shared.bus_parts import (
     AgentMailbox,
     BusMessage,
     BusMetrics,
@@ -70,17 +70,17 @@ from src.core.shared.bus_parts import (  # noqa: F401
 )
 
 __all__ = [
-    # Enums
-    "MessageType",
-    "Priority",
+    "AgentMailbox",
     # Data classes
     "BusMessage",
+    "BusMetrics",
+    # Enums
+    "MessageType",
+    "PersistenceLayer",
+    "Priority",
     # Components
     "RingBuffer",
-    "AgentMailbox",
-    "SharedState",
-    "PersistenceLayer",
-    "BusMetrics",
     # Main class
     "SharedMemoryBus",
+    "SharedState",
 ]

@@ -155,7 +155,7 @@ async def send_via_web_push(
         push_payload["data"] = {k: v for k, v in message.metadata.items() if not k.startswith("fcm_")}
     if message.fields:
         push_payload["data"] = push_payload.get("data", {})
-        push_payload["data"]["fields"] = [{k: v for k, v in f.items()} for f in message.fields]
+        push_payload["data"]["fields"] = [dict(f.items()) for f in message.fields]
 
     # Check payload size
     payload_json = json.dumps(push_payload, separators=(",", ":"))

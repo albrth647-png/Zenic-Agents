@@ -10,29 +10,29 @@ Verifica que:
 """
 
 import os
-import sys
 import sqlite3
+import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data.local_scanner import LocalDataScanner
-from src.data.db_access import DBAccess
+from src.core.channel._proactive import ProactiveChannelBridge
+from src.core.channel.a53_text import ChannelType
+from src.core.sna.alert_manager import AlertManager, AlertSeverity
 from src.core.sna.monitors.base import MonitorWeight
+from src.core.sna.monitors.data_integrity import DataIntegrityMonitor
+from src.core.sna.monitors.disk_space import DiskSpaceMonitor
+from src.core.sna.monitors.duplicate_records import DuplicateRecordsMonitor
 from src.core.sna.monitors.low_stock import LowStockMonitor
 from src.core.sna.monitors.overdue_invoice import OverdueInvoiceMonitor
-from src.core.sna.monitors.tomorrow_appointment import TomorrowAppointmentMonitor
-from src.core.sna.monitors.disk_space import DiskSpaceMonitor
 from src.core.sna.monitors.stale_inventory import StaleInventoryMonitor
+from src.core.sna.monitors.tomorrow_appointment import TomorrowAppointmentMonitor
 from src.core.sna.monitors.unpaid_balance import UnpaidBalanceMonitor
-from src.core.sna.monitors.duplicate_records import DuplicateRecordsMonitor
-from src.core.sna.monitors.data_integrity import DataIntegrityMonitor
-from src.core.sna.alert_manager import AlertManager, AlertSeverity
 from src.core.sna.scheduler import SNAScheduler
 from src.core.sna.sna_engine import SNAEngine
-from src.core.channel.a53_text import ChannelType
-from src.core.channel._proactive import ProactiveChannelBridge
+from src.data.db_access import DBAccess
+from src.data.local_scanner import LocalDataScanner
 
 
 def create_test_db(db_path: str):
@@ -81,7 +81,7 @@ def create_test_db(db_path: str):
         id INTEGER PRIMARY KEY, fecha DATE, monto REAL
     )""")
     for i in range(30):
-        conn.execute(f"INSERT INTO ventas (fecha, monto) VALUES (date('now','-{i} days'), {100 + i * 5})")
+        conn.execute(f"INSERT INTO ventas (fecha, monto) VALUES (date('now','-{i} days'), {100 + i * 5})")  # noqa: S608
 
     conn.commit()
     conn.close()

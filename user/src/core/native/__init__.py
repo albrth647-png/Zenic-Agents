@@ -56,96 +56,96 @@ all original import paths remain valid.
 from __future__ import annotations
 
 # Re-export every public symbol from the split sub-modules.
-from ._native_parts import (  # noqa: F401
+from ._native_parts import (
     # Feature flag
     HAS_NATIVE,
-    # Lazy access helpers for PyO3 types
-    get_native_module,
-    get_encrypted_db,
-    get_shared_memory_bus,
-    get_safety_verdict,
-    get_license_info,
-    # Crypto
-    argon2id_hash,
-    constant_time_compare,
-    pbkdf2_derive_key,
-    # Hash
-    blake3_hash,
-    merkle_root,
-    xxhash64,
-    # Forensic (A1)
-    batch_verify_chains,
-    chain_hash,
-    forensic_hash,
-    merkle_proof,
-    verify_merkle_chain,
-    # Rollback (A3)
-    file_hash,
-    restore_file,
-    snapshot_file,
-    verify_rollback_readiness,
-    # EventBus (B1)
-    batch_resolve_routes,
-    deduplicate_events,
-    resolve_routes,
-    sort_by_priority,
-    wildcard_match,
     # Simulation (C1)
     aggregate_impact,
-    detect_cycles,
-    simulate_dag,
-    topological_sort,
+    # Crypto
+    argon2id_hash,
+    # EventBus (B1)
+    batch_resolve_routes,
+    # Forensic (A1)
+    batch_verify_chains,
+    # Hash
+    blake3_hash,
     # Risk (F3)
     calculate_blast_radius,
+    chain_hash,
     compute_reachability,
+    constant_time_compare,
+    deduplicate_events,
+    detect_cycles,
+    # Rollback (A3)
+    file_hash,
     find_critical_path,
+    forensic_hash,
+    get_encrypted_db,
+    get_license_info,
+    # Lazy access helpers for PyO3 types
+    get_native_module,
+    get_safety_verdict,
+    get_shared_memory_bus,
+    merkle_proof,
+    merkle_root,
     multi_node_blast_radius,
+    pbkdf2_derive_key,
     propagate_risks,
+    resolve_routes,
+    restore_file,
+    simulate_dag,
+    snapshot_file,
+    sort_by_priority,
+    topological_sort,
+    verify_merkle_chain,
+    verify_rollback_readiness,
+    wildcard_match,
+    xxhash64,
 )
 
 __all__ = [
     # Feature flag
     "HAS_NATIVE",
-    # Lazy access helpers for PyO3 types
-    "get_native_module",
-    "get_encrypted_db",
-    "get_shared_memory_bus",
-    "get_safety_verdict",
-    "get_license_info",
-    # Crypto
-    "argon2id_hash",
-    "constant_time_compare",
-    "pbkdf2_derive_key",
-    # Hash
-    "blake3_hash",
-    "merkle_root",
-    "xxhash64",
-    # Forensic (A1)
-    "batch_verify_chains",
-    "chain_hash",
-    "forensic_hash",
-    "merkle_proof",
-    "verify_merkle_chain",
-    # Rollback (A3)
-    "file_hash",
-    "restore_file",
-    "snapshot_file",
-    "verify_rollback_readiness",
-    # EventBus (B1)
-    "batch_resolve_routes",
-    "deduplicate_events",
-    "resolve_routes",
-    "sort_by_priority",
-    "wildcard_match",
     # Simulation (C1)
     "aggregate_impact",
-    "detect_cycles",
-    "simulate_dag",
-    "topological_sort",
+    # Crypto
+    "argon2id_hash",
+    # EventBus (B1)
+    "batch_resolve_routes",
+    # Forensic (A1)
+    "batch_verify_chains",
+    # Hash
+    "blake3_hash",
     # Risk (F3)
     "calculate_blast_radius",
+    "chain_hash",
     "compute_reachability",
+    "constant_time_compare",
+    "deduplicate_events",
+    "detect_cycles",
+    # Rollback (A3)
+    "file_hash",
     "find_critical_path",
+    "forensic_hash",
+    "get_encrypted_db",
+    "get_license_info",
+    # Lazy access helpers for PyO3 types
+    "get_native_module",
+    "get_safety_verdict",
+    "get_shared_memory_bus",
+    "merkle_proof",
+    "merkle_root",
     "multi_node_blast_radius",
+    "pbkdf2_derive_key",
     "propagate_risks",
+    "resolve_routes",
+    "restore_file",
+    "simulate_dag",
+    "snapshot_file",
+    "sort_by_priority",
+    "topological_sort",
+    "verify_merkle_chain",
+    "verify_rollback_readiness",
+    "wildcard_match",
+    "xxhash64",
 ]

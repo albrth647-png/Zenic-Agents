@@ -177,7 +177,7 @@ class TransformExecutor(ActionExecutor):
     def _csv_to_json(self, data, sep):
         if not isinstance(data, str):
             raise ValueError("csv_to_json requires a CSV string")
-        return [row for row in csv.DictReader(data.strip().split("\n"), delimiter=sep)]
+        return list(csv.DictReader(data.strip().split("\n"), delimiter=sep))
 
     def _flatten(self, data, prefix=""):
         if not isinstance(data, dict):

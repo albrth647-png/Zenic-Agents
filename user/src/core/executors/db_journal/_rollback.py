@@ -9,16 +9,16 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List
+from typing import Any
 
 from src.core.shared.retry import with_retry
 
-from ._types import JournalEntry, RollbackResult
 from ._sql_helpers import (
     _extract_table_and_where_from_delete,
     _extract_table_and_where_from_update,
     _extract_table_from_insert,
 )
+from ._types import JournalEntry, RollbackResult
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class _RollbackMixin:
         result: RollbackResult,
     ) -> int:
         """Re-insert rows that were captured before a DELETE."""
-        before_data: List[Dict[str, Any]] = json.loads(entry.before_data)
+        before_data: list[dict[str, Any]] = json.loads(entry.before_data)
         if not before_data:
             return 0
 
@@ -124,7 +124,7 @@ class _RollbackMixin:
                     col_names = ", ".join(columns)
                     values = [row[c] for c in columns]
                     insert_sql = (
-                        f"INSERT OR REPLACE INTO {table}"
+                        f"INSERT OR REPLACE INTO {table}"  # noqa: S608
                         f" ({col_names}) VALUES ({placeholders})"
                     )
                     conn.execute(insert_sql, values)  # nosemgrep: sqlalchemy-execute-raw-query
@@ -150,7 +150,7 @@ class _RollbackMixin:
         result: RollbackResult,
     ) -> int:
         """Restore old column values for rows captured before an UPDATE."""
-        before_data: List[Dict[str, Any]] = json.loads(entry.before_data)
+        before_data: list[dict[str, Any]] = json.loads(entry.before_data)
         if not before_data:
             return 0
 
@@ -180,9 +180,9 @@ class _RollbackMixin:
                     pk_col = columns[0]
                     pk_val = row[pk_col]
                     update_sql = (
-                        f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"
+                        f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
                     )
-                    conn.execute(update_sql, values + [pk_val])  # nosemgrep: sqlalchemy-execute-raw-query
+                    conn.execute(update_sql, [*values, pk_val])  # nosemgrep: sqlalchemy-execute-raw-query
                     restored += 1
                 conn.commit()
             except Exception as exc:
@@ -225,7 +225,7 @@ class _RollbackMixin:
             conn = sqlite3.connect(entry.db_path)
             try:
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f"DELETE FROM {table} WHERE rowid = ?",
+                    f"DELETE FROM {table} WHERE rowid = ?",  # noqa: S608
                     (entry.lastrowid,),
                 )
                 conn.commit()

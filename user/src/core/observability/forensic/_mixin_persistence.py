@@ -7,7 +7,6 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Optional, Tuple
 
 from src.core.observability.forensic._helpers import retry as _retry
 
@@ -28,7 +27,7 @@ class PersistenceMixin:
         query_type: str,
         entity_id: str,
         tenant_id: str,
-        time_range: Optional[Tuple[float, float]],
+        time_range: tuple[float, float] | None,
         result_summary: str,
     ) -> None:
         """Persist a record of a forensic query to SQLite."""

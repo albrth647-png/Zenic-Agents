@@ -141,7 +141,7 @@ pub fn extractor_stats(result: &ExtractionResult, py: Python<'_>) -> PyResult<Py
     let method_dist = PyDict::new_bound(py);
     let mut method_counts: HashMap<String, usize> = HashMap::new();
     for m in result.matches() {
-        *method_counts.entry(m.match_method.clone()).or_insert(0) += 1;
+        *method_counts.entry(m.match_method().to_string()).or_insert(0) += 1;
     }
     for (method, count) in &method_counts {
         method_dist.set_item(method, count)?;

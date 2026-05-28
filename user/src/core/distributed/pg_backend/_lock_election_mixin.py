@@ -7,7 +7,6 @@ extend_lock, is_locked, campaign, abdicate, get_leader, renew_leadership.
 
 import logging
 import time
-from typing import Optional
 
 logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 
@@ -146,7 +145,7 @@ class PgLockElectionMixin:
             logger.error("PgBackend abdicate error: %s", exc)
             return False
 
-    async def get_leader(self, election_name: str) -> Optional[str]:
+    async def get_leader(self, election_name: str) -> str | None:
         try:
             rows = self._execute_query(
                 """

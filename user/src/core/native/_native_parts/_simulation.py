@@ -7,21 +7,21 @@ Provides: topological_sort, detect_cycles, aggregate_impact, simulate_dag
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from ._loader import HAS_NATIVE
 
 
 def topological_sort(
-    nodes: List[str], edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    nodes: list[str], edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Topological sort of a DAG using Kahn's algorithm."""
     if HAS_NATIVE:
         from ._loader import _rust_topological_sort
         return _rust_topological_sort(nodes, edges)
     # Pure Python fallback
-    adj: Dict[str, List[str]] = defaultdict(list)
-    in_degree: Dict[str, int] = defaultdict(int)
+    adj: dict[str, list[str]] = defaultdict(list)
+    in_degree: dict[str, int] = defaultdict(int)
 
     for node in nodes:
         in_degree[node] = 0
@@ -30,7 +30,7 @@ def topological_sort(
         in_degree[dst] += 1
 
     queue = deque(n for n, d in in_degree.items() if d == 0)
-    sorted_nodes: List[str] = []
+    sorted_nodes: list[str] = []
 
     while queue:
         node = queue.popleft()
@@ -48,8 +48,8 @@ def topological_sort(
 
 
 def detect_cycles(
-    nodes: List[str], edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    nodes: list[str], edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Detect cycles in a directed graph using DFS."""
     if HAS_NATIVE:
         from ._loader import _rust_detect_cycles
@@ -61,11 +61,11 @@ def detect_cycles(
 
 
 def aggregate_impact(
-    sorted_nodes: List[str],
-    edges: List[Tuple[str, str]],
-    risk_scores: Dict[str, float],
+    sorted_nodes: list[str],
+    edges: list[tuple[str, str]],
+    risk_scores: dict[str, float],
     strategy: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Aggregate risk scores across a DAG execution path."""
     if HAS_NATIVE:
         from ._loader import _rust_aggregate_impact
@@ -99,9 +99,9 @@ def aggregate_impact(
 
 
 def simulate_dag(
-    nodes: List[Dict[str, Any]],
-    edges: List[Tuple[str, str]],
-) -> Dict[str, Any]:
+    nodes: list[dict[str, Any]],
+    edges: list[tuple[str, str]],
+) -> dict[str, Any]:
     """Simulate a DAG execution without side effects."""
     if HAS_NATIVE:
         from ._loader import _rust_simulate_dag

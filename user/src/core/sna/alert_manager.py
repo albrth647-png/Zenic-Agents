@@ -15,9 +15,10 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from src.core.sna.monitors.base import MonitorResult
+if TYPE_CHECKING:
+    from src.core.sna.monitors.base import MonitorResult
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class Alert:
     def __post_init__(self):
         if not self.fingerprint:
             # Fingerprint para deduplicación: monitor + tipo de finding
-            finding_types = sorted(set(f.get("type", "") for f in self.findings))
+            finding_types = sorted({f.get("type", "") for f in self.findings})
             self.fingerprint = f"{self.monitor_name}:{':'.join(finding_types)}"
 
 

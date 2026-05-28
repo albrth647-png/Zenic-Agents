@@ -6,7 +6,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Dict, List
+from typing import Any, List  # noqa: UP035
 
 from ._mixin_core import ClosedLoopFeedback
 from ._types import FeedbackAction, FeedbackCycle

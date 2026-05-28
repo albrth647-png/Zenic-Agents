@@ -15,7 +15,6 @@ from typing import Any
 
 from .base import MemoryId, new_id
 
-
 # ─── Niveles de memoria ──────────────────────────────────────
 
 class MemoryType(str, Enum):
@@ -124,12 +123,9 @@ class MemoryQuery:
             return False
         if self.session_id and entry.session_id != self.session_id:
             return False
-        if self.time_range:
-            if not (self.time_range[0] <= entry.created_at <= self.time_range[1]):
-                return False
-        if self.tags and not any(t in entry.tags for t in self.tags):
+        if self.time_range and not (self.time_range[0] <= entry.created_at <= self.time_range[1]):
             return False
-        return True
+        return not (self.tags and not any(t in entry.tags for t in self.tags))
 
 
 # ─── Resultado de memoria ────────────────────────────────────

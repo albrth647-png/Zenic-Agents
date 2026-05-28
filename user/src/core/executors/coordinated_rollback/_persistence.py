@@ -9,15 +9,14 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import List, Optional
 
-from src.core.shared.retry import with_retry
 from src.core.executors.coordinated_rollback._types import (
     ActionStatus,
-    ResourceType,
-    ResourceRecord,
     CoordinatedAction,
+    ResourceRecord,
+    ResourceType,
 )
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -201,10 +200,10 @@ def update_action_status(
     )
 
 
-def load_action(db_path: str, action_id: str) -> Optional[CoordinatedAction]:
+def load_action(db_path: str, action_id: str) -> CoordinatedAction | None:
     """Load a CoordinatedAction and all its records from SQLite."""
 
-    def _do_load() -> Optional[CoordinatedAction]:
+    def _do_load() -> CoordinatedAction | None:
         conn = sqlite3.connect(db_path)
         try:
             # Load the action
@@ -257,10 +256,10 @@ def load_action(db_path: str, action_id: str) -> Optional[CoordinatedAction]:
     )
 
 
-def list_active_action_ids(db_path: str, tenant_id: str) -> List[str]:
+def list_active_action_ids(db_path: str, tenant_id: str) -> list[str]:
     """List all in-progress action IDs for a tenant."""
 
-    def _do_list() -> List[str]:
+    def _do_list() -> list[str]:
         conn = sqlite3.connect(db_path)
         try:
             cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

@@ -268,7 +268,7 @@ class PlanningMixin:
             "app_name": template.replace("_", " ").title(),
             "db_name": f"{template}.db",
             "port": 8000,
-            "host": "0.0.0.0",
+            "host": "0.0.0.0",  # noqa: S104
             "debug": True,
             "secret_key": os.environ.get("ZENIC_SECRET_KEY") or _generate_secure_secret(),
             "entity_count": len(entities),
@@ -316,7 +316,7 @@ class PlanningMixin:
             "APP_NAME": variables.get("app_name", "MyApp"),
             "DB_NAME": variables.get("db_name", "app.db"),
             "PORT": str(variables.get("port", 8000)),
-            "HOST": variables.get("host", "0.0.0.0"),
+            "HOST": variables.get("host", "0.0.0.0"),  # noqa: S104
             "SECRET_KEY": variables.get("secret_key")
             or os.environ.get("ZENIC_SECRET_KEY")
             or _generate_secure_secret(),

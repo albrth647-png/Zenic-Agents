@@ -9,16 +9,17 @@ import logging
 import sqlite3
 import time
 import uuid
+from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import (
-    RiskAssessment,
-    RiskLevel,
     _ACTION_CATEGORY_SCORES,
-    _ROLE_LEVELS,
     _MAX_RETRIES,
     _RETRY_DELAY,
+    _ROLE_LEVELS,
+    RiskAssessment,
+    RiskLevel,
     _score_to_risk_level,
     _score_to_role,
 )
@@ -73,12 +74,12 @@ class RiskBasedApprovalRouter:
     def assess_risk(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
-        context: Dict[str, Any],
+        action_config: dict[str, Any],
+        context: dict[str, Any],
     ) -> RiskAssessment:
         """Compute a risk assessment for the given action + context."""
-        factors: List[str] = []
-        scores: List[float] = []
+        factors: list[str] = []
+        scores: list[float] = []
 
         # 1. Action category base score
         base = self._action_category_score(action_type)
@@ -163,9 +164,9 @@ class RiskBasedApprovalRouter:
 
     def get_history(
         self, action_type: str = "", limit: int = 50,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[Mapping[str, str | int | float | bool | list]]:
         """Return recent risk assessments, optionally filtered by action_type."""
-        def _do_query() -> List[Dict[str, Any]]:
+        def _do_query() -> list[Mapping[str, str | int | float | bool | list]]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             if action_type:
@@ -182,7 +183,7 @@ class RiskBasedApprovalRouter:
                     (limit,),
                 ).fetchall()
             conn.close()
-            results: List[Dict[str, Any]] = []
+            results: list[dict[str, Any]] = []
             for row in rows:
                 results.append({
                     "assessment_id": row["assessment_id"],
@@ -199,9 +200,9 @@ class RiskBasedApprovalRouter:
 
         return self._with_retry(_do_query, fallback=[])
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Mapping[str, str | int | float | dict]:
         """Return aggregate risk-routing statistics."""
-        def _do_query() -> Dict[str, Any]:
+        def _do_query() -> Mapping[str, str | int | float | dict]:
             conn = sqlite3.connect(self._db_path)
             try:
                 total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -214,7 +215,7 @@ class RiskBasedApprovalRouter:
                 auto_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM risk_assessments WHERE auto_approvable = 1"
                 ).fetchone()[0]
-                by_level: Dict[str, int] = {}
+                by_level: dict[str, int] = {}
                 for level in RiskLevel:
                     cnt = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT COUNT(*) FROM risk_assessments WHERE risk_level = ?",
@@ -244,7 +245,7 @@ class RiskBasedApprovalRouter:
         return 0.4
 
     @staticmethod
-    def _amount_score(action_config: Dict[str, Any]) -> float:
+    def _amount_score(action_config: dict[str, Any]) -> float:
         """Higher monetary amounts / larger sizes increase risk."""
         amount = action_config.get("amount", 0)
         if isinstance(amount, (int, float)) and amount > 0:
@@ -260,7 +261,7 @@ class RiskBasedApprovalRouter:
 
     @staticmethod
     def _target_score(
-        action_config: Dict[str, Any], context: Dict[str, Any],
+        action_config: dict[str, Any], context: dict[str, Any],
     ) -> float:
         """Production targets are higher risk than test/dev."""
         target = (
@@ -286,7 +287,7 @@ class RiskBasedApprovalRouter:
         return 0.0
 
     @staticmethod
-    def _user_history_score(context: Dict[str, Any]) -> float:
+    def _user_history_score(context: dict[str, Any]) -> float:
         """New or low-reputation users add risk."""
         approval_count = context.get("user_approval_count", 0)
         rejection_count = context.get("user_rejection_count", 0)
@@ -306,10 +307,7 @@ class RiskBasedApprovalRouter:
         action_lower = action_type.lower()
         financial_kws = ("payment", "financial", "refund", "invoice_pay")
         destructive_kws = ("delete", "drop", "destructive", "remove", "truncate")
-        for kw in financial_kws + destructive_kws:
-            if kw in action_lower:
-                return True
-        return False
+        return any(kw in action_lower for kw in financial_kws + destructive_kws)
 
     # ── Persistence ────────────────────────────────────────
 
@@ -317,7 +315,7 @@ class RiskBasedApprovalRouter:
         self,
         action_type: str,
         assessment: RiskAssessment,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> None:
         """Write a risk assessment to the database."""
         assessment_id = f"ra-{uuid.uuid4().hex[:12]}"
@@ -354,7 +352,7 @@ class RiskBasedApprovalRouter:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()

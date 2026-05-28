@@ -12,12 +12,15 @@ Uso:
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from src.data.local_scanner import LocalDataScanner
+from src.core.sna.alert_manager import Alert, AlertManager
 from src.core.sna.scheduler import SNAScheduler
-from src.core.sna.alert_manager import AlertManager, Alert
 from src.core.sna.thresholds import ThresholdEngine
+from src.data.local_scanner import LocalDataScanner
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

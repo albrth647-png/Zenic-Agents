@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import sqlite3
 
 DB_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "db")
 DB_PATH = os.path.join(DB_DIR, "replay_queue.sqlite")

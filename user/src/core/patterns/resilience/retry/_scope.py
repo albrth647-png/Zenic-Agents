@@ -6,7 +6,8 @@ retry/retry_async decorators and RetryScope context manager.
 
 import functools
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ._config import RetryConfig
 from ._programmatic import with_retry, with_retry_async
@@ -14,7 +15,7 @@ from ._programmatic import with_retry, with_retry_async
 logger = logging.getLogger(__name__)
 
 
-def retry(config: Optional[RetryConfig] = None) -> Callable[..., Any]:
+def retry(config: RetryConfig | None = None) -> Callable[..., Any]:
     """
     Decorator for synchronous functions with retry logic.
 
@@ -39,7 +40,7 @@ def retry(config: Optional[RetryConfig] = None) -> Callable[..., Any]:
     return decorator
 
 
-def retry_async(config: Optional[RetryConfig] = None) -> Callable[..., Any]:
+def retry_async(config: RetryConfig | None = None) -> Callable[..., Any]:
     """
     Decorator for asynchronous functions with retry logic.
 
@@ -74,7 +75,7 @@ class RetryScope:
     The scope collects stats across all operations.
     """
 
-    def __init__(self, config: Optional[RetryConfig] = None) -> None:
+    def __init__(self, config: RetryConfig | None = None) -> None:
         self._config = config or RetryConfig()
         self._total_operations: int = 0
         self._total_retries: int = 0

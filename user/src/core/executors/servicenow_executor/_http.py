@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import time
@@ -76,10 +77,8 @@ class _HttpMixin:
                 resp_headers = result.get("headers", {})
                 remaining = resp_headers.get("X-RateLimit-Remaining") or resp_headers.get("x-ratelimit-remaining")
                 if remaining is not None:
-                    try:
+                    with contextlib.suppress(ValueError, TypeError):
                         self._update_rate_limit(url, int(remaining))
-                    except (ValueError, TypeError):
-                        pass
 
                 # ── Success ───────────────────────────────────
                 with self._lock:
@@ -168,7 +167,7 @@ class _HttpMixin:
             if json_data is not None:
                 data = json.dumps(json_data).encode("utf-8")
 
-            req = urllib.request.Request(validated_url, data=data, headers=headers, method=method)
+            req = urllib.request.Request(validated_url, data=data, headers=headers, method=method)  # noqa: S310
 
             try:
                 with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
@@ -189,7 +188,7 @@ class _HttpMixin:
                 body_text = ""
                 try:
                     body_text = exc.read().decode("utf-8", errors="replace")
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
                 try:

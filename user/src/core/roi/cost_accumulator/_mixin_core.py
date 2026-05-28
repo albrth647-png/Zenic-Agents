@@ -11,9 +11,9 @@ import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import CostCategory, CostEntry, DEFAULT_UNIT_COSTS, _with_retry
+from ._types import DEFAULT_UNIT_COSTS, CostCategory, CostEntry, _with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class CostAccumulator:
         quantity: float,
         unit_cost: float = 0.0,
         currency: str = "USD",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         tenant_id: str = "",
     ) -> CostEntry:
         """Record a single cost entry.
@@ -119,9 +119,9 @@ class CostAccumulator:
         storage_mb: float = 0.0,
         network_mb: float = 0.0,
         tenant_id: str = "",
-    ) -> List[CostEntry]:
+    ) -> list[CostEntry]:
         """Convenience method to record all cost categories for an action at once."""
-        entries: List[CostEntry] = []
+        entries: list[CostEntry] = []
         with self._lock:
             if llm_tokens > 0:
                 entries.append(
@@ -171,7 +171,7 @@ class CostAccumulator:
         self,
         from_time: str = "",
         to_time: str = "",
-        category: Optional[CostCategory] = None,
+        category: CostCategory | None = None,
         tenant_id: str = "",
     ) -> float:
         """Return total cost with optional time-range, category, and tenant filters."""
@@ -207,11 +207,11 @@ class CostAccumulator:
         from_time: str = "",
         to_time: str = "",
         tenant_id: str = "",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Return cost grouped by category."""
         with self._lock:
             try:
-                def _query() -> Dict[str, float]:
+                def _query() -> dict[str, float]:
                     conn = sqlite3.connect(self._db_path)
                     sql = (
                         "SELECT category, COALESCE(SUM(total_cost), 0) "
@@ -237,11 +237,11 @@ class CostAccumulator:
                 logger.error("CostAccumulator: get_cost_breakdown failed: %s", exc)
                 return {}
 
-    def get_daily_costs(self, days: int = 30) -> List[Dict[str, Any]]:
+    def get_daily_costs(self, days: int = 30) -> list[dict[str, Any]]:
         """Return daily cost totals for the last *days* days."""
         with self._lock:
             try:
-                def _query() -> List[Dict[str, Any]]:
+                def _query() -> list[dict[str, Any]]:
                     conn = sqlite3.connect(self._db_path)
                     cutoff = time.strftime(
                         "%Y-%m-%dT00:00:00Z",
@@ -262,11 +262,11 @@ class CostAccumulator:
                 logger.error("CostAccumulator: get_daily_costs failed: %s", exc)
                 return []
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return summary statistics."""
         with self._lock:
             try:
-                def _query() -> Dict[str, Any]:
+                def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT COALESCE(SUM(total_cost), 0) FROM _zenic_costs"
@@ -280,7 +280,7 @@ class CostAccumulator:
                     ).fetchall()
                     conn.close()
 
-                    breakdown: Dict[str, Any] = {}
+                    breakdown: dict[str, Any] = {}
                     for cat, cost, cnt in by_cat:
                         breakdown[cat] = {"total_cost": float(cost), "count": int(cnt)}
 

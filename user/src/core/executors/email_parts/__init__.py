@@ -10,17 +10,17 @@ Sub-modules for the enhanced EmailExecutor infrastructure:
 
 from __future__ import annotations
 
-from .templates import EmailTemplateEngine, EmailTemplate
-from .rate_limiter import EmailRateLimiter
-from .oauth2 import OAuth2TokenManager, OAuth2Config, OAuth2Token
 from .graph_api import GraphAPIEmailProvider
+from .oauth2 import OAuth2Config, OAuth2Token, OAuth2TokenManager
+from .rate_limiter import EmailRateLimiter
+from .templates import EmailTemplate, EmailTemplateEngine
 
 __all__ = [
-    "EmailTemplateEngine",
-    "EmailTemplate",
     "EmailRateLimiter",
-    "OAuth2TokenManager",
+    "EmailTemplate",
+    "EmailTemplateEngine",
+    "GraphAPIEmailProvider",
     "OAuth2Config",
     "OAuth2Token",
-    "GraphAPIEmailProvider",
+    "OAuth2TokenManager",
 ]

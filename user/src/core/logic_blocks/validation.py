@@ -189,7 +189,7 @@ class ValidateUniqueBlock(LogicBlock):
                     _validate_identifier(field_name)
                     _validate_identifier(table_name)
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?', (value,)
+                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?', (value,)  # noqa: S608
                     )
                     row = cursor.fetchone() if hasattr(cursor, "fetchone") else None
                     if row:

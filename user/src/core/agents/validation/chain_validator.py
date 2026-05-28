@@ -184,9 +184,8 @@ class ChainValidator(BaseAgent[ChainResult]):
             # Category-specific data requirements
             data_reqs = CATEGORY_DATA_REQUIREMENTS.get(category, {})
             for block_type, req_field in data_reqs.items():
-                if block_name and block_name.startswith(block_type):
-                    if req_field not in initial_data:
-                        issues.append(f"Block '{block_name}' ({category}) needs " f"'{req_field}' in initial data")
+                if block_name and block_name.startswith(block_type) and req_field not in initial_data:
+                    issues.append(f"Block '{block_name}' ({category}) needs " f"'{req_field}' in initial data")
 
         return issues
 
@@ -244,10 +243,7 @@ class ChainValidator(BaseAgent[ChainResult]):
 
         # Check for intersection or 'any' wildcard
         common = output_types & input_types
-        if common or "any" in output_types or "any" in input_types:
-            return True
-
-        return False
+        return bool(common or "any" in output_types or "any" in input_types)
 
     def _validate_category_compatibility(self, blocks: list[Any]) -> list[str]:
         """Check category-level compatibility between consecutive blocks."""

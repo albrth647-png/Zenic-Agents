@@ -7,8 +7,10 @@ from ChainTemplateLibrary for modularity.
 
 from __future__ import annotations
 
-from ._types import ChainTemplate
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from ._types import ChainTemplate
 
 # ---------------------------------------------------------------------------
 #  Search helpers

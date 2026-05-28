@@ -27,7 +27,17 @@ import {
   DependencyType as DependencyTypeValues,
   SimulationRiskLevel as SimulationRiskLevelValues,
   ConflictSeverity as ConflictSeverityValues,
-} from "./types";
+} from "../types";
+import type {
+  ImpactAnalysisDepth,
+  DependencyRef,
+  BlastRadius,
+  AffectedSetRef,
+  AffectedPlaybookRef,
+  AffectedToolRef,
+  PolicyDocument,
+  PolicyEffectV2,
+} from "../types";
 
 // ─── Composite: Dependency Node ─────────────────────────────────────────
 

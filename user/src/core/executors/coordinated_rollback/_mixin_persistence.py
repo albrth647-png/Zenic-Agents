@@ -7,18 +7,14 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import TYPE_CHECKING, Optional
 
-from src.core.shared.retry import with_retry
 from src.core.executors.coordinated_rollback._types import (
     ActionStatus,
     CoordinatedAction,
     ResourceRecord,
     ResourceType,
 )
-
-if TYPE_CHECKING:
-    pass
+from src.core.shared.retry import with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -124,10 +120,10 @@ class PersistenceMixin:
             label=f"coordinated_rollback._update_status({action_id[:12]})",
         )
 
-    def _load_action(self, action_id: str) -> Optional[CoordinatedAction]:
+    def _load_action(self, action_id: str) -> CoordinatedAction | None:
         """Load a CoordinatedAction and all its records from SQLite."""
 
-        def _do_load() -> Optional[CoordinatedAction]:
+        def _do_load() -> CoordinatedAction | None:
             conn = sqlite3.connect(self._db_path)
             try:
                 # Load the action

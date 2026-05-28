@@ -97,11 +97,11 @@ fn find_best_match(
     }
 
     // Try regex-based extraction for specific types
-    if best_match.is_none() || best_match.as_ref().map_or(true, |m| m.confidence < CONFIDENCE_STEM) {
+    if best_match.is_none() || best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_STEM) {
         match field_type {
             "email" => {
                 if let Some(email) = extract_email_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),
@@ -128,7 +128,7 @@ fn find_best_match(
             }
             "url" => {
                 if let Some(url) = extract_url_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),
@@ -142,7 +142,7 @@ fn find_best_match(
             }
             "phone" => {
                 if let Some(phone) = extract_phone_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),

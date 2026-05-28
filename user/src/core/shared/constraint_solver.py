@@ -9,10 +9,11 @@ Implements a Constraint Satisfaction Problem solver using:
 Fallback when Z3 is not available.
 """
 
-import time
 import logging
+import time
 from collections import deque
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .deterministic import DeterministicRNG
 
@@ -45,14 +46,14 @@ class ConstraintSolver:
     Fallback cuando Z3 no esta disponible.
     """
 
-    def __init__(self, timeout_ms: int = 5000, seed: Optional[int] = None):
+    def __init__(self, timeout_ms: int = 5000, seed: int | None = None):
         self.timeout_ms = timeout_ms
         self._start_time = 0
         self._timed_out = False
         # Deterministic RNG (Phase 5 fix)
         self._rng = DeterministicRNG("constraint_solver", seed_override=seed)
 
-    def solve(self, domains: Dict[str, List[Any]], constraints: List[Constraint]) -> Dict[str, Any]:
+    def solve(self, domains: dict[str, list[Any]], constraints: list[Constraint]) -> dict[str, Any]:
         """Resuelve un CSP (Constraint Satisfaction Problem)."""
         self._start_time = time.time()
         self._timed_out = False
@@ -77,7 +78,7 @@ class ConstraintSolver:
             return {"status": "SATISFIED", "assignment": result}
         return {"status": "UNSATISFIABLE", "assignment": None}
 
-    def verify_invariant(self, condition_func: Callable[..., bool], variables: List[str], domains: Dict[str, List[Any]]) -> Dict[str, Any]:
+    def verify_invariant(self, condition_func: Callable[..., bool], variables: list[str], domains: dict[str, list[Any]]) -> dict[str, Any]:
         """Verifica si una invariante se cumple en todos los estados posibles."""
         self._start_time = time.time()
         self._timed_out = False
@@ -156,7 +157,7 @@ class ConstraintSolver:
 
             assignment = {}
             for var in variables:
-                if var in domains and domains[var]:
+                if domains.get(var):
                     assignment[var] = self._rng.choice(domains[var])
 
             try:
@@ -252,9 +253,8 @@ class ConstraintSolver:
             if c.var1 == var and c.var2 in assignment:
                 if not c.satisfied(val, assignment[c.var2]):
                     return False
-            elif c.var2 == var and c.var1 in assignment:
-                if not c.satisfied(assignment[c.var1], val):
-                    return False
+            elif c.var2 == var and c.var1 in assignment and not c.satisfied(assignment[c.var1], val):
+                return False
         return True
 
     def _check_timeout(self):

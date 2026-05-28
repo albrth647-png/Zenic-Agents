@@ -8,16 +8,16 @@ from .governor_parts import (
     ResourceGovernor,
     get_governor,
     init_governor,
-    tune_gc_for_arm,
-    set_process_priority_low,
     limit_open_files,
+    set_process_priority_low,
+    tune_gc_for_arm,
 )
 
 __all__ = [
     "ResourceGovernor",
     "get_governor",
     "init_governor",
-    "tune_gc_for_arm",
-    "set_process_priority_low",
     "limit_open_files",
+    "set_process_priority_low",
+    "tune_gc_for_arm",
 ]

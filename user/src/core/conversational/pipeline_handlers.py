@@ -11,17 +11,21 @@ Cada handler procesa un tipo de pipeline especifico:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from .types.base import Result, Ok
-from .types.session import Session
+from .types.base import Ok, Result
 from .types.intent import AssistantIntent, IntentCategory
 from .types.response import (
-    AssistantResponse, ResponseFormat, ResponseMetadata,
+    AssistantResponse,
+    ResponseFormat,
+    ResponseMetadata,
 )
-from .types.personality import PersonalityProfile
-from .engine_parts import ResponseGenerator, EngineFormatter
-from .zenic_bridge import ZenicBridge
+
+if TYPE_CHECKING:
+    from .engine_parts import EngineFormatter, ResponseGenerator
+    from .types.personality import PersonalityProfile
+    from .types.session import Session
+    from .zenic_bridge import ZenicBridge
 
 
 class PipelineHandlers:
@@ -38,7 +42,7 @@ class PipelineHandlers:
         generator: ResponseGenerator,
         formatter: EngineFormatter,
         personality_getter: Any,  # Callable para obtener default personality
-        bridge: Optional[ZenicBridge] = None,
+        bridge: ZenicBridge | None = None,
     ) -> None:
         self._generator = generator
         self._formatter = formatter
@@ -52,7 +56,7 @@ class PipelineHandlers:
         message: str,
         intent: AssistantIntent,
         session: Session,
-        personality: Optional[PersonalityProfile] = None,
+        personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
         """Maneja mensajes conversacionales sin motor."""
         profile = personality or self._get_personality()
@@ -81,7 +85,7 @@ class PipelineHandlers:
         enriched: Any,
         intent: AssistantIntent,
         session: Session,
-        personality: Optional[PersonalityProfile] = None,
+        personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
         """Maneja preguntas con contexto de memoria."""
         profile = personality or self._get_personality()
@@ -131,7 +135,7 @@ class PipelineHandlers:
         message: str,
         intent: AssistantIntent,
         session: Session,
-        personality: Optional[PersonalityProfile] = None,
+        personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
         """Maneja mensajes que requieren el motor Zenic-Agents."""
         if self._bridge is None or not self._bridge.is_available:

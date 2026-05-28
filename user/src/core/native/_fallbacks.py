@@ -10,7 +10,6 @@ from __future__ import annotations
 import hashlib
 import hmac as _hmac
 import logging
-from typing import List
 
 logger = logging.getLogger("zenic_agents.core.native")
 
@@ -211,7 +210,7 @@ def xxhash64(data: bytes, seed: int) -> int:
         return h
 
 
-def merkle_root(leaves: List[bytes]) -> str:
+def merkle_root(leaves: list[bytes]) -> str:
     """Pure Python Merkle root computation using BLAKE3.
 
     E-04 FIX: BLAKE3 is now MANDATORY — no SHA-256 fallback.
@@ -254,14 +253,14 @@ def merkle_root(leaves: List[bytes]) -> str:
     # Each leaf is hashed with BLAKE3, then adjacent hashes are
     # concatenated as RAW BYTES (not hex strings) and re-hashed.
     # This matches the Rust merkle_root() function exactly.
-    current_level: List[bytes] = [_hash_func(leaf) for leaf in leaves]
+    current_level: list[bytes] = [_hash_func(leaf) for leaf in leaves]
 
     while len(current_level) > 1:
         # If odd number of nodes, duplicate the last one
         if len(current_level) % 2 != 0:
             current_level.append(current_level[-1])
 
-        next_level: List[bytes] = []
+        next_level: list[bytes] = []
         for i in range(0, len(current_level), 2):
             # E-04 FIX: Concatenate raw bytes, not hex strings.
             # Rust does: combined = left_bytes + right_bytes; blake3(combined)

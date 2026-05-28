@@ -21,7 +21,7 @@ import logging
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import MemoryEntries, ScoredEntry, ScoredEntries
+from ..schemas import MemoryEntries, ScoredEntries, ScoredEntry
 
 logger = logging.getLogger(__name__)
 
@@ -282,7 +282,7 @@ class RelevanceScorer(BaseAgent[ScoredEntries]):
         for entry in entries:
             # Hash the content prefix for dedup
             prefix = entry.content[:DEDUP_CONTENT_PREFIX_LEN].lower().strip()
-            content_hash = hashlib.md5(prefix.encode()).hexdigest()
+            content_hash = hashlib.sha256(prefix.encode()).hexdigest()
 
             if content_hash in seen_hashes:
                 # Keep the higher-scoring entry

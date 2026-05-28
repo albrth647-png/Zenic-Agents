@@ -31,7 +31,7 @@ class EvidenceType(str, Enum):
     KEYWORD_CLASSIFY = "keyword_classify"  # Clasificación por keywords
     STRUCTURAL_MATCH = "structural_match"  # Estructura coincide
     RULE_ENGINE = "rule_engine"  # Motor de reglas
-    SANDBOX_PASS = "sandbox_pass"  # Pasó sandbox
+    SANDBOX_PASS = "sandbox_pass"  # Pasó sandbox  # noqa: S105
 
 
 class VerdictConfidence(str, Enum):

@@ -12,8 +12,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  ENUMS
@@ -81,7 +80,7 @@ class DBFieldSchema:
     unique: bool = False
     indexed: bool = False
     default: Any = None
-    constraints: Dict[str, Any] = field(default_factory=dict)
+    constraints: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
 
@@ -89,18 +88,18 @@ class DBFieldSchema:
 class DBEntitySchema:
     """Schema for a database entity/table."""
     name: str
-    fields: List[DBFieldSchema] = field(default_factory=list)
+    fields: list[DBFieldSchema] = field(default_factory=list)
     primary_key: str = "id"
-    indexes: List[Dict[str, Any]] = field(default_factory=list)
-    constraints: List[str] = field(default_factory=list)
+    indexes: list[dict[str, Any]] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
     description: str = ""
 
 
 @dataclass
 class DBSchema:
     """Complete database schema for a Blueprint."""
-    entities: List[DBEntitySchema] = field(default_factory=list)
-    migrations: List[Dict[str, Any]] = field(default_factory=list)
+    entities: list[DBEntitySchema] = field(default_factory=list)
+    migrations: list[dict[str, Any]] = field(default_factory=list)
     version: str = "1.0.0"
 
 
@@ -111,8 +110,8 @@ class MonitorHook:
     weight: str = "lightweight"           # lightweight, medium, heavy
     interval_seconds: float = 300.0
     enabled: bool = True
-    thresholds: List[Dict[str, Any]] = field(default_factory=list)
-    params: Dict[str, Any] = field(default_factory=dict)
+    thresholds: list[dict[str, Any]] = field(default_factory=list)
+    params: dict[str, Any] = field(default_factory=dict)
     notification_channel: str = "log"
 
 
@@ -136,7 +135,7 @@ class ActionTemplateDef:
     name: str
     description: str = ""
     executor_type: str = ""
-    config_template: Dict[str, Any] = field(default_factory=dict)
+    config_template: dict[str, Any] = field(default_factory=dict)
     safety_category: str = "moderate"
     requires_confirmation: bool = False
     requires_approval: bool = False
@@ -163,7 +162,7 @@ class BlueprintCompatibility:
     blueprint_name: str
     version_range: str = "*"           # Semver range, e.g., ">=1.0.0,<3.0.0"
     composition_notes: str = ""
-    known_conflicts: List[str] = field(default_factory=list)
+    known_conflicts: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -177,9 +176,9 @@ class BlueprintMetadataV2:
     author: str = ""
     tier: BlueprintTier = BlueprintTier.FREE
     status: BlueprintStatus = BlueprintStatus.DRAFT
-    signature: Optional[BlueprintSignature] = None
-    compatibility: List[BlueprintCompatibility] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    signature: BlueprintSignature | None = None
+    compatibility: list[BlueprintCompatibility] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     icon: str = ""
     scale: str = "medium"              # small, medium, large, enterprise
     created_at: float = 0.0
@@ -198,7 +197,7 @@ class OnboardingStep:
     step_type: OnboardingStepType
     title: str = ""
     description: str = ""
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     required: bool = True
     completed: bool = False
 
@@ -207,12 +206,12 @@ class OnboardingStep:
 class OnboardingSession:
     """An active onboarding session."""
     session_id: str = ""
-    blueprint_names: List[str] = field(default_factory=list)
-    steps: List[OnboardingStep] = field(default_factory=list)
+    blueprint_names: list[str] = field(default_factory=list)
+    steps: list[OnboardingStep] = field(default_factory=list)
     current_step: int = 0
     tenant_id: str = ""
     user_id: str = ""
-    import_data: Dict[str, Any] = field(default_factory=dict)
+    import_data: dict[str, Any] = field(default_factory=dict)
     created_at: float = 0.0
     completed_at: float = 0.0
 

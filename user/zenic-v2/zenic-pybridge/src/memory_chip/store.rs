@@ -119,7 +119,7 @@ pub(crate) fn approve_mapping(
     if outcome == HitlOutcome::Approved {
         // Compute a real merkle-derived hash for approval instead of a placeholder
         let approval_hash = {
-            let seal = inner.merkle_seal.lock().map_err(|e| {
+            let mut seal = inner.merkle_seal.lock().map_err(|e| {
                 PyRuntimeError::new_err(format!("Merkle seal lock poisoned: {}", e))
             })?;
             // Use the HITL approval data to generate a deterministic hash

@@ -24,7 +24,7 @@ import pytest
 @pytest.fixture
 def sample_vector():
     """A normalized 384-dimensional vector."""
-    rng = random.Random(42)
+    rng = random.Random(42)  # noqa: S310,S311
     vec = [rng.gauss(0, 1) for _ in range(384)]
     norm = sum(v * v for v in vec) ** 0.5
     if norm > 0:
@@ -35,7 +35,7 @@ def sample_vector():
 @pytest.fixture
 def sample_vectors():
     """100 normalized 384-dimensional vectors."""
-    rng = random.Random(42)
+    rng = random.Random(42)  # noqa: S310,S311
     vectors = []
     for i in range(100):
         vec = [rng.gauss(0, 1) for _ in range(384)]

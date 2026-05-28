@@ -18,8 +18,10 @@ No external dependencies beyond Python stdlib.
 
 import logging
 import threading
-from typing import Any, Dict, List
+from typing import Any, List  # noqa: UP035
 
+from ._async_mixin import AsyncDispatchMixin
+from ._sync_mixin import SyncDispatchMixin
 from ._types import (
     AsyncPipelineBehavior,
     PipelineBehavior,
@@ -27,16 +29,14 @@ from ._types import (
     RequestHandler,
     Response,
 )
-from ._sync_mixin import SyncDispatchMixin
-from ._async_mixin import AsyncDispatchMixin
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "Request",
-    "Response",
-    "RequestHandler",
     "Mediator",
+    "Request",
+    "RequestHandler",
+    "Response",
 ]
 
 
@@ -74,9 +74,9 @@ class Mediator(SyncDispatchMixin, AsyncDispatchMixin):
     """
 
     def __init__(self) -> None:
-        self._handlers: Dict[str, RequestHandler] = {}
-        self._pipelines: List[PipelineBehavior] = []
-        self._async_pipelines: List[AsyncPipelineBehavior] = []
+        self._handlers: dict[str, RequestHandler] = {}
+        self._pipelines: list[PipelineBehavior] = []
+        self._async_pipelines: list[AsyncPipelineBehavior] = []
         self._lock = threading.Lock()
         self._dispatch_count: int = 0
         self._error_count: int = 0
@@ -139,7 +139,7 @@ class Mediator(SyncDispatchMixin, AsyncDispatchMixin):
     # ----------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """
         Runtime statistics for monitoring and debugging.
 

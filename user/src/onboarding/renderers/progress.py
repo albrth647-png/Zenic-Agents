@@ -13,9 +13,12 @@ Design Patterns:
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 try:
     from rich.box import ROUNDED  # noqa: F401
@@ -233,7 +236,7 @@ class ProgressRenderer:
         for cb in self._callbacks:
             try:
                 cb(step)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Rendering ────────────────────────────────────────────

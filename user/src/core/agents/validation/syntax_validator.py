@@ -61,16 +61,15 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
 
             # Check for missing returns on all paths
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef):
-                    if not self._function_returns_on_all_paths(node):
-                        errors.append(
-                            ValidationIssue(
-                                severity="warning",
-                                code="missing_return",
-                                message=f"Function '{node.name}' may not return on all paths",
-                                line=node.lineno,
-                            )
+                if isinstance(node, ast.FunctionDef) and not self._function_returns_on_all_paths(node):
+                    errors.append(
+                        ValidationIssue(
+                            severity="warning",
+                            code="missing_return",
+                            message=f"Function '{node.name}' may not return on all paths",
+                            line=node.lineno,
                         )
+                    )
 
                 # Check for resource leaks (open without with)
                 if isinstance(node, ast.Call):

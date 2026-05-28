@@ -198,7 +198,7 @@ class DependencyResolver:
             return result
 
         # Compute topological order (Kahn's algorithm)
-        in_degree: dict[str, int] = {sid: 0 for sid in self._steps}
+        in_degree: dict[str, int] = dict.fromkeys(self._steps, 0)
         for sid, deps in self._steps.items():
             for dep in deps:
                 if dep in in_degree:
@@ -244,7 +244,7 @@ class DependencyResolver:
     def _detect_cycles(self) -> list[list[str]]:
         """Detect cycles using DFS with coloring."""
         WHITE, GRAY, BLACK = 0, 1, 2
-        color: dict[str, int] = {sid: WHITE for sid in self._steps}
+        color: dict[str, int] = dict.fromkeys(self._steps, WHITE)
         cycles: list[list[str]] = []
         path: list[str] = []
 
@@ -256,7 +256,7 @@ class DependencyResolver:
                     continue
                 if color[dep] == GRAY:
                     cycle_start = path.index(dep)
-                    cycles.append(path[cycle_start:] + [dep])
+                    cycles.append([*path[cycle_start:], dep])
                 elif color[dep] == WHITE:
                     dfs(dep)
             path.pop()

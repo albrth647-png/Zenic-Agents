@@ -7,9 +7,13 @@ todos los recursos del telefono.
 
 from .governor import ResourceGovernor
 from .singleton import get_governor, init_governor
-from .utils import tune_gc_for_arm, set_process_priority_low, limit_open_files
+from .utils import limit_open_files, set_process_priority_low, tune_gc_for_arm
 
 __all__ = [
-    "ResourceGovernor", "get_governor", "init_governor",
-    "tune_gc_for_arm", "set_process_priority_low", "limit_open_files",
+    "ResourceGovernor",
+    "get_governor",
+    "init_governor",
+    "limit_open_files",
+    "set_process_priority_low",
+    "tune_gc_for_arm",
 ]

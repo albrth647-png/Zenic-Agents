@@ -187,12 +187,12 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
         self._semantic_engine = semantic_engine
 
         # Common kwargs for all agents
-        self._ik = dict(
-            circuit_breaker_manager=self._cb_manager,
-            bulkhead_manager=self._bulkhead_manager,
-            health_monitor=self._health_monitor,
-            audit_logger=self._audit_logger,
-        )
+        self._ik = {
+            "circuit_breaker_manager": self._cb_manager,
+            "bulkhead_manager": self._bulkhead_manager,
+            "health_monitor": self._health_monitor,
+            "audit_logger": self._audit_logger,
+        }
 
         # ── Phase 1: Understanding ──
         self._bilingual_router = BilingualRouter(**self._ik)

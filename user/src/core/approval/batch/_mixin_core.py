@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import BatchRequest, BatchResult
 from ._mixin_persistence import BatchPersistenceMixin
+from ._types import BatchRequest, BatchResult
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
     def create_batch(
         self,
         action_type: str,
-        action_configs: List[Dict[str, Any]],
+        action_configs: list[dict[str, Any]],
         requested_by: int,
         required_role: str,
     ) -> BatchRequest:
@@ -58,7 +58,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         chain = get_approval_chain()
 
-        request_ids: List[str] = []
+        request_ids: list[str] = []
         for cfg in action_configs:
             req = chain.create_request(
                 action_type=action_type,
@@ -108,8 +108,8 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         chain = get_approval_chain()
 
         approved = 0
-        errors: List[str] = []
-        individual_results: List[Dict[str, Any]] = []
+        errors: list[str] = []
+        individual_results: list[dict[str, Any]] = []
 
         for idx, request_id in enumerate(batch.request_ids):
             result = chain.approve(request_id, approver_id, approver_role)
@@ -166,8 +166,8 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         chain = get_approval_chain()
 
         rejected = 0
-        errors: List[str] = []
-        individual_results: List[Dict[str, Any]] = []
+        errors: list[str] = []
+        individual_results: list[dict[str, Any]] = []
 
         for idx, request_id in enumerate(batch.request_ids):
             result = chain.reject(request_id, approver_id, reason=reason)
@@ -208,7 +208,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         batch_id: str,
         approver_id: int,
         approver_role: str,
-        indices: List[int],
+        indices: list[int],
     ) -> BatchResult:
         """Approve only the specified indices within the batch."""
         batch = self._get_batch_internal(batch_id)
@@ -225,8 +225,8 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         chain = get_approval_chain()
 
         approved = 0
-        errors: List[str] = []
-        individual_results: List[Dict[str, Any]] = []
+        errors: list[str] = []
+        individual_results: list[dict[str, Any]] = []
 
         for idx in indices:
             if idx < 0 or idx >= len(batch.request_ids):
@@ -270,15 +270,15 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
     # ── Query Methods ──────────────────────────────────────
 
-    def get_batch(self, batch_id: str) -> Optional[BatchRequest]:
+    def get_batch(self, batch_id: str) -> BatchRequest | None:
         """Get a batch by ID."""
         return self._get_batch_internal(batch_id)
 
     def list_batches(
         self, status: str = "", limit: int = 20,
-    ) -> List[BatchRequest]:
+    ) -> list[BatchRequest]:
         """List batches, optionally filtered by status."""
-        def _do_query() -> List[BatchRequest]:
+        def _do_query() -> list[BatchRequest]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             if status:
@@ -299,9 +299,9 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         return self._with_retry(_do_query, fallback=[])
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return aggregate batch approval statistics."""
-        def _do_query() -> Dict[str, Any]:
+        def _do_query() -> dict[str, Any]:
             conn = sqlite3.connect(self._db_path)
             try:
                 total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -313,7 +313,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
                 total_rejected = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT SUM(rejected_count) FROM batch_requests"
                 ).fetchone()[0] or 0
-                by_status: Dict[str, int] = {}
+                by_status: dict[str, int] = {}
                 for st in ("pending", "approved", "rejected", "partial", "completed"):
                     cnt = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT COUNT(*) FROM batch_requests WHERE status = ?",

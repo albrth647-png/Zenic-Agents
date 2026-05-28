@@ -13,10 +13,10 @@ from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import (
-    TriggerSpec,
     ActionSpec,
-    ScheduleSpec,
     ConditionResult,
+    ScheduleSpec,
+    TriggerSpec,
     WorkflowSpec,
 )
 

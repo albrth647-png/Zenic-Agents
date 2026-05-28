@@ -29,14 +29,14 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "VectorSearchResult",
     "VectorStore",
     "get_vector_store",
-    "VectorSearchResult",
 ]
 
 
@@ -53,7 +53,7 @@ class VectorSearchResult:
     id: str
     content: str
     similarity: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class VectorStore:
@@ -73,7 +73,7 @@ class VectorStore:
 
     def __init__(
         self,
-        database_url: Optional[str] = None,
+        database_url: str | None = None,
         dimensions: int = 384,
         hnsw_m: int = 16,
         hnsw_ef_construction: int = 64,
@@ -94,7 +94,7 @@ class VectorStore:
         self._pgvector_available = False
 
         # In-memory fallback for when pgvector is not available
-        self._memory_store: Dict[str, Dict[str, Any]] = {}
+        self._memory_store: dict[str, dict[str, Any]] = {}
         self._stats = {
             "upserts": 0,
             "searches": 0,
@@ -209,7 +209,7 @@ class VectorStore:
                 # 4. Set ef_search for query-time search quality
                 try:
                     await conn.execute(f"SET hnsw.ef_search = {self._ef_search}")
-                except Exception:
+                except Exception:  # noqa: S110
                     pass  # Non-critical
 
                 # 5. Create indexes on metadata columns for filtered search
@@ -246,12 +246,12 @@ class VectorStore:
         self,
         id: str,
         content: str,
-        embedding: List[float],
+        embedding: list[float],
         *,
         source: str = "",
         category: str = "",
-        tags: Optional[List[str]] = None,
-        expires_at: Optional[float] = None,
+        tags: list[str] | None = None,
+        expires_at: float | None = None,
     ) -> bool:
         """Upsert an embedding into the vector store.
 
@@ -287,7 +287,7 @@ class VectorStore:
                     emb_str = "[" + ",".join(str(v) for v in embedding) + "]"
 
                     await conn.execute(
-                        f"""
+                        f"""  # noqa: S608
                         INSERT INTO {self._table_name}
                             (id, content, embedding, source, category, tags, content_hash, updated_at, expires_at)
                         VALUES ($1, $2, $3::vector, $4, $5, $6, $7, NOW(), {expires_str})
@@ -301,7 +301,7 @@ class VectorStore:
                             content_hash = EXCLUDED.content_hash,
                             updated_at = NOW(),
                             expires_at = EXCLUDED.expires_at
-                        """,
+                        """,  # noqa: S608
                         id, content, emb_str, source, category, tags_json, content_hash,
                     )
                 return True
@@ -325,7 +325,7 @@ class VectorStore:
 
     async def upsert_batch(
         self,
-        items: List[Dict[str, Any]],
+        items: list[dict[str, Any]],
     ) -> int:
         """Upsert multiple embeddings in a single transaction.
 
@@ -362,7 +362,7 @@ class VectorStore:
                                 )
 
                                 await conn.execute(
-                                    f"""
+                                    f"""  # noqa: S608
                                     INSERT INTO {self._table_name}
                                         (id, content, embedding, source, category, tags, content_hash, updated_at, expires_at)
                                     VALUES ($1, $2, $3::vector, $4, $5, $6, $7, NOW(), {expires_sql})
@@ -376,7 +376,7 @@ class VectorStore:
                                         content_hash = EXCLUDED.content_hash,
                                         updated_at = NOW(),
                                         expires_at = EXCLUDED.expires_at
-                                    """,
+                                    """,  # noqa: S608
                                     item["id"],
                                     item["content"],
                                     emb_str,
@@ -414,13 +414,13 @@ class VectorStore:
 
     async def search(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         *,
         top_k: int = 5,
         threshold: float = 0.5,
-        category: Optional[str] = None,
-        source: Optional[str] = None,
-    ) -> List[VectorSearchResult]:
+        category: str | None = None,
+        source: str | None = None,
+    ) -> list[VectorSearchResult]:
         """Search for similar embeddings using cosine similarity.
 
         Uses the HNSW index for O(log n) search when pgvector is available.
@@ -442,7 +442,7 @@ class VectorStore:
         start_time = time.time()
         self._stats["searches"] += 1
 
-        results: List[VectorSearchResult] = []
+        results: list[VectorSearchResult] = []
 
         if self._pgvector_available and self._pool:
             try:
@@ -451,7 +451,7 @@ class VectorStore:
 
                     # Build WHERE clause for optional filters
                     where_clauses = ["(1 - (embedding <=> $1::vector)) >= $2"]
-                    params: List[Any] = [emb_str, threshold]
+                    params: list[Any] = [emb_str, threshold]
                     param_idx = 3
 
                     if category is not None:
@@ -471,14 +471,14 @@ class VectorStore:
                     params.append(top_k)
 
                     rows = await conn.fetch(
-                        f"""
+                        f"""  # noqa: S608
                         SELECT id, content, source, category, tags,
                                1 - (embedding <=> $1::vector) AS similarity
                         FROM {self._table_name}
                         WHERE {where_sql}
                         ORDER BY embedding <=> $1::vector
                         LIMIT ${param_idx}
-                        """,
+                        """,  # noqa: S608
                         *params,
                     )
 
@@ -508,12 +508,12 @@ class VectorStore:
 
     def _search_memory(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         top_k: int,
         threshold: float,
-        category: Optional[str] = None,
-        source: Optional[str] = None,
-    ) -> List[VectorSearchResult]:
+        category: str | None = None,
+        source: str | None = None,
+    ) -> list[VectorSearchResult]:
         """Brute-force in-memory cosine similarity search (O(n) fallback)."""
         import numpy as np
 
@@ -522,7 +522,7 @@ class VectorStore:
         if query_norm > 0:
             query = query / query_norm
 
-        scored: List[Tuple[float, VectorSearchResult]] = []
+        scored: list[tuple[float, VectorSearchResult]] = []
         now = time.time()
 
         for id, entry in self._memory_store.items():
@@ -576,7 +576,7 @@ class VectorStore:
             try:
                 async with self._pool.acquire() as conn:
                     await conn.execute(
-                        f"DELETE FROM {self._table_name} WHERE id = $1",
+                        f"DELETE FROM {self._table_name} WHERE id = $1",  # noqa: S608
                         id,
                     )
                 return True
@@ -587,7 +587,7 @@ class VectorStore:
         self._memory_store.pop(id, None)
         return True
 
-    async def count(self, category: Optional[str] = None) -> int:
+    async def count(self, category: str | None = None) -> int:
         """Count the number of stored embeddings.
 
         Args:
@@ -604,15 +604,15 @@ class VectorStore:
                 async with self._pool.acquire() as conn:
                     if category:
                         row = await conn.fetchrow(
-                            f"SELECT COUNT(*) AS cnt FROM {self._table_name} WHERE category = $1",
+                            f"SELECT COUNT(*) AS cnt FROM {self._table_name} WHERE category = $1",  # noqa: S608
                             category,
                         )
                     else:
                         row = await conn.fetchrow(
-                            f"SELECT COUNT(*) AS cnt FROM {self._table_name}"
+                            f"SELECT COUNT(*) AS cnt FROM {self._table_name}"  # noqa: S608
                         )
                     return int(row["cnt"])
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # In-memory fallback
@@ -633,12 +633,12 @@ class VectorStore:
             try:
                 async with self._pool.acquire() as conn:
                     result = await conn.execute(
-                        f"DELETE FROM {self._table_name} WHERE expires_at IS NOT NULL AND expires_at < NOW()"
+                        f"DELETE FROM {self._table_name} WHERE expires_at IS NOT NULL AND expires_at < NOW()"  # noqa: S608
                     )
                     # Parse "DELETE N" result
                     parts = result.split()
                     return int(parts[1]) if len(parts) >= 2 and parts[1].isdigit() else 0
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # In-memory fallback
@@ -651,7 +651,7 @@ class VectorStore:
             del self._memory_store[id]
         return len(expired_ids)
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get vector store statistics.
 
         Returns:
@@ -662,7 +662,7 @@ class VectorStore:
 
         total_count = await self.count()
 
-        stats: Dict[str, Any] = {
+        stats: dict[str, Any] = {
             "backend": self.backend,
             "initialized": self._initialized,
             "dimensions": self._dimensions,
@@ -682,12 +682,12 @@ class VectorStore:
                         SELECT pg_size_pretty(pg_total_relation_size('{self._table_name}')) AS size
                     """)
                     stats["index_size"] = row["size"] if row else "unknown"
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         return stats
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check vector store health for the HealthAggregator.
 
         Returns:
@@ -720,7 +720,7 @@ class VectorStore:
         if self._pool:
             try:
                 await self._pool.close()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             self._pool = None
         self._initialized = False
@@ -729,12 +729,12 @@ class VectorStore:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_vector_store: Optional[VectorStore] = None
+_vector_store: VectorStore | None = None
 _vector_store_lock = asyncio.Lock()
 
 
 def get_vector_store(
-    database_url: Optional[str] = None,
+    database_url: str | None = None,
     dimensions: int = 384,
 ) -> VectorStore:
     """Get or create the singleton VectorStore.

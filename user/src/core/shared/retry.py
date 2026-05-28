@@ -20,9 +20,10 @@ Usage:
     )
 """
 
-import time
 import logging
-from typing import TypeVar, Callable, Optional
+import time
+from collections.abc import Callable
+from typing import TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def with_retry(
     max_retries: int = DEFAULT_MAX_RETRIES,
     base_delay: float = DEFAULT_BASE_DELAY,
     label: str = "operation",
-    on_final_failure: Optional[Callable[[Exception], None]] = None,
+    on_final_failure: Callable[[Exception], None] | None = None,
 ) -> T:
     """Execute fn with retry and exponential backoff.
 
@@ -65,7 +66,7 @@ def with_retry(
         Exception: Re-raises the last exception if all retries fail
             and on_final_failure is not provided.
     """
-    last_exception: Optional[Exception] = None
+    last_exception: Exception | None = None
 
     for attempt in range(1, max_retries + 1):
         try:

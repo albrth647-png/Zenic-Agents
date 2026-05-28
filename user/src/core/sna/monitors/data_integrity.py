@@ -12,9 +12,12 @@ NO espera a que una query devuelva resultados inesperados.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
-from src.data.local_scanner import LocalDataScanner
+
+if TYPE_CHECKING:
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 

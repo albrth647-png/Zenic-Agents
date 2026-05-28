@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -70,10 +71,8 @@ class ComplianceChecker:
         if rule is None:
             return False
         if rule.standard in self._rules_by_standard:
-            try:
+            with contextlib.suppress(ValueError):
                 self._rules_by_standard[rule.standard].remove(rule_id)
-            except ValueError:
-                pass
         return True
 
     def install_default_rules(self) -> None:

@@ -47,9 +47,9 @@ pub fn e2e_start(
         return Ok((state, None));
     }
 
-    let niche = match catalog_get_by_id(niche_id_trimmed) {
-        Some(n) => n,
-        None => {
+    let niche = match catalog_get_by_id(py, niche_id_trimmed) {
+        Ok(Some(n)) => n,
+        Ok(None) => {
             let mut state = E2EPipelineState::new(
                 generate_pipeline_id(niche_id_trimmed),
                 niche_id_trimmed.to_string(),
@@ -63,6 +63,7 @@ pub fn e2e_start(
             state.set_step(E2EPipelineStep::Error);
             return Ok((state, None));
         }
+        Err(e) => return Err(e),
     };
 
     let pipeline_id = generate_pipeline_id(niche_id_trimmed);
@@ -80,7 +81,7 @@ pub fn e2e_start(
     );
 
     // Generate template using Phase A function
-    let template_dict = crate::template::template_generate(niche_id_trimmed, py);
+    let template_dict = crate::template::template_generate(niche_id_trimmed, py)?;
 
     // Start completion session using Phase C function
     let (session, _) = crate::completer::completer_start_session(niche_id_trimmed, py)?;

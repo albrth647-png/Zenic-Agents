@@ -20,7 +20,7 @@ Designed for PostgreSQL (production) and MemoryBackend (dev/testing).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict  # noqa: UP035
 
 from ..backend import CoordinationBackend
 from ..task_queue import DistributedTaskQueue, TaskMessage, TaskPriority

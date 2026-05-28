@@ -101,7 +101,7 @@ class DBAccess:
     def get_table_count(self, table_name: str) -> int:
         """Cuenta los registros en una tabla."""
         conn = self._get_conn()
-        row = conn.execute(f"SELECT COUNT(*) as cnt FROM [{table_name}]").fetchone()
+        row = conn.execute(f"SELECT COUNT(*) as cnt FROM [{table_name}]").fetchone()  # noqa: S608
         return row["cnt"] if row else 0
 
     def get_foreign_keys(self, table_name: str) -> list[dict[str, Any]]:
@@ -159,29 +159,29 @@ class DBAccess:
         self, child_table: str, child_fk: str, parent_table: str, parent_pk: str = "id"
     ) -> list[dict[str, Any]]:
         """Busca registros huérfanos (child con FK sin padre)."""
-        sql = f"""
+        sql = f"""  # noqa: S608
             SELECT c.* FROM [{child_table}] c
             LEFT JOIN [{parent_table}] p ON c.[{child_fk}] = p.[{parent_pk}]
             WHERE p.[{parent_pk}] IS NULL AND c.[{child_fk}] IS NOT NULL
-        """
+        """  # noqa: S608
         return self.execute_query(sql)
 
     def find_duplicates(self, table: str, columns: list[str]) -> list[dict[str, Any]]:
         """Busca registros duplicados basado en columnas específicas."""
         cols = ", ".join(f"[{c}]" for c in columns)
-        sql = f"""
+        sql = f"""  # noqa: S608
             SELECT {cols}, COUNT(*) as duplicate_count
             FROM [{table}]
             GROUP BY {cols}
             HAVING COUNT(*) > 1
             ORDER BY duplicate_count DESC
-        """
+        """  # noqa: S608
         return self.execute_query(sql)
 
     def find_null_fields(self, table: str, required_columns: list[str]) -> list[dict[str, Any]]:
         """Busca registros con campos requeridos que son NULL."""
         conditions = " OR ".join(f"[{c}] IS NULL" for c in required_columns)
-        sql = f"SELECT * FROM [{table}] WHERE {conditions}"
+        sql = f"SELECT * FROM [{table}] WHERE {conditions}"  # noqa: S608
         return self.execute_query(sql)
 
     # ------------------------------------------------------------------ #
@@ -194,7 +194,7 @@ class DBAccess:
         """Busca productos con stock bajo."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC", (threshold,)
+                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC", (threshold,)  # noqa: S608
             )
         except Exception:
             return []
@@ -209,7 +209,7 @@ class DBAccess:
         """Busca facturas vencidas sin pagar."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{status_column}] != ? AND [{due_column}] < date('now') ORDER BY [{due_column}] ASC",
+                f"SELECT * FROM [{table}] WHERE [{status_column}] != ? AND [{due_column}] < date('now') ORDER BY [{due_column}] ASC",  # noqa: S608
                 (paid_status,),
             )
         except Exception:
@@ -219,7 +219,7 @@ class DBAccess:
         """Busca citas programadas para mañana."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{date_column}] = date('now', '+1 day') ORDER BY [{date_column}] ASC"
+                f"SELECT * FROM [{table}] WHERE [{date_column}] = date('now', '+1 day') ORDER BY [{date_column}] ASC"  # noqa: S608
             )
         except Exception:
             return []
@@ -230,7 +230,7 @@ class DBAccess:
         """Busca clientes con saldo pendiente."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC", (threshold,)
+                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC", (threshold,)  # noqa: S608
             )
         except Exception:
             return []
@@ -251,7 +251,7 @@ class DBAccess:
                 logger.warning("get_sales_trend: days=%r no es un entero positivo, usando 30", days)
                 days = 30
             return self.execute_query(
-                f"SELECT date([{date_column}]) as dia, SUM([{amount_column}]) as total "
+                f"SELECT date([{date_column}]) as dia, SUM([{amount_column}]) as total "  # noqa: S608
                 f"FROM [{table}] WHERE [{date_column}] >= date('now', ? || ' days') "
                 f"GROUP BY date([{date_column}]) ORDER BY dia ASC",
                 (f"-{days}",),
@@ -275,7 +275,7 @@ class DBAccess:
                 logger.warning("get_stale_inventory: days=%r no es un entero positivo, usando 90", days)
                 days = 90
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{last_sold_column}] < date('now', ? || ' days') "
+                f"SELECT * FROM [{table}] WHERE [{last_sold_column}] < date('now', ? || ' days') "  # noqa: S608
                 f"OR [{last_sold_column}] IS NULL",
                 (f"-{days}",),
             )

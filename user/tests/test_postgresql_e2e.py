@@ -26,9 +26,8 @@ import pytest_asyncio
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.shared.db_adapters._postgresql import PostgreSQLDatabase
 from src.core.shared.db_adapters._base import DatabaseBackend
-
+from src.core.shared.db_adapters._postgresql import PostgreSQLDatabase
 
 # ── Connection check helper ─────────────────────────────────
 
@@ -91,7 +90,7 @@ def pg_dsn() -> str:
 
 
 @pytest_asyncio.fixture(scope="module")
-async def pg_db(pg_dsn: str) -> Optional[PostgreSQLDatabase]:
+async def pg_db(pg_dsn: str) -> PostgreSQLDatabase | None:
     """Create and initialize a PostgreSQLDatabase instance for the test module."""
     if pg_not_available:
         pytest.skip(SKIP_REASON)

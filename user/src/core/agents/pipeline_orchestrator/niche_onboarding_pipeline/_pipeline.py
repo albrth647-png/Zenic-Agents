@@ -29,17 +29,17 @@ INVARIANTS:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ...executors.safety_gate.domain_gate import (
     get_default_domain_safety_gate,
 )
 from ...niche_rust.bridge import NicheBridge
-from ...niche_rust.ingest_bridge import DocumentIngestor
 from ...niche_rust.certifier_bridge import BlueprintCertifier
 from ...niche_rust.e2e_bridge import PipelineProgress, PipelineResult
+from ...niche_rust.ingest_bridge import DocumentIngestor
 from ..business.interactive_data_collector import InteractiveDataCollector
-from ._steps import PipelineStep, PipelineState
+from ._steps import PipelineState, PipelineStep
 
 logger = logging.getLogger(__name__)
 
@@ -132,8 +132,8 @@ class NicheOnboardingPipeline:
     def upload_documents(
         self,
         state: PipelineState,
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
     ) -> PipelineState:
         """
         Upload and ingest documents. Auto-fills matched template fields.
@@ -182,7 +182,7 @@ class NicheOnboardingPipeline:
 
     # ── Step 3: GENERATE_QUESTIONS ────────────────────────────
 
-    def get_questions(self, state: PipelineState) -> List[Dict[str, Any]]:
+    def get_questions(self, state: PipelineState) -> list[dict[str, Any]]:
         """
         Get questions for missing required fields.
         """
@@ -226,7 +226,7 @@ class NicheOnboardingPipeline:
     def submit_answers(
         self,
         state: PipelineState,
-        answers: Dict[str, str],
+        answers: dict[str, str],
     ) -> PipelineState:
         """Submit batch answers for missing fields."""
         for field_name, value in answers.items():
@@ -272,7 +272,7 @@ class NicheOnboardingPipeline:
         self,
         state: PipelineState,
         action_type: str = "niche_onboarding",
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
         data_sensitivity: str = "low",
     ) -> PipelineState:
         """
@@ -417,9 +417,9 @@ class NicheOnboardingPipeline:
     def run_full(
         self,
         niche_id: str,
-        files: Optional[List[Tuple[str, Optional[bytes]]]] = None,
-        texts: Optional[List[str]] = None,
-        answers: Optional[Dict[str, str]] = None,
+        files: list[tuple[str, bytes | None]] | None = None,
+        texts: list[str] | None = None,
+        answers: dict[str, str] | None = None,
         private_key: str = "",
         data_sensitivity: str = "low",
     ) -> PipelineResult:
@@ -483,7 +483,7 @@ class NicheOnboardingPipeline:
     # ── Helpers ───────────────────────────────────────────────
 
     def _auto_fill_field(
-        self, template_dict: Dict[str, Any], field_name: str, value: str,
+        self, template_dict: dict[str, Any], field_name: str, value: str,
     ) -> bool:
         """Auto-fill a field by searching all sections."""
         template = template_dict.get("template", template_dict)

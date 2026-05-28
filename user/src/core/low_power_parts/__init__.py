@@ -6,11 +6,11 @@ la temperatura y bateria del dispositivo, y fuerce la ejecucion
 secuencial de la Capa 4 cuando el hardware esta bajo estres.
 """
 
+from ._imports import HardwareState, PowerMode
 from .mode import LowPowerSequentialMode
-from ._imports import PowerMode, HardwareState
 
 __all__ = [
+    "HardwareState",
     "LowPowerSequentialMode",
     "PowerMode",
-    "HardwareState",
 ]

@@ -91,7 +91,7 @@ def compute_merkle_root(hashes: list[str]) -> str:
             from src.core.native import merkle_root as _native_merkle_root_fn
 
             return _native_merkle_root_fn([h.encode() for h in hashes])
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # Fall through to pure Python
 
     working = list(hashes)

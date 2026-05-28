@@ -15,11 +15,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from ..types.base import Result, Ok, PipelineContext, Priority
-from ..types.session import Session, MessageRole
-from .sanitizer import SanitizedInput
+from ..types.base import Ok, PipelineContext, Priority, Result
+from ..types.session import MessageRole, Session
 from .parser import ParsedInput
-
+from .sanitizer import SanitizedInput
 
 # ─── Protocolo de fuente de contexto ─────────────────────────
 
@@ -137,7 +136,7 @@ class InputEnricher:
                     query=sanitized.cleaned,
                 )
                 external_ctx.extend(ctx)
-            except Exception:
+            except Exception:  # noqa: S112
                 continue  # Fuentes externas no deben romper el pipeline
 
         # 4. Ajustar prioridad

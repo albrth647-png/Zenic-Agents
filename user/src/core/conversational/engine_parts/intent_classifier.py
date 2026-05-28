@@ -9,8 +9,12 @@ categorias conversacionales.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ..types.intent import AssistantIntent, ConversationMode, IntentCategory
-from ..types.session import Session
+
+if TYPE_CHECKING:
+    from ..types.session import Session
 
 # ─── Patrones de intencion ────────────────────────────────────
 

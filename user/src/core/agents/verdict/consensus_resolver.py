@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..resilience import BaseAgent
-from ..schemas import Evidence, EvidenceType, ConsensusResult, Verdict
+from ..schemas import ConsensusResult, Evidence, EvidenceType, Verdict
 
 # ──────────────────────────────────────────────────────────────
 # CONSENSUS THRESHOLDS

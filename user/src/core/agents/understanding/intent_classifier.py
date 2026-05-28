@@ -164,7 +164,7 @@ class IntentClassifier(BaseAgent[IntentResult]):
 
         for key, (kws, compiled) in patterns.items():
             score = 0.0
-            for kw, pattern in zip(kws, compiled):
+            for kw, pattern in zip(kws, compiled, strict=False):
                 # Word boundary match (2pts)
                 if pattern.search(text):
                     score += 2.0

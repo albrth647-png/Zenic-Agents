@@ -19,14 +19,17 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "EventBus",
     "PipelineEvent",
     "PipelineEventHandler",
-    "EventBus",
 ]
 
 
@@ -72,10 +75,10 @@ class PipelineEvent:
     event_type: str
     pipeline_id: str = ""
     step_id: str = ""
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
-    source: Optional[str] = None
-    correlation_id: Optional[str] = None
+    source: str | None = None
+    correlation_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.event_type:
@@ -154,7 +157,7 @@ class EventBus:
     WILDCARD = "*"
 
     def __init__(self) -> None:
-        self._handlers: Dict[str, List[PipelineEventHandler]] = defaultdict(list)
+        self._handlers: dict[str, list[PipelineEventHandler]] = defaultdict(list)
         self._lock = threading.Lock()
         self._events_published: int = 0
         self._errors_count: int = 0
@@ -277,7 +280,7 @@ class EventBus:
 
     # ── Publish and Collect ──────────────────────────────────
 
-    def publish_and_collect(self, event: PipelineEvent) -> List[Any]:
+    def publish_and_collect(self, event: PipelineEvent) -> list[Any]:
         """
         Publish an event and collect return values from handlers.
 
@@ -293,7 +296,7 @@ class EventBus:
             wildcard = list(self._handlers.get(self.WILDCARD, []))
             target_handlers = specific + wildcard
 
-        results: List[Any] = []
+        results: list[Any] = []
         for handler in target_handlers:
             try:
                 result = handler.handle(event)
@@ -314,7 +317,7 @@ class EventBus:
             self._handlers.clear()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
         with self._lock:
             total_handlers = sum(len(h) for h in self._handlers.values())

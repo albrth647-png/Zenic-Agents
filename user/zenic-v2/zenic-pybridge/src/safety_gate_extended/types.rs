@@ -354,19 +354,22 @@ impl From<ComplianceStandard> for zenic_safety::ComplianceStandard {
     }
 }
 
-impl From<zenic_safety::DomainSafetyCheckResult> for DomainSafetyCheckResult {
+impl From<zenic_safety::engine::DomainSafetyCheckResult> for DomainSafetyCheckResult {
     /// Convert the strongly-typed zenic-safety result to the PyO3 String-based version.
     /// This serializes enum fields to their string representations for Python consumption.
-    fn from(r: zenic_safety::DomainSafetyCheckResult) -> Self {
+    fn from(r: zenic_safety::engine::DomainSafetyCheckResult) -> Self {
+        let base_verdict_name = r.base_verdict.to_string();
+        let domain_verdict_name = r.domain_verdict.to_string();
+        let final_verdict_name = r.final_verdict.to_string();
         DomainSafetyCheckResult {
-            base_verdict: r.base_verdict.as_str().to_string(),
-            domain_verdict: r.domain_verdict.as_str().to_string(),
-            final_verdict: r.final_verdict.as_str().to_string(),
+            base_verdict: base_verdict_name.to_string(),
+            domain_verdict: domain_verdict_name.to_string(),
+            final_verdict: final_verdict_name.to_string(),
             niche_category: r.niche_category.as_str().to_string(),
-            data_sensitivity: r.data_sensitivity.as_str().to_string(),
+            data_sensitivity: r.data_sensitivity.to_string(),
             domain_rules_matched: r.domain_rules_matched,
             compliance_results: r.compliance_results.into_iter().map(|cr| ComplianceCheckResult {
-                standard: cr.standard.as_str().to_string(),
+                standard: crate::safety_gate_extended::types::ComplianceStandard::from(cr.standard).as_str().to_string(),
                 compliant: cr.compliant,
                 violations: cr.violations,
                 recommendations: cr.recommendations,

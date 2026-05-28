@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict
+from typing import Any
 
 from ..base import ActionExecutor, ActionResult, _validate_url
-from ._http import _HttpMixin
 from ._auth import _AuthMixin
+from ._http import _HttpMixin
 from ._operations import _OperationsMixin
 
 logger = logging.getLogger(__name__)
@@ -29,10 +29,10 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._rate_limits: Dict[str, Dict[str, Any]] = {}
+        self._rate_limits: dict[str, dict[str, Any]] = {}
         # OAuth token cache: key = instance_url -> {"token": ..., "expires_at": ...}
-        self._oauth_cache: Dict[str, Dict[str, Any]] = {}
-        self._stats: Dict[str, int] = {
+        self._oauth_cache: dict[str, dict[str, Any]] = {}
+        self._stats: dict[str, int] = {
             "requests_total": 0,
             "requests_success": 0,
             "requests_failed": 0,
@@ -44,8 +44,8 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
 
     async def execute(
         self,
-        config: Dict[str, Any],
-        context: Dict[str, Any],
+        config: dict[str, Any],
+        context: dict[str, Any],
     ) -> ActionResult:
         """Execute a ServiceNow operation.
 

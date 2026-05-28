@@ -11,9 +11,9 @@ import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import ValueCategory, ValueEntry, DEFAULT_UNIT_VALUES, _with_retry
+from ._types import DEFAULT_UNIT_VALUES, ValueCategory, ValueEntry, _with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class ValueTracker:
         action_id: str = "",
         tenant_id: str = "",
         currency: str = "USD",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ValueEntry:
         """Record a single value entry.
 
@@ -118,9 +118,9 @@ class ValueTracker:
         tasks_automated: int = 0,
         action_id: str = "",
         tenant_id: str = "",
-    ) -> List[ValueEntry]:
+    ) -> list[ValueEntry]:
         """Convenience method to record multiple value categories at once."""
-        entries: List[ValueEntry] = []
+        entries: list[ValueEntry] = []
         with self._lock:
             if hours_saved > 0:
                 entries.append(
@@ -164,7 +164,7 @@ class ValueTracker:
         self,
         from_time: str = "",
         to_time: str = "",
-        category: Optional[ValueCategory] = None,
+        category: ValueCategory | None = None,
         tenant_id: str = "",
     ) -> float:
         """Return total value with optional time-range, category, and tenant filters."""
@@ -200,11 +200,11 @@ class ValueTracker:
         from_time: str = "",
         to_time: str = "",
         tenant_id: str = "",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Return value grouped by category."""
         with self._lock:
             try:
-                def _query() -> Dict[str, float]:
+                def _query() -> dict[str, float]:
                     conn = sqlite3.connect(self._db_path)
                     sql = (
                         "SELECT category, COALESCE(SUM(total_value), 0) "
@@ -230,11 +230,11 @@ class ValueTracker:
                 logger.error("ValueTracker: get_value_breakdown failed: %s", exc)
                 return {}
 
-    def get_daily_value(self, days: int = 30) -> List[Dict[str, Any]]:
+    def get_daily_value(self, days: int = 30) -> list[dict[str, Any]]:
         """Return daily value totals for the last *days* days."""
         with self._lock:
             try:
-                def _query() -> List[Dict[str, Any]]:
+                def _query() -> list[dict[str, Any]]:
                     conn = sqlite3.connect(self._db_path)
                     cutoff = time.strftime(
                         "%Y-%m-%dT00:00:00Z",
@@ -260,7 +260,7 @@ class ValueTracker:
         from_time: str = "",
         to_time: str = "",
         tenant_id: str = "",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Compute ROI: total_value, total_cost, roi_percent, net_value."""
         total_value = self.get_total_value(
             from_time=from_time, to_time=to_time, tenant_id=tenant_id,
@@ -286,11 +286,11 @@ class ValueTracker:
             "net_value": round(total_value - total_cost, 2),
         }
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return summary statistics."""
         with self._lock:
             try:
-                def _query() -> Dict[str, Any]:
+                def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT COALESCE(SUM(total_value), 0) FROM _zenic_values"
@@ -304,7 +304,7 @@ class ValueTracker:
                     ).fetchall()
                     conn.close()
 
-                    breakdown: Dict[str, Any] = {}
+                    breakdown: dict[str, Any] = {}
                     for cat, val, cnt in by_cat:
                         breakdown[cat] = {"total_value": float(val), "count": int(cnt)}
 

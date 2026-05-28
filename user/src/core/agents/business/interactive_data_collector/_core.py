@@ -116,7 +116,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # noqa:
     # ── Rust-backed methods ────────────────────────────────────
 
     def _start_session(self, native: Any, data: dict[str, Any]) -> InteractiveCollectionResult:
-        session, template_dict = native["completer_start_session"](data.get("niche_id", ""))
+        session, _template_dict = native["completer_start_session"](data.get("niche_id", ""))
         return InteractiveCollectionResult(
             session_id=session.session_id,
             niche_id=session.niche_id,

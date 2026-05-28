@@ -7,9 +7,10 @@ formateado como respuesta del asistente.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..types.personality import PersonalityProfile
+if TYPE_CHECKING:
+    from ..types.personality import PersonalityProfile
 
 
 class EngineFormatter:

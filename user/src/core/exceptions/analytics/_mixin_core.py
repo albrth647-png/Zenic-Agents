@@ -6,12 +6,15 @@ import json
 import logging
 import sqlite3
 import threading
-from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..engine import ExceptionSignal
 from ..taxonomy import ExceptionCategory
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ..engine import ExceptionSignal
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +122,7 @@ class ExceptionAnalytics:
 
             # Total
             total_row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql}",
+                f"SELECT COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql}",  # noqa: S608
                 params,
             ).fetchone()
             total = total_row[0] if total_row else 0
@@ -127,7 +130,7 @@ class ExceptionAnalytics:
             # By category
             by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY category",
+                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY category",  # noqa: S608
                 params,
             ):
                 by_category[row[0]] = row[1]
@@ -135,7 +138,7 @@ class ExceptionAnalytics:
             # By severity
             by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY severity",
+                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY severity",  # noqa: S608
                 params,
             ):
                 by_severity[row[0]] = row[1]
@@ -143,7 +146,7 @@ class ExceptionAnalytics:
             # By source
             by_source: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT source, COUNT(*) FROM _zenic_analytics_signals "
+                f"SELECT source, COUNT(*) FROM _zenic_analytics_signals "  # noqa: S608
                 f"WHERE {where_sql} GROUP BY source ORDER BY COUNT(*) DESC LIMIT 20",
                 params,
             ):
@@ -207,7 +210,7 @@ class ExceptionAnalytics:
 
             # Group by category + source
             group_rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"""
+                f"""  # noqa: S608
                 SELECT category, source, COUNT(*) as freq,
                        MIN(timestamp) as first_seen,
                        MAX(timestamp) as last_seen
@@ -216,7 +219,7 @@ class ExceptionAnalytics:
                 GROUP BY category, source
                 HAVING freq >= 2
                 ORDER BY freq DESC
-                """,
+                """,  # noqa: S608
                 params,
             ).fetchall()
 
@@ -254,12 +257,12 @@ class ExceptionAnalytics:
 
                 # Sample messages (up to 5)
                 msg_rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f"""
+                    f"""  # noqa: S608
                     SELECT message FROM _zenic_analytics_signals
                     WHERE category = ? AND source = ? {tenant_filter}
                     ORDER BY timestamp DESC LIMIT 5
-                    """,
-                    [category_str, source] + params,
+                    """,  # noqa: S608
+                    [category_str, source, *params],
                 ).fetchall()
                 sample_messages = [r[0] for r in msg_rows]
 
@@ -293,21 +296,21 @@ class ExceptionAnalytics:
         try:
             mid_point = (now - timedelta(hours=12)).isoformat()
             recent_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"""
+                f"""  # noqa: S608
                 SELECT COUNT(*) FROM _zenic_analytics_signals
                 WHERE category = ? AND source = ?
                   AND timestamp >= ? {tenant_filter}
-                """,
-                [category, source, mid_point] + params,
+                """,  # noqa: S608
+                [category, source, mid_point, *params],
             ).fetchone()[0]
 
             older_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"""
+                f"""  # noqa: S608
                 SELECT COUNT(*) FROM _zenic_analytics_signals
                 WHERE category = ? AND source = ?
                   AND timestamp < ? {tenant_filter}
-                """,
-                [category, source, mid_point] + params,
+                """,  # noqa: S608
+                [category, source, mid_point, *params],
             ).fetchone()[0]
 
             if older_count == 0:

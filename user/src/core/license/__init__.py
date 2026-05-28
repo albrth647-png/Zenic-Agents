@@ -11,13 +11,10 @@ Components:
 - KillSwitchStatus: Remote kill switch state
 """
 
-from .types import (
-    LicenseTier,
-    LicenseStatus,
-    HardwareBindingStrength,
-    LicenseInfo,
-    LicenseVerificationResult,
-    KillSwitchStatus,
+from .manager import (
+    LicenseManager,
+    get_license_manager,
+    reset_license_manager,
 )
 from .signer import (
     ECDSASigner,
@@ -25,27 +22,30 @@ from .signer import (
     sign_data,
     verify_signature,
 )
-from .manager import (
-    LicenseManager,
-    get_license_manager,
-    reset_license_manager,
+from .types import (
+    HardwareBindingStrength,
+    KillSwitchStatus,
+    LicenseInfo,
+    LicenseStatus,
+    LicenseTier,
+    LicenseVerificationResult,
 )
 
 __all__ = [
-    # Types
-    "LicenseTier",
-    "LicenseStatus",
-    "HardwareBindingStrength",
-    "LicenseInfo",
-    "LicenseVerificationResult",
-    "KillSwitchStatus",
     # Signer
     "ECDSASigner",
-    "get_signer",
-    "sign_data",
-    "verify_signature",
+    "HardwareBindingStrength",
+    "KillSwitchStatus",
+    "LicenseInfo",
     # Manager
     "LicenseManager",
+    "LicenseStatus",
+    # Types
+    "LicenseTier",
+    "LicenseVerificationResult",
     "get_license_manager",
+    "get_signer",
     "reset_license_manager",
+    "sign_data",
+    "verify_signature",
 ]

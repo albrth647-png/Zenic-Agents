@@ -10,10 +10,12 @@ import json
 import logging
 import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
-from ._status import AutopilotStatus
 from ._retry import _retry_operation
+
+if TYPE_CHECKING:
+    from ._status import AutopilotStatus
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,7 @@ class _PersistenceMixin:
         objective_id: str,
         status: AutopilotStatus,
         plan_id: str = "",
-        result: Optional[Dict[str, Any]] = None,
+        result: dict[str, Any] | None = None,
     ) -> None:
         """Persist the engine state for an objective.
 

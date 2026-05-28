@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class ApprovalStatus(str, Enum):
@@ -36,17 +36,17 @@ class ApprovalRequest:
     """A request for approval of a pending action."""
     request_id: str = ""
     action_type: str = ""
-    action_config: Dict[str, Any] = field(default_factory=dict)
+    action_config: dict[str, Any] = field(default_factory=dict)
     required_role: str = "gerente"
     requested_by: int = 0
     status: ApprovalStatus = ApprovalStatus.PENDING
     priority: ApprovalPriority = ApprovalPriority.NORMAL
     created_at: str = ""
     expires_at: str = ""
-    approved_by: Optional[int] = None
-    approved_at: Optional[str] = None
+    approved_by: int | None = None
+    approved_at: str | None = None
     rejection_reason: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.request_id:
@@ -61,7 +61,7 @@ class ApprovalRequest:
         exp = datetime.fromisoformat(self.expires_at)
         return datetime.now(timezone.utc) > exp
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "request_id": self.request_id,
@@ -125,8 +125,8 @@ class MemoryApprovalPayload:
     mapping_id: str = ""
     ia_question: str = ""
     ia_response: bool = False
-    evidence_for: List[str] = field(default_factory=list)
-    evidence_against: List[str] = field(default_factory=list)
+    evidence_for: list[str] = field(default_factory=list)
+    evidence_against: list[str] = field(default_factory=list)
     consensus_score: float = 0.0
 
     # Minimum character count for admin justification
@@ -173,7 +173,7 @@ class MemoryApprovalPayload:
         except ValueError:
             return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "admin_evidence_review": self.admin_evidence_review,
@@ -190,9 +190,9 @@ class MemoryApprovalPayload:
 
 
 __all__ = [
-    "ApprovalStatus",
     "ApprovalPriority",
     "ApprovalRequest",
     "ApprovalResult",
+    "ApprovalStatus",
     "MemoryApprovalPayload",
 ]

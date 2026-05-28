@@ -10,9 +10,8 @@ import heapq
 import logging
 import threading
 import time
-from typing import List, Optional, Tuple
 
-from .types import BusMessage, _MAX_MAILBOX_DEPTH
+from .types import _MAX_MAILBOX_DEPTH, BusMessage
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class AgentMailbox:
         self.agent_id = agent_id
         self._lock = threading.Lock()
         # Heap of (priority, timestamp, sequence, BusMessage)
-        self._heap: List[Tuple[int, float, int, BusMessage]] = []
+        self._heap: list[tuple[int, float, int, BusMessage]] = []
         self._seq = 0  # Tie-breaker to maintain FIFO within same priority
         self._not_empty = threading.Condition(self._lock)
 
@@ -70,7 +69,7 @@ class AgentMailbox:
 
     # ── Dequeue ──
 
-    def pop(self, timeout_ms: float = 0) -> Optional[BusMessage]:
+    def pop(self, timeout_ms: float = 0) -> BusMessage | None:
         """Non-blocking (or timed) pop of the highest-priority message.
 
         Args:
@@ -105,7 +104,7 @@ class AgentMailbox:
         with self._lock:
             return len(self._heap) == 0
 
-    def peek_all(self) -> List[BusMessage]:
+    def peek_all(self) -> list[BusMessage]:
         """Return a snapshot of all messages without removing them."""
         with self._lock:
             return [item[3] for item in sorted(self._heap)]

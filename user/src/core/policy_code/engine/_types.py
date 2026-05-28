@@ -1,11 +1,11 @@
 """Types and constants for engine."""
 from __future__ import annotations
 
-from ..types import PolicyCondition
-
 import logging
 from pathlib import Path
 from typing import Any
+
+from ..types import PolicyCondition
 
 logger = logging.getLogger("zenic_agents.core.policy_code.engine")
 

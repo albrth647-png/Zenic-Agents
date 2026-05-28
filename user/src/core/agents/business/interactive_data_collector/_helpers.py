@@ -5,10 +5,12 @@ calculation, field validation, and answer application.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._constants import FIELD_SUGGESTIONS, FIELD_VALIDATORS, MAX_ANSWER_LENGTH
-from ._types import CompletionSession
+
+if TYPE_CHECKING:
+    from ._types import CompletionSession
 
 
 def extract_questions_from_template(
@@ -67,7 +69,7 @@ def calculate_progress(
     filled_fields = 0
     missing_required = 0
 
-    for section_id, section in sections.items():
+    for _section_id, section in sections.items():
         if not isinstance(section, dict):
             continue
         fields = section.get("fields", {})
@@ -124,7 +126,7 @@ def apply_answer_to_template(
     template = template_dict.get("template", template_dict)
     sections = template.get("sections", {})
 
-    for section_id, section in sections.items():
+    for _section_id, section in sections.items():
         if not isinstance(section, dict):
             continue
         fields = section.get("fields", {})

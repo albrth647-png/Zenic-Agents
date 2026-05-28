@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import functools
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from src.core.shared.deterministic import ControllableJitter
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 T = TypeVar("T")
 

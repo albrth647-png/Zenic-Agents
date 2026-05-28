@@ -7,7 +7,6 @@ These are stateless and side-effect free, making them easy to test.
 from __future__ import annotations
 
 import re
-from typing import List
 
 
 def extract_table_name(query: str, operation: str) -> str:
@@ -54,7 +53,7 @@ def extract_where_clause(query: str) -> str:
     return match.group(1).strip().rstrip(";").strip() if match else ""
 
 
-def extract_set_fields(query: str) -> List[tuple]:
+def extract_set_fields(query: str) -> list[tuple]:
     """Extract field=value pairs from UPDATE SET clause.
 
     Returns list of (field_name, value) tuples.
@@ -69,7 +68,7 @@ def extract_set_fields(query: str) -> List[tuple]:
         return []
 
     set_clause = match.group(1).strip().rstrip(";")
-    fields: List[tuple] = []
+    fields: list[tuple] = []
 
     for assignment in set_clause.split(","):
         assignment = assignment.strip()
@@ -95,7 +94,7 @@ def extract_set_fields(query: str) -> List[tuple]:
     return fields
 
 
-def extract_insert_columns(query: str) -> List[str]:
+def extract_insert_columns(query: str) -> list[str]:
     """Extract column names from an INSERT INTO table (col1, col2, ...) statement."""
     match = re.search(
         r'\bINTO\s+\w+\s*\(([^)]+)\)',

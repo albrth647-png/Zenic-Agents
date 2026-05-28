@@ -6,14 +6,14 @@ que el asistente puede invocar, con ToolManager
 como orquestador unificado de Fase 2.
 """
 
-from .registry import ToolRegistry
 from .executor import ToolExecutor
-from .permissions import PermissionManager
 from .manager import ToolManager
+from .permissions import PermissionManager
+from .registry import ToolRegistry
 
 __all__ = [
-    "ToolRegistry",
-    "ToolExecutor",
     "PermissionManager",
+    "ToolExecutor",
     "ToolManager",
+    "ToolRegistry",
 ]

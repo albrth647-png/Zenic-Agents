@@ -237,7 +237,7 @@ class MerkleLedgerHelpersMixin:
             if db_path and conn:
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     def _get_last_hash(self, file_path, db_path=None, tenant_id=None):
@@ -265,7 +265,7 @@ class MerkleLedgerHelpersMixin:
             if db_path and conn:
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     def _record_operation(self, file_path, content_hash, parent_hash, operation, db_path=None, tenant_id=None):
@@ -293,13 +293,13 @@ class MerkleLedgerHelpersMixin:
 
         try:
             with_retry(_insert, label="MerkleLedger record_operation")
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # with_retry already logged the failure
         finally:
             if db_path and conn:
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     @staticmethod

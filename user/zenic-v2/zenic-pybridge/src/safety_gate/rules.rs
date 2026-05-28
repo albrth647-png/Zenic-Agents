@@ -43,7 +43,7 @@ pub(crate) static SAFETY_RULES: Lazy<Vec<SafetyRule>> = Lazy::new(|| {
         SafetyRule {
             name: "data_exfiltration",
             category: ActionCategory::Destructive,
-            pattern: Regex::new(r"(?i)\b(?:curl\s+.*(?:password|secret|token|api_key)|wget\s+.*(?:password|secret|token)|\.post\s*\(\s*[\"']https?://.*(?:password|token|key))\b")
+            pattern: Regex::new(r#"(?i)\b(?:curl\s+.*(?:password|secret|token|api_key)|wget\s+.*(?:password|secret|token)|\.post\s*\(\s*["']https?://.*(?:password|token|key))\b"#)
                 .expect("invalid regex: data_exfiltration"),
             verdict: SafetyVerdict::Deny,
             message: "Potential data exfiltration detected — DENIED",

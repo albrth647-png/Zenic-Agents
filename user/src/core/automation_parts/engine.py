@@ -14,16 +14,18 @@ Plus own methods:
 import logging
 import os
 import sqlite3
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from . import types as _types
 from .crud import CoreCRUDMixin
 from .execution import ExecutionMixin
 from .project_gen import ProjectGenMixin
-from .types import (
-    Workflow,
-    WorkflowExecution,
-)
+
+if TYPE_CHECKING:
+    from .types import (
+        Workflow,
+        WorkflowExecution,
+    )
 
 logger = logging.getLogger(__name__)
 

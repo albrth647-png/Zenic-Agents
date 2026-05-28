@@ -5,14 +5,14 @@ Rigor: sin mocks, datos reales, cubre normal + vacío + nulo + extremos + error.
 """
 
 import pytest
+
 from src.core.voice_pipeline._types import (
     AudioFormat,
-    TranscriptionResult,
     ConversionResult,
     STTBackendConfig,
+    TranscriptionResult,
     VoicePipelineMetrics,
 )
-
 
 # ════════════════════════════════════════════════════════════════
 #  AudioFormat enum

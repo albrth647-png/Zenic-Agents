@@ -40,65 +40,77 @@ Todos los ejecutores:
 """
 
 # ── Base ──
+# ── Audit Logger ──
+from .audit_logger import (
+    AuditEntry,
+    AuditMerkleChain,
+    AuditPersistence,
+    AuditQuery,
+    ExecutorAuditLogger,
+    get_default_audit_logger,
+    reset_audit_logger,
+)
 from .base import (
-    ActionResult,
-    ActionExecutor,
-    ExecutorRegistry,
-    _validate_email,
-    _validate_url,
-    _safe_path,
-    _validate_sql,
-    _HAS_AIOSMTPLIB,
     _HAS_AIOHTTP,
+    _HAS_AIOSMTPLIB,
     _HAS_APSCHEDULER,
+    ActionExecutor,
+    ActionResult,
+    ExecutorRegistry,
+    _safe_path,
+    _validate_email,
+    _validate_sql,
+    _validate_url,
     get_default_registry,
     reset_default_registry,
 )
 
-# ── Executors (remaining) ──
-from .database_executor import DatabaseExecutor
-from .file_executor import FileExecutor
-from .transform_executor import TransformExecutor
-from .schedule_executor import ScheduleExecutor
-
-# ── Executors (Phase 2 — channel integration) ──
-from .email_executor import EmailExecutor
-from .jira_executor import JiraExecutor
-from .servicenow_executor import ServiceNowExecutor
-
-# ── Safety Gate ──
-from .safety_gate import (
-    SafetyGate,
-    SafetyVerdict,
-    SafetyCheckResult,
-    ActionCategory,
-    SafetyRule,
-    ActionRateLimiter,
-    get_default_safety_gate,
-    reset_safety_gate,
-)
-
-# ── Audit Logger ──
-from .audit_logger import (
-    ExecutorAuditLogger,
-    AuditEntry,
-    AuditQuery,
-    AuditMerkleChain,
-    AuditPersistence,
-    get_default_audit_logger,
-    reset_audit_logger,
-)
-
 # ── Blueprint Schema ──
 from .blueprint_schema import (
+    ActionTemplate,
     Blueprint,
+    BlueprintLoader,
     BlueprintMetadata,
     BlueprintValidator,
-    BlueprintLoader,
-    ExecutorSchema,
     BusinessRule,
-    ActionTemplate,
+    ExecutorSchema,
     get_default_blueprint,
+)
+from .coordinated_rollback import (
+    ActionStatus as CoordinatedActionStatus,
+)
+from .coordinated_rollback import (
+    CoordinatedAction,
+    CoordinatedRollbackManager,
+    CoordinatedRollbackResult,
+    ResourceRecord,
+    ResourceType,
+    get_coordinated_rollback_manager,
+    reset_coordinated_rollback_manager,
+)
+
+# ── Executors (remaining) ──
+from .database_executor import DatabaseExecutor
+
+# Phase A: DB Journal + Coordinated Rollback
+from .db_journal import (
+    DBTransactionJournal,
+    JournalEntry,
+    get_db_journal,
+    reset_db_journal,
+)
+from .db_journal import (
+    RollbackResult as JournalRollbackResult,
+)
+
+# ── Database Parts ──
+from .db_parts import CRUDValidator, SQLCipherAdapter, Transaction, TransactionManager
+from .diff_preview import (
+    DiffEntry,
+    DiffPreviewEngine,
+    DiffResult,
+    get_diff_preview_engine,
+    reset_diff_preview_engine,
 )
 
 # ── Dispatch Action (DAG Integration) ──
@@ -111,203 +123,195 @@ from .dispatch_action import (
     reset_dispatcher,
 )
 
-# ── Email Parts (Phase 2) ──
-from .email_parts import (
-    EmailTemplateEngine,
-    EmailTemplate,
-    EmailRateLimiter,
-    OAuth2TokenManager,
-    OAuth2Config,
-    OAuth2Token,
-    GraphAPIEmailProvider,
-)
-
-# ── Database Parts ──
-from .db_parts import SQLCipherAdapter, CRUDValidator, TransactionManager, Transaction
-
-# Phase A: Impact Preview + Policy Engine
-from .impact_preview import (
-    ImpactPreviewEngine,
-    ImpactPreview,
-    DBImpactPreview,
-    FileImpactPreview,
-    EmailImpactPreview,
-    ImpactField,
-    ImpactRiskLevel,
-    get_impact_preview_engine,
-    reset_impact_preview_engine,
-)
-from .policy_engine import (
-    PolicyEngine,
-    PolicyRule,
-    PolicyDecision,
-    PolicyCondition,
-    PolicyAction,
-    ConditionOperator,
-    get_policy_engine,
-    reset_policy_engine,
-)
-# Phase A: DB Journal + Coordinated Rollback
-from .db_journal import (
-    DBTransactionJournal,
-    JournalEntry,
-    RollbackResult as JournalRollbackResult,
-    get_db_journal,
-    reset_db_journal,
-)
-from .coordinated_rollback import (
-    CoordinatedRollbackManager,
-    CoordinatedAction,
-    ResourceRecord,
-    ResourceType,
-    ActionStatus as CoordinatedActionStatus,
-    CoordinatedRollbackResult,
-    get_coordinated_rollback_manager,
-    reset_coordinated_rollback_manager,
-)
-
 # Phase C1: Dry-Run / Simulation Engine
 from .dry_run_executor import (
+    DryRunExecutor,
     DryRunOperation,
     DryRunResult,
-    DryRunExecutor,
     dry_run_dispatch,
     get_dry_run_executor,
     reset_dry_run_executor,
 )
+
+# ── Executors (Phase 2 — channel integration) ──
+from .email_executor import EmailExecutor
+
+# ── Email Parts (Phase 2) ──
+from .email_parts import (
+    EmailRateLimiter,
+    EmailTemplate,
+    EmailTemplateEngine,
+    GraphAPIEmailProvider,
+    OAuth2Config,
+    OAuth2Token,
+    OAuth2TokenManager,
+)
+from .file_executor import FileExecutor
+
+# Phase A: Impact Preview + Policy Engine
+from .impact_preview import (
+    DBImpactPreview,
+    EmailImpactPreview,
+    FileImpactPreview,
+    ImpactField,
+    ImpactPreview,
+    ImpactPreviewEngine,
+    ImpactRiskLevel,
+    get_impact_preview_engine,
+    reset_impact_preview_engine,
+)
+from .jira_executor import JiraExecutor
+from .policy_engine import (
+    ConditionOperator,
+    PolicyAction,
+    PolicyCondition,
+    PolicyDecision,
+    PolicyEngine,
+    PolicyRule,
+    get_policy_engine,
+    reset_policy_engine,
+)
+
+# ── Safety Gate ──
+from .safety_gate import (
+    ActionCategory,
+    ActionRateLimiter,
+    SafetyCheckResult,
+    SafetyGate,
+    SafetyRule,
+    SafetyVerdict,
+    get_default_safety_gate,
+    reset_safety_gate,
+)
+from .schedule_executor import ScheduleExecutor
+from .servicenow_executor import ServiceNowExecutor
 from .simulation_engine import (
-    SimulationResult,
     ScenarioComparison,
     SimulationEngine,
+    SimulationResult,
     get_simulation_engine,
     reset_simulation_engine,
 )
-from .diff_preview import (
-    DiffEntry,
-    DiffResult,
-    DiffPreviewEngine,
-    get_diff_preview_engine,
-    reset_diff_preview_engine,
-)
+from .transform_executor import TransformExecutor
 
 __all__ = [
-    # Base
-    "ActionResult",
-    "ActionExecutor",
-    "ExecutorRegistry",
-    "_validate_email",
-    "_validate_url",
-    "_safe_path",
-    "_validate_sql",
-    "_HAS_AIOSMTPLIB",
     "_HAS_AIOHTTP",
+    "_HAS_AIOSMTPLIB",
     "_HAS_APSCHEDULER",
-    "get_default_registry",
-    "reset_default_registry",
-    # Executors (7)
-    "DatabaseExecutor",
-    "FileExecutor",
-    "TransformExecutor",
-    "ScheduleExecutor",
-    # Executors (Phase 2)
-    "EmailExecutor",
-    "ServiceNowExecutor",
-    "JiraExecutor",
-    # Email Parts (Phase 2)
-    "EmailTemplateEngine",
-    "EmailTemplate",
-    "EmailRateLimiter",
-    "OAuth2TokenManager",
-    "OAuth2Config",
-    "OAuth2Token",
-    "GraphAPIEmailProvider",
-    # Safety Gate
-    "SafetyGate",
-    "SafetyVerdict",
-    "SafetyCheckResult",
     "ActionCategory",
-    "SafetyRule",
-    "ActionRateLimiter",
-    "get_default_safety_gate",
-    "reset_safety_gate",
-    # Audit Logger
-    "ExecutorAuditLogger",
-    "AuditEntry",
-    "AuditQuery",
-    "AuditMerkleChain",
-    "AuditPersistence",
-    "get_default_audit_logger",
-    "reset_audit_logger",
-    # Blueprint Schema
-    "Blueprint",
-    "BlueprintMetadata",
-    "BlueprintValidator",
-    "BlueprintLoader",
-    "ExecutorSchema",
-    "BusinessRule",
-    "ActionTemplate",
-    "get_default_blueprint",
     # Dispatch Action
     "ActionDispatcher",
-    "DispatchRequest",
-    "DispatchResult",
-    "exec_dispatch_action",
-    "get_default_dispatcher",
-    "reset_dispatcher",
-    # Database Parts
-    "SQLCipherAdapter",
+    "ActionExecutor",
+    "ActionRateLimiter",
+    # Base
+    "ActionResult",
+    "ActionTemplate",
+    "AuditEntry",
+    "AuditMerkleChain",
+    "AuditPersistence",
+    "AuditQuery",
+    # Blueprint Schema
+    "Blueprint",
+    "BlueprintLoader",
+    "BlueprintMetadata",
+    "BlueprintValidator",
+    "BusinessRule",
     "CRUDValidator",
-    "TransactionManager",
-    "Transaction",
-    # Phase A: Impact Preview
-    "ImpactPreviewEngine",
-    "ImpactPreview",
-    "DBImpactPreview",
-    "FileImpactPreview",
-    "EmailImpactPreview",
-    "ImpactField",
-    "ImpactRiskLevel",
-    "get_impact_preview_engine",
-    "reset_impact_preview_engine",
-    # Phase A: Policy Engine
-    "PolicyEngine",
-    "PolicyRule",
-    "PolicyDecision",
-    "PolicyCondition",
-    "PolicyAction",
     "ConditionOperator",
-    "get_policy_engine",
-    "reset_policy_engine",
-    # Phase A: DB Journal
-    "DBTransactionJournal",
-    "JournalEntry",
-    "JournalRollbackResult",
-    "get_db_journal",
-    "reset_db_journal",
+    "CoordinatedAction",
+    "CoordinatedActionStatus",
     # Phase A: Coordinated Rollback
     "CoordinatedRollbackManager",
-    "CoordinatedAction",
-    "ResourceRecord",
-    "ResourceType",
-    "CoordinatedActionStatus",
     "CoordinatedRollbackResult",
-    "get_coordinated_rollback_manager",
-    "reset_coordinated_rollback_manager",
+    "DBImpactPreview",
+    # Phase A: DB Journal
+    "DBTransactionJournal",
+    # Executors (7)
+    "DatabaseExecutor",
+    "DiffEntry",
+    "DiffPreviewEngine",
+    "DiffResult",
+    "DispatchRequest",
+    "DispatchResult",
+    "DryRunExecutor",
     # Phase C1: Dry-Run / Simulation Engine
     "DryRunOperation",
     "DryRunResult",
-    "DryRunExecutor",
-    "dry_run_dispatch",
-    "get_dry_run_executor",
-    "reset_dry_run_executor",
-    "SimulationResult",
+    # Executors (Phase 2)
+    "EmailExecutor",
+    "EmailImpactPreview",
+    "EmailRateLimiter",
+    "EmailTemplate",
+    # Email Parts (Phase 2)
+    "EmailTemplateEngine",
+    # Audit Logger
+    "ExecutorAuditLogger",
+    "ExecutorRegistry",
+    "ExecutorSchema",
+    "FileExecutor",
+    "FileImpactPreview",
+    "GraphAPIEmailProvider",
+    "ImpactField",
+    "ImpactPreview",
+    # Phase A: Impact Preview
+    "ImpactPreviewEngine",
+    "ImpactRiskLevel",
+    "JiraExecutor",
+    "JournalEntry",
+    "JournalRollbackResult",
+    "OAuth2Config",
+    "OAuth2Token",
+    "OAuth2TokenManager",
+    "PolicyAction",
+    "PolicyCondition",
+    "PolicyDecision",
+    # Phase A: Policy Engine
+    "PolicyEngine",
+    "PolicyRule",
+    "ResourceRecord",
+    "ResourceType",
+    # Database Parts
+    "SQLCipherAdapter",
+    "SafetyCheckResult",
+    # Safety Gate
+    "SafetyGate",
+    "SafetyRule",
+    "SafetyVerdict",
     "ScenarioComparison",
+    "ScheduleExecutor",
+    "ServiceNowExecutor",
     "SimulationEngine",
-    "get_simulation_engine",
-    "reset_simulation_engine",
-    "DiffEntry",
-    "DiffResult",
-    "DiffPreviewEngine",
+    "SimulationResult",
+    "Transaction",
+    "TransactionManager",
+    "TransformExecutor",
+    "_safe_path",
+    "_validate_email",
+    "_validate_sql",
+    "_validate_url",
+    "dry_run_dispatch",
+    "exec_dispatch_action",
+    "get_coordinated_rollback_manager",
+    "get_db_journal",
+    "get_default_audit_logger",
+    "get_default_blueprint",
+    "get_default_dispatcher",
+    "get_default_registry",
+    "get_default_safety_gate",
     "get_diff_preview_engine",
+    "get_dry_run_executor",
+    "get_impact_preview_engine",
+    "get_policy_engine",
+    "get_simulation_engine",
+    "reset_audit_logger",
+    "reset_coordinated_rollback_manager",
+    "reset_db_journal",
+    "reset_default_registry",
     "reset_diff_preview_engine",
+    "reset_dispatcher",
+    "reset_dry_run_executor",
+    "reset_impact_preview_engine",
+    "reset_policy_engine",
+    "reset_safety_gate",
+    "reset_simulation_engine",
 ]

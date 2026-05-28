@@ -7,7 +7,7 @@ use std::fs;
 use super::crypto::constant_time_compare;
 
 /// Collect hardware identifiers cross-platform.
-pub(crate) fn collect_hw_components() -> Vec<String> {
+pub fn collect_hw_components() -> Vec<String> {
     let mut components: Vec<String> = Vec::new();
 
     // 1. Hostname

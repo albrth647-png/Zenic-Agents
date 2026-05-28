@@ -14,6 +14,21 @@ import {
   type ApiError,
 } from '@/lib/api-client';
 
+// ─── Helpers para mocks ─────────────────────────────────────────────────────
+// Las factories retornan funciones compatibles con typeof fetch evitando errores TS
+
+function mockFetchOk<T>(data: T): typeof fetch {
+  return () => Promise.resolve(
+    new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } })
+  );
+}
+
+function mockFetchError(status: number, body: unknown): typeof fetch {
+  return () => Promise.resolve(
+    new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+  );
+}
+
 // ─── formatApiError ─────────────────────────────────────────────────────────
 
 describe('formatApiError', () => {
@@ -82,8 +97,7 @@ describe('formatApiError', () => {
 describe('apiFetch', () => {
   it('resuelve con JSON cuando la respuesta es OK', async () => {
     const data = { id: 1, name: 'Zenic' };
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchOk(data);
 
     const result = await apiFetch<{ id: number; name: string }>('/api/test');
     expect(result).toEqual(data);
@@ -91,40 +105,35 @@ describe('apiFetch', () => {
 
   it('resuelve con array cuando la respuesta es un array', async () => {
     const data = [1, 2, 3];
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchOk(data);
 
     const result = await apiFetch<number[]>('/api/test');
     expect(result).toEqual([1, 2, 3]);
   });
 
   it('resuelve con string cuando la respuesta es un string', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify('hello'), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchOk('hello');
 
     const result = await apiFetch<string>('/api/test');
     expect(result).toBe('hello');
   });
 
   it('resuelve con null cuando la respuesta es null', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(null), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchOk(null);
 
     const result = await apiFetch<null>('/api/test');
     expect(result).toBeNull();
   });
 
   it('resuelve con objeto vacío cuando la respuesta es {}', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchOk({});
 
     const result = await apiFetch<Record<string, unknown>>('/api/test');
     expect(result).toEqual({});
   });
 
   it('lanza ApiError con status 400 para respuesta Bad Request', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'Campo inválido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchError(400, { error: 'Campo inválido' });
 
     try {
       await apiFetch('/api/test');
@@ -137,8 +146,7 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con status 401 para respuesta Unauthorized', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'Token expirado' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchError(401, { error: 'Token expirado' });
 
     try {
       await apiFetch('/api/test');
@@ -150,8 +158,7 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con status 403 para respuesta Forbidden', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ message: 'Access denied' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchError(403, { message: 'Access denied' });
 
     try {
       await apiFetch('/api/test');
@@ -163,8 +170,7 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con status 404 para respuesta Not Found', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'No encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchError(404, { error: 'No encontrado' });
 
     try {
       await apiFetch('/api/test');
@@ -175,8 +181,7 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con status 500 para error del servidor', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = mockFetchError(500, { error: 'Internal Server Error' });
 
     try {
       await apiFetch('/api/test');
@@ -187,8 +192,9 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con status 503 para servicio no disponible', async () => {
-    globalThis.fetch = async () =>
-      new Response('Service Unavailable', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+    globalThis.fetch = () => Promise.resolve(
+      new Response('Service Unavailable', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+    );
 
     try {
       await apiFetch('/api/test');
@@ -199,8 +205,9 @@ describe('apiFetch', () => {
   });
 
   it('maneja respuesta de error sin JSON (body vacío)', async () => {
-    globalThis.fetch = async () =>
-      new Response('', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+    globalThis.fetch = () => Promise.resolve(
+      new Response('', { status: 500, headers: { 'Content-Type': 'text/plain' } })
+    );
 
     try {
       await apiFetch('/api/test');
@@ -213,10 +220,10 @@ describe('apiFetch', () => {
 
   it('lanza ApiError con code TIMEOUT cuando se aborta', async () => {
     // Simular abort inmediato
-    globalThis.fetch = async (_url: string, opts?: RequestInit) => {
+    globalThis.fetch = () => {
       const controller = new AbortController();
       controller.abort();
-      return await fetch(_url, { ...opts, signal: controller.signal });
+      return fetch('/api/test', { signal: controller.signal });
     };
 
     try {
@@ -230,9 +237,7 @@ describe('apiFetch', () => {
   });
 
   it('lanza ApiError con code NETWORK_ERROR cuando fetch lanza error genérico', async () => {
-    globalThis.fetch = async () => {
-      throw new TypeError('Failed to fetch');
-    };
+    globalThis.fetch = () => Promise.reject(new TypeError('Failed to fetch'));
 
     try {
       await apiFetch('/api/test');
@@ -245,8 +250,7 @@ describe('apiFetch', () => {
   });
 
   it('usa errorMessage personalizado cuando se proporciona', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'original' }), { status: 500 });
+    globalThis.fetch = mockFetchError(500, { error: 'original' });
 
     try {
       await apiFetch('/api/test', { errorMessage: 'Error personalizado' });
@@ -257,8 +261,7 @@ describe('apiFetch', () => {
   });
 
   it('preserva el code del body de la respuesta de error', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'mal', code: 'SAGA_FAILED' }), { status: 409 });
+    globalThis.fetch = mockFetchError(409, { error: 'mal', code: 'SAGA_FAILED' });
 
     try {
       await apiFetch('/api/test');
@@ -273,10 +276,17 @@ describe('apiFetch', () => {
 
 describe('apiFetchParallel', () => {
   it('resuelve todos los endpoints cuando todos son OK', async () => {
-    globalThis.fetch = async (url: string) => {
-      if (url === '/a') return new Response(JSON.stringify({ val: 1 }), { status: 200 });
-      if (url === '/b') return new Response(JSON.stringify({ val: 2 }), { status: 200 });
-      return new Response(JSON.stringify(null), { status: 404 });
+    const responses: Record<string, unknown> = {
+      '/a': { val: 1 },
+      '/b': { val: 2 },
+    };
+    globalThis.fetch = (url: RequestInfo | URL) => {
+      const key = typeof url === 'string' ? url : url.toString();
+      const data = responses[key];
+      const status = data ? 200 : 404;
+      return Promise.resolve(
+        new Response(JSON.stringify(data ?? null), { status, headers: { 'Content-Type': 'application/json' } })
+      );
     };
 
     const result = await apiFetchParallel<{ a: { val: number }; b: { val: number } }>({
@@ -291,10 +301,11 @@ describe('apiFetchParallel', () => {
   });
 
   it('aísla errores — un endpoint falla, los demás resuelven', async () => {
-    globalThis.fetch = async (url: string) => {
-      if (url === '/ok') return new Response(JSON.stringify({ data: 'bien' }), { status: 200 });
-      if (url === '/fail') return new Response(JSON.stringify({ error: 'roto' }), { status: 500 });
-      return new Response('', { status: 404 });
+    globalThis.fetch = (url: RequestInfo | URL) => {
+      const key = typeof url === 'string' ? url : url.toString();
+      if (key === '/ok') return Promise.resolve(new Response(JSON.stringify({ data: 'bien' }), { status: 200 }));
+      if (key === '/fail') return Promise.resolve(new Response(JSON.stringify({ error: 'roto' }), { status: 500 }));
+      return Promise.resolve(new Response('', { status: 404 }));
     };
 
     const result = await apiFetchParallel<{ ok: { data: string }; fail: null }>({
@@ -310,8 +321,9 @@ describe('apiFetchParallel', () => {
   });
 
   it('todos los endpoints fallan — todos tienen error', async () => {
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ error: 'server down' }), { status: 503 });
+    globalThis.fetch = () => Promise.resolve(
+      new Response(JSON.stringify({ error: 'server down' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+    );
 
     const result = await apiFetchParallel<{ x: null; y: null }>({
       x: '/x',
@@ -330,9 +342,9 @@ describe('apiFetchParallel', () => {
 describe('apiPost', () => {
   it('envía POST con Content-Type application/json', async () => {
     let capturedOpts: RequestInit | undefined;
-    globalThis.fetch = async (_url: string, opts?: RequestInit) => {
+    globalThis.fetch = (_url: RequestInfo | URL, opts?: RequestInit) => {
       capturedOpts = opts;
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     };
 
     await apiPost('/api/test', { name: 'Zenic' });
@@ -345,9 +357,9 @@ describe('apiPost', () => {
 describe('apiPut', () => {
   it('envía PUT con Content-Type application/json', async () => {
     let capturedOpts: RequestInit | undefined;
-    globalThis.fetch = async (_url: string, opts?: RequestInit) => {
+    globalThis.fetch = (_url: RequestInfo | URL, opts?: RequestInit) => {
       capturedOpts = opts;
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     };
 
     await apiPut('/api/test', { id: 5, active: true });
@@ -359,9 +371,9 @@ describe('apiPut', () => {
 describe('apiDelete', () => {
   it('envía DELETE sin body', async () => {
     let capturedOpts: RequestInit | undefined;
-    globalThis.fetch = async (_url: string, opts?: RequestInit) => {
+    globalThis.fetch = (_url: RequestInfo | URL, opts?: RequestInit) => {
       capturedOpts = opts;
-      return new Response(JSON.stringify({ deleted: true }), { status: 200 });
+      return Promise.resolve(new Response(JSON.stringify({ deleted: true }), { status: 200 }));
     };
 
     await apiDelete('/api/test/5');

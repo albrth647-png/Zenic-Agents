@@ -6,7 +6,7 @@
 //   - Strategy: RoiCalculationStrategy per industry (different formulas)
 //   - Value Object: immutable ROI projections and metric snapshots
 
-import type { PricingTierName, Industry, PricingTier, PlaybookPricing } from "./_core";
+import type { PricingTier, PlaybookPricing } from "./_core";
 import { PricingTierName, Industry } from "./_core";
 
 // ─── ROI System Types ─────────────────────────────────────────────────

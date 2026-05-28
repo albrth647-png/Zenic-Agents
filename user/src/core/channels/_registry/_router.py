@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from ._adapter import AdapterRegistry
 from ._types import (
@@ -18,7 +18,7 @@ from ._types import (
 logger = logging.getLogger("zenic_agents.channels.registry")
 
 # Priority → channel suitability mapping
-_PRIORITY_CHANNEL_MAP: Dict[ChannelPriority, List[str]] = {
+_PRIORITY_CHANNEL_MAP: dict[ChannelPriority, list[str]] = {
     ChannelPriority.LOW: ["log", "email", "push"],
     ChannelPriority.NORMAL: ["log", "email", "push", "teams", "slack"],
     ChannelPriority.HIGH: ["email", "push", "teams", "slack", "sms"],
@@ -27,7 +27,7 @@ _PRIORITY_CHANNEL_MAP: Dict[ChannelPriority, List[str]] = {
 }
 
 # Default fallback chains
-_DEFAULT_FALLBACKS: Dict[str, List[str]] = {
+_DEFAULT_FALLBACKS: dict[str, list[str]] = {
     "teams": ["email", "log"],
     "slack": ["email", "log"],
     "whatsapp": ["sms", "email", "log"],
@@ -50,8 +50,8 @@ class ChannelRouter:
 
     def __init__(self, registry: AdapterRegistry) -> None:
         self._registry = registry
-        self._user_preferences: Dict[str, List[str]] = {}
-        self._priority_overrides: Dict[str, ChannelPriority] = {}
+        self._user_preferences: dict[str, list[str]] = {}
+        self._priority_overrides: dict[str, ChannelPriority] = {}
 
         # Register default fallback chains
         for channel, fallbacks in _DEFAULT_FALLBACKS.items():
@@ -64,8 +64,8 @@ class ChannelRouter:
         priority: ChannelPriority = ChannelPriority.NORMAL,
         alert_type: str = "",
         user_id: str = "",
-        exclude_channels: Optional[Set[str]] = None,
-    ) -> List[str]:
+        exclude_channels: set[str] | None = None,
+    ) -> list[str]:
         """Route a message to the best channel(s) based on priority."""
         exclude = exclude_channels or set()
 
@@ -79,7 +79,7 @@ class ChannelRouter:
             remaining = [c for c in candidates if c not in preferred]
             candidates = preferred + remaining
 
-        available: List[str] = []
+        available: list[str] = []
         for ch in candidates:
             if ch in exclude:
                 continue
@@ -121,7 +121,7 @@ class ChannelRouter:
 
     # ── User Preferences ────────────────────────────────────────
 
-    def set_user_preferences(self, user_id: str, channels: List[str]) -> None:
+    def set_user_preferences(self, user_id: str, channels: list[str]) -> None:
         """Set channel preference order for a user."""
         self._user_preferences[user_id] = channels
         logger.debug(
@@ -129,7 +129,7 @@ class ChannelRouter:
             user_id, channels,
         )
 
-    def get_user_preferences(self, user_id: str) -> List[str]:
+    def get_user_preferences(self, user_id: str) -> list[str]:
         """Get channel preference order for a user."""
         return list(self._user_preferences.get(user_id, []))
 
@@ -150,7 +150,7 @@ class ChannelRouter:
     # ── Properties ──────────────────────────────────────────────
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Router statistics."""
         return {
             "user_preferences_count": len(self._user_preferences),
@@ -163,7 +163,7 @@ class ChannelRouter:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_default_registry: Optional[AdapterRegistry] = None
+_default_registry: AdapterRegistry | None = None
 _registry_lock = threading.Lock()
 
 

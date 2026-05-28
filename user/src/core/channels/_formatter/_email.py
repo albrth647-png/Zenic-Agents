@@ -2,38 +2,46 @@
 
 from __future__ import annotations
 
+import html as html_module
+from typing import TYPE_CHECKING
 
-def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: verify import
+from ._text import sanitize_html
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
+
+
+def format_email_html(message: ChannelMessage) -> str:  # TODO: verify import
     """Format a ChannelMessage into an HTML email body.  # noqa: F821  # TODO: verify import
 
     Builds a styled HTML email with optional title, body,
     field table, and footer.
     """
-    parts: List[str] = []  # noqa: F821  # TODO: verify import
+    parts: list[str] = []  # TODO: verify import
 
     # Title
     if message.title:
-        parts.append(f'<h2 style="color:#1a1a1a;margin:0 0 12px 0;">{html_module.escape(message.title)}</h2>')  # noqa: F821  # TODO: verify import
+        parts.append(f'<h2 style="color:#1a1a1a;margin:0 0 12px 0;">{html_module.escape(message.title)}</h2>')  # TODO: verify import
 
     # Subtitle
     if message.subtitle:
         parts.append(
             f'<p style="color:#666;margin:0 0 8px 0;font-size:14px;">{html_module.escape(message.subtitle)}</p>'
-        )  # noqa: F821  # TODO: verify import
+        )  # TODO: verify import
 
     # Body
     if message.html:
-        parts.append(f'<div style="margin:0 0 12px 0;">{sanitize_html(message.html)}</div>')  # noqa: F821  # TODO: verify import
+        parts.append(f'<div style="margin:0 0 12px 0;">{sanitize_html(message.html)}</div>')  # TODO: verify import
     elif message.text:
-        escaped = html_module.escape(message.text).replace("\n", "<br>")  # noqa: F821  # TODO: verify import
+        escaped = html_module.escape(message.text).replace("\n", "<br>")  # TODO: verify import
         parts.append(f'<div style="margin:0 0 12px 0;">{escaped}</div>')
 
     # Fields table
     if message.fields:
         rows = []
         for f in message.fields[:20]:
-            key = html_module.escape(f.get("title", f.get("name", "")))  # noqa: F821  # TODO: verify import
-            val = html_module.escape(str(f.get("value", "")))  # noqa: F821  # TODO: verify import
+            key = html_module.escape(f.get("title", f.get("name", "")))  # TODO: verify import
+            val = html_module.escape(str(f.get("value", "")))  # TODO: verify import
             rows.append(
                 f'<tr><td style="padding:6px 12px;font-weight:bold;border-bottom:1px solid #eee;">{key}</td>'
                 f'<td style="padding:6px 12px;border-bottom:1px solid #eee;">{val}</td></tr>'
@@ -44,21 +52,21 @@ def format_email_html(message: ChannelMessage) -> str:  # noqa: F821  # TODO: ve
 
     # Image
     if message.image_url:
-        alt_text = html_module.escape(message.title or "Image")  # noqa: F821  # TODO: verify import
-        safe_url = html_module.escape(message.image_url, quote=True)  # noqa: F821  # TODO: verify import
+        alt_text = html_module.escape(message.title or "Image")  # TODO: verify import
+        safe_url = html_module.escape(message.image_url, quote=True)  # TODO: verify import
         parts.append(f'<img src="{safe_url}" alt="{alt_text}" style="max-width:100%;margin:0 0 12px 0;" />')
 
     # Footer
     if message.footer:
         parts.append(
             f'<p style="color:#999;font-size:12px;margin:12px 0 0 0;">{html_module.escape(message.footer)}</p>'
-        )  # noqa: F821  # TODO: verify import
+        )  # TODO: verify import
 
     body = "\n".join(parts)
     return f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">' f"{body}</div>"
 
 
-def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # noqa: F821  # TODO: verify import
+def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # TODO: verify import
     """Format a confirmation request as an HTML email with action buttons.
 
     Returns styled HTML with YES/NO/MORE_INFO links.
@@ -86,10 +94,10 @@ def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # noqa
 
     return (
         f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
-        f'<h2 style="color:#1a1a1a;">{html_module.escape(request.title)}</h2>'  # noqa: F821  # TODO: verify import
-        f'<p style="color:#333;">{html_module.escape(request.message)}</p>'  # noqa: F821  # TODO: verify import
+        f'<h2 style="color:#1a1a1a;">{html_module.escape(request.title)}</h2>'  # TODO: verify import
+        f'<p style="color:#333;">{html_module.escape(request.message)}</p>'  # TODO: verify import
         f'<div style="margin:20px 0;">{"".join(buttons)}</div>'
-        f'<p style="color:#999;font-size:12px;">Action ID: {html_module.escape(request.action_id)} | '  # noqa: F821  # TODO: Phase3 - verify import
+        f'<p style="color:#999;font-size:12px;">Action ID: {html_module.escape(request.action_id)} | '  # TODO: Phase3 - verify import
         f'Expires in {request.timeout_seconds // 60} minutes</p>'
         f'</div>'
     )

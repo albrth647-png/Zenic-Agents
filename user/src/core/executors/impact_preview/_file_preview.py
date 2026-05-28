@@ -117,7 +117,7 @@ def preview_file_operation(config: dict[str, Any]) -> FileImpactPreview:
         preview.read_only = False
         preview.would_create = not preview.destination_exists
         preview.would_overwrite = preview.destination_exists
-        preview.reversible = False if preview.would_overwrite else True
+        preview.reversible = not preview.would_overwrite
         preview.summary = f"Overwrite file: {destination}" if preview.would_overwrite else f"Create file: {destination}"
         if preview.would_overwrite:
             preview.warnings.append(f"Would overwrite existing file ({preview.destination_size} bytes): {destination}")

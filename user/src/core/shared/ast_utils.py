@@ -7,7 +7,6 @@ complexity calculations; this module provides a single source of truth.
 """
 
 import ast
-from typing import List
 
 
 def compute_cyclomatic_complexity(node: ast.AST) -> int:
@@ -33,7 +32,7 @@ def compute_cyclomatic_complexity(node: ast.AST) -> int:
     return complexity
 
 
-def extract_function_calls(func_node: ast.AST) -> List[str]:
+def extract_function_calls(func_node: ast.AST) -> list[str]:
     """Extract unique function call names from an AST node.
 
     Args:
@@ -52,7 +51,7 @@ def extract_function_calls(func_node: ast.AST) -> List[str]:
     return sorted(set(calls))
 
 
-def extract_class_connections(class_node: ast.ClassDef) -> List[str]:
+def extract_class_connections(class_node: ast.ClassDef) -> list[str]:
     """Extract inheritance and method connections from a class node.
 
     Args:

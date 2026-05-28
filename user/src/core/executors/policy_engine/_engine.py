@@ -22,7 +22,7 @@ import logging
 import re
 import threading
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._evaluator import PolicyCondition
 from ._types import ConditionOperator, PolicyAction, PolicyDecision, PolicyRule
@@ -49,7 +49,7 @@ class PolicyEngine:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._policies: Dict[str, PolicyRule] = {}  # name -> rule
+        self._policies: dict[str, PolicyRule] = {}  # name -> rule
         self._eval_count: int = 0
 
     # ── Loading Policies ──────────────────────────────────
@@ -95,7 +95,7 @@ class PolicyEngine:
                 "Install with: pip install pyyaml"
             )
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not isinstance(data, dict):
@@ -109,7 +109,7 @@ class PolicyEngine:
 
         return self.load_policies_from_dict(policies_data)
 
-    def load_policies_from_dict(self, policies: List[Dict[str, Any]]) -> int:
+    def load_policies_from_dict(self, policies: list[dict[str, Any]]) -> int:
         """Load policy rules from a list of Python dicts.
 
         Each dict should have the same structure as the YAML format.
@@ -143,8 +143,8 @@ class PolicyEngine:
     def evaluate(
         self,
         action_type: str,
-        config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any],
+        context: dict[str, Any] | None = None,
     ) -> PolicyDecision:
         """Evaluate all applicable policies for an action.
 
@@ -176,8 +176,8 @@ class PolicyEngine:
             )
 
             # Track results
-            matched_rules: List[str] = []
-            details: List[Dict[str, Any]] = []
+            matched_rules: list[str] = []
+            details: list[dict[str, Any]] = []
             best_action: PolicyAction = PolicyAction.ALLOW
             denial_reason: str = ""
             escalation_role: str = ""
@@ -186,7 +186,7 @@ class PolicyEngine:
                 try:
                     if rule.matches(action_type, config, context, category):
                         matched_rules.append(rule.name)
-                        detail: Dict[str, Any] = {
+                        detail: dict[str, Any] = {
                             "rule_name": rule.name,
                             "action": rule.action.value,
                             "priority": rule.priority,
@@ -208,11 +208,10 @@ class PolicyEngine:
                             PolicyAction.REQUIRE_APPROVAL,
                             PolicyAction.ESCALATE,
                             PolicyAction.REQUIRE_CONFIRMATION,
-                        ):
-                            if best_action == PolicyAction.ALLOW:
-                                best_action = rule.action
-                                if rule.action == PolicyAction.ESCALATE:
-                                    escalation_role = rule.escalation_role
+                        ) and best_action == PolicyAction.ALLOW:
+                            best_action = rule.action
+                            if rule.action == PolicyAction.ESCALATE:
+                                escalation_role = rule.escalation_role
 
                 except Exception as exc:
                     logger.warning(
@@ -278,7 +277,7 @@ class PolicyEngine:
             logger.warning("PolicyEngine: Policy '%s' not found for removal", policy_name)
             return False
 
-    def list_policies(self) -> List[PolicyRule]:
+    def list_policies(self) -> list[PolicyRule]:
         """List all loaded policies, sorted by priority (descending).
 
         Returns:
@@ -286,7 +285,7 @@ class PolicyEngine:
         """
         with self._lock:
             return sorted(
-                list(self._policies.values()),
+                self._policies.values(),
                 key=lambda p: p.priority,
                 reverse=True,
             )
@@ -295,7 +294,7 @@ class PolicyEngine:
         self,
         action_type: str,
         category: str = "",
-    ) -> List[PolicyRule]:
+    ) -> list[PolicyRule]:
         """Filter policies by action type and/or category.
 
         Returns policies whose conditions would potentially match
@@ -309,7 +308,7 @@ class PolicyEngine:
             List of applicable PolicyRule objects, sorted by priority (descending).
         """
         with self._lock:
-            applicable: List[PolicyRule] = []
+            applicable: list[PolicyRule] = []
             for rule in self._policies.values():
                 # Category filter
                 if rule.category_filter and category:
@@ -342,7 +341,7 @@ class PolicyEngine:
 
     # ── Stats ──────────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get engine statistics."""
         with self._lock:
             return {
@@ -354,7 +353,7 @@ class PolicyEngine:
     # ── Internal Parsing ──────────────────────────────────
 
     @staticmethod
-    def _parse_policy_dict(data: Dict[str, Any]) -> PolicyRule:
+    def _parse_policy_dict(data: dict[str, Any]) -> PolicyRule:
         """Parse a policy dict into a PolicyRule.
 
         Expected keys:
@@ -371,7 +370,7 @@ class PolicyEngine:
             raise ValueError(f"Policy must have a non-empty string 'name', got: {name!r}")
 
         # Parse condition
-        condition: Optional[PolicyCondition] = None
+        condition: PolicyCondition | None = None
         cond_data = data.get("condition")
         if cond_data and isinstance(cond_data, dict):
             cond_field = cond_data.get("field", "")
@@ -422,7 +421,7 @@ class PolicyEngine:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_policy_engine: Optional[PolicyEngine] = None
+_policy_engine: PolicyEngine | None = None
 _policy_engine_lock = threading.Lock()
 
 

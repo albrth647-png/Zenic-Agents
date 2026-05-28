@@ -186,7 +186,7 @@ class AgentCache:
         best_match = None
         best_score = 0.0
 
-        for key, entry in self._cache.items():
+        for _key, entry in self._cache.items():
             if entry.get("agent") != agent_name:
                 continue
             if self._is_expired(entry):
@@ -202,7 +202,7 @@ class AgentCache:
                 if score > best_score and score >= SIMILARITY_THRESHOLD:
                     best_score = score
                     best_match = entry["result"]
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
         return best_match

@@ -140,7 +140,7 @@ class _ExpressionEvaluator:
 
         # Check for comparison operator
         if peek[0] == "OP":
-            op_kind, op_val = self._consume()
+            _op_kind, op_val = self._consume()
             right = self._parse_value()
             return self._apply_comparison(left, op_val, right)
 

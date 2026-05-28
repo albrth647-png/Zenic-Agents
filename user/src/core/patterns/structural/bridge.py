@@ -10,7 +10,7 @@ Designed for resource-constrained environments (Android/Termux, 500MB RAM).
 import logging
 import threading
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """Generate an embedding vector for *text*."""
         ...
 
@@ -75,7 +75,7 @@ class LocalProvider(LLMProvider):
                 return result if isinstance(result, str) else str(result)
             raise RuntimeError("LocalProvider: engine has no generate/_call_llm method")
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         if not self.is_ready():
             raise RuntimeError("LocalProvider: engine not loaded")
         if hasattr(self._engine, "embed"):
@@ -92,7 +92,7 @@ class LocalProvider(LLMProvider):
         return True
 
     @staticmethod
-    def _pseudo_embed(text: str, dim: int = 64) -> List[float]:
+    def _pseudo_embed(text: str, dim: int = 64) -> list[float]:
         """Deterministic hash-based pseudo-embedding (not for semantic use)."""
         import hashlib
         h = hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -149,7 +149,7 @@ class AgentLLMBridge:
             provider = self._provider
         return provider.complete(prompt, **kwargs)
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """Generate an embedding via the current provider."""
         with self._lock:
             provider = self._provider
@@ -196,7 +196,7 @@ class AgentLLMBridge:
             return self._provider
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return bridge statistics."""
         with self._lock:
             return {

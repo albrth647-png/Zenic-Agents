@@ -9,7 +9,7 @@ import uuid
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from .types import KnowledgeNode
 
@@ -29,7 +29,7 @@ def _now_iso() -> str:
 
 
 def _retry(func: Any, max_retries: int = 3, base_delay: float = 0.1) -> Any:
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             return func()
@@ -44,7 +44,7 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 0.1) -> Any:
 class CrossAgentKnowledgeBus:
     """Thread-safe cross-agent knowledge sharing with pub/sub."""
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
         self._db_path = db_path or str(DB_PATH)
         self._init_db()
@@ -83,7 +83,7 @@ class CrossAgentKnowledgeBus:
         domain: str,
         concept: str,
         content: str,
-        tags: Set[str],
+        tags: set[str],
         source_agent: str,
         confidence: float = 0.5,
     ) -> str:
@@ -108,7 +108,7 @@ class CrossAgentKnowledgeBus:
         self,
         domain: str,
         agent_id: str,
-        callback_filter: Optional[Dict[str, Any]] = None,
+        callback_filter: dict[str, Any] | None = None,
     ) -> str:
         sub_id = _new_id("sub")
         now = _now_iso()
@@ -159,9 +159,9 @@ class CrossAgentKnowledgeBus:
             count = _retry(_notify)
         return count
 
-    def get_subscriptions(self, agent_id: str) -> List[Dict[str, Any]]:
+    def get_subscriptions(self, agent_id: str) -> list[dict[str, Any]]:
         with self._lock:
-            def _fetch() -> List[Dict[str, Any]]:
+            def _fetch() -> list[dict[str, Any]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -169,7 +169,7 @@ class CrossAgentKnowledgeBus:
                         "FROM cab_subscriptions WHERE agent_id = ?",
                         (agent_id,),
                     )
-                    results: List[Dict[str, Any]] = []
+                    results: list[dict[str, Any]] = []
                     for row in cursor.fetchall():
                         results.append({
                             "id": row[0],
@@ -209,14 +209,14 @@ class CrossAgentKnowledgeBus:
         source_domain: str,
         target_domain: str,
         max_depth: int = 3,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         from .graph_engine import get_knowledge_graph
 
-        stats: Dict[str, int] = {"propagated": 0, "skipped": 0, "edges_created": 0}
+        stats: dict[str, int] = {"propagated": 0, "skipped": 0, "edges_created": 0}
         engine = get_knowledge_graph()
 
         with self._lock:
-            def _propagate() -> Dict[str, int]:
+            def _propagate() -> dict[str, int]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -230,7 +230,7 @@ class CrossAgentKnowledgeBus:
 
             source_ids = _retry(_propagate)
 
-            visited: Set[str] = set()
+            visited: set[str] = set()
             queue: deque[tuple[str, int]] = deque((sid, 0) for sid in source_ids)
 
             while queue:
@@ -289,13 +289,13 @@ class CrossAgentKnowledgeBus:
 
     def resolve_conflicts(
         self,
-        node_ids: List[str],
+        node_ids: list[str],
         strategy: str = "highest_confidence",
-    ) -> Optional[KnowledgeNode]:
+    ) -> KnowledgeNode | None:
         from .graph_engine import get_knowledge_graph
 
         engine = get_knowledge_graph()
-        nodes: List[KnowledgeNode] = []
+        nodes: list[KnowledgeNode] = []
         for nid in node_ids:
             node = engine.get_node(nid)
             if node is not None:
@@ -316,7 +316,7 @@ class CrossAgentKnowledgeBus:
 
 # ── Singleton ──────────────────────────────────────────────────
 
-_instance: Optional[CrossAgentKnowledgeBus] = None
+_instance: CrossAgentKnowledgeBus | None = None
 _instance_lock = threading.Lock()
 
 

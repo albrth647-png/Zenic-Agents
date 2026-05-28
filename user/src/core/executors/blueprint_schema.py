@@ -152,9 +152,8 @@ class BlueprintValidator:
 
         # Check denied operations
         operation = str(config.get("operation", "")).lower()
-        if operation and schema.denied_operations:
-            if operation in schema.denied_operations:
-                errors.append(f"Operation '{operation}' is denied by Blueprint schema")
+        if operation and schema.denied_operations and operation in schema.denied_operations:
+            errors.append(f"Operation '{operation}' is denied by Blueprint schema")
 
         # Check max records
         if schema.max_records > 0:

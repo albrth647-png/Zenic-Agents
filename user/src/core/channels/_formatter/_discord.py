@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from ._helpers import _parse_color
 from ._limits import LIMITS
-from ._text import truncate, sanitize_plain_text, sanitize_html
-from .._types import ChannelMessage, ConfirmationRequest
+from ._text import sanitize_html, sanitize_plain_text, truncate
+
+if TYPE_CHECKING:
+    from .._types import ChannelMessage, ConfirmationRequest
 
 
-def build_discord_embed(message: ChannelMessage) -> Dict[str, Any]:
+def build_discord_embed(message: ChannelMessage) -> dict[str, Any]:
     """Build a Discord embed from a ChannelMessage.
 
     Returns:
         Dict compatible with Discord message embed.
     """
-    embed: Dict[str, Any] = {}
+    embed: dict[str, Any] = {}
 
     if message.title:
         embed["title"] = truncate(message.title, LIMITS.discord_embed_title)
@@ -58,7 +60,7 @@ def build_discord_embed(message: ChannelMessage) -> Dict[str, Any]:
 def build_discord_confirmation_components(
     request: ConfirmationRequest,
     custom_id_prefix: str = "confirm",
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Build Discord Select Menu / Button components for confirmation.
 
     Args:
@@ -68,7 +70,7 @@ def build_discord_confirmation_components(
     Returns:
         List of Discord component dicts (action rows).
     """
-    buttons: List[Dict[str, Any]] = []
+    buttons: list[dict[str, Any]] = []
     for option in request.options:
         label = option.replace("_", " ").title()
         buttons.append({
@@ -81,12 +83,12 @@ def build_discord_confirmation_components(
     return [{"type": 1, "components": buttons}]
 
 
-def format_discord_message(message: ChannelMessage) -> Dict[str, Any]:
+def format_discord_message(message: ChannelMessage) -> dict[str, Any]:
     """Format a ChannelMessage into a Discord message payload.
 
     Uses embeds for titled messages, plain text otherwise.
     """
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
     if message.title or message.fields or message.image_url:
         # Rich message with embed

@@ -110,9 +110,8 @@ class PluginLifecycleManager:
             instance = self._registry.get_plugin(plugin_id)
             if instance is None:
                 return False
-            if instance.state == PluginState.ACTIVE:
-                if not self.unload_plugin(plugin_id):
-                    return False
+            if instance.state == PluginState.ACTIVE and not self.unload_plugin(plugin_id):
+                return False
             self._registry.set_state(plugin_id, PluginState.DISABLED)
             logger.info("Plugin disabled: %s", plugin_id)
             return True

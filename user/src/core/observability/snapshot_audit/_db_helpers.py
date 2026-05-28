@@ -10,11 +10,13 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-import threading
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from ._audit import retry
 from ._types import SnapshotEntry
+
+if TYPE_CHECKING:
+    import threading
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +80,7 @@ def init_db(db_path: str) -> bool:
 
 # ── Row Conversion ──────────────────────────────────────────
 
-def row_to_entry(row: Dict[str, Any]) -> SnapshotEntry:
+def row_to_entry(row: dict[str, Any]) -> SnapshotEntry:
     """Convert a raw DB row dict to a SnapshotEntry."""
     data_raw = row.get("data", "{}")
     if isinstance(data_raw, str):
@@ -190,10 +192,10 @@ def load_snapshot(
     snapshot_id: str,
     db_path: str,
     lock: threading.RLock,
-) -> Optional[SnapshotEntry]:
+) -> SnapshotEntry | None:
     """Load a single SnapshotEntry from SQLite by snapshot_id."""
 
-    def _query() -> Optional[SnapshotEntry]:
+    def _query() -> SnapshotEntry | None:
         with lock:
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row
@@ -223,9 +225,9 @@ def query_entity_history(
     limit: int,
     db_path: str,
     lock: threading.RLock,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Query raw snapshot rows for entity history."""
-    def _query() -> List[Dict[str, Any]]:
+    def _query() -> list[dict[str, Any]]:
         with lock:
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row

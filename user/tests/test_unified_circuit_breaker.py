@@ -81,7 +81,7 @@ async def redis_async_client(redis_url: str):
     try:
         async for key in client.scan_iter("zenic:cb:test*"):
             await client.delete(key)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     await client.close()
 
@@ -105,7 +105,7 @@ async def cb_manager(redis_url: str):
     # Cleanup
     try:
         await manager.disconnect()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
 

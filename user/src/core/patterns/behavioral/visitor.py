@@ -286,16 +286,15 @@ class RefactorVisitor(ASTVisitor):
                 )
 
         # Deep nesting
-        if name in ("If", "For", "While", "With", "Try"):
-            if depth > 4:
-                self.refactor_marks.append(
-                    {
-                        "type": "deep_nesting",
-                        "node": name,
-                        "line": getattr(node, "lineno", 0),
-                        "value": depth,
-                    }
-                )
+        if name in ("If", "For", "While", "With", "Try") and depth > 4:
+            self.refactor_marks.append(
+                {
+                    "type": "deep_nesting",
+                    "node": name,
+                    "line": getattr(node, "lineno", 0),
+                    "value": depth,
+                }
+            )
 
         for child in ast.iter_child_nodes(node):
             child_depth = (

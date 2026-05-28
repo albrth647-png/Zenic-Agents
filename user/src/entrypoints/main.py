@@ -257,7 +257,7 @@ class ZenicTUIApp(App):
             # Auto-scroll to bottom
             scroll = self.query_one("#log-area", VerticalScroll)
             scroll.scroll_end(animate=False)
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
 

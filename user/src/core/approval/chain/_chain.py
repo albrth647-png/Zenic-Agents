@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import threading
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from ._validation import (
     ApprovalPriority,
@@ -27,6 +27,9 @@ from ._validation import (
     ApprovalStatus,
     MemoryApprovalPayload,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ class ApprovalChain:
         self._default_timeout_hours = default_timeout_hours
         self._escalation_timeout_hours = escalation_timeout_hours
         self._lock = threading.RLock()
-        self._callbacks: List[Callable[[ApprovalRequest], None]] = []
+        self._callbacks: list[Callable[[ApprovalRequest], None]] = []
 
         # Use the extracted persistence module
         from ..chain_parts.persistence import ApprovalChainDB
@@ -60,13 +63,13 @@ class ApprovalChain:
     def create_request(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         requested_by: int,
         required_role: str = "gerente",
         priority: ApprovalPriority = ApprovalPriority.NORMAL,
-        timeout_hours: Optional[int] = None,
+        timeout_hours: int | None = None,
         tenant_id: str = "__anonymous__",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ApprovalRequest:
         """Create a new approval request for a pending action."""
         timeout = timeout_hours or self._default_timeout_hours
@@ -176,37 +179,37 @@ class ApprovalChain:
 
     # ── Query methods ──────────────────────────────────────
 
-    def get_request(self, request_id: str) -> Optional[ApprovalRequest]:
+    def get_request(self, request_id: str) -> ApprovalRequest | None:
         """Get a single approval request by ID."""
         return self._db.get_request(request_id)
 
     def list_pending(
-        self, required_role: Optional[str] = None, tenant_id: Optional[str] = None,
-    ) -> List[ApprovalRequest]:
+        self, required_role: str | None = None, tenant_id: str | None = None,
+    ) -> list[ApprovalRequest]:
         """List all pending approval requests."""
         return self._db.query_requests(
             status=ApprovalStatus.PENDING, required_role=required_role, tenant_id=tenant_id,
         )
 
-    def list_by_requester(self, requested_by: int) -> List[ApprovalRequest]:
+    def list_by_requester(self, requested_by: int) -> list[ApprovalRequest]:
         """List all requests by a specific user."""
         return self._db.query_requests(requested_by=requested_by)
 
-    def list_expired(self) -> List[ApprovalRequest]:
+    def list_expired(self) -> list[ApprovalRequest]:
         """Find all pending requests that have expired."""
         pending = self.list_pending()
         return [r for r in pending if r.is_expired()]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get approval chain statistics."""
         return self._db.get_stats()
 
     # ── Escalation ─────────────────────────────────────────
 
-    def check_escalations(self) -> List[ApprovalRequest]:
+    def check_escalations(self) -> list[ApprovalRequest]:
         """Check for expired requests and escalate them."""
         expired = self.list_expired()
-        escalated: List[ApprovalRequest] = []
+        escalated: list[ApprovalRequest] = []
 
         role_escalation = {"viewer": "operador", "operador": "gerente", "gerente": "admin"}
 
@@ -236,9 +239,9 @@ class ApprovalChain:
         self,
         user_id: int,
         action_type: str,
-        action_config: Dict[str, Any],
+        action_config: dict[str, Any],
         priority: ApprovalPriority = ApprovalPriority.NORMAL,
-    ) -> Optional[ApprovalResult]:
+    ) -> ApprovalResult | None:
         """Check if this request can be auto-approved based on adaptive history.
 
         Phase C3: Integration with AdaptiveApprovalEngine.
@@ -273,9 +276,9 @@ class ApprovalChain:
     def check_risk_routing(
         self,
         action_type: str,
-        action_config: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Optional[str]:
+        action_config: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> str | None:
         """Determine required role based on risk assessment.
 
         Phase C3: Integration with RiskBasedApprovalRouter.
@@ -378,8 +381,8 @@ class ApprovalChain:
         mapping_id: str,
         ia_question: str,
         ia_response: bool,
-        evidence_for: List[str],
-        evidence_against: List[str],
+        evidence_for: list[str],
+        evidence_against: list[str],
         consensus_score: float,
     ) -> MemoryApprovalPayload:
         """Create a MemoryApprovalPayload from a VerdictEngine result.
@@ -413,7 +416,7 @@ class ApprovalChain:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_approval_chain_instance: Optional[ApprovalChain] = None
+_approval_chain_instance: ApprovalChain | None = None
 _approval_chain_lock = threading.Lock()
 
 

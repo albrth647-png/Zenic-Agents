@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from string import Template as StringTemplate
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.email_parts.templates")
 
@@ -49,7 +49,7 @@ class EmailTemplate:
     body_template: str
     html_template: str = ""
     category: str = "general"
-    required_variables: List[str] = field(default_factory=list)
+    required_variables: list[str] = field(default_factory=list)
     has_attachments: bool = False
     description: str = ""
 
@@ -58,7 +58,7 @@ class EmailTemplate:
 #  BUILT-IN TEMPLATES
 # ──────────────────────────────────────────────────────────────
 
-BUILTIN_TEMPLATES: Dict[str, EmailTemplate] = {
+BUILTIN_TEMPLATES: dict[str, EmailTemplate] = {
     "invoice": EmailTemplate(
         name="invoice",
         subject_template="Invoice #$invoice_number from $company_name",
@@ -224,7 +224,7 @@ class EmailTemplateEngine:
     """
 
     def __init__(self) -> None:
-        self._templates: Dict[str, EmailTemplate] = dict(BUILTIN_TEMPLATES)
+        self._templates: dict[str, EmailTemplate] = dict(BUILTIN_TEMPLATES)
         self._custom_count: int = 0
 
     def register_template(self, template: EmailTemplate) -> None:
@@ -246,7 +246,7 @@ class EmailTemplateEngine:
             template.category,
         )
 
-    def get_template(self, name: str) -> Optional[EmailTemplate]:
+    def get_template(self, name: str) -> EmailTemplate | None:
         """Get a template by name.
 
         Args:
@@ -257,7 +257,7 @@ class EmailTemplateEngine:
         """
         return self._templates.get(name)
 
-    def list_templates(self) -> List[str]:
+    def list_templates(self) -> list[str]:
         """List all available template names (built-in + custom).
 
         Returns:
@@ -268,9 +268,9 @@ class EmailTemplateEngine:
     def render(
         self,
         template_name: str,
-        variables: Dict[str, Any],
+        variables: dict[str, Any],
         fallback_to_raw: bool = True,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Render a template with the given variables.
 
         Uses string.Template.safe_substitute() so missing variables
@@ -325,7 +325,7 @@ class EmailTemplateEngine:
 
         return {"subject": subject, "body": body, "html": html}
 
-    def render_from_config(self, config: Dict[str, Any]) -> Dict[str, str]:
+    def render_from_config(self, config: dict[str, Any]) -> dict[str, str]:
         """Render from an executor config dict.
 
         Config should have 'template' (name) and 'template_vars' (dict).
@@ -351,7 +351,7 @@ class EmailTemplateEngine:
         }
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get template engine statistics.
 
         Returns:
@@ -367,12 +367,12 @@ class EmailTemplateEngine:
     # ── Private Methods ───────────────────────────────────────
 
     @staticmethod
-    def _prepare_variables(variables: Dict[str, Any]) -> Dict[str, str]:
+    def _prepare_variables(variables: dict[str, Any]) -> dict[str, str]:
         """Convert all variable values to strings for substitution.
 
         Handles None, lists, dicts, and other types gracefully.
         """
-        result: Dict[str, str] = {}
+        result: dict[str, str] = {}
         for k, v in variables.items():
             if v is None:
                 result[k] = ""
@@ -385,7 +385,7 @@ class EmailTemplateEngine:
         return result
 
     @staticmethod
-    def _safe_substitute(template_str: str, variables: Dict[str, str]) -> str:
+    def _safe_substitute(template_str: str, variables: dict[str, str]) -> str:
         """Safe substitution that leaves unknown $variables as-is.
 
         Uses string.Template.safe_substitute() which preserves

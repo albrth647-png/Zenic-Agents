@@ -160,7 +160,7 @@ class SessionMixin:
                 (self._tenant_id,),
             ).fetchall()
 
-            for event_type, count in event_types:
+            for event_type, _count in event_types:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT id, description, importance FROM episodic_memory WHERE event_type=? AND tenant_id=? ORDER BY importance DESC",
                     (event_type, self._tenant_id),
@@ -190,7 +190,7 @@ class SessionMixin:
                     )
 
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})", ids_to_remove
+                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})", ids_to_remove  # noqa: S608
                     )
                     consolidated_episodes += len(ids_to_remove)
 

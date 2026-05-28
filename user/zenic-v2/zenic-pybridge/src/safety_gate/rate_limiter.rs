@@ -88,19 +88,26 @@ pub(crate) fn rate_limit_check(action_type: &str, category: &ActionCategory) -> 
     let max_financial_per_hour = state.max_financial_per_hour;
 
     // ── Per-action per-minute check ────────────────────────────
-    let ts = state
-        .timestamps
-        .entry(action_type.to_string())
-        .or_insert_with(Vec::new);
-    ts.retain(|t| now - *t < 60.0);
-    if ts.len() >= max_per_minute {
+    let exceeded_minute = {
+        let ts = state
+            .timestamps
+            .entry(action_type.to_string())
+            .or_insert_with(Vec::new);
+        ts.retain(|t| now - *t < 60.0);
+        if ts.len() >= max_per_minute {
+            true
+        } else {
+            // Record per-minute timestamp now (release the borrow)
+            ts.push(now);
+            false
+        }
+    };
+    if exceeded_minute {
         return Some(format!(
             "Rate limited: {} exceeded {}/min",
             action_type, max_per_minute
         ));
     }
-    // NOTE: ts.push(now) deferred — only record after ALL checks pass
-    // (H-89 fix: recording before category check caused false rate limits)
 
     // ── Per-category per-hour check ────────────────────────────
     let cat_ts = state
@@ -137,8 +144,7 @@ pub(crate) fn rate_limit_check(action_type: &str, category: &ActionCategory) -> 
         }
     }
 
-    // ALL checks passed — now record timestamps (H-89 fix)
-    ts.push(now);
+    // ALL checks passed — record per-category timestamp
     cat_ts.push(now);
 
     None

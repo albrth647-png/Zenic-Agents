@@ -7,9 +7,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.core.agents.validation import SecurityScanner, SyntaxValidator, RiskCalculator
-from src.core.agents.schemas import SecurityResult, SyntaxResult, RiskResult
+from src.core.agents.schemas import RiskResult, SecurityResult, SyntaxResult
 from src.core.agents.schemas._v1_compat_schemas import ValidationOutput
+from src.core.agents.validation import RiskCalculator, SecurityScanner, SyntaxValidator
 from src.core.shared.agent_schemas import ValidationIssue as SharedValidationIssue
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ValidationAgentCompat:
         self._call_count = 0
 
     def validate_with_runner(self, runner: Any, target: str, content: str,
-                             rules: list[str] = None,
+                             rules: list[str] | None = None,
                              language: str = "python") -> ValidationOutput:
         """Validate using v2 agents."""
         self._call_count += 1

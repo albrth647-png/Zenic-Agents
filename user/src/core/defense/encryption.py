@@ -261,6 +261,7 @@ class EncryptionManager:
             combined = base_salt + fingerprint.encode()
             return hashlib.sha256(combined).digest()
         except Exception:
+            # Hardware binding is best-effort; fall back to base salt on failure
             return base_salt
 
     def _get_or_create_salt(self) -> bytes:
@@ -332,7 +333,7 @@ class EncryptionManager:
             import subprocess
 
             result = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"],
+                ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
                 capture_output=True,
                 text=True,
                 timeout=3,
@@ -420,7 +421,8 @@ class EncryptionManager:
                 if self._previous_fernet is not None:
                     try:
                         return self._previous_fernet.decrypt(ciphertext.encode()).decode()
-                    except Exception:
+                    except Exception:  # noqa: S110
+                        # Secondary key decryption failed; full failure logged below
                         pass
                 logger.error("EncryptionManager: Decryption failed with both current and previous keys")
                 raise ValueError("Decryption failed with both current and previous keys")

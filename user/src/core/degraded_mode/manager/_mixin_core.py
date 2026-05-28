@@ -5,11 +5,14 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..persistence import DegradationPersistence
+from ._types import _FEATURE_RESTRICTIONS, ModeTransition, SystemMode
 from .types import DegradationLevel, DegradationReason, DegradationState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -29,24 +32,24 @@ class DegradedModeManager:
         self._persistence = DegradationPersistence(db_path)
         self._state = self._persistence.load_state()
         self._current_mode = self._level_to_system_mode(self._state.level)
-        self._transition_history: list[ModeTransition] = []  # noqa: F821
-        self._callbacks: list[Callable[[ModeTransition], None]] = []  # noqa: F821
+        self._transition_history: list[ModeTransition] = []
+        self._callbacks: list[Callable[[ModeTransition], None]] = []
         self._lock = threading.RLock()
 
     # ── Mode mapping helpers ──────────────────────────────
 
     @staticmethod
-    def _level_to_system_mode(level: DegradationLevel) -> SystemMode:  # noqa: F821
+    def _level_to_system_mode(level: DegradationLevel) -> SystemMode:
         mapping = {
-            DegradationLevel.NORMAL: SystemMode.NORMAL,  # noqa: F821
-            DegradationLevel.DEGRADED: SystemMode.DEGRADED,  # noqa: F821
-            DegradationLevel.PARALYSIS_1: SystemMode.PARALYSIS_L1,  # noqa: F821
-            DegradationLevel.PARALYSIS_2: SystemMode.PARALYSIS_L2,  # noqa: F821
+            DegradationLevel.NORMAL: SystemMode.NORMAL,
+            DegradationLevel.DEGRADED: SystemMode.DEGRADED,
+            DegradationLevel.PARALYSIS_1: SystemMode.PARALYSIS_L1,
+            DegradationLevel.PARALYSIS_2: SystemMode.PARALYSIS_L2,
         }
-        return mapping.get(level, SystemMode.DEGRADED)  # noqa: F821
+        return mapping.get(level, SystemMode.DEGRADED)
 
     @staticmethod
-    def _system_mode_to_level(mode: SystemMode) -> DegradationLevel:  # noqa: F821
+    def _system_mode_to_level(mode: SystemMode) -> DegradationLevel:
         return mode.degradation_level
 
     # ── Core transitions ──────────────────────────────────
@@ -71,7 +74,7 @@ class DegradedModeManager:
                 reason=reason,
                 message=message or f"Entered {target_level.name}",
                 entered_at=time.time(),
-                restricted_features=_FEATURE_RESTRICTIONS.get(target_level, []),  # noqa: F821
+                restricted_features=_FEATURE_RESTRICTIONS.get(target_level, []),
             )
             self._current_mode = self._level_to_system_mode(target_level)
             self._persistence.save_state(self._state)
@@ -81,7 +84,7 @@ class DegradedModeManager:
                 reason=reason,
                 message=self._state.message,
             )
-            transition = ModeTransition(  # noqa: F821
+            transition = ModeTransition(
                 from_mode=self._level_to_system_mode(old_level),
                 to_mode=self._current_mode,
                 reason=reason.value,
@@ -119,7 +122,7 @@ class DegradedModeManager:
                 entered_at=time.time(),
                 restricted_features=[],
             )
-            self._current_mode = SystemMode.NORMAL  # noqa: F821
+            self._current_mode = SystemMode.NORMAL
             self._persistence.save_state(self._state)
             self._persistence.append_history(
                 from_level=old_level,
@@ -128,9 +131,9 @@ class DegradedModeManager:
                 message="Returned to normal",
                 operator="admin",
             )
-            transition = ModeTransition(  # noqa: F821
+            transition = ModeTransition(
                 from_mode=self._level_to_system_mode(old_level),
-                to_mode=SystemMode.NORMAL,  # noqa: F821
+                to_mode=SystemMode.NORMAL,
                 reason="License restored",
                 operator="admin",
             )
@@ -150,10 +153,7 @@ class DegradedModeManager:
         restricted = self._state.restricted_features
         if not restricted:
             return True
-        for blocked in restricted:
-            if blocked == "*" or feature.startswith(blocked):
-                return False
-        return True
+        return all(not (blocked == "*" or feature.startswith(blocked)) for blocked in restricted)
 
     def get_restricted_features(self) -> list[str]:
         """Return the list of currently restricted feature prefixes."""
@@ -225,16 +225,16 @@ class DegradedModeManager:
 
     # ── Legacy compatibility ──────────────────────────────
 
-    def enter_restrictive(self, reason: str = "Update pending") -> ModeTransition:  # noqa: F821
+    def enter_restrictive(self, reason: str = "Update pending") -> ModeTransition:
         """Enter restrictive mode (limited writes) — legacy compat."""
         self.enter_degraded(DegradationReason.MANUAL, reason, level=1)
         return (
             self._transition_history[-1]
             if self._transition_history
-            else ModeTransition(  # noqa: F821
+            else ModeTransition(
                 from_mode=SystemMode.NORMAL,
                 to_mode=SystemMode.RESTRICTIVE,
-                reason=reason,  # noqa: F821
+                reason=reason,
             )
         )
 
@@ -242,20 +242,20 @@ class DegradedModeManager:
         self,
         reason: str = "License restored",
         operator: str = "admin",
-    ) -> ModeTransition:  # noqa: F821
+    ) -> ModeTransition:
         """Return to normal mode — legacy compat."""
         self.exit_degraded()
         return (
             self._transition_history[-1]
             if self._transition_history
-            else ModeTransition(  # noqa: F821
+            else ModeTransition(
                 from_mode=SystemMode.DEGRADED,
                 to_mode=SystemMode.NORMAL,
-                reason=reason,  # noqa: F821
+                reason=reason,
             )
         )
 
-    def get_current_mode(self) -> SystemMode:  # noqa: F821
+    def get_current_mode(self) -> SystemMode:
         """Get the current operating mode (legacy compat)."""
         return self._current_mode
 
@@ -265,7 +265,7 @@ class DegradedModeManager:
 
         return MODE_CAPABILITIES.get(
             self._current_mode,
-            MODE_CAPABILITIES[SystemMode.DEGRADED],  # noqa: F821
+            MODE_CAPABILITIES[SystemMode.DEGRADED],
         )
 
     def check_action(self, action: str) -> dict[str, Any]:
@@ -303,28 +303,28 @@ class DegradedModeManager:
             return True
         return any(endpoint.startswith(a) for a in caps.allowed_endpoints)
 
-    def resolve_mode_from_license(self) -> SystemMode | None:  # noqa: F821
+    def resolve_mode_from_license(self) -> SystemMode | None:
         """Determine the correct mode based on license status."""
         try:
             from src.core.license.manager import get_license_manager
 
             result = get_license_manager().verify()
             if result.status.value == "active":
-                return SystemMode.NORMAL  # noqa: F821
+                return SystemMode.NORMAL
             if result.status.value in ("grace_period", "expired"):
-                return SystemMode.DEGRADED  # noqa: F821
+                return SystemMode.DEGRADED
             if result.status.value == "revoked":
-                return SystemMode.PARALYSIS_L3  # noqa: F821
-            return SystemMode.DEGRADED  # noqa: F821
+                return SystemMode.PARALYSIS_L3
+            return SystemMode.DEGRADED
         except ImportError:
             return None
 
     # ── Callbacks ─────────────────────────────────────────
 
-    def on_mode_change(self, callback: Callable[[ModeTransition], None]) -> None:  # noqa: F821
+    def on_mode_change(self, callback: Callable[[ModeTransition], None]) -> None:
         self._callbacks.append(callback)
 
-    def _notify_callbacks(self, transition: ModeTransition) -> None:  # noqa: F821  # TODO: Phase3 - verify import
+    def _notify_callbacks(self, transition: ModeTransition) -> None:  # TODO: Phase3 - verify import
         for cb in self._callbacks:
             try:
                 cb(transition)

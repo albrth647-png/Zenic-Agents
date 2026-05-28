@@ -11,7 +11,7 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..backend import BackendConfig, CoordinationBackend
 from ._coord_mixin import CoordinationMixin

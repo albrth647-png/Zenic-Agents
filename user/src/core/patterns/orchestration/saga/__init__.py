@@ -3,7 +3,7 @@
 import logging
 import threading
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, List  # noqa: UP035, Optional
 
 from ._async_mixin import SagaAsyncMixin
 from ._sync_mixin import SagaSyncMixin

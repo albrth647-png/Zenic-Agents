@@ -29,7 +29,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ except ImportError:
     PASSLIB_AVAILABLE = False
 
 try:
-    from fastapi import HTTPException  # type: ignore[import-untyped]
+    from fastapi import HTTPException  # type: ignore[import-untyped]  # noqa: F401
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -118,22 +118,22 @@ PLAN_DEFINITIONS: dict[str, dict[str, Any]] = {
 
 class AuthMethod(str, Enum):
     """Supported authentication methods."""
-    PASSWORD = "password"
+    PASSWORD = "password"  # noqa: S105
     API_KEY = "api_key"
-    TOKEN = "token"
+    TOKEN = "token"  # noqa: S105
 
 
 @dataclass
 class AuthResult:
     """Result of an authentication attempt."""
     success: bool
-    user_id: Optional[int] = None
-    username: Optional[str] = None
-    role: Optional[str] = None
-    tenant_id: Optional[str] = None
-    plan: Optional[str] = None
-    token: Optional[str] = None
-    error: Optional[str] = None
+    user_id: int | None = None
+    username: str | None = None
+    role: str | None = None
+    tenant_id: str | None = None
+    plan: str | None = None
+    token: str | None = None
+    error: str | None = None
 
 
 @dataclass
@@ -178,12 +178,12 @@ class AuthService:
     def __init__(
         self,
         db_name: str = "auth.sqlite",
-        secret_key: Optional[str] = None,
-        gateway_url: Optional[str] = None,
+        secret_key: str | None = None,
+        gateway_url: str | None = None,
     ) -> None:
         self._db_name = db_name
         self._secret_key = secret_key or os.environ.get(
-            "ZENIC_AUTH_SECRET", ""
+            "ZENIC_AUTH_SECRET"
         )
         self._gateway_url = gateway_url or os.environ.get(
             "ZENIC_GATEWAY_URL", ""
@@ -387,7 +387,7 @@ class AuthService:
 
         return f"{header}.{payload_b64}.{sig}"
 
-    def _decode_token(self, token: str) -> Optional[dict[str, Any]]:
+    def _decode_token(self, token: str) -> dict[str, Any] | None:
         """Decode and verify a JWT or HMAC token.
 
         Returns the decoded payload dict if valid, None otherwise.
@@ -776,7 +776,7 @@ class AuthService:
         self,
         user_id: int,
         name: str,
-        permissions: Optional[list[str]] = None,
+        permissions: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a new API key for a user.
 
@@ -946,7 +946,7 @@ class AuthService:
 
     # ── User Management ───────────────────────────────────────
 
-    def get_user(self, user_id: int) -> Optional[dict[str, Any]]:
+    def get_user(self, user_id: int) -> dict[str, Any] | None:
         """Get user details by ID (excludes password hash)."""
         try:
             conn = self._get_conn()
@@ -956,10 +956,11 @@ class AuthService:
                 (user_id,),
             ).fetchone()
             return dict(row) if row else None
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.get_user error: %s", exc)
             return None
 
-    def get_user_by_username(self, username: str) -> Optional[dict[str, Any]]:
+    def get_user_by_username(self, username: str) -> dict[str, Any] | None:
         """Get user details by username (excludes password hash)."""
         try:
             conn = self._get_conn()
@@ -969,13 +970,14 @@ class AuthService:
                 (username,),
             ).fetchone()
             return dict(row) if row else None
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.get_user_by_username error: %s", exc)
             return None
 
     def list_users(
         self,
-        role: Optional[str] = None,
-        tenant_id: Optional[str] = None,
+        role: str | None = None,
+        tenant_id: str | None = None,
         page: int = 1,
         page_size: int = PAGE_SIZE,
     ) -> dict[str, Any]:
@@ -995,13 +997,13 @@ class AuthService:
             where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
             offset = (page - 1) * page_size
 
-            count_row = conn.execute(f"SELECT COUNT(*) as cnt FROM users {where}", params).fetchone()
+            count_row = conn.execute(f"SELECT COUNT(*) as cnt FROM users {where}", params).fetchone()  # noqa: S608
             total = count_row["cnt"] if count_row else 0
 
             rows = conn.execute(
-                f"SELECT id, username, email, role, tenant_id, plan, is_active, created_at, updated_at "
+                f"SELECT id, username, email, role, tenant_id, plan, is_active, created_at, updated_at "  # noqa: S608
                 f"FROM users {where} ORDER BY id ASC LIMIT ? OFFSET ?",
-                params + [page_size, offset],
+                [*params, page_size, offset],
             ).fetchall()
 
             return {
@@ -1142,7 +1144,8 @@ class AuthService:
 
             return permission in perms
 
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.check_permission error: %s", exc)
             return False
 
     def check_role_hierarchy(self, user_role: str, required_role: str) -> bool:
@@ -1171,7 +1174,8 @@ class AuthService:
                 (tenant_id,),
             ).fetchall()
             return [dict(r) for r in rows]
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.list_tenant_users error: %s", exc)
             return []
 
     def check_plan_limit(self, tenant_id: str, limit_name: str) -> bool:
@@ -1211,7 +1215,8 @@ class AuthService:
 
             return True
 
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.check_plan_limit error: %s", exc)
             return True
 
     # ── Session Management ────────────────────────────────────
@@ -1234,7 +1239,7 @@ class AuthService:
             logger.error("AuthService.cleanup_expired_sessions error: %s", exc)
             return 0
 
-    def get_active_sessions(self, user_id: Optional[int] = None) -> list[dict[str, Any]]:
+    def get_active_sessions(self, user_id: int | None = None) -> list[dict[str, Any]]:
         """Get active (non-expired) sessions, optionally filtered by user."""
         try:
             conn = self._get_conn()
@@ -1250,7 +1255,8 @@ class AuthService:
                     (now,),
                 ).fetchall()
             return [dict(r) for r in rows]
-        except Exception:
+        except Exception as exc:
+            logger.warning("AuthService.get_active_sessions error: %s", exc)
             return []
 
     # ── Stats & Health ────────────────────────────────────────
@@ -1292,7 +1298,7 @@ class AuthService:
 
 # ── Module-level Singleton ───────────────────────────────────
 
-_auth_service: Optional[AuthService] = None
+_auth_service: AuthService | None = None
 _auth_lock = threading.Lock()
 
 
@@ -1313,26 +1319,26 @@ def reset_auth_service() -> None:
 
 
 __all__ = [
-    # Class
-    "AuthService",
-    # Data types
-    "AuthMethod",
-    "AuthResult",
-    "APIKeyRecord",
-    "AdminSession",
+    "ACCESS_EXPIRE_MIN",
+    "API_KEY_PREFIX",
+    "HAS_FASTAPI",
+    # Feature flags
+    "JOSE_AVAILABLE",
+    "PAGE_SIZE",
+    "PASSLIB_AVAILABLE",
+    "PBKDF2_ITERATIONS",
+    "PLAN_DEFINITIONS",
+    "REFRESH_EXPIRE_DAYS",
     # Constants
     "ROLE_HIERARCHY",
     "ROLE_PERMISSIONS",
-    "ACCESS_EXPIRE_MIN",
-    "REFRESH_EXPIRE_DAYS",
-    "PBKDF2_ITERATIONS",
-    "API_KEY_PREFIX",
-    "PAGE_SIZE",
-    "PLAN_DEFINITIONS",
-    # Feature flags
-    "JOSE_AVAILABLE",
-    "PASSLIB_AVAILABLE",
-    "HAS_FASTAPI",
+    "APIKeyRecord",
+    "AdminSession",
+    # Data types
+    "AuthMethod",
+    "AuthResult",
+    # Class
+    "AuthService",
     # Helpers
     "get_auth_service",
     "reset_auth_service",

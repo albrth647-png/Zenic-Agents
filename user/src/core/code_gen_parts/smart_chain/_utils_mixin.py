@@ -1,8 +1,7 @@
 """SmartPromptChain - Utility Methods."""
 
-import re
 import logging
-from typing import Optional
+import re
 
 logger = logging.getLogger("zenic_agents.code_gen_parts.smart_chain")
 
@@ -57,7 +56,7 @@ class SmartChainUtilsMixin:
         return "generic"
 
     @staticmethod
-    def _extract_code(text: str, language: str = "python") -> Optional[str]:
+    def _extract_code(text: str, language: str = "python") -> str | None:
         """Extract code from markdown code blocks."""
         # Try ```python ... ``` or ``` ... ```
         pattern = rf'```(?:{language})?\s*\n(.*?)```'

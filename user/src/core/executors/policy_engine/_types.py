@@ -96,9 +96,8 @@ class PolicyRule:
             True if the rule's condition matches and category filter passes.
         """
         # Category filter check
-        if self.category_filter and category:
-            if self.category_filter.lower() != category.lower():
-                return False
+        if self.category_filter and category and self.category_filter.lower() != category.lower():
+            return False
 
         # Condition check
         if self.condition is None:

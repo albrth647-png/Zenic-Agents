@@ -133,7 +133,7 @@ class GraphAPITransportMixin:
                     timeout=aiohttp.ClientTimeout(total=60),  # noqa: F821
                 ) as response:
                     # Update rate limit from headers
-                    resp_headers = {k: v for k, v in response.headers.items()}
+                    resp_headers = dict(response.headers.items())
                     self._rate_limit.update_from_headers(resp_headers)
 
                     if response.status == 202:

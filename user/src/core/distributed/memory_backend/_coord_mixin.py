@@ -8,7 +8,7 @@ and node topology operations for MemoryBackend.
 import copy
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class CoordinationMixin:
             del self._elections[election_name]
             return True
 
-    async def get_leader(self, election_name: str) -> Optional[str]:
+    async def get_leader(self, election_name: str) -> str | None:
         with self._lock:
             election = self._elections.get(election_name)
             if election is None:
@@ -69,15 +69,15 @@ class CoordinationMixin:
     #  CIRCUIT BREAKER STATE
     # ----------------------------------------------------------
 
-    async def get_circuit_state(self, circuit_name: str) -> Optional[Dict[str, Any]]:
+    async def get_circuit_state(self, circuit_name: str) -> dict[str, Any] | None:
         with self._lock:
             return copy.deepcopy(self._circuits.get(circuit_name))
 
     async def update_circuit_state(
         self,
         circuit_name: str,
-        state: Dict[str, Any],
-        expected_version: Optional[int] = None,
+        state: dict[str, Any],
+        expected_version: int | None = None,
     ) -> bool:
         with self._lock:
             current = self._circuits.get(circuit_name)
@@ -98,8 +98,8 @@ class CoordinationMixin:
         self,
         saga_id: str,
         name: str,
-        steps: List[Dict[str, Any]],
-        initial_context: Dict[str, Any],
+        steps: list[dict[str, Any]],
+        initial_context: dict[str, Any],
     ) -> bool:
         with self._lock:
             if saga_id in self._sagas:
@@ -116,7 +116,7 @@ class CoordinationMixin:
             }
             return True
 
-    async def get_saga(self, saga_id: str) -> Optional[Dict[str, Any]]:
+    async def get_saga(self, saga_id: str) -> dict[str, Any] | None:
         with self._lock:
             saga = self._sagas.get(saga_id)
             return copy.deepcopy(saga) if saga else None
@@ -126,8 +126,8 @@ class CoordinationMixin:
         saga_id: str,
         step_name: str,
         status: str,
-        result: Optional[Dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> bool:
         with self._lock:
             saga = self._sagas.get(saga_id)
@@ -147,7 +147,7 @@ class CoordinationMixin:
         self,
         saga_id: str,
         status: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> bool:
         with self._lock:
             saga = self._sagas.get(saga_id)
@@ -162,7 +162,7 @@ class CoordinationMixin:
     #  NODE TOPOLOGY
     # ----------------------------------------------------------
 
-    async def register_node(self, node_info: Dict[str, Any]) -> bool:
+    async def register_node(self, node_info: dict[str, Any]) -> bool:
         with self._lock:
             node_id = node_info.get("node_id", "")
             self._nodes[node_id] = {
@@ -172,7 +172,7 @@ class CoordinationMixin:
             }
             return True
 
-    async def heartbeat(self, node_id: str, status: Optional[Dict[str, Any]] = None) -> bool:
+    async def heartbeat(self, node_id: str, status: dict[str, Any] | None = None) -> bool:
         with self._lock:
             node = self._nodes.get(node_id)
             if node is None:
@@ -189,7 +189,7 @@ class CoordinationMixin:
                 return True
             return False
 
-    async def list_nodes(self, active_only: bool = True) -> List[Dict[str, Any]]:
+    async def list_nodes(self, active_only: bool = True) -> list[dict[str, Any]]:
         now = time.time()
         with self._lock:
             result = []

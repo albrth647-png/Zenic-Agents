@@ -12,18 +12,18 @@ Phase 2 implementations:
   - EmailChannelProvider    — Email (SMTP + Microsoft Graph API)
 """
 
-from .teams import TeamsChannelProvider
-from .slack import SlackChannelProvider
-from .whatsapp import WhatsAppChannelProvider
-from .twilio_sms import TwilioSMSChannelProvider
-from .push import PushChannelProvider
 from .email import EmailChannelProvider
+from .push import PushChannelProvider
+from .slack import SlackChannelProvider
+from .teams import TeamsChannelProvider
+from .twilio_sms import TwilioSMSChannelProvider
+from .whatsapp import WhatsAppChannelProvider
 
 __all__ = [
-    "TeamsChannelProvider",
-    "SlackChannelProvider",
-    "WhatsAppChannelProvider",
-    "TwilioSMSChannelProvider",
-    "PushChannelProvider",
     "EmailChannelProvider",
+    "PushChannelProvider",
+    "SlackChannelProvider",
+    "TeamsChannelProvider",
+    "TwilioSMSChannelProvider",
+    "WhatsAppChannelProvider",
 ]

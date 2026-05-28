@@ -94,15 +94,14 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
         elif isinstance(input_data, VerdictInput):
             pass
 
-        if consensus and isinstance(consensus, ConsensusResult):
-            if not consensus.needs_llm:
-                # Consensus is clear — no AI needed
-                return VerdictOutput(
-                    verdict=consensus.verdict,
-                    confidence=consensus.confidence,
-                    source="deterministic_consensus",
-                    llm_used=False,
-                )
+        if consensus and isinstance(consensus, ConsensusResult) and not consensus.needs_llm:
+            # Consensus is clear — no AI needed
+            return VerdictOutput(
+                verdict=consensus.verdict,
+                confidence=consensus.confidence,
+                source="deterministic_consensus",
+                llm_used=False,
+            )
 
         # AI arbitration needed
         return self._request_llm_verdict(input_data)

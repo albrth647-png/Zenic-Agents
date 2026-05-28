@@ -1128,11 +1128,60 @@ const ZenicDB = (function() {
     return getOne(`SELECT * FROM ${table} WHERE id = ?`, [id]);
   }
 
+  /** Whitelist of valid table names */
+  const VALID_TABLES = new Set([
+    'users','roles','permissions','role_permissions','agents','agent_tools','agent_memories',
+    'conversations','messages','tasks','task_steps','mcp_servers','mcp_tools','tool_executions',
+    'hitl_requests','policies','policy_evaluations','subscriptions','nichos','nicho_agents',
+    'vault_entries','audit_logs','integrations','webhooks','system_settings','notifications',
+    'sessions','agent_collaborations','workflows','workflow_executions','data_classifications',
+    'access_logs','metrics','api_keys','deployments','feedback','schedules','tags','entity_tags',
+    'cost_records','error_logs','knowledge_entries','feature_flags'
+  ]);
+
+  /** Whitelist of valid column names for ORDER BY (built from SCHEMA column patterns) */
+  const VALID_ORDER_COLUMNS = new Set([
+    'id','name','email','title','description','status','type','role','action','resource',
+    'priority','severity','level','category','industry','emoji','color','model','version',
+    'value','key','key_name','url','token','prefix','path','transport_type',
+    'is_active','is_enabled','is_read','is_system','is_featured','is_system',
+    'total_tasks','success_rate','call_count','avg_latency_ms','max_tokens','temperature',
+    'sort_order','agent_count','rating','quantity','unit_cost','total_cost',
+    'created_at','updated_at','started_at','completed_at','last_login','last_accessed',
+    'last_connected','last_sync','last_triggered','last_run','next_run','last_used',
+    'requested_at','reviewed_at','deployed_at','recorded_at','expires_at',
+    'user_id','agent_id','task_id','role_id','owner_id','nicho_id','server_id','tool_id',
+    'policy_id','tenant_id','initiator_agent_id','target_agent_id','workflow_id',
+    'conversation_id','entity_id','tag_id' 
+  ]);
+
   async function findAll(table, orderBy = 'created_at DESC', limit = 100) {
-    return query(`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT ${limit}`);
+    // SECURITY: Validate table name against whitelist
+    if (!VALID_TABLES.has(table)) {
+      console.error('[DB] findAll: invalid table name:', table);
+      return [];
+    }
+    // SECURITY: Parse and validate ORDER BY clause
+    const orderMatch = orderBy.trim().match(/^(\w+)\s+(ASC|DESC)$/i);
+    const safeOrderBy = orderMatch && VALID_ORDER_COLUMNS.has(orderMatch[1])
+      ? `${orderMatch[1]} ${orderMatch[2].toUpperCase()}`
+      : 'created_at DESC';
+    // SECURITY: Ensure limit is a positive integer
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 100;
+    return query(`SELECT * FROM ${table} ORDER BY ${safeOrderBy} LIMIT ?`, [safeLimit]);
   }
 
   async function findByField(table, field, value) {
+    // SECURITY: Validate table against whitelist
+    if (!VALID_TABLES.has(table)) {
+      console.error('[DB] findByField: invalid table name:', table);
+      return [];
+    }
+    // SECURITY: Validate field against whitelist
+    if (!VALID_ORDER_COLUMNS.has(field)) {
+      console.error('[DB] findByField: invalid field name:', field);
+      return [];
+    }
     return query(`SELECT * FROM ${table} WHERE ${field} = ?`, [value]);
   }
 
@@ -1200,7 +1249,9 @@ const ZenicDB = (function() {
 
   // Audit log
   async function getAuditLog(limit = 50) {
-    return query(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT ${limit}`);
+    // SECURITY: Ensure limit is a positive integer
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 50;
+    return query(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT ?`, [safeLimit]);
   }
 
   // Add audit entry

@@ -19,6 +19,7 @@ except ImportError:
     _HAS_Z3 = False
 
 from ..constraint_solver import ConstraintSolver
+
 # Phase 5 — Deterministic RNG instead of bare random.choice
 from ..deterministic import DeterministicRNG
 
@@ -53,7 +54,7 @@ class Z3InvariantMixin:
             # Compute total state space size
             total_states = 1
             for var_name in variables:
-                if var_name in domains and domains[var_name]:
+                if domains.get(var_name):
                     total_states *= len(domains[var_name])
 
             # For small domains, enumerate and build Z3 constraints directly
@@ -145,7 +146,7 @@ class Z3InvariantMixin:
                 assignment[var_name] = val
                 encoded = self._encode_value(val)
                 z3_cond = z3_vars[var_name] == encoded
-                enumerate_states(idx + 1, assignment, z3_conds + [z3_cond])
+                enumerate_states(idx + 1, assignment, [*z3_conds, z3_cond])
 
         enumerate_states(0, {}, [])
 
@@ -226,10 +227,10 @@ class Z3InvariantMixin:
                 # Use EnumSort for small/medium finite domains
                 const_names = [f"{var_name}__v{i}" for i in range(len(vals))]
                 if len(const_names) < 2:
-                    const_names = const_names + [f"{var_name}__dummy"]
-                sort, consts = z3_module.EnumSort(self._unique_sort_name(f"dom_{var_name}"), const_names)
+                    const_names = [*const_names, f"{var_name}__dummy"]
+                sort, _consts = z3_module.EnumSort(self._unique_sort_name(f"dom_{var_name}"), const_names)
                 z3_vars[var_name] = z3_module.Const(var_name, sort)
-                var_domain_maps[var_name] = dict(zip(const_names, vals))
+                var_domain_maps[var_name] = dict(zip(const_names, vals, strict=False))
                 var_sorts[var_name] = sort
                 # Domain membership is implicit with EnumSort
 
@@ -245,7 +246,7 @@ class Z3InvariantMixin:
         for _ in range(samples):
             assignment = {}
             for var_name in variables:
-                if var_name in domains and domains[var_name]:
+                if domains.get(var_name):
                     assignment[var_name] = _z3_rng.choice(domains[var_name])
             checked += 1
             try:

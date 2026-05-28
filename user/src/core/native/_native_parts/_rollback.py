@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from ._loader import HAS_NATIVE
 
 
-def snapshot_file(source_path: str, backup_path: str) -> Dict[str, Any]:
+def snapshot_file(source_path: str, backup_path: str) -> dict[str, Any]:
     """Create a backup snapshot of a file with BLAKE3 checksum."""
     if HAS_NATIVE:
         from ._loader import _rust_snapshot_file
@@ -40,7 +40,7 @@ def snapshot_file(source_path: str, backup_path: str) -> Dict[str, Any]:
 
 def restore_file(
     backup_path: str, target_path: str, expected_checksum: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Restore a file from a backup with checksum verification."""
     if HAS_NATIVE:
         from ._loader import _rust_restore_file
@@ -71,8 +71,8 @@ def restore_file(
 
 
 def verify_rollback_readiness(
-    resources: List[Dict[str, Any]],
-) -> Dict[str, Any]:
+    resources: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Verify that all resources needed for rollback are available."""
     if HAS_NATIVE:
         from ._loader import _rust_verify_rollback_readiness
@@ -80,7 +80,7 @@ def verify_rollback_readiness(
     # Pure Python fallback
     total = len(resources)
     verified = 0
-    failed: List[Dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
 
     for res in resources:
         rtype = res.get("resource_type", "")

@@ -14,7 +14,7 @@ Ported from:
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 from ..resilience import BaseAgent
 from ..schemas import Conclusion, DecomposedSteps, ReasoningResult, ReasoningStep
@@ -95,9 +95,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
 
     def _extract_steps(self, input_data: Any) -> list[ReasoningStep]:
         """Extract reasoning steps from input."""
-        if isinstance(input_data, ReasoningResult):
-            return input_data.steps
-        elif isinstance(input_data, DecomposedSteps):
+        if isinstance(input_data, (ReasoningResult, DecomposedSteps)):
             return input_data.steps
         elif isinstance(input_data, list):
             if all(isinstance(s, ReasoningStep) for s in input_data):
@@ -206,7 +204,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
             source="deterministic",
         )
 
-    def _find_marked_conclusion(self, conclusions: list[str]) -> Optional[str]:
+    def _find_marked_conclusion(self, conclusions: list[str]) -> str | None:
         """Find a conclusion that has explicit conclusion markers."""
         for conclusion in reversed(conclusions):
             conclusion_lower = conclusion.lower()
@@ -219,7 +217,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
                         return extracted
         return None
 
-    def _find_conclusion_in_text(self, text: str) -> Optional[str]:
+    def _find_conclusion_in_text(self, text: str) -> str | None:
         """Find conclusion in raw text using markers."""
         text_lower = text.lower()
 

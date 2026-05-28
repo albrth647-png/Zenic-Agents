@@ -57,10 +57,10 @@ class _WorkItem:
 
     def __init__(
         self,
-        fn: Callable[..., Any] = None,
+        fn: Callable[..., Any] | None = None,
         args: tuple = (),
-        kwargs: dict = None,
-        future: Future = None,
+        kwargs: dict | None = None,
+        future: Future | None = None,
         priority: int = 0,
         _sentinel: bool = False,
     ) -> None:

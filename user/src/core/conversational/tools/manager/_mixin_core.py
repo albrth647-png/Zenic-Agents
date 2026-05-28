@@ -366,6 +366,11 @@ class ToolManager:
                     return f"Error: Expresion contiene operadores no permitidos: {expression}"
 
             # Evaluate the validated AST safely
+            # SECURITY: eval is safe here because:
+            #   - Input is restricted to math chars only
+            #   - AST is parsed and validated against safe node types
+            #   - __builtins__ is explicitly empty
+            #   - Only math functions are available
             result = eval(
                 compile(tree, "<math>", "eval"),
                 {"__builtins__": {}},

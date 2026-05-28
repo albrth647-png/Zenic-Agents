@@ -52,12 +52,12 @@ class SalesTrendMonitor(MonitorBase):
             prev_start = current_start - (window_days * 86400)
 
             current_rows = self._execute_query(
-                f"SELECT SUM(amount) FROM {table} WHERE date >= ?",
+                f"SELECT SUM(amount) FROM {table} WHERE date >= ?",  # noqa: S608
                 (current_start,),
                 db_name=db_name,
             )
             prev_rows = self._execute_query(
-                f"SELECT SUM(amount) FROM {table} WHERE date >= ? AND date < ?",
+                f"SELECT SUM(amount) FROM {table} WHERE date >= ? AND date < ?",  # noqa: S608
                 (prev_start, current_start),
                 db_name=db_name,
             )
@@ -129,12 +129,12 @@ class CRMConversionMonitor(MonitorBase):
 
         try:
             total_rows = self._execute_query(
-                f"SELECT COUNT(*) FROM {table}",
+                f"SELECT COUNT(*) FROM {table}",  # noqa: S608
                 (),
                 db_name=db_name,
             )
             converted_rows = self._execute_query(
-                f"SELECT COUNT(*) FROM {table} WHERE status = 'converted'",
+                f"SELECT COUNT(*) FROM {table} WHERE status = 'converted'",  # noqa: S608
                 (),
                 db_name=db_name,
             )

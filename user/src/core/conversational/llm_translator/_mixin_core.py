@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import re
@@ -215,10 +216,8 @@ class LLMTranslator(FallbackMixin):
         # Look for confidence
         conf_match = re.search(r'confidence["\s:]*(0?\.\d+|1\.0|1|0)', text, re.I)
         if conf_match:
-            try:
+            with contextlib.suppress(ValueError):
                 result["confidence"] = float(conf_match.group(1))
-            except ValueError:
-                pass
 
         return result if result else None
 

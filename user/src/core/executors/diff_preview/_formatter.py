@@ -7,9 +7,10 @@ Formatting utilities for rendering DiffResult objects as text or JSON.
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ._types import DiffResult
+if TYPE_CHECKING:
+    from ._types import DiffResult
 
 # ──────────────────────────────────────────────────────────────
 #  HELPERS

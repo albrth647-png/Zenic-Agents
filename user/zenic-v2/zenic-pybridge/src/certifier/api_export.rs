@@ -161,14 +161,16 @@ pub fn certifier_export_yaml(blueprint: &CertifiedBlueprint, py: Python<'_>) -> 
         Ok(ym) => {
             let dump = ym.getattr("dump")?;
             let default_flow_style = ym.getattr("SafeDumper")?.getattr("default_flow_style")?;
-            let result = dump.call((blueprint_dict,), Some(&[("default_flow_style", false)]))?;
+            let kwargs = PyDict::new_bound(py);
+            kwargs.set_item("default_flow_style", false)?;
+            let result = dump.call((blueprint_dict,), Some(&kwargs))?;
             result.extract::<String>()
         }
         Err(_) => {
             // Fallback to JSON
             let json_module = py.import_bound("json")?;
             let dumps = json_module.getattr("dumps")?;
-            let result = dumps.call((blueprint_dict,))?;
+            let result = dumps.call1((blueprint_dict,))?;
             result.extract::<String>()
         }
     }

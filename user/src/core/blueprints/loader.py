@@ -18,16 +18,24 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .types import (
-    ActionTemplateDef, BlueprintCompatibility, BlueprintMetadataV2,
-    BlueprintSignature, BlueprintStatus, BlueprintTier,
-    BusinessRuleDef, DBEntitySchema, DBFieldSchema, DBSchema,
-    FieldType, MonitorHook,
-)
-from .schema import CertifiedBlueprint
 from .certifier import verify_blueprint
+from .schema import CertifiedBlueprint
+from .types import (
+    ActionTemplateDef,
+    BlueprintCompatibility,
+    BlueprintMetadataV2,
+    BlueprintSignature,
+    BlueprintStatus,
+    BlueprintTier,
+    BusinessRuleDef,
+    DBEntitySchema,
+    DBFieldSchema,
+    DBSchema,
+    FieldType,
+    MonitorHook,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +67,7 @@ class BlueprintLoaderV2:
         bp = loader.load_dict(data)
     """
 
-    def load_file(self, filepath: str, verify: bool = True) -> Optional[CertifiedBlueprint]:
+    def load_file(self, filepath: str, verify: bool = True) -> CertifiedBlueprint | None:
         """Load a Blueprint from a YAML or JSON file.
 
         Args:
@@ -74,7 +82,7 @@ class BlueprintLoaderV2:
             return None
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
         except OSError as e:
             logger.error("BlueprintLoader: Cannot read %s: %s", filepath, e)
@@ -98,25 +106,24 @@ class BlueprintLoaderV2:
             return None
 
         # Verify signature if present
-        if verify and blueprint.is_certified:
-            if not verify_blueprint(blueprint):
-                logger.warning(
-                    "BlueprintLoader: Signature verification FAILED for %s",
-                    blueprint.metadata.name,
-                )
-                blueprint.metadata.status = BlueprintStatus.DRAFT
+        if verify and blueprint.is_certified and not verify_blueprint(blueprint):
+            logger.warning(
+                "BlueprintLoader: Signature verification FAILED for %s",
+                blueprint.metadata.name,
+            )
+            blueprint.metadata.status = BlueprintStatus.DRAFT
 
         return blueprint
 
     def load_directory(
         self, dirpath: str, verify: bool = True,
-    ) -> List[CertifiedBlueprint]:
+    ) -> list[CertifiedBlueprint]:
         """Load all Blueprint files from a directory.
 
         Scans for .yaml, .yml, and .json files.
         Returns list of successfully loaded Blueprints.
         """
-        blueprints: List[CertifiedBlueprint] = []
+        blueprints: list[CertifiedBlueprint] = []
 
         if not os.path.isdir(dirpath):
             logger.warning("BlueprintLoader: Directory not found: %s", dirpath)
@@ -136,7 +143,7 @@ class BlueprintLoaderV2:
         )
         return blueprints
 
-    def load_dict(self, data: Dict[str, Any]) -> Optional[CertifiedBlueprint]:
+    def load_dict(self, data: dict[str, Any]) -> CertifiedBlueprint | None:
         """Load a CertifiedBlueprint from a dictionary.
 
         Expected format:
@@ -171,7 +178,7 @@ class BlueprintLoaderV2:
 
     # ── Parsing Helpers ────────────────────────────────────
 
-    def _parse_metadata(self, data: Dict[str, Any]) -> BlueprintMetadataV2:
+    def _parse_metadata(self, data: dict[str, Any]) -> BlueprintMetadataV2:
         """Parse metadata section."""
         signature = None
         sig_data = data.get("signature")
@@ -213,7 +220,7 @@ class BlueprintLoaderV2:
             scale=data.get("scale", "medium"),
         )
 
-    def _parse_db_schema(self, data: Dict[str, Any]) -> DBSchema:
+    def _parse_db_schema(self, data: dict[str, Any]) -> DBSchema:
         """Parse database schema section."""
         entities = []
         for e_data in data.get("entities", []):
@@ -248,7 +255,7 @@ class BlueprintLoaderV2:
             version=data.get("version", "1.0.0"),
         )
 
-    def _parse_rules(self, data: List[Any]) -> List[BusinessRuleDef]:
+    def _parse_rules(self, data: list[Any]) -> list[BusinessRuleDef]:
         """Parse business rules section."""
         rules = []
         for r_data in data:
@@ -266,7 +273,7 @@ class BlueprintLoaderV2:
             ))
         return rules
 
-    def _parse_actions(self, data: Dict[str, Any]) -> List[ActionTemplateDef]:
+    def _parse_actions(self, data: dict[str, Any]) -> list[ActionTemplateDef]:
         """Parse action templates section."""
         actions = []
         for key, a_data in data.items():
@@ -284,7 +291,7 @@ class BlueprintLoaderV2:
             ))
         return actions
 
-    def _parse_monitor_hooks(self, data: Dict[str, Any]) -> List[MonitorHook]:
+    def _parse_monitor_hooks(self, data: dict[str, Any]) -> list[MonitorHook]:
         """Parse monitor hooks section."""
         hooks = []
         for monitor_id, h_data in data.items():
@@ -301,7 +308,7 @@ class BlueprintLoaderV2:
             ))
         return hooks
 
-    def _parse_yaml(self, content: str) -> Optional[Dict[str, Any]]:
+    def _parse_yaml(self, content: str) -> dict[str, Any] | None:
         """Parse YAML content."""
         if not _HAS_YAML:
             return None
@@ -310,7 +317,7 @@ class BlueprintLoaderV2:
         except Exception:
             return None
 
-    def _parse_json(self, content: str) -> Optional[Dict[str, Any]]:
+    def _parse_json(self, content: str) -> dict[str, Any] | None:
         """Parse JSON content."""
         try:
             return json.loads(content)

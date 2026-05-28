@@ -5,13 +5,13 @@ valores extremos + error de sistema. Si un test no puede fallar, no se escribe.
 """
 
 import pytest
+
 from src.core.agents.schemas.types._transport_types import (
     TextChannelInput,
     TextChannelResult,
     VoiceChannelInput,
     VoiceChannelResult,
 )
-
 
 # ════════════════════════════════════════════════════════════════
 #  TextChannelInput
@@ -183,11 +183,11 @@ class TestVoiceChannelInput:
 
     def test_normal_construction_with_path(self):
         inp = VoiceChannelInput(
-            audio_path="/tmp/voice_note.ogg",
+            audio_path="/tmp/voice_note.ogg",  # noqa: S108
             audio_format="ogg",
             channel="local",
         )
-        assert inp.audio_path == "/tmp/voice_note.ogg"
+        assert inp.audio_path == "/tmp/voice_note.ogg"  # noqa: S108
 
     def test_empty_url_and_path(self):
         """Sin fuente de audio — el agente lo detecta como error."""
@@ -198,7 +198,7 @@ class TestVoiceChannelInput:
         """URL y path simultáneos — el agente decide prioridad."""
         inp = VoiceChannelInput(
             audio_url="https://example.com/audio.mp3",
-            audio_path="/tmp/audio.mp3",
+            audio_path="/tmp/audio.mp3",  # noqa: S108
         )
         assert inp.audio_url and inp.audio_path
 

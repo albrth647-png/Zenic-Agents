@@ -6,7 +6,7 @@ operations. Maintains backward compatibility with db_initializer.py.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._base import DatabaseBackend
 
@@ -24,7 +24,7 @@ class SQLiteDatabase(DatabaseBackend):
 
     def __init__(self, db_path: str = "") -> None:
         self._db_path = db_path
-        self._pool: Optional[Any] = None
+        self._pool: Any | None = None
 
     async def initialize(self) -> None:
         """Initialize using the existing db_initializer for backward compat."""
@@ -47,30 +47,30 @@ class SQLiteDatabase(DatabaseBackend):
         from src.core.shared.db_initializer import get_connection
         return get_connection(self._db_path or "graph_ast.sqlite")
 
-    async def execute(self, conn: Any, query: str, params: Optional[tuple] = None) -> None:
+    async def execute(self, conn: Any, query: str, params: tuple | None = None) -> None:
         if params:
             conn.execute(query, params)  # nosemgrep: sqlalchemy-execute-raw-query
         else:
             conn.execute(query)  # nosemgrep: sqlalchemy-execute-raw-query
         conn.commit()
 
-    async def fetch_one(self, conn: Any, query: str, params: Optional[tuple] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_one(self, conn: Any, query: str, params: tuple | None = None) -> dict[str, Any] | None:
         cursor = conn.execute(query, params) if params else conn.execute(query)  # nosemgrep: sqlalchemy-execute-raw-query
         row = cursor.fetchone()
         if row is None:
             return None
         if hasattr(row, 'keys'):
-            return dict(zip(row.keys(), row))
+            return dict(zip(row.keys(), row, strict=False))
         return dict(row) if row else None
 
-    async def fetch_all(self, conn: Any, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    async def fetch_all(self, conn: Any, query: str, params: tuple | None = None) -> list[dict[str, Any]]:
         cursor = conn.execute(query, params) if params else conn.execute(query)  # nosemgrep: sqlalchemy-execute-raw-query
         rows = cursor.fetchall()
         if rows and hasattr(rows[0], 'keys'):
-            return [dict(zip(r.keys(), r)) for r in rows]
+            return [dict(zip(r.keys(), r, strict=False)) for r in rows]
         return [dict(r) for r in rows]
 
-    async def fetch_val(self, conn: Any, query: str, params: Optional[tuple] = None) -> Any:
+    async def fetch_val(self, conn: Any, query: str, params: tuple | None = None) -> Any:
         cursor = conn.execute(query, params) if params else conn.execute(query)  # nosemgrep: sqlalchemy-execute-raw-query
         row = cursor.fetchone()
         return row[0] if row else None

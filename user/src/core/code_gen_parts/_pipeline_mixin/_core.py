@@ -104,9 +104,8 @@ class PipelineMixin(ProcessBuilderMixin):
                 code = f"# Z3 Verified: {solver_insights['validated_constraints']}\n" + code
             return code
 
-        if intent.op == OperationType.CREATE and intent.goal == GoalType.BUG_FIX:
-            if intent.raw_code:
-                return orch._code_transform.fix_python(intent.raw_code, ast_analysis, solver_insights)
+        if intent.op == OperationType.CREATE and intent.goal == GoalType.BUG_FIX and intent.raw_code:
+            return orch._code_transform.fix_python(intent.raw_code, ast_analysis, solver_insights)
 
         if intent.op in [OperationType.REFACTOR, OperationType.OPTIMIZE] and intent.raw_code:
             return orch._code_transform.refactor_python(intent.raw_code, ast_analysis, solver_insights)
@@ -154,7 +153,7 @@ class PipelineMixin(ProcessBuilderMixin):
         """
         import_lines = [
             "from dataclasses import dataclass, field",
-            "from typing import List, Optional, Dict, Any",
+            "from typing import Dict  # noqa: UP035, Any",
         ]
         for imp in needed_imports:
             if imp and imp not in ["object", "str", "int", "bool", "list", "dict"]:

@@ -11,19 +11,19 @@ Verifica que el scanner puede:
 """
 
 import os
-import sys
 import sqlite3
+import sys
 import tempfile
 import unittest
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Añadir src al path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data.local_scanner import LocalDataScanner
 from src.data.db_access import DBAccess
 from src.data.fs_scanner import FileSystemScanner
+from src.data.local_scanner import LocalDataScanner
 
 
 class TestDBAccess(unittest.TestCase):
@@ -114,7 +114,7 @@ class TestDBAccess(unittest.TestCase):
         for i in range(30):
             day = f"date('now', '-{i} days')"
             amount = 100 + (i % 7) * 20
-            conn.execute(f"INSERT INTO ventas (fecha, monto, producto_id) VALUES ({day}, {amount}, {(i % 5) + 1})")
+            conn.execute(f"INSERT INTO ventas (fecha, monto, producto_id) VALUES ({day}, {amount}, {(i % 5) + 1})")  # noqa: S608
 
         # Registro huérfano (factura sin cliente válido)
         # Desactivar FK check para poder insertar un huérfano

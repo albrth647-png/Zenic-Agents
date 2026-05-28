@@ -10,6 +10,9 @@ import { TIER_LIMITS, TIER_DISPLAY_NAMES, FEATURE_TIER_MAP } from '@/lib/pricing
 import type { SubscriptionTierName, FeatureName } from '@/lib/pricing-engine/types';
 import type { ContextoSuscripcion } from '@/app/_page_parts/types';
 
+/** SWR allows shouldRetryOnError to be boolean | function — cast to function for test */
+const shouldRetryOnError = defaultSWRConfig.shouldRetryOnError as (err: unknown) => boolean;
+
 // ─── SWR Config ─────────────────────────────────────────────────────────────
 
 describe('defaultSWRConfig', () => {
@@ -23,45 +26,45 @@ describe('defaultSWRConfig', () => {
 
   it('reintenta errores 5xx', () => {
     const err500 = { status: 500, message: 'Internal Server Error' };
-    expect(defaultSWRConfig.shouldRetryOnError?.(err500)).toBe(true);
+    expect(shouldRetryOnError(err500)).toBe(true);
   });
 
   it('reintenta errores 502', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 502, message: 'Bad Gateway' })).toBe(true);
+    expect(shouldRetryOnError({ status: 502, message: 'Bad Gateway' })).toBe(true);
   });
 
   it('no reintenta errores 400 (Bad Request)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 400, message: 'Bad Request' })).toBe(false);
+    expect(shouldRetryOnError({ status: 400, message: 'Bad Request' })).toBe(false);
   });
 
   it('no reintenta errores 401 (Unauthorized)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 401, message: 'Unauthorized' })).toBe(false);
+    expect(shouldRetryOnError({ status: 401, message: 'Unauthorized' })).toBe(false);
   });
 
   it('no reintenta errores 403 (Forbidden)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 403, message: 'Forbidden' })).toBe(false);
+    expect(shouldRetryOnError({ status: 403, message: 'Forbidden' })).toBe(false);
   });
 
   it('no reintenta errores 404 (Not Found)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 404, message: 'Not Found' })).toBe(false);
+    expect(shouldRetryOnError({ status: 404, message: 'Not Found' })).toBe(false);
   });
 
   it('no reintenta errores 429 (Rate Limit)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 429, message: 'Too Many' })).toBe(false);
+    expect(shouldRetryOnError({ status: 429, message: 'Too Many' })).toBe(false);
   });
 
   it('reintenta errores sin status (error genérico)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.(new Error('Network error'))).toBe(true);
+    expect(shouldRetryOnError(new Error('Network error'))).toBe(true);
   });
 
   it('reintenta errores null/undefined (caso límite)', () => {
-    expect(defaultSWRConfig.shouldRetryOnError?.(null)).toBe(true);
-    expect(defaultSWRConfig.shouldRetryOnError?.(undefined)).toBe(true);
+    expect(shouldRetryOnError(null)).toBe(true);
+    expect(shouldRetryOnError(undefined)).toBe(true);
   });
 
   it('reintenta errores con status 0 (sin conexión)', () => {
     // status 0 no está en rango 400-499, así que reintenta
-    expect(defaultSWRConfig.shouldRetryOnError?.({ status: 0, message: 'No connection' })).toBe(true);
+    expect(shouldRetryOnError({ status: 0, message: 'No connection' })).toBe(true);
   });
 
   it('límite de reintentos es 2', () => {

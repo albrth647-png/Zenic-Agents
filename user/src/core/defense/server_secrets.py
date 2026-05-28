@@ -20,8 +20,11 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +63,8 @@ class SecretVerification:
     server_url: str = ""
     response_time_ms: float = 0.0
     message: str = ""
-    expires_at: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    expires_at: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ServerSecretsLayer:
@@ -95,15 +98,15 @@ class ServerSecretsLayer:
         self._grace_period_hours = grace_period_hours
         self._cache_duration_hours = cache_duration_hours
         self._offline_fallback = offline_fallback
-        self._verification_cache: Dict[str, SecretVerification] = {}
+        self._verification_cache: dict[str, SecretVerification] = {}
         self._last_online_time: float = 0.0
         self._lock = threading.Lock()
-        self._callbacks: List[Callable[[SecretVerification], None]] = []
+        self._callbacks: list[Callable[[SecretVerification], None]] = []
 
     def verify(
         self,
         secret_type: SecretType,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         force_online: bool = False,
     ) -> SecretVerification:
         """Verify a secret against the server.
@@ -145,7 +148,7 @@ class ServerSecretsLayer:
         )
 
     def _verify_online(
-        self, secret_type: SecretType, payload: Dict[str, Any],
+        self, secret_type: SecretType, payload: dict[str, Any],
     ) -> SecretVerification:
         """Perform online verification against the license server.
 
@@ -154,18 +157,18 @@ class ServerSecretsLayer:
         """
         start = time.time()
         try:
-            import urllib.request
             import urllib.error
+            import urllib.request
 
             url = _validate_url(f"{self._server_url}/api/v1/verify/{secret_type.value}")
             data = json.dumps(payload).encode()
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 url, data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
 
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
                 body = json.loads(resp.read().decode())
                 elapsed_ms = (time.time() - start) * 1000
 
@@ -199,7 +202,7 @@ class ServerSecretsLayer:
             )
 
     def _verify_offline_fallback(
-        self, secret_type: SecretType, payload: Dict[str, Any],
+        self, secret_type: SecretType, payload: dict[str, Any],
     ) -> SecretVerification:
         """Provide offline verification fallback.
 
@@ -234,7 +237,7 @@ class ServerSecretsLayer:
         hours_since = (time.time() - self._last_online_time) / 3600
         return hours_since <= self._grace_period_hours
 
-    def get_last_online_time(self) -> Optional[float]:
+    def get_last_online_time(self) -> float | None:
         """Get the timestamp of the last successful online verification."""
         return self._last_online_time if self._last_online_time > 0 else None
 
@@ -255,13 +258,13 @@ class ServerSecretsLayer:
     # ── Helpers ────────────────────────────────────────────
 
     @staticmethod
-    def _cache_key(secret_type: SecretType, payload: Dict[str, Any]) -> str:
+    def _cache_key(secret_type: SecretType, payload: dict[str, Any]) -> str:
         """Generate a cache key for a verification request."""
         payload_str = json.dumps(payload, sort_keys=True)
         hash_val = hashlib.sha256(payload_str.encode()).hexdigest()[:12]
         return f"{secret_type.value}:{hash_val}"
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current server secrets status."""
         return {
             "server_url": self._server_url or "not configured",
@@ -276,7 +279,7 @@ class ServerSecretsLayer:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_server_secrets: Optional[ServerSecretsLayer] = None
+_server_secrets: ServerSecretsLayer | None = None
 _lock = threading.Lock()
 
 

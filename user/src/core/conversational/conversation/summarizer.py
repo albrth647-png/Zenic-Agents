@@ -17,10 +17,13 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from ..types.intent import IntentCategory
 from ..types.session import Message, MessageRole, Session
-from .turn_tracker import TurnRecord
+
+if TYPE_CHECKING:
+    from .turn_tracker import TurnRecord
 
 logger = logging.getLogger("zenic_agents.conversational.summarizer")
 

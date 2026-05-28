@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .._types import (
     ChannelMessage,
@@ -19,8 +19,10 @@ from .._types import (
     ChannelResponse,
     DeliveryStatus,
 )
-from ._registry_core import AdapterRegistry
 from ._types import _DEFAULT_FALLBACKS, _PRIORITY_CHANNEL_MAP
+
+if TYPE_CHECKING:
+    from ._registry_core import AdapterRegistry
 
 logger = logging.getLogger("zenic_agents.channels.router")
 

@@ -104,7 +104,7 @@ def load_audit_events(
 
         where = " AND ".join(conditions)
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM audit_events WHERE {where} " "ORDER BY created_at ASC LIMIT 2000",
+            f"SELECT * FROM audit_events WHERE {where} " "ORDER BY created_at ASC LIMIT 2000",  # noqa: S608
             params,
         ).fetchall()
         conn.close()
@@ -145,7 +145,7 @@ def load_ledger_entries(
 
         where = " AND ".join(conditions)
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM ledger WHERE {where} " "ORDER BY id ASC LIMIT 2000",
+            f"SELECT * FROM ledger WHERE {where} " "ORDER BY id ASC LIMIT 2000",  # noqa: S608
             params,
         ).fetchall()
         return [dict(r) for r in rows]

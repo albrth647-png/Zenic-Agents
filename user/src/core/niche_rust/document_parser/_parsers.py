@@ -6,6 +6,7 @@ PDF, DOCX, and HTML parsing functions for binary format support.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 from typing import Any
@@ -84,10 +85,8 @@ def _parse_pdf_bytes(data: bytes) -> tuple[str, list[str]]:
         return ("", errors)
     finally:
         if tmp_path and os.path.exists(tmp_path):
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
 
 
 # ──────────────────────────────────────────────────────────────
@@ -148,10 +147,8 @@ def _parse_docx_bytes(data: bytes) -> tuple[str, list[str]]:
         return ("", errors)
     finally:
         if tmp_path and os.path.exists(tmp_path):
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
 
 
 # ──────────────────────────────────────────────────────────────

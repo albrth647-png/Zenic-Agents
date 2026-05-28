@@ -32,7 +32,7 @@ fn is_private_ip(ip: &IpAddr) -> bool {
         IpAddr::V6(v6) => {
             v6.is_loopback()
                 || v6.is_unspecified()
-                || v6.is_link_local()
+                || v6.is_unicast_link_local()
                 || v6.is_multicast()
                 || matches!(v6.segments(), [0xfc00..=0xfdff, ..]) // Unique local
         }
@@ -46,7 +46,7 @@ fn is_private_ip(ip: &IpAddr) -> bool {
 ///
 /// FIX: Only HTTPS is accepted. HTTP is rejected to prevent MITM attacks
 /// on the Authorization header.
-pub(crate) fn parse_host_port(url: &str) -> Option<(String, u16)> {
+pub fn parse_host_port(url: &str) -> Option<(String, u16)> {
     let url = url.trim();
     if url.is_empty() {
         return None;
@@ -101,7 +101,7 @@ pub(crate) fn parse_host_port(url: &str) -> Option<(String, u16)> {
 /// - License key is sent via the `Authorization` header, not URL query param
 /// - Prevents credential leakage in server logs, proxy caches, browser history
 fn perform_https_get(
-    stream: &TcpStream,
+    stream: TcpStream,
     host: &str,
     path_url: &str,
     license_key: &str,
@@ -235,7 +235,7 @@ pub fn check_kill_switch(
         Ok(stream) => {
             // Server is reachable — attempt a TLS-secured HTTPS GET
             let response = perform_https_get(
-                &stream, &host, remote_url, license_key, timeout,
+                stream, &host, remote_url, license_key, timeout,
             );
 
             match response {

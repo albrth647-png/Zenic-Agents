@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from ..base import ActionResult
 
@@ -19,8 +19,8 @@ class _ExtrasMixin:
 
     async def _add_comment(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Add a comment to an existing issue.
@@ -41,7 +41,7 @@ class _ExtrasMixin:
                 "Missing required config key: comment",
             )
 
-        payload: Dict[str, Any] = {"body": comment}
+        payload: dict[str, Any] = {"body": comment}
 
         url = f"{base_url}{_API_V2}/issue/{issue_key}/comment"
         resp = await self._jira_request("POST", url, headers, payload)
@@ -85,8 +85,8 @@ class _ExtrasMixin:
 
     async def _link_issues(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Create a link between two issues.
@@ -108,7 +108,7 @@ class _ExtrasMixin:
                 "Missing required config key: outward_issue",
             )
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "type": {"name": link_type},
             "inwardIssue": {"key": inward_issue},
             "outwardIssue": {"key": outward_issue},
@@ -160,8 +160,8 @@ class _ExtrasMixin:
 
     async def _get_issue_types(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Get all issue types available to the user.
@@ -217,8 +217,8 @@ class _ExtrasMixin:
 
     async def _get_priorities(
         self,
-        config: Dict[str, Any],
-        headers: Dict[str, str],
+        config: dict[str, Any],
+        headers: dict[str, str],
         base_url: str,
     ) -> ActionResult:
         """Get all priorities.
@@ -270,7 +270,7 @@ class _ExtrasMixin:
 
     # ── Dry-Run Mode ──────────────────────────────────────────
 
-    def _dry_run(self, config: Dict[str, Any]) -> ActionResult:
+    def _dry_run(self, config: dict[str, Any]) -> ActionResult:
         """Return a simulated result when Jira is not configured.
 
         Logs the intended operation and returns success with dry_run flag.
@@ -288,7 +288,7 @@ class _ExtrasMixin:
             operation, project_key, issue_key, summary, jql, comment,
         )
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "operation": operation,
             "mode": "dry_run",
         }

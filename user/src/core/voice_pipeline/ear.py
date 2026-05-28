@@ -30,18 +30,21 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import threading
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._types import (
     STTBackendConfig,
     TranscriptionResult,
     VoicePipelineMetrics,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 _logger = logging.getLogger("zenic_agents.voice_pipeline.ear")
 
@@ -292,9 +295,9 @@ class FasterWhisperBackend(STTBackend):
                     language=lang,
                     beam_size=5,
                     vad_filter=True,  # Voice Activity Detection
-                    vad_parameters=dict(
-                        min_silence_duration_ms=500,
-                    ),
+                    vad_parameters={
+                        "min_silence_duration_ms": 500,
+                    },
                 )
 
                 # Collect all segments
@@ -333,10 +336,8 @@ class FasterWhisperBackend(STTBackend):
                 )
 
             finally:
-                try:
+                with contextlib.suppress(OSError):
                     os.unlink(tmp_path)
-                except OSError:
-                    pass
 
         except Exception as e:
             duration = time.monotonic() - start
@@ -508,10 +509,8 @@ class WhisperBackend(STTBackend):
                 )
 
             finally:
-                try:
+                with contextlib.suppress(OSError):
                     os.unlink(tmp_path)
-                except OSError:
-                    pass
 
         except Exception as e:
             duration = time.monotonic() - start

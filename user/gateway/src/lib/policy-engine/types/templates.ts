@@ -1,3 +1,5 @@
+import type { ConditionOperator, ComplianceMapping, PolicyDocument } from './core';
+
 // ─── 5. Policy Template Engine ──────────────────────────────────────────
 
 /** Template API version */

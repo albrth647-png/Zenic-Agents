@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from enum import IntEnum
 from dataclasses import dataclass, field
-from typing import Any
 from datetime import datetime
+from enum import IntEnum
+from typing import TYPE_CHECKING, Any
 
-from src.data.local_scanner import LocalDataScanner
+if TYPE_CHECKING:
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 

@@ -7,17 +7,20 @@ con payloads correctamente tipados.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..types.events import (
-    Event, EventType,
-    MessageReceivedPayload,
+    ErrorPayload,
+    Event,
+    EventType,
     IntentClassifiedPayload,
+    MessageReceivedPayload,
     ResponseGeneratedPayload,
     ToolCalledPayload,
-    ErrorPayload,
 )
-from .event_bus import EventBus
+
+if TYPE_CHECKING:
+    from .event_bus import EventBus
 
 
 class EventTypes:

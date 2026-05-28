@@ -10,7 +10,6 @@ from typing import Any
 
 import yaml
 
-
 _DNA_DIR = Path(__file__).parent
 
 

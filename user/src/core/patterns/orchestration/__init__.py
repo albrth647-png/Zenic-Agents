@@ -25,6 +25,15 @@ No external dependencies beyond Python stdlib.
 #  EVENT BUS - Observer/Pub-Sub Pattern
 # ============================================================
 
+# ============================================================
+#  COMMAND BUS - Command Pattern
+# ============================================================
+from .command_bus import (
+    Command,
+    CommandBus,
+    CommandHandler,
+    CommandResult,
+)
 from .event_bus import (
     Event,
     EventBus,
@@ -34,7 +43,6 @@ from .event_bus import (
 # ============================================================
 #  MEDIATOR - Agent Coordination Pattern
 # ============================================================
-
 from .mediator import (
     Mediator,
     Request,
@@ -43,25 +51,13 @@ from .mediator import (
 )
 
 # ============================================================
-#  COMMAND BUS - Command Pattern
-# ============================================================
-
-from .command_bus import (
-    Command,
-    CommandBus,
-    CommandHandler,
-    CommandResult,
-)
-
-# ============================================================
 #  SAGA - Multi-Step Rollback Pattern
 # ============================================================
-
 from .saga import (
     Saga,
     SagaContext,
-    SagaStep,
     SagaStatus,
+    SagaStep,
 )
 
 # ============================================================
@@ -69,23 +65,23 @@ from .saga import (
 # ============================================================
 
 __all__ = [
+    "Command",
+    # Command Bus
+    "CommandBus",
+    "CommandHandler",
+    "CommandResult",
+    "Event",
     # Event Bus
     "EventBus",
     "EventHandler",
-    "Event",
     # Mediator
     "Mediator",
     "Request",
-    "Response",
     "RequestHandler",
-    # Command Bus
-    "CommandBus",
-    "Command",
-    "CommandHandler",
-    "CommandResult",
+    "Response",
     # Saga
     "Saga",
-    "SagaStep",
     "SagaContext",
     "SagaStatus",
+    "SagaStep",
 ]

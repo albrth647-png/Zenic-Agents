@@ -8,9 +8,9 @@ import json
 import logging
 import sqlite3
 import time
-from typing import Any, List, Optional
+from typing import Any
 
-from ._types import ExpiryRecord, _MAX_RETRIES, _RETRY_DELAY
+from ._types import _MAX_RETRIES, _RETRY_DELAY, ExpiryRecord
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +45,9 @@ class ExpiryPersistenceMixin:
 
     # ── Private Helpers ────────────────────────────────────
 
-    def _get_active_records(self) -> List[ExpiryRecord]:
+    def _get_active_records(self) -> list[ExpiryRecord]:
         """Get all active expiry records."""
-        def _do_query() -> List[ExpiryRecord]:
+        def _do_query() -> list[ExpiryRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -123,7 +123,7 @@ class ExpiryPersistenceMixin:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()

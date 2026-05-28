@@ -22,8 +22,10 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -71,14 +73,14 @@ class FlowResult:
     """
     success: bool
     state: FlowState
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     message: str = ""
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     elapsed_ms: float = 0.0
     flow_id: str = ""
     flow_name: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize result to dictionary."""
         return {
             "success": self.success,
@@ -107,9 +109,9 @@ class FlowContext:
         artifacts: Collected artifacts from each step.
     """
     flow_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
-    user_input: Dict[str, Any] = field(default_factory=dict)
-    env: Dict[str, str] = field(default_factory=dict)
-    artifacts: Dict[str, Any] = field(default_factory=dict)
+    user_input: dict[str, Any] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict)
+    artifacts: dict[str, Any] = field(default_factory=dict)
 
     def set_artifact(self, key: str, value: Any) -> None:
         """Store an artifact in the context."""
@@ -169,8 +171,8 @@ class BaseFlow(ABC):
         self._state: FlowState = FlowState.PENDING
         self._context: FlowContext = FlowContext()
         self._started_at: float = 0.0
-        self._result: Optional[FlowResult] = None
-        self._hooks: Dict[str, List[Callable[..., None]]] = {
+        self._result: FlowResult | None = None
+        self._hooks: dict[str, list[Callable[..., None]]] = {
             "pre_validate": [],
             "post_validate": [],
             "pre_execute": [],
@@ -192,7 +194,7 @@ class BaseFlow(ABC):
         return self._context
 
     @property
-    def result(self) -> Optional[FlowResult]:
+    def result(self) -> FlowResult | None:
         return self._result
 
     # ── Hook System ──────────────────────────────────────────
@@ -216,8 +218,8 @@ class BaseFlow(ABC):
 
     # ── Template Method ──────────────────────────────────────
 
-    def run(self, user_input: Optional[Dict[str, Any]] = None,
-            env: Optional[Dict[str, str]] = None) -> FlowResult:
+    def run(self, user_input: dict[str, Any] | None = None,
+            env: dict[str, str] | None = None) -> FlowResult:
         """Execute the flow with the Template Method pattern.
 
         This is the main entry point — it orchestrates the full
@@ -236,7 +238,7 @@ class BaseFlow(ABC):
         )
         self._state = FlowState.RUNNING
         self._started_at = time.monotonic()
-        errors: List[str] = []
+        errors: list[str] = []
         rendered_output = ""
 
         try:
@@ -335,9 +337,9 @@ class FlowRegistry:
     """
 
     def __init__(self) -> None:
-        self._flows: Dict[str, Type[BaseFlow]] = {}
+        self._flows: dict[str, type[BaseFlow]] = {}
 
-    def register(self, name: str, flow_class: Type[BaseFlow]) -> None:
+    def register(self, name: str, flow_class: type[BaseFlow]) -> None:
         """Register a flow class by name."""
         self._flows[name] = flow_class
         logger.debug("FlowRegistry: Registered flow '%s'", name)
@@ -356,7 +358,7 @@ class FlowRegistry:
             raise KeyError(f"Flow '{name}' not registered. Available: {list(self._flows.keys())}")
         return self._flows[name]()
 
-    def list_flows(self) -> List[Dict[str, str]]:
+    def list_flows(self) -> list[dict[str, str]]:
         """List all registered flows with metadata."""
         result = []
         for name, flow_class in self._flows.items():
@@ -369,7 +371,7 @@ class FlowRegistry:
         return result
 
     @property
-    def flow_names(self) -> List[str]:
+    def flow_names(self) -> list[str]:
         """Get list of registered flow names."""
         return list(self._flows.keys())
 

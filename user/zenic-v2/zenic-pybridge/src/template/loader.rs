@@ -36,9 +36,10 @@ use super::types::{NicheDefinition, TemplateFieldType};
 ///     }
 #[pyfunction]
 pub fn template_generate(niche_id: &str, py: Python<'_>) -> PyResult<Option<Py<PyDict>>> {
-    let niche = match catalog_get_by_id(niche_id) {
-        Some(n) => n,
-        None => return Ok(None),
+    let niche = match catalog_get_by_id(py, niche_id) {
+        Ok(Some(n)) => n,
+        Ok(None) => return Ok(None),
+        Err(e) => return Err(e),
     };
     generate_template_dict(&niche, py).map(Some)
 }
@@ -80,9 +81,9 @@ fn generate_template_dict(niche: &NicheDefinition, py: Python<'_>) -> PyResult<P
 
     for section in niche.template_sections() {
         let section_dict = PyDict::new_bound(py);
-        section_dict.set_item("_title", &section.title).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _title: {}", e)))?;
-        section_dict.set_item("_description", &section.description).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _description: {}", e)))?;
-        section_dict.set_item("_order", section.order).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _order: {}", e)))?;
+        section_dict.set_item("_title", section.title()).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _title: {}", e)))?;
+        section_dict.set_item("_description", section.description()).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _description: {}", e)))?;
+        section_dict.set_item("_order", section.order()).map_err(|e| PyRuntimeError::new_err(format!("Failed to set _order: {}", e)))?;
 
         for field in section.fields() {
             let field_dict = PyDict::new_bound(py);

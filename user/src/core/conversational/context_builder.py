@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING
 
 from ..config.constants import (  # type: ignore[import-unresolved]
     CONTEXT_RESERVE_RESPONSE,
@@ -30,8 +31,10 @@ from .knowledge import KnowledgeBase
 from .memory import MemoryManager
 from .tools import ToolManager
 from .types.intent import AssistantIntent, IntentCategory
-from .types.personality import PersonalityProfile
 from .types.session import MessageRole, Session
+
+if TYPE_CHECKING:
+    from .types.personality import PersonalityProfile
 
 logger = logging.getLogger("zenic_agents.conversational.context_builder")
 
@@ -61,11 +64,11 @@ class BuiltContext:
     """Contexto construido listo para el pipeline/LLM."""
 
     system_prompt: str = ""
-    messages: list[dict[str, Any]] = field(default_factory=list)
-    memory_context: list[dict[str, Any]] = field(default_factory=list)
-    knowledge_context: list[dict[str, Any]] = field(default_factory=list)
-    tools: list[dict[str, Any]] = field(default_factory=list)
-    conversation_state: dict[str, Any] = field(default_factory=dict)
+    messages: list[Mapping[str, str | int | float | bool | list | dict]] = field(default_factory=list)
+    memory_context: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    knowledge_context: list[Mapping[str, str | float | bool]] = field(default_factory=list)
+    tools: list[Mapping[str, str | int | float | bool]] = field(default_factory=list)
+    conversation_state: Mapping[str, str | int | float | bool] = field(default_factory=dict)
     total_tokens_estimated: int = 0
     build_time_ms: float = 0.0
     sources_used: list[str] = field(default_factory=list)
@@ -82,7 +85,7 @@ class BuiltContext:
     def has_tools(self) -> bool:
         return len(self.tools) > 0
 
-    def to_chat_messages(self) -> list[dict[str, Any]]:
+    def to_chat_messages(self) -> list[Mapping[str, str | int | float | bool | list | dict]]:
         """Convierte a formato de mensajes de chat."""
         msgs: list[dict[str, Any]] = []
 
@@ -226,7 +229,7 @@ class ContextBuilder:
 
         return base
 
-    def _build_history(self, session: Session) -> list[dict[str, Any]]:
+    def _build_history(self, session: Session) -> list[Mapping[str, str | int | float | bool | list | dict]]:
         """Construye el historial de mensajes."""
         recent = session.get_recent_messages(self._config.max_history_messages)
         return [
@@ -239,7 +242,7 @@ class ContextBuilder:
         self,
         session_id: str,
         query: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Mapping[str, str | float | bool]]:
         """Busca memoria relevante."""
         if not query:
             return []
@@ -254,7 +257,7 @@ class ContextBuilder:
         self,
         intent: AssistantIntent,
         query: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Mapping[str, str | float | bool]]:
         """Busca conocimiento relevante."""
         if not query:
             return []
@@ -277,12 +280,12 @@ class ContextBuilder:
 
         return [e.to_context_dict() for e in result.entries]
 
-    def _build_tools(self, intent: AssistantIntent) -> list[dict[str, Any]]:
+    def _build_tools(self, intent: AssistantIntent) -> list[Mapping[str, str | int | float | bool]]:
         """Obtiene tools relevantes en formato de chat."""
         tools = self._tools.get_tools_for_intent(intent)
         return [t.to_chat_format() for t in tools]
 
-    def _build_conversation_state(self, session_id: str) -> dict[str, Any]:
+    def _build_conversation_state(self, session_id: str) -> Mapping[str, str | int | float | bool]:
         """Obtiene estado de conversacion."""
         state = self._conversation.get_state(session_id)
         if state is None:
@@ -294,9 +297,9 @@ class ContextBuilder:
     @staticmethod
     def _estimate_tokens(
         system: str,
-        messages: list[dict[str, Any]],
-        memory: list[dict[str, Any]],
-        knowledge: list[dict[str, Any]],
+        messages: list[Mapping[str, str | int | float | bool | list | dict]],
+        memory: list[Mapping[str, str | float | bool]],
+        knowledge: list[Mapping[str, str | float | bool]],
     ) -> int:
         """Estima tokens (1 token ≈ 4 chars para espanol)."""
         total_chars = len(system)
@@ -314,9 +317,9 @@ class ContextBuilder:
 
     def _truncate_history(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[Mapping[str, str | int | float | bool | list | dict]],
         excess_tokens: int,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Mapping[str, str | int | float | bool | list | dict]]:
         """Trunca el historial para reducir tokens."""
         # Eliminar mensajes mas antiguos (no system)
         chars_to_remove = excess_tokens * 4

@@ -102,7 +102,7 @@ class CoreCRUDMixin:
         conditions: list[dict] | None = None,
     ) -> Workflow:
         """Crea un nuevo workflow de automatización."""
-        wf_id = hashlib.md5(f"{name}:{time.time()}".encode()).hexdigest()[:12]
+        wf_id = hashlib.sha256(f"{name}:{time.time()}".encode()).hexdigest()[:12]
 
         workflow = Workflow(
             id=wf_id,

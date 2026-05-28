@@ -6,15 +6,28 @@ and data payloads for communication between pipeline levels.
 """
 
 import enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 __all__ = [
-    "OperationType", "GoalType", "CriticalityLevel", "RoutePath",
-    "IntentPayload", "RoutingPayload", "PlanStep", "ExecutionPlan",
-    "SandboxResult", "MerkleNode", "ChatMessage", "ChatRequest",
-    "criticality_to_int", "criticality_to_path", "criticality_to_str",
-    "CRITICALITY_INT_TO_STR", "CRITICALITY_STR_TO_INT",
-    "CRITICALITY_INT_TO_PATH", "CRITICALITY_PATH_TO_INT",
+    "CRITICALITY_INT_TO_PATH",
+    "CRITICALITY_INT_TO_STR",
+    "CRITICALITY_PATH_TO_INT",
+    "CRITICALITY_STR_TO_INT",
+    "ChatMessage",
+    "ChatRequest",
+    "CriticalityLevel",
+    "ExecutionPlan",
+    "GoalType",
+    "IntentPayload",
+    "MerkleNode",
+    "OperationType",
+    "PlanStep",
+    "RoutePath",
+    "RoutingPayload",
+    "SandboxResult",
+    "criticality_to_int",
+    "criticality_to_path",
+    "criticality_to_str",
 ]
 
 
@@ -107,8 +120,8 @@ class RoutePath(str, enum.Enum):
 # ============================================================
 
 class IntentPayload:
-    def __init__(self, op: Union[str, OperationType] = OperationType.SEARCH.value, target: str = "unknown",
-                 goal: Union[str, GoalType] = GoalType.FEATURE_ADD.value, scrap_query: str = "", confidence: float = 0.0,
+    def __init__(self, op: str | OperationType = OperationType.SEARCH.value, target: str = "unknown",
+                 goal: str | GoalType = GoalType.FEATURE_ADD.value, scrap_query: str = "", confidence: float = 0.0,
                  language: str = "python", raw_code: str = "", context: str = "") -> None:
         self.op = op.value if isinstance(op, enum.Enum) else op
         self.target = target
@@ -121,8 +134,8 @@ class IntentPayload:
 
 
 class RoutingPayload:
-    def __init__(self, intent: Optional[IntentPayload] = None, criticality: Union[int, CriticalityLevel] = CriticalityLevel.FAST_STANDARD.value,
-                 route: Union[str, RoutePath] = RoutePath.FAST_PATH.value, reason: str = "") -> None:
+    def __init__(self, intent: IntentPayload | None = None, criticality: int | CriticalityLevel = CriticalityLevel.FAST_STANDARD.value,
+                 route: str | RoutePath = RoutePath.FAST_PATH.value, reason: str = "") -> None:
         self.intent = intent or IntentPayload()
         self.criticality = criticality.value if isinstance(criticality, enum.Enum) else criticality
         self.route = route.value if isinstance(route, enum.Enum) else route
@@ -131,7 +144,7 @@ class RoutingPayload:
 
 class PlanStep:
     def __init__(self, step_id: int = 0, action: str = "ANALYZE_CODE", target_node_name: str = "",
-                 source: str = "LOCAL_GRAPH", constraints: Optional[Dict[str, Any]] = None) -> None:
+                 source: str = "LOCAL_GRAPH", constraints: dict[str, Any] | None = None) -> None:
         self.step_id = step_id
         self.action = action
         self.target_node_name = target_node_name
@@ -140,8 +153,8 @@ class PlanStep:
 
 
 class ExecutionPlan:
-    def __init__(self, plan_id: str = "", steps: Optional[List[PlanStep]] = None, solver_status: str = "HEURISTIC_FALLBACK",
-                 solver_proof: Optional[Any] = None, mcts_simulations: int = 0, mcts_depth_reached: int = 0) -> None:
+    def __init__(self, plan_id: str = "", steps: list[PlanStep] | None = None, solver_status: str = "HEURISTIC_FALLBACK",
+                 solver_proof: Any | None = None, mcts_simulations: int = 0, mcts_depth_reached: int = 0) -> None:
         self.plan_id = plan_id
         self.steps = steps or []
         self.solver_status = solver_status
@@ -151,8 +164,8 @@ class ExecutionPlan:
 
 
 class SandboxResult:
-    def __init__(self, status: str = "PASS", error_message: str = "", error_node: Optional[str] = None,
-                 warnings: Optional[List[str]] = None, metrics: Optional[Dict[str, Any]] = None,
+    def __init__(self, status: str = "PASS", error_message: str = "", error_node: str | None = None,
+                 warnings: list[str] | None = None, metrics: dict[str, Any] | None = None,
                  paths_explored: int = 0, paths_pruned: int = 0) -> None:
         self.status = status
         self.error_message = error_message
@@ -180,7 +193,7 @@ class ChatMessage:
 
 
 class ChatRequest:
-    def __init__(self, model: str = "zenic-agents", messages: Optional[List[ChatMessage]] = None, temperature: float = 0.1,
+    def __init__(self, model: str = "zenic-agents", messages: list[ChatMessage] | None = None, temperature: float = 0.1,
                  max_tokens: int = 2000, stream: bool = False) -> None:
         self.model = model
         self.messages = messages or []

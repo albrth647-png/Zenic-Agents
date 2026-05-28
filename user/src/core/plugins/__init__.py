@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 try:
-    from .types import PluginState, PluginCapability, PluginManifest, PluginInstance
+    from .types import PluginCapability, PluginInstance, PluginManifest, PluginState
 except ImportError:
     PluginState = None  # type: ignore[assignment,misc]
     PluginCapability = None  # type: ignore[assignment,misc]
@@ -24,8 +24,8 @@ except ImportError:
 
 try:
     from .hook_system import (
-        HookType,
         HookRegistration,
+        HookType,
         PluginHookSystem,
         get_plugin_hook_system,
         reset_plugin_hook_system,
@@ -38,9 +38,19 @@ except ImportError:
     reset_plugin_hook_system = None  # type: ignore[assignment,misc]
 
 __all__ = [
-    "PluginState", "PluginCapability", "PluginManifest", "PluginInstance",
-    "PluginRegistry", "get_plugin_registry", "reset_plugin_registry",
-    "PluginLifecycleManager", "get_plugin_lifecycle", "reset_plugin_lifecycle",
-    "HookType", "HookRegistration", "PluginHookSystem",
-    "get_plugin_hook_system", "reset_plugin_hook_system",
+    "HookRegistration",
+    "HookType",
+    "PluginCapability",
+    "PluginHookSystem",
+    "PluginInstance",
+    "PluginLifecycleManager",
+    "PluginManifest",
+    "PluginRegistry",
+    "PluginState",
+    "get_plugin_hook_system",
+    "get_plugin_lifecycle",
+    "get_plugin_registry",
+    "reset_plugin_hook_system",
+    "reset_plugin_lifecycle",
+    "reset_plugin_registry",
 ]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import List
+
 
 def truncate(text: str, max_length: int, suffix: str = "...") -> str:
     """Truncate text to max_length, appending suffix if truncated."""
@@ -12,7 +12,7 @@ def truncate(text: str, max_length: int, suffix: str = "...") -> str:
     return text[: max_length - len(suffix)] + suffix
 
 
-def split_message(text: str, max_length: int, overlap: int = 0) -> List[str]:
+def split_message(text: str, max_length: int, overlap: int = 0) -> list[str]:
     """Split long text into chunks respecting paragraph/line/word boundaries.
 
     Strategy (in order of preference):
@@ -32,7 +32,7 @@ def split_message(text: str, max_length: int, overlap: int = 0) -> List[str]:
     if len(text) <= max_length:
         return [text]
 
-    chunks: List[str] = []
+    chunks: list[str] = []
 
     while text:
         if len(text) <= max_length:

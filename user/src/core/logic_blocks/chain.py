@@ -5,12 +5,13 @@ Base class for composable logic blocks and the LogicChain pipeline
 that executes them sequentially with branching support.
 """
 
+import logging
 import re
 import time
-import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional
+from collections.abc import Callable
 from copy import deepcopy
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class LogicChain:
         self._blocks: list[dict[str, Any]] = []
         self._log: list[dict[str, Any]] = []
 
-    def execute(self, initial_data: dict[str, Any], context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def execute(self, initial_data: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Ejecuta la cadena completa de bloques secuencialmente.
 
         Args:
@@ -138,7 +139,7 @@ class LogicChain:
                         "success": False, "error": str(e),
                         "timestamp": time.time(),
                     })
-                    data.update({"success": False, "error": f"{block.name}: {str(e)}"})
+                    data.update({"success": False, "error": f"{block.name}: {e!s}"})
                     data["_chain_stopped"] = True
                     data["_stopped_at"] = block.name
                     break

@@ -7,13 +7,12 @@ Singleton access for the EscalationManager.
 from __future__ import annotations
 
 import threading
-from typing import Optional
 
 from ._escalator import EscalationManager
 
 # ── Singleton ─────────────────────────────────────────────
 
-_escalation_instance: Optional[EscalationManager] = None
+_escalation_instance: EscalationManager | None = None
 _escalation_lock = threading.Lock()
 
 

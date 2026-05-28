@@ -9,9 +9,12 @@ NO espera a que el usuario reporte "la API no funciona".
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
-from src.data.local_scanner import LocalDataScanner
+
+if TYPE_CHECKING:
+    from src.data.local_scanner import LocalDataScanner
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ class APIHealthMonitor(BaseMonitor):
                 )
                 for ep in custom_endpoints:
                     self.endpoints.append(ep)
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # Verificar que hay endpoints configurados

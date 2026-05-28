@@ -1,6 +1,7 @@
 """MiniAIEngine bounded tasks — composition of task mixins."""
 
 import logging
+
 from ._tasks_1to4_mixin import BoundedTasks1To4Mixin
 from ._tasks_5to7_mixin import BoundedTasks5To7Mixin
 

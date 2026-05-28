@@ -13,15 +13,15 @@ Jitter: random.uniform(0, jitter_max * current_delay) added when jitter=True.
 """
 
 from ._config import RetryConfig
-from ._programmatic import with_retry, with_retry_async, with_config_retry
-from ._scope import retry, retry_async, RetryScope
+from ._programmatic import with_config_retry, with_retry, with_retry_async
+from ._scope import RetryScope, retry, retry_async
 
 __all__ = [
     "RetryConfig",
+    "RetryScope",
     "retry",
     "retry_async",
-    "with_retry",
     "with_config_retry",
+    "with_retry",
     "with_retry_async",
-    "RetryScope",
 ]

@@ -9,16 +9,16 @@ Design Patterns:
   - Facade: simplified rendering API
 """
 
-from .welcome import WelcomeRenderer, render_welcome
-from .status_display import StatusRenderer, render_status_panel
 from .progress import ProgressRenderer, StepIndicator, render_progress
+from .status_display import StatusRenderer, render_status_panel
+from .welcome import WelcomeRenderer, render_welcome
 
 __all__ = [
-    "WelcomeRenderer",
-    "render_welcome",
-    "StatusRenderer",
-    "render_status_panel",
     "ProgressRenderer",
+    "StatusRenderer",
     "StepIndicator",
+    "WelcomeRenderer",
     "render_progress",
+    "render_status_panel",
+    "render_welcome",
 ]

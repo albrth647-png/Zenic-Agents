@@ -86,7 +86,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._active_requests_gauge.inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def dec_active_requests(self) -> None:
@@ -96,7 +96,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._active_requests_gauge.dec()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Rate Limit Tracking ────────────────────────────────
@@ -108,7 +108,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._rate_limit_accepted_total.inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def record_rate_limit_rejected(self) -> None:
@@ -118,7 +118,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._rate_limit_rejected_total.inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Auth Tracking ──────────────────────────────────────
@@ -130,7 +130,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._auth_success_total.labels(auth_method=method).inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def record_auth_failure(self, method: str = "jwt") -> None:
@@ -140,7 +140,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._auth_failure_total.labels(auth_method=method).inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Circuit Breaker Tracking ───────────────────────────
@@ -154,7 +154,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._circuit_breaker_state_gauge.labels(name=name).set(value)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Task Queue Tracking ────────────────────────────────
@@ -166,7 +166,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._task_queue_depth_gauge.labels(queue_name=queue_name).set(depth)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def record_task_completed(self, task_type: str, worker_id: str, duration: float = 0.0) -> None:
@@ -179,7 +179,7 @@ class MetricsCollector:
                 ).inc()
                 if self._config.histograms and duration > 0:
                     self._task_duration_seconds.labels(task_type=task_type).observe(duration)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def record_task_failed(self, task_type: str, worker_id: str) -> None:
@@ -190,7 +190,7 @@ class MetricsCollector:
                     task_type=task_type,
                     worker_id=worker_id,
                 ).inc()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Resource Tracking ──────────────────────────────────
@@ -201,7 +201,7 @@ class MetricsCollector:
             try:
                 self._ram_usage_mb_gauge.set(ram_mb)
                 self._cpu_usage_pct_gauge.set(cpu_pct)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def update_uptime(self, seconds: float) -> None:
@@ -209,7 +209,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._uptime_seconds_gauge.set(seconds)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def update_tenant_count(self, count: int) -> None:
@@ -217,7 +217,7 @@ class MetricsCollector:
         if self._prom_available:
             try:
                 self._tenant_active_gauge.set(count)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Export ─────────────────────────────────────────────
@@ -229,7 +229,7 @@ class MetricsCollector:
                 import prometheus_client
 
                 return prometheus_client.generate_latest().decode("utf-8")
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # Fallback: custom text format

@@ -73,42 +73,97 @@ impl TemplateFieldSchema {
     pub fn name(&self) -> &str {
         &self.name
     }
+
+    /// Get the display name.
+    pub fn display_name(&self) -> &str {
+        &self.display_name
+    }
+
+    /// Get the field type.
+    pub fn field_type(&self) -> TemplateFieldType {
+        self.field_type
+    }
+
+    /// Get the requirement.
+    pub fn requirement(&self) -> FieldRequirement {
+        self.requirement
+    }
+
+    /// Check if this field is required.
+    pub fn is_required(&self) -> bool {
+        self.requirement == FieldRequirement::Required
+    }
+
+    /// Get the default value.
+    pub fn default_value(&self) -> Option<&str> {
+        self.default_value.as_deref()
+    }
+
+    /// Get the description.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Get the condition.
+    pub fn condition(&self) -> &str {
+        &self.condition
+    }
+
+    /// Get the enum variants.
+    pub fn enum_variants(&self) -> Vec<String> {
+        self.enum_variants.clone()
+    }
+
+    /// Get the reference entity.
+    pub fn reference_entity(&self) -> &str {
+        &self.reference_entity
+    }
+
+    /// Get the file accept types.
+    pub fn file_accept(&self) -> Vec<String> {
+        self.file_accept.clone()
+    }
+
+    /// Get the display order.
+    pub fn order(&self) -> usize {
+        self.order
+    }
 }
 
 #[pymethods]
 impl TemplateFieldSchema {
-    #[getter]
-    fn name(&self) -> &str {
+    #[getter(name)]
+    fn py_get_name(&self) -> &str {
         &self.name
     }
 
-    #[getter]
-    fn display_name(&self) -> &str {
+    #[getter(display_name)]
+    fn py_get_display_name(&self) -> &str {
         &self.display_name
     }
 
-    #[getter]
-    fn field_type(&self) -> TemplateFieldType {
+    #[getter(field_type)]
+    fn py_get_field_type(&self) -> TemplateFieldType {
         self.field_type
     }
 
-    #[getter]
-    fn requirement(&self) -> FieldRequirement {
+    #[getter(requirement)]
+    fn py_get_requirement(&self) -> FieldRequirement {
         self.requirement
     }
 
-    #[getter]
-    fn default_value(&self) -> Option<&str> {
+    #[getter(default_value)]
+    fn py_get_default_value(&self) -> Option<&str> {
         self.default_value.as_deref()
     }
 
-    #[getter]
-    fn description(&self) -> &str {
+    #[getter(description)]
+    fn py_get_description(&self) -> &str {
         &self.description
     }
 
-    #[getter]
-    fn condition(&self) -> &str {
+    #[getter(condition)]
+    fn py_get_condition(&self) -> &str {
         &self.condition
     }
 
@@ -121,33 +176,33 @@ impl TemplateFieldSchema {
         Ok(dict.unbind())
     }
 
-    #[getter]
-    fn enum_variants(&self) -> Vec<String> {
+    #[getter(enum_variants)]
+    fn py_get_enum_variants(&self) -> Vec<String> {
         self.enum_variants.clone()
     }
 
-    #[getter]
-    fn reference_entity(&self) -> &str {
+    #[getter(reference_entity)]
+    fn py_get_reference_entity(&self) -> &str {
         &self.reference_entity
     }
 
-    #[getter]
-    fn file_accept(&self) -> Vec<String> {
+    #[getter(file_accept)]
+    fn py_get_file_accept(&self) -> Vec<String> {
         self.file_accept.clone()
     }
 
-    #[getter]
-    fn order(&self) -> usize {
+    #[getter(order)]
+    fn py_get_order(&self) -> usize {
         self.order
     }
 
     /// Check if this field is required.
-    fn is_required(&self) -> bool {
+    fn py_is_required(&self) -> bool {
         self.requirement == FieldRequirement::Required
     }
 
     /// Check if this field is conditional.
-    fn is_conditional(&self) -> bool {
+    fn py_is_conditional(&self) -> bool {
         self.requirement == FieldRequirement::Conditional
     }
 
@@ -208,6 +263,21 @@ impl TemplateSection {
         &self.section_id
     }
 
+    /// Get the title.
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    /// Get the description.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Get the display order.
+    pub fn order(&self) -> usize {
+        self.order
+    }
+
     /// Get all fields.
     pub fn fields(&self) -> &[TemplateFieldSchema] {
         &self.fields
@@ -221,23 +291,23 @@ impl TemplateSection {
 
 #[pymethods]
 impl TemplateSection {
-    #[getter]
-    fn section_id(&self) -> &str {
+    #[getter(section_id)]
+    fn py_get_section_id(&self) -> &str {
         &self.section_id
     }
 
-    #[getter]
-    fn title(&self) -> &str {
+    #[getter(title)]
+    fn py_get_title(&self) -> &str {
         &self.title
     }
 
-    #[getter]
-    fn description(&self) -> &str {
+    #[getter(description)]
+    fn py_get_description(&self) -> &str {
         &self.description
     }
 
-    #[getter]
-    fn order(&self) -> usize {
+    #[getter(order)]
+    fn py_get_order(&self) -> usize {
         self.order
     }
 

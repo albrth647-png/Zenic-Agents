@@ -8,21 +8,18 @@ chain templates. Extracted from ChainTemplateLibrary for modularity.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
-
 from typing import Any
 
 from ._types import (
+    _DB_DIR,
+    _DB_PATH,
     ChainTemplate,
     TemplateStep,
     TemplateVariable,
-    _DB_DIR,
-    _DB_PATH,
     logger,
 )
-
-import os  # noqa: E402 – needed for makedirs
-
 
 # ---------------------------------------------------------------------------
 #  Database initialization

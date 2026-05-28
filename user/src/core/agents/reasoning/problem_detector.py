@@ -404,7 +404,7 @@ class ProblemDetector(BaseAgent[ProblemType]):
 
         # Multiple problem types detected
         types_found = 0
-        for ptype, keywords in PROBLEM_TYPE_KEYWORDS.items():
+        for _ptype, keywords in PROBLEM_TYPE_KEYWORDS.items():
             if any(kw in query_lower for kw in keywords):
                 types_found += 1
         if types_found > 1:

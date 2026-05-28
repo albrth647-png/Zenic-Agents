@@ -2,7 +2,7 @@
 
 import logging
 import threading
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Tuple  # noqa: UP035
 
 from ._mixin_core import RiskPredictionEngine
 

@@ -5,18 +5,18 @@ Almacena y recupera conocimiento estructurado para
 enriquecer las respuestas del asistente.
 """
 
+from ._base import KnowledgeBase
 from ._types import (
     KnowledgeEntry,
     KnowledgeQuery,
     KnowledgeResult,
     KnowledgeType,
 )
-from ._base import KnowledgeBase
 
 __all__ = [
     "KnowledgeBase",
     "KnowledgeEntry",
-    "KnowledgeType",
     "KnowledgeQuery",
     "KnowledgeResult",
+    "KnowledgeType",
 ]

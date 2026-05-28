@@ -157,7 +157,7 @@ class SmartChainTemplatesDataMixin:
                     entity = word.lower()
                     break
             return (
-                f"\n"
+                f"\n"  # noqa: S608
                 f"    def create(self, data: Dict[str, Any]) -> Dict[str, Any]:\n"
                 f'        """Create a new {entity} with parameterized SQL INSERT."""\n'
                 f"        try:\n"

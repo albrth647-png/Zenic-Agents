@@ -88,8 +88,9 @@ class DatabaseExecutor(ActionExecutor):
             if operation in ("insert", "update", "delete"):
                 try:
                     journal_id = self._journal.journal_before(db_path, operation, query, params, "__anonymous__")
-                except Exception:
-                    pass  # Journal failure should not block operations
+                except Exception:  # noqa: S110
+                    # Journal failure must not block DB operations
+                    pass
 
             conn.commit()
             result = {"affected_rows": cursor.rowcount, "lastrowid": cursor.lastrowid}
@@ -98,7 +99,8 @@ class DatabaseExecutor(ActionExecutor):
                 try:
                     self._journal.journal_after(journal_id, cursor.rowcount, cursor.lastrowid)
                     result["journal_id"] = journal_id
-                except Exception:
+                except Exception:  # noqa: S110
+                    # Journal failure must not block DB operations
                     pass
 
             return result

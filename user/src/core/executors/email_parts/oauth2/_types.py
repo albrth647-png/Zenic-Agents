@@ -15,7 +15,7 @@ class OAuth2GrantType(str, Enum):
 
     CLIENT_CREDENTIALS = "client_credentials"
     AUTHORIZATION_CODE = "authorization_code"
-    REFRESH_TOKEN = "refresh_token"
+    REFRESH_TOKEN = "refresh_token"  # noqa: S105
 
 
 @dataclass
@@ -49,7 +49,7 @@ class OAuth2Token:
     """
 
     access_token: str = ""
-    token_type: str = "Bearer"
+    token_type: str = "Bearer"  # noqa: S105
     expires_at: float = 0.0  # Unix timestamp
     refresh_token: str = ""
     scope: str = ""

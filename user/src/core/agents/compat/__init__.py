@@ -16,14 +16,11 @@ this module can be deprecated and removed.
 
 from __future__ import annotations
 
-# Re-export backward-compatible aliases
-from ._types import VALID_OPERATIONS, VALID_GOALS, logger
-
 # Re-export adapter classes
 from ._adapter import (
-    SurgicalAgentCompat,
-    ReasoningAgentCompat,
     BusinessLogicAgentCompat,
+    ReasoningAgentCompat,
+    SurgicalAgentCompat,
 )
 
 # Re-export mapper classes
@@ -35,15 +32,18 @@ from ._mapper import (
 # Re-export migration class
 from ._migration import AgentRunnerCompat
 
+# Re-export backward-compatible aliases
+from ._types import VALID_GOALS, VALID_OPERATIONS, logger
+
 __all__ = [
-    "SurgicalAgentCompat",
-    "ReasoningAgentCompat",
-    "BusinessLogicAgentCompat",
-    "AutomationAgentCompat",
-    "ValidationAgentCompat",
-    "AgentRunnerCompat",
+    "VALID_GOALS",
     # Backward-compatible aliases
     "VALID_OPERATIONS",
-    "VALID_GOALS",
+    "AgentRunnerCompat",
+    "AutomationAgentCompat",
+    "BusinessLogicAgentCompat",
+    "ReasoningAgentCompat",
+    "SurgicalAgentCompat",
+    "ValidationAgentCompat",
     "logger",
 ]

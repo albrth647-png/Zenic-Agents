@@ -5,14 +5,16 @@ from __future__ import annotations
 import fnmatch
 import json
 import logging
-import sqlite3
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._types import (
     ConditionOperator,
     TriggerCondition,
     TriggerMapping,
 )
+
+if TYPE_CHECKING:
+    import sqlite3
 
 logger = logging.getLogger("zenic_agents.events.trigger_map")
 
@@ -39,9 +41,7 @@ def _match_event_pattern(pattern: str, event_type: str) -> bool:
             return True  # "**" matches everything
         if event_type == prefix:
             return True
-        if event_type.startswith(prefix + "."):
-            return True
-        return False
+        return bool(event_type.startswith(prefix + "."))
 
     # Standard fnmatch for single-level wildcards
     return fnmatch.fnmatch(event_type, pattern)

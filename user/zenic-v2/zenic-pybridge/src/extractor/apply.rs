@@ -25,6 +25,7 @@ use super::types::*;
 pub fn extractor_apply_matches(
     template_dict: &Bound<'_, PyDict>,
     matches: &Bound<'_, PyList>,
+    py: Python<'_>,
 ) -> PyResult<bool> {
     let match_list: Vec<FieldMatch> = matches.extract()?;
     if match_list.is_empty() {
@@ -48,7 +49,7 @@ pub fn extractor_apply_matches(
             template_dict,
             section_id,
             field_name,
-            value.into(),
+            pyo3::types::PyString::new_bound(py, value).into_any(),
         );
 
         match result {
@@ -57,7 +58,7 @@ pub fn extractor_apply_matches(
                 // Field not found in the specified section; try to find it
                 // This can happen when section_id is empty
                 if section_id.is_empty() {
-                    if let Ok(found) = try_set_field_any_section(template_dict, field_name, value) {
+                    if let Ok(found) = try_set_field_any_section(template_dict, field_name, value, py) {
                         if found {
                             any_applied = true;
                         }
@@ -76,6 +77,7 @@ fn try_set_field_any_section(
     template_dict: &Bound<'_, PyDict>,
     field_name: &str,
     value: &str,
+    py: Python<'_>,
 ) -> PyResult<bool> {
     let template_obj = match template_dict.get_item("template") {
         Ok(Some(t)) => t,
@@ -109,7 +111,7 @@ fn try_set_field_any_section(
                 template_dict,
                 &section_id,
                 field_name,
-                value.into(),
+                pyo3::types::PyString::new_bound(py, value).into_any(),
             );
         }
     }

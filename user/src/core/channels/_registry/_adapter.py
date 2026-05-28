@@ -177,7 +177,7 @@ class AdapterRegistry:
     ) -> ChannelResponse:
         """Send a message with automatic fallback chain."""
         exclude = exclude_channels or set()
-        chain = [channel] + self.get_fallback_chain(channel)
+        chain = [channel, *self.get_fallback_chain(channel)]
 
         last_response: ChannelResponse | None = None
 

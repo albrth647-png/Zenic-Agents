@@ -31,9 +31,7 @@ def _is_unpicklable(value: Any) -> bool:
     # Compiled regex patterns (have .pattern attribute but can't always deepcopy)
     import re
 
-    if isinstance(value, re.Pattern):
-        return True
-    return False
+    return bool(isinstance(value, re.Pattern))
 
 
 def _make_fresh_thread_primitive(value: Any) -> Any:
@@ -130,10 +128,7 @@ def _has_internal_locks(obj: Any) -> bool:
     """Check if an object has threading locks in its __dict__ (recursively, depth=1)."""
     if not hasattr(obj, "__dict__"):
         return False
-    for value in obj.__dict__.values():
-        if _is_thread_primitive(value):
-            return True
-    return False
+    return any(_is_thread_primitive(value) for value in obj.__dict__.values())
 
 
 class AgentPrototype:

@@ -175,8 +175,8 @@ async def _download_url(url: str) -> bytes | None:
         import urllib.request
 
         def _sync_download() -> bytes | None:
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            req = urllib.request.Request(url)  # noqa: S310
+            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
                 return resp.read()
 
         return await asyncio.to_thread(_sync_download)

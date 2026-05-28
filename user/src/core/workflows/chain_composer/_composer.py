@@ -17,6 +17,18 @@ import threading
 import time
 from typing import Any
 
+from ._db_layer import (
+    init_db as _init_db,
+)
+from ._db_layer import (
+    load_chains as _load_chains,
+)
+from ._db_layer import (
+    log_execution as _log_execution,
+)
+from ._db_layer import (
+    save_chain as _save_chain,
+)
 from ._optimizer import _STEP_EXECUTORS
 from ._types import (
     _DB_DIR,
@@ -29,12 +41,6 @@ from ._types import (
     ComposedChain,
 )
 from ._validator import validate_chain
-from ._db_layer import (
-    init_db as _init_db,
-    load_chains as _load_chains,
-    save_chain as _save_chain,
-    log_execution as _log_execution,
-)
 
 logger = logging.getLogger(__name__)
 

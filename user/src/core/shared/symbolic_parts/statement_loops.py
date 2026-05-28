@@ -162,7 +162,7 @@ class StatementLoopsMixin:
         # Path for 0 iterations (condition false immediately)
         false_str, false_z3 = self._encode_z3_condition(stmt.test, path, negate=True)
         exit_path = SymbolicPath(
-            condition=path.condition + [false_str],
+            condition=[*path.condition, false_str],
             variables=dict(path.variables),
             is_pruned=path.is_pruned,
             z3_conditions=list(path.z3_conditions),
@@ -183,7 +183,7 @@ class StatementLoopsMixin:
                 # Condition true path
                 true_str, true_z3 = self._encode_z3_condition(stmt.test, cp, negate=False)
                 iter_path = SymbolicPath(
-                    condition=cp.condition + [true_str],
+                    condition=[*cp.condition, true_str],
                     variables=dict(cp.variables),
                     is_pruned=cp.is_pruned,
                     z3_conditions=list(cp.z3_conditions),
@@ -204,7 +204,7 @@ class StatementLoopsMixin:
                 # Also add exit path after this iteration
                 exit_str, exit_z3 = self._encode_z3_condition(stmt.test, cp, negate=True)
                 exit_iter_path = SymbolicPath(
-                    condition=cp.condition + [exit_str],
+                    condition=[*cp.condition, exit_str],
                     variables=dict(cp.variables),
                     is_pruned=cp.is_pruned,
                     z3_conditions=list(cp.z3_conditions),

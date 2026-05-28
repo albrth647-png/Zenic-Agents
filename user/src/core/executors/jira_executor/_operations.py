@@ -8,9 +8,9 @@ This module composes the full _OperationsMixin from the split sub-modules:
 
 from __future__ import annotations
 
+from ._operations_extras import _ExtrasMixin
 from ._operations_issues import _IssuesMixin
 from ._operations_transitions import _TransitionsMixin
-from ._operations_extras import _ExtrasMixin
 
 
 class _OperationsMixin(_IssuesMixin, _TransitionsMixin, _ExtrasMixin):

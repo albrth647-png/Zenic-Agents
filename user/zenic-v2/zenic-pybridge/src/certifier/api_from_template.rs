@@ -71,6 +71,7 @@ pub fn certifier_from_template(
     // Validate completeness using template_validate
     let validation = crate::template::template_validate(template_dict, py)?;
     let is_valid: bool = validation
+        .bind(py)
         .get_item("valid")
         .ok()
         .flatten()
@@ -78,6 +79,7 @@ pub fn certifier_from_template(
         .unwrap_or(false);
 
     let missing_required: usize = validation
+        .bind(py)
         .get_item("missing_required")
         .ok()
         .flatten()
@@ -156,7 +158,7 @@ pub fn certifier_from_template(
         .get_item("metadata")
         .ok()
         .flatten()
-        .and_then(|m| m.downcast::<PyDict>().ok())
+        .and_then(|m| m.downcast::<PyDict>().ok().cloned())
         .and_then(|m| m.get_item("tags").ok().flatten())
         .and_then(|v| v.extract().ok())
         .unwrap_or_default();
@@ -364,75 +366,75 @@ pub(super) fn build_default_db_schema(niche_id: &str) -> Vec<DbTableDef> {
     // Common tables for all niches
     let mut users = DbTableDef::new("users".to_string(), "id".to_string());
     users.set_encrypted(true);
-    users.add_column(ColumnDef::py_new("id".to_string(), "uuid".to_string()));
+    users.add_column(ColumnDef::new("id".to_string(), "uuid".to_string()));
     users.add_column({
-        let mut col = ColumnDef::py_new("email".to_string(), "text".to_string());
+        let mut col = ColumnDef::new("email".to_string(), "text".to_string());
         col.set_unique(true);
         col.set_indexed(true);
         col
     });
     users.add_column({
-        let mut col = ColumnDef::py_new("name".to_string(), "text".to_string());
+        let mut col = ColumnDef::new("name".to_string(), "text".to_string());
         col.set_nullable(false);
         col
     });
     users.add_column({
-        let mut col = ColumnDef::py_new("role".to_string(), "text".to_string());
+        let mut col = ColumnDef::new("role".to_string(), "text".to_string());
         col.set_nullable(false);
         col.set_indexed(true);
         col
     });
-    users.add_column(ColumnDef::py_new("created_at".to_string(), "datetime".to_string()));
+    users.add_column(ColumnDef::new("created_at".to_string(), "datetime".to_string()));
     tables.push(users);
 
     let mut audit_log = DbTableDef::new("audit_log".to_string(), "id".to_string());
     audit_log.set_encrypted(false);
-    audit_log.add_column(ColumnDef::py_new("id".to_string(), "uuid".to_string()));
+    audit_log.add_column(ColumnDef::new("id".to_string(), "uuid".to_string()));
     audit_log.add_column({
-        let mut col = ColumnDef::py_new("user_id".to_string(), "uuid".to_string());
+        let mut col = ColumnDef::new("user_id".to_string(), "uuid".to_string());
         col.set_indexed(true);
         col
     });
     audit_log.add_column({
-        let mut col = ColumnDef::py_new("action".to_string(), "text".to_string());
+        let mut col = ColumnDef::new("action".to_string(), "text".to_string());
         col.set_indexed(true);
         col.set_nullable(false);
         col
     });
-    audit_log.add_column(ColumnDef::py_new("resource_type".to_string(), "text".to_string()));
-    audit_log.add_column(ColumnDef::py_new("resource_id".to_string(), "text".to_string()));
-    audit_log.add_column(ColumnDef::py_new("timestamp".to_string(), "datetime".to_string()));
-    audit_log.add_column(ColumnDef::py_new("details".to_string(), "json".to_string()));
+    audit_log.add_column(ColumnDef::new("resource_type".to_string(), "text".to_string()));
+    audit_log.add_column(ColumnDef::new("resource_id".to_string(), "text".to_string()));
+    audit_log.add_column(ColumnDef::new("timestamp".to_string(), "datetime".to_string()));
+    audit_log.add_column(ColumnDef::new("details".to_string(), "json".to_string()));
     tables.push(audit_log);
 
     // Niche-specific tables
     if niche_id.contains("crm") || niche_id.contains("sales") {
         let mut contacts = DbTableDef::new("contacts".to_string(), "id".to_string());
-        contacts.add_column(ColumnDef::py_new("id".to_string(), "uuid".to_string()));
+        contacts.add_column(ColumnDef::new("id".to_string(), "uuid".to_string()));
         contacts.add_column({
-            let mut col = ColumnDef::py_new("name".to_string(), "text".to_string());
+            let mut col = ColumnDef::new("name".to_string(), "text".to_string());
             col.set_nullable(false);
             col
         });
-        contacts.add_column(ColumnDef::py_new("email".to_string(), "text".to_string()));
-        contacts.add_column(ColumnDef::py_new("company".to_string(), "text".to_string()));
-        contacts.add_column(ColumnDef::py_new("stage".to_string(), "text".to_string()));
-        contacts.add_column(ColumnDef::py_new("value".to_string(), "currency".to_string()));
+        contacts.add_column(ColumnDef::new("email".to_string(), "text".to_string()));
+        contacts.add_column(ColumnDef::new("company".to_string(), "text".to_string()));
+        contacts.add_column(ColumnDef::new("stage".to_string(), "text".to_string()));
+        contacts.add_column(ColumnDef::new("value".to_string(), "currency".to_string()));
         tables.push(contacts);
     }
 
     if niche_id.contains("inventory") || niche_id.contains("warehouse") {
         let mut products = DbTableDef::new("products".to_string(), "id".to_string());
-        products.add_column(ColumnDef::py_new("id".to_string(), "uuid".to_string()));
+        products.add_column(ColumnDef::new("id".to_string(), "uuid".to_string()));
         products.add_column({
-            let mut col = ColumnDef::py_new("name".to_string(), "text".to_string());
+            let mut col = ColumnDef::new("name".to_string(), "text".to_string());
             col.set_nullable(false);
             col
         });
-        products.add_column(ColumnDef::py_new("sku".to_string(), "text".to_string()));
-        products.add_column(ColumnDef::py_new("quantity".to_string(), "integer".to_string()));
-        products.add_column(ColumnDef::py_new("price".to_string(), "currency".to_string()));
-        products.add_column(ColumnDef::py_new("min_stock".to_string(), "integer".to_string()));
+        products.add_column(ColumnDef::new("sku".to_string(), "text".to_string()));
+        products.add_column(ColumnDef::new("quantity".to_string(), "integer".to_string()));
+        products.add_column(ColumnDef::new("price".to_string(), "currency".to_string()));
+        products.add_column(ColumnDef::new("min_stock".to_string(), "integer".to_string()));
         tables.push(products);
     }
 

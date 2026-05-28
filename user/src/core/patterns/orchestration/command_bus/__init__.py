@@ -18,7 +18,7 @@ No external dependencies beyond Python stdlib.
 
 import logging
 import threading
-from typing import Dict, List
+from typing import List  # noqa: UP035
 
 from ._types import (
     Command,

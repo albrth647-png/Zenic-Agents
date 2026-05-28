@@ -1,7 +1,7 @@
 """CoordinationBackend - Additional methods."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("zenic_agents.distributed.backend")
 
@@ -54,7 +54,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if leadership was relinquished.
         """
-    async def get_leader(self, election_name: str) -> Optional[str]:
+    async def get_leader(self, election_name: str) -> str | None:
         """
         Get the current leader for an election.
 
@@ -76,7 +76,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if leadership was renewed.
         """
-    async def get_circuit_state(self, circuit_name: str) -> Optional[Dict[str, Any]]:
+    async def get_circuit_state(self, circuit_name: str) -> dict[str, Any] | None:
         """
         Get the shared state of a circuit breaker.
 
@@ -89,8 +89,8 @@ class CoordinationBackendExtraMixin:
     async def update_circuit_state(
         self,
         circuit_name: str,
-        state: Dict[str, Any],
-        expected_version: Optional[int] = None,
+        state: dict[str, Any],
+        expected_version: int | None = None,
     ) -> bool:
         """
         Update circuit breaker state with optimistic concurrency.
@@ -107,8 +107,8 @@ class CoordinationBackendExtraMixin:
         self,
         saga_id: str,
         name: str,
-        steps: List[Dict[str, Any]],
-        initial_context: Dict[str, Any],
+        steps: list[dict[str, Any]],
+        initial_context: dict[str, Any],
     ) -> bool:
         """
         Persist a new saga with its steps and initial context.
@@ -123,7 +123,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the saga was created.
         """
-    async def get_saga(self, saga_id: str) -> Optional[Dict[str, Any]]:
+    async def get_saga(self, saga_id: str) -> dict[str, Any] | None:
         """
         Get saga state by ID.
 
@@ -138,8 +138,8 @@ class CoordinationBackendExtraMixin:
         saga_id: str,
         step_name: str,
         status: str,
-        result: Optional[Dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> bool:
         """
         Update the status of a specific saga step.
@@ -158,7 +158,7 @@ class CoordinationBackendExtraMixin:
         self,
         saga_id: str,
         status: str,
-        error: Optional[str] = None,
+        error: str | None = None,
     ) -> bool:
         """
         Update the overall saga status.
@@ -171,7 +171,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the saga was updated.
         """
-    async def register_node(self, node_info: Dict[str, Any]) -> bool:
+    async def register_node(self, node_info: dict[str, Any]) -> bool:
         """
         Register this node in the cluster topology.
 
@@ -181,7 +181,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if registration succeeded.
         """
-    async def heartbeat(self, node_id: str, status: Optional[Dict[str, Any]] = None) -> bool:
+    async def heartbeat(self, node_id: str, status: dict[str, Any] | None = None) -> bool:
         """
         Send a heartbeat for this node.
 
@@ -202,7 +202,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the node was found and removed.
         """
-    async def list_nodes(self, active_only: bool = True) -> List[Dict[str, Any]]:
+    async def list_nodes(self, active_only: bool = True) -> list[dict[str, Any]]:
         """
         List nodes in the cluster.
 

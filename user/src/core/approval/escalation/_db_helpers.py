@@ -13,14 +13,14 @@ import sqlite3
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._types import (
-    EscalationLevel,
-    SLAPolicy,
-    EscalationSLA,
     _MAX_RETRIES,
     _RETRY_DELAY,
+    EscalationLevel,
+    EscalationSLA,
+    SLAPolicy,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def with_retry(
     max_retries: int = _MAX_RETRIES,
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
-    last_exc: Optional[Exception] = None
+    last_exc: Exception | None = None
     for attempt in range(1, max_retries + 1):
         try:
             return fn()
@@ -124,7 +124,7 @@ def init_db(db_path: str) -> None:
 
 def load_sla_policies(
     db_path: str,
-    sla_policies: Dict[EscalationLevel, SLAPolicy],
+    sla_policies: dict[EscalationLevel, SLAPolicy],
 ) -> None:
     """Load SLA policies from the database, overriding defaults.
 
@@ -260,9 +260,9 @@ def record_escalation_history(
 def find_escalation_sla(
     db_path: str,
     request_id: str,
-) -> Optional[EscalationSLA]:
+) -> EscalationSLA | None:
     """Find an escalation SLA by request ID."""
-    def _do_find() -> Optional[EscalationSLA]:
+    def _do_find() -> EscalationSLA | None:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -277,9 +277,9 @@ def find_escalation_sla(
     return with_retry(_do_find, fallback=None)
 
 
-def get_active_slas(db_path: str) -> List[EscalationSLA]:
+def get_active_slas(db_path: str) -> list[EscalationSLA]:
     """Get all active (non-breached) SLA records."""
-    def _do_query() -> List[EscalationSLA]:
+    def _do_query() -> list[EscalationSLA]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -296,9 +296,9 @@ def get_active_slas(db_path: str) -> List[EscalationSLA]:
 def get_escalation_history_rows(
     db_path: str,
     request_id: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get the escalation history for a request as a list of dicts."""
-    def _do_query() -> List[Dict[str, Any]]:
+    def _do_query() -> list[dict[str, Any]]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

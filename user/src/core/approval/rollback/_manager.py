@@ -22,16 +22,18 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._db_helpers import (
     get_compensations,
-    get_rollback_history as _get_rollback_history_db,
     get_rollback_record_by_id,
     init_db,
     now_utc_iso,
     persist_compensation,
     persist_rollback_record,
+)
+from ._db_helpers import (
+    get_rollback_history as _get_rollback_history_db,
 )
 from ._snapshots import (
     CompensationAction,
@@ -61,7 +63,7 @@ class RollbackManager:
         self,
         request_id: str,
         action_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         description: str = "",
     ) -> CompensationAction:
         """Register a compensation action for a request.
@@ -134,7 +136,7 @@ class RollbackManager:
             persist_rollback_record(self._db_path, record, insert=True)
 
         # Execute compensation actions in reverse order (SAGA pattern)
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         all_succeeded = True
 
         for action in reversed(actions):
@@ -190,11 +192,11 @@ class RollbackManager:
         )
         return record
 
-    def get_rollback_record(self, rollback_id: str) -> Optional[RollbackRecord]:
+    def get_rollback_record(self, rollback_id: str) -> RollbackRecord | None:
         """Get a rollback record by ID."""
         return get_rollback_record_by_id(self._db_path, rollback_id)
 
-    def get_rollback_history(self, request_id: str) -> List[RollbackRecord]:
+    def get_rollback_history(self, request_id: str) -> list[RollbackRecord]:
         """Get all rollback records for a request."""
         return _get_rollback_history_db(self._db_path, request_id)
 
@@ -215,7 +217,7 @@ class RollbackManager:
 
     def _execute_compensation_action(
         self, action: CompensationAction,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a single compensation action.
 
         This is a stub — real implementations would dispatch to
@@ -287,7 +289,7 @@ class RollbackManager:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_rollback_instance: Optional[RollbackManager] = None
+_rollback_instance: RollbackManager | None = None
 _rollback_lock = threading.Lock()
 
 

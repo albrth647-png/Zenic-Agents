@@ -19,7 +19,7 @@ import sqlite3
 import threading
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from ._templates import (
     ChannelConfig,
@@ -46,7 +46,7 @@ class NotificationDispatcher:
     def __init__(self, db_path: str = "notification.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._channels: Dict[NotificationChannel, ChannelConfig] = {}
+        self._channels: dict[NotificationChannel, ChannelConfig] = {}
         self._init_db()
         # In-app is always enabled
         self._channels[NotificationChannel.IN_APP] = ChannelConfig(
@@ -100,7 +100,7 @@ class NotificationDispatcher:
     # ── Channel Management ─────────────────────────────────
 
     def register_channel(
-        self, channel_type: Union[NotificationChannel, str], config: Union[ChannelConfig, Dict[str, Any]],
+        self, channel_type: NotificationChannel | str, config: ChannelConfig | dict[str, Any],
     ) -> None:
         """Register or update a notification channel configuration."""
         # Coerce string to enum
@@ -164,14 +164,14 @@ class NotificationDispatcher:
 
     def dispatch(
         self,
-        event: Union[NotificationEvent, str],
+        event: NotificationEvent | str,
         request_id: str,
         recipient_id: str,
         title: str,
         body: str,
-        priority: Union[NotificationPriority, str] = NotificationPriority.NORMAL,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> List[NotificationMessage]:
+        priority: NotificationPriority | str = NotificationPriority.NORMAL,
+        metadata: dict[str, Any] | None = None,
+    ) -> list[NotificationMessage]:
         """Send notifications via all enabled channels.
 
         Args:
@@ -198,7 +198,7 @@ class NotificationDispatcher:
             except ValueError:
                 priority = NotificationPriority.NORMAL
 
-        messages: List[NotificationMessage] = []
+        messages: list[NotificationMessage] = []
         meta = metadata or {}
 
         with self._lock:
@@ -271,9 +271,9 @@ class NotificationDispatcher:
 
     def get_notification_history(
         self, request_id: str,
-    ) -> List[NotificationMessage]:
+    ) -> list[NotificationMessage]:
         """Get all notifications sent for a request."""
-        def _do_query() -> List[NotificationMessage]:
+        def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -287,9 +287,9 @@ class NotificationDispatcher:
 
         return self._with_retry(_do_query, fallback=[])
 
-    def get_pending_notifications(self) -> List[NotificationMessage]:
+    def get_pending_notifications(self) -> list[NotificationMessage]:
         """Get all notifications with 'pending' or 'failed' status."""
-        def _do_query() -> List[NotificationMessage]:
+        def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -380,9 +380,9 @@ class NotificationDispatcher:
 
     # ── Private Helpers ────────────────────────────────────
 
-    def _find_message(self, notification_id: str) -> Optional[NotificationMessage]:
+    def _find_message(self, notification_id: str) -> NotificationMessage | None:
         """Find a notification by ID."""
-        def _do_find() -> Optional[NotificationMessage]:
+        def _do_find() -> NotificationMessage | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -458,7 +458,7 @@ class NotificationDispatcher:
         max_retries: int = _MAX_RETRIES,
     ) -> Any:
         """Execute *fn* with retry logic on database errors."""
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, max_retries + 1):
             try:
                 return fn()
@@ -482,7 +482,7 @@ class NotificationDispatcher:
 
 # ── Singleton ─────────────────────────────────────────────
 
-_notification_instance: Optional[NotificationDispatcher] = None
+_notification_instance: NotificationDispatcher | None = None
 _notification_lock = threading.Lock()
 
 

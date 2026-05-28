@@ -202,7 +202,7 @@ class AuthRegisterBlock(LogicBlock):
                     return {"success": False, "error": f"Registration failed: {db_err!s}"}
 
             # Fallback: return user data without DB
-            user_id = hashlib.md5(f"{username}{email}".encode()).hexdigest()[:8]
+            user_id = hashlib.sha256(f"{username}{email}".encode()).hexdigest()[:8]
             logger.debug(f"AuthRegisterBlock: Fallback register {_sanitize(username)}")
             return {
                 "success": True,

@@ -13,8 +13,7 @@ import logging
 import os
 import threading
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from .license_parts.hw_binding import check_hardware_match, get_hardware_fingerprint
@@ -28,6 +27,9 @@ from .types import (
     LicenseTier,
     LicenseVerificationResult,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -273,13 +275,13 @@ class LicenseManager:
             import urllib.request
 
             validated_url = _validate_url(f"{server_url}/api/v1/kill-switch")
-            req = urllib.request.Request(validated_url, method="GET")
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            req = urllib.request.Request(validated_url, method="GET")  # noqa: S310
+            with urllib.request.urlopen(req, timeout=5) as resp:  # noqa: S310
                 data = json.loads(resp.read().decode())
                 if data.get("active", False):
                     self.activate_kill_switch(data.get("reason", "Remote kill switch"), "server")
                     return True
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         return False
 
@@ -326,7 +328,7 @@ class LicenseManager:
         while self._running:
             try:
                 self._perform_heartbeat()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
             time.sleep(self._heartbeat_interval * 3600)
 
@@ -345,13 +347,13 @@ class LicenseManager:
                 }
             ).encode()
             validated_url = _validate_url(f"{server_url}/api/v1/heartbeat")
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 validated_url,
                 data=payload,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
                 body = json.loads(resp.read().decode())
                 self._last_heartbeat = time.time()
                 if body.get("kill_switch", False):
@@ -370,7 +372,7 @@ class LicenseManager:
         for cb in self._callbacks:
             try:
                 cb(event_type, data)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Status ─────────────────────────────────────────────

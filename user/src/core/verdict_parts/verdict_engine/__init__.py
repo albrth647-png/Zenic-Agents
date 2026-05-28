@@ -6,7 +6,7 @@ import os
 import re
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List  # noqa: UP035, Optional
 
 from ..consensus_resolver import ConsensusResolver
 from ..deterministic_pipeline import DeterministicPipeline
@@ -139,7 +139,7 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         """Ensure executor is cleaned up on garbage collection."""
         try:
             self.shutdown()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # NOTE: Do NOT log here — __del__ runs during garbage collection and

@@ -8,7 +8,7 @@ Provides: wildcard_match, resolve_routes, batch_resolve_routes,
 from __future__ import annotations
 
 import fnmatch
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 from ._loader import HAS_NATIVE
 
@@ -23,15 +23,15 @@ def wildcard_match(pattern: str, text: str) -> bool:
 
 
 def resolve_routes(
-    event_topic: str, subscriptions: List[Dict[str, Any]],
-) -> List[str]:
+    event_topic: str, subscriptions: list[dict[str, Any]],
+) -> list[str]:
     """Resolve which handlers should receive an event."""
     if HAS_NATIVE:
         from ._loader import _rust_resolve_routes
         return _rust_resolve_routes(event_topic, subscriptions)
     # Pure Python fallback
     _priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-    matched: List[Tuple[int, str]] = []
+    matched: list[tuple[int, str]] = []
     for sub in subscriptions:
         if not sub.get("active", True):
             continue
@@ -45,9 +45,9 @@ def resolve_routes(
 
 
 def batch_resolve_routes(
-    event_topics: List[str],
-    subscriptions: List[Dict[str, Any]],
-) -> Dict[str, List[str]]:
+    event_topics: list[str],
+    subscriptions: list[dict[str, Any]],
+) -> dict[str, list[str]]:
     """Batch resolve routes for multiple events."""
     if HAS_NATIVE:
         from ._loader import _rust_batch_resolve_routes
@@ -57,16 +57,16 @@ def batch_resolve_routes(
 
 
 def deduplicate_events(
-    new_fingerprints: List[str],
-    seen_fingerprints: Set[str],
-) -> Dict[str, Any]:
+    new_fingerprints: list[str],
+    seen_fingerprints: set[str],
+) -> dict[str, Any]:
     """Deduplicate events by fingerprint."""
     if HAS_NATIVE:
         from ._loader import _rust_deduplicate_events
         return _rust_deduplicate_events(new_fingerprints, seen_fingerprints)
     # Pure Python fallback
-    unique: List[str] = []
-    duplicates: List[str] = []
+    unique: list[str] = []
+    duplicates: list[str] = []
     for fp in new_fingerprints:
         if fp in seen_fingerprints:
             duplicates.append(fp)
@@ -76,8 +76,8 @@ def deduplicate_events(
 
 
 def sort_by_priority(
-    events: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    events: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Sort events by priority (critical first)."""
     if HAS_NATIVE:
         from ._loader import _rust_sort_by_priority

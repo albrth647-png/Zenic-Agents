@@ -18,15 +18,14 @@ from src.core.agents.schemas.types._transport_types import (
 )
 from src.core.agents.transport.voice_channel_agent import (
     VoiceChannelAgent,
-    _read_local_file,
     _get_voice_duration_limit,
     _get_voice_size_limit,
+    _read_local_file,
 )
 from src.core.voice_pipeline import VoicePipeline
 from src.core.voice_pipeline._types import STTBackendConfig
-from src.core.voice_pipeline.ear import Ear, DummyBackend
+from src.core.voice_pipeline.ear import DummyBackend, Ear
 from src.core.voice_pipeline.format_adapter import FormatAdapter
-
 
 # ── Audio fixtures ─────────────────────────────────────────────
 
@@ -95,7 +94,7 @@ class TestReadLocalFile:
         assert result is None
 
     def test_read_directory_instead_of_file(self):
-        result = _read_local_file("/tmp")
+        result = _read_local_file("/tmp")  # noqa: S108
         assert result is None
 
     def test_read_too_large_file(self):

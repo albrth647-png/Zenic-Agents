@@ -1,14 +1,15 @@
 """Core logic for integrity — IntegrityVerifier class."""
 
 from __future__ import annotations
+
 import hashlib
 import logging
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ._types import IntegrityStatus, IntegrityCheckResult, _SAFE_IDENTIFIER_RE
+from ._types import _SAFE_IDENTIFIER_RE, IntegrityCheckResult, IntegrityStatus
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,10 @@ class IntegrityVerifier:
     ) -> None:
         self._db_path = db_path
         self._check_interval = check_interval_seconds
-        self._baselines: Dict[str, str] = {}
-        self._callbacks: List[Any] = []
+        self._baselines: dict[str, str] = {}
+        self._callbacks: list[Any] = []
         self._running = False
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
         self._lock = threading.RLock()
         self._init_db()
 
@@ -92,18 +93,18 @@ class IntegrityVerifier:
         logger.info("IntegrityVerifier: Baseline established for '%s'", component)
         return hash_value
 
-    def establish_file_baseline(self, file_path: str, component_name: str = "") -> Optional[str]:
+    def establish_file_baseline(self, file_path: str, component_name: str = "") -> str | None:
         """Establish a baseline for a file's contents."""
         component = component_name or f"file:{file_path}"
         try:
             with open(file_path, "rb") as f:
                 data = f.read()
             return self.establish_baseline(component, data)
-        except (OSError, IOError) as exc:
+        except OSError as exc:
             logger.warning("IntegrityVerifier: Cannot read file %s: %s", file_path, exc)
             return None
 
-    def establish_db_baseline(self, db_path: str, component_name: str = "") -> Optional[str]:
+    def establish_db_baseline(self, db_path: str, component_name: str = "") -> str | None:
         """Establish a baseline for a SQLite database.
 
         Computes checksum of all tables' row counts and content hashes.
@@ -114,13 +115,13 @@ class IntegrityVerifier:
             tables = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT name FROM sqlite_master WHERE type='table'",
             ).fetchall()
-            checksum_parts: List[str] = []
+            checksum_parts: list[str] = []
             for (table_name,) in tables:
                 # SECURITY: Validate table name from sqlite_master to prevent injection
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
                 checksum_parts.append(f"{table_name}:{count}")
             conn.close()
             data = "|".join(checksum_parts).encode()
@@ -175,7 +176,7 @@ class IntegrityVerifier:
             with open(file_path, "rb") as f:
                 data = f.read()
             return self.verify_component(component, data)
-        except (OSError, IOError) as exc:
+        except OSError as exc:
             return IntegrityCheckResult(
                 component=component,
                 status=IntegrityStatus.ERROR,
@@ -190,13 +191,13 @@ class IntegrityVerifier:
             tables = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT name FROM sqlite_master WHERE type='table'",
             ).fetchall()
-            checksum_parts: List[str] = []
+            checksum_parts: list[str] = []
             for (table_name,) in tables:
                 # SECURITY: Validate table name from sqlite_master to prevent injection
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
                 checksum_parts.append(f"{table_name}:{count}")
             conn.close()
             data = "|".join(checksum_parts).encode()
@@ -210,13 +211,13 @@ class IntegrityVerifier:
 
     # ── Cross-Verification ─────────────────────────────────
 
-    def cross_verify(self, components: List[str]) -> Dict[str, IntegrityCheckResult]:
+    def cross_verify(self, components: list[str]) -> dict[str, IntegrityCheckResult]:
         """Cross-verify multiple components against each other.
 
         Each component is independently verified. If any component
         fails, the cross-verification reports the failure.
         """
-        results: Dict[str, IntegrityCheckResult] = {}
+        results: dict[str, IntegrityCheckResult] = {}
         for comp in components:
             if comp.startswith("file:"):
                 path = comp[5:]
@@ -235,7 +236,7 @@ class IntegrityVerifier:
 
     # ── Periodic Monitoring ────────────────────────────────
 
-    def start_monitoring(self, watch_components: Optional[List[str]] = None) -> None:
+    def start_monitoring(self, watch_components: list[str] | None = None) -> None:
         """Start periodic integrity monitoring."""
         if self._running:
             return
@@ -308,6 +309,7 @@ class IntegrityVerifier:
             conn.close()
             return row[0] if row else ""
         except Exception:
+            # DB read failure — return empty string, caller handles missing baseline
             return ""
 
     def _log_check(self, result: IntegrityCheckResult) -> None:
@@ -323,10 +325,11 @@ class IntegrityVerifier:
             )
             conn.commit()
             conn.close()
-        except Exception:
+        except Exception:  # noqa: S110
+            # Logging check result to DB is best-effort; failure is non-critical
             pass
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get integrity verification status."""
         return {
             "baselines_count": len(self._baselines),

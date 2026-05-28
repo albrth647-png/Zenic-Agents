@@ -10,17 +10,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
-from ..oauth2 import OAuth2TokenManager
 from ._types import (
-    _HAS_AIOHTTP,
-    _GRAPH_BASE_URL,
-    _MAX_RETRIES,
-    _INITIAL_BACKOFF_SECONDS,
     _BACKOFF_MULTIPLIER,
+    _GRAPH_BASE_URL,
+    _HAS_AIOHTTP,
+    _INITIAL_BACKOFF_SECONDS,
+    _MAX_RETRIES,
     _RateLimitState,
 )
+
+if TYPE_CHECKING:
+    from ..oauth2 import OAuth2TokenManager
 
 if _HAS_AIOHTTP:
     import aiohttp
@@ -30,12 +32,12 @@ logger = logging.getLogger("zenic_agents.email_parts.graph_api")
 
 async def send_once(
     provider: Any,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     sender: str,
     service_name: str,
     token_manager: OAuth2TokenManager,
     rate_limit: _RateLimitState,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Make a single send attempt via Graph API.
 
     Args:
@@ -83,9 +85,7 @@ async def send_once(
                 timeout=aiohttp.ClientTimeout(total=60),
             ) as response:
                 # Update rate limit from headers
-                resp_headers = {
-                    k: v for k, v in response.headers.items()
-                }
+                resp_headers = dict(response.headers.items())
                 rate_limit.update_from_headers(resp_headers)
 
                 if response.status == 202:
@@ -109,7 +109,7 @@ async def send_once(
                 except Exception:
                     error_msg = f"HTTP {response.status}"
 
-                result: Dict[str, Any] = {
+                result: dict[str, Any] = {
                     "success": False,
                     "message_id": "",
                     "status_code": response.status,
@@ -139,14 +139,14 @@ async def send_once(
 
 async def send_with_retry(
     provider: Any,
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     sender: str,
     service_name: str,
     token_manager: OAuth2TokenManager,
     rate_limit: _RateLimitState,
     send_count_ref: list,
     error_count_ref: list,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Send email with exponential backoff retry.
 
     Args:
@@ -239,10 +239,10 @@ async def send_with_retry(
 async def upload_attachment_session(
     provider: Any,
     sender: str,
-    attachment: Dict[str, Any],
+    attachment: dict[str, Any],
     service_name: str,
     token_manager: OAuth2TokenManager,
-) -> Optional[str]:
+) -> str | None:
     """Upload a large attachment using a Graph API upload session.
 
     For attachments larger than 4MB, creates an upload session

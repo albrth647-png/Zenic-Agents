@@ -86,7 +86,7 @@ async def redis_session_store():
                     await store._redis.delete(*keys)
                 if cursor == 0:
                     break
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     await store.close()
@@ -96,7 +96,11 @@ async def redis_session_store():
 def sample_session():
     """Create a sample session for testing."""
     from src.core.conversational.types.session import (
-        Session, SessionConfig, Message, MessageRole, MessageMetadata,
+        Message,
+        MessageMetadata,
+        MessageRole,
+        Session,
+        SessionConfig,
     )
 
     session = Session(

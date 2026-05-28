@@ -11,44 +11,44 @@ Design Patterns:
 """
 
 from .activation_key import (
+    ACTIVATION_KEY_PATTERN,
+    CONFIRMATION_CODE_PATTERN,
     ActivationKeyValidator,
     ConfirmationCodeValidator,
     validate_activation_key,
     validate_confirmation_code,
-    ACTIVATION_KEY_PATTERN,
-    CONFIRMATION_CODE_PATTERN,
 )
 from .user_input import (
-    UsernameValidator,
     EmailValidator,
+    InvalidResult,
     PaymentRefValidator,
-    validate_username,
+    UsernameValidator,
+    ValidationResult,
+    ValidatorChain,
+    ValidResult,
     validate_email,
     validate_payment_ref,
-    ValidationResult,
-    ValidResult,
-    InvalidResult,
-    ValidatorChain,
+    validate_username,
 )
 
 __all__ = [
+    "ACTIVATION_KEY_PATTERN",
+    "CONFIRMATION_CODE_PATTERN",
     # Activation key validators
     "ActivationKeyValidator",
     "ConfirmationCodeValidator",
-    "validate_activation_key",
-    "validate_confirmation_code",
-    "ACTIVATION_KEY_PATTERN",
-    "CONFIRMATION_CODE_PATTERN",
+    "EmailValidator",
+    "InvalidResult",
+    "PaymentRefValidator",
     # User input validators
     "UsernameValidator",
-    "EmailValidator",
-    "PaymentRefValidator",
-    "validate_username",
-    "validate_email",
-    "validate_payment_ref",
+    "ValidResult",
     # Core validation types
     "ValidationResult",
-    "ValidResult",
-    "InvalidResult",
     "ValidatorChain",
+    "validate_activation_key",
+    "validate_confirmation_code",
+    "validate_email",
+    "validate_payment_ref",
+    "validate_username",
 ]

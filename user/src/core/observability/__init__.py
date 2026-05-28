@@ -11,15 +11,33 @@ All components are optional — graceful degradation when
 dependencies are not installed (e.g. on Termux/ARM).
 """
 
-from .tracing import (
-    TracingConfig,
-    init_tracing,
-    get_tracer,
-    trace_span,
-    get_current_trace_id,
-    get_current_span_id,
-    inject_trace_context,
-    extract_trace_context,
+from .audit import (
+    AuditEvent,
+    AuditEventType,
+    AuditLogger,
+    AuditSeverity,
+    get_audit_logger,
+)
+from .forensic import (
+    ChainVerificationResult,
+    EvidenceBundle,
+    ForensicEngine,
+    ForensicEntry,
+    ForensicReport,
+    get_forensic_engine,
+    reset_forensic_engine,
+)
+from .health import (
+    HealthAggregator,
+    HealthCheckResult,
+    HealthStatus,
+    check_auth_db,
+    check_coordination_backend,
+    check_disk_space,
+    check_orchestrator,
+    check_redis,
+    check_resources,
+    get_health_aggregator,
 )
 from .metrics import (
     MetricsCollector,
@@ -27,62 +45,70 @@ from .metrics import (
     get_metrics_collector,
     metrics_middleware,
 )
-from .audit import (
-    AuditLogger,
-    AuditEvent,
-    AuditEventType,
-    AuditSeverity,
-    get_audit_logger,
-)
-from .health import (
-    HealthAggregator,
-    HealthStatus,
-    HealthCheckResult,
-    get_health_aggregator,
-    check_orchestrator,
-    check_auth_db,
-    check_resources,
-    check_disk_space,
-    check_coordination_backend,
-    check_redis,
-)
-from .forensic import (
-    ForensicEngine,
-    ForensicEntry,
-    ForensicReport,
-    ChainVerificationResult,
-    EvidenceBundle,
-    get_forensic_engine,
-    reset_forensic_engine,
-)
 from .snapshot_audit import (
     SnapshotAuditEngine,
+    SnapshotDiff,
     SnapshotEntry,
     SnapshotPair,
-    SnapshotDiff,
     get_snapshot_audit_engine,
     reset_snapshot_audit_engine,
 )
+from .tracing import (
+    TracingConfig,
+    extract_trace_context,
+    get_current_span_id,
+    get_current_trace_id,
+    get_tracer,
+    init_tracing,
+    inject_trace_context,
+    trace_span,
+)
 
 __all__ = [
-    # Tracing
-    "TracingConfig", "init_tracing", "get_tracer", "trace_span",
-    "get_current_trace_id", "get_current_span_id",
-    "inject_trace_context", "extract_trace_context",
-    # Metrics
-    "MetricsCollector", "MetricsConfig", "get_metrics_collector", "metrics_middleware",
+    "AuditEvent",
+    "AuditEventType",
     # Audit
-    "AuditLogger", "AuditEvent", "AuditEventType", "AuditSeverity", "get_audit_logger",
-    # Health
-    "HealthAggregator", "HealthStatus", "HealthCheckResult",
-    "get_health_aggregator",
-    "check_orchestrator", "check_auth_db", "check_resources",
-    "check_disk_space", "check_coordination_backend", "check_redis",
+    "AuditLogger",
+    "AuditSeverity",
+    "ChainVerificationResult",
+    "EvidenceBundle",
     # Forensic
-    "ForensicEngine", "ForensicEntry", "ForensicReport",
-    "ChainVerificationResult", "EvidenceBundle",
-    "get_forensic_engine", "reset_forensic_engine",
+    "ForensicEngine",
+    "ForensicEntry",
+    "ForensicReport",
+    # Health
+    "HealthAggregator",
+    "HealthCheckResult",
+    "HealthStatus",
+    # Metrics
+    "MetricsCollector",
+    "MetricsConfig",
     # Snapshot Audit
-    "SnapshotAuditEngine", "SnapshotEntry", "SnapshotPair", "SnapshotDiff",
-    "get_snapshot_audit_engine", "reset_snapshot_audit_engine",
+    "SnapshotAuditEngine",
+    "SnapshotDiff",
+    "SnapshotEntry",
+    "SnapshotPair",
+    # Tracing
+    "TracingConfig",
+    "check_auth_db",
+    "check_coordination_backend",
+    "check_disk_space",
+    "check_orchestrator",
+    "check_redis",
+    "check_resources",
+    "extract_trace_context",
+    "get_audit_logger",
+    "get_current_span_id",
+    "get_current_trace_id",
+    "get_forensic_engine",
+    "get_health_aggregator",
+    "get_metrics_collector",
+    "get_snapshot_audit_engine",
+    "get_tracer",
+    "init_tracing",
+    "inject_trace_context",
+    "metrics_middleware",
+    "reset_forensic_engine",
+    "reset_snapshot_audit_engine",
+    "trace_span",
 ]

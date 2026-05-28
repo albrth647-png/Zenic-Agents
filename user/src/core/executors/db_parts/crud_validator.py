@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 class CRUDValidationResult:
     """Result of a CRUD operation validation."""
     valid: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     sanitized_table: str = ""
     operation: str = ""
     risk_level: str = "low"  # low, medium, high, critical
@@ -39,10 +39,10 @@ class CRUDValidationResult:
 class TableSchema:
     """Schema definition for a database table."""
     table_name: str
-    columns: Dict[str, str] = field(default_factory=dict)   # column_name → type
-    required_columns: List[str] = field(default_factory=list)
-    unique_columns: List[str] = field(default_factory=list)
-    protected_columns: List[str] = field(default_factory=list)  # Cannot be modified
+    columns: dict[str, str] = field(default_factory=dict)   # column_name → type
+    required_columns: list[str] = field(default_factory=list)
+    unique_columns: list[str] = field(default_factory=list)
+    protected_columns: list[str] = field(default_factory=list)  # Cannot be modified
     max_records: int = 0                         # 0 = unlimited
 
 
@@ -84,9 +84,9 @@ class CRUDValidator:
     """
 
     def __init__(self) -> None:
-        self._schemas: Dict[str, TableSchema] = {}
+        self._schemas: dict[str, TableSchema] = {}
         self._global_max_records: int = 10000
-        self._denied_tables: Set[str] = {
+        self._denied_tables: set[str] = {
             "sqlite_master", "sqlite_sequence", "sqlite_temp_master",
         }
 
@@ -96,7 +96,7 @@ class CRUDValidator:
         logger.debug(f"CRUDValidator: Registered schema for '{schema.table_name}'")
 
     def register_schema_from_dict(
-        self, table_name: str, schema_dict: Dict[str, Any]
+        self, table_name: str, schema_dict: dict[str, Any]
     ) -> None:
         """Register a table schema from a dictionary."""
         schema = TableSchema(
@@ -113,7 +113,7 @@ class CRUDValidator:
         self,
         operation: str,
         table_name: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
         query: str = "",
         where_clause: str = "",
     ) -> CRUDValidationResult:
@@ -129,8 +129,8 @@ class CRUDValidator:
         Returns:
             CRUDValidationResult with validation outcome
         """
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
         risk_level = "low"
 
         # Step 1: Validate table name
@@ -194,11 +194,11 @@ class CRUDValidator:
             risk_level=risk_level,
         )
 
-    def get_schema(self, table_name: str) -> Optional[TableSchema]:
+    def get_schema(self, table_name: str) -> TableSchema | None:
         """Get the registered schema for a table."""
         return self._schemas.get(table_name)
 
-    def list_schemas(self) -> List[str]:
+    def list_schemas(self) -> list[str]:
         """List all registered table names."""
         return list(self._schemas.keys())
 
@@ -209,16 +209,14 @@ class CRUDValidator:
         """Validate table name against injection patterns."""
         if not table_name or not _TABLE_NAME_PATTERN.match(table_name):
             return False
-        if _DANGEROUS_TABLE_PATTERNS.search(table_name):
-            return False
-        return True
+        return not _DANGEROUS_TABLE_PATTERNS.search(table_name)
 
     def _validate_delete(
         self, table_name: str, query: str, where_clause: str
-    ) -> tuple[List[str], List[str], str]:
+    ) -> tuple[list[str], list[str], str]:
         """Validate DELETE operation."""
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
         risk_level = "high"
 
         # Check for DELETE without WHERE (mass delete)
@@ -239,13 +237,13 @@ class CRUDValidator:
     def _validate_update(
         self,
         table_name: str,
-        data: Optional[Dict[str, Any]],
+        data: dict[str, Any] | None,
         query: str,
         where_clause: str,
-    ) -> tuple[List[str], List[str], str]:
+    ) -> tuple[list[str], list[str], str]:
         """Validate UPDATE operation."""
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
         risk_level = "medium"
 
         # Check for UPDATE without WHERE
@@ -277,11 +275,11 @@ class CRUDValidator:
     def _validate_insert(
         self,
         table_name: str,
-        data: Optional[Dict[str, Any]],
-    ) -> tuple[List[str], List[str], str]:
+        data: dict[str, Any] | None,
+    ) -> tuple[list[str], list[str], str]:
         """Validate INSERT operation."""
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
         risk_level = "low"
 
         schema = self._schemas.get(table_name)

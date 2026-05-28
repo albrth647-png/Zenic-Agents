@@ -52,7 +52,7 @@ class DemandProjectionMonitor(MonitorBase):
             # Get daily sales for the last 30 days
             cutoff = time.time() - (30 * 86400)
             rows = self._execute_query(
-                f"SELECT date, SUM(amount) FROM {sales_table} " f"WHERE date >= ? GROUP BY date ORDER BY date",
+                f"SELECT date, SUM(amount) FROM {sales_table} " f"WHERE date >= ? GROUP BY date ORDER BY date",  # noqa: S608
                 (cutoff,),
                 db_name=db_name,
             )
@@ -88,7 +88,7 @@ class DemandProjectionMonitor(MonitorBase):
 
             # Get current inventory
             inv_rows = self._execute_query(
-                f"SELECT SUM(quantity) FROM {inventory_table}",
+                f"SELECT SUM(quantity) FROM {inventory_table}",  # noqa: S608
                 (),
                 db_name=db_name,
             )
@@ -201,7 +201,7 @@ class MultiSourceAnalysisMonitor(MonitorBase):
                     ram_mb = status.get("ram_usage_mb", 0)
                     ram_limit = status.get("ram_limit_mb", 1)
                     ram_pct = (ram_mb / ram_limit * 100) if ram_limit > 0 else 0
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
             # Anomaly detection: high error rate + slow responses + high resources

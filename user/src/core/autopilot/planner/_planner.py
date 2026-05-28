@@ -15,11 +15,11 @@ import json
 import logging
 import sqlite3
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.core.autopilot.planner._optimizer import _retry_db_operation, estimate_plan_impact
 from src.core.autopilot.planner._scheduler import _match_template
-from src.core.autopilot.planner._types import PlanStep, PlannedAction
+from src.core.autopilot.planner._types import PlannedAction, PlanStep
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +94,8 @@ class AutopilotPlanner:
         template_steps = _match_template(objective)
 
         # Resolve step IDs for dependency linking
-        step_id_map: Dict[str, str] = {}
-        steps: List[PlanStep] = []
+        step_id_map: dict[str, str] = {}
+        steps: list[PlanStep] = []
 
         for tmpl in template_steps:
             step = PlanStep(
@@ -169,7 +169,7 @@ class AutopilotPlanner:
         )
         return plan
 
-    def get_plan(self, plan_id: str) -> Optional[PlannedAction]:
+    def get_plan(self, plan_id: str) -> PlannedAction | None:
         """Get a plan by ID.
 
         Args:
@@ -181,7 +181,7 @@ class AutopilotPlanner:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> Optional[PlannedAction]:
+            def _fetch() -> PlannedAction | None:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -197,7 +197,7 @@ class AutopilotPlanner:
 
             return _retry_db_operation(_fetch)
 
-    def list_plans(self, objective_id: str = "") -> List[PlannedAction]:
+    def list_plans(self, objective_id: str = "") -> list[PlannedAction]:
         """List plans, optionally filtered by objective.
 
         Args:
@@ -209,7 +209,7 @@ class AutopilotPlanner:
         self._ensure_schema()
         with self._lock:
 
-            def _list() -> List[PlannedAction]:
+            def _list() -> list[PlannedAction]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -319,7 +319,7 @@ class AutopilotPlanner:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_autopilot_planner_instance: Optional[AutopilotPlanner] = None
+_autopilot_planner_instance: AutopilotPlanner | None = None
 _autopilot_planner_lock = threading.Lock()
 
 

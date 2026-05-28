@@ -40,57 +40,49 @@ Usage::
 # ============================================================
 
 from .backend import (
-    CoordinationBackend,
     BackendConfig,
     BackendType,
+    CoordinationBackend,
+)
+from .circuit_breaker_distributed import (
+    DistributedCircuitBreaker,
+    SharedCircuitState,
+)
+from .leader_election import (
+    LeaderElection,
+    LeadershipState,
+)
+from .lock_manager import (
+    DistributedLock,
+    DistributedLockManager,
+)
+from .saga_coordinator import (
+    DistributedSagaCoordinator,
+    DistributedSagaState,
+    DistributedSagaStep,
 )
 
 # Lazy imports for PostgreSQL and Memory backends — they are accessed
 # through CoordinationBackend.create() factory method to avoid
 # import-time dependency on psycopg2/asyncpg when not needed.
-
 # ============================================================
 #  CORE COMPONENTS
 # ============================================================
-
 from .task_queue import (
     DistributedTaskQueue,
     TaskMessage,
-    TaskStatus,
     TaskPriority,
+    TaskStatus,
 )
-
-from .worker import (
-    DistributedWorker,
-    WorkerState,
-    WorkerConfig,
-)
-
-from .saga_coordinator import (
-    DistributedSagaCoordinator,
-    DistributedSagaStep,
-    DistributedSagaState,
-)
-
-from .circuit_breaker_distributed import (
-    DistributedCircuitBreaker,
-    SharedCircuitState,
-)
-
-from .leader_election import (
-    LeaderElection,
-    LeadershipState,
-)
-
-from .lock_manager import (
-    DistributedLockManager,
-    DistributedLock,
-)
-
 from .topology import (
     ClusterTopology,
     NodeInfo,
     NodeState,
+)
+from .worker import (
+    DistributedWorker,
+    WorkerConfig,
+    WorkerState,
 )
 
 # ============================================================
@@ -98,34 +90,34 @@ from .topology import (
 # ============================================================
 
 __all__ = [
-    # Backend
-    "CoordinationBackend",
     "BackendConfig",
     "BackendType",
-    # Task Queue
-    "DistributedTaskQueue",
-    "TaskMessage",
-    "TaskStatus",
-    "TaskPriority",
-    # Worker
-    "DistributedWorker",
-    "WorkerState",
-    "WorkerConfig",
-    # Saga
-    "DistributedSagaCoordinator",
-    "DistributedSagaStep",
-    "DistributedSagaState",
+    # Topology
+    "ClusterTopology",
+    # Backend
+    "CoordinationBackend",
     # Circuit Breaker
     "DistributedCircuitBreaker",
-    "SharedCircuitState",
+    "DistributedLock",
+    # Lock Manager
+    "DistributedLockManager",
+    # Saga
+    "DistributedSagaCoordinator",
+    "DistributedSagaState",
+    "DistributedSagaStep",
+    # Task Queue
+    "DistributedTaskQueue",
+    # Worker
+    "DistributedWorker",
     # Leader Election
     "LeaderElection",
     "LeadershipState",
-    # Lock Manager
-    "DistributedLockManager",
-    "DistributedLock",
-    # Topology
-    "ClusterTopology",
     "NodeInfo",
     "NodeState",
+    "SharedCircuitState",
+    "TaskMessage",
+    "TaskPriority",
+    "TaskStatus",
+    "WorkerConfig",
+    "WorkerState",
 ]

@@ -11,19 +11,19 @@ from agents.schemas.types.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 # ── Re-export shared types from single source of truth ──
 # E-13 FIX: These types now live in shared/agent_schemas.py to break
 # the circular dependency (agents/ → agents/).
-from src.core.shared.agent_schemas import (
-    TriggerSpec,
-    ActionSpec,
-    ScheduleSpec,
-    ValidationIssue,
-)
+
+if TYPE_CHECKING:
+    from src.core.shared.agent_schemas import (
+        ValidationIssue,
+    )
 
 # ────────────────────────────── Layer 4: Code ──────────────────────────────
 
@@ -36,7 +36,7 @@ class CodeRequest:
     requirements: str = ""
     language: str = "python"
     existing_code: str = ""
-    constraints: dict[str, Any] = field(default_factory=dict)
+    constraints: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
 
 @dataclass
@@ -59,8 +59,8 @@ class ScaffoldResult:
     """A21 ProjectScaffolder output."""
 
     files: list[dict[str, str]] = field(default_factory=list)
-    structure: dict[str, Any] = field(default_factory=dict)
-    config: dict[str, Any] = field(default_factory=dict)
+    structure: Mapping[str, str | list | Mapping] = field(default_factory=dict)
+    config: Mapping[str, str | int | float | bool] = field(default_factory=dict)
     source: str = "deterministic"
 
 
@@ -137,7 +137,7 @@ class AutoDescription:
     """Input for automation agents."""
 
     description: str = ""
-    context: dict[str, Any] = field(default_factory=dict)
+    context: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
 
 # TriggerSpec, ActionSpec, ScheduleSpec are now imported from
@@ -150,7 +150,7 @@ class ConditionResult:
     """A32 ConditionExtractor output."""
 
     conditions: list[str] = field(default_factory=list)
-    logic_tree: dict[str, Any] = field(default_factory=dict)
+    logic_tree: Mapping[str, str | list | bool] = field(default_factory=dict)
     source: str = "deterministic"
 
 
@@ -169,7 +169,7 @@ class WorkflowSpec:
 
     yaml: str = ""
     json_spec: str = ""
-    executable: dict[str, Any] = field(default_factory=dict)
+    executable: Mapping[str, str | int | float | bool | list | Mapping] = field(default_factory=dict)
     source: str = "deterministic"
 
 
@@ -261,7 +261,7 @@ class EvidenceType(str, Enum):
     KEYWORD_CLASSIFY = "KEYWORD_CLASSIFY"
     STRUCTURAL_MATCH = "STRUCTURAL_MATCH"
     RULE_ENGINE = "RULE_ENGINE"
-    SANDBOX_PASS = "SANDBOX_PASS"
+    SANDBOX_PASS = "SANDBOX_PASS"  # noqa: S105 — enum value, not a password
 
 
 @dataclass
@@ -273,7 +273,7 @@ class Evidence:
     weight: float = 0.5
     source: str = ""
     detail: str = ""
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
 
 @dataclass

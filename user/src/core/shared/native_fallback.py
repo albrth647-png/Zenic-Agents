@@ -22,14 +22,15 @@ import os
 import re
 import shutil
 from collections import defaultdict
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["call_native", "register_fallback"]
 
 # Registry of Python fallback implementations
-_FALLBACKS: Dict[str, Callable] = {}
+_FALLBACKS: dict[str, Callable] = {}
 
 
 def register_fallback(name: str, fn: Callable) -> None:
@@ -160,7 +161,7 @@ def _xxhash64_fallback(data: bytes, seed: int) -> int:
         return h
 
 
-def _merkle_root_fallback(leaves: List[bytes]) -> str:
+def _merkle_root_fallback(leaves: list[bytes]) -> str:
     """Python fallback for merkle_root using BLAKE3 or SHA-256."""
     if not leaves:
         raise ValueError("leaves must not be empty")
@@ -175,11 +176,11 @@ def _merkle_root_fallback(leaves: List[bytes]) -> str:
     if len(leaves) == 1:
         return _hash_func(leaves[0]).hex()
 
-    current_level: List[bytes] = [_hash_func(leaf) for leaf in leaves]
+    current_level: list[bytes] = [_hash_func(leaf) for leaf in leaves]
     while len(current_level) > 1:
         if len(current_level) % 2 != 0:
             current_level.append(current_level[-1])
-        next_level: List[bytes] = []
+        next_level: list[bytes] = []
         for i in range(0, len(current_level), 2):
             combined = current_level[i] + current_level[i + 1]
             next_level.append(_hash_func(combined))
@@ -214,7 +215,7 @@ def _chain_hash(parent_hash: str, entry_hash: str) -> str:
         return hashlib.sha256(combined).hexdigest()
 
 
-def _verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Python fallback for verify_merkle_chain."""
     if not entries:
         return {"is_valid": True, "total_entries": 0, "valid_entries": 0,
@@ -222,9 +223,9 @@ def _verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     total = len(entries)
     valid_count = 0
-    broken_links: List[Dict[str, Any]] = []
+    broken_links: list[dict[str, Any]] = []
 
-    file_groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    file_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in entries:
         fp = r.get("file_path", "__unknown__")
         file_groups[fp].append(r)
@@ -266,7 +267,7 @@ def _verify_merkle_chain(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
             "root_hash": root_hash}
 
 
-def _merkle_proof(entry_hash: str, all_hashes: List[str]) -> Dict[str, Any]:
+def _merkle_proof(entry_hash: str, all_hashes: list[str]) -> dict[str, Any]:
     """Python fallback for merkle_proof."""
     if not all_hashes:
         raise ValueError("all_hashes must not be empty")
@@ -287,7 +288,7 @@ def _merkle_proof(entry_hash: str, all_hashes: List[str]) -> Dict[str, Any]:
                 "proof_path": [], "leaf_index": 0, "verified": True}
 
     current_level = [_hash_func(h.encode()) for h in all_hashes]
-    proof_path: List[str] = []
+    proof_path: list[str] = []
     current_idx = idx
 
     while len(current_level) > 1:
@@ -310,7 +311,7 @@ def _merkle_proof(entry_hash: str, all_hashes: List[str]) -> Dict[str, Any]:
             "leaf_index": idx, "verified": True}
 
 
-def _batch_verify_chains(chains: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Dict[str, Any]]:
+def _batch_verify_chains(chains: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, Any]]:
     """Python fallback for batch_verify_chains."""
     return {chain_id: _verify_merkle_chain(entries) for chain_id, entries in chains.items()}
 
@@ -338,7 +339,7 @@ def _restore_file(snapshot_path: str, target_path: str) -> str:
     return target_path
 
 
-def _verify_rollback_readiness(snapshot_dir: str) -> Dict[str, Any]:
+def _verify_rollback_readiness(snapshot_dir: str) -> dict[str, Any]:
     """Python fallback for verify_rollback_readiness — checks snapshot directory."""
     if not os.path.isdir(snapshot_dir):
         return {"ready": False, "snapshots": 0, "reason": "Snapshot directory does not exist"}
@@ -367,17 +368,17 @@ def _wildcard_match(pattern: str, topic: str) -> bool:
     return bool(re.fullmatch(regex, topic))
 
 
-def _resolve_routes(pattern: str, registered_topics: List[str]) -> List[str]:
+def _resolve_routes(pattern: str, registered_topics: list[str]) -> list[str]:
     """Python fallback for resolve_routes — resolves pattern to matching topics."""
     return [t for t in registered_topics if _wildcard_match(pattern, t)]
 
 
-def _batch_resolve_routes(patterns: List[str], registered_topics: List[str]) -> Dict[str, List[str]]:
+def _batch_resolve_routes(patterns: list[str], registered_topics: list[str]) -> dict[str, list[str]]:
     """Python fallback for batch_resolve_routes."""
     return {p: _resolve_routes(p, registered_topics) for p in patterns}
 
 
-def _deduplicate_events(events: List[Dict[str, Any]], key_field: str = "id") -> List[Dict[str, Any]]:
+def _deduplicate_events(events: list[dict[str, Any]], key_field: str = "id") -> list[dict[str, Any]]:
     """Python fallback for deduplicate_events."""
     seen = set()
     result = []
@@ -389,7 +390,7 @@ def _deduplicate_events(events: List[Dict[str, Any]], key_field: str = "id") -> 
     return result
 
 
-def _sort_by_priority(events: List[Dict[str, Any]], priority_field: str = "priority") -> List[Dict[str, Any]]:
+def _sort_by_priority(events: list[dict[str, Any]], priority_field: str = "priority") -> list[dict[str, Any]]:
     """Python fallback for sort_by_priority."""
     return sorted(events, key=lambda e: e.get(priority_field, 0), reverse=True)
 
@@ -398,10 +399,10 @@ def _sort_by_priority(events: List[Dict[str, Any]], priority_field: str = "prior
 #  BUILT-IN PYTHON FALLBACKS — Simulation (C1)
 # ════════════════════════════════════════════════════════════════
 
-def _topological_sort(nodes: List[str], edges: List[tuple]) -> List[str]:
+def _topological_sort(nodes: list[str], edges: list[tuple]) -> list[str]:
     """Python fallback for topological_sort — Kahn's algorithm."""
-    in_degree = {n: 0 for n in nodes}
-    graph: Dict[str, List[str]] = {n: [] for n in nodes}
+    in_degree = dict.fromkeys(nodes, 0)
+    graph: dict[str, list[str]] = {n: [] for n in nodes}
     for src, dst in edges:
         graph[src].append(dst)
         in_degree[dst] = in_degree.get(dst, 0) + 1
@@ -418,9 +419,9 @@ def _topological_sort(nodes: List[str], edges: List[tuple]) -> List[str]:
     return result
 
 
-def _detect_cycles(nodes: List[str], edges: List[tuple]) -> List[List[str]]:
+def _detect_cycles(nodes: list[str], edges: list[tuple]) -> list[list[str]]:
     """Python fallback for detect_cycles — DFS cycle detection."""
-    graph: Dict[str, List[str]] = {n: [] for n in nodes}
+    graph: dict[str, list[str]] = {n: [] for n in nodes}
     for src, dst in edges:
         graph[src].append(dst)
 
@@ -436,7 +437,7 @@ def _detect_cycles(nodes: List[str], edges: List[tuple]) -> List[List[str]]:
         for neighbor in graph.get(node, []):
             if neighbor in path_set:
                 cycle_start = path.index(neighbor)
-                cycles.append(path[cycle_start:] + [neighbor])
+                cycles.append([*path[cycle_start:], neighbor])
             elif neighbor not in visited:
                 dfs(neighbor)
         path.pop()
@@ -448,7 +449,7 @@ def _detect_cycles(nodes: List[str], edges: List[tuple]) -> List[List[str]]:
     return cycles
 
 
-def _aggregate_impact(changes: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _aggregate_impact(changes: list[dict[str, Any]]) -> dict[str, Any]:
     """Python fallback for aggregate_impact — sums risk scores."""
     total_risk = sum(c.get("risk_score", 0) for c in changes)
     affected_nodes = set()
@@ -461,9 +462,9 @@ def _aggregate_impact(changes: List[Dict[str, Any]]) -> Dict[str, Any]:
             "affected_nodes": list(affected_nodes)}
 
 
-def _simulate_dag(nodes: List[str], edges: List[tuple], change_node: str) -> Dict[str, Any]:
+def _simulate_dag(nodes: list[str], edges: list[tuple], change_node: str) -> dict[str, Any]:
     """Python fallback for simulate_dag — BFS reachability from change_node."""
-    graph: Dict[str, List[str]] = {n: [] for n in nodes}
+    graph: dict[str, list[str]] = {n: [] for n in nodes}
     for src, dst in edges:
         graph[src].append(dst)
 
@@ -486,9 +487,9 @@ def _simulate_dag(nodes: List[str], edges: List[tuple], change_node: str) -> Dic
 #  BUILT-IN PYTHON FALLBACKS — Risk (F3)
 # ════════════════════════════════════════════════════════════════
 
-def _calculate_blast_radius(node: str, edges: List[tuple], max_depth: int = 10) -> Dict[str, Any]:
+def _calculate_blast_radius(node: str, edges: list[tuple], max_depth: int = 10) -> dict[str, Any]:
     """Python fallback for calculate_blast_radius — BFS with depth limit."""
-    graph: Dict[str, List[str]] = {}
+    graph: dict[str, list[str]] = {}
     for src, dst in edges:
         graph.setdefault(src, []).append(dst)
 
@@ -506,9 +507,9 @@ def _calculate_blast_radius(node: str, edges: List[tuple], max_depth: int = 10) 
     return {"center": node, "radius": len(visited), "affected": list(visited)}
 
 
-def _propagate_risks(start_nodes: List[str], edges: List[tuple], initial_scores: Dict[str, float]) -> Dict[str, float]:
+def _propagate_risks(start_nodes: list[str], edges: list[tuple], initial_scores: dict[str, float]) -> dict[str, float]:
     """Python fallback for propagate_risks — simple risk propagation."""
-    graph: Dict[str, List[str]] = {}
+    graph: dict[str, list[str]] = {}
     for src, dst in edges:
         graph.setdefault(src, []).append(dst)
 
@@ -527,9 +528,9 @@ def _propagate_risks(start_nodes: List[str], edges: List[tuple], initial_scores:
     return scores
 
 
-def _find_critical_path(nodes: List[str], edges: List[tuple], scores: Dict[str, float]) -> List[str]:
+def _find_critical_path(nodes: list[str], edges: list[tuple], scores: dict[str, float]) -> list[str]:
     """Python fallback for find_critical_path — highest-risk path via greedy."""
-    graph: Dict[str, List[str]] = {}
+    graph: dict[str, list[str]] = {}
     for src, dst in edges:
         graph.setdefault(src, []).append(dst)
 
@@ -550,13 +551,13 @@ def _find_critical_path(nodes: List[str], edges: List[tuple], scores: Dict[str, 
     return path
 
 
-def _compute_reachability(nodes: List[str], edges: List[tuple]) -> Dict[str, List[str]]:
+def _compute_reachability(nodes: list[str], edges: list[tuple]) -> dict[str, list[str]]:
     """Python fallback for compute_reachability — all-pairs reachability."""
-    graph: Dict[str, List[str]] = {n: [] for n in nodes}
+    graph: dict[str, list[str]] = {n: [] for n in nodes}
     for src, dst in edges:
         graph.setdefault(src, []).append(dst)
 
-    reachability: Dict[str, List[str]] = {}
+    reachability: dict[str, list[str]] = {}
     for node in nodes:
         visited = set()
         queue = [node]
@@ -573,7 +574,7 @@ def _compute_reachability(nodes: List[str], edges: List[tuple]) -> Dict[str, Lis
     return reachability
 
 
-def _multi_node_blast_radius(nodes: List[str], edges: List[tuple], max_depth: int = 10) -> Dict[str, Dict[str, Any]]:
+def _multi_node_blast_radius(nodes: list[str], edges: list[tuple], max_depth: int = 10) -> dict[str, dict[str, Any]]:
     """Python fallback for multi_node_blast_radius."""
     return {node: _calculate_blast_radius(node, edges, max_depth) for node in nodes}
 

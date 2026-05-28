@@ -13,11 +13,11 @@ from ._types import (
 )
 
 __all__ = [
-    "ReplayQueue",
+    "BatchRetryResult",
     "DeadLetterEvent",
     "DeadLetterStatus",
+    "ReplayQueue",
     "RetryResult",
-    "BatchRetryResult",
     "get_replay_queue",
     "reset_replay_queue",
 ]

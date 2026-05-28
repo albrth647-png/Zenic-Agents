@@ -8,13 +8,12 @@ presets y crear perfiles personalizados.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from .types.personality import (
+    PERSONALITY_PRESETS,
+    LanguagePreference,
     PersonalityProfile,
     ToneLevel,
-    LanguagePreference,
-    PERSONALITY_PRESETS,
 )
 
 logger = logging.getLogger("zenic_agents.conversational.personality")
@@ -44,7 +43,7 @@ class PersonalityManager:
 
     # ─── Lectura ──────────────────────────────────────────────
 
-    def get(self, name: str) -> Optional[PersonalityProfile]:
+    def get(self, name: str) -> PersonalityProfile | None:
         """Obtiene un perfil por nombre."""
         return self._profiles.get(name)
 
@@ -116,7 +115,7 @@ class PersonalityManager:
 
     def build_system_prompt(
         self,
-        personality_name: Optional[str] = None,
+        personality_name: str | None = None,
         session_context: str = "",
     ) -> str:
         """

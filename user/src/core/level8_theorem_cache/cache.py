@@ -218,7 +218,7 @@ class TheoremCache:
 
         try:
             with_retry(_save_entry, label="TheoremCache save")
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # with_retry already logged the failure
 
     def _evict_if_needed(self, conn):

@@ -7,7 +7,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Set
+from typing import Set  # noqa: UP035
 
 from ._mixin_core import MemoryEngineV2
 

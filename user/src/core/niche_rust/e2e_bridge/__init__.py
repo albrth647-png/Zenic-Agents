@@ -17,11 +17,11 @@ All core logic is in Rust. This module provides:
     - PipelineResult: final pipeline result
 """
 
-from ._types import PipelineProgress, PipelineResult
 from ._mixin_core import NichePipeline
+from ._types import PipelineProgress, PipelineResult
 
 __all__ = [
+    "NichePipeline",
     "PipelineProgress",
     "PipelineResult",
-    "NichePipeline",
 ]

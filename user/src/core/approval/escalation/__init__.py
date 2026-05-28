@@ -18,15 +18,15 @@ Integration:
 Persistence: SQLite with retry logic.
 """
 
-from ._types import EscalationLevel, SLAPolicy, EscalationSLA
 from ._escalator import EscalationManager
 from ._routing import get_escalation_manager, reset_escalation_manager
+from ._types import EscalationLevel, EscalationSLA, SLAPolicy
 
 __all__ = [
     "EscalationLevel",
-    "SLAPolicy",
-    "EscalationSLA",
     "EscalationManager",
+    "EscalationSLA",
+    "SLAPolicy",
     "get_escalation_manager",
     "reset_escalation_manager",
 ]

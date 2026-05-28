@@ -16,12 +16,15 @@ La IA NUNCA escribe el mensaje — el AlertManager lo construye determinísticam
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
-from src.core.sna.alert_manager import Alert, AlertSeverity, AlertChannel
-from src.core.channel.a53_text import TextChannelAgent, TextMessage, ChannelType
+from src.core.channel.a53_text import ChannelType, TextChannelAgent, TextMessage
+from src.core.sna.alert_manager import Alert, AlertChannel, AlertSeverity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

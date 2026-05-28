@@ -11,14 +11,16 @@ Once all orchestrator call sites are migrated to use v2 types directly
 
 from __future__ import annotations
 
-from typing import Any, Optional
 from dataclasses import dataclass, field
+from typing import Any
 
 # Re-export unified types from shared module (single source of truth)
-from src.core.shared.agent_schemas import (  # noqa: F401
-    TriggerSpec, ActionSpec, ScheduleSpec, ValidationIssue,
+from src.core.shared.agent_schemas import (
+    ActionSpec,
+    ScheduleSpec,
+    TriggerSpec,
+    ValidationIssue,
 )
-
 
 # ============================================================
 #  INTENT AGENT SCHEMAS
@@ -191,7 +193,7 @@ class ValidationOutput:
 class ContextInput:
     """Input for ContextAgent (F3)."""
     message: str = ""
-    intent_output: Optional[Any] = None   # IntentOutput from SurgicalAgent (F2)
+    intent_output: Any | None = None   # IntentOutput from SurgicalAgent (F2)
     max_tokens: int = 500                 # Total context budget
 
 
@@ -234,7 +236,7 @@ class CriticalityInput:
     target: str = ""                 # File name, function name, or component
     context: str = ""                # Additional context (user message, etc.)
     code_snippet: str = ""           # Code snippet if available
-    existing_level: Optional[int] = None  # Pre-existing criticality from MacroRouter
+    existing_level: int | None = None  # Pre-existing criticality from MacroRouter
 
 
 @dataclass

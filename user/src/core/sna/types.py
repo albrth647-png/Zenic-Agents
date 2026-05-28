@@ -11,8 +11,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 # ──────────────────────────────────────────────────────────────
 #  ENUMS
@@ -75,7 +74,7 @@ class MonitorResult:
     detail: str = ""
     weight: MonitorWeight = MonitorWeight.LIGHTWEIGHT
     severity: AlertSeverity = AlertSeverity.INFO
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     checked_at: float = 0.0
     duration_ms: float = 0.0
 
@@ -92,7 +91,7 @@ class ThresholdConfig:
     field_name: str
     operator: ThresholdOperator
     value: float
-    value_high: Optional[float] = None  # For BETWEEN operator
+    value_high: float | None = None  # For BETWEEN operator
     severity: AlertSeverity = AlertSeverity.WARNING
     cooldown_seconds: float = 300.0     # Min time between same alerts
     tenant_id: str = ""
@@ -131,11 +130,11 @@ class Alert:
     title: str = ""
     message: str = ""
     value: Any = None
-    threshold: Optional[ThresholdConfig] = None
+    threshold: ThresholdConfig | None = None
     tenant_id: str = ""
     channel: str = ""              # Preferred notification channel
-    dispatch_actions: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    dispatch_actions: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: float = 0.0
     dispatched_at: float = 0.0
     notified_at: float = 0.0
@@ -164,7 +163,7 @@ class MonitorConfig:
     enabled: bool = True
     tenant_id: str = ""
     blueprint_name: str = ""
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
     notification_channel: str = "log"
     priority: int = 5   # 0=critical, 10=low (for scheduler priority queue)
 
@@ -199,14 +198,14 @@ class SNAStats:
 # ──────────────────────────────────────────────────────────────
 
 # Default intervals by monitor weight
-DEFAULT_INTERVALS: Dict[MonitorWeight, float] = {
+DEFAULT_INTERVALS: dict[MonitorWeight, float] = {
     MonitorWeight.LIGHTWEIGHT: 300.0,   # 5 min
     MonitorWeight.MEDIUM: 600.0,        # 10 min
     MonitorWeight.HEAVY: 1800.0,        # 30 min
 }
 
 # Default alert channels by severity
-DEFAULT_CHANNELS: Dict[AlertSeverity, str] = {
+DEFAULT_CHANNELS: dict[AlertSeverity, str] = {
     AlertSeverity.INFO: "log",
     AlertSeverity.WARNING: "notification",
     AlertSeverity.CRITICAL: "telegram",

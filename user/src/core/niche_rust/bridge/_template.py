@@ -7,7 +7,7 @@ YAML template generation and validation system.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ._native import NATIVE_AVAILABLE, _native
 
@@ -41,7 +41,7 @@ class NicheTemplate:
         yaml_str = tmpl.to_yaml(template)
     """
 
-    def generate(self, niche_id: str) -> Optional[Dict[str, Any]]:
+    def generate(self, niche_id: str) -> dict[str, Any] | None:
         """Generate a YAML template skeleton from a niche_id."""
         if not niche_id or not isinstance(niche_id, str):
             logger.error("NicheTemplate.generate: niche_id must be a non-empty string")
@@ -51,7 +51,7 @@ class NicheTemplate:
             return None
         return _native.template_generate(niche_id)
 
-    def generate_from_niche(self, niche: Any) -> Optional[Dict[str, Any]]:
+    def generate_from_niche(self, niche: Any) -> dict[str, Any] | None:
         """Generate a template from an existing NicheDefinition object."""
         if niche is None:
             logger.error("NicheTemplate.generate_from_niche: niche cannot be None")
@@ -65,7 +65,7 @@ class NicheTemplate:
             logger.error("NicheTemplate.generate_from_niche: %s", e)
             return None
 
-    def validate(self, template_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def validate(self, template_dict: dict[str, Any]) -> dict[str, Any]:
         """Validate a template dict for completeness."""
         _incomplete = {
             "valid": False,
@@ -87,7 +87,7 @@ class NicheTemplate:
             logger.error("NicheTemplate.validate: %s", e)
             return {**_incomplete, "error": str(e)}
 
-    def missing_fields(self, template_dict: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def missing_fields(self, template_dict: dict[str, Any]) -> list[dict[str, Any]]:
         """List all missing required fields in a template."""
         if not template_dict:
             return []
@@ -102,7 +102,7 @@ class NicheTemplate:
 
     def set_field(
         self,
-        template_dict: Dict[str, Any],
+        template_dict: dict[str, Any],
         section_id: str,
         field_name: str,
         value: Any,
@@ -125,7 +125,7 @@ class NicheTemplate:
             logger.error("NicheTemplate.set_field: %s", e)
             return False
 
-    def to_yaml(self, template_dict: Dict[str, Any]) -> Optional[str]:
+    def to_yaml(self, template_dict: dict[str, Any]) -> str | None:
         """Serialize a template dict to a YAML string."""
         if not template_dict:
             return None

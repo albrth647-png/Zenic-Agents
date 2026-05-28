@@ -8,16 +8,16 @@ import logging
 import time
 from typing import Any
 
-from src.core.workflows.chain_composer._types import (
-    ChainStep,
-    ChainStepType,
-    ChainStatus,
-    ComposedChain,
-    ChainStepResult,
-    ChainExecutionResult,
-    ChainValidationResult,
-)
 from src.core.workflows.chain_composer._executors import STEP_EXECUTORS
+from src.core.workflows.chain_composer._types import (
+    ChainExecutionResult,
+    ChainStatus,
+    ChainStep,
+    ChainStepResult,
+    ChainStepType,
+    ChainValidationResult,
+    ComposedChain,
+)
 
 logger = logging.getLogger(__name__)
 
