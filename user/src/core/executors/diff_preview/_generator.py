@@ -15,10 +15,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.core.executors.db_journal import DBTransactionJournal
 
-# ── Row data type ─────────────────────────────────────────────
-RowData = dict[str, str | int | float | None]
-SQLParams = list[str | int | float | None]
-
 from ._comparator import (
     build_db_summary,
     count_placeholders_in_set,
@@ -30,6 +26,10 @@ from ._comparator import (
 )
 from ._formatter import format_diff
 from ._types import DiffEntry, DiffResult
+
+# ── Row data type ─────────────────────────────────────────────
+RowData = dict[str, str | int | float | None]
+SQLParams = list[str | int | float | None]
 
 logger = logging.getLogger(__name__)
 
@@ -418,7 +418,7 @@ class DiffPreviewEngine:
             )
 
         risk = estimate_risk_from_diffs(diffs, "send_email")
-        summary = f"Would send email from '{from_email}' to " f"{len(to_emails)} recipient(s) with subject '{subject}'"
+        summary = f"Would send email from '{from_email}' to {len(to_emails)} recipient(s) with subject '{subject}'"
 
         return DiffResult(
             action_type="email",

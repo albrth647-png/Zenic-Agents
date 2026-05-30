@@ -177,9 +177,7 @@ class StepDecomposer(BaseAgent[DecomposedSteps]):
                 return getattr(input_data, attr, "")
         return ""
 
-    def _build_steps(
-        self, template: list[dict[str, Any]], query: str
-    ) -> list[ReasoningStep]:
+    def _build_steps(self, template: list[dict[str, Any]], query: str) -> list[ReasoningStep]:
         """Build ReasoningStep list from template."""
         steps: list[ReasoningStep] = []
         for i, tmpl in enumerate(template[:MAX_STEPS]):
@@ -188,12 +186,14 @@ class StepDecomposer(BaseAgent[DecomposedSteps]):
             if query and i == 0:
                 desc = f"{desc} [context: {query[:80]}]"
 
-            steps.append(ReasoningStep(
-                step_number=i + 1,
-                description=desc,
-                conclusion="",
-                confidence=0.0,  # Not yet executed
-            ))
+            steps.append(
+                ReasoningStep(
+                    step_number=i + 1,
+                    description=desc,
+                    conclusion="",
+                    confidence=0.0,  # Not yet executed
+                )
+            )
         return steps
 
     def _extract_dependencies(self, template: list[dict[str, Any]]) -> list[str]:
@@ -208,9 +208,7 @@ class StepDecomposer(BaseAgent[DecomposedSteps]):
         """Compute topological execution order (sequential by default)."""
         return [s.step_number for s in steps]
 
-    def decompose_with_context(
-        self, input_data: Any, context: str = ""
-    ) -> DecomposedSteps:
+    def decompose_with_context(self, input_data: Any, context: str = "") -> DecomposedSteps:
         """
         Decompose with additional context injected into step descriptions.
 

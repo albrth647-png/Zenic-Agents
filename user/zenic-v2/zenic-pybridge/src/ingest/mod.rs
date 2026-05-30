@@ -19,7 +19,7 @@ pub use extractors::{
     parse_csv_line, truncate_text,
 };
 pub use types::{
-    BatchExtractionResult, DocumentFormat, ExtractedText, FORMAT_MAP, MAX_DOCUMENT_SIZE,
+    BatchExtractionResult, DocumentFormat, ExtractedText, MAX_DOCUMENT_SIZE,
     MAX_EXTRACTED_TEXT_LENGTH,
 };
 
@@ -173,14 +173,15 @@ mod tests {
     fn test_ingest_extract_text_simple_pdf_rejected() {
         let data = b"%PDF-1.4 fake content";
         let result = ingest_extract_text_simple("report.pdf", data);
-        assert!(result.has_errors());
+        // has_errors() is a #[pymethods] getter — use errors field directly
+        assert!(!result.errors.is_empty());
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_ingest_extract_text_empty_data() {
         let result = ingest_extract_text_simple("empty.txt", b"");
-        assert!(result.has_errors());
+        assert!(!result.errors.is_empty());
         assert!(result.is_empty());
     }
 
@@ -199,7 +200,7 @@ mod tests {
     #[test]
     fn test_ingest_process_extracted_text_empty() {
         let result = ingest_process_extracted_text("empty.pdf", "pdf", "");
-        assert!(result.has_errors());
+        assert!(!result.errors.is_empty());
         assert!(result.is_empty());
     }
 

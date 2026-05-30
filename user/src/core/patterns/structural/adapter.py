@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Abstract base
 # ======================================================================
 
+
 class LLMAdapter(ABC):
     """
     Abstract base class for LLM adapters.
@@ -54,6 +55,7 @@ class LLMAdapter(ABC):
 # ======================================================================
 # Concrete adapters
 # ======================================================================
+
 
 class LocalLLMAdapter(LLMAdapter):
     """
@@ -129,9 +131,7 @@ class FallbackLLMAdapter(LLMAdapter):
             self._primary_calls += 1
             return self._primary.generate(prompt, **kwargs)
         except Exception as exc:
-            logger.warning(
-                "FallbackLLMAdapter: primary failed (%s), using secondary", exc
-            )
+            logger.warning("FallbackLLMAdapter: primary failed (%s), using secondary", exc)
             self._secondary_calls += 1
             return self._secondary.generate(prompt, **kwargs)
 
@@ -150,6 +150,7 @@ class FallbackLLMAdapter(LLMAdapter):
 # ======================================================================
 # Adapter Registry
 # ======================================================================
+
 
 class AdapterRegistry:
     """
@@ -202,7 +203,4 @@ class AdapterRegistry:
     def get_available(self) -> list[str]:
         """Return a sorted list of names whose adapters report ``is_available()``."""
         with self._lock:
-            return sorted(
-                name for name, adapter in self._adapters.items()
-                if adapter.is_available()
-            )
+            return sorted(name for name, adapter in self._adapters.items() if adapter.is_available())

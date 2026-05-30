@@ -165,7 +165,7 @@ class MemoryApprovalPayload:
             )
         if not self.admin_session_id.strip():
             raise ValueError(
-                "HITL: admin_session_id es OBLIGATORIO. " "Debe estar ligado al ID criptográfico de la sesión."
+                "HITL: admin_session_id es OBLIGATORIO. Debe estar ligado al ID criptográfico de la sesión."
             )
 
     def is_valid(self) -> bool:

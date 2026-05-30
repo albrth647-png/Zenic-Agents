@@ -2,7 +2,7 @@
 // POST /api/v1/hitl/expiry/check
 
 import { NextResponse } from "next/server";
-import { getExpiryService } from "@/lib/hitl";
+import { getExpiryService } from "@/lib/hitl/expiry-service/_service";
 
 // POST /api/v1/hitl/expiry/check
 export async function POST() {

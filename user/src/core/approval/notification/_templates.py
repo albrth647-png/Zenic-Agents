@@ -14,6 +14,7 @@ from typing import Any
 
 class NotificationChannel(str, Enum):
     """Available notification channels."""
+
     IN_APP = "in_app"
     EMAIL = "email"
     SLACK = "slack"
@@ -26,6 +27,7 @@ class NotificationChannel(str, Enum):
 
 class NotificationPriority(str, Enum):
     """Priority level for notifications."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -34,6 +36,7 @@ class NotificationPriority(str, Enum):
 
 class NotificationEvent(str, Enum):
     """Types of notification events in the HITL system."""
+
     APPROVAL_PENDING = "APPROVAL_PENDING"
     APPROVAL_APPROVED = "APPROVAL_APPROVED"
     APPROVAL_REJECTED = "APPROVAL_REJECTED"

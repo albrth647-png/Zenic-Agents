@@ -392,11 +392,14 @@ def _check_compliance_pci_dss(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "card" in config_str or "credit" in config_str or "pan" in config_str:
-        if "tokeniz" not in config_str and "token" not in config_str:
-            violations.append("Card data processing without tokenization — PCI-DSS Requirement 3")
-            recommendations.append("Use tokenization for all card data storage and processing")
-            risk_level = "critical"
+    if (
+        "card" in config_str
+        or "credit" in config_str
+        or ("pan" in config_str and "tokeniz" not in config_str and "token" not in config_str)
+    ):
+        violations.append("Card data processing without tokenization — PCI-DSS Requirement 3")
+        recommendations.append("Use tokenization for all card data storage and processing")
+        risk_level = "critical"
 
     if violations:
         return ComplianceResult("pci_dss", False, violations, recommendations, risk_level)
@@ -409,11 +412,19 @@ def _check_compliance_gdpr(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "personal_data" in config_str or "pii" in config_str or "user_data" in config_str:
-        if "consent" not in config_str and "legal_basis" not in config_str and "legitimate_interest" not in config_str:
-            violations.append("Personal data processing without documented legal basis — GDPR Article 6")
-            recommendations.append("Document legal basis for data processing")
-            risk_level = "high"
+    if (
+        "personal_data" in config_str
+        or "pii" in config_str
+        or (
+            "user_data" in config_str
+            and "consent" not in config_str
+            and "legal_basis" not in config_str
+            and "legitimate_interest" not in config_str
+        )
+    ):
+        violations.append("Personal data processing without documented legal basis — GDPR Article 6")
+        recommendations.append("Document legal basis for data processing")
+        risk_level = "high"
 
     if violations:
         return ComplianceResult("gdpr", False, violations, recommendations, risk_level)
@@ -426,11 +437,19 @@ def _check_compliance_sox(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "financial_report" in config_str or "accounting" in config_str or "ledger" in config_str:
-        if "dual_control" not in config_str and "segregation" not in config_str and "approval" not in config_str:
-            violations.append("Financial data modification without dual control — SOX Section 404")
-            recommendations.append("Implement dual control for financial modifications")
-            risk_level = "critical"
+    if (
+        "financial_report" in config_str
+        or "accounting" in config_str
+        or (
+            "ledger" in config_str
+            and "dual_control" not in config_str
+            and "segregation" not in config_str
+            and "approval" not in config_str
+        )
+    ):
+        violations.append("Financial data modification without dual control — SOX Section 404")
+        recommendations.append("Implement dual control for financial modifications")
+        risk_level = "critical"
 
     if violations:
         return ComplianceResult("sox", False, violations, recommendations, risk_level)
@@ -443,11 +462,19 @@ def _check_compliance_aml_kyc(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "transfer" in config_str or "transaction" in config_str or "payment" in config_str:
-        if "kyc_verified" not in config_str and "kyc_check" not in config_str and "identity_verified" not in config_str:
-            violations.append("Financial transaction without KYC verification — AML compliance risk")
-            recommendations.append("Verify customer identity before processing transactions")
-            risk_level = "critical"
+    if (
+        "transfer" in config_str
+        or "transaction" in config_str
+        or (
+            "payment" in config_str
+            and "kyc_verified" not in config_str
+            and "kyc_check" not in config_str
+            and "identity_verified" not in config_str
+        )
+    ):
+        violations.append("Financial transaction without KYC verification — AML compliance risk")
+        recommendations.append("Verify customer identity before processing transactions")
+        risk_level = "critical"
 
     if violations:
         return ComplianceResult("aml_kyc", False, violations, recommendations, risk_level)
@@ -460,11 +487,15 @@ def _check_compliance_coppa(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "minor" in config_str or "child" in config_str or "under_13" in config_str or "student" in config_str:
-        if "parental_consent" not in config_str and "guardian_approval" not in config_str:
-            violations.append("Children's data collection without parental consent — COPPA Section 3")
-            recommendations.append("Obtain verifiable parental consent before collecting children's data")
-            risk_level = "critical"
+    if (
+        "minor" in config_str
+        or "child" in config_str
+        or "under_13" in config_str
+        or ("student" in config_str and "parental_consent" not in config_str and "guardian_approval" not in config_str)
+    ):
+        violations.append("Children's data collection without parental consent — COPPA Section 3")
+        recommendations.append("Obtain verifiable parental consent before collecting children's data")
+        risk_level = "critical"
 
     if violations:
         return ComplianceResult("coppa", False, violations, recommendations, risk_level)
@@ -477,15 +508,12 @@ def _check_compliance_iso_27001(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "config_change" in config_str or "system_modify" in config_str or "infrastructure_change" in config_str:
-        if (
-            "change_management" not in config_str
-            and "change_request" not in config_str
-            and "approval" not in config_str
-        ):
-            violations.append("System change without change management — ISO 27001 Annex A.12")
-            recommendations.append("Route system changes through formal change management process")
-            risk_level = "high"
+    if ("config_change" in config_str or "system_modify" in config_str or "infrastructure_change" in config_str) and (
+        "change_management" not in config_str and "change_request" not in config_str and "approval" not in config_str
+    ):
+        violations.append("System change without change management — ISO 27001 Annex A.12")
+        recommendations.append("Route system changes through formal change management process")
+        risk_level = "high"
 
     if violations:
         return ComplianceResult("iso_27001", False, violations, recommendations, risk_level)
@@ -498,11 +526,19 @@ def _check_compliance_soc2(config_str: str) -> ComplianceResult:
     recommendations = []
     risk_level = "low"
 
-    if "data_access" in config_str or "sensitive_data" in config_str or "api_key" in config_str:
-        if "monitored" not in config_str and "audit" not in config_str and "logging" not in config_str:
-            violations.append("Sensitive data access without monitoring — SOC 2 CC6.1")
-            recommendations.append("Enable monitoring and audit logging for sensitive data access")
-            risk_level = "high"
+    if (
+        "data_access" in config_str
+        or "sensitive_data" in config_str
+        or (
+            "api_key" in config_str
+            and "monitored" not in config_str
+            and "audit" not in config_str
+            and "logging" not in config_str
+        )
+    ):
+        violations.append("Sensitive data access without monitoring — SOC 2 CC6.1")
+        recommendations.append("Enable monitoring and audit logging for sensitive data access")
+        risk_level = "high"
 
     if violations:
         return ComplianceResult("soc2", False, violations, recommendations, risk_level)

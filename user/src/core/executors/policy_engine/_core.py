@@ -1,6 +1,7 @@
 """
 Policy Engine — Core engine and singleton.
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,9 +45,9 @@ class PolicyEngine:
             raise FileNotFoundError(f"Policy YAML file not found: {yaml_path}")
         try:
             import yaml
-        except ImportError:
+        except ImportError as e:
             logger.error("PolicyEngine: PyYAML not installed.")
-            raise ImportError("PyYAML is required. Install with: pip install pyyaml")
+            raise ImportError("PyYAML is required. Install with: pip install pyyaml") from e
         with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         if not isinstance(data, dict):
@@ -64,11 +65,18 @@ class PolicyEngine:
                     rule = self._parse_policy_dict(policy_data)
                     self._policies[rule.name] = rule
                     loaded += 1
-                    logger.info("PolicyEngine: Loaded policy '%s' (action=%s, priority=%d)",
-                        rule.name, rule.action.value, rule.priority)
+                    logger.info(
+                        "PolicyEngine: Loaded policy '%s' (action=%s, priority=%d)",
+                        rule.name,
+                        rule.action.value,
+                        rule.priority,
+                    )
                 except Exception as exc:
-                    logger.warning("PolicyEngine: Failed to load policy from dict: %s — %s",
-                        policy_data.get("name", "<unknown>"), exc)
+                    logger.warning(
+                        "PolicyEngine: Failed to load policy from dict: %s — %s",
+                        policy_data.get("name", "<unknown>"),
+                        exc,
+                    )
             return loaded
 
     def evaluate(
@@ -106,11 +114,15 @@ class PolicyEngine:
                             best_action = PolicyAction.DENY
                             denial_reason = f"Denied by policy '{rule.name}': {rule.description}"
                             break
-                        if rule.action in (
-                            PolicyAction.REQUIRE_APPROVAL,
-                            PolicyAction.ESCALATE,
-                            PolicyAction.REQUIRE_CONFIRMATION,
-                        ) and best_action == PolicyAction.ALLOW:
+                        if (
+                            rule.action
+                            in (
+                                PolicyAction.REQUIRE_APPROVAL,
+                                PolicyAction.ESCALATE,
+                                PolicyAction.REQUIRE_CONFIRMATION,
+                            )
+                            and best_action == PolicyAction.ALLOW
+                        ):
                             best_action = rule.action
                             if rule.action == PolicyAction.ESCALATE:
                                 escalation_role = rule.escalation_role
@@ -129,16 +141,23 @@ class PolicyEngine:
                 evaluation_count=self._eval_count,
                 details=details,
             )
-            logger.info("PolicyEngine: Evaluated '%s' → %s (matched: %s)",
-                action_type, best_action.value,
-                matched_rules if matched_rules else "none")
+            logger.info(
+                "PolicyEngine: Evaluated '%s' → %s (matched: %s)",
+                action_type,
+                best_action.value,
+                matched_rules if matched_rules else "none",
+            )
             return decision
 
     def add_policy(self, policy: PolicyRule) -> None:
         with self._lock:
             self._policies[policy.name] = policy
-            logger.info("PolicyEngine: Added policy '%s' (action=%s, priority=%d)",
-                policy.name, policy.action.value, policy.priority)
+            logger.info(
+                "PolicyEngine: Added policy '%s' (action=%s, priority=%d)",
+                policy.name,
+                policy.action.value,
+                policy.priority,
+            )
 
     def remove_policy(self, policy_name: str) -> bool:
         with self._lock:
@@ -161,27 +180,27 @@ class PolicyEngine:
         with self._lock:
             applicable: list[PolicyRule] = []
             for rule in self._policies.values():
-                if rule.category_filter and category:
-                    if rule.category_filter.lower() != category.lower():
-                        continue
+                if rule.category_filter and category and rule.category_filter.lower() != category.lower():
+                    continue
                 if rule.condition and rule.condition.field == "action_type":
                     if rule.condition.operator == ConditionOperator.EQ:
                         if rule.condition.value != action_type:
                             continue
                     elif rule.condition.operator == ConditionOperator.IN:
-                        if isinstance(rule.condition.value, (list, tuple)):
-                            if action_type not in rule.condition.value:
-                                continue
+                        if isinstance(rule.condition.value, (list, tuple)) and action_type not in rule.condition.value:
+                            continue
                     elif rule.condition.operator == ConditionOperator.REGEX:
                         try:
                             if not re.search(str(rule.condition.value), action_type):
                                 continue
                         except re.error:
                             pass
-                    elif rule.condition.operator == ConditionOperator.CONTAINS:
-                        if isinstance(rule.condition.value, str):
-                            if rule.condition.value not in action_type:
-                                continue
+                    elif (
+                        rule.condition.operator == ConditionOperator.CONTAINS
+                        and isinstance(rule.condition.value, str)
+                        and rule.condition.value not in action_type
+                    ):
+                        continue
                 applicable.append(rule)
             return sorted(applicable, key=lambda p: p.priority, reverse=True)
 
@@ -208,14 +227,14 @@ class PolicyEngine:
                 raise ValueError(f"Policy '{name}': condition must have a 'field'")
             try:
                 cond_op = ConditionOperator(cond_op_str)
-            except ValueError:
-                raise ValueError(f"Policy '{name}': invalid operator '{cond_op_str}'.")
+            except ValueError as e:
+                raise ValueError(f"Policy '{name}': invalid operator '{cond_op_str}'.") from e
             condition = PolicyCondition(field=cond_field, operator=cond_op, value=cond_value)
         action_str = data.get("action", "ALLOW")
         try:
             action = PolicyAction(action_str)
-        except ValueError:
-            raise ValueError(f"Policy '{name}': invalid action '{action_str}'.")
+        except ValueError as e:
+            raise ValueError(f"Policy '{name}': invalid action '{action_str}'.") from e
         return PolicyRule(
             name=name,
             description=str(data.get("description", "")),

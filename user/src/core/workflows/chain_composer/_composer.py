@@ -78,6 +78,7 @@ class DynamicChainComposer:
         """Lazy-load the ChainTemplateLibrary singleton."""
         if self._template_library is None:
             from ..chain_templates import get_template_library
+
             self._template_library = get_template_library()
         return self._template_library
 
@@ -103,16 +104,20 @@ class DynamicChainComposer:
             for template in templates:
                 logger.info(
                     "Composing chain from event '%s' using template '%s'",
-                    event_type, template.template_id,
+                    event_type,
+                    template.template_id,
                 )
                 try:
                     chain = self.template_library.instantiate(
-                        template.template_id, enriched_data,
+                        template.template_id,
+                        enriched_data,
                     )
                 except (KeyError, ValueError) as exc:
                     logger.debug(
                         "Template %s skipped for event '%s': %s",
-                        template.template_id, event_type, exc,
+                        template.template_id,
+                        event_type,
+                        exc,
                     )
                     continue
 
@@ -145,12 +150,14 @@ class DynamicChainComposer:
                 )
                 try:
                     chain = self.template_library.instantiate(
-                        template.template_id, context,
+                        template.template_id,
+                        context,
                     )
                 except (KeyError, ValueError) as exc:
                     logger.debug(
                         "Template %s skipped for intent: %s",
-                        template.template_id, exc,
+                        template.template_id,
+                        exc,
                     )
                     continue
 
@@ -267,7 +274,9 @@ class DynamicChainComposer:
         _log_execution(result, _DB_PATH)
         logger.info(
             "Chain %s completed successfully in %dms (%d steps)",
-            chain.chain_id, elapsed_ms, len(step_results),
+            chain.chain_id,
+            elapsed_ms,
+            len(step_results),
         )
         return result
 
@@ -304,7 +313,11 @@ class DynamicChainComposer:
                         delay = base_delay * (2 ** (attempt - 1))
                         logger.debug(
                             "Step %s failed (attempt %d/%d): %s — retrying in %.2fs",
-                            step.step_id, attempt, max_retries, last_error, delay,
+                            step.step_id,
+                            attempt,
+                            max_retries,
+                            last_error,
+                            delay,
                         )
                         time.sleep(delay)
                         continue
@@ -334,13 +347,19 @@ class DynamicChainComposer:
                     delay = base_delay * (2 ** (attempt - 1))
                     logger.debug(
                         "Step %s error (attempt %d/%d): %s — retrying in %.2fs",
-                        step.step_id, attempt, max_retries, exc, delay,
+                        step.step_id,
+                        attempt,
+                        max_retries,
+                        exc,
+                        delay,
                     )
                     time.sleep(delay)
                 else:
                     logger.warning(
                         "Step %s failed after %d attempts: %s",
-                        step.step_id, max_retries, exc,
+                        step.step_id,
+                        max_retries,
+                        exc,
                     )
 
         return ChainStepResult(

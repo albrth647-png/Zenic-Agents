@@ -22,6 +22,7 @@ from .sanitizer import SanitizedInput
 
 # ─── Protocolo de fuente de contexto ─────────────────────────
 
+
 @runtime_checkable
 class ContextSource(Protocol):
     """Fuente de contexto para enriquecimiento."""
@@ -33,9 +34,11 @@ class ContextSource(Protocol):
 
 # ─── Contexto enriquecido ────────────────────────────────────
 
+
 @dataclass
 class EnrichedInput:
     """Input completamente procesado y enriquecido."""
+
     sanitized: SanitizedInput = field(default_factory=SanitizedInput)
     parsed: ParsedInput = field(default_factory=ParsedInput)
     session_context: list[dict[str, Any]] = field(default_factory=list)
@@ -81,10 +84,7 @@ class EnrichedInput:
                 "has_code": self.parsed.has_code,
                 "conversation_turn": self.conversation_turn,
                 "recent_topics": self.recent_topics,
-                "entities": [
-                    {"text": e.text, "type": e.entity_type}
-                    for e in self.parsed.entities
-                ],
+                "entities": [{"text": e.text, "type": e.entity_type} for e in self.parsed.entities],
                 "keywords": self.parsed.keywords[:20],
                 "warnings": self.sanitized.warnings,
             },
@@ -140,23 +140,23 @@ class InputEnricher:
                 continue  # Fuentes externas no deben romper el pipeline
 
         # 4. Ajustar prioridad
-        priority = self._adjust_priority(
-            sanitized.priority, turn, memory_ctx, parsed
-        )
+        priority = self._adjust_priority(sanitized.priority, turn, memory_ctx, parsed)
 
         # 5. Merge
         all_memory = memory_ctx + external_ctx
 
-        return Ok(EnrichedInput(
-            sanitized=sanitized,
-            parsed=parsed,
-            session_context=session_ctx,
-            memory_context=all_memory,
-            conversation_turn=turn,
-            recent_topics=topics,
-            user_preferences=prefs,
-            priority=priority,
-        ))
+        return Ok(
+            EnrichedInput(
+                sanitized=sanitized,
+                parsed=parsed,
+                session_context=session_ctx,
+                memory_context=all_memory,
+                conversation_turn=turn,
+                recent_topics=topics,
+                user_preferences=prefs,
+                priority=priority,
+            )
+        )
 
     # ─── Extraccion de contexto ───────────────────────────────
 
@@ -170,11 +170,13 @@ class InputEnricher:
         context: list[dict[str, Any]] = []
         for msg in recent:
             if msg.role in (MessageRole.USER, MessageRole.ASSISTANT):
-                context.append({
-                    "role": msg.role.value,
-                    "content": msg.content[:200],  # Truncar para no saturar
-                    "source": "session",
-                })
+                context.append(
+                    {
+                        "role": msg.role.value,
+                        "content": msg.content[:200],  # Truncar para no saturar
+                        "source": "session",
+                    }
+                )
         return context
 
     @staticmethod
@@ -203,9 +205,7 @@ class InputEnricher:
         return topics[:10]
 
     @staticmethod
-    def _extract_preferences(
-        session: Session | None, sanitized: SanitizedInput
-    ) -> dict[str, Any]:
+    def _extract_preferences(session: Session | None, sanitized: SanitizedInput) -> dict[str, Any]:
         """Extrae preferencias del usuario de la sesion."""
         prefs: dict[str, Any] = {}
         if session:

@@ -3,7 +3,7 @@
 // Create HITL request from SafetyGate verdict or PolicyEngine requirement
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPipelineIntegration } from "@/lib/hitl";
+import { getPipelineIntegration } from "@/lib/hitl/pipeline-integration";
 
 // POST /api/v1/hitl/pipeline/create
 export async function POST(request: NextRequest) {

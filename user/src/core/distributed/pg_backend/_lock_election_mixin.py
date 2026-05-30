@@ -15,6 +15,7 @@ logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 #  LOCK & ELECTION MIXIN
 # ============================================================
 
+
 class PgLockElectionMixin:
     """
     Mixin providing PostgreSQL distributed lock and leader election operations.

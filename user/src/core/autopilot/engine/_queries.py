@@ -32,7 +32,8 @@ class _QueriesMixin:
             return {"objective_id": objective_id, "status": "not_found"}
 
         engine_status = self._objective_statuses.get(  # type: ignore[attr-defined]
-            objective_id, AutopilotStatus.IDLE,
+            objective_id,
+            AutopilotStatus.IDLE,
         )
         progress = self.kpi_tracker.get_objective_progress(objective_id)  # type: ignore[attr-defined]
         plan = self._active_plans.get(objective_id)  # type: ignore[attr-defined]
@@ -84,13 +85,16 @@ class _QueriesMixin:
             except Exception as exc:
                 logger.error(
                     "AutopilotEngine: Cycle failed for %s: %s",
-                    objective.objective_id, exc,
+                    objective.objective_id,
+                    exc,
                 )
-                results.append({
-                    "objective_id": objective.objective_id,
-                    "status": "error",
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "objective_id": objective.objective_id,
+                        "status": "error",
+                        "error": str(exc),
+                    }
+                )
 
         return results
 
@@ -104,11 +108,13 @@ class _QueriesMixin:
             **self._stats,  # type: ignore[attr-defined]
             "cycle_count": self._cycle_count,  # type: ignore[attr-defined]
             "active_objectives": sum(
-                1 for s in self._objective_statuses.values()  # type: ignore[attr-defined]
+                1
+                for s in self._objective_statuses.values()  # type: ignore[attr-defined]
                 if s in (AutopilotStatus.EXECUTING, AutopilotStatus.PLANNING, AutopilotStatus.WAITING_APPROVAL)
             ),
             "paused_objectives": sum(
-                1 for s in self._objective_statuses.values()  # type: ignore[attr-defined]
+                1
+                for s in self._objective_statuses.values()  # type: ignore[attr-defined]
                 if s == AutopilotStatus.PAUSED
             ),
         }

@@ -69,8 +69,7 @@ class Singleton(Generic[T]):
         with self._lock:
             if self._instance is not None:
                 raise RuntimeError(
-                    f"Singleton '{self._name}' is already initialized. "
-                    f"Call reset() first if you need to reinitialize."
+                    f"Singleton '{self._name}' is already initialized. Call reset() first if you need to reinitialize."
                 )
             self._factory = factory
             self._instance = self._factory()

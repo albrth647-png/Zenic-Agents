@@ -3,7 +3,7 @@
 // ⚠️ SECURITY FIX (Phase 0): Added authentication — fromUserId from verified session
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDelegationService } from "@/lib/hitl";
+import { getDelegationService } from "@/lib/hitl/delegation/_delegator";
 import { requireAuth, handleAuthError } from "@/lib/auth";
 
 interface RouteParams {

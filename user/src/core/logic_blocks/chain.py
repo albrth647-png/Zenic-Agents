@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _validate_identifier(name: str) -> str:
     """Validate SQL identifier to prevent injection. Only alphanumeric + underscore."""
-    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', name):
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
         raise ValueError(f"Invalid SQL identifier: {name!r}")
     return name
 
@@ -120,11 +120,14 @@ class LogicChain:
                 try:
                     logger.debug(f"LogicChain[{self.name}] Step {i}: {block.name}")
                     result = block.execute(data, ctx)
-                    self._log.append({
-                        "step": i, "block": block.name,
-                        "success": result.get("success", True),
-                        "timestamp": time.time(),
-                    })
+                    self._log.append(
+                        {
+                            "step": i,
+                            "block": block.name,
+                            "success": result.get("success", True),
+                            "timestamp": time.time(),
+                        }
+                    )
                     # Merge result into data (result keys override)
                     data.update(result)
                     # If a block explicitly fails, stop chain
@@ -134,11 +137,15 @@ class LogicChain:
                         break
                 except Exception as e:
                     logger.error(f"LogicChain[{self.name}] Error in {block.name}: {e}")
-                    self._log.append({
-                        "step": i, "block": block.name,
-                        "success": False, "error": str(e),
-                        "timestamp": time.time(),
-                    })
+                    self._log.append(
+                        {
+                            "step": i,
+                            "block": block.name,
+                            "success": False,
+                            "error": str(e),
+                            "timestamp": time.time(),
+                        }
+                    )
                     data.update({"success": False, "error": f"{block.name}: {e!s}"})
                     data["_chain_stopped"] = True
                     data["_stopped_at"] = block.name
@@ -155,29 +162,36 @@ class LogicChain:
                     if branch._blocks:
                         branch_result = branch.execute(data, ctx)
                         data.update(branch_result)
-                        self._log.append({
-                            "step": i, "type": "condition",
-                            "branch_taken": branch.name,
-                            "success": branch_result.get("success", True),
-                            "timestamp": time.time(),
-                        })
+                        self._log.append(
+                            {
+                                "step": i,
+                                "type": "condition",
+                                "branch_taken": branch.name,
+                                "success": branch_result.get("success", True),
+                                "timestamp": time.time(),
+                            }
+                        )
                         if branch_result.get("success") is False:
                             data["_chain_stopped"] = True
                             break
                 except Exception as e:
                     logger.error(f"LogicChain[{self.name}] Condition error: {e}")
-                    self._log.append({
-                        "step": i, "type": "condition",
-                        "success": False, "error": str(e),
-                        "timestamp": time.time(),
-                    })
+                    self._log.append(
+                        {
+                            "step": i,
+                            "type": "condition",
+                            "success": False,
+                            "error": str(e),
+                            "timestamp": time.time(),
+                        }
+                    )
 
         # Clean up internal keys
         data.pop("_chain_stopped", None)
         data.pop("_stopped_at", None)
         return data
 
-    def add_block(self, block: LogicBlock) -> 'LogicChain':
+    def add_block(self, block: LogicBlock) -> "LogicChain":
         """Agrega un bloque al final de la cadena. Retorna self para fluent API."""
         self._blocks.append({"type": "block", "block": block})
         return self
@@ -185,9 +199,9 @@ class LogicChain:
     def add_condition(
         self,
         condition_func: Callable[[dict, dict], bool],
-        true_branch: 'LogicChain',
-        false_branch: 'LogicChain',
-    ) -> 'LogicChain':
+        true_branch: "LogicChain",
+        false_branch: "LogicChain",
+    ) -> "LogicChain":
         """Agrega un branch condicional a la cadena.
 
         Args:
@@ -195,12 +209,14 @@ class LogicChain:
             true_branch: Chain a ejecutar si la condicion es True
             false_branch: Chain a ejecutar si la condicion es False
         """
-        self._blocks.append({
-            "type": "condition",
-            "condition": condition_func,
-            "true_branch": true_branch,
-            "false_branch": false_branch,
-        })
+        self._blocks.append(
+            {
+                "type": "condition",
+                "condition": condition_func,
+                "true_branch": true_branch,
+                "false_branch": false_branch,
+            }
+        )
         return self
 
     @property

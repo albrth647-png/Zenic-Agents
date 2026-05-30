@@ -26,10 +26,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # ── Connection check helper ─────────────────────────────────
 
+
 def _redis_available() -> bool:
     """Check if Redis is reachable at the configured URL."""
     try:
-        import redis  # noqa: F401
+        import redis
     except ImportError:
         return False
 
@@ -46,13 +47,11 @@ def _redis_available() -> bool:
 
 # Skip all tests if Redis is not reachable
 redis_not_available = not _redis_available()
-SKIP_REASON = (
-    "Redis is not available. "
-    "Start it with: docker compose up -d redis"
-)
+SKIP_REASON = "Redis is not available. Start it with: docker compose up -d redis"
 
 
 # ── Fixtures ─────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="module")
 def redis_url() -> str:
@@ -67,13 +66,14 @@ def redis_client(redis_url: str):
         pytest.skip(SKIP_REASON)
 
     import redis as rd
+
     client = rd.from_url(redis_url, decode_responses=True)
     yield client
     # Cleanup test keys
     try:
         for key in client.keys("test:*"):
             client.delete(key)
-    except Exception:  # noqa: S110
+    except Exception:
         pass
     client.close()
 
@@ -95,12 +95,13 @@ async def redis_async_client(redis_url: str):
     try:
         async for key in client.scan_iter("atest:*"):
             await client.delete(key)
-    except Exception:  # noqa: S110
+    except Exception:
         pass
     await client.close()
 
 
 # ── 1. Ping / Connectivity ──────────────────────────────────
+
 
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestPing:
@@ -124,6 +125,7 @@ class TestPing:
 
 
 # ── 2. Set/Get with TTL ─────────────────────────────────────
+
 
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestSetGetWithTTL:
@@ -192,16 +194,19 @@ class TestSetGetWithTTL:
 
     def test_mset_and_mget(self, redis_client):
         """MSET/MGET should handle multiple keys."""
-        redis_client.mset({
-            "test:multi_a": "value_a",
-            "test:multi_b": "value_b",
-            "test:multi_c": "value_c",
-        })
+        redis_client.mset(
+            {
+                "test:multi_a": "value_a",
+                "test:multi_b": "value_b",
+                "test:multi_c": "value_c",
+            }
+        )
         results = redis_client.mget("test:multi_a", "test:multi_b", "test:multi_c")
         assert results == ["value_a", "value_b", "value_c"]
 
 
 # ── 3. Key Prefix Isolation ─────────────────────────────────
+
 
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestKeyPrefixIsolation:
@@ -260,6 +265,7 @@ class TestKeyPrefixIsolation:
 
 # ── 4. Connection Error Handling ─────────────────────────────
 
+
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestConnectionErrorHandling:
     """Test error handling for connection failures."""
@@ -267,19 +273,21 @@ class TestConnectionErrorHandling:
     def test_connection_refused(self):
         """Connecting to a non-existent Redis should raise ConnectionError."""
         import redis as rd
+
         client = rd.from_url(
             "redis://localhost:16379/0",  # Unlikely port
             socket_connect_timeout=2,
         )
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             client.ping()
         client.close()
 
     def test_invalid_url_raises(self):
         """An invalid Redis URL should raise an error on connection."""
         import redis as rd
+
         client = rd.from_url("redis://nonexistent.host:6379/0", socket_connect_timeout=2)
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             client.ping()
         client.close()
 
@@ -287,11 +295,12 @@ class TestConnectionErrorHandling:
         """Operating on a key with wrong type should raise ResponseError."""
         redis_client.set("test:string_key", "string_value")
         # Trying LIST operation on a STRING key should fail
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             redis_client.lpush("test:string_key", "list_item")
 
 
 # ── 5. Async Redis Operations ───────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
@@ -350,6 +359,7 @@ class TestAsyncRedisOperations:
 
     async def test_async_concurrent_operations(self, redis_async_client):
         """Multiple concurrent async operations should succeed."""
+
         async def set_and_get(idx: int):
             key = f"atest:concurrent:{idx}"
             await redis_async_client.set(key, f"val_{idx}")
@@ -371,12 +381,13 @@ class TestAsyncRedisOperations:
             "redis://localhost:16379/0",
             socket_connect_timeout=2,
         )
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             await client.ping()
         await client.close()
 
 
 # ── 6. Redis Data Type Operations ───────────────────────────
+
 
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestRedisDataTypes:
@@ -384,11 +395,14 @@ class TestRedisDataTypes:
 
     def test_hash_operations(self, redis_client):
         """HSET/HGET should work for hash data (useful for tenant config)."""
-        redis_client.hset("test:tenant:config", mapping={
-            "plan": "pro",
-            "rate_limit": "1000",
-            "active": "true",
-        })
+        redis_client.hset(
+            "test:tenant:config",
+            mapping={
+                "plan": "pro",
+                "rate_limit": "1000",
+                "active": "true",
+            },
+        )
         plan = redis_client.hget("test:tenant:config", "plan")
         assert plan == "pro"
 

@@ -7,7 +7,7 @@ import { searchOntologyBase } from '@/lib/memory-chip';
 
 interface LookupRequestBody {
   text: string;
-  tenant_id?: string;
+  tenantId?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tenantId = body.tenant_id || '__anonymous__';
+    const tenantId = body.tenantId || '__anonymous__';
     const searchText = body.text.trim().toLowerCase();
 
     // Check tenant subscription for memory chip access
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
       if (!subscription) {
         return NextResponse.json(
-          { success: false, error: 'No subscription found for this tenant', tenant_id: tenantId },
+          { success: false, error: 'No subscription found for this tenant', tenantId: tenantId },
           { status: 403 },
         );
       }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
           {
             success: false,
             error: 'Subscription is not active. Memory chip access requires an active subscription.',
-            tenant_id: tenantId,
+            tenantId: tenantId,
           },
           { status: 403 },
         );
@@ -67,16 +67,16 @@ export async function POST(request: NextRequest) {
 
     if (existingMapping) {
       const mapping = {
-        mapping_id: existingMapping.mappingId,
+        mappingId: existingMapping.mappingId,
         origin: existingMapping.origin,
         relation: existingMapping.relation,
         destination: existingMapping.destination,
         mechanism: existingMapping.mechanism as 'schema_drift' | 'intent_routing' | 'policy_refinement' | 'ontology_base',
         confidence: existingMapping.confidence,
-        tenant_id: existingMapping.tenantId,
+        tenantId: existingMapping.tenantId,
         created_at: existingMapping.createdAt.getTime(),
         approved: existingMapping.approved,
-        merkle_hash: existingMapping.merkleHash,
+        merkleHash: existingMapping.merkleHash,
       };
 
       return NextResponse.json({
@@ -96,16 +96,16 @@ export async function POST(request: NextRequest) {
     if (ontologyResults.length > 0) {
       const bestMatch = ontologyResults[0];
       const mapping = {
-        mapping_id: `ontology_${bestMatch.term}`,
+        mappingId: `ontology_${bestMatch.term}`,
         origin: bestMatch.term,
         relation: 'maps_to',
         destination: bestMatch.mapped_to,
         mechanism: 'ontology_base' as const,
         confidence: bestMatch.confidence,
-        tenant_id: tenantId,
+        tenantId: tenantId,
         created_at: Date.now(),
         approved: false,
-        merkle_hash: null,
+        merkleHash: null,
       };
 
       return NextResponse.json({

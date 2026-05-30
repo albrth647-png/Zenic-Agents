@@ -22,19 +22,21 @@ class MCTSMixin:
         actions = []
 
         if op == OperationType.CREATE:
-            actions = ["ANALYZE_STRUCTURE", "SCRAPE_PATTERNS", "GENERATE_CODE",
-                       "VALIDATE_SECURITY", "SYMBOLIC_VALIDATION"]
+            actions = [
+                "ANALYZE_STRUCTURE",
+                "SCRAPE_PATTERNS",
+                "GENERATE_CODE",
+                "VALIDATE_SECURITY",
+                "SYMBOLIC_VALIDATION",
+            ]
         elif op == OperationType.REFACTOR:
-            actions = ["ANALYZE_PATTERNS", "REPLACE_AST_NODE", "VALIDATE_INTERFACE",
-                       "SYMBOLIC_VALIDATION", "RUN_TESTS"]
+            actions = ["ANALYZE_PATTERNS", "REPLACE_AST_NODE", "VALIDATE_INTERFACE", "SYMBOLIC_VALIDATION", "RUN_TESTS"]
         elif op == OperationType.DEBUG:
-            actions = ["TRACE_EXECUTION", "PATCH_FIX", "VALIDATE_FIX",
-                       "SYMBOLIC_VALIDATION"]
+            actions = ["TRACE_EXECUTION", "PATCH_FIX", "VALIDATE_FIX", "SYMBOLIC_VALIDATION"]
         elif op == OperationType.DELETE:
             actions = ["CHECK_DEPENDENCIES", "DELETE_AST_NODE", "VALIDATE_NO_BREAKAGE"]
         elif op == OperationType.OPTIMIZE:
-            actions = ["ANALYZE_PATTERNS", "REPLACE_AST_NODE", "BENCHMARK",
-                       "VALIDATE_PERFORMANCE"]
+            actions = ["ANALYZE_PATTERNS", "REPLACE_AST_NODE", "BENCHMARK", "VALIDATE_PERFORMANCE"]
         elif op == OperationType.ANALYZE:
             actions = ["ANALYZE_STRUCTURE", "QUALITY_REPORT", "SUGGEST_IMPROVEMENTS"]
         elif op == OperationType.EXPLAIN:

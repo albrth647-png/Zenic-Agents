@@ -130,7 +130,7 @@ class ExceptionAnalytics:
             # By category
             by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY category",  # noqa: S608
+                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY category",  # noqa: S608
                 params,
             ):
                 by_category[row[0]] = row[1]
@@ -138,7 +138,7 @@ class ExceptionAnalytics:
             # By severity
             by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals " f"WHERE {where_sql} GROUP BY severity",  # noqa: S608
+                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY severity",  # noqa: S608
                 params,
             ):
                 by_severity[row[0]] = row[1]

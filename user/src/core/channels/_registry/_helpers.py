@@ -57,9 +57,7 @@ def resolve_fallback_chain(
     Returns:
         Ordered list of fallback channel names (excluding the primary).
     """
-    fallbacks: list[str] = list(
-        (custom_fallbacks or {}).get(channel, _DEFAULT_FALLBACKS.get(channel, []))
-    )
+    fallbacks: list[str] = list((custom_fallbacks or {}).get(channel, _DEFAULT_FALLBACKS.get(channel, [])))
     # Guarantee terminal "log" fallback (unless the channel IS log)
     if channel != "log" and "log" not in fallbacks:
         fallbacks.append("log")
@@ -102,11 +100,7 @@ def filter_available_channels(
         Filtered list preserving the original candidate order.
     """
     excluded = exclude or set()
-    return [
-        ch
-        for ch in candidates
-        if ch not in excluded and available_providers.get(ch, False)
-    ]
+    return [ch for ch in candidates if ch not in excluded and available_providers.get(ch, False)]
 
 
 # ── Response Construction ───────────────────────────────────

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 # ────────────────────────────── A53: Text Channel ──────────────────────────────
 
+
 @dataclass
 class TextChannelInput:
     """Input for A53 TextChannelAgent.
@@ -32,15 +33,15 @@ class TextChannelInput:
     the text and where it should go.
     """
 
-    text: str = ""                              # Raw text to deliver
-    channel: str = ""                           # Target channel name (e.g. "whatsapp", "telegram")
-    recipient: str = ""                         # Recipient identifier (chat_id, phone, email)
-    priority: str = "normal"                    # Priority: low|normal|high|urgent|emergency
-    reply_to: str = ""                          # Message ID to reply to (if supported)
-    thread_id: str = ""                         # Thread/conversation ID (if supported)
+    text: str = ""  # Raw text to deliver
+    channel: str = ""  # Target channel name (e.g. "whatsapp", "telegram")
+    recipient: str = ""  # Recipient identifier (chat_id, phone, email)
+    priority: str = "normal"  # Priority: low|normal|high|urgent|emergency
+    reply_to: str = ""  # Message ID to reply to (if supported)
+    thread_id: str = ""  # Thread/conversation ID (if supported)
     metadata: dict[str, Any] = field(default_factory=dict)
-    max_chunks: int = 10                        # Safety limit: max message splits allowed
-    fallback_channels: Sequence[str] = ()       # Override default fallback chain
+    max_chunks: int = 10  # Safety limit: max message splits allowed
+    fallback_channels: Sequence[str] = ()  # Override default fallback chain
 
 
 @dataclass
@@ -53,22 +54,23 @@ class TextChannelResult:
     and any truncation or fallback indicators.
     """
 
-    success: bool = False                       # All chunks delivered successfully
-    channel_used: str = ""                      # Actual channel that delivered the last chunk
-    original_channel: str = ""                  # Originally requested channel
-    messages_sent: int = 0                      # Number of chunks successfully sent
+    success: bool = False  # All chunks delivered successfully
+    channel_used: str = ""  # Actual channel that delivered the last chunk
+    original_channel: str = ""  # Originally requested channel
+    messages_sent: int = 0  # Number of chunks successfully sent
     message_ids: list[str] = field(default_factory=list)  # Platform message IDs
-    status: str = "pending"                     # pending|sent|delivered|failed|fallback|dry_run
-    truncated: bool = False                     # Was any chunk truncated?
-    split_count: int = 0                        # Total number of chunks (1 = no split)
-    fallback_used: bool = False                 # Was a fallback channel used?
-    original_length: int = 0                    # Length of original raw text
-    delivered_length: int = 0                   # Total length of delivered text
-    error: str = ""                             # Error details if failed
-    source: str = "deterministic"               # Audit source trace
+    status: str = "pending"  # pending|sent|delivered|failed|fallback|dry_run
+    truncated: bool = False  # Was any chunk truncated?
+    split_count: int = 0  # Total number of chunks (1 = no split)
+    fallback_used: bool = False  # Was a fallback channel used?
+    original_length: int = 0  # Length of original raw text
+    delivered_length: int = 0  # Total length of delivered text
+    error: str = ""  # Error details if failed
+    source: str = "deterministic"  # Audit source trace
 
 
 # ────────────────────────────── A52: Voice Channel ──────────────────────────────
+
 
 @dataclass
 class VoiceChannelInput:
@@ -83,12 +85,12 @@ class VoiceChannelInput:
       inbound audio→text transcription only.
     """
 
-    audio_url: str = ""                         # Download URL for the audio
-    audio_path: str = ""                        # Local filesystem path (alternative)
-    audio_format: str = ""                      # Detected/provided format: ogg|mp3|wav|m4a|opus
-    channel: str = ""                           # Source channel name
-    sender: str = ""                            # Sender identifier
-    duration_seconds: float = 0.0               # Audio duration (if known)
+    audio_url: str = ""  # Download URL for the audio
+    audio_path: str = ""  # Local filesystem path (alternative)
+    audio_format: str = ""  # Detected/provided format: ogg|mp3|wav|m4a|opus
+    channel: str = ""  # Source channel name
+    sender: str = ""  # Sender identifier
+    duration_seconds: float = 0.0  # Audio duration (if known)
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -106,11 +108,11 @@ class VoiceChannelResult:
     """
 
     success: bool = False
-    transcribed_text: str = ""                  # STT transcription result
-    channel: str = ""                           # Source channel
-    audio_format: str = ""                      # Original audio format
-    duration_seconds: float = 0.0               # Original audio duration
-    confidence: float = 0.0                     # STT confidence (0.0-1.0)
-    language: str = ""                          # Detected language
+    transcribed_text: str = ""  # STT transcription result
+    channel: str = ""  # Source channel
+    audio_format: str = ""  # Original audio format
+    duration_seconds: float = 0.0  # Original audio duration
+    confidence: float = 0.0  # STT confidence (0.0-1.0)
+    language: str = ""  # Detected language
     error: str = ""
     source: str = "deterministic"

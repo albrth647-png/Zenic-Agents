@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const targetTier = body.targetTier as SubscriptionTierName;
 
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId: body.tenantId },
     });
 
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     // Perform upgrade
     const updated = await db.$transaction(async (tx) => {
       // Update subscription tier
-      const sub = await tx.tenantSubscription.update({
+      const sub = await tx.subscription.update({
         where: { tenantId: body.tenantId },
         data: {
           tier: targetTier,
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
       const usageTypes = Object.keys(USAGE_TYPE_MAPPING);
       for (const usageType of usageTypes) {
         const limitValue = getLimitForUsageType(usageType, targetTier);
-        await tx.usageRecordDb.updateMany({
+        await tx.usageRecord.updateMany({
           where: {
             tenantId: body.tenantId,
             usageType,

@@ -57,16 +57,18 @@ def init_db() -> None:
 
 def serialize_steps(steps: list[TemplateStep]) -> str:
     """Serialize a list of TemplateStep to a JSON string."""
-    return json.dumps([
-        {
-            "step_type": s.step_type,
-            "config_template": s.config_template,
-            "next_step_id": s.next_step_id,
-            "condition_expr": s.condition_expr,
-            "timeout_ms": s.timeout_ms,
-        }
-        for s in steps
-    ])
+    return json.dumps(
+        [
+            {
+                "step_type": s.step_type,
+                "config_template": s.config_template,
+                "next_step_id": s.next_step_id,
+                "condition_expr": s.condition_expr,
+                "timeout_ms": s.timeout_ms,
+            }
+            for s in steps
+        ]
+    )
 
 
 def deserialize_steps(raw: list[dict[str, Any]]) -> list[TemplateStep]:
@@ -85,16 +87,18 @@ def deserialize_steps(raw: list[dict[str, Any]]) -> list[TemplateStep]:
 
 def serialize_variables(variables: list[TemplateVariable]) -> str:
     """Serialize a list of TemplateVariable to a JSON string."""
-    return json.dumps([
-        {
-            "name": v.name,
-            "var_type": v.var_type,
-            "default_value": v.default_value,
-            "required": v.required,
-            "description": v.description,
-        }
-        for v in variables
-    ])
+    return json.dumps(
+        [
+            {
+                "name": v.name,
+                "var_type": v.var_type,
+                "default_value": v.default_value,
+                "required": v.required,
+                "description": v.description,
+            }
+            for v in variables
+        ]
+    )
 
 
 def deserialize_variables(raw: list[dict[str, Any]]) -> list[TemplateVariable]:

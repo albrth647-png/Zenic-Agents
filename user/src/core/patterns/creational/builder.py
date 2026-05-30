@@ -46,7 +46,7 @@ class OrchestratorBuilder:
     """
 
     # Required keys for build() – at least these must be set
-    _REQUIRED_FULL: dict[str, str] = {
+    _REQUIRED_FULL: dict[str, str] = {  # noqa: RUF012
         "model_manager": "ModelManager",
         "semantic_engine": "SemanticEngine",
         "mini_ai": "MiniAIEngine",
@@ -57,7 +57,7 @@ class OrchestratorBuilder:
     }
 
     # Required keys for build_minimal()
-    _REQUIRED_MINIMAL: dict[str, str] = {
+    _REQUIRED_MINIMAL: dict[str, str] = {  # noqa: RUF012
         "model_manager": "ModelManager",
         "mini_ai": "MiniAIEngine",
     }

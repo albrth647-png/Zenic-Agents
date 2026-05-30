@@ -47,13 +47,15 @@ class LowStockMonitor(BaseMonitor):
         for item in items:
             stock_val = item.get("stock", item.get("cantidad", item.get("inventario", "?")))
             name_val = item.get("nombre", item.get("name", item.get("producto", str(item.get("id", "?")))))
-            findings.append({
-                "type": "low_stock",
-                "product": name_val,
-                "current_stock": stock_val,
-                "threshold": self.threshold,
-                "message": f"Stock bajo: {name_val} tiene {stock_val} unidades (mínimo: {self.threshold})",
-            })
+            findings.append(
+                {
+                    "type": "low_stock",
+                    "product": name_val,
+                    "current_stock": stock_val,
+                    "threshold": self.threshold,
+                    "message": f"Stock bajo: {name_val} tiene {stock_val} unidades (mínimo: {self.threshold})",
+                }
+            )
 
         return MonitorResult(
             monitor_name=self.name,

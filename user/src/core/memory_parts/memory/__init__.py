@@ -1,5 +1,5 @@
-'''memory - refactored into sub-modules.'''
+"""memory - refactored into sub-modules."""
 
 from ._core import SmartMemory
 
-__all__ = ['SmartMemory']
+__all__ = ["SmartMemory"]

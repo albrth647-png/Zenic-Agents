@@ -115,7 +115,7 @@ class ConsensusResolver:
         for e in evidence_against:
             if e.evidence_type in VETO_TYPES and e.weight >= 0.7:
                 logger.warning(
-                    f"ConsensusResolver: VETO automático por {e.evidence_type.value} " f"from {e.source}: {e.detail}"
+                    f"ConsensusResolver: VETO automático por {e.evidence_type.value} from {e.source}: {e.detail}"
                 )
                 return ConsensusResult(
                     verdict=Verdict.NO,

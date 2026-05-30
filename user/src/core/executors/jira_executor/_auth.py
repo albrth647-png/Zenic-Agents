@@ -30,34 +30,19 @@ class _AuthMixin:
         headers: dict[str, str] = {"Content-Type": "application/json"}
 
         if auth_type == "bearer":
-            token = (
-                config.get("bearer_token", "")
-                or os.environ.get(_ENV_BEARER_TOKEN, "")
-            )
+            token = config.get("bearer_token", "") or os.environ.get(_ENV_BEARER_TOKEN, "")
             if not token:
-                raise ValueError(
-                    "Bearer token required but not provided "
-                    "(config.bearer_token or JIRA_BEARER_TOKEN)"
-                )
+                raise ValueError("Bearer token required but not provided (config.bearer_token or JIRA_BEARER_TOKEN)")
             headers["Authorization"] = f"Bearer {token}"
 
         else:  # api_token (default)
-            email = (
-                config.get("email", "")
-                or os.environ.get(_ENV_EMAIL, "")
-            )
-            api_token = (
-                config.get("api_token", "")
-                or os.environ.get(_ENV_API_TOKEN, "")
-            )
+            email = config.get("email", "") or os.environ.get(_ENV_EMAIL, "")
+            api_token = config.get("api_token", "") or os.environ.get(_ENV_API_TOKEN, "")
             if not email or not api_token:
                 raise ValueError(
-                    "API token auth requires email and api_token "
-                    "(config.email/api_token or JIRA_EMAIL/JIRA_API_TOKEN)"
+                    "API token auth requires email and api_token (config.email/api_token or JIRA_EMAIL/JIRA_API_TOKEN)"
                 )
-            credential = base64.b64encode(
-                f"{email}:{api_token}".encode()
-            ).decode("utf-8")
+            credential = base64.b64encode(f"{email}:{api_token}".encode()).decode("utf-8")
             headers["Authorization"] = f"Basic {credential}"
 
         return headers

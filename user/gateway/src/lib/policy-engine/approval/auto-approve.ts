@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import type { PolicyApprovalRequest, ApprovalDecision, PolicyDocument, ApprovalListOptions } from "./types";
-import { validateTransition, ApprovalStatus as ApprovalStatusEnum } from "./types";
+import { validateTransition } from "./types";
+import { ApprovalStatus as ApprovalStatusEnum } from "../types/approval";
 import { mapDbToApprovalRequest } from "./workflow";
 import { rollbackToVersion } from "../versioning";
 

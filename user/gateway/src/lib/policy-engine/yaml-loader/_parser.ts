@@ -27,7 +27,7 @@ export function loadPolicyFromYaml(
   // 1. Parse YAML
   let raw: unknown;
   try {
-    raw = yaml.load(yamlContent, { schema: yaml.DEFAULT_SAFE_SCHEMA });
+    raw = yaml.load(yamlContent, { schema: yaml.DEFAULT_SCHEMA });
   } catch (err) {
     throw new PolicyCompilationError(
       `YAML parse error: ${err instanceof Error ? err.message : String(err)}`,

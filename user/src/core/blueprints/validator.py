@@ -56,7 +56,7 @@ class ValidationResult:
         self.warnings.extend(other.warnings)
 
     def __repr__(self) -> str:
-        return f"ValidationResult(valid={self.is_valid}, " f"errors={len(self.errors)}, warnings={len(self.warnings)})"
+        return f"ValidationResult(valid={self.is_valid}, errors={len(self.errors)}, warnings={len(self.warnings)})"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -77,13 +77,13 @@ class BlueprintValidatorV2:
     """
 
     # Required metadata fields
-    REQUIRED_META_FIELDS = ["name", "version", "domain"]
+    REQUIRED_META_FIELDS = ["name", "version", "domain"]  # noqa: RUF012
 
     # Valid severity levels
-    VALID_SEVERITIES = {"info", "warning", "error", "block", "critical"}
+    VALID_SEVERITIES = {"info", "warning", "error", "block", "critical"}  # noqa: RUF012
 
     # Valid safety categories
-    VALID_SAFETY_CATEGORIES = {
+    VALID_SAFETY_CATEGORIES = {  # noqa: RUF012
         "safe",
         "moderate",
         "destructive",
@@ -91,7 +91,7 @@ class BlueprintValidatorV2:
     }
 
     # Valid executor types
-    KNOWN_EXECUTOR_TYPES = {
+    KNOWN_EXECUTOR_TYPES = {  # noqa: RUF012
         "email",
         "http",
         "database",
@@ -199,7 +199,7 @@ class BlueprintValidatorV2:
                 try:
                     FieldType(fld.field_type.value if isinstance(fld.field_type, FieldType) else fld.field_type)
                 except ValueError:
-                    result.add_error(f"Invalid field type '{fld.field_type}' " f"on '{entity.name}.{fld.name}'")
+                    result.add_error(f"Invalid field type '{fld.field_type}' on '{entity.name}.{fld.name}'")
 
     # ── Monitor Hook Validation ────────────────────────────
 
@@ -219,14 +219,14 @@ class BlueprintValidatorV2:
             # Validate weight
             valid_weights = {"lightweight", "medium", "heavy"}
             if hook.weight not in valid_weights:
-                result.add_error(f"Invalid monitor weight '{hook.weight}' " f"for hook '{hook.monitor_id}'")
+                result.add_error(f"Invalid monitor weight '{hook.weight}' for hook '{hook.monitor_id}'")
 
             # Validate thresholds structure
             for i, th in enumerate(hook.thresholds):
                 if "field" not in th:
-                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' " f"missing 'field' key")
+                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' missing 'field' key")
                 if "value" not in th:
-                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' " f"missing 'value' key")
+                    result.add_warning(f"Threshold [{i}] in '{hook.monitor_id}' missing 'value' key")
 
     # ── Business Rule Validation ───────────────────────────
 
@@ -247,7 +247,7 @@ class BlueprintValidatorV2:
                 result.add_error(f"Invalid severity '{rule.severity}' in rule '{rule.rule_id}'")
 
             if rule.executor_type and rule.executor_type not in self.KNOWN_EXECUTOR_TYPES:
-                result.add_warning(f"Unknown executor type '{rule.executor_type}' " f"in rule '{rule.rule_id}'")
+                result.add_warning(f"Unknown executor type '{rule.executor_type}' in rule '{rule.rule_id}'")
 
     # ── Action Template Validation ─────────────────────────
 
@@ -265,14 +265,10 @@ class BlueprintValidatorV2:
             template_ids.add(action.template_id)
 
             if action.safety_category not in self.VALID_SAFETY_CATEGORIES:
-                result.add_error(
-                    f"Invalid safety category '{action.safety_category}' " f"in action '{action.template_id}'"
-                )
+                result.add_error(f"Invalid safety category '{action.safety_category}' in action '{action.template_id}'")
 
             if action.executor_type and action.executor_type not in self.KNOWN_EXECUTOR_TYPES:
-                result.add_warning(
-                    f"Unknown executor type '{action.executor_type}' " f"in action '{action.template_id}'"
-                )
+                result.add_warning(f"Unknown executor type '{action.executor_type}' in action '{action.template_id}'")
 
     # ── Executor Schema Validation ─────────────────────────
 
@@ -298,12 +294,12 @@ class BlueprintValidatorV2:
         # Check A → B compatibility
         conflicts = bp_a.get_known_conflicts(bp_b.metadata.name)
         for conflict in conflicts:
-            result.add_error(f"Conflict between '{bp_a.metadata.name}' and " f"'{bp_b.metadata.name}': {conflict}")
+            result.add_error(f"Conflict between '{bp_a.metadata.name}' and '{bp_b.metadata.name}': {conflict}")
 
         # Check B → A compatibility
         conflicts = bp_b.get_known_conflicts(bp_a.metadata.name)
         for conflict in conflicts:
-            result.add_error(f"Conflict between '{bp_b.metadata.name}' and " f"'{bp_a.metadata.name}': {conflict}")
+            result.add_error(f"Conflict between '{bp_b.metadata.name}' and '{bp_a.metadata.name}': {conflict}")
 
     def _check_entity_collisions(
         self,

@@ -17,7 +17,8 @@ import {
   PAYMENT_NETWORK,
   TIER_DISPLAY_NAMES,
 } from "../types";
-import { resolveTierName, simpleHash } from "./_ts-fallback-core";
+import { resolveTierName } from "./_ts-fallback-core";
+import { simpleHash } from "./_ts-fallback-payment";
 
 export function tsValidateTrc20Address(address: string): AddressValidation {
   const valid = address.startsWith("T") && address.length === 34 && address.slice(1).split("").every(c => /[A-Za-z0-9]/.test(c));

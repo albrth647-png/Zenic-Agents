@@ -10,14 +10,14 @@ from pydub.generators import Sine
 
 from src.core.voice_pipeline import VoicePipeline
 from src.core.voice_pipeline._types import (
-    AudioFormat,
     STTBackendConfig,
     TranscriptionResult,
 )
-from src.core.voice_pipeline.ear import DummyBackend, Ear
+from src.core.voice_pipeline.ear import Ear
 from src.core.voice_pipeline.format_adapter import FormatAdapter
 
 # ── Audio fixtures ─────────────────────────────────────────────
+
 
 def _make_wav_bytes(duration_ms: int = 500) -> bytes:
     tone = Sine(440).to_audio_segment(duration=duration_ms)
@@ -37,12 +37,15 @@ def _make_ogg_bytes(duration_ms: int = 500) -> bytes:
 #  VoicePipeline — Construction
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineInit:
 
+class TestVoicePipelineInit:
     def test_default_construction(self):
         vp = VoicePipeline()
         assert vp.active_backend in (
-            "faster_whisper", "whisper", "cloud", "dummy",
+            "faster_whisper",
+            "whisper",
+            "cloud",
+            "dummy",
         )
         assert vp.adapter is not None
         assert vp.ear is not None
@@ -66,8 +69,8 @@ class TestVoicePipelineInit:
 #  VoicePipeline — process() with real audio
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineProcess:
 
+class TestVoicePipelineProcess:
     def test_process_wav_with_dummy(self):
         """WAV → FormatAdapter pass-through → DummyBackend → failure (no STT)."""
         config = STTBackendConfig(fallback_chain=("dummy",))
@@ -138,8 +141,8 @@ class TestVoicePipelineProcess:
 #  VoicePipeline — process_async
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineAsync:
 
+class TestVoicePipelineAsync:
     @pytest.mark.asyncio
     async def test_process_async(self):
         config = STTBackendConfig(fallback_chain=("dummy",))
@@ -162,8 +165,8 @@ class TestVoicePipelineAsync:
 #  VoicePipeline — Health Check
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineHealthCheck:
 
+class TestVoicePipelineHealthCheck:
     def test_health_check_structure(self):
         config = STTBackendConfig(fallback_chain=("dummy",))
         vp = VoicePipeline(stt_config=config)
@@ -184,8 +187,8 @@ class TestVoicePipelineHealthCheck:
 #  VoicePipeline — INBOUND ONLY invariant
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineInboundOnly:
 
+class TestVoicePipelineInboundOnly:
     def test_no_tts_capability(self):
         """VoicePipeline NO tiene capacidad de TTS — solo audio→text."""
         vp = VoicePipeline()

@@ -37,6 +37,7 @@ logger = logging.getLogger("zenic_agents.email_parts.oauth2")
 
 try:
     import aiohttp
+
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
@@ -90,7 +91,9 @@ class OAuth2TokenManager:
         self._configs[service_name] = config
         logger.info(
             "OAuth2TokenManager: Registered service '%s' (grant_type=%s, configured=%s)",
-            service_name, config.grant_type.value, config.is_configured,
+            service_name,
+            config.grant_type.value,
+            config.is_configured,
         )
 
     # ── Token Retrieval ───────────────────────────────────────
@@ -145,9 +148,9 @@ class OAuth2TokenManager:
 
             # Cannot auto-acquire token
             logger.warning(
-                "OAuth2TokenManager: Cannot auto-acquire token for '%s' "
-                "(grant_type=%s, no refresh_token available)",
-                service_name, config.grant_type.value,
+                "OAuth2TokenManager: Cannot auto-acquire token for '%s' (grant_type=%s, no refresh_token available)",
+                service_name,
+                config.grant_type.value,
             )
             return token if token else OAuth2Token()
 
@@ -213,7 +216,8 @@ class OAuth2TokenManager:
 
         logger.info(
             "OAuth2TokenManager: Generated authorization URL for '%s' (state=%s...)",
-            service_name, state[:8],
+            service_name,
+            state[:8],
         )
         return url, state
 
@@ -276,7 +280,8 @@ class OAuth2TokenManager:
         self._tokens[service_name] = token
         logger.info(
             "OAuth2TokenManager: Token set for '%s' (expires_at=%.0f)",
-            service_name, token.expires_at,
+            service_name,
+            token.expires_at,
         )
 
     def clear_token(self, service_name: str) -> None:
@@ -291,10 +296,7 @@ class OAuth2TokenManager:
         """Get token manager statistics."""
         return {
             "registered_services": list(self._configs.keys()),
-            "services_with_tokens": [
-                name for name, token in self._tokens.items()
-                if token and not token.is_expired
-            ],
+            "services_with_tokens": [name for name, token in self._tokens.items() if token and not token.is_expired],
             "total_refreshes": self._refresh_count,
             "total_requests": self._request_count,
             "total_errors": self._error_count,
@@ -355,27 +357,30 @@ class OAuth2TokenManager:
 
         if not _HAS_AIOHTTP:
             logger.debug(
-                "OAuth2TokenManager: aiohttp not available, cannot make token request "
-                "for '%s' (dry-run)",
+                "OAuth2TokenManager: aiohttp not available, cannot make token request for '%s' (dry-run)",
                 service_name,
             )
             return None
 
         try:
-            async with aiohttp.ClientSession() as session, session.post(
-                token_url,
-                data=data,
-                headers={"Accept": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=30),
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
+                    token_url,
+                    data=data,
+                    headers={"Accept": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as response,
+            ):
                 body = await response.json()
 
                 if response.status != 200:
                     error_desc = body.get("error_description", body.get("error", "unknown"))
                     logger.warning(
-                        "OAuth2TokenManager: Token request failed for '%s': "
-                        "status=%d, error=%s",
-                        service_name, response.status, error_desc,
+                        "OAuth2TokenManager: Token request failed for '%s': status=%d, error=%s",
+                        service_name,
+                        response.status,
+                        error_desc,
                     )
                     self._error_count += 1
                     return None
@@ -384,14 +389,16 @@ class OAuth2TokenManager:
 
         except asyncio.TimeoutError:
             logger.warning(
-                "OAuth2TokenManager: Token request timed out for '%s'", service_name,
+                "OAuth2TokenManager: Token request timed out for '%s'",
+                service_name,
             )
             self._error_count += 1
             return None
         except Exception as exc:
             logger.warning(
                 "OAuth2TokenManager: Token request error for '%s': %s",
-                service_name, exc,
+                service_name,
+                exc,
             )
             self._error_count += 1
             return None

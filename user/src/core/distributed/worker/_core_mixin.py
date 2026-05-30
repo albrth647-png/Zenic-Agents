@@ -41,6 +41,7 @@ class DistributedWorkerCoreMixin:
         self._tasks_failed: int = 0
         self._tasks_stolen: int = 0
         self._lock = threading.Lock()
+
     def register_handler(self, task_type: str, handler: TaskHandler) -> None:
         """
         Register a handler for a specific task type.
@@ -52,8 +53,10 @@ class DistributedWorkerCoreMixin:
         self._handlers[task_type] = handler
         logger.debug(
             "Worker %s: Registered handler for task type '%s'",
-            self._config.worker_id, task_type,
+            self._config.worker_id,
+            task_type,
         )
+
     def register_handlers(self, handlers: dict[str, TaskHandler]) -> None:
         """
         Register multiple task handlers.
@@ -63,6 +66,7 @@ class DistributedWorkerCoreMixin:
         """
         for task_type, handler in handlers.items():
             self.register_handler(task_type, handler)
+
     def start(self, blocking: bool = True) -> None:
         """
         Start the worker.
@@ -111,9 +115,11 @@ class DistributedWorkerCoreMixin:
 
         if blocking:
             self._main_thread.join()
+
     async def start_async(self) -> None:
         """Async version of start() — runs worker in background."""
         self.start(blocking=False)
+
     def stop(self) -> None:
         """
         Signal the worker to stop gracefully.
@@ -147,17 +153,21 @@ class DistributedWorkerCoreMixin:
 
         self._state = WorkerState.STOPPED
         logger.info("Worker %s: Stopped", self._config.worker_id)
+
     def pause(self) -> None:
         """Pause task processing (heartbeat continues)."""
         self._state = WorkerState.PAUSED
         logger.info("Worker %s: Paused", self._config.worker_id)
+
     def resume(self) -> None:
         """Resume task processing."""
         self._state = WorkerState.IDLE
         logger.info("Worker %s: Resumed", self._config.worker_id)
+
     def worker_id(self) -> str:
         """Worker identifier."""
         return self._config.worker_id
+
     def state(self) -> WorkerState:
         """Current worker state."""
         return self._state

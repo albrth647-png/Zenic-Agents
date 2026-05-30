@@ -6,12 +6,11 @@
 //! - TLS enforcement: only https:// URLs are accepted (http:// is rejected)
 //! - Default-deny on parse errors and connection issues
 
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 use std::io::Read;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, TcpStream};
+use std::net::{IpAddr, TcpStream};
 use std::time::Duration;
 
 /// Check if an IP address is a private/reserved range (SSRF protection).

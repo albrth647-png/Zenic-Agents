@@ -87,7 +87,8 @@ class ComplianceChecker:
         self._rules_by_standard[rule.standard].append(rule.rule_id)
         logger.debug(
             "ComplianceChecker: Added rule '%s' (%s)",
-            rule.rule_id, rule.standard.value,
+            rule.rule_id,
+            rule.standard.value,
         )
 
     def remove_rule(self, rule_id: str) -> bool:
@@ -104,9 +105,7 @@ class ComplianceChecker:
         """Install the built-in compliance rules for all standards."""
         for rule in build_all_default_rules():
             self.add_rule(rule)
-        logger.info(
-            "ComplianceChecker: Installed %d default rules", len(self._rules)
-        )
+        logger.info("ComplianceChecker: Installed %d default rules", len(self._rules))
 
     # ── Compliance Checking ──────────────────────────────────
 
@@ -154,7 +153,9 @@ class ComplianceChecker:
         logger.info(
             "ComplianceChecker: %s (standard=%s, violations=%d, %.1fms)",
             "PASS" if result.compliant else "FAIL",
-            standard.value, len(violations), elapsed,
+            standard.value,
+            len(violations),
+            elapsed,
         )
         return result
 
@@ -223,10 +224,7 @@ class ComplianceChecker:
     @property
     def stats(self) -> dict[str, Any]:
         """Runtime statistics."""
-        std_counts = {
-            std.value: len(rules)
-            for std, rules in self._rules_by_standard.items()
-        }
+        std_counts = {std.value: len(rules) for std, rules in self._rules_by_standard.items()}
         return {
             "total_rules": len(self._rules),
             "standards": std_counts,
@@ -240,7 +238,4 @@ class ComplianceChecker:
         self._audit_trail.clear()
 
     def __repr__(self) -> str:
-        return (
-            f"ComplianceChecker(rules={self.rule_count}, "
-            f"standards={len(self._rules_by_standard)})"
-        )
+        return f"ComplianceChecker(rules={self.rule_count}, standards={len(self._rules_by_standard)})"

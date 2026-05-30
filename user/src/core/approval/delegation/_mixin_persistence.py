@@ -21,6 +21,7 @@ class DelegationPersistenceMixin:
 
     def _init_db(self) -> None:
         """Create the delegation tables if they do not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -63,7 +64,9 @@ class DelegationPersistenceMixin:
     # ── Private Helpers ────────────────────────────────────
 
     def _list_active_rules_for(
-        self, from_user_id: int, from_role: str,
+        self,
+        from_user_id: int,
+        from_role: str,
     ) -> list[DelegationRule]:
         """List active delegation rules for a user+role."""
         conn = sqlite3.connect(self._db_path)
@@ -82,6 +85,7 @@ class DelegationPersistenceMixin:
 
     def _find_rule(self, rule_id: str) -> DelegationRule | None:
         """Find a delegation rule by ID."""
+
         def _do_find() -> DelegationRule | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -98,6 +102,7 @@ class DelegationPersistenceMixin:
 
     def _find_record(self, record_id: str) -> DelegationRecord | None:
         """Find a delegation record by ID."""
+
         def _do_find() -> DelegationRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -122,6 +127,7 @@ class DelegationPersistenceMixin:
 
     def _persist_rule(self, rule: DelegationRule, *, insert: bool) -> None:
         """Insert or update a delegation rule."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -131,9 +137,15 @@ class DelegationPersistenceMixin:
                         active, expires_at, created_at, reason)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
-                        rule.rule_id, rule.from_user_id, rule.to_user_id,
-                        rule.from_role, rule.to_role, int(rule.active),
-                        rule.expires_at, rule.created_at, rule.reason,
+                        rule.rule_id,
+                        rule.from_user_id,
+                        rule.to_user_id,
+                        rule.from_role,
+                        rule.to_role,
+                        int(rule.active),
+                        rule.expires_at,
+                        rule.created_at,
+                        rule.reason,
                     ),
                 )
             else:
@@ -150,6 +162,7 @@ class DelegationPersistenceMixin:
 
     def _persist_record(self, record: DelegationRecord, *, insert: bool) -> None:
         """Insert or update a delegation record."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -159,9 +172,12 @@ class DelegationPersistenceMixin:
                         action_type, delegated_at, acknowledged)
                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
                     (
-                        record.record_id, record.rule_id,
-                        record.original_approver, record.delegated_to,
-                        record.action_type, record.delegated_at,
+                        record.record_id,
+                        record.rule_id,
+                        record.original_approver,
+                        record.delegated_to,
+                        record.action_type,
+                        record.delegated_at,
                         int(record.acknowledged),
                     ),
                 )
@@ -205,7 +221,10 @@ class DelegationPersistenceMixin:
             except sqlite3.OperationalError as exc:
                 last_exc = exc
                 logger.warning(
-                    "DelegationManager: DB retry %d/%d — %s", attempt, max_retries, exc,
+                    "DelegationManager: DB retry %d/%d — %s",
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

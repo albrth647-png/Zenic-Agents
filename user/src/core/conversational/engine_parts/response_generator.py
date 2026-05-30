@@ -157,9 +157,7 @@ class ResponseGenerator:
 
         if any(n in text for n in negative):
             return (
-                "Lamento que no fue lo que esperabas. "
-                "Puedo intentar de nuevo con un enfoque diferente. "
-                "Que cambiarias?"
+                "Lamento que no fue lo que esperabas. Puedo intentar de nuevo con un enfoque diferente. Que cambiarias?"
             )
 
         return "Gracias por tu feedback. Lo tendre en cuenta para mejorar."

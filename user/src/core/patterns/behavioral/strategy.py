@@ -60,9 +60,7 @@ class StrategyRegistry:
         if not name:
             raise ValueError("StrategyRegistry: name must be a non-empty string")
         if not callable(strategy):
-            raise ValueError(
-                f"StrategyRegistry: strategy for '{name}' must be callable"
-            )
+            raise ValueError(f"StrategyRegistry: strategy for '{name}' must be callable")
         with self._lock:
             if name in self._strategies:
                 logger.debug("StrategyRegistry: overwriting strategy '%s'", name)
@@ -150,7 +148,8 @@ class StrategyRegistry:
             self._defaults[category] = name
             logger.debug(
                 "StrategyRegistry: set default strategy for category '%s' → '%s'",
-                category, name,
+                category,
+                name,
             )
 
     def get_default(self, category: str = "__default__") -> Callable[..., Any] | None:

@@ -63,18 +63,21 @@ PAGE_SIZE = 50
 
 try:
     from jose import JWTError, jwt  # type: ignore[import-untyped]
+
     JOSE_AVAILABLE = True
 except ImportError:
     JOSE_AVAILABLE = False
 
 try:
     from passlib.hash import pbkdf2_sha256  # type: ignore[import-untyped]
+
     PASSLIB_AVAILABLE = True
 except ImportError:
     PASSLIB_AVAILABLE = False
 
 try:
     from fastapi import HTTPException  # type: ignore[import-untyped]  # noqa: F401
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -108,16 +111,27 @@ PLAN_DEFINITIONS: dict[str, dict[str, Any]] = {
         "max_users": -1,  # unlimited
         "max_api_keys": -1,  # unlimited
         "rate_limit_rpm": -1,  # unlimited
-        "features": ["basic_chat", "local_db", "cloud_sync", "analytics", "priority_support", "custom_agents",
-                     "sso", "audit_log", "sla"],
+        "features": [
+            "basic_chat",
+            "local_db",
+            "cloud_sync",
+            "analytics",
+            "priority_support",
+            "custom_agents",
+            "sso",
+            "audit_log",
+            "sla",
+        ],
     },
 }
 
 
 # ── Data Types ────────────────────────────────────────────────
 
+
 class AuthMethod(str, Enum):
     """Supported authentication methods."""
+
     PASSWORD = "password"  # noqa: S105
     API_KEY = "api_key"
     TOKEN = "token"  # noqa: S105
@@ -126,6 +140,7 @@ class AuthMethod(str, Enum):
 @dataclass
 class AuthResult:
     """Result of an authentication attempt."""
+
     success: bool
     user_id: int | None = None
     username: str | None = None
@@ -139,6 +154,7 @@ class AuthResult:
 @dataclass
 class APIKeyRecord:
     """Stored API key metadata."""
+
     key_id: str
     user_id: int
     name: str
@@ -152,6 +168,7 @@ class APIKeyRecord:
 @dataclass
 class AdminSession:
     """Admin user session tracking."""
+
     session_id: str
     user_id: int
     username: str
@@ -162,6 +179,7 @@ class AdminSession:
 
 
 # ── AuthService Implementation ────────────────────────────────
+
 
 class AuthService:
     """Full authentication and authorization service.
@@ -182,12 +200,8 @@ class AuthService:
         gateway_url: str | None = None,
     ) -> None:
         self._db_name = db_name
-        self._secret_key = secret_key or os.environ.get(
-            "ZENIC_AUTH_SECRET"
-        )
-        self._gateway_url = gateway_url or os.environ.get(
-            "ZENIC_GATEWAY_URL", ""
-        )
+        self._secret_key = secret_key or os.environ.get("ZENIC_AUTH_SECRET")
+        self._gateway_url = gateway_url or os.environ.get("ZENIC_GATEWAY_URL", "")
         self._lock = threading.RLock()
 
         # Stats tracking
@@ -207,7 +221,8 @@ class AuthService:
 
         logger.info(
             "AuthService initialized (jose=%s, passlib=%s, gateway=%s)",
-            JOSE_AVAILABLE, PASSLIB_AVAILABLE,
+            JOSE_AVAILABLE,
+            PASSLIB_AVAILABLE,
             "connected" if self._gateway_url else "offline",
         )
 
@@ -217,10 +232,12 @@ class AuthService:
         """Get a database connection via FastPool."""
         try:
             from src.core.shared.fast_connection_pool import fast_pool
+
             return fast_pool().get(self._db_name)
         except ImportError:
             # Fallback: direct SQLite connection
             from pathlib import Path
+
             db_path = str(Path.home() / ".zenic_agents" / "data" / self._db_name)
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
             conn = sqlite3.connect(db_path, check_same_thread=False)
@@ -372,18 +389,12 @@ class AuthService:
 
     def _encode_hmac_token(self, payload: dict[str, Any]) -> str:
         """Encode payload as base64 + HMAC-SHA256 signature."""
-        header = base64.urlsafe_b64encode(
-            json.dumps({"alg": "HS256", "typ": "JWT"}).encode()
-        ).decode()
-        payload_b64 = base64.urlsafe_b64encode(
-            json.dumps(payload, default=str).encode()
-        ).decode()
+        header = base64.urlsafe_b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode()).decode()
+        payload_b64 = base64.urlsafe_b64encode(json.dumps(payload, default=str).encode()).decode()
         signing_input = f"{header}.{payload_b64}"
 
         secret = self._secret_key or "zenic-default-dev-key"
-        sig = hmac_mod.new(
-            secret.encode(), signing_input.encode(), hashlib.sha256
-        ).hexdigest()
+        sig = hmac_mod.new(secret.encode(), signing_input.encode(), hashlib.sha256).hexdigest()
 
         return f"{header}.{payload_b64}.{sig}"
 
@@ -399,9 +410,7 @@ class AuthService:
         # Try jose JWT first
         if JOSE_AVAILABLE and self._secret_key:
             try:
-                payload = jwt.decode(
-                    token, self._secret_key, algorithms=["HS256"]
-                )
+                payload = jwt.decode(token, self._secret_key, algorithms=["HS256"])
                 if payload.get("exp", 0) < time.time():
                     return None
                 if self._is_token_revoked(payload.get("jti", "")):
@@ -420,7 +429,8 @@ class AuthService:
         # Verify signature
         secret = self._secret_key or "zenic-default-dev-key"
         expected_sig = hmac_mod.new(
-            secret.encode(), f"{header_b64}.{payload_b64}".encode(),
+            secret.encode(),
+            f"{header_b64}.{payload_b64}".encode(),
             hashlib.sha256,
         ).hexdigest()
 
@@ -477,8 +487,7 @@ class AuthService:
             if not admin_password:
                 admin_password = secrets.token_urlsafe(24)
                 logger.warning(
-                    "AuthService: No ZENIC_ADMIN_PASSWORD set. "
-                    "Generated admin password (save this!): %s",
+                    "AuthService: No ZENIC_ADMIN_PASSWORD set. Generated admin password (save this!): %s",
                     admin_password,
                 )
 
@@ -599,9 +608,7 @@ class AuthService:
     def _increment_failed_login(self, conn: sqlite3.Connection, user_id: int) -> None:
         """Increment failed login count and lock account if threshold reached."""
         try:
-            row = conn.execute(
-                "SELECT failed_login_attempts FROM users WHERE id = ?", (user_id,)
-            ).fetchone()
+            row = conn.execute("SELECT failed_login_attempts FROM users WHERE id = ?", (user_id,)).fetchone()
             if not row:
                 return
 
@@ -611,7 +618,8 @@ class AuthService:
                 lock_until = time.time() + 900  # 15 minutes
                 logger.warning(
                     "AuthService: Account id=%d locked after %d failed attempts",
-                    user_id, attempts,
+                    user_id,
+                    attempts,
                 )
 
             conn.execute(
@@ -920,23 +928,17 @@ class AuthService:
         try:
             conn = self._get_conn()
             # Verify ownership or admin role
-            key = conn.execute(
-                "SELECT user_id FROM api_keys WHERE key_id = ?", (key_id,)
-            ).fetchone()
+            key = conn.execute("SELECT user_id FROM api_keys WHERE key_id = ?", (key_id,)).fetchone()
             if not key:
                 return False
 
-            requester = conn.execute(
-                "SELECT role FROM users WHERE id = ?", (user_id,)
-            ).fetchone()
+            requester = conn.execute("SELECT role FROM users WHERE id = ?", (user_id,)).fetchone()
             is_admin = requester and ROLE_HIERARCHY.get(requester["role"], 0) >= ROLE_HIERARCHY.get("admin", 3)
 
             if key["user_id"] != user_id and not is_admin:
                 return False
 
-            conn.execute(
-                "UPDATE api_keys SET is_active = 0 WHERE key_id = ?", (key_id,)
-            )
+            conn.execute("UPDATE api_keys SET is_active = 0 WHERE key_id = ?", (key_id,))
             conn.commit()
             return True
 
@@ -1062,9 +1064,7 @@ class AuthService:
                 (time.time(), user_id),
             )
             # Revoke all API keys for this user
-            conn.execute(
-                "UPDATE api_keys SET is_active = 0 WHERE user_id = ?", (user_id,)
-            )
+            conn.execute("UPDATE api_keys SET is_active = 0 WHERE user_id = ?", (user_id,))
             conn.commit()
             return True
 
@@ -1088,9 +1088,7 @@ class AuthService:
 
         try:
             conn = self._get_conn()
-            row = conn.execute(
-                "SELECT password_hash FROM users WHERE id = ?", (user_id,)
-            ).fetchone()
+            row = conn.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,)).fetchone()
             if not row:
                 return False
 
@@ -1126,9 +1124,7 @@ class AuthService:
         """
         try:
             conn = self._get_conn()
-            row = conn.execute(
-                "SELECT role, is_active FROM users WHERE id = ?", (user_id,)
-            ).fetchone()
+            row = conn.execute("SELECT role, is_active FROM users WHERE id = ?", (user_id,)).fetchone()
 
             if not row or not row["is_active"]:
                 return False
@@ -1229,9 +1225,7 @@ class AuthService:
         """
         try:
             conn = self._get_conn()
-            cursor = conn.execute(
-                "DELETE FROM sessions WHERE expires_at < ?", (time.time(),)
-            )
+            cursor = conn.execute("DELETE FROM sessions WHERE expires_at < ?", (time.time(),))
             conn.commit()
             return cursor.rowcount
 
@@ -1271,9 +1265,7 @@ class AuthService:
             conn = self._get_conn()
             self._refresh_user_count(conn)
             active_sessions = len(self.get_active_sessions())
-            active_api_keys = conn.execute(
-                "SELECT COUNT(*) as cnt FROM api_keys WHERE is_active = 1"
-            ).fetchone()
+            active_api_keys = conn.execute("SELECT COUNT(*) as cnt FROM api_keys WHERE is_active = 1").fetchone()
 
             return {
                 "total_users": self._stats["total_users"],

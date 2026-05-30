@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # Try YAML support
 try:
     import yaml as _yaml
+
     _HAS_YAML = True
 except ImportError:
     _HAS_YAML = False
@@ -50,6 +51,7 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 #  BLUEPRINT LOADER
 # ──────────────────────────────────────────────────────────────
+
 
 class BlueprintLoaderV2:
     """Loads CertifiedBlueprint objects from various sources.
@@ -116,7 +118,9 @@ class BlueprintLoaderV2:
         return blueprint
 
     def load_directory(
-        self, dirpath: str, verify: bool = True,
+        self,
+        dirpath: str,
+        verify: bool = True,
     ) -> list[CertifiedBlueprint]:
         """Load all Blueprint files from a directory.
 
@@ -139,7 +143,8 @@ class BlueprintLoaderV2:
 
         logger.info(
             "BlueprintLoader: Loaded %d Blueprints from %s",
-            len(blueprints), dirpath,
+            len(blueprints),
+            dirpath,
         )
         return blueprints
 
@@ -194,12 +199,14 @@ class BlueprintLoaderV2:
 
         compatibility = []
         for c_data in data.get("compatibility", []):
-            compatibility.append(BlueprintCompatibility(
-                blueprint_name=c_data.get("blueprint_name", ""),
-                version_range=c_data.get("version_range", "*"),
-                composition_notes=c_data.get("composition_notes", ""),
-                known_conflicts=c_data.get("known_conflicts", []),
-            ))
+            compatibility.append(
+                BlueprintCompatibility(
+                    blueprint_name=c_data.get("blueprint_name", ""),
+                    version_range=c_data.get("version_range", "*"),
+                    composition_notes=c_data.get("composition_notes", ""),
+                    known_conflicts=c_data.get("known_conflicts", []),
+                )
+            )
 
         tier_str = data.get("tier", "free")
         status_str = data.get("status", "draft")
@@ -231,23 +238,27 @@ class BlueprintLoaderV2:
                     ft = FieldType(ft_str)
                 except ValueError:
                     ft = FieldType.STR
-                fields.append(DBFieldSchema(
-                    name=f_data.get("name", ""),
-                    field_type=ft,
-                    required=f_data.get("required", True),
-                    unique=f_data.get("unique", False),
-                    indexed=f_data.get("indexed", False),
-                    default=f_data.get("default"),
-                    description=f_data.get("description", ""),
-                ))
-            entities.append(DBEntitySchema(
-                name=e_data.get("name", ""),
-                fields=fields,
-                primary_key=e_data.get("primary_key", "id"),
-                indexes=e_data.get("indexes", []),
-                constraints=e_data.get("constraints", []),
-                description=e_data.get("description", ""),
-            ))
+                fields.append(
+                    DBFieldSchema(
+                        name=f_data.get("name", ""),
+                        field_type=ft,
+                        required=f_data.get("required", True),
+                        unique=f_data.get("unique", False),
+                        indexed=f_data.get("indexed", False),
+                        default=f_data.get("default"),
+                        description=f_data.get("description", ""),
+                    )
+                )
+            entities.append(
+                DBEntitySchema(
+                    name=e_data.get("name", ""),
+                    fields=fields,
+                    primary_key=e_data.get("primary_key", "id"),
+                    indexes=e_data.get("indexes", []),
+                    constraints=e_data.get("constraints", []),
+                    description=e_data.get("description", ""),
+                )
+            )
 
         return DBSchema(
             entities=entities,
@@ -261,16 +272,18 @@ class BlueprintLoaderV2:
         for r_data in data:
             if not isinstance(r_data, dict):
                 continue
-            rules.append(BusinessRuleDef(
-                rule_id=r_data.get("rule_id", r_data.get("name", "")),
-                name=r_data.get("name", ""),
-                description=r_data.get("description", ""),
-                executor_type=r_data.get("executor_type", ""),
-                condition=r_data.get("condition", ""),
-                action=r_data.get("action", ""),
-                severity=r_data.get("severity", "warning"),
-                active=r_data.get("active", True),
-            ))
+            rules.append(
+                BusinessRuleDef(
+                    rule_id=r_data.get("rule_id", r_data.get("name", "")),
+                    name=r_data.get("name", ""),
+                    description=r_data.get("description", ""),
+                    executor_type=r_data.get("executor_type", ""),
+                    condition=r_data.get("condition", ""),
+                    action=r_data.get("action", ""),
+                    severity=r_data.get("severity", "warning"),
+                    active=r_data.get("active", True),
+                )
+            )
         return rules
 
     def _parse_actions(self, data: dict[str, Any]) -> list[ActionTemplateDef]:
@@ -279,16 +292,18 @@ class BlueprintLoaderV2:
         for key, a_data in data.items():
             if not isinstance(a_data, dict):
                 continue
-            actions.append(ActionTemplateDef(
-                template_id=key,
-                name=a_data.get("name", key),
-                description=a_data.get("description", ""),
-                executor_type=a_data.get("executor_type", ""),
-                config_template=a_data.get("config", {}),
-                safety_category=a_data.get("safety_category", "moderate"),
-                requires_confirmation=a_data.get("requires_confirmation", False),
-                requires_approval=a_data.get("requires_approval", False),
-            ))
+            actions.append(
+                ActionTemplateDef(
+                    template_id=key,
+                    name=a_data.get("name", key),
+                    description=a_data.get("description", ""),
+                    executor_type=a_data.get("executor_type", ""),
+                    config_template=a_data.get("config", {}),
+                    safety_category=a_data.get("safety_category", "moderate"),
+                    requires_confirmation=a_data.get("requires_confirmation", False),
+                    requires_approval=a_data.get("requires_approval", False),
+                )
+            )
         return actions
 
     def _parse_monitor_hooks(self, data: dict[str, Any]) -> list[MonitorHook]:
@@ -297,15 +312,17 @@ class BlueprintLoaderV2:
         for monitor_id, h_data in data.items():
             if not isinstance(h_data, dict):
                 continue
-            hooks.append(MonitorHook(
-                monitor_id=monitor_id,
-                weight=h_data.get("weight", "lightweight"),
-                interval_seconds=float(h_data.get("interval_seconds", 300)),
-                enabled=h_data.get("enabled", True),
-                thresholds=h_data.get("thresholds", []),
-                params=h_data.get("params", {}),
-                notification_channel=h_data.get("notification_channel", "log"),
-            ))
+            hooks.append(
+                MonitorHook(
+                    monitor_id=monitor_id,
+                    weight=h_data.get("weight", "lightweight"),
+                    interval_seconds=float(h_data.get("interval_seconds", 300)),
+                    enabled=h_data.get("enabled", True),
+                    thresholds=h_data.get("thresholds", []),
+                    params=h_data.get("params", {}),
+                    notification_channel=h_data.get("notification_channel", "log"),
+                )
+            )
         return hooks
 
     def _parse_yaml(self, content: str) -> dict[str, Any] | None:

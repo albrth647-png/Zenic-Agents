@@ -47,8 +47,10 @@ _TYPE_MAP: dict[str, type] = {
 
 # ─── Dataclasses ────────────────────────────────────────────────
 
+
 class IssueType(str, Enum):
     """Types of validation issues."""
+
     MISSING = "missing"
     WRONG_TYPE = "wrong_type"
     CONSTRAINT_VIOLATION = "constraint_violation"
@@ -57,6 +59,7 @@ class IssueType(str, Enum):
 @dataclass
 class ValidationIssue:
     """A single validation problem found in event data."""
+
     field: str
     issue_type: IssueType
     message: str
@@ -65,6 +68,7 @@ class ValidationIssue:
 @dataclass
 class ValidationResult:
     """Result of validating event data against a schema."""
+
     valid: bool
     issues: list[ValidationIssue] = field(default_factory=list)
     event_type: str = ""
@@ -73,6 +77,7 @@ class ValidationResult:
 @dataclass
 class EventSchema:
     """A registered event validation schema."""
+
     schema_id: str
     event_type: str
     schema: dict[str, Any]  # {required_fields, field_types, field_constraints}
@@ -80,6 +85,7 @@ class EventSchema:
 
 
 # ─── Registry ───────────────────────────────────────────────────
+
 
 class EventSchemaRegistry:
     """
@@ -141,7 +147,8 @@ class EventSchemaRegistry:
 
         logger.info(
             "SchemaRegistry: registered schema %s for event_type=%s",
-            schema_id, event_type,
+            schema_id,
+            event_type,
         )
         return schema_id
 
@@ -160,7 +167,8 @@ class EventSchemaRegistry:
             if self._schemas_by_event_type.get(entry.event_type) is entry:
                 self._schemas_by_event_type.pop(entry.event_type, None)
             logger.info(
-                "SchemaRegistry: unregistered schema %s", schema_id,
+                "SchemaRegistry: unregistered schema %s",
+                schema_id,
             )
             return True
 
@@ -179,11 +187,13 @@ class EventSchemaRegistry:
         if not isinstance(data, dict):
             return ValidationResult(
                 valid=False,
-                issues=[ValidationIssue(
-                    field="",
-                    issue_type=IssueType.WRONG_TYPE,
-                    message=f"Expected dict, got {type(data).__name__}",
-                )],
+                issues=[
+                    ValidationIssue(
+                        field="",
+                        issue_type=IssueType.WRONG_TYPE,
+                        message=f"Expected dict, got {type(data).__name__}",
+                    )
+                ],
                 event_type=event_type,
             )
 
@@ -201,11 +211,13 @@ class EventSchemaRegistry:
         required_fields: list[str] = schema.get("required_fields", [])
         for fld in required_fields:
             if fld not in data:
-                issues.append(ValidationIssue(
-                    field=fld,
-                    issue_type=IssueType.MISSING,
-                    message=f"Required field '{fld}' is missing",
-                ))
+                issues.append(
+                    ValidationIssue(
+                        field=fld,
+                        issue_type=IssueType.MISSING,
+                        message=f"Required field '{fld}' is missing",
+                    )
+                )
 
         # 2. Check field types
         field_types: dict[str, str] = schema.get("field_types", {})
@@ -216,7 +228,8 @@ class EventSchemaRegistry:
             if expected_type is None:
                 logger.warning(
                     "SchemaRegistry: unknown type '%s' for field '%s', skipping type check",
-                    type_name, fld,
+                    type_name,
+                    fld,
                 )
                 continue
             value = data[fld]
@@ -224,14 +237,13 @@ class EventSchemaRegistry:
             if expected_type is float and isinstance(value, int) and not isinstance(value, bool):
                 continue
             if not isinstance(value, expected_type):
-                issues.append(ValidationIssue(
-                    field=fld,
-                    issue_type=IssueType.WRONG_TYPE,
-                    message=(
-                        f"Field '{fld}' expected type {expected_type.__name__}, "
-                        f"got {type(value).__name__}"
-                    ),
-                ))
+                issues.append(
+                    ValidationIssue(
+                        field=fld,
+                        issue_type=IssueType.WRONG_TYPE,
+                        message=(f"Field '{fld}' expected type {expected_type.__name__}, got {type(value).__name__}"),
+                    )
+                )
 
         # 3. Check field constraints
         field_constraints: dict[str, dict[str, Any]] = schema.get("field_constraints", {})
@@ -242,11 +254,13 @@ class EventSchemaRegistry:
             for constraint_name, constraint_val in constraints.items():
                 issue_msg = self._check_constraint(fld, value, constraint_name, constraint_val)
                 if issue_msg is not None:
-                    issues.append(ValidationIssue(
-                        field=fld,
-                        issue_type=IssueType.CONSTRAINT_VIOLATION,
-                        message=issue_msg,
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            field=fld,
+                            issue_type=IssueType.CONSTRAINT_VIOLATION,
+                            message=issue_msg,
+                        )
+                    )
 
         valid = len(issues) == 0
         return ValidationResult(
@@ -270,12 +284,14 @@ class EventSchemaRegistry:
         with self._lock:
             result = []
             for entry in self._schemas_by_id.values():
-                result.append({
-                    "schema_id": entry.schema_id,
-                    "event_type": entry.event_type,
-                    "schema": entry.schema,
-                    "created_at": entry.created_at,
-                })
+                result.append(
+                    {
+                        "schema_id": entry.schema_id,
+                        "event_type": entry.event_type,
+                        "schema": entry.schema,
+                        "created_at": entry.created_at,
+                    }
+                )
             return result
 
     # ── Internals ───────────────────────────────────────────────
@@ -296,58 +312,44 @@ class EventSchemaRegistry:
                 if not isinstance(value, (int, float)):
                     return f"Constraint 'min' on '{field_name}' requires numeric value"
                 if value < constraint_val:
-                    return (
-                        f"Field '{field_name}' value {value} is below "
-                        f"minimum {constraint_val}"
-                    )
+                    return f"Field '{field_name}' value {value} is below minimum {constraint_val}"
             elif constraint_name == "max":
                 if not isinstance(value, (int, float)):
                     return f"Constraint 'max' on '{field_name}' requires numeric value"
                 if value > constraint_val:
-                    return (
-                        f"Field '{field_name}' value {value} exceeds "
-                        f"maximum {constraint_val}"
-                    )
+                    return f"Field '{field_name}' value {value} exceeds maximum {constraint_val}"
             elif constraint_name == "min_length":
                 if not isinstance(value, (str, list)):
                     return f"Constraint 'min_length' on '{field_name}' requires str or list"
                 if len(value) < constraint_val:
-                    return (
-                        f"Field '{field_name}' length {len(value)} is below "
-                        f"minimum {constraint_val}"
-                    )
+                    return f"Field '{field_name}' length {len(value)} is below minimum {constraint_val}"
             elif constraint_name == "max_length":
                 if not isinstance(value, (str, list)):
                     return f"Constraint 'max_length' on '{field_name}' requires str or list"
                 if len(value) > constraint_val:
-                    return (
-                        f"Field '{field_name}' length {len(value)} exceeds "
-                        f"maximum {constraint_val}"
-                    )
+                    return f"Field '{field_name}' length {len(value)} exceeds maximum {constraint_val}"
             elif constraint_name == "pattern":
                 import re
+
                 if not isinstance(value, str):
                     return f"Constraint 'pattern' on '{field_name}' requires str"
                 if not re.search(constraint_val, value):
-                    return (
-                        f"Field '{field_name}' value does not match "
-                        f"pattern '{constraint_val}'"
-                    )
+                    return f"Field '{field_name}' value does not match pattern '{constraint_val}'"
             elif constraint_name == "allowed":
                 if value not in constraint_val:
-                    return (
-                        f"Field '{field_name}' value {value!r} not in "
-                        f"allowed values {constraint_val}"
-                    )
+                    return f"Field '{field_name}' value {value!r} not in allowed values {constraint_val}"
             else:
                 logger.warning(
                     "SchemaRegistry: unknown constraint '%s' on field '%s'",
-                    constraint_name, field_name,
+                    constraint_name,
+                    field_name,
                 )
         except Exception as exc:
             logger.error(
                 "SchemaRegistry: error checking constraint '%s' on '%s': %s",
-                constraint_name, field_name, exc,
+                constraint_name,
+                field_name,
+                exc,
             )
             return f"Error checking constraint '{constraint_name}' on '{field_name}': {exc}"
 

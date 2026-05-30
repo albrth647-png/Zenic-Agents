@@ -117,8 +117,7 @@ class VerdictCircuitBreaker:
                 if self._success_count >= self._success_threshold:
                     self._transition_to(VerdictCircuitState.CLOSED)
                     logger.info(
-                        f"VerdictCircuitBreaker[{self._name}]: "
-                        f"HALF_OPEN → CLOSED ({self._success_count} successes)"
+                        f"VerdictCircuitBreaker[{self._name}]: HALF_OPEN → CLOSED ({self._success_count} successes)"
                     )
             elif self._state == VerdictCircuitState.CLOSED:
                 self._failure_count = 0
@@ -136,10 +135,7 @@ class VerdictCircuitBreaker:
             if self._state == VerdictCircuitState.HALF_OPEN:
                 self._half_open_calls += 1
                 self._transition_to(VerdictCircuitState.OPEN)
-                logger.warning(
-                    f"VerdictCircuitBreaker[{self._name}]: "
-                    f"HALF_OPEN → OPEN (failure in half-open)"
-                )
+                logger.warning(f"VerdictCircuitBreaker[{self._name}]: HALF_OPEN → OPEN (failure in half-open)")
             elif self._state == VerdictCircuitState.CLOSED:
                 if self._failure_count >= self._failure_threshold:
                     self._transition_to(VerdictCircuitState.OPEN)
@@ -161,10 +157,7 @@ class VerdictCircuitBreaker:
         elapsed = time.monotonic() - self._opened_at
         if elapsed >= self._recovery_timeout:
             self._transition_to(VerdictCircuitState.HALF_OPEN)
-            logger.info(
-                f"VerdictCircuitBreaker[{self._name}]: "
-                f"OPEN → HALF_OPEN (recovery timeout elapsed)"
-            )
+            logger.info(f"VerdictCircuitBreaker[{self._name}]: OPEN → HALF_OPEN (recovery timeout elapsed)")
 
     def _transition_to(self, new_state: VerdictCircuitState) -> None:
         """Perform state transition."""
@@ -188,6 +181,7 @@ class VerdictCircuitBreaker:
 #  VERDICT RETRY POLICY
 # ============================================================
 
+
 @dataclass
 class VerdictRetryConfig:
     """
@@ -202,6 +196,7 @@ class VerdictRetryConfig:
         jitter_max: Jitter multiplier (0..1).
         timeout_per_attempt: Timeout in seconds per individual LLM call.
     """
+
     max_attempts: int = 3
     base_delay: float = 1.0
     max_delay: float = 10.0
@@ -213,7 +208,7 @@ class VerdictRetryConfig:
 
     def __post_init__(self):
         if self._jitter_gen is None:
-            object.__setattr__(self, '_jitter_gen', ControllableJitter("verdict_retry"))
+            object.__setattr__(self, "_jitter_gen", ControllableJitter("verdict_retry"))
 
     def compute_delay(self, attempt: int) -> float:
         """Compute delay for the given attempt (1-based)."""
@@ -228,9 +223,11 @@ class VerdictRetryConfig:
 #  VERDICT HEALTH MONITOR
 # ============================================================
 
+
 @dataclass
 class VerdictHealthSnapshot:
     """Snapshot of the LLM health at a point in time."""
+
     is_healthy: bool
     avg_latency_s: float
     success_rate: float
@@ -240,5 +237,3 @@ class VerdictHealthSnapshot:
     total_ambiguous: int
     last_call_time: float | None
     circuit_breaker_state: str
-
-

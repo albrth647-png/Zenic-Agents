@@ -15,8 +15,6 @@ import sqlite3
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timedelta
-from pathlib import Path
 
 # Añadir src al path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -50,11 +48,21 @@ class TestDBAccess(unittest.TestCase):
             )
         """)
         # Insertar productos con stock bajo
-        conn.execute("INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Lápiz', 'LAP001', 2, 1.50, date('now', '-120 days'))")
-        conn.execute("INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Cuaderno', 'CUA001', 0, 3.00, date('now', '-5 days'))")
-        conn.execute("INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Bolígrafo', 'BOL001', 50, 2.00, date('now', '-1 day'))")
-        conn.execute("INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Regla', 'REG001', 3, 1.75, date('now', '-200 days'))")
-        conn.execute("INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Mochila', 'MOC001', 10, 25.00, date('now', '-3 days'))")
+        conn.execute(
+            "INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Lápiz', 'LAP001', 2, 1.50, date('now', '-120 days'))"
+        )
+        conn.execute(
+            "INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Cuaderno', 'CUA001', 0, 3.00, date('now', '-5 days'))"
+        )
+        conn.execute(
+            "INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Bolígrafo', 'BOL001', 50, 2.00, date('now', '-1 day'))"
+        )
+        conn.execute(
+            "INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Regla', 'REG001', 3, 1.75, date('now', '-200 days'))"
+        )
+        conn.execute(
+            "INSERT INTO productos (nombre, codigo, stock, precio, ultima_venta) VALUES ('Mochila', 'MOC001', 10, 25.00, date('now', '-3 days'))"
+        )
 
         # Tabla clientes
         conn.execute("""
@@ -66,9 +74,15 @@ class TestDBAccess(unittest.TestCase):
                 saldo_pendiente REAL DEFAULT 0
             )
         """)
-        conn.execute("INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Ana García', 'ana@test.com', '555-001', 150.00)")
-        conn.execute("INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Bob López', 'bob@test.com', '555-002', 0)")
-        conn.execute("INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Carlos Ruiz', 'carlos@test.com', '555-003', 500.50)")
+        conn.execute(
+            "INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Ana García', 'ana@test.com', '555-001', 150.00)"
+        )
+        conn.execute(
+            "INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Bob López', 'bob@test.com', '555-002', 0)"
+        )
+        conn.execute(
+            "INSERT INTO clientes (nombre, email, telefono, saldo_pendiente) VALUES ('Carlos Ruiz', 'carlos@test.com', '555-003', 500.50)"
+        )
 
         # Tabla facturas (con vencidas)
         conn.execute("""
@@ -83,10 +97,18 @@ class TestDBAccess(unittest.TestCase):
                 FOREIGN KEY (cliente_id) REFERENCES clientes(id)
             )
         """)
-        conn.execute("INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (1, 'F-001', 100.00, date('now', '-30 days'), date('now', '-5 days'), 'pendiente')")
-        conn.execute("INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (2, 'F-002', 200.00, date('now', '-10 days'), date('now', '+10 days'), 'pendiente')")
-        conn.execute("INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (3, 'F-003', 300.00, date('now', '-60 days'), date('now', '-30 days'), 'pendiente')")
-        conn.execute("INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (1, 'F-004', 50.00, date('now', '-5 days'), date('now', '+25 days'), 'pagada')")
+        conn.execute(
+            "INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (1, 'F-001', 100.00, date('now', '-30 days'), date('now', '-5 days'), 'pendiente')"
+        )
+        conn.execute(
+            "INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (2, 'F-002', 200.00, date('now', '-10 days'), date('now', '+10 days'), 'pendiente')"
+        )
+        conn.execute(
+            "INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (3, 'F-003', 300.00, date('now', '-60 days'), date('now', '-30 days'), 'pendiente')"
+        )
+        conn.execute(
+            "INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (1, 'F-004', 50.00, date('now', '-5 days'), date('now', '+25 days'), 'pagada')"
+        )
 
         # Tabla citas
         conn.execute("""
@@ -120,7 +142,9 @@ class TestDBAccess(unittest.TestCase):
         # Desactivar FK check para poder insertar un huérfano
         conn.commit()  # Commit antes de cambiar PRAGMA
         conn.execute("PRAGMA foreign_keys=OFF")
-        conn.execute("INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (999, 'F-ORPHAN', 50.00, date('now'), date('now', '+30 days'), 'pendiente')")
+        conn.execute(
+            "INSERT INTO facturas (cliente_id, numero, monto, fecha, fecha_vencimiento, estado) VALUES (999, 'F-ORPHAN', 50.00, date('now'), date('now', '+30 days'), 'pendiente')"
+        )
         conn.commit()
         conn.execute("PRAGMA foreign_keys=ON")
 
@@ -278,6 +302,7 @@ class TestFileSystemScanner(unittest.TestCase):
             f.write("temp data")
         # Hacerlo viejo (modificar mtime)
         import time
+
         old_time = time.time() - 48 * 3600  # 48 horas atrás
         os.utime(old_file, (old_time, old_time))
 
@@ -347,8 +372,12 @@ class TestLocalDataScanner(unittest.TestCase):
                 precio REAL, ultima_venta DATE
             )
         """)
-        conn.execute("INSERT INTO productos (nombre, stock, precio, ultima_venta) VALUES ('Item1', 1, 10.0, date('now', '-100 days'))")
-        conn.execute("INSERT INTO productos (nombre, stock, precio, ultima_venta) VALUES ('Item2', 20, 5.0, date('now', '-1 day'))")
+        conn.execute(
+            "INSERT INTO productos (nombre, stock, precio, ultima_venta) VALUES ('Item1', 1, 10.0, date('now', '-100 days'))"
+        )
+        conn.execute(
+            "INSERT INTO productos (nombre, stock, precio, ultima_venta) VALUES ('Item2', 20, 5.0, date('now', '-1 day'))"
+        )
         conn.commit()
         conn.close()
 

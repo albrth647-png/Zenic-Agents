@@ -156,7 +156,8 @@ class ImpactPreviewEngine:
             for idx, config in enumerate(configs):
                 try:
                     preview = self.preview_action(
-                        action_type, config,
+                        action_type,
+                        config,
                         context={"scenario_index": idx},
                     )
                     preview.metadata["scenario_index"] = idx
@@ -164,18 +165,21 @@ class ImpactPreviewEngine:
                 except Exception as exc:
                     logger.warning(
                         "ImpactPreviewEngine: compare_scenarios failed for config %d: %s",
-                        idx, exc,
+                        idx,
+                        exc,
                     )
                     # Still produce a preview for the failed scenario
-                    results.append(ImpactPreview(
-                        action_type=action_type,
-                        category=ActionCategory.MODERATE,
-                        risk_level=ImpactRiskLevel.HIGH,
-                        risk_score=0.9,
-                        summary=f"Could not preview scenario {idx}: {exc}",
-                        warnings=[f"Preview error: {exc}"],
-                        metadata={"scenario_index": idx, "error": str(exc)},
-                    ))
+                    results.append(
+                        ImpactPreview(
+                            action_type=action_type,
+                            category=ActionCategory.MODERATE,
+                            risk_level=ImpactRiskLevel.HIGH,
+                            risk_score=0.9,
+                            summary=f"Could not preview scenario {idx}: {exc}",
+                            warnings=[f"Preview error: {exc}"],
+                            metadata={"scenario_index": idx, "error": str(exc)},
+                        )
+                    )
             return results
 
     # ── Stats ──────────────────────────────────────────────

@@ -15,7 +15,7 @@ interface StartEpisodeRequestBody {
   relation: string;
   destination: string;
   mechanism: string;
-  tenant_id?: string;
+  tenantId?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tenantId = body.tenant_id || '__anonymous__';
+    const tenantId = body.tenantId || '__anonymous__';
     const mechanism = body.mechanism as MechanismType;
 
     // Check tenant subscription for lifecycle access
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
       if (!subscription) {
         return NextResponse.json(
-          { success: false, error: 'No subscription found for this tenant', tenant_id: tenantId },
+          { success: false, error: 'No subscription found for this tenant', tenantId: tenantId },
           { status: 403 },
         );
       }
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           {
             success: false,
             error: 'Subscription is not active. Cannot start lifecycle episodes.',
-            tenant_id: tenantId,
+            tenantId: tenantId,
           },
           { status: 403 },
         );
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
           {
             success: false,
             error: `Mechanism "${mechanism}" is not available for tier "${subscription.tier}". Allowed: ${features.mechanisms_allowed.join(', ')}`,
-            tenant_id: tenantId,
+            tenantId: tenantId,
           },
           { status: 403 },
         );
@@ -153,16 +153,16 @@ export async function POST(request: NextRequest) {
         data: {
           episode_id: episode.episodeId,
           mapping: {
-            mapping_id: mapping.mappingId,
+            mappingId: mapping.mappingId,
             origin: mapping.origin,
             relation: mapping.relation,
             destination: mapping.destination,
             mechanism: mapping.mechanism as MechanismType,
             confidence: mapping.confidence,
-            tenant_id: mapping.tenantId,
+            tenantId: mapping.tenantId,
             created_at: mapping.createdAt.getTime(),
             approved: mapping.approved,
-            merkle_hash: mapping.merkleHash,
+            merkleHash: mapping.merkleHash,
           },
           current_phase: episode.currentPhase,
           created_at: episode.createdAt.getTime(),

@@ -23,9 +23,11 @@ from ..types.base import Err, Ok, Priority, Result
 
 # ─── Config ──────────────────────────────────────────────────
 
+
 @dataclass
 class SanitizerConfig:
     """Configuracion del sanitizador."""
+
     max_length: int = 10000
     min_length: int = 1
     max_newlines: int = 50
@@ -37,9 +39,11 @@ class SanitizerConfig:
 
 # ─── Resultado de sanitizacion ───────────────────────────────
 
+
 @dataclass
 class SanitizedInput:
     """Resultado del proceso de sanitizacion."""
+
     original: str = ""
     cleaned: str = ""
     was_modified: bool = False
@@ -100,9 +104,7 @@ class InputSanitizer:
             return Err(ValueError("El mensaje esta vacio"))
 
         if len(raw_input) > self._config.max_length:
-            return Err(ValueError(
-                f"Mensaje excede {self._config.max_length} caracteres"
-            ))
+            return Err(ValueError(f"Mensaje excede {self._config.max_length} caracteres"))
 
         # 2. Limpieza
         cleaned, was_modified = self._clean(raw_input)
@@ -122,19 +124,21 @@ class InputSanitizer:
         # 5. Prioridad
         priority = self._infer_priority(cleaned, has_code, warnings)
 
-        return Ok(SanitizedInput(
-            original=raw_input,
-            cleaned=cleaned,
-            was_modified=was_modified,
-            detected_language=lang,
-            priority=priority,
-            warnings=warnings,
-            char_count=len(cleaned),
-            word_count=len(cleaned.split()),
-            line_count=cleaned.count("\n") + 1,
-            has_code_blocks=has_code,
-            has_urls=has_urls,
-        ))
+        return Ok(
+            SanitizedInput(
+                original=raw_input,
+                cleaned=cleaned,
+                was_modified=was_modified,
+                detected_language=lang,
+                priority=priority,
+                warnings=warnings,
+                char_count=len(cleaned),
+                word_count=len(cleaned.split()),
+                line_count=cleaned.count("\n") + 1,
+                has_code_blocks=has_code,
+                has_urls=has_urls,
+            )
+        )
 
     # ─── Limpieza ─────────────────────────────────────────────
 
@@ -163,10 +167,7 @@ class InputSanitizer:
 
         # Strip control chars (preservar newlines y tabs)
         if self._config.strip_control_chars:
-            cleaned = "".join(
-                ch for ch in result
-                if ch.isprintable() or ch in ("\n", "\t")
-            )
+            cleaned = "".join(ch for ch in result if ch.isprintable() or ch in ("\n", "\t"))
             if cleaned != result:
                 result = cleaned
                 modified = True
@@ -194,10 +195,7 @@ class InputSanitizer:
         code_blocks = list(_CODE_BLOCK_PATTERN.finditer(text))
         text_without_code = text
         for match in reversed(code_blocks):
-            text_without_code = (
-                text_without_code[:match.start()]
-                + text_without_code[match.end():]
-            )
+            text_without_code = text_without_code[: match.start()] + text_without_code[match.end() :]
 
         for pattern in _INJECTION_PATTERNS:
             if pattern.search(text_without_code):
@@ -208,13 +206,35 @@ class InputSanitizer:
     def _detect_language(text: str) -> str:
         """Deteccion basica de idioma por caracteres."""
         spanish_markers = [
-            "ñ", "á", "é", "í", "ó", "ú", "ü",
-            "que", "el", "la", "los", "las",
-            "de", "en", "es", "un", "una",
+            "ñ",
+            "á",
+            "é",
+            "í",
+            "ó",
+            "ú",
+            "ü",
+            "que",
+            "el",
+            "la",
+            "los",
+            "las",
+            "de",
+            "en",
+            "es",
+            "un",
+            "una",
         ]
         english_markers = [
-            "the", "is", "are", "was", "were",
-            "and", "but", "for", "not", "you",
+            "the",
+            "is",
+            "are",
+            "was",
+            "were",
+            "and",
+            "but",
+            "for",
+            "not",
+            "you",
         ]
 
         text_lower = text.lower()
@@ -228,9 +248,7 @@ class InputSanitizer:
         return "es"  # Default
 
     @staticmethod
-    def _infer_priority(
-        text: str, has_code: bool, warnings: list[str]
-    ) -> Priority:
+    def _infer_priority(text: str, has_code: bool, warnings: list[str]) -> Priority:
         """Infiere la prioridad del mensaje."""
         if warnings:
             return Priority.HIGH

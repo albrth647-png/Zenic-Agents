@@ -69,7 +69,6 @@ impl Default for CriticalityGateBuilder {
 mod tests {
     use super::*;
     use crate::role::{CriticalityClearance, Role};
-    use crate::gate::types::CriticalityGate;
     use zenic_proto::{NodeId, NodeCriticality, SessionId};
 
     #[test]

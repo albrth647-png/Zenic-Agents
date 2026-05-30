@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 use std::time::Instant;
 use zenic_proto::SubGraphId;
-use zenic_graph::NodeCatalog;
 use zenic_proto::SuperNodeId;
 
 /// Current state of a subgraph in memory.

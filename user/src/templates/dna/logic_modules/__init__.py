@@ -3,6 +3,7 @@
 All YAML files in this directory are split for maintainability (<=400 lines each).
 Use these loader functions to get the assembled data as if it were a single file.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

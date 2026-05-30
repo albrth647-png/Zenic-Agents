@@ -4,11 +4,8 @@
 
 use crate::categories::NicheCategory;
 use crate::compliance::ComplianceResult;
-use crate::sensitivity::DataSensitivity;
-use crate::verdict::{ActionCategory, SafetyVerdict};
 
 use super::core::DomainSafetyGate;
-use super::types::DomainSafetyCheckResult;
 
 impl DomainSafetyGate {
     /// Check only domain rules (Layer 2) without the full pipeline.
@@ -59,6 +56,8 @@ impl DomainSafetyGate {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::sensitivity::DataSensitivity;
+    use crate::verdict::SafetyVerdict;
 
     #[test]
     fn base_deny_cannot_be_overridden() {

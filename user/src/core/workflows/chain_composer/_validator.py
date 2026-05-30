@@ -46,17 +46,13 @@ def validate_chain(chain: ComposedChain) -> ChainValidationResult:
             try:
                 ChainStepType(step.step_type)
             except ValueError:
-                result.errors.append(
-                    f"Step '{step.step_id}' has invalid step_type: {step.step_type}"
-                )
+                result.errors.append(f"Step '{step.step_id}' has invalid step_type: {step.step_type}")
                 result.valid = False
 
     # 4. next_step_id references
     for step in chain.steps:
         if step.next_step_id and step.next_step_id not in step_ids:
-            result.errors.append(
-                f"Step '{step.step_id}' references non-existent next_step_id '{step.next_step_id}'"
-            )
+            result.errors.append(f"Step '{step.step_id}' references non-existent next_step_id '{step.next_step_id}'")
             result.valid = False
 
     # 5. Orphan detection (BFS from first step)
@@ -75,22 +71,16 @@ def validate_chain(chain: ComposedChain) -> ChainValidationResult:
                 queue.append(nxt)
         orphans = step_ids - visited
         if orphans:
-            result.warnings.append(
-                f"Orphan steps not reachable from first step: {orphans}"
-            )
+            result.warnings.append(f"Orphan steps not reachable from first step: {orphans}")
 
     # 6. Length warning
     if len(chain.steps) > 10:
-        result.warnings.append(
-            f"Chain has {len(chain.steps)} steps — consider splitting into sub-chains"
-        )
+        result.warnings.append(f"Chain has {len(chain.steps)} steps — consider splitting into sub-chains")
 
     # 7. Condition step without condition_expr
     for step in chain.steps:
         if step.step_type == ChainStepType.CONDITION and not step.condition_expr:
-            result.warnings.append(
-                f"Condition step '{step.step_id}' has no condition_expr"
-            )
+            result.warnings.append(f"Condition step '{step.step_id}' has no condition_expr")
 
     if result.errors:
         result.valid = False

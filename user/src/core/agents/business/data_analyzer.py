@@ -17,10 +17,19 @@ from ..schemas import AnalyticsResult
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-SUPPORTED_METRICS = frozenset({
-    "count", "min", "max", "avg", "sum",
-    "median", "stdev", "variance", "range",
-})
+SUPPORTED_METRICS = frozenset(
+    {
+        "count",
+        "min",
+        "max",
+        "avg",
+        "sum",
+        "median",
+        "stdev",
+        "variance",
+        "range",
+    }
+)
 
 MAX_DATASET_SIZE = 5000
 TREND_WINDOW = 5  # Window size for simple trend detection
@@ -74,7 +83,9 @@ class DataAnalyzer(BaseAgent[AnalyticsResult]):
 
         if count == 0:
             return AnalyticsResult(
-                metrics=metrics, trends=[], insights=["Empty dataset"],
+                metrics=metrics,
+                trends=[],
+                insights=["Empty dataset"],
                 source="deterministic",
             )
 
@@ -84,7 +95,9 @@ class DataAnalyzer(BaseAgent[AnalyticsResult]):
         if not values:
             insights.append("No numeric data found for analysis")
             return AnalyticsResult(
-                metrics=metrics, trends=trends, insights=insights,
+                metrics=metrics,
+                trends=trends,
+                insights=insights,
                 source="deterministic",
             )
 
@@ -109,8 +122,8 @@ class DataAnalyzer(BaseAgent[AnalyticsResult]):
 
         # ── Trend detection (simple moving average comparison) ──
         if len(values) >= TREND_WINDOW * 2:
-            first_half = values[:len(values) // 2]
-            second_half = values[len(values) // 2:]
+            first_half = values[: len(values) // 2]
+            second_half = values[len(values) // 2 :]
             avg_first = sum(first_half) / len(first_half)
             avg_second = sum(second_half) / len(second_half)
 
@@ -194,6 +207,8 @@ class DataAnalyzer(BaseAgent[AnalyticsResult]):
     def fallback(self, input_data: Any) -> AnalyticsResult:
         """Safe fallback: empty analytics result."""
         return AnalyticsResult(
-            metrics={}, trends=[], insights=[],
+            metrics={},
+            trends=[],
+            insights=[],
             source="fallback",
         )

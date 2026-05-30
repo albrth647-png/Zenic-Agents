@@ -112,6 +112,7 @@ CREATE INDEX IF NOT EXISTS idx_coord_nodes_heartbeat
 #  CONNECTION MANAGEMENT MIXIN
 # ============================================================
 
+
 class PgConnectionMixin:
     """
     Mixin providing PostgreSQL connection management and DB helpers.
@@ -127,16 +128,16 @@ class PgConnectionMixin:
         try:
             import psycopg2  # type: ignore[import-unresolved]
             from psycopg2 import pool
-        except ImportError:
+        except ImportError as exc:
             raise ImportError(
-                "psycopg2 is required for PostgreSQL coordination backend. "
-                "Install with: pip install psycopg2-binary"
-            )
+                "psycopg2 is required for PostgreSQL coordination backend. Install with: pip install psycopg2-binary"
+            ) from exc
 
         conn_string = self._config.connection_string
         if not conn_string:
             # Try environment variable
             import os
+
             conn_string = os.environ.get(
                 "DATABASE_URL_SYNC",
                 os.environ.get("DATABASE_URL", ""),
@@ -162,10 +163,7 @@ class PgConnectionMixin:
             )
         except Exception:
             # Fallback to single connection
-            logger.warning(
-                "PgBackend: Connection pool creation failed, "
-                "falling back to single connection"
-            )
+            logger.warning("PgBackend: Connection pool creation failed, falling back to single connection")
             self._pool = None
             self._conn = psycopg2.connect(conn_string)
             self._conn.autocommit = True

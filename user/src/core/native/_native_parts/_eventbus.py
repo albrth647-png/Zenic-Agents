@@ -17,17 +17,20 @@ def wildcard_match(pattern: str, text: str) -> bool:
     """Fast wildcard pattern matching supporting * and ? wildcards."""
     if HAS_NATIVE:
         from ._loader import _rust_wildcard_match
+
         return _rust_wildcard_match(pattern, text)
     # Pure Python fallback using fnmatch
     return fnmatch.fnmatch(text, pattern)
 
 
 def resolve_routes(
-    event_topic: str, subscriptions: list[dict[str, Any]],
+    event_topic: str,
+    subscriptions: list[dict[str, Any]],
 ) -> list[str]:
     """Resolve which handlers should receive an event."""
     if HAS_NATIVE:
         from ._loader import _rust_resolve_routes
+
         return _rust_resolve_routes(event_topic, subscriptions)
     # Pure Python fallback
     _priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
@@ -51,6 +54,7 @@ def batch_resolve_routes(
     """Batch resolve routes for multiple events."""
     if HAS_NATIVE:
         from ._loader import _rust_batch_resolve_routes
+
         return _rust_batch_resolve_routes(event_topics, subscriptions)
     # Pure Python fallback
     return {topic: resolve_routes(topic, subscriptions) for topic in event_topics}
@@ -63,6 +67,7 @@ def deduplicate_events(
     """Deduplicate events by fingerprint."""
     if HAS_NATIVE:
         from ._loader import _rust_deduplicate_events
+
         return _rust_deduplicate_events(new_fingerprints, seen_fingerprints)
     # Pure Python fallback
     unique: list[str] = []
@@ -81,8 +86,8 @@ def sort_by_priority(
     """Sort events by priority (critical first)."""
     if HAS_NATIVE:
         from ._loader import _rust_sort_by_priority
+
         return _rust_sort_by_priority(events)
     # Pure Python fallback
     _priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-    return sorted(events, key=lambda e: _priority_order.get(
-        e.get("priority", "normal").lower(), 2))
+    return sorted(events, key=lambda e: _priority_order.get(e.get("priority", "normal").lower(), 2))

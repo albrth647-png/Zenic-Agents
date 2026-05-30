@@ -195,7 +195,8 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     if lm is not None:
         # Wire license events to degraded mode
         _init_component(
-            results, "license_degraded_wiring",
+            results,
+            "license_degraded_wiring",
             lambda: _wire_license_events(lm, dm),
         )
 
@@ -203,6 +204,7 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
         try:
             if not lm.get_current_license():
                 from src.core.license.types import LicenseTier
+
                 lm.create_license(
                     tier=LicenseTier.STARTER,
                     issued_to="Zenic-Agents Default",
@@ -216,7 +218,8 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
 
     # ── 3. Defense Manager ────────────────────────────────
     _init_component(
-        results, "defense",
+        results,
+        "defense",
         lambda: _init_defense(start_defense_monitoring),
     )
 
@@ -226,7 +229,8 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
     # ── 5. Wire SafetyGate → ApprovalChain (Composition) ──
     if chain is not None:
         _init_component(
-            results, "safety_gate_wiring",
+            results,
+            "safety_gate_wiring",
             lambda: _wire_safety_gate(chain),
         )
 
@@ -244,6 +248,7 @@ def initialize_phase6(start_defense_monitoring: bool = True) -> dict[str, Any]:
 def _init_defense(start_monitoring: bool) -> Any:
     """Initialize DefenseManager."""
     from src.core.defense import get_defense_manager
+
     defense = get_defense_manager()
     defense.initialize_all(start_monitoring=start_monitoring)
     return defense
@@ -252,11 +257,13 @@ def _init_defense(start_monitoring: bool) -> Any:
 def _init_approval() -> Any:
     """Initialize ApprovalChain and WorkflowEngine."""
     from src.core.approval.chain import get_approval_chain
+
     return get_approval_chain()
 
 
 def _wire_license_events(lm: Any, dm: Any) -> None:
     """Wire license events to degraded mode manager."""
+
     def _on_license_event(event_type: str, data: dict[str, Any]) -> None:
         """React to license events by adjusting operating mode."""
         if event_type == "kill_switch_activated":
@@ -276,6 +283,7 @@ def _wire_safety_gate(chain: Any) -> None:
         get_default_safety_gate,
         set_default_safety_gate,
     )
+
     safety_gate = get_default_safety_gate()
     enhanced_gate = _create_enhanced_safety_gate(safety_gate, chain)
     set_default_safety_gate(enhanced_gate)

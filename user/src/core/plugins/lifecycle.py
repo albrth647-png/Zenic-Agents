@@ -39,16 +39,19 @@ class PluginLifecycleManager:
 
             for dep_id in dep_order:
                 dep = self._registry.get_plugin(dep_id)
-                if dep is not None and dep.state not in (PluginState.ACTIVE, PluginState.LOADED):
-                    if dep_id != plugin_id:
-                        ok, err = self.load_plugin(dep_id)
-                        if not ok:
-                            self._registry.set_state(
-                                plugin_id,
-                                PluginState.ERROR,
-                                f"Dependency {dep_id} failed: {err}",
-                            )
-                            return (False, f"Dependency {dep_id} failed: {err}")
+                if (
+                    dep is not None
+                    and dep.state not in (PluginState.ACTIVE, PluginState.LOADED)
+                    and dep_id != plugin_id
+                ):
+                    ok, err = self.load_plugin(dep_id)
+                    if not ok:
+                        self._registry.set_state(
+                            plugin_id,
+                            PluginState.ERROR,
+                            f"Dependency {dep_id} failed: {err}",
+                        )
+                        return (False, f"Dependency {dep_id} failed: {err}")
 
             # Execute entry point
             success, error = self._execute_entry_point(instance.manifest)

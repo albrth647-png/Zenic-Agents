@@ -92,11 +92,12 @@ mod tests {
             45,
             30,
         );
-        assert_eq!(state.pipeline_id(), "e2e-test-001");
-        assert_eq!(state.niche_id(), "fintech");
-        assert_eq!(state.total_fields(), 45);
-        assert_eq!(state.required_fields(), 30);
-        assert_eq!(state.current_step(), "select_niche");
+        // Fields are pub(super) — accessible from tests in same module
+        assert_eq!(state.pipeline_id, "e2e-test-001");
+        assert_eq!(state.niche_id, "fintech");
+        assert_eq!(state.total_fields, 45);
+        assert_eq!(state.required_fields, 30);
+        assert_eq!(state.current_step, "select_niche");
     }
 
     #[test]

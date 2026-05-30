@@ -13,7 +13,7 @@ class BoundedTasks5To7Mixin:
     #  BOUNDED TASK 5: generate_pattern (template library)
     # ================================================================
 
-    PATTERN_LIBRARY = {
+    PATTERN_LIBRARY = {  # noqa: RUF012
         "python": {
             "async_await": "async def {name}({params}):\n    result = await {operation}({params})\n    return result\n",
             "validator": "def {name}(data: dict) -> bool:\n    required = {required_fields}\n    return all(k in data for k in required)\n",
@@ -84,7 +84,7 @@ class BoundedTasks5To7Mixin:
     #  BOUNDED TASK 6: explain_violation (catalog-based)
     # ================================================================
 
-    VIOLATION_CATALOG = {
+    VIOLATION_CATALOG = {  # noqa: RUF012
         "exec_call": "Use of exec() allows arbitrary code execution, which is a critical security risk.",
         "eval_call": "Use of eval() allows arbitrary code execution, which is a critical security risk.",
         "import_call": "Dynamic import via __import__() can load untrusted modules at runtime.",

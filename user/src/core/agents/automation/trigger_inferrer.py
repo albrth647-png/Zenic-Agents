@@ -20,20 +20,53 @@ from ..schemas import AutoDescription, TriggerSpec
 
 TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "schedule": [
-        "cada", "every", "diario", "daily", "semanal", "weekly",
-        "mensual", "monthly", "hora", "hourly", "cron", "schedule",
-        "programado", "periódico", "periodico", "a las",
-        "minuto", "minute", "segundo", "second",
+        "cada",
+        "every",
+        "diario",
+        "daily",
+        "semanal",
+        "weekly",
+        "mensual",
+        "monthly",
+        "hora",
+        "hourly",
+        "cron",
+        "schedule",
+        "programado",
+        "periódico",
+        "periodico",
+        "a las",
+        "minuto",
+        "minute",
+        "segundo",
+        "second",
     ],
     "event": [
-        "cuando", "when", "al detectar", "on event",
-        "detecte", "ocurra", "trigger", "al recibir",
-        "al cambiar", "on change", "on update", "al actualizar",
+        "cuando",
+        "when",
+        "al detectar",
+        "on event",
+        "detecte",
+        "ocurra",
+        "trigger",
+        "al recibir",
+        "al cambiar",
+        "on change",
+        "on update",
+        "al actualizar",
     ],
     "webhook": [
-        "webhook", "callback", "http post", "endpoint", "api call",
-        "recibir", "petición", "peticion", "post request",
-        "incoming", "entrante",
+        "webhook",
+        "callback",
+        "http post",
+        "endpoint",
+        "api call",
+        "recibir",
+        "petición",
+        "peticion",
+        "post request",
+        "incoming",
+        "entrante",
     ],
 }
 
@@ -102,9 +135,7 @@ class TriggerInferrer(BaseAgent[TriggerSpec]):
             return input_data
         return ""
 
-    def _build_trigger_config(
-        self, trigger_type: str, description: str
-    ) -> dict[str, Any]:
+    def _build_trigger_config(self, trigger_type: str, description: str) -> dict[str, Any]:
         """Build configuration dict for the detected trigger type."""
         if trigger_type == "schedule":
             return self._build_schedule_config(description)

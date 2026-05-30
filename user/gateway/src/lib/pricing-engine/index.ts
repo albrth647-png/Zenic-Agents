@@ -96,10 +96,13 @@ export type {
   SagaOrchestratorResult,
 } from "./saga";
 
-export {
+export type {
   SagaTypeName as SagaTypeNameConst,
   SagaStatusName as SagaStatusNameConst,
   SagaStepStatusName as SagaStepStatusNameConst,
+} from "./saga";
+
+export {
   executeSaga,
   resumeSaga,
   getSagaStatus,

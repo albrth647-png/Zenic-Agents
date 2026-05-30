@@ -74,7 +74,7 @@ class PatternDetectionMixin:
                     LearningInsight(
                         id=_new_id("ins"),
                         insight_type="success_pattern",
-                        pattern=f"High success rate for {atype}: {rate*100:.1f}%",
+                        pattern=f"High success rate for {atype}: {rate * 100:.1f}%",
                         recommendation=f"Use {atype} approach as template for similar operations",
                         confidence=0.0,
                         supporting_outcomes=[],

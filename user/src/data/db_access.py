@@ -194,7 +194,8 @@ class DBAccess:
         """Busca productos con stock bajo."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC", (threshold,)  # noqa: S608
+                f"SELECT * FROM [{table}] WHERE [{stock_column}] <= ? ORDER BY [{stock_column}] ASC",  # noqa: S608
+                (threshold,),
             )
         except Exception:
             return []
@@ -230,7 +231,8 @@ class DBAccess:
         """Busca clientes con saldo pendiente."""
         try:
             return self.execute_query(
-                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC", (threshold,)  # noqa: S608
+                f"SELECT * FROM [{table}] WHERE [{balance_column}] > ? ORDER BY [{balance_column}] DESC",  # noqa: S608
+                (threshold,),
             )
         except Exception:
             return []

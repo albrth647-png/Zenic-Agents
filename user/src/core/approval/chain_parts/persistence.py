@@ -69,7 +69,9 @@ class ApprovalChainDB:
             logger.error("ApprovalChainDB: DB init failed: %s", exc)
 
     def persist_request(
-        self, request: ApprovalRequest, tenant_id: str = "__anonymous__",
+        self,
+        request: ApprovalRequest,
+        tenant_id: str = "__anonymous__",
     ) -> None:
         """Persist a new request to the database."""
         try:
@@ -81,14 +83,20 @@ class ApprovalChainDB:
                     approved_by, approved_at, rejection_reason, metadata, tenant_id)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    request.request_id, request.action_type,
+                    request.request_id,
+                    request.action_type,
                     json.dumps(request.action_config),
-                    request.required_role, request.requested_by,
-                    request.status.value, request.priority.value,
-                    request.created_at, request.expires_at,
-                    request.approved_by, request.approved_at,
+                    request.required_role,
+                    request.requested_by,
+                    request.status.value,
+                    request.priority.value,
+                    request.created_at,
+                    request.expires_at,
+                    request.approved_by,
+                    request.approved_at,
                     request.rejection_reason,
-                    json.dumps(request.metadata), tenant_id,
+                    json.dumps(request.metadata),
+                    tenant_id,
                 ),
             )
             conn.commit()
@@ -107,10 +115,14 @@ class ApprovalChainDB:
                    rejection_reason=?, metadata=?
                    WHERE request_id=?""",
                 (
-                    request.status.value, request.required_role,
-                    request.expires_at, request.approved_by,
-                    request.approved_at, request.rejection_reason,
-                    json.dumps(request.metadata), request.request_id,
+                    request.status.value,
+                    request.required_role,
+                    request.expires_at,
+                    request.approved_by,
+                    request.approved_at,
+                    request.rejection_reason,
+                    json.dumps(request.metadata),
+                    request.request_id,
                 ),
             )
             conn.commit()

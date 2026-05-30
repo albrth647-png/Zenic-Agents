@@ -3,7 +3,6 @@
 use rusqlite::Connection;
 
 use crate::errors::MemoryError;
-use crate::types::SemanticMapping;
 
 /// SQL to create the `semantic_mappings` table and its indices.
 const SCHEMA_MAPPINGS: &str = r#"

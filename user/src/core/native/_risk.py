@@ -20,7 +20,8 @@ if HAS_NATIVE:
 
 
 def calculate_blast_radius(
-    node_id: str, edges: list[tuple[str, str]],
+    node_id: str,
+    edges: list[tuple[str, str]],
 ) -> dict[str, Any]:
     """Calculate the blast radius of a node failure."""
     if HAS_NATIVE:
@@ -46,12 +47,18 @@ def calculate_blast_radius(
     visited.discard(node_id)
     transitive = visited - direct
     blast_size = len(visited)
-    risk_level = "low" if blast_size == 0 else "medium" if blast_size <= 3 else "high" if blast_size <= 10 else "critical"
+    risk_level = (
+        "low" if blast_size == 0 else "medium" if blast_size <= 3 else "high" if blast_size <= 10 else "critical"
+    )
 
-    return {"source_node": node_id, "blast_radius": list(visited),
-            "direct_dependents": list(direct),
-            "transitive_dependents": list(transitive),
-            "blast_radius_size": blast_size, "risk_level": risk_level}
+    return {
+        "source_node": node_id,
+        "blast_radius": list(visited),
+        "direct_dependents": list(direct),
+        "transitive_dependents": list(transitive),
+        "blast_radius_size": blast_size,
+        "risk_level": risk_level,
+    }
 
 
 def propagate_risks(
@@ -99,8 +106,12 @@ def propagate_risks(
     max_effective = max(effective.values()) if effective else 0.0
     high_risk = [n for n, r in effective.items() if r >= 0.7]
 
-    return {"effective_risks": effective, "max_effective_risk": max_effective,
-            "high_risk_nodes": high_risk, "risk_paths": risk_paths}
+    return {
+        "effective_risks": effective,
+        "max_effective_risk": max_effective,
+        "high_risk_nodes": high_risk,
+        "risk_paths": risk_paths,
+    }
 
 
 def find_critical_path(
@@ -146,13 +157,12 @@ def find_critical_path(
     critical_set = set(critical_path)
     is_on_critical = {n: n in critical_set for n in nodes}
 
-    return {"critical_path": critical_path,
-            "total_duration_ms": total_duration,
-            "is_on_critical_path": is_on_critical}
+    return {"critical_path": critical_path, "total_duration_ms": total_duration, "is_on_critical_path": is_on_critical}
 
 
 def compute_reachability(
-    source_nodes: list[str], edges: list[tuple[str, str]],
+    source_nodes: list[str],
+    edges: list[tuple[str, str]],
 ) -> dict[str, Any]:
     """Compute reachability from source nodes."""
     if HAS_NATIVE:
@@ -180,13 +190,16 @@ def compute_reachability(
         all_reachable.update(visited)
         by_source[source] = list(visited)
 
-    return {"reachable": list(all_reachable),
-            "reachable_count": sum(len(v) for v in by_source.values()),
-            "by_source": by_source}
+    return {
+        "reachable": list(all_reachable),
+        "reachable_count": sum(len(v) for v in by_source.values()),
+        "by_source": by_source,
+    }
 
 
 def multi_node_blast_radius(
-    failed_nodes: list[str], edges: list[tuple[str, str]],
+    failed_nodes: list[str],
+    edges: list[tuple[str, str]],
 ) -> dict[str, Any]:
     """Calculate combined blast radius for multiple node failures."""
     if HAS_NATIVE:
@@ -211,14 +224,18 @@ def multi_node_blast_radius(
 
     blast_radius = [n for n in visited if n not in failed_set]
     blast_size = len(blast_radius)
-    risk_level = "low" if blast_size == 0 else "medium" if blast_size <= 5 else "high" if blast_size <= 15 else "critical"
+    risk_level = (
+        "low" if blast_size == 0 else "medium" if blast_size <= 5 else "high" if blast_size <= 15 else "critical"
+    )
 
     per_node: dict[str, dict[str, Any]] = {}
     for node in failed_nodes:
         node_result = calculate_blast_radius(node, edges)
         per_node[node] = node_result
 
-    return {"combined_blast_radius": blast_radius,
-            "blast_radius_size": blast_size,
-            "risk_level": risk_level,
-            "per_node": per_node}
+    return {
+        "combined_blast_radius": blast_radius,
+        "blast_radius_size": blast_size,
+        "risk_level": risk_level,
+        "per_node": per_node,
+    }

@@ -148,15 +148,15 @@ impl LicenseStatus {
 #[pyclass(name = "LicenseInfo")]
 #[derive(Clone, Debug)]
 pub struct LicenseInfo {
-    license_key: String,
-    tier: LicenseTier,
-    holder: String,
-    issued_at: i64,
-    expires_at: i64,
-    hardware_id: String,
-    features: Vec<String>,
-    max_users: u32,
-    signature: String,
+    pub(crate) license_key: String,
+    pub(crate) tier: LicenseTier,
+    pub(crate) holder: String,
+    pub(crate) issued_at: i64,
+    pub(crate) expires_at: i64,
+    pub(crate) hardware_id: String,
+    pub(crate) features: Vec<String>,
+    pub(crate) max_users: u32,
+    pub(crate) signature: String,
 }
 
 impl LicenseInfo {

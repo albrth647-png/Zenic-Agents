@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ======================================================================
 
+
 @dataclass
 class Command:
     """
@@ -34,6 +35,7 @@ class Command:
         command_type: Unique identifier for the command kind.
         payload: Dict of command-specific data.
     """
+
     command_type: str
     payload: dict[str, Any] = field(default_factory=dict)
 
@@ -47,6 +49,7 @@ class Query:
         query_type: Unique identifier for the query kind.
         params: Dict of query-specific parameters.
     """
+
     query_type: str
     params: dict[str, Any] = field(default_factory=dict)
 
@@ -54,6 +57,7 @@ class Query:
 # ======================================================================
 # Handler ABCs
 # ======================================================================
+
 
 class CommandHandler(ABC):
     """Abstract handler for :class:`Command` objects."""
@@ -92,6 +96,7 @@ class QueryHandler(ABC):
 # ======================================================================
 # CQRS Bus
 # ======================================================================
+
 
 class CQRSBus:
     """
@@ -137,9 +142,7 @@ class CQRSBus:
     # Registration
     # ------------------------------------------------------------------
 
-    def register_command_handler(
-        self, command_type: str, handler: CommandHandler
-    ) -> None:
+    def register_command_handler(self, command_type: str, handler: CommandHandler) -> None:
         """
         Register a handler for a command type.
 
@@ -158,9 +161,7 @@ class CQRSBus:
             self._command_handlers[command_type] = handler
             logger.debug("CQRSBus: registered command handler for '%s'", command_type)
 
-    def register_query_handler(
-        self, query_type: str, handler: QueryHandler
-    ) -> None:
+    def register_query_handler(self, query_type: str, handler: QueryHandler) -> None:
         """
         Register a handler for a query type.
 
@@ -209,9 +210,7 @@ class CQRSBus:
             if command_type not in self._command_validators:
                 self._command_validators[command_type] = []
             self._command_validators[command_type].append(validator)
-            logger.debug(
-                "CQRSBus: registered validator for command '%s'", command_type
-            )
+            logger.debug("CQRSBus: registered validator for command '%s'", command_type)
 
     # ------------------------------------------------------------------
     # Execution
@@ -239,9 +238,7 @@ class CQRSBus:
             validators = list(self._command_validators.get(command.command_type, []))
 
         if handler is None:
-            raise KeyError(
-                f"CQRSBus: no handler registered for command '{command.command_type}'"
-            )
+            raise KeyError(f"CQRSBus: no handler registered for command '{command.command_type}'")
 
         # Validation middleware
         for validator in validators:
@@ -276,7 +273,8 @@ class CQRSBus:
                 self._commands_failed += 1
             logger.error(
                 "CQRSBus: command '%s' handler failed – %s",
-                command.command_type, exc,
+                command.command_type,
+                exc,
             )
             return {"success": False, "error": str(exc)}
 
@@ -307,9 +305,7 @@ class CQRSBus:
                 if (time.monotonic() - ts) < self._query_cache_ttl:
                     self._query_cache_hits += 1
                     self._queries_executed += 1
-                    logger.debug(
-                        "CQRSBus: query '%s' cache HIT", query.query_type
-                    )
+                    logger.debug("CQRSBus: query '%s' cache HIT", query.query_type)
                     return copy.deepcopy(result)
                 # Expired — remove
                 del self._query_cache[cache_key]
@@ -317,9 +313,7 @@ class CQRSBus:
             handler = self._query_handlers.get(query.query_type)
 
         if handler is None:
-            raise KeyError(
-                f"CQRSBus: no handler registered for query '{query.query_type}'"
-            )
+            raise KeyError(f"CQRSBus: no handler registered for query '{query.query_type}'")
 
         # Execute handler
         try:
@@ -334,7 +328,8 @@ class CQRSBus:
                 self._queries_executed += 1
             logger.error(
                 "CQRSBus: query '%s' handler failed – %s",
-                query.query_type, exc,
+                query.query_type,
+                exc,
             )
             return {"success": False, "error": str(exc)}
 
@@ -355,15 +350,13 @@ class CQRSBus:
                 self._query_cache.clear()
                 logger.debug("CQRSBus: cleared entire query cache")
             else:
-                keys_to_remove = [
-                    k for k in self._query_cache
-                    if k.startswith(f"{query_type}:")
-                ]
+                keys_to_remove = [k for k in self._query_cache if k.startswith(f"{query_type}:")]
                 for k in keys_to_remove:
                     del self._query_cache[k]
                 logger.debug(
                     "CQRSBus: cleared %d cache entries for query '%s'",
-                    len(keys_to_remove), query_type,
+                    len(keys_to_remove),
+                    query_type,
                 )
 
     # ------------------------------------------------------------------

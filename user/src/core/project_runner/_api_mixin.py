@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 class PublicAPIMixin:
     """Mixin providing public API methods for ProjectRunner."""
 
-    def run_project(self, project_name: str, port: int = 0,
-                    auto_install: bool = True,
-                    auto_start: bool = True) -> RunResult:
+    def run_project(
+        self, project_name: str, port: int = 0, auto_install: bool = True, auto_start: bool = True
+    ) -> RunResult:
         """Run a generated project.
 
         Steps:
@@ -158,12 +158,14 @@ class PublicAPIMixin:
                         with open(port_file) as f:
                             port = int(f.read().strip())
 
-                    running.append({
-                        "project_name": name,
-                        "port": port,
-                        "pid": pid,
-                        "health_ok": self._health_check(port) if port else False,
-                    })
+                    running.append(
+                        {
+                            "project_name": name,
+                            "port": port,
+                            "pid": pid,
+                            "health_ok": self._health_check(port) if port else False,
+                        }
+                    )
                 except (ProcessLookupError, ValueError, FileNotFoundError):
                     # Process is dead, clean up
                     for f in [pid_file, port_file]:

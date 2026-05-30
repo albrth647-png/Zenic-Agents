@@ -153,7 +153,7 @@ class CircuitBreakerManager:
     """Manages per-agent circuit breaker instances."""
 
     # Default configs per agent group
-    DEFAULT_CONFIGS = {
+    DEFAULT_CONFIGS = {  # noqa: RUF012
         "understanding": {"failure_threshold": 3, "recovery_timeout": 60.0},
         "memory": {"failure_threshold": 5, "recovery_timeout": 30.0},
         "business": {"failure_threshold": 3, "recovery_timeout": 60.0},
@@ -175,9 +175,7 @@ class CircuitBreakerManager:
             if agent_name not in self._breakers:
                 group = self._classify_agent(agent_name)
                 config = self.DEFAULT_CONFIGS.get(group, {"failure_threshold": 3, "recovery_timeout": 60.0})
-                self._breakers[agent_name] = AgentCircuitBreaker(
-                    name=agent_name, **config
-                )
+                self._breakers[agent_name] = AgentCircuitBreaker(name=agent_name, **config)
             return self._breakers[agent_name]
 
     def can_call(self, agent_name: str) -> bool:
@@ -209,7 +207,10 @@ class CircuitBreakerManager:
             return "understanding"
         elif any(k in name_lower for k in ["memory", "relevance", "compressor", "prefetch"]):
             return "memory"
-        elif any(k in name_lower for k in ["invoice", "inventory", "crm", "task", "report", "notification", "analytics", "router"]):
+        elif any(
+            k in name_lower
+            for k in ["invoice", "inventory", "crm", "task", "report", "notification", "analytics", "router"]
+        ):
             return "business"
         elif any(k in name_lower for k in ["code_gen", "refactor", "optim", "fixer", "scaffold", "defensive"]):
             return "code"

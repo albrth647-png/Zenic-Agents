@@ -105,7 +105,8 @@ class Mediator(SyncDispatchMixin, AsyncDispatchMixin):
             self._handlers[request_type] = handler
             logger.info(
                 "Mediator: Registered handler %s for request_type '%s'",
-                type(handler).__name__, request_type,
+                type(handler).__name__,
+                request_type,
             )
 
     # ----------------------------------------------------------
@@ -131,7 +132,7 @@ class Mediator(SyncDispatchMixin, AsyncDispatchMixin):
             self._pipelines.append(behavior_fn)
             logger.debug(
                 "Mediator: Added pipeline behavior '%s'",
-                getattr(behavior_fn, '__name__', repr(behavior_fn)),
+                getattr(behavior_fn, "__name__", repr(behavior_fn)),
             )
 
     # ----------------------------------------------------------

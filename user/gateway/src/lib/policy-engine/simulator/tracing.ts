@@ -204,7 +204,7 @@ export function formatTrace(trace: SimulationTrace): string {
 
   if (trace.causingChange) {
     lines.push("");
-    lines.push(`Causing Change: ${trace.causingChange.type} on policy "${trace.causingChange.policyId}"`);
+    lines.push(`Causing Change: ${trace.causingChange}`);
   }
 
   return lines.join("\n");

@@ -42,7 +42,7 @@ class BulkheadFullError(Exception):
         self.active = active
         self.max_concurrent = max_concurrent
         self.queue_size = queue_size
-        super().__init__(f"Bulkhead '{name}' is full: " f"active={active}/{max_concurrent}, queue={queue_size}")
+        super().__init__(f"Bulkhead '{name}' is full: active={active}/{max_concurrent}, queue={queue_size}")
 
 
 # ============================================================
@@ -310,7 +310,7 @@ class Bulkhead:
                 active=self._active_count,
                 max_concurrent=self._max_concurrent,
                 queue_size=self._queue_size,
-            )
+            ) from None
 
         # Transition from queued to active (semaphore acquired)
         if was_queued:

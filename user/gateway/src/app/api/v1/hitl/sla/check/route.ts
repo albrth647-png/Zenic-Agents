@@ -2,7 +2,7 @@
 // POST /api/v1/hitl/sla/check
 
 import { NextResponse } from "next/server";
-import { getSLAService } from "@/lib/hitl";
+import { getSLAService } from "@/lib/hitl/sla-service/_monitor";
 
 // POST /api/v1/hitl/sla/check
 export async function POST() {

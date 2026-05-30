@@ -4,7 +4,7 @@
 //! method, and `Default` implementation.
 
 use crate::categories::NicheCategory;
-use crate::compliance::{ComplianceEngine, ComplianceResult};
+use crate::compliance::ComplianceEngine;
 use crate::domain_rules::DomainRuleSet;
 use crate::sensitivity::DataSensitivity;
 use crate::verdict::{ActionCategory, SafetyVerdict};

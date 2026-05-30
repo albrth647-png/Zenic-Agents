@@ -13,15 +13,17 @@ from ._operations import _OperationsMixin
 
 logger = logging.getLogger(__name__)
 
-_VALID_OPERATIONS = frozenset({
-    "create_incident",
-    "update_incident",
-    "close_incident",
-    "get_incident",
-    "search_incidents",
-    "add_comment",
-    "create_change_request",
-})
+_VALID_OPERATIONS = frozenset(
+    {
+        "create_incident",
+        "update_incident",
+        "close_incident",
+        "get_incident",
+        "search_incidents",
+        "add_comment",
+        "create_change_request",
+    }
+)
 
 
 class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
@@ -65,10 +67,7 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
             return ActionResult(
                 success=False,
                 data={"operation": operation},
-                error=(
-                    f"Invalid ServiceNow operation: '{operation}'. "
-                    f"Must be one of {sorted(_VALID_OPERATIONS)}"
-                ),
+                error=(f"Invalid ServiceNow operation: '{operation}'. Must be one of {sorted(_VALID_OPERATIONS)}"),
                 duration_ms=self._elapsed_ms(start),
             )
 
@@ -78,8 +77,7 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
         # ── Dry-run when no instance configured ───────────────
         if not instance_url:
             logger.info(
-                "ServiceNowExecutor: dry-run mode — no instance_url configured "
-                "for operation '%s'",
+                "ServiceNowExecutor: dry-run mode — no instance_url configured for operation '%s'",
                 operation,
             )
             with self._lock:
@@ -142,7 +140,8 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
             elapsed = self._elapsed_ms(start)
             logger.error(
                 "ServiceNowExecutor: unhandled error in '%s': %s",
-                operation, exc,
+                operation,
+                exc,
             )
             return ActionResult(
                 success=False,
@@ -154,7 +153,6 @@ class ServiceNowExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecuto
     # ──────────────────────────────────────────────────────────
     #  CONFIG RESOLVERS
     # ──────────────────────────────────────────────────────────
-
 
 
 __all__ = ["ServiceNowExecutor"]

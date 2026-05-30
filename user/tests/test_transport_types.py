@@ -4,8 +4,6 @@ Rigor: sin mocks, datos reales. Casos: normal + vacío + nulo + tipo incorrecto 
 valores extremos + error de sistema. Si un test no puede fallar, no se escribe.
 """
 
-import pytest
-
 from src.core.agents.schemas.types._transport_types import (
     TextChannelInput,
     TextChannelResult,
@@ -17,8 +15,8 @@ from src.core.agents.schemas.types._transport_types import (
 #  TextChannelInput
 # ════════════════════════════════════════════════════════════════
 
-class TestTextChannelInput:
 
+class TestTextChannelInput:
     def test_defaults_all_empty_or_zero(self):
         """Todos los campos deben tener defaults seguros — nunca raise."""
         inp = TextChannelInput()
@@ -95,8 +93,8 @@ class TestTextChannelInput:
 #  TextChannelResult
 # ════════════════════════════════════════════════════════════════
 
-class TestTextChannelResult:
 
+class TestTextChannelResult:
     def test_defaults_indicate_failure(self):
         """Defaults deben indicar fallo (success=False, status=pending)."""
         res = TextChannelResult()
@@ -157,8 +155,8 @@ class TestTextChannelResult:
 #  VoiceChannelInput
 # ════════════════════════════════════════════════════════════════
 
-class TestVoiceChannelInput:
 
+class TestVoiceChannelInput:
     def test_defaults_all_empty(self):
         inp = VoiceChannelInput()
         assert inp.audio_url == ""
@@ -225,8 +223,8 @@ class TestVoiceChannelInput:
 #  VoiceChannelResult
 # ════════════════════════════════════════════════════════════════
 
-class TestVoiceChannelResult:
 
+class TestVoiceChannelResult:
     def test_defaults_indicate_failure(self):
         res = VoiceChannelResult()
         assert res.success is False

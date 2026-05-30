@@ -88,7 +88,9 @@ class LogicBuilder:
         self._register_builtin_blocks()
         self._keyword_map = build_keyword_map()
 
-        logger.info(f"LogicBuilder: Initialized with {len(self._blocks)} blocks in {len({b.category for b in self._blocks.values()})} categories")
+        logger.info(
+            f"LogicBuilder: Initialized with {len(self._blocks)} blocks in {len({b.category for b in self._blocks.values()})} categories"
+        )
 
     # ============================================================
     #  BUILD METHODS
@@ -116,7 +118,7 @@ class LogicBuilder:
                     suggested_blocks.add(bn)
 
         # Also use template_engine's suggest_blocks if available
-        if self._template_engine and hasattr(self._template_engine, 'suggest_blocks'):
+        if self._template_engine and hasattr(self._template_engine, "suggest_blocks"):
             try:
                 template_suggestions = self._template_engine.suggest_blocks(description)
                 for ts in template_suggestions:

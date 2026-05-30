@@ -110,9 +110,7 @@ class ComplianceResult:
         high = sum(1 for v in self.violations if v.severity == ComplianceSeverity.HIGH)
         medium = sum(1 for v in self.violations if v.severity == ComplianceSeverity.MEDIUM)
         low = sum(1 for v in self.violations if v.severity == ComplianceSeverity.LOW)
-        return (
-            f"NON-COMPLIANT ({self.standard.value}): " f"{critical} critical, {high} high, {medium} medium, {low} low"
-        )
+        return f"NON-COMPLIANT ({self.standard.value}): {critical} critical, {high} high, {medium} medium, {low} low"
 
 
 class ComplianceRule:

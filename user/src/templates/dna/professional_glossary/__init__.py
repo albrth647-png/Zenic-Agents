@@ -3,6 +3,7 @@
 Transformation rules are split across sub-files for maintainability.
 Use load_all_rules() to get the assembled data.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

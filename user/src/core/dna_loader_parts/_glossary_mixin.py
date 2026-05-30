@@ -40,7 +40,7 @@ class GlossaryMixin:
             # Case-insensitive replacement preserving original capitalization
             result = re.sub(
                 re.escape(entry.from_term),
-                lambda m: self._preserve_case_replace(m, entry.to_term),
+                lambda m, entry=entry: self._preserve_case_replace(m, entry.to_term),
                 result,
                 flags=re.IGNORECASE,
             )

@@ -169,10 +169,7 @@ def validate_target(target: ObjectiveTarget) -> list[str]:
 
     valid_operators = {"<", ">", "<=", ">=", "==", "!="}
     if target.operator not in valid_operators:
-        errors.append(
-            f"Invalid operator '{target.operator}'. "
-            f"Must be one of: {', '.join(sorted(valid_operators))}"
-        )
+        errors.append(f"Invalid operator '{target.operator}'. Must be one of: {', '.join(sorted(valid_operators))}")
 
     if not isinstance(target.current_value, (int, float)):
         errors.append("current_value must be numeric")
@@ -211,10 +208,7 @@ def validate_objective(objective: Objective) -> list[str]:
     if objective.deadline:
         parsed = parse_deadline(objective.deadline)
         if parsed is None:
-            errors.append(
-                f"Invalid deadline format: '{objective.deadline}'. "
-                "Expected ISO 8601 format."
-            )
+            errors.append(f"Invalid deadline format: '{objective.deadline}'. Expected ISO 8601 format.")
 
     return errors
 

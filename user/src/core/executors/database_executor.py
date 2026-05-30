@@ -5,6 +5,7 @@ Ejecutor de operaciones reales en SQLite.
 """
 
 import asyncio
+import contextlib
 import logging
 import os
 import sqlite3
@@ -86,11 +87,8 @@ class DatabaseExecutor(ActionExecutor):
             # Journal the operation for rollback capability
             journal_id = ""
             if operation in ("insert", "update", "delete"):
-                try:
+                with contextlib.suppress(Exception):
                     journal_id = self._journal.journal_before(db_path, operation, query, params, "__anonymous__")
-                except Exception:  # noqa: S110
-                    # Journal failure must not block DB operations
-                    pass
 
             conn.commit()
             result = {"affected_rows": cursor.rowcount, "lastrowid": cursor.lastrowid}
@@ -99,7 +97,7 @@ class DatabaseExecutor(ActionExecutor):
                 try:
                     self._journal.journal_after(journal_id, cursor.rowcount, cursor.lastrowid)
                     result["journal_id"] = journal_id
-                except Exception:  # noqa: S110
+                except Exception:
                     # Journal failure must not block DB operations
                     pass
 

@@ -28,11 +28,10 @@ from .._fallbacks import (
 from ._loader import HAS_NATIVE
 
 
-def pbkdf2_derive_key(
-    password: bytes, salt: bytes, iterations: int, key_length: int
-) -> bytes:
+def pbkdf2_derive_key(password: bytes, salt: bytes, iterations: int, key_length: int) -> bytes:
     if HAS_NATIVE:
         from ._loader import _rust_pbkdf2_derive_key
+
         return _rust_pbkdf2_derive_key(password, salt, iterations, key_length)
     return _py_pbkdf2_derive_key(password, salt, iterations, key_length)
 
@@ -46,17 +45,15 @@ def argon2id_hash(
 ) -> bytes:
     if HAS_NATIVE:
         from ._loader import _rust_argon2id_hash
-        return _rust_argon2id_hash(
-            password, salt, memory_cost, time_cost, parallelism
-        )
-    return _py_argon2id_hash(
-        password, salt, memory_cost, time_cost, parallelism
-    )
+
+        return _rust_argon2id_hash(password, salt, memory_cost, time_cost, parallelism)
+    return _py_argon2id_hash(password, salt, memory_cost, time_cost, parallelism)
 
 
 def constant_time_compare(a: bytes, b: bytes) -> bool:
     if HAS_NATIVE:
         from ._loader import _rust_constant_time_compare
+
         return _rust_constant_time_compare(a, b)
     return _py_constant_time_compare(a, b)
 
@@ -64,6 +61,7 @@ def constant_time_compare(a: bytes, b: bytes) -> bool:
 def blake3_hash(data: bytes) -> str:
     if HAS_NATIVE:
         from ._loader import _rust_blake3_hash
+
         return _rust_blake3_hash(data)
     return _py_blake3_hash(data)
 
@@ -71,6 +69,7 @@ def blake3_hash(data: bytes) -> str:
 def xxhash64(data: bytes, seed: int = 0) -> int:
     if HAS_NATIVE:
         from ._loader import _rust_xxhash64
+
         return _rust_xxhash64(data, seed)
     return _py_xxhash64(data, seed)
 
@@ -78,5 +77,6 @@ def xxhash64(data: bytes, seed: int = 0) -> int:
 def merkle_root(leaves: list[bytes]) -> str:
     if HAS_NATIVE:
         from ._loader import _rust_merkle_root
+
         return _rust_merkle_root(leaves)
     return _py_merkle_root(leaves)

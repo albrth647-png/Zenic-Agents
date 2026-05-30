@@ -214,7 +214,7 @@ class SNAPersistence:
             ).fetchall()
         else:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT * FROM sna_alerts WHERE status NOT IN ('resolved','expired') " "ORDER BY created_at DESC",
+                "SELECT * FROM sna_alerts WHERE status NOT IN ('resolved','expired') ORDER BY created_at DESC",
             ).fetchall()
         return [self._row_to_alert(r) for r in rows]
 

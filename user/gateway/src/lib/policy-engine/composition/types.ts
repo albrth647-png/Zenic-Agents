@@ -21,17 +21,36 @@ import type {
 import {
   POLICY_SET_API_VERSION,
   POLICY_SET_KIND,
-  type PolicySet,
-  type PolicySetEntry,
-  type MergeStrategy,
-  type ComposedPolicyResult,
-  type CompositionStats,
-  type PolicyConflict,
-  type ConflictType,
-  type ConflictSeverity,
-  type ConflictResolutionStrategy,
-  type ConflictStatementRef,
 } from "../types";
+import type {
+  PolicySet,
+  PolicySetEntry,
+  MergeStrategy,
+  ComposedPolicyResult,
+  CompositionStats,
+  PolicyConflict,
+  ConflictType,
+  ConflictSeverity,
+  ConflictResolutionStrategy,
+  ConflictStatementRef,
+} from "../types";
+
+// Re-export all types needed by sibling modules
+export type {
+  PolicyDocument,
+  PolicyStatement,
+  PolicyEffectV2,
+  PolicySet,
+  PolicySetEntry,
+  MergeStrategy,
+  ComposedPolicyResult,
+  CompositionStats,
+  PolicyConflict,
+  ConflictType,
+  ConflictSeverity,
+  ConflictResolutionStrategy,
+  ConflictStatementRef,
+};
 
 
 // ─── Constants ────────────────────────────────────────────────────────

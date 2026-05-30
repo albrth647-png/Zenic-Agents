@@ -64,7 +64,7 @@ def get_domain_rules_from_blueprint(
                         )
                     )
             return rules
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
     # Fallback to DNALoader

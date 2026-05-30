@@ -69,7 +69,7 @@ async function lookupSubscriptionFromDb(tenantId: string): Promise<SubscriptionL
   let dbAvailable = true;
 
   try {
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 

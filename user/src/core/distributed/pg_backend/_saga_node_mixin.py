@@ -16,6 +16,7 @@ logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 #  CIRCUIT BREAKER STATE MIXIN
 # ============================================================
 
+
 class PgCircuitMixin:
     """
     Mixin providing PostgreSQL circuit breaker state operations.
@@ -92,6 +93,7 @@ class PgCircuitMixin:
 # ============================================================
 #  SAGA STATE MIXIN
 # ============================================================
+
 
 class PgSagaMixin:
     """
@@ -255,6 +257,7 @@ class PgSagaMixin:
 # ============================================================
 #  NODE TOPOLOGY MIXIN
 # ============================================================
+
 
 class PgNodeMixin:
     """

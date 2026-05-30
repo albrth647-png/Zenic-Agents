@@ -37,7 +37,8 @@ mod sections;
 mod tests;
 
 // Re-export all public catalog functions so they remain accessible as crate::catalog::*
+
 pub use catalog_data::{
     catalog_count, catalog_get_all, catalog_get_by_category, catalog_get_by_id, catalog_ids,
-    catalog_search,
+    catalog_search, ALL_NICHES,
 };

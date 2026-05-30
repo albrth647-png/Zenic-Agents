@@ -95,7 +95,9 @@ class InventoryManager(BaseAgent[InventoryResult]):
     def fallback(self, input_data: Any) -> InventoryResult:
         """Safe fallback: empty inventory result."""
         return InventoryResult(
-            levels={}, alerts=[], reorder=[],
+            levels={},
+            alerts=[],
+            reorder=[],
             source="fallback",
         )
 
@@ -117,7 +119,11 @@ class InventoryManager(BaseAgent[InventoryResult]):
     def get_stats(self) -> dict[str, Any]:
         """Return inventory statistics."""
         self.__init_store()
-        low_stock = [p for p in self._products if p.get("quantity", 0) <= p.get("low_stock_threshold", DEFAULT_LOW_STOCK_THRESHOLD)]
+        low_stock = [
+            p
+            for p in self._products
+            if p.get("quantity", 0) <= p.get("low_stock_threshold", DEFAULT_LOW_STOCK_THRESHOLD)
+        ]
         return {
             "total_products": len(self._products),
             "low_stock_count": len(low_stock),
@@ -161,7 +167,8 @@ class InventoryManager(BaseAgent[InventoryResult]):
         """Return products at or below their low-stock threshold."""
         self.__init_store()
         return [
-            p for p in self._products
+            p
+            for p in self._products
             if p.get("quantity", 0) <= p.get("low_stock_threshold", DEFAULT_LOW_STOCK_THRESHOLD)
         ]
 

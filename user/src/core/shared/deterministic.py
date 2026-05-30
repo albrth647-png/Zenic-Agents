@@ -590,7 +590,7 @@ def install_uuid4_patch() -> None:
         uuid.uuid4 = _deterministic_uuid4
         _uuid4_patched = True
     logger.info(
-        "install_uuid4_patch: uuid.uuid4() replaced with deterministic version " "(seed=%d)",
+        "install_uuid4_patch: uuid.uuid4() replaced with deterministic version (seed=%d)",
         SeedManager().master_seed,
     )
 
@@ -872,7 +872,7 @@ def install_time_patch(increment: float = 0.001) -> None:
         _time_module.time = _deterministic_time_time
         _time_patched = True
     logger.info(
-        "install_time_patch: time.time() replaced with deterministic clock " "(seed=%d, increment=%.4fs)",
+        "install_time_patch: time.time() replaced with deterministic clock (seed=%d, increment=%.4fs)",
         SeedManager().master_seed,
         increment,
     )

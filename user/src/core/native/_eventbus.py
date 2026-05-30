@@ -28,7 +28,8 @@ def wildcard_match(pattern: str, text: str) -> bool:
 
 
 def resolve_routes(
-    event_topic: str, subscriptions: list[dict[str, Any]],
+    event_topic: str,
+    subscriptions: list[dict[str, Any]],
 ) -> list[str]:
     """Resolve which handlers should receive an event."""
     if HAS_NATIVE:
@@ -85,5 +86,4 @@ def sort_by_priority(
         return _rust_sort_by_priority(events)
     # Pure Python fallback
     _priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-    return sorted(events, key=lambda e: _priority_order.get(
-        e.get("priority", "normal").lower(), 2))
+    return sorted(events, key=lambda e: _priority_order.get(e.get("priority", "normal").lower(), 2))

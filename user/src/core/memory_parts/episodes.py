@@ -6,6 +6,7 @@ project memory, and enhanced stats methods for SmartMemory.
 Phase 2: Fully tenant-aware — all queries scoped by tenant_id.
 """
 
+import contextlib
 import json
 import sqlite3
 import time
@@ -406,24 +407,20 @@ class EpisodesMixin:
             episodic_count = 0
             procedural_count = 0
             project_count = 0
-            try:
+            with contextlib.suppress(sqlite3.OperationalError):
                 episodic_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM episodic_memory WHERE tenant_id=?", (self._tenant_id,)
                 ).fetchone()[0]
-            except sqlite3.OperationalError:
-                pass
-            try:
+
+            with contextlib.suppress(sqlite3.OperationalError):
                 procedural_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM procedural_memory WHERE tenant_id=?", (self._tenant_id,)
                 ).fetchone()[0]
-            except sqlite3.OperationalError:
-                pass
-            try:
+
+            with contextlib.suppress(sqlite3.OperationalError):
                 project_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM project_memory WHERE tenant_id=?", (self._tenant_id,)
                 ).fetchone()[0]
-            except sqlite3.OperationalError:
-                pass
         with self._working_lock:
             working_size = len(self._working_memory)
         return {

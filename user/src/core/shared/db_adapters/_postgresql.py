@@ -24,10 +24,7 @@ class PostgreSQLDatabase(DatabaseBackend):
     backend_name = "postgresql"
 
     def __init__(self, dsn: str = "") -> None:
-        self._dsn = dsn or os.environ.get(
-            "DATABASE_URL",
-            "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db"
-        )
+        self._dsn = dsn or os.environ.get("DATABASE_URL", "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db")
         # Convert SQLAlchemy-style DSN to asyncpg format
         self._async_dsn = self._convert_dsn(self._dsn)
         self._pool: Any | None = None
@@ -49,11 +46,8 @@ class PostgreSQLDatabase(DatabaseBackend):
         """Create connection pool and initialize tables."""
         try:
             import asyncpg  # type: ignore[import-unresolved]
-        except ImportError:
-            raise ImportError(
-                "asyncpg is required for PostgreSQL. "
-                "Install with: pip install asyncpg"
-            )
+        except ImportError as exc:
+            raise ImportError("asyncpg is required for PostgreSQL. Install with: pip install asyncpg") from exc
 
         self._pool = await asyncpg.create_pool(
             self._async_dsn,
@@ -86,10 +80,18 @@ class PostgreSQLDatabase(DatabaseBackend):
                     UNIQUE(file_path, name, node_type, tenant_id)
                 )
             """)
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
 
             # Theorem Cache
             await conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -107,8 +109,12 @@ class PostgreSQLDatabase(DatabaseBackend):
                     PRIMARY KEY (structural_hash, tenant_id)
                 )
             """)
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
 
             # Merkle Ledger
             await conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -122,8 +128,12 @@ class PostgreSQLDatabase(DatabaseBackend):
                     tenant_id TEXT NOT NULL DEFAULT '__anonymous__'
                 )
             """)
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
 
             # Request Log
             await conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -143,9 +153,15 @@ class PostgreSQLDatabase(DatabaseBackend):
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 )
             """)
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)")  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)"
+            )  # nosemgrep: sqlalchemy-execute-raw-query
 
             # Auth tables
             await self._create_auth_tables(conn)
@@ -172,9 +188,15 @@ class PostgreSQLDatabase(DatabaseBackend):
                 login_count INTEGER DEFAULT 0
             )
         """)
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")  # nosemgrep: sqlalchemy-execute-raw-query
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)")  # nosemgrep: sqlalchemy-execute-raw-query
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
 
         await conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
             CREATE TABLE IF NOT EXISTS revoked_tokens (
@@ -198,8 +220,12 @@ class PostgreSQLDatabase(DatabaseBackend):
                 usage_count INTEGER DEFAULT 0
             )
         """)
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_apikeys_user ON api_keys(user_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_apikeys_active ON api_keys(active)")  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_apikeys_user ON api_keys(user_id)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_apikeys_active ON api_keys(active)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
 
         await conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
             CREATE TABLE IF NOT EXISTS tenants (
@@ -226,7 +252,9 @@ class PostgreSQLDatabase(DatabaseBackend):
                 UNIQUE(tenant_id, period_date)
             )
         """)
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_tenant_usage_tenant ON tenant_usage(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
+        await conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_tenant_usage_tenant ON tenant_usage(tenant_id)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
 
     async def _create_memory_tables(self, conn: Any) -> None:
         """Create SmartMemory tables."""
@@ -234,17 +262,41 @@ class PostgreSQLDatabase(DatabaseBackend):
         # DDL statements (CREATE TABLE/INDEX) cannot use parameterized queries
         # for identifiers (table names, column names). These values are not
         # user-supplied — they come from the hardcoded list above.
-        _SAFE_MEMORY_TABLES = frozenset({
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
-        })
+        _SAFE_MEMORY_TABLES = frozenset(
+            {
+                "semantic_cache",
+                "long_term_memory",
+                "episodic_memory",
+                "procedural_memory",
+                "project_memory",
+                "conversation_sessions",
+            }
+        )
         for table_name, extra_cols in [
-            ("semantic_cache", "query_hash TEXT NOT NULL, query_text TEXT NOT NULL, response_summary TEXT NOT NULL, operation TEXT DEFAULT '', goal TEXT DEFAULT '', importance REAL DEFAULT 0.5, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, access_count INTEGER DEFAULT 0, session_id TEXT DEFAULT '', client_id TEXT DEFAULT 'default', UNIQUE(query_hash, tenant_id)"),
-            ("long_term_memory", "query_text TEXT NOT NULL, solution_summary TEXT NOT NULL, operation TEXT DEFAULT '', goal TEXT DEFAULT '', importance REAL DEFAULT 0.5, success BOOLEAN DEFAULT TRUE, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, access_count INTEGER DEFAULT 0, tags JSONB DEFAULT '[]', client_id TEXT DEFAULT 'default'"),
-            ("episodic_memory", "event_type TEXT NOT NULL, description TEXT NOT NULL, context TEXT DEFAULT '', outcome TEXT DEFAULT '', importance REAL DEFAULT 0.5, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, tags JSONB DEFAULT '[]', client_id TEXT DEFAULT 'default'"),
-            ("procedural_memory", "pattern_name TEXT NOT NULL UNIQUE, pattern_type TEXT DEFAULT 'strategy', description TEXT NOT NULL, success_count INTEGER DEFAULT 0, fail_count INTEGER DEFAULT 0, success_rate REAL DEFAULT 0.0, steps JSONB DEFAULT '[]', embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, last_used DOUBLE PRECISION DEFAULT 0, client_id TEXT DEFAULT 'default'"),
-            ("project_memory", "project_name TEXT NOT NULL UNIQUE, project_type TEXT DEFAULT '', description TEXT DEFAULT '', path TEXT DEFAULT '', status TEXT DEFAULT 'active', entities JSONB DEFAULT '[]', endpoints JSONB DEFAULT '[]', config JSONB DEFAULT '{}', created_at DOUBLE PRECISION DEFAULT 0, updated_at DOUBLE PRECISION DEFAULT 0, notes TEXT DEFAULT '', client_id TEXT DEFAULT 'default'"),
-            ("conversation_sessions", "started_at DOUBLE PRECISION DEFAULT 0, ended_at DOUBLE PRECISION DEFAULT 0, summary TEXT DEFAULT '', importance REAL DEFAULT 0.5, exchange_count INTEGER DEFAULT 0, client_id TEXT DEFAULT 'default'"),
+            (
+                "semantic_cache",
+                "query_hash TEXT NOT NULL, query_text TEXT NOT NULL, response_summary TEXT NOT NULL, operation TEXT DEFAULT '', goal TEXT DEFAULT '', importance REAL DEFAULT 0.5, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, access_count INTEGER DEFAULT 0, session_id TEXT DEFAULT '', client_id TEXT DEFAULT 'default', UNIQUE(query_hash, tenant_id)",
+            ),
+            (
+                "long_term_memory",
+                "query_text TEXT NOT NULL, solution_summary TEXT NOT NULL, operation TEXT DEFAULT '', goal TEXT DEFAULT '', importance REAL DEFAULT 0.5, success BOOLEAN DEFAULT TRUE, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, access_count INTEGER DEFAULT 0, tags JSONB DEFAULT '[]', client_id TEXT DEFAULT 'default'",
+            ),
+            (
+                "episodic_memory",
+                "event_type TEXT NOT NULL, description TEXT NOT NULL, context TEXT DEFAULT '', outcome TEXT DEFAULT '', importance REAL DEFAULT 0.5, embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, tags JSONB DEFAULT '[]', client_id TEXT DEFAULT 'default'",
+            ),
+            (
+                "procedural_memory",
+                "pattern_name TEXT NOT NULL UNIQUE, pattern_type TEXT DEFAULT 'strategy', description TEXT NOT NULL, success_count INTEGER DEFAULT 0, fail_count INTEGER DEFAULT 0, success_rate REAL DEFAULT 0.0, steps JSONB DEFAULT '[]', embedding BYTEA, created_at DOUBLE PRECISION DEFAULT 0, last_used DOUBLE PRECISION DEFAULT 0, client_id TEXT DEFAULT 'default'",
+            ),
+            (
+                "project_memory",
+                "project_name TEXT NOT NULL UNIQUE, project_type TEXT DEFAULT '', description TEXT DEFAULT '', path TEXT DEFAULT '', status TEXT DEFAULT 'active', entities JSONB DEFAULT '[]', endpoints JSONB DEFAULT '[]', config JSONB DEFAULT '{}', created_at DOUBLE PRECISION DEFAULT 0, updated_at DOUBLE PRECISION DEFAULT 0, notes TEXT DEFAULT '', client_id TEXT DEFAULT 'default'",
+            ),
+            (
+                "conversation_sessions",
+                "started_at DOUBLE PRECISION DEFAULT 0, ended_at DOUBLE PRECISION DEFAULT 0, summary TEXT DEFAULT '', importance REAL DEFAULT 0.5, exchange_count INTEGER DEFAULT 0, client_id TEXT DEFAULT 'default'",
+            ),
         ]:
             # SECURITY: Validate table_name against whitelist before interpolation
             assert table_name in _SAFE_MEMORY_TABLES, f"Invalid table: {table_name}"
@@ -256,8 +308,12 @@ class PostgreSQLDatabase(DatabaseBackend):
                     tenant_id TEXT DEFAULT '__anonymous__'
                 )
             """)
-            await conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{table_name}_tenant ON {table_name}(tenant_id)")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
-            await conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{table_name}_tenant_client ON {table_name}(tenant_id, client_id)")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            await conn.execute(
+                f"CREATE INDEX IF NOT EXISTS idx_{table_name}_tenant ON {table_name}(tenant_id)"
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            await conn.execute(
+                f"CREATE INDEX IF NOT EXISTS idx_{table_name}_tenant_client ON {table_name}(tenant_id, client_id)"
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
 
     async def close(self) -> None:
         if self._pool:

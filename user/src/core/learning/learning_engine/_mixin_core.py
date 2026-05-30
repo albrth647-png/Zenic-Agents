@@ -143,7 +143,7 @@ class LearningEngine(PatternDetectionMixin):
 
                     where = " AND ".join(conditions)
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM learning_insights WHERE {where} " f"ORDER BY confidence DESC",  # noqa: S608
+                        f"SELECT * FROM learning_insights WHERE {where} ORDER BY confidence DESC",  # noqa: S608
                         params,
                     )
                     return [self._insight_from_row(row) for row in cursor.fetchall()]
@@ -231,7 +231,7 @@ class LearningEngine(PatternDetectionMixin):
             hints.append(
                 {
                     "type": "high_failure_rate",
-                    "message": f"Failure rate is {len(failures)/len(history)*100:.1f}%",
+                    "message": f"Failure rate is {len(failures) / len(history) * 100:.1f}%",
                     "failure_count": len(failures),
                     "total_count": len(history),
                 }

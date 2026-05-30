@@ -6,7 +6,7 @@ use pyo3::types::PyDict;
 use std::sync::{Arc, Mutex};
 
 use zenic_memory::{
-    HitlOutcome, LearningMechanism, LifecyclePhase, MemoryCache, MemoryError, OntologyBase,
+    LearningMechanism, LifecyclePhase, MemoryCache, MemoryError, OntologyBase,
     SemanticGraph, SemanticMapping, SubscriptionGate, SubscriptionTier, HitlBridge, MerkleSeal,
     YamlRenderer, LifecycleManager, VerdictAdapter,
 };

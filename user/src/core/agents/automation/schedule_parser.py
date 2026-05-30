@@ -29,13 +29,27 @@ SCHEDULE_PATTERNS: dict[str, list[str]] = {
 
 # Day name mappings for cron
 DAY_NAME_MAP: dict[str, str] = {
-    "lunes": "1", "monday": "1", "mon": "1",
-    "martes": "2", "tuesday": "2", "tue": "2",
-    "miércoles": "3", "wednesday": "3", "wed": "3",
-    "jueves": "4", "thursday": "4", "thu": "4",
-    "viernes": "5", "friday": "5", "fri": "5",
-    "sábado": "6", "saturday": "6", "sat": "6",
-    "domingo": "0", "sunday": "0", "sun": "0",
+    "lunes": "1",
+    "monday": "1",
+    "mon": "1",
+    "martes": "2",
+    "tuesday": "2",
+    "tue": "2",
+    "miércoles": "3",
+    "wednesday": "3",
+    "wed": "3",
+    "jueves": "4",
+    "thursday": "4",
+    "thu": "4",
+    "viernes": "5",
+    "friday": "5",
+    "fri": "5",
+    "sábado": "6",
+    "saturday": "6",
+    "sat": "6",
+    "domingo": "0",
+    "sunday": "0",
+    "sun": "0",
 }
 
 # Interval pattern: "cada/every N horas/minutos/segundos"

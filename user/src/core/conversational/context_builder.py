@@ -17,9 +17,8 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..config.constants import (  # type: ignore[import-unresolved]
     CONTEXT_RESERVE_RESPONSE,
@@ -34,6 +33,8 @@ from .types.intent import AssistantIntent, IntentCategory
 from .types.session import MessageRole, Session
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from .types.personality import PersonalityProfile
 
 logger = logging.getLogger("zenic_agents.conversational.context_builder")
@@ -225,7 +226,7 @@ class ContextBuilder:
                 "Proporciona respuestas tecnicas precisas con ejemplos.\n"
             )
         elif intent.category == IntentCategory.QUESTION:
-            base += "El usuario esta haciendo una pregunta. " "Responde de forma clara y completa.\n"
+            base += "El usuario esta haciendo una pregunta. Responde de forma clara y completa.\n"
 
         return base
 

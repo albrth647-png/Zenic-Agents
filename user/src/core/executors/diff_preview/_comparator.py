@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 #  RETRY HELPER
 # ──────────────────────────────────────────────────────────────
 
+
 def retry(
     fn: Any,
     max_retries: int = 3,
@@ -43,16 +44,22 @@ def retry(
         except Exception as exc:
             last_exc = exc
             if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 logger.debug(
                     "%s: retry %d/%d after %.2fs — %s",
-                    label, attempt + 1, max_retries, delay, exc,
+                    label,
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                    exc,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
                     "%s: failed after %d attempts — %s",
-                    label, max_retries, exc,
+                    label,
+                    max_retries,
+                    exc,
                 )
     raise last_exc  # type: ignore[misc]
 
@@ -60,6 +67,7 @@ def retry(
 # ──────────────────────────────────────────────────────────────
 #  RISK ESTIMATION
 # ──────────────────────────────────────────────────────────────
+
 
 def estimate_risk_from_diffs(
     diffs: list[DiffEntry],
@@ -104,6 +112,7 @@ def estimate_risk_from_diffs(
 #  SQL PARSING HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 def extract_where_clause(query: str, operation: str) -> str:
     """Best-effort extraction of WHERE clause from a SQL query."""
     op_upper = operation.upper()
@@ -111,14 +120,16 @@ def extract_where_clause(query: str, operation: str) -> str:
     if op_upper == "DELETE":
         m = re.match(
             r"^\s*DELETE\s+FROM\s+\w+\s+WHERE\s+(.+)$",
-            query, re.IGNORECASE | re.DOTALL,
+            query,
+            re.IGNORECASE | re.DOTALL,
         )
         return m.group(1).strip() if m else ""
 
     if op_upper == "UPDATE":
         m = re.match(
             r"^\s*UPDATE\s+\w+\s+SET\s+.+?\s+WHERE\s+(.+)$",
-            query, re.IGNORECASE | re.DOTALL,
+            query,
+            re.IGNORECASE | re.DOTALL,
         )
         return m.group(1).strip() if m else ""
 
@@ -135,7 +146,8 @@ def parse_set_fields(query: str) -> list[tuple]:
     """
     m = re.match(
         r"^\s*UPDATE\s+\w+\s+SET\s+(.+?)(?:\s+WHERE\s+.+)?$",
-        query, re.IGNORECASE | re.DOTALL,
+        query,
+        re.IGNORECASE | re.DOTALL,
     )
     if not m:
         return []
@@ -170,7 +182,8 @@ def count_placeholders_in_set(query: str) -> int:
     """Count the number of ``?`` placeholders in the SET clause."""
     m = re.match(
         r"^\s*UPDATE\s+\w+\s+SET\s+(.+?)(?:\s+WHERE\s+.+)?$",
-        query, re.IGNORECASE | re.DOTALL,
+        query,
+        re.IGNORECASE | re.DOTALL,
     )
     if not m:
         return 0
@@ -185,7 +198,8 @@ def parse_insert_columns(query: str) -> list[str]:
     """
     m = re.match(
         r"^\s*INSERT\s+INTO\s+\w+\s*\(([^)]+)\)",
-        query, re.IGNORECASE,
+        query,
+        re.IGNORECASE,
     )
     if not m:
         return []
@@ -196,6 +210,7 @@ def parse_insert_columns(query: str) -> list[str]:
 # ──────────────────────────────────────────────────────────────
 #  DB SUMMARY BUILDER
 # ──────────────────────────────────────────────────────────────
+
 
 def build_db_summary(
     operation: str,

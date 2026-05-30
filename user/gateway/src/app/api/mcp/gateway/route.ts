@@ -10,7 +10,7 @@ import { getRateLimiter } from "@/lib/mcp-gateway/rate-limiter/rate-limiter";
 import { getAuthService } from "@/lib/mcp-gateway/auth/auth-service";
 import { getToolRegistry } from "@/lib/mcp-gateway/sdk/tool-registry";
 import { getMerkleAuditService } from "@/lib/mcp-gateway/audit/merkle-audit";
-import type { ApiResponse, GatewayRequest } from "@/lib/mcp-gateway/types";
+import type { ApiResponse, GatewayRequest, AuthMethod } from "@/lib/mcp-gateway/types";
 import { recordAudit } from "@/lib/mcp-gateway/services/audit-service";
 
 /** POST /api/mcp/gateway — Execute a tool through the gateway (SECURED) */
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       },
       auth: {
         authenticated: true,
-        method: authContext.method,
+        method: authContext.method as AuthMethod,
         executorId: authContext.executorId ?? body.executorId,
         tenantId: authContext.tenantId,
         roles: authContext.roles,

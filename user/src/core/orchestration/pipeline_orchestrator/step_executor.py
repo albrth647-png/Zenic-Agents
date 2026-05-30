@@ -180,7 +180,7 @@ class StepExecutor:
                     result.status = StepStatus.RETRYING
                     backoff = self._backoff_base * (2 ** (attempt - 1))
                     logger.warning(
-                        "StepExecutor: Step '%s' failed (attempt %d/%d), " "retrying in %.1fs: %s",
+                        "StepExecutor: Step '%s' failed (attempt %d/%d), retrying in %.1fs: %s",
                         step_id,
                         attempt,
                         effective_retries + 1,

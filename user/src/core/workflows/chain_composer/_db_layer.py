@@ -119,7 +119,7 @@ def load_chains(db_path: str = _DB_PATH) -> dict[str, ComposedChain]:
 
     with sqlite3.connect(db_path) as conn:
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            "SELECT chain_id, name, description, steps, metadata, " "tenant_id, created_at, status FROM composed_chains"
+            "SELECT chain_id, name, description, steps, metadata, tenant_id, created_at, status FROM composed_chains"
         ).fetchall()
 
     for row in rows:

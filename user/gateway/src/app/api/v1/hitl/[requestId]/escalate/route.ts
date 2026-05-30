@@ -3,7 +3,7 @@
 // ⚠️ SECURITY FIX (Phase 0): Added authentication — fromUserId from verified session
 
 import { NextRequest, NextResponse } from "next/server";
-import { getEscalationService } from "@/lib/hitl";
+import { getEscalationService } from "@/lib/hitl/delegation/_rules";
 import { requireAuth, handleAuthError } from "@/lib/auth";
 
 interface RouteParams {

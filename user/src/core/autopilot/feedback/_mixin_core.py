@@ -337,7 +337,7 @@ class ClosedLoopFeedback:
         elif negative_count >= 3:
             action = FeedbackAction.ESCALATE_TO_HUMAN  # noqa: F821
             analysis = (
-                f"3+ consecutive negative cycles ({negative_count}). " f"Escalating to human for manual intervention."
+                f"3+ consecutive negative cycles ({negative_count}). Escalating to human for manual intervention."
             )
         elif avg_improvement < 0:
             action = FeedbackAction.CHANGE_APPROACH  # noqa: F821
@@ -347,18 +347,15 @@ class ClosedLoopFeedback:
             )
         elif stagnant_count >= self._max_cycles_without_improvement:
             action = FeedbackAction.ADJUST_STRATEGY  # noqa: F821
-            analysis = (
-                f"No improvement for {stagnant_count} consecutive cycles. " f"Adjusting strategy to break plateau."
-            )
+            analysis = f"No improvement for {stagnant_count} consecutive cycles. Adjusting strategy to break plateau."
         elif avg_improvement > 0:
             action = FeedbackAction.CONTINUE  # noqa: F821
             analysis = (
-                f"Positive improvement ({avg_improvement:.4f}) on cycle {cycle_number}. "
-                f"Continuing current strategy."
+                f"Positive improvement ({avg_improvement:.4f}) on cycle {cycle_number}. Continuing current strategy."
             )
         else:
             action = FeedbackAction.CONTINUE  # noqa: F821
-            analysis = f"No change detected on cycle {cycle_number}. " f"Continuing to monitor."
+            analysis = f"No change detected on cycle {cycle_number}. Continuing to monitor."
 
         return action, analysis
 

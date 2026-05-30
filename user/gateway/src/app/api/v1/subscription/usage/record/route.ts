@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const increment = body.increment ?? 1;
 
     // Verify subscription exists and is active
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 
@@ -67,10 +67,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the usage record
-    const usageRecord = await db.usageRecordDb.findUnique({
-      where: {
-        tenantId_usageType: { tenantId, usageType },
-      },
+    const usageRecord = await db.usageRecord.findFirst({
+      where: { tenantId, resource: usageType },
     });
 
     if (!usageRecord) {
@@ -81,18 +79,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Update usage: either set absolute value or increment
-    const newValue = body.value !== undefined ? body.value : usageRecord.currentValue + increment;
+    const newValue = body.value !== undefined ? body.value : usageRecord.usageCount + increment;
 
-    const updated = await db.usageRecordDb.update({
-      where: {
-        tenantId_usageType: { tenantId, usageType },
-      },
+    const updated = await db.usageRecord.update({
+      where: { id: usageRecord.id },
       data: {
-        currentValue: newValue,
+        usageCount: newValue,
       },
     });
 
-    const isOverLimit = updated.currentValue > updated.limitValue;
+    const isOverLimit = updated.usageCount > updated.limitValue;
 
     return NextResponse.json({
       data: {

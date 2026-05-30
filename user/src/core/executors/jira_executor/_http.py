@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 from typing import Any
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 try:
     import urllib.error
     import urllib.request
+
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
@@ -46,11 +48,19 @@ class _HttpMixin:
             try:
                 if _HAS_AIOHTTP:
                     return await self._jira_request_aiohttp(
-                        method, url, headers, json_data, params,
+                        method,
+                        url,
+                        headers,
+                        json_data,
+                        params,
                     )
                 elif _HAS_URLLIB:
                     return await self._jira_request_urllib(
-                        method, url, headers, json_data, params,
+                        method,
+                        url,
+                        headers,
+                        json_data,
+                        params,
                     )
                 else:
                     return {
@@ -63,20 +73,25 @@ class _HttpMixin:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
                         "JiraExecutor: attempt %d/%d failed for %s %s: %s",
-                        attempt, _MAX_RETRIES, method, url, exc,
+                        attempt,
+                        _MAX_RETRIES,
+                        method,
+                        url,
+                        exc,
                     )
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
                         "JiraExecutor: all %d attempts failed for %s %s: %s",
-                        _MAX_RETRIES, method, url, exc,
+                        _MAX_RETRIES,
+                        method,
+                        url,
+                        exc,
                     )
                     return {
                         "status": 0,
                         "body": {
-                            "errorMessages": [
-                                f"HTTP error after {_MAX_RETRIES} attempts: {exc}"
-                            ],
+                            "errorMessages": [f"HTTP error after {_MAX_RETRIES} attempts: {exc}"],
                         },
                         "headers": {},
                     }
@@ -100,13 +115,16 @@ class _HttpMixin:
         import aiohttp
 
         timeout = aiohttp.ClientTimeout(total=_HTTP_TIMEOUT)
-        async with aiohttp.ClientSession(timeout=timeout) as session, session.request(
-            method,
-            url,
-            headers=headers,
-            json=json_data,
-            params=params,
-        ) as resp:
+        async with (
+            aiohttp.ClientSession(timeout=timeout) as session,
+            session.request(
+                method,
+                url,
+                headers=headers,
+                json=json_data,
+                params=params,
+            ) as resp,
+        ):
             # Track rate limits from response headers
             remaining = resp.headers.get("X-RateLimit-Remaining")
             if remaining is not None:
@@ -151,15 +169,14 @@ class _HttpMixin:
             filtered = {k: v for k, v in params.items() if v is not None}
             if filtered:
                 from urllib.parse import urlencode
+
                 separator = "&" if "?" in url else "?"
                 url = f"{url}{separator}{urlencode(filtered)}"
 
         validated_url = _validate_url_ssrf(url)
 
         def _sync_request() -> dict[str, Any]:
-            data = (
-                json.dumps(json_data).encode("utf-8") if json_data else None
-            )
+            data = json.dumps(json_data).encode("utf-8") if json_data else None
             req = urllib.request.Request(  # noqa: S310
                 validated_url,
                 data=data,
@@ -177,10 +194,8 @@ class _HttpMixin:
                     }
             except urllib.error.HTTPError as exc:
                 body_text = ""
-                try:
+                with contextlib.suppress(Exception):
                     body_text = exc.read().decode("utf-8")[:2000]
-                except Exception:  # noqa: S110
-                    pass
                 body: dict[str, Any] = {}
                 try:
                     body = json.loads(body_text) if body_text else {}
@@ -189,9 +204,7 @@ class _HttpMixin:
 
                 if exc.code == 429:
                     retry_after = float(exc.headers.get("Retry-After", "5"))
-                    raise RuntimeError(
-                        f"Rate limited, retry after {retry_after}s"
-                    )
+                    raise RuntimeError(f"Rate limited, retry after {retry_after}s") from exc
 
                 return {
                     "status": exc.code,

@@ -15,9 +15,7 @@ class CompatMixin:
     async def _handle_abortive_protocol(self, intent, routing, plan, ast_analysis, start_time):
         if self._abortive is None:
             return {"status": "skipped", "reason": "AbortiveProtocol not available"}
-        return await self._abortive.handle_abortive_protocol(
-            intent, routing, plan, ast_analysis, start_time
-        )
+        return await self._abortive.handle_abortive_protocol(intent, routing, plan, ast_analysis, start_time)
 
     def _generate_subtasks(self, intent, ast_analysis, plan=None):
         if self._abortive is None:
@@ -47,16 +45,13 @@ class CompatMixin:
     def _merge_block_code(self, code_parts, comment_prefix, skip_prefix):
         if self._abortive is None:
             return ""
-        return self._abortive.merge_block_code(
-            code_parts, comment_prefix, skip_prefix
-        )
+        return self._abortive.merge_block_code(code_parts, comment_prefix, skip_prefix)
 
     # ─── Partial Reasoning backward compat ──────────────────────────────────
 
-    def _build_partial_reasoning_response(self, intent, routing, plan,
-                                           ast_analysis, trial, start_time,
-                                           subtask_results=None,
-                                           combined_code=""):
+    def _build_partial_reasoning_response(
+        self, intent, routing, plan, ast_analysis, trial, start_time, subtask_results=None, combined_code=""
+    ):
         if self._partial_reasoning is None:
             return {
                 "status": "skipped",
@@ -64,8 +59,14 @@ class CompatMixin:
                 "intent": intent,
             }
         return self._partial_reasoning.build_partial_reasoning_response(
-            intent, routing, plan, ast_analysis, trial, start_time,
-            subtask_results=subtask_results, combined_code=combined_code,
+            intent,
+            routing,
+            plan,
+            ast_analysis,
+            trial,
+            start_time,
+            subtask_results=subtask_results,
+            combined_code=combined_code,
         )
 
     # ─── Code Generator backward compat ─────────────────────────────────────
@@ -94,48 +95,74 @@ class CompatMixin:
     def _generate_pipeline_driven_code(self, intent, ast_analysis, plan, lang):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
-        return self._code_gen.generate_pipeline_driven_code(
-            intent, ast_analysis, plan, lang
-        )
+        return self._code_gen.generate_pipeline_driven_code(intent, ast_analysis, plan, lang)
 
-    def _generate_python_pipeline_driven(self, intent, ast_analysis, ast_context,
-                                          solver_insights, mcts_actions, safe_target,
-                                          has_security_action, has_replace_node,
-                                          has_patch_fix):
+    def _generate_python_pipeline_driven(
+        self,
+        intent,
+        ast_analysis,
+        ast_context,
+        solver_insights,
+        mcts_actions,
+        safe_target,
+        has_security_action,
+        has_replace_node,
+        has_patch_fix,
+    ):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_python_pipeline_driven(
-            intent, ast_analysis, ast_context, solver_insights,
-            mcts_actions, safe_target, has_security_action,
-            has_replace_node, has_patch_fix,
+            intent,
+            ast_analysis,
+            ast_context,
+            solver_insights,
+            mcts_actions,
+            safe_target,
+            has_security_action,
+            has_replace_node,
+            has_patch_fix,
         )
 
-    def _generate_pipeline_feature_module(self, safe_target, existing_functions,
-                                           existing_classes, needed_imports,
-                                           solver_insights, mcts_actions):
+    def _generate_pipeline_feature_module(
+        self, safe_target, existing_functions, existing_classes, needed_imports, solver_insights, mcts_actions
+    ):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_pipeline_feature_module(
-            safe_target, existing_functions, existing_classes,
-            needed_imports, solver_insights, mcts_actions,
+            safe_target,
+            existing_functions,
+            existing_classes,
+            needed_imports,
+            solver_insights,
+            mcts_actions,
         )
 
     def _generate_contextual_code(self, intent, ast_analysis, plan, lang):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
-        return self._code_gen.generate_contextual_code(
-            intent, ast_analysis, plan, lang
-        )
+        return self._code_gen.generate_contextual_code(intent, ast_analysis, plan, lang)
 
-    def _generate_python_contextual(self, intent, ast_analysis, safe_target,
-                                     existing_functions, existing_classes,
-                                     existing_connections, needed_imports,
-                                     max_complexity):
+    def _generate_python_contextual(
+        self,
+        intent,
+        ast_analysis,
+        safe_target,
+        existing_functions,
+        existing_classes,
+        existing_connections,
+        needed_imports,
+        max_complexity,
+    ):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_python_contextual(
-            intent, ast_analysis, safe_target, existing_functions,
-            existing_classes, existing_connections, needed_imports,
+            intent,
+            ast_analysis,
+            safe_target,
+            existing_functions,
+            existing_classes,
+            existing_connections,
+            needed_imports,
             max_complexity,
         )
 
@@ -144,19 +171,23 @@ class CompatMixin:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_security_module(safe_target)
 
-    def _generate_feature_module(self, safe_target, existing_functions,
-                                  existing_classes, needed_imports):
+    def _generate_feature_module(self, safe_target, existing_functions, existing_classes, needed_imports):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_feature_module(
-            safe_target, existing_functions, existing_classes, needed_imports,
+            safe_target,
+            existing_functions,
+            existing_classes,
+            needed_imports,
         )
 
     def _generate_kotlin_contextual(self, intent, safe_target, existing_classes):
         if self._code_gen is None:
             return {"status": "skipped", "reason": "CodeGenerator removed in v3.0.0"}
         return self._code_gen.generate_kotlin_contextual(
-            intent, safe_target, existing_classes,
+            intent,
+            safe_target,
+            existing_classes,
         )
 
     def _generate_go_contextual(self, intent, safe_target):
@@ -182,12 +213,14 @@ class CompatMixin:
             return {"status": "skipped", "reason": "CodeTransformer removed in v3.0.0", "code": code}
         return self._code_transform.fix_python(code, ast_analysis, solver_insights)
 
-    def _optimize_function(self, target_name, lang="python",
-                            ast_analysis=None, solver_insights=None):
+    def _optimize_function(self, target_name, lang="python", ast_analysis=None, solver_insights=None):
         if self._code_transform is None:
             return {"status": "skipped", "reason": "CodeTransformer removed in v3.0.0"}
         return self._code_transform.optimize_function(
-            target_name, lang, ast_analysis, solver_insights,
+            target_name,
+            lang,
+            ast_analysis,
+            solver_insights,
         )
 
     # ─── Analysis Utils backward compat ─────────────────────────────────────
@@ -217,10 +250,14 @@ class CompatMixin:
     def _check_dependencies(self, code, target, lang):
         return self._analysis.check_dependencies(code, target, lang)
 
-    def _log_request(self, intent, status, elapsed_ms, cache_hit=False,
-                    solver_status="", mcts_sims=0):
+    def _log_request(self, intent, status, elapsed_ms, cache_hit=False, solver_status="", mcts_sims=0):
         return self._analysis.log_request(
-            intent, status, elapsed_ms, cache_hit, solver_status, mcts_sims,
+            intent,
+            status,
+            elapsed_ms,
+            cache_hit,
+            solver_status,
+            mcts_sims,
         )
 
     # ─── Shared Properties ──────────────────────────────────────────────────
@@ -228,37 +265,37 @@ class CompatMixin:
     @property
     def model_manager(self):
         """Public accessor for model manager."""
-        return getattr(self, '_model_mgr', None)
+        return getattr(self, "_model_mgr", None)
 
     @property
     def low_power_mode(self):
         """Public accessor for low power mode."""
-        return getattr(self, '_low_power_mode', None)
+        return getattr(self, "_low_power_mode", None)
 
     @property
     def context_pointer_engine(self):
         """Public accessor for context pointer engine."""
-        return getattr(self, '_context_pointer_engine', None)
+        return getattr(self, "_context_pointer_engine", None)
 
     def get_niche_cron(self):
         """Public accessor for niche cron scheduler."""
-        return getattr(self, '_niche_cron', None)
+        return getattr(self, "_niche_cron", None)
 
     def get_niche_auto_scraper(self):
         """Public accessor for niche auto scraper."""
-        return getattr(self, '_niche_auto_scraper', None)
+        return getattr(self, "_niche_auto_scraper", None)
 
     @property
     def abortive(self):
         """Public accessor for abortive protocol."""
-        return getattr(self, '_abortive', None)
+        return getattr(self, "_abortive", None)
 
     @property
     def pending_resumptions(self):
         """Public accessor for pending resumptions dict."""
-        return getattr(self, '_pending_resumptions', {})
+        return getattr(self, "_pending_resumptions", {})
 
     @property
     def isolation_manager(self):
         """Public accessor for isolation manager."""
-        return getattr(self, '_isolation_manager', None)
+        return getattr(self, "_isolation_manager", None)

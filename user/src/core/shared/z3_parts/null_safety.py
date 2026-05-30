@@ -23,6 +23,7 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -33,8 +34,7 @@ logger = logging.getLogger(__name__)
 class Z3NullSafetyMixin:
     """Mixin for null-safety proof methods using Z3 EnumSort."""
 
-    def _z3_prove_null_safety(self, variable_names, nullable_vars,
-                               assignments=None):
+    def _z3_prove_null_safety(self, variable_names, nullable_vars, assignments=None):
         """Null-safety proof using Z3 EnumSort {NONE, SOME_VALUE}.
 
         Two-phase proof:
@@ -67,9 +67,7 @@ class Z3NullSafetyMixin:
                 }
 
             # Create EnumSort for nullability domain
-            null_sort, null_consts = z3_module.EnumSort(
-                self._unique_sort_name("Nullability"), ["NONE", "SOME_VALUE"]
-            )
+            null_sort, null_consts = z3_module.EnumSort(self._unique_sort_name("Nullability"), ["NONE", "SOME_VALUE"])
             NONE_VAL, SOME_VAL = null_consts[0], null_consts[1]
 
             # Create a Z3 variable of this sort for each program variable
@@ -169,10 +167,14 @@ class Z3NullSafetyMixin:
                 while changed:
                     changed = False
                     for target, source in assignments:
-                        if target in variable_names and source in variable_names:
-                            if source in can_be_none and target not in can_be_none:
-                                can_be_none.add(target)
-                                changed = True
+                        if (
+                            target in variable_names
+                            and source in variable_names
+                            and source in can_be_none
+                            and target not in can_be_none
+                        ):
+                            can_be_none.add(target)
+                            changed = True
 
                 # For each assignment, add implication constraint:
                 # If source can be NONE, then target can be NONE
@@ -200,11 +202,7 @@ class Z3NullSafetyMixin:
             # "at least one non-nullable var IS NONE"
             # If UNSAT → it's impossible under dataflow constraints → PROVEN
             # If SAT   → found a counterexample → VIOLATED
-            proof_solver.add(
-                z3_module.Or(
-                    *[z3_vars[v] == NONE_VAL for v in non_nullable]
-                )
-            )
+            proof_solver.add(z3_module.Or(*[z3_vars[v] == NONE_VAL for v in non_nullable]))
 
             proof_result = proof_solver.check()
 
@@ -237,9 +235,7 @@ class Z3NullSafetyMixin:
                 full_assignment = {}
                 for var_name in variable_names:
                     val = model.eval(z3_vars[var_name])
-                    full_assignment[var_name] = (
-                        "None" if str(val) == "NONE" else "Some"
-                    )
+                    full_assignment[var_name] = "None" if str(val) == "NONE" else "Some"
 
                 return {
                     "status": "VIOLATED",

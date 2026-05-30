@@ -136,9 +136,7 @@ class AgentFactory:
         if not agent_type:
             raise ValueError("AgentFactory: agent_type must be a non-empty string")
         if not (isinstance(agent_class, type) and issubclass(agent_class, BaseAgent)):
-            raise ValueError(
-                f"AgentFactory: agent_class for '{agent_type}' must be a BaseAgent subclass"
-            )
+            raise ValueError(f"AgentFactory: agent_class for '{agent_type}' must be a BaseAgent subclass")
         config = default_config or {}
         with self._lock:
             if agent_type in self._registry:

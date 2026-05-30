@@ -1,3 +1,5 @@
+import type { PolicyEffectV2 } from './core';
+
 // ─── 1. Conflict Detection & Resolution ─────────────────────────────────
 
 /** Conflict severity levels */

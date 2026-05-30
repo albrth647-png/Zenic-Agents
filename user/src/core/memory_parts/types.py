@@ -32,6 +32,7 @@ from typing import Any
 
 try:
     import numpy as np
+
     HAS_NUMPY = True
 except ImportError:
     np = None
@@ -43,25 +44,26 @@ DB_DIR = os.path.join(os.path.expanduser("~"), ".zenic_agents", "db")
 DB_PATH = os.path.join(DB_DIR, "smart_memory.sqlite")
 
 # Limits for Qwen3-0.6B context window
-MAX_WORKING_ENTRIES = 20       # Max entries in working memory
-MAX_COMPRESSED_TOKENS = 500    # Max tokens for compressed context
-IMPORTANCE_THRESHOLD = 0.6     # Min importance to promote to long-term
-SEMANTIC_CACHE_THRESHOLD = 0.85 # Min similarity for cache hit
-MAX_LONG_TERM_ENTRIES = 500    # Max entries in long-term memory
-MAX_EPISODIC_ENTRIES = 200     # Max entries in episodic memory
-MAX_PROCEDURAL_ENTRIES = 100   # Max entries in procedural memory
-MAX_PROJECT_ENTRIES = 50       # Max entries in project memory
+MAX_WORKING_ENTRIES = 20  # Max entries in working memory
+MAX_COMPRESSED_TOKENS = 500  # Max tokens for compressed context
+IMPORTANCE_THRESHOLD = 0.6  # Min importance to promote to long-term
+SEMANTIC_CACHE_THRESHOLD = 0.85  # Min similarity for cache hit
+MAX_LONG_TERM_ENTRIES = 500  # Max entries in long-term memory
+MAX_EPISODIC_ENTRIES = 200  # Max entries in episodic memory
+MAX_PROCEDURAL_ENTRIES = 100  # Max entries in procedural memory
+MAX_PROJECT_ENTRIES = 50  # Max entries in project memory
 
 
 @dataclass
 class MemoryEntry:
     """Una entrada en la memoria."""
+
     id: int | None = None
     query: str = ""
     response: str = ""
     operation: str = ""
     goal: str = ""
-    importance: float = 0.5     # 0.0-1.0, higher = more important
+    importance: float = 0.5  # 0.0-1.0, higher = more important
     timestamp: float = 0.0
     embedding: Any | None = None  # np.ndarray when numpy available
     access_count: int = 0

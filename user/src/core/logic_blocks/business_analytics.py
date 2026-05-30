@@ -27,8 +27,8 @@ class ReportGeneratorBlock(LogicBlock):
     name = "report_generator"
     category = "business_logic"
     description = "Generate reports from data with summaries and metrics"
-    inputs = ["data", "report_type", "format"]
-    outputs = ["report_content", "metadata"]
+    inputs = ["data", "report_type", "format"]  # noqa: RUF012
+    outputs = ["report_content", "metadata"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -119,8 +119,8 @@ class DataAnalyzerBlock(LogicBlock):
     name = "data_analyzer"
     category = "business_logic"
     description = "Statistical analysis and metrics from data"
-    inputs = ["dataset", "metrics"]
-    outputs = ["analysis_result", "summary"]
+    inputs = ["dataset", "metrics"]  # noqa: RUF012
+    outputs = ["analysis_result", "summary"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:

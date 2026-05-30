@@ -251,7 +251,7 @@ class NicheConverter(NicheConverterLegacyMixin):
                         "optional": [],
                         "rate_limits": {},
                     }
-        except Exception:  # noqa: S110
+        except Exception:
             pass
 
         if "database" not in schemas:

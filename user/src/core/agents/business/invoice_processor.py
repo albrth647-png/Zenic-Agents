@@ -16,12 +16,12 @@ from ..schemas import InvoiceResult
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-DEFAULT_TAX_RATE = 0.16          # 16% default (common in LATAM)
-MAX_DISCOUNT_PCT = 100.0         # Cap at 100%
-MAX_ITEM_PRICE = 1_000_000.0     # Sanity cap per item
-MAX_ITEMS = 500                  # Max items per invoice
-QUANTITY_MIN = 0.0               # Min quantity (0 = free)
-PRICE_MIN = 0.0                  # Min price (0 = free)
+DEFAULT_TAX_RATE = 0.16  # 16% default (common in LATAM)
+MAX_DISCOUNT_PCT = 100.0  # Cap at 100%
+MAX_ITEM_PRICE = 1_000_000.0  # Sanity cap per item
+MAX_ITEMS = 500  # Max items per invoice
+QUANTITY_MIN = 0.0  # Min quantity (0 = free)
+PRICE_MIN = 0.0  # Min price (0 = free)
 
 
 class InvoiceProcessor(BaseAgent[InvoiceResult]):
@@ -59,8 +59,11 @@ class InvoiceProcessor(BaseAgent[InvoiceResult]):
         # ── Validation ──
         if not items:
             return InvoiceResult(
-                totals={}, tax=0.0, discounts=0.0,
-                valid=False, source="deterministic",
+                totals={},
+                tax=0.0,
+                discounts=0.0,
+                valid=False,
+                source="deterministic",
             )
 
         if len(items) > MAX_ITEMS:
@@ -86,13 +89,15 @@ class InvoiceProcessor(BaseAgent[InvoiceResult]):
 
             item_total = round(qty * price, 2)
             subtotal += item_total
-            processed_items.append({
-                "index": idx,
-                "name": item.get("name", f"item_{idx}"),
-                "quantity": qty,
-                "price": price,
-                "item_total": item_total,
-            })
+            processed_items.append(
+                {
+                    "index": idx,
+                    "name": item.get("name", f"item_{idx}"),
+                    "quantity": qty,
+                    "price": price,
+                    "item_total": item_total,
+                }
+            )
 
         # ── Aggregate calculations ──
         discount_amount = round(subtotal * (discount_pct / 100.0), 2) if discount_pct > 0 else 0.0
@@ -122,8 +127,11 @@ class InvoiceProcessor(BaseAgent[InvoiceResult]):
     def fallback(self, input_data: Any) -> InvoiceResult:
         """Safe fallback: empty invoice with valid=False."""
         return InvoiceResult(
-            totals={}, tax=0.0, discounts=0.0,
-            valid=False, source="fallback",
+            totals={},
+            tax=0.0,
+            discounts=0.0,
+            valid=False,
+            source="fallback",
         )
 
     # ──────────────────────────────────────────────────────────────
@@ -151,11 +159,13 @@ class InvoiceProcessor(BaseAgent[InvoiceResult]):
         discount_pct = float(data.get("discount", 0))
 
         # Use execute() for the math
-        result = self.execute({
-            "items": items,
-            "tax_rate": tax_rate,
-            "discount": discount_pct,
-        })
+        result = self.execute(
+            {
+                "items": items,
+                "tax_rate": tax_rate,
+                "discount": discount_pct,
+            }
+        )
 
         invoice = {
             "id": self._next_id,

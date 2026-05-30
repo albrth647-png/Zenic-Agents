@@ -14,9 +14,7 @@ import logging
 logger = logging.getLogger("zenic_agents.core.native")
 
 
-def pbkdf2_derive_key(
-    password: bytes, salt: bytes, iterations: int, key_length: int
-) -> bytes:
+def pbkdf2_derive_key(password: bytes, salt: bytes, iterations: int, key_length: int) -> bytes:
     """Pure Python PBKDF2-HMAC-SHA256 key derivation using hashlib.
 
     Parameters
@@ -107,9 +105,7 @@ def argon2id_hash(
             "falling back to PBKDF2 for argon2id_hash. "
             "Install 'argon2-cffi' or build the native extension."
         )
-        derived = hashlib.pbkdf2_hmac(
-            "sha256", password, salt, time_cost * 100000, 32
-        )
+        derived = hashlib.pbkdf2_hmac("sha256", password, salt, time_cost * 100000, 32)
         return derived
 
 
@@ -159,7 +155,7 @@ def blake3_hash(data: bytes) -> str:
         import blake3 as _blake3  # type: ignore[import-untyped]
 
         return _blake3.blake3(data).hexdigest()
-    except ImportError:
+    except ImportError as exc:
         raise RuntimeError(
             "BLAKE3 is mandatory for integrity verification. "
             "Install the 'blake3' Python package or build the "
@@ -167,7 +163,7 @@ def blake3_hash(data: bytes) -> str:
             "SHA-256 fallback removed (E-04 FIX): it produced "
             "different hashes than the Rust side, causing "
             "cross-language integrity mismatches."
-        )
+        ) from exc
 
 
 def xxhash64(data: bytes, seed: int) -> int:
@@ -237,13 +233,14 @@ def merkle_root(leaves: list[bytes]) -> str:
     def _hash_func(data: bytes) -> bytes:
         try:
             import blake3 as _blake3  # type: ignore[import-untyped]
+
             return _blake3.blake3(data).digest()
-        except ImportError:
+        except ImportError as exc:
             raise RuntimeError(
                 "BLAKE3 is mandatory for Merkle root computation. "
                 "Install the 'blake3' Python package or build the "
                 "native Rust extension. SHA-256 fallback removed (E-04 FIX)."
-            )
+            ) from exc
 
     # If only one leaf, its hash is the root (matches Rust hash.rs)
     if len(leaves) == 1:

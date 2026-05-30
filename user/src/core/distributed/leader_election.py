@@ -191,7 +191,7 @@ class LeaderElection:
                 self._fencing_token = self._fencing_gen.next()
 
             logger.info(
-                "LeaderElection: '%s' — %s is now LEADER " "(fencing_token=%d)",
+                "LeaderElection: '%s' — %s is now LEADER (fencing_token=%d)",
                 self._election_name,
                 self._candidate_id,
                 self._fencing_token,
@@ -324,7 +324,7 @@ class LeaderElection:
         )
         self._renewal_thread.start()
         logger.debug(
-            "LeaderElection: Started renewal for '%s' " "(interval=%.1fs)",
+            "LeaderElection: Started renewal for '%s' (interval=%.1fs)",
             self._election_name,
             self._renewal_interval,
         )

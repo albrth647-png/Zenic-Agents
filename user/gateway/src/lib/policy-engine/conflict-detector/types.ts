@@ -28,6 +28,21 @@ import {
   PolicyEffectV2,
 } from "../types";
 
+export type {
+  ConflictResolution,
+  ConflictReport,
+  PolicyConflict,
+  ConflictStatementRef,
+  PolicyStatement,
+  PolicyCondition,
+};
+export {
+  ConflictType,
+  ConflictSeverity,
+  ConflictResolutionStrategy,
+  PolicyEffectV2,
+};
+
 // Re-exported type aliases for naming consistency
 // (the types module exports ConflictType/ConflictSeverity as both values and types)
 type ConflictTypeType = ConflictType;

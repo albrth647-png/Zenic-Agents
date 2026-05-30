@@ -10,21 +10,18 @@ Usage:
     DATABASE_URL=postgresql://... pytest tests/test_vector_store.py -v  # pgvector
 """
 
-import asyncio
-import math
 import os
 import random
-import time
-from typing import List
 
 import pytest
 
 # ── Fixtures ─────────────────────────────────────────────────
 
+
 @pytest.fixture
 def sample_vector():
     """A normalized 384-dimensional vector."""
-    rng = random.Random(42)  # noqa: S310,S311
+    rng = random.Random(42)  # noqa: S311
     vec = [rng.gauss(0, 1) for _ in range(384)]
     norm = sum(v * v for v in vec) ** 0.5
     if norm > 0:
@@ -35,9 +32,9 @@ def sample_vector():
 @pytest.fixture
 def sample_vectors():
     """100 normalized 384-dimensional vectors."""
-    rng = random.Random(42)  # noqa: S310,S311
+    rng = random.Random(42)  # noqa: S311
     vectors = []
-    for i in range(100):
+    for _i in range(100):
         vec = [rng.gauss(0, 1) for _ in range(384)]
         norm = sum(v * v for v in vec) ** 0.5
         if norm > 0:
@@ -48,12 +45,14 @@ def sample_vectors():
 
 # ── HNSW Index Tests ────────────────────────────────────────
 
+
 class TestHNSWIndex:
     """Tests for the in-memory HNSW index."""
 
     def test_create_index(self):
         """Test creating an empty HNSW index."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=384, M=16, ef_construction=64)
         assert index.size == 0
         assert index.max_level == -1
@@ -61,6 +60,7 @@ class TestHNSWIndex:
     def test_insert_single(self):
         """Test inserting a single vector."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
         vec = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         index.insert("doc1", vec)
@@ -69,6 +69,7 @@ class TestHNSWIndex:
     def test_insert_multiple(self):
         """Test inserting multiple vectors."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
         for i in range(50):
             vec = [0.0] * 10
@@ -80,6 +81,7 @@ class TestHNSWIndex:
     def test_search_empty_index(self):
         """Test searching an empty index returns no results."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
         query = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         results = index.search(query, top_k=5)
@@ -88,6 +90,7 @@ class TestHNSWIndex:
     def test_search_single_vector(self):
         """Test searching with a single vector in the index."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
         vec = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         index.insert("doc1", vec)
@@ -101,6 +104,7 @@ class TestHNSWIndex:
     def test_search_top_k(self, sample_vectors):
         """Test searching returns correct top-k results."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=384, M=16, ef_construction=64, seed=42)
         for i, vec in enumerate(sample_vectors):
             index.insert(f"doc_{i}", vec)
@@ -116,6 +120,7 @@ class TestHNSWIndex:
     def test_search_with_threshold(self, sample_vectors):
         """Test search with threshold filtering."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=384, M=16, ef_construction=64, seed=42)
         for i, vec in enumerate(sample_vectors):
             index.insert(f"doc_{i}", vec)
@@ -132,6 +137,7 @@ class TestHNSWIndex:
     def test_insert_duplicate_id(self):
         """Test inserting a vector with duplicate ID updates it."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
 
         vec1 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -151,6 +157,7 @@ class TestHNSWIndex:
     def test_delete(self):
         """Test deleting a vector from the index."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
 
         for i in range(10):
@@ -170,6 +177,7 @@ class TestHNSWIndex:
     def test_clear(self):
         """Test clearing the index."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
 
         for i in range(10):
@@ -184,6 +192,7 @@ class TestHNSWIndex:
     def test_bulk_insert(self):
         """Test bulk insertion is more efficient."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=10, M=4, ef_construction=8, seed=42)
 
         items = [(f"doc_{i}", [1.0 if j == i % 10 else 0.0 for j in range(10)]) for i in range(50)]
@@ -194,6 +203,7 @@ class TestHNSWIndex:
     def test_get_stats(self, sample_vectors):
         """Test getting index statistics."""
         from src.core.vector.hnsw_index import HNSWIndex
+
         index = HNSWIndex(dimensions=384, M=16, ef_construction=64, seed=42)
 
         for i, vec in enumerate(sample_vectors[:20]):
@@ -218,6 +228,7 @@ class TestHNSWIndex:
         appear in the HNSW results (recall >= 0.8).
         """
         from src.core.vector.hnsw_index import HNSWIndex, _cosine_similarity
+
         index = HNSWIndex(dimensions=384, M=16, ef_construction=64, seed=42)
 
         for i, vec in enumerate(sample_vectors):
@@ -231,11 +242,11 @@ class TestHNSWIndex:
             sim = _cosine_similarity(query, vec)
             all_sims.append((sim, f"doc_{i}"))
         all_sims.sort(key=lambda x: x[0], reverse=True)
-        brute_force_ids = set(id for _, id in all_sims[:5])
+        brute_force_ids = {id for _, id in all_sims[:5]}
 
         # HNSW top-5
         hnsw_results = index.search(query, top_k=5, ef=100)
-        hnsw_ids = set(id for id, _ in hnsw_results)
+        hnsw_ids = {id for id, _ in hnsw_results}
 
         # Recall = |HNSW ∩ BruteForce| / |BruteForce|
         recall = len(hnsw_ids & brute_force_ids) / len(brute_force_ids)
@@ -244,12 +255,14 @@ class TestHNSWIndex:
 
 # ── VectorStore Tests (Memory Backend) ─────────────────────
 
+
 class TestVectorStoreMemory:
     """Tests for VectorStore with in-memory backend."""
 
     @pytest.fixture
     def store(self):
         from src.core.vector.vector_store import VectorStore
+
         store = VectorStore(database_url=None, dimensions=384)
         return store
 
@@ -383,6 +396,7 @@ class TestVectorStoreMemory:
 
 # ── VectorStore Tests (pgvector backend) ────────────────────
 
+
 @pytest.mark.skipif(
     not os.environ.get("DATABASE_URL", "").startswith("postgresql"),
     reason="DATABASE_URL not configured for PostgreSQL",
@@ -393,6 +407,7 @@ class TestVectorStorePgvector:
     @pytest.fixture
     def pg_store(self):
         from src.core.vector.vector_store import VectorStore
+
         url = os.environ.get("DATABASE_URL", "")
         store = VectorStore(database_url=url, dimensions=384)
         return store
@@ -400,7 +415,7 @@ class TestVectorStorePgvector:
     @pytest.mark.asyncio
     async def test_pgvector_initialize(self, pg_store):
         """Test pgvector initialization."""
-        result = await pg_store.initialize()
+        await pg_store.initialize()
         # May or may not succeed depending on pgvector availability
         assert pg_store.is_initialized
         await pg_store.close()
@@ -426,18 +441,21 @@ class TestVectorStorePgvector:
 
 # ── Cosine Similarity Tests ─────────────────────────────────
 
+
 class TestCosineSimilarity:
     """Tests for the cosine similarity helper function."""
 
     def test_identical_vectors(self):
         """Test identical vectors have similarity 1.0."""
         from src.core.vector.hnsw_index import _cosine_similarity
+
         vec = [1.0, 0.0, 0.0]
         assert abs(_cosine_similarity(vec, vec) - 1.0) < 1e-6
 
     def test_orthogonal_vectors(self):
         """Test orthogonal vectors have similarity 0.0."""
         from src.core.vector.hnsw_index import _cosine_similarity
+
         a = [1.0, 0.0, 0.0]
         b = [0.0, 1.0, 0.0]
         assert abs(_cosine_similarity(a, b)) < 1e-6
@@ -445,6 +463,7 @@ class TestCosineSimilarity:
     def test_opposite_vectors(self):
         """Test opposite vectors have similarity -1.0."""
         from src.core.vector.hnsw_index import _cosine_similarity
+
         a = [1.0, 0.0, 0.0]
         b = [-1.0, 0.0, 0.0]
         assert abs(_cosine_similarity(a, b) - (-1.0)) < 1e-6
@@ -452,6 +471,7 @@ class TestCosineSimilarity:
     def test_zero_vector(self):
         """Test zero vector returns 0.0 similarity."""
         from src.core.vector.hnsw_index import _cosine_similarity
+
         a = [1.0, 0.0, 0.0]
         b = [0.0, 0.0, 0.0]
         assert _cosine_similarity(a, b) == 0.0

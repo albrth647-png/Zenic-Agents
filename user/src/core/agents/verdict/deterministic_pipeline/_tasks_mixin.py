@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Mapping
 from typing import Any
 
 from ._constants import (
@@ -83,9 +82,7 @@ class DeterministicTasksMixin:
             return {"file": "", "lang": "unknown", "function": None, "confidence": 0.0, "source": "deterministic"}
 
         # File extraction
-        file_match = re.search(
-            r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))', text
-        )
+        file_match = re.search(r"([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))", text)
         file_name = file_match.group(1) if file_match else ""
 
         # Language from extension
@@ -93,7 +90,7 @@ class DeterministicTasksMixin:
         lang = EXT_LANG_MAP.get(ext, "unknown")
 
         # Function name extraction
-        func_match = re.search(r'(?:function|func|def|fun)\s+(\w+)', text)
+        func_match = re.search(r"(?:function|func|def|fun)\s+(\w+)", text)
         function = func_match.group(1) if func_match else None
 
         # Language from keywords (fallback)
@@ -148,14 +145,12 @@ class DeterministicTasksMixin:
     #  TASK 4: fill_template_gaps
     # ──────────────────────────────────────────────────────────
 
-    def _fill_template_gaps(
-        self, template: str, context: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    def _fill_template_gaps(self, template: str, context: dict[str, str] | None = None) -> dict[str, Any]:
         """Fill template gaps with context and defaults."""
         if not template:
             return {"result": "", "confidence": 1.0, "source": "deterministic"}
 
-        gaps = re.findall(r'__GAP_(\w+)__', template)
+        gaps = re.findall(r"__GAP_(\w+)__", template)
         if not gaps:
             return {"result": template, "confidence": 1.0, "source": "deterministic"}
 
@@ -176,7 +171,7 @@ class DeterministicTasksMixin:
 
             result = result.replace(f"__GAP_{gap}__", str(value))
 
-        all_filled = not re.search(r'__GAP_\w+__', result)
+        all_filled = not re.search(r"__GAP_\w+__", result)
         confidence = 1.0 if all_filled else 0.5
 
         return {
@@ -190,7 +185,9 @@ class DeterministicTasksMixin:
     # ──────────────────────────────────────────────────────────
 
     def _generate_pattern(
-        self, pattern_desc: str, language: str = "python",
+        self,
+        pattern_desc: str,
+        language: str = "python",
         context: dict[str, str | int | list | dict] | None = None,
     ) -> dict[str, Any]:
         """Generate code snippet from template library."""
@@ -234,13 +231,11 @@ class DeterministicTasksMixin:
     #  TASK 6: explain_violation
     # ──────────────────────────────────────────────────────────
 
-    def _explain_violation(
-        self, code: str, violations: list[str]
-    ) -> dict[str, Any]:
+    def _explain_violation(self, code: str, violations: list[str]) -> dict[str, Any]:
         """Explain violations using catalog."""
         if not violations:
             return {
-                "result": "No violations detected." if not code else "No violations detected.",
+                "result": "No violations detected.",
                 "confidence": 1.0,
                 "source": "deterministic",
             }
@@ -267,14 +262,12 @@ class DeterministicTasksMixin:
     #  TASK 7: describe_subtask
     # ──────────────────────────────────────────────────────────
 
-    def _describe_subtask(
-        self, target: str, action: str, context: str = ""
-    ) -> dict[str, Any]:
+    def _describe_subtask(self, target: str, action: str, context: str = "") -> dict[str, Any]:
         """Generate a descriptive name for a subtask."""
-        safe_target = re.sub(r'[^a-z0-9_]', '_', target.lower()).strip('_')
-        safe_action = re.sub(r'[^a-z0-9_]', '_', action.lower()).strip('_')
+        safe_target = re.sub(r"[^a-z0-9_]", "_", target.lower()).strip("_")
+        safe_action = re.sub(r"[^a-z0-9_]", "_", action.lower()).strip("_")
 
-        name = re.sub(r'_+', '_', f"{safe_action}_{safe_target}").strip('_')
+        name = re.sub(r"_+", "_", f"{safe_action}_{safe_target}").strip("_")
 
         if not name or len(name) < 3:
             name = "unnamed_subtask"
@@ -305,8 +298,9 @@ class DeterministicTasksMixin:
         """Public API: Task 4 — fill template gaps."""
         return self._fill_template_gaps(template, context or {})
 
-    def generate_pattern(self, pattern_desc: str, language: str = "python",
-                         context: dict[str, str | int | list | dict] | None = None) -> dict[str, Any]:
+    def generate_pattern(
+        self, pattern_desc: str, language: str = "python", context: dict[str, str | int | list | dict] | None = None
+    ) -> dict[str, Any]:
         """Public API: Task 5 — generate pattern."""
         return self._generate_pattern(pattern_desc, language, context)
 

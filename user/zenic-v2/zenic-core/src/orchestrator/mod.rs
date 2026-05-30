@@ -34,7 +34,7 @@ mod tests {
     use zenic_graph::{DirectedAcyclicGraph, EdgeDescriptor};
     use zenic_policy::{Action, CriticalityClearance, Permission, Resource, RolePriority, SafetyVeto};
     use zenic_proto::BusinessDomain;
-    use zenic_runtime::{DEFAULT_MAX_LOADED_NODES, DEFAULT_MEMORY_BUDGET_BYTES, MemoryManager};
+    use zenic_runtime::{DEFAULT_MAX_LOADED_NODES, DEFAULT_MEMORY_BUDGET_BYTES};
 
     fn make_admin_role() -> zenic_policy::Role {
         let mut role = zenic_policy::Role::new("admin", "Administrator")

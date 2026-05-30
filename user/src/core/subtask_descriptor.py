@@ -31,10 +31,18 @@ class SubtaskDescriptor:
         depth: Profundidad de recursión en subdivisión
     """
 
-    def __init__(self, message: str, target: str = "", operation: str = "", goal: str = "",
-                 solver_insights: dict[str, Any] | None = None, mcts_hints: list[Any] | None = None,
-                 parent_violations: list[Any] | None = None,
-                 parent_context: dict[str, Any] | None = None, depth: int = 0):
+    def __init__(
+        self,
+        message: str,
+        target: str = "",
+        operation: str = "",
+        goal: str = "",
+        solver_insights: dict[str, Any] | None = None,
+        mcts_hints: list[Any] | None = None,
+        parent_violations: list[Any] | None = None,
+        parent_context: dict[str, Any] | None = None,
+        depth: int = 0,
+    ):
         self.message = message
         self.target = target
         self.operation = operation

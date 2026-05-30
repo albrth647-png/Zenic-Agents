@@ -211,9 +211,10 @@ class Z3Solver(
                 annotation = v.get("annotation") or "unknown"
                 # Flatten Optional[X] -> include both X and None
                 types_for_var = self._annotation_to_types(annotation)
-                if v.get("nullable", False) or (isinstance(annotation, str) and "Optional" in annotation):
-                    if "None" not in types_for_var:
-                        types_for_var.append("None")
+                if v.get("nullable", False) or (
+                    (isinstance(annotation, str) and "Optional" in annotation) and "None" not in types_for_var
+                ):
+                    types_for_var.append("None")
                 variables_with_types.append(
                     {
                         "name": v["name"],

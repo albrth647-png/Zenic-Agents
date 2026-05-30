@@ -20,8 +20,10 @@ if TYPE_CHECKING:
 # PIPELINE STEPS
 # ──────────────────────────────────────────────────────────────
 
+
 class PipelineStep(str, Enum):
     """Pipeline step identifiers."""
+
     NOT_STARTED = "not_started"
     SELECT_NICHE = "select_niche"
     UPLOAD_DOCUMENTS = "upload_documents"
@@ -38,6 +40,7 @@ class PipelineStep(str, Enum):
 # ──────────────────────────────────────────────────────────────
 # PIPELINE STATE
 # ──────────────────────────────────────────────────────────────
+
 
 class PipelineState:
     """Mutable state for an ongoing pipeline execution."""

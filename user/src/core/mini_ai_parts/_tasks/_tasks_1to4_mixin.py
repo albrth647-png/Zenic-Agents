@@ -52,7 +52,7 @@ class BoundedTasks1To4Mixin:
     VALID_GOALS = VALID_INTENT_GOALS
 
     # Keyword maps with weighted scoring
-    OP_KEYWORDS = {
+    OP_KEYWORDS = {  # noqa: RUF012
         "CREATE": [
             "create",
             "new",
@@ -86,7 +86,7 @@ class BoundedTasks1To4Mixin:
         "OPTIMIZE": ["optimize", "improve", "faster", "optimizar", "mejorar", "acelerar", "performance", "rendimiento"],
     }
 
-    GOAL_KEYWORDS = {
+    GOAL_KEYWORDS = {  # noqa: RUF012
         "BUG_FIX": ["bug", "fix", "error", "corregir", "arreglar", "wrong", "broken", "falla", "defecto"],
         "FEATURE_ADD": ["add", "new", "feature", "agregar", "nueva", "implement", "crear", "nueva funcionalidad"],
         "SECURITY_HARDEN": ["security", "auth", "login", "token", "crypto", "vulnerability", "seguridad", "autenticar"],
@@ -200,7 +200,7 @@ class BoundedTasks1To4Mixin:
     #  BOUNDED TASK 3: suggest_pattern (heuristic lookup)
     # ================================================================
 
-    PATTERN_HEURISTICS = [
+    PATTERN_HEURISTICS = [  # noqa: RUF012
         (["async", "await", "coroutine", "asincrono"], "async_await"),
         (["validate", "validar", "check", "verify", "verificar"], "validator"),
         (["repository", "repo", "database", "db", "base de datos"], "repository"),

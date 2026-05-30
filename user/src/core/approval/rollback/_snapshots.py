@@ -17,6 +17,7 @@ from typing import Any
 
 class RollbackStatus(str, Enum):
     """Status of a rollback operation."""
+
     PENDING = "pending"
     EXECUTING = "executing"
     COMPLETED = "completed"
@@ -26,6 +27,7 @@ class RollbackStatus(str, Enum):
 
 class RollbackTrigger(str, Enum):
     """What triggered the rollback."""
+
     APPROVAL_EXPIRED = "APPROVAL_EXPIRED"
     ACTION_FAILED = "ACTION_FAILED"
     MANUAL_UNDO = "MANUAL_UNDO"
@@ -97,13 +99,17 @@ class RollbackRecord:
 
     def _compute_hash(self) -> str:
         """Compute SHA-256 Merkle hash of the rollback record."""
-        payload = json.dumps({
-            "rollback_id": self.rollback_id,
-            "request_id": self.request_id,
-            "trigger": self.trigger.value if isinstance(self.trigger, RollbackTrigger) else self.trigger,
-            "compensation_actions": [a.to_dict() for a in self.compensation_actions],
-            "created_at": self.created_at,
-        }, sort_keys=True, separators=(",", ":"))
+        payload = json.dumps(
+            {
+                "rollback_id": self.rollback_id,
+                "request_id": self.request_id,
+                "trigger": self.trigger.value if isinstance(self.trigger, RollbackTrigger) else self.trigger,
+                "compensation_actions": [a.to_dict() for a in self.compensation_actions],
+                "created_at": self.created_at,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(payload.encode()).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:

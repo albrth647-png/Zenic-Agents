@@ -14,13 +14,47 @@ from ..schemas import LanguageResult
 
 # Spanish indicator words (common words that strongly indicate Spanish)
 ES_INDICATORS = [
-    "el", "la", "los", "las", "un", "una", "unos", "unas",
-    "de", "del", "en", "por", "para", "con", "sin", "sobre",
-    "que", "como", "donde", "cuando", "cual", "quien",
-    "crear", "hacer", "tener", "poder", "decir", "ver",
-    "proyecto", "aplicacion", "funcion", "metodo", "clase",
-    "base de datos", "interfaz", "usuario", "sistema",
-    "necesito", "quiero", "deseo", "ayuda",
+    "el",
+    "la",
+    "los",
+    "las",
+    "un",
+    "una",
+    "unos",
+    "unas",
+    "de",
+    "del",
+    "en",
+    "por",
+    "para",
+    "con",
+    "sin",
+    "sobre",
+    "que",
+    "como",
+    "donde",
+    "cuando",
+    "cual",
+    "quien",
+    "crear",
+    "hacer",
+    "tener",
+    "poder",
+    "decir",
+    "ver",
+    "proyecto",
+    "aplicacion",
+    "funcion",
+    "metodo",
+    "clase",
+    "base de datos",
+    "interfaz",
+    "usuario",
+    "sistema",
+    "necesito",
+    "quiero",
+    "deseo",
+    "ayuda",
 ]
 
 
@@ -36,7 +70,7 @@ class BilingualRouter(BaseAgent[LanguageResult]):
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A48_BilingualRouter", **kwargs)
         self._es_pattern = re.compile(
-            r'\b(' + '|'.join(re.escape(w) for w in ES_INDICATORS) + r')\b',
+            r"\b(" + "|".join(re.escape(w) for w in ES_INDICATORS) + r")\b",
             re.IGNORECASE,
         )
 

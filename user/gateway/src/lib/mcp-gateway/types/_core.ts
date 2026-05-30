@@ -6,3 +6,5 @@ export * from "./_enums";
 export * from "./_config";
 export * from "./_types";
 export * from "./_defaults";
+export type { GatewayRequest } from "../engine/types";
+export type { AuthMethod } from "../auth/types";

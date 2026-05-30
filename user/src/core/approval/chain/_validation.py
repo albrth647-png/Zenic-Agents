@@ -15,6 +15,7 @@ from typing import Any
 
 class ApprovalStatus(str, Enum):
     """Status of an approval request."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -25,6 +26,7 @@ class ApprovalStatus(str, Enum):
 
 class ApprovalPriority(str, Enum):
     """Priority level for approval requests."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -34,6 +36,7 @@ class ApprovalPriority(str, Enum):
 @dataclass
 class ApprovalRequest:
     """A request for approval of a pending action."""
+
     request_id: str = ""
     action_type: str = ""
     action_config: dict[str, Any] = field(default_factory=dict)
@@ -83,6 +86,7 @@ class ApprovalRequest:
 @dataclass
 class ApprovalResult:
     """Result of an approval action."""
+
     success: bool
     request_id: str
     status: ApprovalStatus
@@ -92,6 +96,7 @@ class ApprovalResult:
 # ═══════════════════════════════════════════════════════════════
 # GRIETA 3: MemoryApprovalPayload — HITL Mandatory Fields
 # ═══════════════════════════════════════════════════════════════
+
 
 @dataclass
 class MemoryApprovalPayload:
@@ -161,8 +166,7 @@ class MemoryApprovalPayload:
             )
         if not self.admin_session_id.strip():
             raise ValueError(
-                "HITL: admin_session_id es OBLIGATORIO. "
-                "Debe estar ligado al ID criptográfico de la sesión."
+                "HITL: admin_session_id es OBLIGATORIO. Debe estar ligado al ID criptográfico de la sesión."
             )
 
     def is_valid(self) -> bool:

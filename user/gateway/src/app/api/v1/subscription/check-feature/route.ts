@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 

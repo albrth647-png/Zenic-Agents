@@ -235,10 +235,10 @@ def _preload_models(orchestrator: object) -> None:
         t0 = time.time()
         _ = _mgr.semantic_engine
         t1 = time.time()
-        logger.info(f"  SemanticEngine loaded in {t1-t0:.1f}s")
+        logger.info(f"  SemanticEngine loaded in {t1 - t0:.1f}s")
         _ = _mgr.mini_ai_engine
         t2 = time.time()
-        logger.info(f"  MiniAIEngine loaded in {t2-t1:.1f}s")
+        logger.info(f"  MiniAIEngine loaded in {t2 - t1:.1f}s")
     except Exception as e:
         logger.warning(f"Model preload failed: {e}")
 
@@ -257,14 +257,14 @@ def _init_sna(args: argparse.Namespace) -> object:
             from src.core.executors.dispatch_action import get_default_dispatcher
 
             sna_engine.set_dispatcher(get_default_dispatcher())
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         loaded = sna_engine.load_default_monitors()
         logger.info("SNA: Loaded %d default monitors", loaded)
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                asyncio.ensure_future(sna_engine.start())
+                _sna_task = loop.create_task(sna_engine.start())  # noqa: RUF006
             else:
                 loop.run_until_complete(sna_engine.start())
         except RuntimeError:
@@ -283,7 +283,7 @@ def _shutdown(governor: object, sna_engine: object = None) -> None:
             import asyncio
 
             asyncio.get_event_loop().run_until_complete(sna_engine.stop())
-        except Exception:  # noqa: S110
+        except Exception:
             pass
     # Phase 6: Stop defense monitoring and license heartbeat
     try:
@@ -294,7 +294,7 @@ def _shutdown(governor: object, sna_engine: object = None) -> None:
         reset_anti_tampering()
         reset_integrity_verifier()
         reset_license_manager()
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
 

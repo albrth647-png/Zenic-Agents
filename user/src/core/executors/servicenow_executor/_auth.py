@@ -57,7 +57,7 @@ class _AuthMixin:
             token = self._get_oauth_token(config)
             if not token:
                 raise ValueError(
-                    "OAuth2 token acquisition failed — check client_id, " "client_secret, and token_url configuration"
+                    "OAuth2 token acquisition failed — check client_id, client_secret, and token_url configuration"
                 )
             return {
                 "Authorization": f"Bearer {token}",
@@ -121,7 +121,7 @@ class _AuthMixin:
         token_url = config.get("oauth_token_url", "") or os.environ.get(_ENV_TOKEN_URL, "")
 
         if not all([client_id, client_secret, token_url]):
-            logger.warning("ServiceNowExecutor: OAuth2 requires client_id, " "client_secret, and token_url")
+            logger.warning("ServiceNowExecutor: OAuth2 requires client_id, client_secret, and token_url")
             return None
 
         # ── Token request (synchronous — fallback urllib) ─────

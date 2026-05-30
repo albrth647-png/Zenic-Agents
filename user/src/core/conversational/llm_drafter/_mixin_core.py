@@ -88,7 +88,7 @@ class LLMDrafter:
             drafted = self._format_by_channel(drafted, channel)
 
         elapsed_ms = (time.time() - start) * 1000
-        logger.debug(f"Drafted response in {elapsed_ms:.1f}ms " f"(status={status}, personality={personality})")
+        logger.debug(f"Drafted response in {elapsed_ms:.1f}ms (status={status}, personality={personality})")
 
         return drafted
 

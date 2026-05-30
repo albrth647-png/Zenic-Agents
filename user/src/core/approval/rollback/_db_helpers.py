@@ -28,6 +28,7 @@ _RETRY_DELAY = 0.1
 
 # ── Retry Utility ──────────────────────────────────────────
 
+
 def with_retry(
     fn: Any,
     fallback: Any = None,
@@ -42,7 +43,9 @@ def with_retry(
             last_exc = exc
             logger.warning(
                 "RollbackManager: DB retry %d/%d — %s",
-                attempt, max_retries, exc,
+                attempt,
+                max_retries,
+                exc,
             )
             if attempt < max_retries:
                 time.sleep(_RETRY_DELAY * attempt)
@@ -56,13 +59,16 @@ def with_retry(
 
 # ── Time Utility ───────────────────────────────────────────
 
+
 def now_utc_iso() -> str:
     """Return current UTC time as ISO string."""
     from datetime import datetime, timezone
+
     return datetime.now(timezone.utc).isoformat()
 
 
 # ── Row Conversion ─────────────────────────────────────────
+
 
 def row_to_compensation(row: sqlite3.Row) -> CompensationAction:
     """Convert a database row to a CompensationAction."""
@@ -93,8 +99,10 @@ def row_to_rollback_record(row: sqlite3.Row) -> RollbackRecord:
 
 # ── DB Initialisation ─────────────────────────────────────
 
+
 def init_db(db_path: str) -> None:
     """Create the rollback tables if they do not exist."""
+
     def _do_init() -> None:
         conn = sqlite3.connect(db_path)
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -135,6 +143,7 @@ def init_db(db_path: str) -> None:
 
 # ── Persistence ────────────────────────────────────────────
 
+
 def persist_compensation(
     db_path: str,
     request_id: str,
@@ -143,6 +152,7 @@ def persist_compensation(
     insert: bool,
 ) -> None:
     """Insert or update a compensation action."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(db_path)
         if insert:
@@ -182,6 +192,7 @@ def persist_rollback_record(
     insert: bool,
 ) -> None:
     """Insert or update a rollback record."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(db_path)
         actions_json = json.dumps([a.to_dict() for a in record.compensation_actions])
@@ -228,8 +239,10 @@ def persist_rollback_record(
 
 # ── Queries ────────────────────────────────────────────────
 
+
 def get_compensations(db_path: str, request_id: str) -> list[CompensationAction]:
     """Get all compensation actions for a request."""
+
     def _do_query() -> list[CompensationAction]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -247,6 +260,7 @@ def get_compensations(db_path: str, request_id: str) -> list[CompensationAction]
 
 def get_rollback_record_by_id(db_path: str, rollback_id: str) -> RollbackRecord | None:
     """Get a rollback record by ID."""
+
     def _do_find() -> RollbackRecord | None:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -264,6 +278,7 @@ def get_rollback_record_by_id(db_path: str, rollback_id: str) -> RollbackRecord 
 
 def get_rollback_history(db_path: str, request_id: str) -> list[RollbackRecord]:
     """Get all rollback records for a request."""
+
     def _do_query() -> list[RollbackRecord]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row

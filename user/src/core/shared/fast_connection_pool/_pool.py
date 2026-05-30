@@ -4,12 +4,13 @@ FastConnectionPool — FastPool Class.
 Ultra-fast SQLite connection pool with thread-local caching.
 """
 
+import contextlib
 import logging
 import sqlite3
 import threading
 import time
 from collections import deque
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 from ._pragmas import PoolStats, _apply_pragmas
@@ -62,6 +63,7 @@ class FastPool:
 
         # atexit cleanup
         import atexit
+
         atexit.register(self.close_all)
 
     @staticmethod
@@ -69,17 +71,20 @@ class FastPool:
         """Get the data directory path."""
         import os
         from pathlib import Path
-        if 'ANDROID_ARGUMENT' in os.environ:
+
+        if "ANDROID_ARGUMENT" in os.environ:
             try:
                 from android.storage import app_storage_path  # type: ignore[import-unresolved]
+
                 return str(Path(app_storage_path()) / "zenic_data")
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
         return str(Path.home() / ".zenic_agents" / "data")
 
     def _db_path(self, db_name: str) -> str:
         """Get full path for a database file."""
         import os
+
         return os.path.join(self._data_dir, db_name)
 
     def _get_stats(self, db_name: str) -> PoolStats:
@@ -121,7 +126,7 @@ class FastPool:
         stats.last_used = time.monotonic()
 
         # Layer 1: Thread-local cache
-        local_pool = getattr(self._local, 'pool', None)
+        local_pool = getattr(self._local, "pool", None)
         if local_pool is None:
             local_pool = {}
             self._local.pool = local_pool
@@ -132,10 +137,8 @@ class FastPool:
                 stats.thread_local_hits += 1
                 return conn
             else:
-                try:
+                with suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
                 del local_pool[db_name]
                 stats.reconnections += 1
 
@@ -152,10 +155,8 @@ class FastPool:
                     stats.active_connections += 1
                     return conn
                 else:
-                    try:
+                    with suppress(Exception):
                         conn.close()
-                    except Exception:  # noqa: S110
-                        pass
                     stats.reconnections += 1
 
         # Layer 3: New connection
@@ -173,10 +174,8 @@ class FastPool:
             if len(self._shared[db_name]) < self._max_shared:
                 self._shared[db_name].append(conn)
             else:
-                try:
+                with suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
 
     @contextmanager
     def write(self, db_name: str):
@@ -189,10 +188,8 @@ class FastPool:
             conn.commit()
             self._get_stats(db_name).total_commits += 1
         except Exception:
-            try:
+            with suppress(Exception):
                 conn.rollback()
-            except Exception:  # noqa: S110
-                pass
             raise
         finally:
             lock.release()
@@ -210,10 +207,8 @@ class FastPool:
             self._get_stats(db_name).total_commits += 1
             self._get_stats(db_name).batch_commits += 1
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute("ROLLBACK")  # nosemgrep: sqlalchemy-execute-raw-query
-            except Exception:  # noqa: S110
-                pass
             raise
         finally:
             lock.release()
@@ -259,23 +254,19 @@ class FastPool:
         """Close all connections and stop the cleaner thread."""
         self._shutdown.set()
 
-        local_pool = getattr(self._local, 'pool', None)
+        local_pool = getattr(self._local, "pool", None)
         if local_pool:
             for _name, conn in local_pool.items():
-                try:
+                with suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
             local_pool.clear()
 
         with self._shared_lock:
             for _name, pool in self._shared.items():
                 while pool:
                     conn = pool.popleft()
-                    try:
+                    with suppress(Exception):
                         conn.close()
-                    except Exception:  # noqa: S110
-                        pass
             self._shared.clear()
 
         logger.info("FastPool: all connections closed")
@@ -299,15 +290,23 @@ class FastPool:
                         try:
                             conn.close()
                             stats.active_connections -= 1
-                        except Exception:  # noqa: S110
+                        except Exception:
                             pass
 
     def purge_tenant(self, db_name: str, tenant_id: str, tables: list[str]) -> int:
         """Remove all rows for a tenant from specified tables (GDPR compliance)."""
-        _VALID_TABLES = frozenset({
-            "ast_nodes", "theorems", "ledger", "requests",
-            "episodes", "patterns", "projects", "cache_entries",
-        })
+        _VALID_TABLES = frozenset(
+            {
+                "ast_nodes",
+                "theorems",
+                "ledger",
+                "requests",
+                "episodes",
+                "patterns",
+                "projects",
+                "cache_entries",
+            }
+        )
         total_deleted = 0
         with self.write(db_name) as conn:
             for table in tables:
@@ -321,6 +320,5 @@ class FastPool:
                     )
                     total_deleted += cursor.rowcount
                 except sqlite3.Error as e:
-                    logger.warning("Failed to purge tenant %s from %s.%s: %s",
-                                   tenant_id, db_name, table, e)
+                    logger.warning("Failed to purge tenant %s from %s.%s: %s", tenant_id, db_name, table, e)
         return total_deleted

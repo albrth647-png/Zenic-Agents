@@ -47,10 +47,10 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_ca_tenant " "ON coordinated_actions(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_ca_tenant ON coordinated_actions(tenant_id)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_ca_status " "ON coordinated_actions(status)"
+                    "CREATE INDEX IF NOT EXISTS idx_ca_status ON coordinated_actions(status)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     """
@@ -67,7 +67,7 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_rr_action " "ON resource_records(action_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_rr_action ON resource_records(action_id)"
                 )
                 conn.commit()
             finally:
@@ -273,9 +273,7 @@ class CoreMixin:
                     self._mark_record_compensated(action_id, record)
                     result.compensations_succeeded += 1
                 except Exception as exc:
-                    error_msg = (
-                        f"Compensation failed for {record.resource_type.value}" f" ({record.resource_id}): {exc}"
-                    )
+                    error_msg = f"Compensation failed for {record.resource_type.value} ({record.resource_id}): {exc}"
                     result.errors.append(error_msg)
                     logger.error(
                         "CoordinatedRollbackManager: %s",
@@ -288,7 +286,7 @@ class CoreMixin:
 
             result.success = len(result.errors) == 0
             logger.info(
-                "CoordinatedRollbackManager: rollback complete action=%s " "attempted=%d succeeded=%d errors=%d",
+                "CoordinatedRollbackManager: rollback complete action=%s attempted=%d succeeded=%d errors=%d",
                 action_id[:12],
                 result.compensations_attempted,
                 result.compensations_succeeded,

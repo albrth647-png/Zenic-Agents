@@ -2,9 +2,12 @@
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use zenic_graph::{SubGraphDescriptor, SuperNodeDescriptor};
-    use zenic_proto::{BusinessDomain, NodeCategory, NodeCriticality, NodeId};
+    use crate::loader::FractalLoader;
+    use crate::memory::MemoryManager;
+    use zenic_graph::{NodeCatalog, SubGraphDescriptor, SuperNodeDescriptor};
+    use zenic_proto::{
+        BusinessDomain, LoadPolicy, NodeCategory, NodeCriticality, NodeId, SubGraphId, SuperNodeId,
+    };
 
     fn setup_catalog() -> (NodeCatalog, SuperNodeId, SubGraphId, Vec<NodeId>) {
         let mut catalog = NodeCatalog::new();

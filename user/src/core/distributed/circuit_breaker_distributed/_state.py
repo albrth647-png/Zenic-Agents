@@ -21,6 +21,7 @@ class SharedCircuitState:
         opened_at: Timestamp when circuit was opened.
         version: Optimistic concurrency version number.
     """
+
     __slots__ = (
         "failure_count",
         "half_open_call_count",

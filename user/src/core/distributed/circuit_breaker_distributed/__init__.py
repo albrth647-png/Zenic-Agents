@@ -149,10 +149,7 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         self._maybe_sync()
         with self._lock:
             remaining = 0.0
-            if (
-                self._local_state.state == "open"
-                and self._local_state.opened_at is not None
-            ):
+            if self._local_state.state == "open" and self._local_state.opened_at is not None:
                 elapsed = time.monotonic() - self._local_state.opened_at
                 remaining = max(0.0, self._recovery_timeout - elapsed)
 

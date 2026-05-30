@@ -117,7 +117,7 @@ class DiscoveryMixin:
             if success:
                 removed += 1
                 logger.info(
-                    "ClusterTopology: Removed dead node %s " "(last_heartbeat=%.0fs ago)",
+                    "ClusterTopology: Removed dead node %s (last_heartbeat=%.0fs ago)",
                     node.node_id,
                     time.time() - node.last_heartbeat,
                 )

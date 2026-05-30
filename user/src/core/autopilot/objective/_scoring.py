@@ -17,8 +17,10 @@ from typing import Any
 #  ENUMS
 # ──────────────────────────────────────────────────────────────
 
+
 class ObjectiveStatus(str, Enum):
     """Lifecycle status of an objective."""
+
     DRAFT = "draft"
     ACTIVE = "active"
     PAUSED = "paused"
@@ -29,6 +31,7 @@ class ObjectiveStatus(str, Enum):
 
 class ObjectivePriority(str, Enum):
     """Priority level of an objective."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -39,6 +42,7 @@ class ObjectivePriority(str, Enum):
 #  DATACLASSES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ObjectiveTarget:
     """A measurable target for an objective.
@@ -46,6 +50,7 @@ class ObjectiveTarget:
     Example: metric_name="overdue_rate", current_value=0.15,
              target_value=0.05, operator="<"
     """
+
     metric_name: str
     current_value: float
     target_value: float
@@ -86,6 +91,7 @@ class Objective:
     Represents a goal the autopilot system works toward, such as
     "reduce overdue invoices to <5%" or "increase revenue by 20%".
     """
+
     objective_id: str = ""
     name: str = ""
     description: str = ""
@@ -170,10 +176,7 @@ class Objective:
             A new Objective instance.
         """
         targets_data = data.get("targets", [])
-        targets = [
-            ObjectiveTarget(**t) if isinstance(t, dict) else t
-            for t in targets_data
-        ]
+        targets = [ObjectiveTarget(**t) if isinstance(t, dict) else t for t in targets_data]
         priority_raw = data.get("priority", "normal")
         status_raw = data.get("status", "draft")
         return cls(

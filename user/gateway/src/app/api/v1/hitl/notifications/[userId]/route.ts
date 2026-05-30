@@ -2,7 +2,7 @@
 // GET /api/v1/hitl/notifications/[userId]
 
 import { NextRequest, NextResponse } from "next/server";
-import { getNotificationLogService } from "@/lib/hitl";
+import { getNotificationLogService } from "@/lib/hitl/notification-log-service";
 
 interface RouteParams {
   params: Promise<{ userId: string }>;

@@ -207,7 +207,7 @@ class EvidenceCollector:
 
         # Check safe patterns
         safe_count = 0
-        for pattern, description in SAFE_PATTERNS:
+        for pattern, _description in SAFE_PATTERNS:
             if re.search(pattern, code):
                 safe_count += 1
 

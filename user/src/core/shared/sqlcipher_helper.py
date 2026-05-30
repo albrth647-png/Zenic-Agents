@@ -29,7 +29,7 @@ from typing import Any
 # ──────────────────────────────────────────────────────────────
 #  SQL INJECTION PROTECTION: Identifier validation regex
 # ──────────────────────────────────────────────────────────────
-_SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 def _validate_identifier(name: str, context: str = "") -> None:
@@ -39,9 +39,8 @@ def _validate_identifier(name: str, context: str = "") -> None:
     SQL injection (e.g., quotes, semicolons, whitespace).
     """
     if not _SAFE_IDENTIFIER_RE.match(name):
-        raise ValueError(
-            f"Invalid SQL identifier: {name!r} {context}"
-        )
+        raise ValueError(f"Invalid SQL identifier: {name!r} {context}")
+
 
 logger = logging.getLogger("zenic_agents.shared.sqlcipher")
 
@@ -49,16 +48,18 @@ logger = logging.getLogger("zenic_agents.shared.sqlcipher")
 #  LIBRARY RESOLUTION
 # ──────────────────────────────────────────────────────────────
 
-sqlcipher_module: Any = None          # Will hold whichever module loaded
-_LOADED_LIBRARY: str | None = None # "pysqlcipher3" | "sqlcipher3" | None
+sqlcipher_module: Any = None  # Will hold whichever module loaded
+_LOADED_LIBRARY: str | None = None  # "pysqlcipher3" | "sqlcipher3" | None
 
 try:
     from pysqlcipher3 import dbapi2 as _pysqlcipher  # type: ignore[import-untyped]
+
     sqlcipher_module = _pysqlcipher
     _LOADED_LIBRARY = "pysqlcipher3"
 except ImportError:
     try:
         from sqlcipher3 import dbapi2 as _sqlcipher  # type: ignore[import-untyped]
+
         sqlcipher_module = _sqlcipher
         _LOADED_LIBRARY = "sqlcipher3"
     except ImportError:
@@ -73,10 +74,7 @@ if HAS_SQLCIPHER:
         _LOADED_LIBRARY,
     )
 else:
-    logger.debug(
-        "SQLCipher helper: neither pysqlcipher3 nor sqlcipher3 found; "
-        "falling back to plain sqlite3"
-    )
+    logger.debug("SQLCipher helper: neither pysqlcipher3 nor sqlcipher3 found; falling back to plain sqlite3")
 
 # Backward-compatible alias used by db_initializer.py
 _HAS_SQLCIPHER: bool = HAS_SQLCIPHER
@@ -103,6 +101,7 @@ _DEFAULT_SQLITE_PRAGMAS: list[tuple[str, str | int]] = [
 # ──────────────────────────────────────────────────────────────
 #  PUBLIC FUNCTIONS
 # ──────────────────────────────────────────────────────────────
+
 
 def is_sqlcipher_available() -> bool:
     """Return True if any SQLCipher library is importable.
@@ -187,8 +186,7 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
     """
     if not HAS_SQLCIPHER:
         raise RuntimeError(
-            "SQLCipher is not available. Install pysqlcipher3 or "
-            "sqlcipher3-binary to encrypt databases."
+            "SQLCipher is not available. Install pysqlcipher3 or sqlcipher3-binary to encrypt databases."
         )
     if not os.path.isfile(source_path):
         raise FileNotFoundError(f"Database not found: {source_path}")
@@ -216,9 +214,7 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
         # SECURITY: source_path is validated by caller (must be existing file);
         # we sanitize quotes to prevent breaking out of the string literal.
         safe_path = source_path.replace("'", "''")
-        enc_conn.execute(
-            f"ATTACH DATABASE '{safe_path}' AS plain_db KEY ''"
-        )
+        enc_conn.execute(f"ATTACH DATABASE '{safe_path}' AS plain_db KEY ''")
         # Export: read from plain, write to encrypted
         tables = plain_conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
@@ -259,6 +255,7 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
 #  PRIVATE HELPERS
 # ──────────────────────────────────────────────────────────────
 
+
 def _open_encrypted(
     db_path: str,
     passphrase: str,
@@ -276,22 +273,32 @@ def _open_encrypted(
     # SECURITY: PRAGMA statements cannot use ? parameterization in sqlite3.
     # We validate all inputs to prevent injection:
     hex_key = passphrase.encode("utf-8").hex()
-    if not all(c in '0123456789abcdef' for c in hex_key):
+    if not all(c in "0123456789abcdef" for c in hex_key):
         raise ValueError("Invalid hex key derived from passphrase")
-    conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+    conn.execute(
+        f"PRAGMA key = \"x'{hex_key}'\""
+    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
     if not isinstance(kdf_iterations, int) or kdf_iterations <= 0:
         raise ValueError(f"Invalid kdf_iterations: {kdf_iterations}")
-    conn.execute(f"PRAGMA kdf_iter = {kdf_iterations}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+    conn.execute(
+        f"PRAGMA kdf_iter = {kdf_iterations}"
+    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
     if not isinstance(cipher_page_size, int) or cipher_page_size <= 0:
         raise ValueError(f"Invalid cipher_page_size: {cipher_page_size}")
-    conn.execute(f"PRAGMA cipher_page_size = {cipher_page_size}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+    conn.execute(
+        f"PRAGMA cipher_page_size = {cipher_page_size}"
+    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
     # SECURITY: Validate cipher algorithm names are module-level constants
     # (not user-supplied). These are validated against a whitelist pattern.
     for _algo in (_DEFAULT_CIPHER_HMAC, _DEFAULT_CIPHER_KDF):
         if not _SAFE_IDENTIFIER_RE.match(_algo):
             raise ValueError(f"Invalid cipher algorithm name: {_algo!r}")
-    conn.execute(f"PRAGMA cipher_hmac_algorithm = {_DEFAULT_CIPHER_HMAC}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
-    conn.execute(f"PRAGMA cipher_kdf_algorithm = {_DEFAULT_CIPHER_KDF}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+    conn.execute(
+        f"PRAGMA cipher_hmac_algorithm = {_DEFAULT_CIPHER_HMAC}"
+    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+    conn.execute(
+        f"PRAGMA cipher_kdf_algorithm = {_DEFAULT_CIPHER_KDF}"
+    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
 
     if apply_pragmas:
         _apply_pragmas(conn)
@@ -301,9 +308,7 @@ def _open_encrypted(
             conn.execute("SELECT count(*) FROM sqlite_master")  # nosemgrep: sqlalchemy-execute-raw-query
         except Exception as exc:
             conn.close()
-            raise RuntimeError(
-                f"SQLCipher key verification failed for '{db_path}': {exc}"
-            ) from exc
+            raise RuntimeError(f"SQLCipher key verification failed for '{db_path}': {exc}") from exc
 
     if row_factory is not None:
         conn.row_factory = row_factory
@@ -344,11 +349,9 @@ def _apply_pragmas(conn: Any) -> None:
         _validate_identifier(pragma_name, "in _apply_pragmas")
         if isinstance(pragma_value, str):
             if not _SAFE_IDENTIFIER_RE.match(pragma_value):
-                raise ValueError(
-                    f"Invalid PRAGMA value: {pragma_value!r} for {pragma_name}"
-                )
+                raise ValueError(f"Invalid PRAGMA value: {pragma_value!r} for {pragma_name}")
         elif not isinstance(pragma_value, int):
-            raise ValueError(
-                f"Invalid PRAGMA value type: {type(pragma_value)} for {pragma_name}"
-            )
-        conn.execute(f"PRAGMA {pragma_name} = {pragma_value}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            raise ValueError(f"Invalid PRAGMA value type: {type(pragma_value)} for {pragma_name}")
+        conn.execute(
+            f"PRAGMA {pragma_name} = {pragma_value}"
+        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier

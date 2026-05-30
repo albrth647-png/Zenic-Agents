@@ -128,8 +128,7 @@ class PersistenceMixin:
             try:
                 # Load the action
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT action_id, tenant_id, status, created_at "
-                    "FROM coordinated_actions WHERE action_id = ?",
+                    "SELECT action_id, tenant_id, status, created_at FROM coordinated_actions WHERE action_id = ?",
                     (action_id,),
                 )
                 row = cursor.fetchone()

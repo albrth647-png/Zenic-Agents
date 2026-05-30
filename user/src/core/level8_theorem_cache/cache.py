@@ -26,6 +26,7 @@ Sin dependencias externas. Compatible con Android.
 """
 
 import ast
+import contextlib
 import hashlib
 import json
 import logging
@@ -216,10 +217,8 @@ class TheoremCache:
             # Eviction: remove LRU entries if limit exceeded (scoped by tenant)
             self._evict_if_needed(conn)
 
-        try:
+        with contextlib.suppress(Exception):
             with_retry(_save_entry, label="TheoremCache save")
-        except Exception:  # noqa: S110
-            pass  # with_retry already logged the failure
 
     def _evict_if_needed(self, conn):
         """

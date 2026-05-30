@@ -193,7 +193,7 @@ class ChoicePrompt(BasePrompt):
         try:
             console = Console()
             console.print(f"\n  [bold]{self.label}[/]")
-            for i, (value, desc) in enumerate(self.choices, 1):
+            for i, (_value, desc) in enumerate(self.choices, 1):
                 console.print(f"    [cyan]{i}[/]. {desc}")
 
             raw = RichPrompt.ask(
@@ -223,7 +223,7 @@ class ChoicePrompt(BasePrompt):
         """Collect using plain text choice display."""
         try:
             print(f"\n  {self.label}")
-            for i, (value, desc) in enumerate(self.choices, 1):
+            for i, (_value, desc) in enumerate(self.choices, 1):
                 print(f"    {i}. {desc}")
 
             raw = input(f"  Select (1-{len(self.choices)}) [1]: ").strip() or "1"
@@ -339,9 +339,9 @@ class PromptBuilder:
                 console = Console()
                 console.print(Panel(f"[bold]{self._title}[/]", border_style="cyan"))
             else:
-                print(f"\n{'='*50}")
+                print(f"\n{'=' * 50}")
                 print(f"  {self._title}")
-                print(f"{'='*50}\n")
+                print(f"{'=' * 50}\n")
 
         # Collect each prompt
         for prompt in self._prompts:

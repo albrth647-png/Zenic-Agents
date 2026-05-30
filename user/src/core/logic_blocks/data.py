@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 # \A/\Z anchors prevent bypass with embedded newlines.
 # Only allows: column_name [ASC|DESC] [, column_name [ASC|DESC]]*
 _SAFE_ORDER_RE = re.compile(
-    r'\A[a-zA-Z_][a-zA-Z0-9_]*(\s+(ASC|DESC))?'
-    r'(,\s*[a-zA-Z_][a-zA-Z0-9_]*(\s+(ASC|DESC))?)*\Z',
+    r"\A[a-zA-Z_][a-zA-Z0-9_]*(\s+(ASC|DESC))?"
+    r"(,\s*[a-zA-Z_][a-zA-Z0-9_]*(\s+(ASC|DESC))?)*\Z",
     re.IGNORECASE,
 )
 
@@ -38,8 +38,8 @@ class CRUDCreateBlock(LogicBlock):
     name = "crud_create"
     category = "data"
     description = "Create a new record in the database"
-    inputs = ["data", "table", "fields"]
-    outputs = ["result", "id", "status"]
+    inputs = ["data", "table", "fields"]  # noqa: RUF012
+    outputs = ["result", "id", "status"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -48,13 +48,19 @@ class CRUDCreateBlock(LogicBlock):
 
             # Use all data as fields if no explicit fields specified
             if not fields:
-                fields = {k: v for k, v in data.items()
-                          if (not k.startswith("_") and k not in ("table", "success", "error")
-                          and not isinstance(v, (list, dict))) or isinstance(v, dict)}
+                fields = {
+                    k: v
+                    for k, v in data.items()
+                    if (
+                        not k.startswith("_")
+                        and k not in ("table", "success", "error")
+                        and not isinstance(v, (list, dict))
+                    )
+                    or isinstance(v, dict)
+                }
 
             # Filter out internal keys
-            clean_fields = {k: v for k, v in fields.items()
-                           if not k.startswith("_") and k not in ("table",)}
+            clean_fields = {k: v for k, v in fields.items() if not k.startswith("_") and k not in ("table",)}
 
             db = context.get("db")
             if db is not None:
@@ -67,10 +73,10 @@ class CRUDCreateBlock(LogicBlock):
                     values = list(clean_fields.values())
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         f'INSERT INTO "{table}" ({columns}) VALUES ({placeholders})',  # noqa: S608
-                        values
+                        values,
                     )
-                    record_id = cursor.lastrowid if hasattr(cursor, 'lastrowid') else len(clean_fields)
-                    db.commit() if hasattr(db, 'commit') else None
+                    record_id = cursor.lastrowid if hasattr(cursor, "lastrowid") else len(clean_fields)
+                    db.commit() if hasattr(db, "commit") else None
                     logger.debug(f"CRUDCreateBlock: Created record in {table}, id={record_id}")
                     return {
                         "success": True,
@@ -103,8 +109,8 @@ class CRUDReadBlock(LogicBlock):
     name = "crud_read"
     category = "data"
     description = "Read records with filtering and pagination"
-    inputs = ["table", "filters", "page", "page_size"]
-    outputs = ["records", "total", "page"]
+    inputs = ["table", "filters", "page", "page_size"]  # noqa: RUF012
+    outputs = ["records", "total", "page"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -120,7 +126,7 @@ class CRUDReadBlock(LogicBlock):
             # and only ASC/DESC keywords are allowed.
             # Unicode normalization prevents bypass with homoglyphs.
             # \A/\Z anchors prevent bypass with embedded newlines.
-            order_by = unicodedata.normalize('NFKC', str(order_by))
+            order_by = unicodedata.normalize("NFKC", str(order_by))
             if not _SAFE_ORDER_RE.match(order_by):
                 logger.warning("CRUDReadBlock: Invalid order_by rejected: %r", order_by)
                 order_by = "id DESC"
@@ -150,17 +156,20 @@ class CRUDReadBlock(LogicBlock):
 
                     # SECURITY: table and column names validated by _validate_identifier;
                     # data values use ? parameterization via 'values' tuple
-                    count_cursor = db.execute(f'SELECT COUNT(*) FROM "{table}"{where_str}', values)  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
+                    count_cursor = db.execute(
+                        f'SELECT COUNT(*) FROM "{table}"{where_str}',
+                        values,  # noqa: S608
+                    )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                     total = count_cursor.fetchone()[0]
 
                     # Fetch page
                     offset = (page - 1) * page_size
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         f'SELECT * FROM "{table}"{where_str} ORDER BY {order_by} LIMIT ? OFFSET ?',  # noqa: S608
-                        [*values, page_size, offset]
+                        [*values, page_size, offset],
                     )
                     rows = cursor.fetchall()
-                    records = [dict(row) if hasattr(row, 'keys') else row for row in rows]
+                    records = [dict(row) if hasattr(row, "keys") else row for row in rows]
 
                     logger.debug(f"CRUDReadBlock: Read {len(records)} from {table}, total={total}")
                     return {
@@ -195,8 +204,8 @@ class CRUDUpdateBlock(LogicBlock):
     name = "crud_update"
     category = "data"
     description = "Update records by ID"
-    inputs = ["table", "id", "fields"]
-    outputs = ["result", "updated_fields", "status"]
+    inputs = ["table", "id", "fields"]  # noqa: RUF012
+    outputs = ["result", "updated_fields", "status"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -208,9 +217,13 @@ class CRUDUpdateBlock(LogicBlock):
                 return {"success": False, "error": "No record ID provided for update"}
 
             if not fields:
-                fields = {k: v for k, v in data.items()
-                          if not k.startswith("_") and k not in ("table", "id", "success", "error", "record_id")
-                          and isinstance(v, (str, int, float, bool))}
+                fields = {
+                    k: v
+                    for k, v in data.items()
+                    if not k.startswith("_")
+                    and k not in ("table", "id", "success", "error", "record_id")
+                    and isinstance(v, (str, int, float, bool))
+                }
 
             if not fields:
                 return {"success": False, "error": "No fields provided for update"}
@@ -225,10 +238,10 @@ class CRUDUpdateBlock(LogicBlock):
                     values = [*list(fields.values()), record_id]
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         f'UPDATE "{table}" SET {", ".join(set_clauses)} WHERE id = ?',  # noqa: S608
-                        values
+                        values,
                     )
-                    rows_affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 1
-                    db.commit() if hasattr(db, 'commit') else None
+                    rows_affected = cursor.rowcount if hasattr(cursor, "rowcount") else 1
+                    db.commit() if hasattr(db, "commit") else None
                     logger.debug(f"CRUDUpdateBlock: Updated {table} id={record_id}, fields={list(fields.keys())}")
                     return {
                         "success": True,
@@ -260,8 +273,8 @@ class CRUDDeleteBlock(LogicBlock):
     name = "crud_delete"
     category = "data"
     description = "Delete records by ID"
-    inputs = ["table", "id"]
-    outputs = ["result", "status"]
+    inputs = ["table", "id"]  # noqa: RUF012
+    outputs = ["result", "status"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -279,14 +292,17 @@ class CRUDDeleteBlock(LogicBlock):
                     if soft_delete:
                         cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                             f'UPDATE "{table}" SET deleted_at = ? WHERE id = ?',  # noqa: S608
-                            (time.strftime("%Y-%m-%d %H:%M:%S"), record_id)
+                            (time.strftime("%Y-%m-%d %H:%M:%S"), record_id),
                         )
                     else:
                         # SECURITY: record_id uses ? parameterization
-                        cursor = db.execute(f'DELETE FROM "{table}" WHERE id = ?', (record_id,))  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
+                        cursor = db.execute(
+                            f'DELETE FROM "{table}" WHERE id = ?',
+                            (record_id,),  # noqa: S608
+                        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
 
-                    rows_affected = cursor.rowcount if hasattr(cursor, 'rowcount') else 1
-                    db.commit() if hasattr(db, 'commit') else None
+                    rows_affected = cursor.rowcount if hasattr(cursor, "rowcount") else 1
+                    db.commit() if hasattr(db, "commit") else None
                     logger.debug(f"CRUDDeleteBlock: Deleted from {table} id={record_id}, rows={rows_affected}")
                     return {
                         "success": True,

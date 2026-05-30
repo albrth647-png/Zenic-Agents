@@ -22,15 +22,17 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["MCTSNode", "MCTSPlanner"]
 
+
 # ARM-optimized defaults: detect if running on mobile
 def _is_arm_device():
     """Detecta si estamos en un dispositivo ARM (Teléfono/Tablet)."""
     try:
-        machine = os.uname().machine if hasattr(os, 'uname') else ''
-        return 'arm' in machine.lower() or 'aarch' in machine.lower()
+        machine = os.uname().machine if hasattr(os, "uname") else ""
+        return "arm" in machine.lower() or "aarch" in machine.lower()
     except Exception as e:
         logger.debug("MCTS: ARM detection failed: %s", e)
         return False
+
 
 # Adaptive defaults based on hardware
 _IS_ARM = _is_arm_device()
@@ -42,6 +44,7 @@ DEFAULT_TIMEOUT_MS = 5000
 # ============================================================
 #  MCTS (Monte Carlo Tree Search) - Implementacion Real
 # ============================================================
+
 
 class MCTSNode:
     """
@@ -61,13 +64,11 @@ class MCTSNode:
     def ucb1(self, exploration=1.414):
         """Upper Confidence Bound 1 para seleccion."""
         if self.parent is None or self.parent.visits == 0:
-            return float('inf')
+            return float("inf")
         if self.visits == 0:
-            return float('inf')
+            return float("inf")
         exploitation = self.wins / self.visits
-        exploration_term = exploration * math.sqrt(
-            math.log(self.parent.visits) / self.visits
-        )
+        exploration_term = exploration * math.sqrt(math.log(self.parent.visits) / self.visits)
         return exploitation + exploration_term
 
     def best_child(self, exploration=1.414):

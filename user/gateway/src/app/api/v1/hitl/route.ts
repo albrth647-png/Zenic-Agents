@@ -4,8 +4,8 @@
 // ⚠️ SECURITY FIX (Phase 0): Added authentication to all endpoints
 
 import { NextRequest, NextResponse } from "next/server";
-import { getApprovalEngine } from "@/lib/hitl";
-import { ApprovalRequestStatus, ApprovalPriority, ApprovalType } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
+import { ApprovalRequestStatus, ApprovalPriority, ApprovalType } from "@/lib/hitl/types/_core";
 import { requireAuth, requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 // GET /api/v1/hitl

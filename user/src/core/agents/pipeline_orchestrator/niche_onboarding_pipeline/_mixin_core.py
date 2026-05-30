@@ -87,7 +87,7 @@ class NicheOnboardingCoreMixin:
                 state.template_dict = result.template_dict
             state.fields_auto_filled = len(result.matched_fields)
             state.add_warning(
-                f"Auto-filled {len(result.matched_fields)} fields from " f"{result.documents_processed} documents"
+                f"Auto-filled {len(result.matched_fields)} fields from {result.documents_processed} documents"
             )
         else:
             if result.errors:

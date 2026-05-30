@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 # ── Flow State Machine ───────────────────────────────────────
 
+
 class FlowState(str, Enum):
     """Lifecycle states for an onboarding flow.
 
@@ -40,6 +41,7 @@ class FlowState(str, Enum):
                            → FAILED
                            → CANCELLED
     """
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -57,6 +59,7 @@ class FlowState(str, Enum):
 
 # ── Data Types ───────────────────────────────────────────────
 
+
 @dataclass
 class FlowResult:
     """Result of a flow execution.
@@ -71,6 +74,7 @@ class FlowResult:
         flow_id: Unique identifier for this flow execution.
         flow_name: Name of the flow that was executed.
     """
+
     success: bool
     state: FlowState
     data: dict[str, Any] = field(default_factory=dict)
@@ -108,6 +112,7 @@ class FlowContext:
         env: Environment variables / configuration.
         artifacts: Collected artifacts from each step.
     """
+
     flow_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     user_input: dict[str, Any] = field(default_factory=dict)
     env: dict[str, str] = field(default_factory=dict)
@@ -127,6 +132,7 @@ class FlowContext:
 
 
 # ── Base Flow (Template Method) ──────────────────────────────
+
 
 class BaseFlow(ABC):
     """Abstract base for all onboarding flows using Template Method.
@@ -218,8 +224,7 @@ class BaseFlow(ABC):
 
     # ── Template Method ──────────────────────────────────────
 
-    def run(self, user_input: dict[str, Any] | None = None,
-            env: dict[str, str] | None = None) -> FlowResult:
+    def run(self, user_input: dict[str, Any] | None = None, env: dict[str, str] | None = None) -> FlowResult:
         """Execute the flow with the Template Method pattern.
 
         This is the main entry point — it orchestrates the full
@@ -291,13 +296,13 @@ class BaseFlow(ABC):
 
     # ── Overridable Steps ────────────────────────────────────
 
-    def on_validate(self, ctx: FlowContext) -> None:
+    def on_validate(self, ctx: FlowContext) -> None:  # noqa: B027
         """Validate user inputs before execution. Override for custom validation.
 
         Raises:
             ValueError: If validation fails.
         """
-        pass
+        ...
 
     @abstractmethod
     def on_execute(self, ctx: FlowContext) -> None:
@@ -315,12 +320,13 @@ class BaseFlow(ABC):
         """
         return f"Flow '{self.name}' completed successfully."
 
-    def on_finalize(self, ctx: FlowContext) -> None:
+    def on_finalize(self, ctx: FlowContext) -> None:  # noqa: B027
         """Cleanup and side effects after execution. Override for custom cleanup."""
-        pass
+        ...
 
 
 # ── Flow Registry ────────────────────────────────────────────
+
 
 class FlowRegistry:
     """Registry of available onboarding flows.
@@ -363,11 +369,13 @@ class FlowRegistry:
         result = []
         for name, flow_class in self._flows.items():
             instance = flow_class()
-            result.append({
-                "name": name,
-                "description": instance.description,
-                "version": instance.version,
-            })
+            result.append(
+                {
+                    "name": name,
+                    "description": instance.description,
+                    "version": instance.version,
+                }
+            )
         return result
 
     @property

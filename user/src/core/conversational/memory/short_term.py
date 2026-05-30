@@ -93,30 +93,18 @@ class ShortTermMemory:
             if query.session_id and query.session_id in self._session_index:
                 ids = self._session_index[query.session_id]
                 candidates = [
-                    self._entries[mid]
-                    for mid in ids
-                    if mid in self._entries
-                    and not self._entries[mid].is_expired
+                    self._entries[mid] for mid in ids if mid in self._entries and not self._entries[mid].is_expired
                 ]
             else:
-                candidates = [
-                    e for e in self._entries.values()
-                    if not e.is_expired
-                ]
+                candidates = [e for e in self._entries.values() if not e.is_expired]
 
             # Filtrar por categorias
             if query.categories:
-                candidates = [
-                    e for e in candidates
-                    if e.category in query.categories
-                ]
+                candidates = [e for e in candidates if e.category in query.categories]
 
             # Filtrar por importancia
             if query.min_importance > 0:
-                candidates = [
-                    e for e in candidates
-                    if e.importance >= query.min_importance
-                ]
+                candidates = [e for e in candidates if e.importance >= query.min_importance]
 
             # Scoring
             for entry in candidates:
@@ -125,13 +113,11 @@ class ShortTermMemory:
 
             # Ordenar y limitar
             candidates.sort(key=lambda e: e.relevance_score, reverse=True)
-            results = candidates[:query.max_results]
+            results = candidates[: query.max_results]
 
         elapsed = (time.time() - start) * 1000
         self._stats.total_retrieved += 1
-        self._stats.avg_retrieval_ms = (
-            (self._stats.avg_retrieval_ms + elapsed) / 2
-        )
+        self._stats.avg_retrieval_ms = (self._stats.avg_retrieval_ms + elapsed) / 2
 
         return MemoryResult(
             entries=results,
@@ -144,11 +130,7 @@ class ShortTermMemory:
         """Obtiene todas las entradas de una sesion."""
         with self._lock:
             ids = self._session_index.get(session_id, [])
-            return [
-                self._entries[mid]
-                for mid in ids
-                if mid in self._entries
-            ]
+            return [self._entries[mid] for mid in ids if mid in self._entries]
 
     def get_preferences(self, session_id: str) -> dict[str, Any]:
         """Obtiene preferencias almacenadas de una sesion."""
@@ -174,23 +156,16 @@ class ShortTermMemory:
     def cleanup_expired(self) -> int:
         """Limpia entradas expiradas."""
         with self._lock:
-            expired = [
-                mid for mid, e in self._entries.items()
-                if e.is_expired
-            ]
+            expired = [mid for mid, e in self._entries.items() if e.is_expired]
             for mid in expired:
                 entry = self._entries.pop(mid)
                 # Limpiar indices
                 sid = entry.session_id
                 if sid in self._session_index:
-                    self._session_index[sid] = [
-                        i for i in self._session_index[sid] if i != mid
-                    ]
+                    self._session_index[sid] = [i for i in self._session_index[sid] if i != mid]
                 cat = entry.category
                 if cat in self._category_index:
-                    self._category_index[cat] = [
-                        i for i in self._category_index[cat] if i != mid
-                    ]
+                    self._category_index[cat] = [i for i in self._category_index[cat] if i != mid]
 
             self._stats.short_term_count = len(self._entries)
             self._stats.evictions += len(expired)
@@ -219,9 +194,7 @@ class ShortTermMemory:
         # Limpiar indices
         sid = entry.session_id
         if sid in self._session_index:
-            self._session_index[sid] = [
-                i for i in self._session_index[sid] if i != min_id
-            ]
+            self._session_index[sid] = [i for i in self._session_index[sid] if i != min_id]
 
     @staticmethod
     def _score(entry: MemoryEntry, query: MemoryQuery) -> float:

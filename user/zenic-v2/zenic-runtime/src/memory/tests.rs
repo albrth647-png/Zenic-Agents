@@ -2,7 +2,10 @@
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::memory::{
+        MemoryManager, NodeLoadState,
+        DEFAULT_MAX_LOADED_NODES, DEFAULT_MEMORY_BUDGET_BYTES,
+    };
     use zenic_proto::{LoadPolicy, NodeId, SubGraphId};
 
     #[test]

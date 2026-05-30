@@ -14,6 +14,7 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -60,18 +61,14 @@ class Z3InvariantMixin:
             # For small domains, enumerate and build Z3 constraints directly
             # that capture the invariant function
             if total_states <= _INV_ENUM_THRESHOLD:
-                result = self._z3_invariant_enumerated(
-                    invariant_func, variables, domains
-                )
+                result = self._z3_invariant_enumerated(invariant_func, variables, domains)
                 if result is not None:
                     return result
 
             # For larger domains, use bounded Z3 verification:
             # encode domain membership + try to find counterexamples
             # within a bounded search depth
-            result = self._z3_invariant_bounded(
-                invariant_func, variables, domains
-            )
+            result = self._z3_invariant_bounded(invariant_func, variables, domains)
             if result is not None:
                 return result
 
@@ -110,9 +107,7 @@ class Z3InvariantMixin:
             # Restrict to domain using bijective encoding
             encoded_vals = [self._encode_value(v) for v in vals]
             if encoded_vals:
-                solver.add(
-                    z3_module.Or(*[z3_var == ev for ev in encoded_vals])
-                )
+                solver.add(z3_module.Or(*[z3_var == ev for ev in encoded_vals]))
 
         # Enumerate states where invariant is VIOLATED
         # Build Z3 constraints encoding these violation patterns
@@ -129,10 +124,7 @@ class Z3InvariantMixin:
                 try:
                     if not invariant_func(**assignment):
                         # This assignment violates the invariant
-                        violation_constraints.append(
-                            z3_module.And(*z3_conds) if z3_conds
-                            else z3_module.BoolVal(True)
-                        )
+                        violation_constraints.append(z3_module.And(*z3_conds) if z3_conds else z3_module.BoolVal(True))
                 except Exception as inv_err:
                     logger.debug(f"Z3Solver: Invariant evaluation failed: {inv_err}")
                 return
@@ -181,9 +173,7 @@ class Z3InvariantMixin:
             for var_name in variables:
                 if var_name in z3_vars:
                     val = model.eval(z3_vars[var_name])
-                    counterexample[var_name] = self._decode_value(
-                        val, domains.get(var_name, [])
-                    )
+                    counterexample[var_name] = self._decode_value(val, domains.get(var_name, []))
             return {
                 "status": "VIOLATED",
                 "solver_type": "Z3_INT",

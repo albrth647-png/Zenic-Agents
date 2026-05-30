@@ -108,7 +108,7 @@ class CoreMixin:
                 params.append(time_range[1])
             where = " AND ".join(conditions)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM audit_events WHERE {where} " "ORDER BY created_at ASC LIMIT 2000",  # noqa: S608
+                f"SELECT * FROM audit_events WHERE {where} ORDER BY created_at ASC LIMIT 2000",  # noqa: S608
                 params,
             ).fetchall()
             conn.close()
@@ -133,7 +133,7 @@ class CoreMixin:
                 params.append(time_range[1])
             where = " AND ".join(conditions)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM ledger WHERE {where} " "ORDER BY timestamp ASC LIMIT 2000",  # noqa: S608
+                f"SELECT * FROM ledger WHERE {where} ORDER BY timestamp ASC LIMIT 2000",  # noqa: S608
                 params,
             ).fetchall()
             return [dict(r) for r in rows]
@@ -260,7 +260,7 @@ class CoreMixin:
             entity_id="",
             tenant_id=tenant_id,
             time_range=None,
-            result_summary=(f"total={total} valid={valid_count} " f"broken={len(broken_links)} ok={is_valid}"),
+            result_summary=(f"total={total} valid={valid_count} broken={len(broken_links)} ok={is_valid}"),
         )
 
         logger.info(

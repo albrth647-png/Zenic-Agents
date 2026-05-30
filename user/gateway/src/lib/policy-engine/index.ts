@@ -129,7 +129,7 @@ export {
   deleteTemplate,
 } from "./templates";
 export type {
-  TemplateListOptions,
+  ListTemplatesOptions,
 } from "./templates";
 
 // Namespace Engine (Phase 4 — Multi-tenant Policy Scoping)
@@ -141,4 +141,7 @@ export {
   getNamespaceHierarchy,
   updateNamespace,
   deleteNamespace,
+} from "./namespaces";
+export type {
+  NamespaceUpdateRequest,
 } from "./namespaces";

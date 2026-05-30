@@ -23,6 +23,23 @@ import {
  * 3. **Fixed Window** — simplest algorithm. Groups requests into fixed time
  *    periods and counts against a per-period cap.
  */
+// ─── Singleton ─────────────────────────────────────────────────────
+
+let rateLimiterInstance: RateLimiter | null = null;
+
+/** Get or create the RateLimiter singleton */
+export function getRateLimiter(): RateLimiter {
+  if (!rateLimiterInstance) {
+    rateLimiterInstance = new RateLimiter();
+  }
+  return rateLimiterInstance;
+}
+
+/** Reset the RateLimiter singleton (for testing) */
+export function resetRateLimiter(): void {
+  rateLimiterInstance = null;
+}
+
 export class RateLimiter {
   private buckets = new Map<string, TokenBucketState>();
   private windows = new Map<string, number[]>();

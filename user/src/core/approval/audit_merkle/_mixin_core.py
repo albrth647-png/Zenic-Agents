@@ -26,6 +26,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
     def __init__(self, db_path: str = "audit_merkle.sqlite") -> None:
         self._db_path = db_path
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -70,12 +71,15 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
         logger.info(
             "ApprovalAuditMerkle: Recorded %s for request %s (hash=%s…)",
-            event_type_enum.value, request_id, record.content_hash[:16],
+            event_type_enum.value,
+            request_id,
+            record.content_hash[:16],
         )
         return record
 
     def get_audit_trail(self, request_id: str) -> list[AuditRecord]:
         """Get all audit records for a request, in chronological order."""
+
         def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -91,7 +95,8 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
         return self._with_retry(_do_query, fallback=[])
 
     def verify_chain_integrity(
-        self, request_id: str,
+        self,
+        request_id: str,
     ) -> tuple[bool, int | None]:
         """Verify all hashes and chain links for a request's audit trail."""
         records = self.get_audit_trail(request_id)
@@ -103,15 +108,17 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             expected_hash = self._compute_content_hash(record, previous_hash)
             if record.content_hash != expected_hash:
                 logger.warning(
-                    "ApprovalAuditMerkle: Content hash mismatch at index %d "
-                    "for request %s", i, request_id,
+                    "ApprovalAuditMerkle: Content hash mismatch at index %d for request %s",
+                    i,
+                    request_id,
                 )
                 return (False, i)
 
             if i > 0 and record.previous_hash != records[i - 1].content_hash:
                 logger.warning(
-                    "ApprovalAuditMerkle: Chain link broken at index %d "
-                    "for request %s", i, request_id,
+                    "ApprovalAuditMerkle: Chain link broken at index %d for request %s",
+                    i,
+                    request_id,
                 )
                 return (False, i)
 
@@ -119,6 +126,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def verify_global_integrity(self) -> tuple[bool, int | None]:
         """Verify the entire global audit chain."""
+
         def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -150,6 +158,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def get_merkle_proof(self, record_id: str) -> MerkleProof:
         """Generate a Merkle proof for a specific record."""
+
         def _do_query() -> list[AuditRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -196,9 +205,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             for j in range(0, len(hashes), 2):
                 left = hashes[j]
                 right = hashes[j + 1] if j + 1 < len(hashes) else left
-                combined = hashlib.sha256(
-                    f"{left}{right}".encode()
-                ).hexdigest()
+                combined = hashlib.sha256(f"{left}{right}".encode()).hexdigest()
                 new_hashes.append(combined)
 
             hashes = new_hashes
@@ -227,6 +234,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
 
     def compute_root_hash(self) -> str:
         """Compute the current Merkle root from all records."""
+
         def _do_query() -> list[str]:
             conn = sqlite3.connect(self._db_path)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -244,9 +252,7 @@ class ApprovalAuditMerkle(AuditMerklePersistenceMixin):
             for i in range(0, len(hashes), 2):
                 left = hashes[i]
                 right = hashes[i + 1] if i + 1 < len(hashes) else left
-                combined = hashlib.sha256(
-                    f"{left}{right}".encode()
-                ).hexdigest()
+                combined = hashlib.sha256(f"{left}{right}".encode()).hexdigest()
                 new_hashes.append(combined)
             hashes = new_hashes
 

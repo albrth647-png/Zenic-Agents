@@ -44,6 +44,7 @@ logger = logging.getLogger("zenic_agents.email_parts.graph_api")
 #  GRAPH API EMAIL PROVIDER
 # ──────────────────────────────────────────────────────────────
 
+
 class GraphAPIEmailProvider:
     """Microsoft Graph API email provider for sending emails.
 

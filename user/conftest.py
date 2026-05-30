@@ -18,8 +18,6 @@ Usage:
         os.environ["ZENIC_DETERMINISTIC_SEED"] = "12345"
 """
 
-import os
-import random
 
 import pytest
 

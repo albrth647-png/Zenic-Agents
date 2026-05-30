@@ -30,6 +30,7 @@ pub struct SharedMemoryBus {
     /// Metrics counters
     pub(crate) total_published: Arc<Mutex<u64>>,
     pub(crate) total_received: Arc<Mutex<u64>>,
+        #[allow(dead_code)]
     pub(crate) max_buffer_size: usize,
     pub(crate) max_mailbox_size: usize,
 }

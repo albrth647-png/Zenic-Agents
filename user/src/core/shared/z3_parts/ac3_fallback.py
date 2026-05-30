@@ -111,8 +111,7 @@ class AC3FallbackMixin:
                                         name_i,
                                         lambda x, y, compat=compatible: x in compat,
                                         description=(
-                                            f"type compat: {name_j} -> "
-                                            f"{name_i} (source type must be in {compatible})"
+                                            f"type compat: {name_j} -> {name_i} (source type must be in {compatible})"
                                         ),
                                     )
                                 )
@@ -204,14 +203,17 @@ class AC3FallbackMixin:
                 tree = ast.parse(raw_code)
                 invariants = []
                 for node in ast.walk(tree):
-                    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.FloorDiv)):
-                        if isinstance(node.right, ast.Name):
-                            invariants.append(
-                                {
-                                    "kind": "no_div_zero",
-                                    "variables": [node.right.id],
-                                }
-                            )
+                    if (
+                        isinstance(node, ast.BinOp)
+                        and isinstance(node.op, (ast.Div, ast.FloorDiv))
+                        and isinstance(node.right, ast.Name)
+                    ):
+                        invariants.append(
+                            {
+                                "kind": "no_div_zero",
+                                "variables": [node.right.id],
+                            }
+                        )
                 results["invariant_safety"] = {
                     "status": "LIKELY_PROVEN" if not invariants else "UNKNOWN",
                     "solver_type": "AC3",

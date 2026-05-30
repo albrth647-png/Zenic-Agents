@@ -3,7 +3,6 @@ use pyo3::types::PyDict;
 use std::collections::HashMap;
 
 use super::config::*;
-use super::schema_types::*;
 
 // ═══════════════════════════════════════════════════════════════
 //  Internal Helpers

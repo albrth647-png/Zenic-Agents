@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import type { PolicyDocument, PolicyApprovalRequest, ApprovalDecision, AutoApproveRule } from "../types";
 import { ApprovalStatus as ApprovalStatusEnum } from "../types/approval";
+import type { ApprovalStatus } from "../types/approval";
 import { validateTransition } from "./types";
 import { mapDbToApprovalRequest, loadExistingDocument, evaluateAutoApproveRules } from "./workflow";
 import { createVersion } from "../versioning";
@@ -69,9 +70,9 @@ export async function submitForReview(
 
   const shouldAutoApprove = evaluateAutoApproveRules(autoApproveRules, proposedDocument, existingDocument);
 
-  const newStatus = shouldAutoApprove
+  const newStatus = (shouldAutoApprove
     ? ApprovalStatusEnum.APPROVED
-    : ApprovalStatusEnum.PENDING_REVIEW;
+    : ApprovalStatusEnum.PENDING_REVIEW) as string;
 
   const updated = await db.policyApproval.update({
     where: { approvalId },
@@ -126,7 +127,7 @@ export async function approveRequest(
   }
 
   const updatedApprovals = [...existingApprovals, decision];
-  let newStatus = record.status;
+  let newStatus: string = record.status;
   let newCurrentApprovals = record.currentApprovals;
 
   if (decision.decision === "rejected") {
@@ -157,7 +158,7 @@ export async function approveRequest(
     const freshApprovals = JSON.parse(freshRecord.approvals) as ApprovalDecision[];
     const mergedApprovals = [...freshApprovals, decision];
 
-    let finalStatus = freshRecord.status;
+    let finalStatus: string = freshRecord.status;
     let finalCurrentApprovals = freshRecord.currentApprovals;
 
     if (decision.decision === "rejected") {
@@ -172,7 +173,7 @@ export async function approveRequest(
     return tx.policyApproval.update({
       where: { approvalId },
       data: {
-        status: finalStatus,
+        status: finalStatus as string,
         currentApprovals: finalCurrentApprovals,
         approvals: JSON.stringify(mergedApprovals),
         updatedAt: new Date(),

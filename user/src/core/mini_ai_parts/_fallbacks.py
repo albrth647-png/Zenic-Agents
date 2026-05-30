@@ -44,14 +44,46 @@ class FallbackMethodsMixin:
         text_lower = text.lower()
 
         op_keywords = {
-            "CREATE": ["create", "new", "add", "implement", "crear", "nuevo", "agregar", "generar", "build", "make", "escribir", "write"],
-            "REFACTOR": ["refactor", "restructure", "reorganize", "refactorizar", "reestructurar", "clean", "simplify", "mejorar", "limpiar"],
+            "CREATE": [
+                "create",
+                "new",
+                "add",
+                "implement",
+                "crear",
+                "nuevo",
+                "agregar",
+                "generar",
+                "build",
+                "make",
+                "escribir",
+                "write",
+            ],
+            "REFACTOR": [
+                "refactor",
+                "restructure",
+                "reorganize",
+                "refactorizar",
+                "reestructurar",
+                "clean",
+                "simplify",
+                "mejorar",
+                "limpiar",
+            ],
             "DELETE": ["delete", "remove", "eliminate", "eliminar", "borrar", "quitar", "drop", "remover"],
             "SEARCH": ["search", "find", "where", "locate", "buscar", "encontrar", "donde", "localizar"],
             "ANALYZE": ["analyze", "review", "check", "analizar", "revisar", "verificar", "examine", "inspeccionar"],
             "EXPLAIN": ["explain", "describe", "what does", "explicar", "describir", "como funciona", "que hace"],
             "DEBUG": ["debug", "fix", "correct", "bug", "error", "corregir", "arreglar", "depurar", "reparar"],
-            "OPTIMIZE": ["optimize", "improve", "faster", "optimizar", "mejorar", "acelerar", "performance", "rendimiento"],
+            "OPTIMIZE": [
+                "optimize",
+                "improve",
+                "faster",
+                "optimizar",
+                "mejorar",
+                "acelerar",
+                "performance",
+                "rendimiento",
+            ],
         }
 
         best_op, best_score = "SEARCH", 0
@@ -73,7 +105,16 @@ class FallbackMethodsMixin:
         goal_keywords = {
             "BUG_FIX": ["bug", "fix", "error", "corregir", "arreglar", "wrong", "broken", "falla", "defecto"],
             "FEATURE_ADD": ["add", "new", "feature", "agregar", "nueva", "implement", "crear", "nueva funcionalidad"],
-            "SECURITY_HARDEN": ["security", "auth", "login", "token", "crypto", "vulnerability", "seguridad", "autenticar"],
+            "SECURITY_HARDEN": [
+                "security",
+                "auth",
+                "login",
+                "token",
+                "crypto",
+                "vulnerability",
+                "seguridad",
+                "autenticar",
+            ],
             "PERFORMANCE": ["optimize", "fast", "slow", "performance", "optimizar", "rapido", "lento", "velocidad"],
             "MODERN_PATTERN": ["modern", "update", "upgrade", "moderno", "actualizar", "migrate", "migrar"],
             "COMPLEXITY_REDUCTION": ["simplify", "reduce", "complex", "simplificar", "reducir", "complejo"],
@@ -91,20 +132,27 @@ class FallbackMethodsMixin:
     def _fallback_extract(self, text: str) -> dict[str, Any]:
         """Deterministic regex-based entity extraction."""
         # File extraction
-        file_match = re.search(r'([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))', text)
+        file_match = re.search(r"([\w\.-]+\.(py|kt|go|js|ts|java|rs|rb|cpp|c|h))", text)
         file_name = file_match.group(1) if file_match else ""
 
         # Language from extension
         lang_map = {
-            ".py": "python", ".kt": "kotlin", ".go": "go",
-            ".js": "javascript", ".ts": "typescript", ".java": "java",
-            ".rs": "rust", ".rb": "ruby", ".cpp": "cpp", ".c": "c",
+            ".py": "python",
+            ".kt": "kotlin",
+            ".go": "go",
+            ".js": "javascript",
+            ".ts": "typescript",
+            ".java": "java",
+            ".rs": "rust",
+            ".rb": "ruby",
+            ".cpp": "cpp",
+            ".c": "c",
         }
         ext = os.path.splitext(file_name)[1] if file_name else ""
         lang = lang_map.get(ext, "unknown")
 
         # Function name extraction
-        func_match = re.search(r'(?:function|func|def|fun)\s+(\w+)', text)
+        func_match = re.search(r"(?:function|func|def|fun)\s+(\w+)", text)
         function = func_match.group(1) if func_match else None
 
         return {
@@ -126,7 +174,7 @@ class FallbackMethodsMixin:
                 "observer": "class Observable:\n    def __init__(self):\n        self._observers = []\n    def subscribe(self, observer):\n        self._observers.append(observer)\n    def notify(self, event):\n        for obs in self._observers:\n            obs.on_event(event)\n",
                 "security": "import hashlib, secrets\n\ndef hash_password(password: str) -> str:\n    salt = secrets.token_hex(16)\n    return hashlib.sha256((salt + password).encode()).hexdigest()\n",
                 "cache": "from functools import lru_cache\n\n@lru_cache(maxsize=128)\ndef get_data(key):\n    return expensive_lookup(key)\n",
-                "default": "def generated_function(data):\n    \"\"\"Generated by ZENIC-AGENTS v1\"\"\"\n    return data\n",
+                "default": 'def generated_function(data):\n    """Generated by ZENIC-AGENTS v1"""\n    return data\n',
             },
             "kotlin": {
                 "default": "fun generatedFunction(data: Any): Any {\n    return data\n}\n",

@@ -25,7 +25,7 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 1.0) -> Any:
         except Exception:
             if attempt == max_retries - 1:
                 raise
-            time.sleep(base_delay * (2 ** attempt))
+            time.sleep(base_delay * (2**attempt))
 
 
 class PluginRegistry:
@@ -128,7 +128,9 @@ class PluginRegistry:
     def _delete_from_db(self, plugin_id: str) -> None:
         def _del() -> None:
             conn = sqlite3.connect(self._db_path)
-            conn.execute("DELETE FROM plugins WHERE plugin_id = ?", (plugin_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+            conn.execute(
+                "DELETE FROM plugins WHERE plugin_id = ?", (plugin_id,)
+            )  # nosemgrep: sqlalchemy-execute-raw-query
             conn.commit()
             conn.close()
 
@@ -213,11 +215,11 @@ class PluginRegistry:
     def validate_manifest(self, manifest: PluginManifest) -> tuple[bool, list[str]]:
         """Validate a plugin manifest."""
         errors: list[str] = []
-        if not manifest.id or not re.match(r'^[a-zA-Z0-9_][a-zA-Z0-9_-]*$', manifest.id):
+        if not manifest.id or not re.match(r"^[a-zA-Z0-9_][a-zA-Z0-9_-]*$", manifest.id):
             errors.append("Plugin ID must be non-empty alphanumeric with underscores/hyphens")
         if not manifest.name:
             errors.append("Plugin name is required")
-        if not manifest.version or not re.match(r'^\d+\.\d+\.\d+', manifest.version):
+        if not manifest.version or not re.match(r"^\d+\.\d+\.\d+", manifest.version):
             errors.append("Version must follow semver (x.y.z)")
         if not manifest.entry_point:
             errors.append("Entry point is required")
@@ -228,9 +230,7 @@ class PluginRegistry:
                 logger.warning("Dependency not yet registered: %s", dep)
         return (len(errors) == 0, errors)
 
-    def set_state(
-        self, plugin_id: str, state: PluginState, error: str | None = None
-    ) -> bool:
+    def set_state(self, plugin_id: str, state: PluginState, error: str | None = None) -> bool:
         with self._lock:
             instance = self._plugins.get(plugin_id)
             if instance is None:
@@ -247,9 +247,7 @@ class PluginRegistry:
         with self._lock:
             return [p for p in self._plugins.values() if cap in p.manifest.capabilities]
 
-    def check_circular_dependencies(
-        self, plugin_id: str, dependencies: list[str]
-    ) -> bool:
+    def check_circular_dependencies(self, plugin_id: str, dependencies: list[str]) -> bool:
         """Return True if circular dependency detected."""
         visited: set[str] = set()
         stack: set[str] = set()

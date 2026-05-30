@@ -1,3 +1,5 @@
+import type { DiffChangeType } from './core';
+
 // ─── Policy Diff ──────────────────────────────────────────────────────
 
 /** A diff between two policy versions */

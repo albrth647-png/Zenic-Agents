@@ -44,6 +44,7 @@ class ImpactScorer:
     def _init_db(self) -> None:
         """Create the _zenic_impacts table if it does not exist."""
         try:
+
             def _create() -> None:
                 conn = sqlite3.connect(self._db_path)
                 conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -62,20 +63,16 @@ class ImpactScorer:
                     )
                 """)
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_impacts_source "
-                    "ON _zenic_impacts(source)"
+                    "CREATE INDEX IF NOT EXISTS idx_impacts_source ON _zenic_impacts(source)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_impacts_timestamp "
-                    "ON _zenic_impacts(timestamp)"
+                    "CREATE INDEX IF NOT EXISTS idx_impacts_timestamp ON _zenic_impacts(timestamp)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_impacts_urgency "
-                    "ON _zenic_impacts(urgency_hours)"
+                    "CREATE INDEX IF NOT EXISTS idx_impacts_urgency ON _zenic_impacts(urgency_hours)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_impacts_score "
-                    "ON _zenic_impacts(impact_score)"
+                    "CREATE INDEX IF NOT EXISTS idx_impacts_score ON _zenic_impacts(impact_score)"
                 )
                 conn.commit()
                 conn.close()
@@ -140,7 +137,11 @@ class ImpactScorer:
 
         logger.debug(
             "ImpactScorer: scored alert '%s' — loss=%.2f gain=%.2f urgency=%.1fh score=%.4f",
-            source_id, loss, gain, urgency, score.impact_score,
+            source_id,
+            loss,
+            gain,
+            urgency,
+            score.impact_score,
         )
         return score
 
@@ -189,7 +190,10 @@ class ImpactScorer:
 
         logger.debug(
             "ImpactScorer: scored exception '%s' — loss=%.2f gain=%.2f urgency=%.1fh",
-            source_id, loss, gain, urgency,
+            source_id,
+            loss,
+            gain,
+            urgency,
         )
         return score
 
@@ -242,7 +246,10 @@ class ImpactScorer:
 
         logger.debug(
             "ImpactScorer: scored action '%s' — loss=%.2f gain=%.2f urgency=%.1fh",
-            action_type, loss, gain, urgency,
+            action_type,
+            loss,
+            gain,
+            urgency,
         )
         return score
 
@@ -252,6 +259,7 @@ class ImpactScorer:
         """Return the top *limit* impact scores ordered by impact_score descending."""
         with self._lock:
             try:
+
                 def _query() -> list[ImpactScore]:
                     conn = sqlite3.connect(self._db_path)
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -278,6 +286,7 @@ class ImpactScorer:
         """Return aggregate impact summary: total potential loss/gain, average urgency."""
         with self._lock:
             try:
+
                 def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     sql = (
@@ -320,6 +329,7 @@ class ImpactScorer:
         """Return impacts with urgency ≤ *max_urgency_hours*, ordered by urgency ascending."""
         with self._lock:
             try:
+
                 def _query() -> list[ImpactScore]:
                     conn = sqlite3.connect(self._db_path)
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

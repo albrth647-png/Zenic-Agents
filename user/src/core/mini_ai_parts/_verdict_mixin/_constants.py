@@ -13,9 +13,7 @@ VERDICT_CONSENSUS_ATTEMPTS = int(os.environ.get("ZENIC_VERDICT_CONSENSUS", "1"))
 VERDICT_CONSENSUS_THRESHOLD = 2  # Minimum YES for verdict YES
 
 VERDICT_SYSTEM_PROMPT = (
-    "You are a binary decision maker. "
-    "Reply with ONLY one word: YES or NO. "
-    "Never explain. Never add anything else."
+    "You are a binary decision maker. Reply with ONLY one word: YES or NO. Never explain. Never add anything else."
 )
 
 # Import resilience patterns

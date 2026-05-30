@@ -3,7 +3,8 @@
 // PUT  /api/v1/hitl/[requestId] — Update request
 
 import { NextRequest, NextResponse } from "next/server";
-import { getApprovalEngine, getAuditTrail, getApprovalTimeline, verifyAuditIntegrity } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
+import { getAuditTrail, getApprovalTimeline, verifyAuditIntegrity } from "@/lib/hitl/approval-audit/_auditor";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;

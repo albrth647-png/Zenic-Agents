@@ -22,14 +22,11 @@ def tune_gc_for_arm():
 
     if thresholds != new_thresholds:
         gc.set_threshold(*new_thresholds)
-        logger.info(
-            "GC tuned for ARM: %s -> %s",
-            thresholds, new_thresholds
-        )
+        logger.info("GC tuned for ARM: %s -> %s", thresholds, new_thresholds)
 
     # Habilitar DEBUG para detectar ciclos de referencia
     # Solo en modo debug, no en produccion
-    if os.environ.get('ZENIC_DEBUG_GC'):
+    if os.environ.get("ZENIC_DEBUG_GC"):
         gc.set_debug(gc.DEBUG_STATS)
 
 

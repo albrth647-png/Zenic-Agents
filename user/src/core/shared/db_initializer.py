@@ -55,6 +55,7 @@ def _get_fast_pool():
     """Get the FastPool singleton, with fallback if import fails."""
     try:
         from src.core.shared.fast_connection_pool import fast_pool
+
         return fast_pool()
     except ImportError:
         logger.warning("db_initializer: FastPool not available, using legacy connection management")
@@ -92,6 +93,7 @@ def is_encryption_enabled() -> bool:
     """
     try:
         from src.core.shared.sqlcipher_helper import HAS_SQLCIPHER
+
         return HAS_SQLCIPHER and bool(os.environ.get(_ZENIC_DB_PASSPHRASE_ENV, ""))
     except ImportError:
         return False
@@ -106,6 +108,7 @@ def get_data_dir() -> Path:
     if "ANDROID_ARGUMENT" in os.environ:
         try:
             from android.storage import app_storage_path  # type: ignore[import-unresolved]
+
             data_dir = Path(app_storage_path()) / "zenic_data"
         except Exception:
             data_dir = Path.home() / ".zenic_agents" / "data"
@@ -147,6 +150,7 @@ def get_encrypted_connection(
     """
     try:
         from src.core.shared.sqlcipher_helper import get_sqlcipher_connection
+
         has_sqlcipher = True
     except ImportError:
         has_sqlcipher = False
@@ -213,9 +217,9 @@ def get_connection(db_name: str) -> sqlite3.Connection:
             return pool.get(db_name)
         except Exception as exc:
             logger.warning(
-                "db_initializer: FastPool.get() failed for '%s', "
-                "falling back to direct connection: %s",
-                db_name, exc,
+                "db_initializer: FastPool.get() failed for '%s', falling back to direct connection: %s",
+                db_name,
+                exc,
             )
 
     # Fallback: direct connection (FastPool unavailable)
@@ -251,6 +255,7 @@ def close_all_connections() -> None:
     # Close FastPool connections
     try:
         from src.core.shared.fast_connection_pool import close_all_pools
+
         close_all_pools()
     except ImportError:
         pass
@@ -305,9 +310,9 @@ class write_lock:
                 return self
             except Exception as exc:
                 logger.debug(
-                    "write_lock: FastPool.write() failed for '%s', "
-                    "using fallback lock: %s",
-                    self._db_name, exc,
+                    "write_lock: FastPool.write() failed for '%s', using fallback lock: %s",
+                    self._db_name,
+                    exc,
                 )
 
         # Fallback: simple per-DB lock
@@ -342,7 +347,7 @@ def _ensure_table(
 ) -> None:
     """Create a table with its indexes in a single transaction."""
     conn.execute(schema)
-    for idx in (indexes or []):
+    for idx in indexes or []:
         conn.execute(idx)
     conn.commit()
 
@@ -360,7 +365,9 @@ def initialize_databases() -> None:
 
     # Graph AST (Phase 2: tenant-aware)
     conn = _get_conn("graph_ast.sqlite")
-    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS ast_nodes (
+    _ensure_table(
+        conn,
+        """CREATE TABLE IF NOT EXISTS ast_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_path TEXT NOT NULL,
         node_type TEXT NOT NULL,
@@ -372,16 +379,20 @@ def initialize_databases() -> None:
         complexity INTEGER DEFAULT 1,
         connections TEXT DEFAULT '[]',
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        UNIQUE(file_path, name, node_type, tenant_id))""", [
-        "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)",
-        "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)",
-        "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)",
-        "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)",
-    ])
+        UNIQUE(file_path, name, node_type, tenant_id))""",
+        [
+            "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)",
+            "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)",
+            "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)",
+            "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)",
+        ],
+    )
 
     # Theorem Cache
     conn = _get_conn("theorem_cache.sqlite")
-    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS theorems (
+    _ensure_table(
+        conn,
+        """CREATE TABLE IF NOT EXISTS theorems (
         structural_hash TEXT NOT NULL,
         operation TEXT NOT NULL,
         goal TEXT NOT NULL,
@@ -392,28 +403,36 @@ def initialize_databases() -> None:
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        PRIMARY KEY (structural_hash, tenant_id))""", [
-        "CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)",
-        "CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)",
-    ])
+        PRIMARY KEY (structural_hash, tenant_id))""",
+        [
+            "CREATE INDEX IF NOT EXISTS idx_skeleton ON theorems(skeleton_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_theorems_tenant ON theorems(tenant_id)",
+        ],
+    )
 
     # Merkle Ledger
     conn = _get_conn("merkle_ledger.sqlite")
-    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS ledger (
+    _ensure_table(
+        conn,
+        """CREATE TABLE IF NOT EXISTS ledger (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_path TEXT NOT NULL,
         hash_sha256 TEXT NOT NULL,
         parent_hash TEXT NOT NULL,
         operation TEXT NOT NULL,
         timestamp REAL NOT NULL,
-        tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""", [
-        "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)",
-        "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)",
-    ])
+        tenant_id TEXT NOT NULL DEFAULT '__anonymous__')""",
+        [
+            "CREATE INDEX IF NOT EXISTS idx_ledger_file ON ledger(file_path)",
+            "CREATE INDEX IF NOT EXISTS idx_ledger_tenant ON ledger(tenant_id)",
+        ],
+    )
 
     # Request Log (Phase 2: tenant-aware)
     conn = _get_conn("request_log.sqlite")
-    _ensure_table(conn, """CREATE TABLE IF NOT EXISTS requests (
+    _ensure_table(
+        conn,
+        """CREATE TABLE IF NOT EXISTS requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         request_id TEXT NOT NULL,
         model TEXT,
@@ -426,11 +445,14 @@ def initialize_databases() -> None:
         mcts_simulations INTEGER DEFAULT 0,
         cache_hit INTEGER DEFAULT 0,
         tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""", [
-        "CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)",
-        "CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)",
-        "CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)",
-    ])
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+        [
+            "CREATE INDEX IF NOT EXISTS idx_requests_time ON requests(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_requests_tenant ON requests(tenant_id)",
+            "CREATE INDEX IF NOT EXISTS idx_requests_tenant_time ON requests(tenant_id, created_at)",
+        ],
+    )
 
-    logger.info("Databases initialized with WAL mode + PRAGMA optimizations (via %s)",
-                "FastPool" if pool else "legacy pool")
+    logger.info(
+        "Databases initialized with WAL mode + PRAGMA optimizations (via %s)", "FastPool" if pool else "legacy pool"
+    )

@@ -57,14 +57,15 @@ class AgentMailbox:
         if not self._heap:
             return
         # Find max-priority item (highest numeric value = lowest priority)
-        max_idx = max(range(len(self._heap)),
-                      key=lambda i: self._heap[i][0])
+        max_idx = max(range(len(self._heap)), key=lambda i: self._heap[i][0])
         evicted = self._heap.pop(max_idx)
         if evicted is not None:
             heapq.heapify(self._heap)
             logger.debug(
                 "Mailbox %s evicted message from %s (priority=%d)",
-                self.agent_id, evicted[3].sender, evicted[0],
+                self.agent_id,
+                evicted[3].sender,
+                evicted[0],
             )
 
     # ── Dequeue ──

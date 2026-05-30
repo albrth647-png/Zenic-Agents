@@ -335,8 +335,8 @@ export class RedisCache<T = unknown> implements ICache<T> {
     }
 
     try {
-      this.client = new Redis({
-        url,
+      // Pass URL as first arg, options as second (ioredis v5+)
+      this.client = new Redis(url, {
         // Built-in retry strategy: reconnect with exponential backoff
         retryStrategy(times: number) {
           if (times > 20) {

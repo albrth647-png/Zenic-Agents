@@ -14,6 +14,7 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -26,7 +27,7 @@ class Z3TypeLatticeMixin:
 
     # Type compatibility lattice: subtype relationships
     # key = type, value = set of types that are compatible (assignable to) this type
-    _TYPE_LATTICE = {
+    _TYPE_LATTICE = {  # noqa: RUF012
         "int": {"int", "float", "bool", "object", "unknown"},
         "float": {"float", "object", "unknown"},
         "str": {"str", "object", "unknown"},
@@ -37,7 +38,22 @@ class Z3TypeLatticeMixin:
         "set": {"set", "object", "unknown"},
         "bytes": {"bytes", "object", "unknown"},
         "None": {"None", "object", "unknown"},
-        "Any": {"int", "float", "str", "bool", "list", "dict", "tuple", "set", "bytes", "callable", "None", "object", "Any", "unknown"},
+        "Any": {
+            "int",
+            "float",
+            "str",
+            "bool",
+            "list",
+            "dict",
+            "tuple",
+            "set",
+            "bytes",
+            "callable",
+            "None",
+            "object",
+            "Any",
+            "unknown",
+        },
         "callable": {"callable", "object", "unknown"},
         "object": {"object", "unknown"},
         "unknown": {"unknown"},
@@ -97,8 +113,14 @@ class Z3TypeLatticeMixin:
         return types
 
     def _add_assign_compat(
-        self, solver, type_sort, type_name_to_const,
-        left_var, right_var, left_type, right_type,
+        self,
+        solver,
+        type_sort,
+        type_name_to_const,
+        left_var,
+        right_var,
+        left_type,
+        right_type,
     ):
         """
         Add assignment compatibility constraint:
@@ -112,18 +134,12 @@ class Z3TypeLatticeMixin:
         # Get compatible types for the left-hand side's static type
         compatible = self._TYPE_LATTICE.get(left_type, {"unknown"})
         # The right variable must have a type that is in the compatible set
-        compat_consts = [
-            type_name_to_const[t]
-            for t in compatible
-            if t in type_name_to_const
-        ]
+        compat_consts = [type_name_to_const[t] for t in compatible if t in type_name_to_const]
         if compat_consts:
             # FIX: Use Implies so the constraint is conditional on the
             # left variable actually having the static type. This avoids
             # over-constraining when the variable could have other types.
-            left_type_const = type_name_to_const.get(
-                left_type, type_name_to_const.get("unknown")
-            )
+            left_type_const = type_name_to_const.get(left_type, type_name_to_const.get("unknown"))
             solver.add(
                 z3_module.Implies(
                     left_var == left_type_const,
@@ -132,8 +148,13 @@ class Z3TypeLatticeMixin:
             )
 
     def _add_binop_compat(
-        self, solver, type_sort, type_name_to_const,
-        left_var, right_var, op,
+        self,
+        solver,
+        type_sort,
+        type_name_to_const,
+        left_var,
+        right_var,
+        op,
     ):
         """
         Add binary operation type compatibility constraint.
@@ -142,16 +163,8 @@ class Z3TypeLatticeMixin:
         if op in ("add", "+"):
             # Addition: both must be numeric OR both must be str
             numeric = {"int", "float", "bool"}
-            numeric_consts = [
-                type_name_to_const[t]
-                for t in numeric
-                if t in type_name_to_const
-            ]
-            str_consts = [
-                type_name_to_const[t]
-                for t in {"str"}
-                if t in type_name_to_const
-            ]
+            numeric_consts = [type_name_to_const[t] for t in numeric if t in type_name_to_const]
+            str_consts = [type_name_to_const[t] for t in {"str"} if t in type_name_to_const]
             if numeric_consts and str_consts:
                 solver.add(
                     z3_module.Or(
@@ -175,11 +188,7 @@ class Z3TypeLatticeMixin:
         else:
             # Sub, mul, div: both must be numeric
             numeric = {"int", "float", "bool"}
-            numeric_consts = [
-                type_name_to_const[t]
-                for t in numeric
-                if t in type_name_to_const
-            ]
+            numeric_consts = [type_name_to_const[t] for t in numeric if t in type_name_to_const]
             if numeric_consts:
                 solver.add(
                     z3_module.And(
@@ -189,8 +198,12 @@ class Z3TypeLatticeMixin:
                 )
 
     def _add_compare_compat(
-        self, solver, type_sort, type_name_to_const,
-        left_var, right_var,
+        self,
+        solver,
+        type_sort,
+        type_name_to_const,
+        left_var,
+        right_var,
     ):
         """
         Add comparison type compatibility: both sides must be
@@ -206,11 +219,7 @@ class Z3TypeLatticeMixin:
 
         family_constraints = []
         for family in families:
-            family_consts = [
-                type_name_to_const[t]
-                for t in family
-                if t in type_name_to_const
-            ]
+            family_consts = [type_name_to_const[t] for t in family if t in type_name_to_const]
             if family_consts:
                 family_constraints.append(
                     z3_module.And(
@@ -236,24 +245,16 @@ class Z3TypeLatticeMixin:
             if op in ("assign", "="):
                 compat = self._TYPE_LATTICE.get(left_type, {"unknown"})
                 if right_type not in compat:
-                    violations.append(
-                        f"Type mismatch in assignment: {right_type} -> {left} "
-                        f"(expected one of {compat})"
-                    )
+                    violations.append(f"Type mismatch in assignment: {right_type} -> {left} (expected one of {compat})")
             elif op in ("add", "+"):
                 numeric = {"int", "float", "bool"}
                 if not (
-                    (left_type in numeric and right_type in numeric)
-                    or (left_type == "str" and right_type == "str")
+                    (left_type in numeric and right_type in numeric) or (left_type == "str" and right_type == "str")
                 ):
-                    violations.append(
-                        f"Incompatible types for +: {left_type} + {right_type}"
-                    )
+                    violations.append(f"Incompatible types for +: {left_type} + {right_type}")
             elif op in ("sub", "-", "mul", "*", "div", "/"):
                 numeric = {"int", "float", "bool"}
                 if left_type not in numeric or right_type not in numeric:
-                    violations.append(
-                        f"Incompatible types for {op}: {left_type}, {right_type}"
-                    )
+                    violations.append(f"Incompatible types for {op}: {left_type}, {right_type}")
 
         return violations

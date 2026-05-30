@@ -2,7 +2,7 @@
 // POST /api/v1/hitl/evidence
 
 import { NextRequest, NextResponse } from "next/server";
-import { getEvidenceService } from "@/lib/hitl";
+import { getEvidenceService } from "@/lib/hitl/evidence-service";
 
 // POST /api/v1/hitl/evidence
 export async function POST(request: NextRequest) {

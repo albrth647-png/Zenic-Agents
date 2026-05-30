@@ -18,7 +18,7 @@ No external APIs needed — pure code generation.
 """
 
 import logging  # noqa: E402
-from typing import Any, List  # noqa: UP035, Optional  # noqa: E402
+from typing import Any, Optional  # noqa: E402
 
 logger = logging.getLogger("zenic_agents.multi_language")
 
@@ -26,7 +26,7 @@ from ._core_mixin import MultiLanguageCoreMixin  # noqa: E402
 from ._extra_mixin import MultiLanguageExtraMixin  # noqa: E402
 from ._types import TYPE_MAP  # noqa: E402
 
-__all__ = ["TYPE_MAP", "Any", "Dict", "List", "MultiLanguage", "Optional"]
+__all__ = ["TYPE_MAP", "Any", "MultiLanguage", "Optional"]
 
 
 class MultiLanguage(MultiLanguageCoreMixin, MultiLanguageExtraMixin):

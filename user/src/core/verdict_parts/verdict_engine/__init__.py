@@ -35,6 +35,8 @@ try:
 except ImportError:
     _RESILIENCE_AVAILABLE = False
 
+import contextlib
+
 from ._config import (
     VERDICT_CONSENSUS_ATTEMPTS,
     VERDICT_CONSENSUS_THRESHOLD,
@@ -137,10 +139,8 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
 
     def __del__(self):
         """Ensure executor is cleaned up on garbage collection."""
-        try:
+        with contextlib.suppress(Exception):
             self.shutdown()
-        except Exception:  # noqa: S110
-            pass
 
         # NOTE: Do NOT log here — __del__ runs during garbage collection and
         # referencing self._mini_ai / self._semantic may already be invalid.

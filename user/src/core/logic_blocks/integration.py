@@ -28,8 +28,8 @@ class FileOperationBlock(LogicBlock):
     name = "file_operation"
     category = "integrations"
     description = "Read/write local file operations"
-    inputs = ["path", "operation", "content"]
-    outputs = ["content", "path", "status"]
+    inputs = ["path", "operation", "content"]  # noqa: RUF012
+    outputs = ["content", "path", "status"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:

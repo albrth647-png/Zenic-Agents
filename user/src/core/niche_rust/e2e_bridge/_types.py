@@ -54,7 +54,7 @@ class PipelineProgress:
         self.warning_count = warning_count
 
     def __repr__(self) -> str:
-        return f"PipelineProgress(id={self.pipeline_id!r}, step={self.current_step}, " f"pct={self.progress_pct:.1f}%)"
+        return f"PipelineProgress(id={self.pipeline_id!r}, step={self.current_step}, pct={self.progress_pct:.1f}%)"
 
 
 class PipelineResult:

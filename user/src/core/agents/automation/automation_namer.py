@@ -21,16 +21,74 @@ from ..schemas import ActionSpec, AutoDescription, NameResult, TriggerSpec
 
 STOP_WORDS = {
     # Spanish
-    "un", "una", "el", "la", "los", "las", "a", "de", "del",
-    "en", "por", "para", "con", "que", "se", "su", "al",
-    "lo", "le", "les", "y", "o", "es", "son", "fue", "ser",
+    "un",
+    "una",
+    "el",
+    "la",
+    "los",
+    "las",
+    "a",
+    "de",
+    "del",
+    "en",
+    "por",
+    "para",
+    "con",
+    "que",
+    "se",
+    "su",
+    "al",
+    "lo",
+    "le",
+    "les",
+    "y",
+    "o",
+    "es",
+    "son",
+    "fue",
+    "ser",
     # English
-    "the", "an", "is", "are", "was", "were", "be",
-    "create", "make", "generate", "build", "automate", "set",
-    "get", "put", "do", "run", "go", "has", "have", "had",
-    "this", "that", "these", "those", "it", "its",
-    "from", "into", "with", "without", "by", "to", "of",
-    "and", "or", "but", "not", "in", "on", "at",
+    "the",
+    "an",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "create",
+    "make",
+    "generate",
+    "build",
+    "automate",
+    "set",
+    "get",
+    "put",
+    "do",
+    "run",
+    "go",
+    "has",
+    "have",
+    "had",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "from",
+    "into",
+    "with",
+    "without",
+    "by",
+    "to",
+    "of",
+    "and",
+    "or",
+    "but",
+    "not",
+    "in",
+    "on",
+    "at",
 }
 
 # Name templates by trigger + action combination
@@ -82,9 +140,7 @@ class AutomationNamer(BaseAgent[NameResult]):
 
         # If we have specs, use template composition
         if trigger_spec or action_spec:
-            return self._name_from_specs(
-                trigger_spec, action_spec, description
-            )
+            return self._name_from_specs(trigger_spec, action_spec, description)
 
         # If only description, extract name from it
         if description:
@@ -145,10 +201,7 @@ class AutomationNamer(BaseAgent[NameResult]):
         words = re.sub(r"[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s]", "", description).split()
 
         # Filter stop words and take first 4 meaningful words
-        meaningful = [
-            w.lower() for w in words[:8]
-            if w.lower() not in STOP_WORDS and len(w) > 1
-        ][:4]
+        meaningful = [w.lower() for w in words[:8] if w.lower() not in STOP_WORDS and len(w) > 1][:4]
 
         if not meaningful:
             name = "automation"
@@ -170,10 +223,7 @@ class AutomationNamer(BaseAgent[NameResult]):
             return "auto"
 
         words = re.sub(r"[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s]", "", description).split()
-        meaningful = [
-            w.lower() for w in words[:10]
-            if w.lower() not in STOP_WORDS and len(w) > 1
-        ][:max_words]
+        meaningful = [w.lower() for w in words[:10] if w.lower() not in STOP_WORDS and len(w) > 1][:max_words]
 
         return "_".join(meaningful) if meaningful else "auto"
 
@@ -197,6 +247,7 @@ class AutomationNamer(BaseAgent[NameResult]):
     def fallback(self, input_data: Any) -> NameResult:
         """Fallback: Return generic automation name with deterministic ID."""
         from src.core.shared.deterministic import FencingTokenGenerator
+
         _namer_fencing = FencingTokenGenerator("automation_namer")
         ts = _namer_fencing.next() % 100000
         return NameResult(

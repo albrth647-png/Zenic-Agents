@@ -38,12 +38,10 @@ def init_db(db_path: str) -> None:
                 """
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "CREATE INDEX IF NOT EXISTS idx_ca_tenant "
-                "ON coordinated_actions(tenant_id)"
+                "CREATE INDEX IF NOT EXISTS idx_ca_tenant ON coordinated_actions(tenant_id)"
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "CREATE INDEX IF NOT EXISTS idx_ca_status "
-                "ON coordinated_actions(status)"
+                "CREATE INDEX IF NOT EXISTS idx_ca_status ON coordinated_actions(status)"
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
@@ -60,8 +58,7 @@ def init_db(db_path: str) -> None:
                 """
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "CREATE INDEX IF NOT EXISTS idx_rr_action "
-                "ON resource_records(action_id)"
+                "CREATE INDEX IF NOT EXISTS idx_rr_action ON resource_records(action_id)"
             )
             conn.commit()
         finally:
@@ -73,9 +70,7 @@ def init_db(db_path: str) -> None:
         base_delay=0.5,
         label="coordinated_rollback._init_db",
     )
-    logger.debug(
-        "CoordinatedRollbackManager: schema initialised at %s", db_path
-    )
+    logger.debug("CoordinatedRollbackManager: schema initialised at %s", db_path)
 
 
 def persist_action(db_path: str, action: CoordinatedAction) -> None:
@@ -208,8 +203,7 @@ def load_action(db_path: str, action_id: str) -> CoordinatedAction | None:
         try:
             # Load the action
             cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT action_id, tenant_id, status, created_at "
-                "FROM coordinated_actions WHERE action_id = ?",
+                "SELECT action_id, tenant_id, status, created_at FROM coordinated_actions WHERE action_id = ?",
                 (action_id,),
             )
             row = cursor.fetchone()

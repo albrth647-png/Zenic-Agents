@@ -11,7 +11,6 @@ from agents.schemas.types.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -21,6 +20,8 @@ from typing import TYPE_CHECKING, Any
 # the circular dependency (agents/ → agents/).
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from src.core.shared.agent_schemas import (
         ValidationIssue,
     )

@@ -91,9 +91,7 @@ def _build_confirmation_html(request: ConfirmationRequest) -> str:
     timeout_text = ""
     if request.timeout_seconds > 0:
         minutes = request.timeout_seconds // 60
-        timeout_text = (
-            f"<p style='color:#6c757d;font-size:12px;'>" f"This request will expire in {minutes} minute(s).</p>"
-        )
+        timeout_text = f"<p style='color:#6c757d;font-size:12px;'>This request will expire in {minutes} minute(s).</p>"
 
     return (
         f"<div style='font-family:Arial,sans-serif;max-width:600px;"

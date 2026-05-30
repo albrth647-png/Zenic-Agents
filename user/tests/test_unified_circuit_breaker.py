@@ -17,6 +17,7 @@ Run with:  pytest tests/test_unified_circuit_breaker.py -v
 """
 
 import asyncio
+import contextlib
 import os
 import sys
 import time
@@ -30,10 +31,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # ── Connection check helper ─────────────────────────────────
 
+
 def _redis_available() -> bool:
     """Check if Redis is reachable at the configured URL."""
     try:
-        import redis  # noqa: F401
+        import redis
     except ImportError:
         return False
 
@@ -50,13 +52,11 @@ def _redis_available() -> bool:
 
 # Skip all Redis tests if Redis is not reachable
 redis_not_available = not _redis_available()
-SKIP_REASON = (
-    "Redis is not available. "
-    "Start it with: docker compose up -d redis"
-)
+SKIP_REASON = "Redis is not available. Start it with: docker compose up -d redis"
 
 
 # ── Fixtures ─────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="module")
 def redis_url() -> str:
@@ -81,7 +81,7 @@ async def redis_async_client(redis_url: str):
     try:
         async for key in client.scan_iter("zenic:cb:test*"):
             await client.delete(key)
-    except Exception:  # noqa: S110
+    except Exception:
         pass
     await client.close()
 
@@ -103,13 +103,12 @@ async def cb_manager(redis_url: str):
     await manager.connect()
     yield manager
     # Cleanup
-    try:
+    with contextlib.suppress(Exception):
         await manager.disconnect()
-    except Exception:  # noqa: S110
-        pass
 
 
 # ── 1. State Transitions ────────────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
@@ -211,6 +210,7 @@ class TestStateTransitions:
 
 # ── 2. Redis Key Format Verification ───────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestRedisKeyFormat:
@@ -267,6 +267,7 @@ class TestRedisKeyFormat:
 
 
 # ── 3. Fallback to In-Memory ───────────────────────────────
+
 
 @pytest.mark.asyncio
 class TestFallbackToInMemory:
@@ -332,6 +333,7 @@ class TestFallbackToInMemory:
 
 # ── 4. Concurrent Access Safety ─────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestConcurrentAccess:
@@ -385,6 +387,7 @@ class TestConcurrentAccess:
 
 # ── 5. Stats Collection ────────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestStatsCollection:
@@ -411,7 +414,7 @@ class TestStatsCollection:
     async def test_stats_failure_count_increments(self, cb_manager):
         """failure_count should increment with each failure."""
         agent = "stats_increment_agent"
-        for i in range(3):
+        for _i in range(3):
             await cb_manager.record_failure(agent)
 
         stats = await cb_manager.get_stats(agent)
@@ -448,6 +451,7 @@ class TestStatsCollection:
 
 # ── 6. Cross-Language State Sharing ────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestCrossLanguageStateSharing:
@@ -470,11 +474,13 @@ class TestCrossLanguageStateSharing:
                 "successCount": "0",
                 "lastFailureAt": str(int(time.time() * 1000)),
                 "lastSuccessAt": "0",
-                "config": json.dumps({
-                    "failureThreshold": config["failure_threshold"],
-                    "recoveryTimeoutMs": int(config["recovery_timeout"] * 1000),
-                    "successThreshold": config["success_threshold"],
-                }),
+                "config": json.dumps(
+                    {
+                        "failureThreshold": config["failure_threshold"],
+                        "recoveryTimeoutMs": int(config["recovery_timeout"] * 1000),
+                        "successThreshold": config["success_threshold"],
+                    }
+                ),
             },
         )
         await redis_async_client.pexpire(redis_key, 60000)
@@ -500,6 +506,7 @@ class TestCrossLanguageStateSharing:
 
         # Config should be valid JSON
         import json
+
         config = json.loads(data["config"])
         assert "failureThreshold" in config
         assert "recoveryTimeoutMs" in config
@@ -507,6 +514,7 @@ class TestCrossLanguageStateSharing:
 
 
 # ── 7. In-Memory CircuitBreakerManager (Baseline) ──────────
+
 
 class TestInMemoryBaseline:
     """Test the base CircuitBreakerManager still works (no Redis needed)."""

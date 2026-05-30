@@ -77,7 +77,8 @@ class StateTracker:
         self._snapshots[state.pipeline_id] = []
         logger.debug(
             "StateTracker: Created pipeline '%s' (id=%s)",
-            name, state.pipeline_id,
+            name,
+            state.pipeline_id,
         )
         return state
 
@@ -137,7 +138,8 @@ class StateTracker:
         pipeline.steps[step_id] = step
         logger.debug(
             "StateTracker: Added step '%s' to pipeline '%s'",
-            step_id, pipeline_id,
+            step_id,
+            pipeline_id,
         )
         return step
 
@@ -246,7 +248,8 @@ class StateTracker:
 
         logger.debug(
             "StateTracker: Snapshot taken for pipeline '%s' (total: %d)",
-            pipeline_id, len(snapshots),
+            pipeline_id,
+            len(snapshots),
         )
         return snap
 
@@ -277,7 +280,8 @@ class StateTracker:
         self._pipelines[pipeline_id] = restored
         logger.info(
             "StateTracker: Restored pipeline '%s' from snapshot %d",
-            pipeline_id, snapshot_index,
+            pipeline_id,
+            snapshot_index,
         )
         return restored
 
@@ -285,17 +289,11 @@ class StateTracker:
 
     def get_failed_pipelines(self) -> list[PipelineState]:
         """Get all pipelines with FAILED status."""
-        return [
-            p for p in self._pipelines.values()
-            if p.status == PipelineStatus.FAILED
-        ]
+        return [p for p in self._pipelines.values() if p.status == PipelineStatus.FAILED]
 
     def get_running_pipelines(self) -> list[PipelineState]:
         """Get all pipelines with RUNNING status."""
-        return [
-            p for p in self._pipelines.values()
-            if p.status == PipelineStatus.RUNNING
-        ]
+        return [p for p in self._pipelines.values() if p.status == PipelineStatus.RUNNING]
 
     @property
     def stats(self) -> dict[str, Any]:

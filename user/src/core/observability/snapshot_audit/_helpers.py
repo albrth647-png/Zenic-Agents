@@ -125,7 +125,7 @@ def _update_pairing(
         with self._lock:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? " "WHERE snapshot_id = ?",
+                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? WHERE snapshot_id = ?",
                 (paired_snapshot_id, pair_id, snapshot_id),
             )
             conn.commit()

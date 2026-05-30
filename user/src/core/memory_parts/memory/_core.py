@@ -22,6 +22,8 @@ def _sanitize_client(value: str, visible: int = 4) -> str:
 
 # Tenant module removed — use tenant_utils for multi-tenant context
 # from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext
+import contextlib  # noqa: E402
+
 from src.core.shared.tenant_utils import (  # noqa: E402
     resolve_tenant_id,
     set_tenant_context,
@@ -175,10 +177,8 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
                 "memory_patterns",
                 "memory_projects",
             ]:
-                try:
+                with contextlib.suppress(Exception):
                     cursor.execute(f"DROP TABLE IF EXISTS {table}")
-                except Exception:  # noqa: S110
-                    pass
             conn.commit()
             conn.close()
             # Re-initialize schema

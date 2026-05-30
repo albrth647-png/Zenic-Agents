@@ -318,7 +318,7 @@ class ConfirmFlowMixin:
                 return {
                     "status": STATUS_PENDING,
                     "message": (
-                        f"Unrecognized response '{user_response}'. " f"Please reply with 'yes', 'no', or 'more_info'."
+                        f"Unrecognized response '{user_response}'. Please reply with 'yes', 'no', or 'more_info'."
                     ),
                     "action_id": action_id,
                     "options": ["yes", "no", "more_info"],
@@ -367,9 +367,7 @@ class ConfirmFlowMixin:
 
             message = format_approve_message(action_type, config, required_role)
 
-            logger.info(
-                f"Approval requested: action_id={action_id}, " f"type={action_type}, required_role={required_role}"
-            )
+            logger.info(f"Approval requested: action_id={action_id}, type={action_type}, required_role={required_role}")
 
             return {
                 "action_id": action_id,

@@ -187,6 +187,9 @@ impl NicheDefinition {
             .map(|s| s.required_field_count())
             .sum()
     }
+
+    // has_compliance() exists only in #[pymethods] to avoid E0592.
+    // Tests can use self.compliance().iter().any(...) instead.
 }
 
 #[pymethods]

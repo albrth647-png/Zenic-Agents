@@ -13,18 +13,20 @@ from ._operations import _OperationsMixin
 
 logger = logging.getLogger(__name__)
 
-_VALID_OPERATIONS = frozenset({
-    "create_issue",
-    "update_issue",
-    "transition_issue",
-    "get_issue",
-    "search_issues",
-    "add_comment",
-    "get_transitions",
-    "link_issues",
-    "get_issue_types",
-    "get_priorities",
-})
+_VALID_OPERATIONS = frozenset(
+    {
+        "create_issue",
+        "update_issue",
+        "transition_issue",
+        "get_issue",
+        "search_issues",
+        "add_comment",
+        "get_transitions",
+        "link_issues",
+        "get_issue_types",
+        "get_priorities",
+    }
+)
 
 
 class JiraExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
@@ -74,8 +76,7 @@ class JiraExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
             return ActionResult(
                 False,
                 {"operation": operation},
-                f"Invalid Jira operation: '{operation}'. "
-                f"Must be one of {sorted(_VALID_OPERATIONS)}",
+                f"Invalid Jira operation: '{operation}'. Must be one of {sorted(_VALID_OPERATIONS)}",
                 self._elapsed_ms(start),
             )
 
@@ -128,7 +129,8 @@ class JiraExecutor(_HttpMixin, _AuthMixin, _OperationsMixin, ActionExecutor):
             elapsed = self._elapsed_ms(start)
             logger.error(
                 "JiraExecutor: unhandled exception in %s: %s",
-                operation, exc,
+                operation,
+                exc,
             )
             result = ActionResult(
                 False,

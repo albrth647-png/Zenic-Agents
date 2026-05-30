@@ -39,6 +39,7 @@ class ValueTracker:
     def _init_db(self) -> None:
         """Create the _zenic_values table if it does not exist."""
         try:
+
             def _create() -> None:
                 conn = sqlite3.connect(self._db_path)
                 conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -56,16 +57,13 @@ class ValueTracker:
                     )
                 """)
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_values_category "
-                    "ON _zenic_values(category)"
+                    "CREATE INDEX IF NOT EXISTS idx_values_category ON _zenic_values(category)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_values_timestamp "
-                    "ON _zenic_values(timestamp)"
+                    "CREATE INDEX IF NOT EXISTS idx_values_timestamp ON _zenic_values(timestamp)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_values_tenant "
-                    "ON _zenic_values(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_values_tenant ON _zenic_values(tenant_id)"
                 )
                 conn.commit()
                 conn.close()
@@ -106,7 +104,10 @@ class ValueTracker:
 
         logger.debug(
             "ValueTracker: recorded %s value: qty=%.4f unit=%.6f total=%.6f",
-            category.value, quantity, unit_value, entry.total_value,
+            category.value,
+            quantity,
+            unit_value,
+            entry.total_value,
         )
         return entry
 
@@ -170,6 +171,7 @@ class ValueTracker:
         """Return total value with optional time-range, category, and tenant filters."""
         with self._lock:
             try:
+
                 def _query() -> float:
                     conn = sqlite3.connect(self._db_path)
                     sql = "SELECT COALESCE(SUM(total_value), 0) FROM _zenic_values WHERE 1=1"
@@ -204,12 +206,10 @@ class ValueTracker:
         """Return value grouped by category."""
         with self._lock:
             try:
+
                 def _query() -> dict[str, float]:
                     conn = sqlite3.connect(self._db_path)
-                    sql = (
-                        "SELECT category, COALESCE(SUM(total_value), 0) "
-                        "FROM _zenic_values WHERE 1=1"
-                    )
+                    sql = "SELECT category, COALESCE(SUM(total_value), 0) FROM _zenic_values WHERE 1=1"
                     params: list = []
                     if from_time:
                         sql += " AND timestamp >= ?"
@@ -234,6 +234,7 @@ class ValueTracker:
         """Return daily value totals for the last *days* days."""
         with self._lock:
             try:
+
                 def _query() -> list[dict[str, Any]]:
                     conn = sqlite3.connect(self._db_path)
                     cutoff = time.strftime(
@@ -263,14 +264,19 @@ class ValueTracker:
     ) -> dict[str, float]:
         """Compute ROI: total_value, total_cost, roi_percent, net_value."""
         total_value = self.get_total_value(
-            from_time=from_time, to_time=to_time, tenant_id=tenant_id,
+            from_time=from_time,
+            to_time=to_time,
+            tenant_id=tenant_id,
         )
         total_cost: float = 0.0
         try:
             from ..cost_accumulator import get_cost_accumulator
+
             acc = get_cost_accumulator()
             total_cost = acc.get_total_cost(
-                from_time=from_time, to_time=to_time, tenant_id=tenant_id,
+                from_time=from_time,
+                to_time=to_time,
+                tenant_id=tenant_id,
             )
         except Exception as exc:
             logger.debug("ValueTracker: CostAccumulator unavailable for ROI: %s", exc)
@@ -290,6 +296,7 @@ class ValueTracker:
         """Return summary statistics."""
         with self._lock:
             try:
+
                 def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -299,8 +306,7 @@ class ValueTracker:
                         "SELECT COUNT(*) FROM _zenic_values"
                     ).fetchone()[0]
                     by_cat = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT category, COALESCE(SUM(total_value), 0), COUNT(*) "
-                        "FROM _zenic_values GROUP BY category"
+                        "SELECT category, COALESCE(SUM(total_value), 0), COUNT(*) FROM _zenic_values GROUP BY category"
                     ).fetchall()
                     conn.close()
 

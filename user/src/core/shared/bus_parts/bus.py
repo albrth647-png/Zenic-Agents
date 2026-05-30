@@ -37,9 +37,9 @@ class SharedMemoryBus:
     across 42+ agents with tenant isolation.
     """
 
-    def __init__(self, db_path: str | None = None,
-                 ring_size: int = _DEFAULT_RING_SIZE,
-                 tenant_id: str = "default") -> None:
+    def __init__(
+        self, db_path: str | None = None, ring_size: int = _DEFAULT_RING_SIZE, tenant_id: str = "default"
+    ) -> None:
         self._tenant_id = tenant_id
         self._db_path = db_path or "shared_bus.sqlite"
 
@@ -76,16 +76,23 @@ class SharedMemoryBus:
 
         logger.info(
             "SharedMemoryBus initialised: db=%s ring=%d slots tenant=%s",
-            self._db_path, ring_size, tenant_id,
+            self._db_path,
+            ring_size,
+            tenant_id,
         )
 
     # ── Mailbox API ──
 
-    def send(self, sender: str, recipient: str, payload: Any,
-             msg_type: MessageType = MessageType.DATA,
-             priority: Priority = Priority.NORMAL,
-             correlation_id: str = "",
-             ttl_seconds: float = 300.0) -> bool:
+    def send(
+        self,
+        sender: str,
+        recipient: str,
+        payload: Any,
+        msg_type: MessageType = MessageType.DATA,
+        priority: Priority = Priority.NORMAL,
+        correlation_id: str = "",
+        ttl_seconds: float = 300.0,
+    ) -> bool:
         """Send a message to an agent's mailbox.
 
         O(1) in-memory delivery; async SQLite flush. Returns True.
@@ -133,13 +140,12 @@ class SharedMemoryBus:
                     continue  # Discard expired and try next
             self._metrics.record_receive(agent_id)
             return msg
-        logger.warning("SharedMemoryBus.receive: Exceeded max TTL discards (%d) for agent %s",
-                       max_discards, agent_id)
+        logger.warning("SharedMemoryBus.receive: Exceeded max TTL discards (%d) for agent %s", max_discards, agent_id)
         return None
 
-    def broadcast(self, sender: str, payload: Any,
-                  msg_type: MessageType = MessageType.DATA,
-                  priority: Priority = Priority.NORMAL) -> int:
+    def broadcast(
+        self, sender: str, payload: Any, msg_type: MessageType = MessageType.DATA, priority: Priority = Priority.NORMAL
+    ) -> int:
         """Broadcast a message to all registered agents.
 
         Returns number of agents that received the message.
@@ -172,35 +178,37 @@ class SharedMemoryBus:
 
     # ── Shared State API ──
 
-    def set_state(self, namespace: str, key: str, value: Any,
-                  ttl: float = 0) -> None:
+    def set_state(self, namespace: str, key: str, value: Any, ttl: float = 0) -> None:
         """Set a value in shared state. O(1) in-memory, async flush."""
         self._state.set(namespace, key, value, ttl=ttl, tenant_id=self._tenant_id)
-        self._persistence.enqueue_state((
-            namespace, key,
-            json.dumps(value, default=str),
-            self._tenant_id,
-            time.monotonic(),
-            ttl,
-        ))
+        self._persistence.enqueue_state(
+            (
+                namespace,
+                key,
+                json.dumps(value, default=str),
+                self._tenant_id,
+                time.monotonic(),
+                ttl,
+            )
+        )
 
-    def get_state(self, namespace: str, key: str,
-                  default: Any = None) -> Any:
+    def get_state(self, namespace: str, key: str, default: Any = None) -> Any:
         """Get a value from shared state. O(1) in-memory lookup."""
-        return self._state.get(namespace, key, default=default,
-                               tenant_id=self._tenant_id)
+        return self._state.get(namespace, key, default=default, tenant_id=self._tenant_id)
 
     def get_and_set(self, namespace: str, key: str, value: Any) -> Any:
         """Atomic get-and-set. Returns the previous value."""
-        old = self._state.get_and_set(namespace, key, value,
-                                       tenant_id=self._tenant_id)
-        self._persistence.enqueue_state((
-            namespace, key,
-            json.dumps(value, default=str),
-            self._tenant_id,
-            time.monotonic(),
-            0,
-        ))
+        old = self._state.get_and_set(namespace, key, value, tenant_id=self._tenant_id)
+        self._persistence.enqueue_state(
+            (
+                namespace,
+                key,
+                json.dumps(value, default=str),
+                self._tenant_id,
+                time.monotonic(),
+                0,
+            )
+        )
         return old
 
     def delete_state(self, namespace: str, key: str) -> None:
@@ -209,11 +217,9 @@ class SharedMemoryBus:
 
     def list_keys(self, namespace: str, prefix: str = "") -> list[str]:
         """List keys in a namespace with optional prefix filter."""
-        return self._state.list_keys(namespace, prefix=prefix,
-                                      tenant_id=self._tenant_id)
+        return self._state.list_keys(namespace, prefix=prefix, tenant_id=self._tenant_id)
 
-    def register_state_callback(self, namespace: str,
-                                callback: Callable[[str, str, Any], None]) -> None:
+    def register_state_callback(self, namespace: str, callback: Callable[[str, str, Any], None]) -> None:
         """Register a callback for state changes in a namespace.
 
         Use namespace="*" to watch all namespaces.
@@ -274,10 +280,7 @@ class SharedMemoryBus:
         Returns the number of database rows deleted.
         """
         with self._mailboxes_lock, self._agents_lock:
-            to_remove = [
-                aid for aid, tid in self._registered_agents.items()
-                if tid == tenant_id
-            ]
+            to_remove = [aid for aid, tid in self._registered_agents.items() if tid == tenant_id]
             for aid in to_remove:
                 self._registered_agents.pop(aid, None)
                 self._mailboxes.pop(aid, None)

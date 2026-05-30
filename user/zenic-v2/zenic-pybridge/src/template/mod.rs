@@ -37,23 +37,25 @@ mod tests {
     use crate::niche::{DataSensitivity, FieldRequirement, NicheCategory,
                        NicheDefinition, TemplateFieldType};
 
+    use crate::catalog::ALL_NICHES;
+
     #[test]
     fn test_catalog_lookup_for_template() {
         // Verify catalog has the niches that template_generate depends on
-        let niche = crate::catalog::catalog_get_by_id("telemedicine");
+        let niche = ALL_NICHES.iter().find(|n| n.niche_id() == "telemedicine");
         assert!(niche.is_some());
         assert_eq!(niche.unwrap().niche_id(), "telemedicine");
     }
 
     #[test]
     fn test_catalog_lookup_returns_none_for_invalid() {
-        let niche = crate::catalog::catalog_get_by_id("nonexistent_niche");
+        let niche = ALL_NICHES.iter().find(|n| n.niche_id() == "nonexistent_niche");
         assert!(niche.is_none());
     }
 
     #[test]
     fn test_niche_definition_field_counts() {
-        let niche = crate::catalog::catalog_get_by_id("ai_automation").unwrap();
+        let niche = ALL_NICHES.iter().find(|n| n.niche_id() == "ai_automation").unwrap();
         assert!(niche.total_field_count() > 0);
         assert!(niche.required_field_count() > 0);
         assert!(niche.required_field_count() <= niche.total_field_count());
@@ -61,14 +63,12 @@ mod tests {
 
     #[test]
     fn test_all_niches_have_sections_for_template() {
-        let ids = crate::catalog::catalog_ids();
-        for id in ids {
-            let niche = crate::catalog::catalog_get_by_id(&id).unwrap();
+        for niche in ALL_NICHES.iter() {
             assert!(
-                niche.section_count() >= 2,
+                niche.template_sections().len() >= 2,
                 "Niche {} should have at least 2 sections, got {}",
-                id,
-                niche.section_count(),
+                niche.niche_id(),
+                niche.template_sections().len(),
             );
         }
     }

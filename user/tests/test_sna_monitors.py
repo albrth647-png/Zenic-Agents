@@ -31,7 +31,6 @@ from src.core.sna.monitors.tomorrow_appointment import TomorrowAppointmentMonito
 from src.core.sna.monitors.unpaid_balance import UnpaidBalanceMonitor
 from src.core.sna.scheduler import SNAScheduler
 from src.core.sna.sna_engine import SNAEngine
-from src.data.db_access import DBAccess
 from src.data.local_scanner import LocalDataScanner
 
 
@@ -63,12 +62,18 @@ def create_test_db(db_path: str):
         monto REAL, fecha DATE, fecha_vencimiento DATE, estado TEXT DEFAULT 'pendiente',
         FOREIGN KEY (cliente_id) REFERENCES clientes(id)
     )""")
-    conn.execute("INSERT INTO facturas VALUES (1, 1, 'F-001', 100.0, date('now','-30 days'), date('now','-5 days'), 'pendiente')")
-    conn.execute("INSERT INTO facturas VALUES (2, 2, 'F-002', 200.0, date('now','-10 days'), date('now','+10 days'), 'pendiente')")
+    conn.execute(
+        "INSERT INTO facturas VALUES (1, 1, 'F-001', 100.0, date('now','-30 days'), date('now','-5 days'), 'pendiente')"
+    )
+    conn.execute(
+        "INSERT INTO facturas VALUES (2, 2, 'F-002', 200.0, date('now','-10 days'), date('now','+10 days'), 'pendiente')"
+    )
     # Insertar huérfano desactivando FK check temporalmente
     conn.commit()  # Commit antes de cambiar PRAGMA
     conn.execute("PRAGMA foreign_keys=OFF")
-    conn.execute("INSERT INTO facturas VALUES (3, 999, 'F-ORPHAN', 50.0, date('now'), date('now','+30 days'), 'pendiente')")
+    conn.execute(
+        "INSERT INTO facturas VALUES (3, 999, 'F-ORPHAN', 50.0, date('now'), date('now','+30 days'), 'pendiente')"
+    )
     conn.commit()
     conn.execute("PRAGMA foreign_keys=ON")
 
@@ -387,7 +392,7 @@ class TestSNAEngineWithProactiveBridge(unittest.TestCase):
             received_alerts.append(alert)
 
         scanner = LocalDataScanner(db_path=self.db_path)
-        bridge = ProactiveChannelBridge(
+        ProactiveChannelBridge(
             default_channel=ChannelType.TELEGRAM,
             default_recipient="test_user",
         )

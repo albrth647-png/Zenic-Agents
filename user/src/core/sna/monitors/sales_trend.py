@@ -64,13 +64,15 @@ class SalesTrendMonitor(BaseMonitor):
             return MonitorResult(
                 monitor_name=self.name,
                 weight=self.weight,
-                findings=[{
-                    "type": "sales_drop",
-                    "recent_total": round(recent_total, 2),
-                    "previous_total": round(previous_total, 2),
-                    "change_percent": round(change_percent, 1),
-                    "message": f"Caída de ventas: {abs(change_percent):.1f}% vs semana anterior",
-                }],
+                findings=[
+                    {
+                        "type": "sales_drop",
+                        "recent_total": round(recent_total, 2),
+                        "previous_total": round(previous_total, 2),
+                        "change_percent": round(change_percent, 1),
+                        "message": f"Caída de ventas: {abs(change_percent):.1f}% vs semana anterior",
+                    }
+                ],
                 healthy=False,
                 details={
                     "recent_total": recent_total,

@@ -123,8 +123,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                     if row is None:
                         return None
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "UPDATE memory_v2_records SET access_count = access_count + 1, "
-                        "last_accessed = ? WHERE id = ?",
+                        "UPDATE memory_v2_records SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
                         (_now_iso(), record_id),  # noqa: F821
                     )
                     conn.commit()
@@ -210,8 +209,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT * FROM memory_v2_records WHERE session_id = ? "
-                        "ORDER BY importance DESC, created_at ASC",
+                        "SELECT * FROM memory_v2_records WHERE session_id = ? ORDER BY importance DESC, created_at ASC",
                         (session_id,),
                     )
                     all_records = [self._record_from_row(row) for row in cursor.fetchall()]
@@ -250,8 +248,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT * FROM memory_v2_records WHERE session_id = ? "
-                        "ORDER BY embedding_hash, created_at ASC",
+                        "SELECT * FROM memory_v2_records WHERE session_id = ? ORDER BY embedding_hash, created_at ASC",
                         (session_id,),
                     )
                     records = [self._record_from_row(row) for row in cursor.fetchall()]

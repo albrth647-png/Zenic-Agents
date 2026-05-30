@@ -96,7 +96,7 @@ impl CheckpointStore {
         }
 
         // Persist to disk if enabled.
-        if let Some(ref dir) = self.persist_dir {
+        if let Some(ref _dir) = self.persist_dir {
             if let Err(e) = self.persist_checkpoint(&exec_id, &checkpoint) {
                 log::warn!(
                     "E-11: Failed to persist checkpoint {:?} to disk: {}. \

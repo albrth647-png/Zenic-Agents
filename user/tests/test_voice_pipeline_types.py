@@ -4,8 +4,6 @@ STTBackendConfig, VoicePipelineMetrics.
 Rigor: sin mocks, datos reales, cubre normal + vacío + nulo + extremos + error.
 """
 
-import pytest
-
 from src.core.voice_pipeline._types import (
     AudioFormat,
     ConversionResult,
@@ -18,8 +16,8 @@ from src.core.voice_pipeline._types import (
 #  AudioFormat enum
 # ════════════════════════════════════════════════════════════════
 
-class TestAudioFormat:
 
+class TestAudioFormat:
     def test_all_formats_exist(self):
         """Todos los formatos definidos deben estar en el enum."""
         expected = {"OGG", "MP3", "WAV", "M4A", "OPUS", "WEBM", "AMR", "AAC", "FLAC", "UNKNOWN"}
@@ -100,8 +98,8 @@ class TestAudioFormat:
 #  TranscriptionResult
 # ════════════════════════════════════════════════════════════════
 
-class TestTranscriptionResult:
 
+class TestTranscriptionResult:
     def test_defaults_indicate_failure(self):
         res = TranscriptionResult()
         assert res.success is False
@@ -155,8 +153,8 @@ class TestTranscriptionResult:
 #  ConversionResult
 # ════════════════════════════════════════════════════════════════
 
-class TestConversionResult:
 
+class TestConversionResult:
     def test_defaults_indicate_failure(self):
         res = ConversionResult()
         assert res.success is False
@@ -187,8 +185,8 @@ class TestConversionResult:
 #  STTBackendConfig
 # ════════════════════════════════════════════════════════════════
 
-class TestSTTBackendConfig:
 
+class TestSTTBackendConfig:
     def test_defaults(self):
         cfg = STTBackendConfig()
         assert cfg.backend_name == "auto"
@@ -223,8 +221,8 @@ class TestSTTBackendConfig:
 #  VoicePipelineMetrics
 # ════════════════════════════════════════════════════════════════
 
-class TestVoicePipelineMetrics:
 
+class TestVoicePipelineMetrics:
     def test_defaults(self):
         m = VoicePipelineMetrics()
         assert m.total_transcriptions == 0

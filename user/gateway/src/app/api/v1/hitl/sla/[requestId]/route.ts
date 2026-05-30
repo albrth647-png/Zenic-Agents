@@ -2,7 +2,7 @@
 // GET /api/v1/hitl/sla/[requestId]
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSLAService } from "@/lib/hitl";
+import { getSLAService } from "@/lib/hitl/sla-service/_monitor";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;

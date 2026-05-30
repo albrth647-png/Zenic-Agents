@@ -36,7 +36,7 @@ const MAX_DIGEST_QUEUE_SIZE = 100;
 // ═══════════════════════════════════════════════════════════════════════════
 
 class NotificationService {
-  private static instance: NotificationService | null = null;
+  public static instance: NotificationService | null = null;
   private subscriptions: Map<string, NotificationSubscription> = new Map();
   private digestQueue: Map<string, string[]> = new Map(); // userId → notification IDs
 
@@ -97,12 +97,13 @@ class NotificationService {
           // INVARIANT 3: cap digest queue
           if (queue.length < MAX_DIGEST_QUEUE_SIZE) {
             // Persist notification to DB immediately (even in digest mode)
-            await db.hitlNotification.create({
+            await db.hitlNotificationLog.create({
               data: {
-                userId,
-                type: mapEventType(event),
+                notificationId: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                recipientId: userId,
+                event: mapEventType(event),
                 title: eventTitle,
-                message,
+                body: message,
                 requestId: payload.requestId,
                 priority: notificationPriority,
                 channel,
@@ -115,12 +116,12 @@ class NotificationService {
           }
         } else {
           // Send immediately — persist to DB
-          await db.hitlNotification.create({
+          await db.hitlNotificationLog.create({
             data: {
-              userId,
-              type: mapEventType(event),
+              recipientId: userId,
+              event: mapEventType(event),
               title: eventTitle,
-              message,
+              body: message,
               requestId: payload.requestId,
               priority: notificationPriority,
               channel,
@@ -148,10 +149,10 @@ class NotificationService {
   }): Promise<HitlNotification[]> {
     const limit = Math.min(options?.limit ?? 50, 200); // INVARIANT 3: max 200
 
-    const where: Record<string, unknown> = { userId };
+    const where: Record<string, unknown> = { recipientId: userId };
     if (options?.unreadOnly) where.isRead = false; // FIX #1 CRÍTICO: mostrar NO leídas cuando unreadOnly=true
 
-    const records = await db.hitlNotification.findMany({
+    const records = await db.hitlNotificationLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: limit,
@@ -159,10 +160,10 @@ class NotificationService {
 
     return records.map((r) => ({
       id: r.id,
-      userId: r.userId,
-      type: r.type as HitlNotification["type"],
+      userId: r.recipientId,
+      type: r.event as HitlNotification["type"],
       title: r.title,
-      message: r.message,
+      message: r.body,
       requestId: r.requestId,
       priority: r.priority as NotificationPriority,
       channel: r.channel as NotificationChannel,
@@ -173,13 +174,13 @@ class NotificationService {
 
   /** Mark a notification as read */
   async markAsRead(userId: string, notificationId: string): Promise<boolean> {
-    const record = await db.hitlNotification.findFirst({
-      where: { id: notificationId, userId },
+    const record = await db.hitlNotificationLog.findFirst({
+      where: { id: notificationId, recipientId: userId },
     });
 
     if (!record) return false;
 
-    await db.hitlNotification.update({
+    await db.hitlNotificationLog.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
@@ -189,8 +190,8 @@ class NotificationService {
 
   /** Mark all notifications as read for a user */
   async markAllAsRead(userId: string): Promise<number> {
-    const result = await db.hitlNotification.updateMany({
-      where: { userId, isRead: false },
+    const result = await db.hitlNotificationLog.updateMany({
+      where: { recipientId: userId, isRead: false },
       data: { isRead: true },
     });
 
@@ -199,8 +200,8 @@ class NotificationService {
 
   /** Get unread count for a user */
   async getUnreadCount(userId: string): Promise<number> {
-    return db.hitlNotification.count({
-      where: { userId, isRead: false },
+    return db.hitlNotificationLog.count({
+      where: { recipientId: userId, isRead: false },
     });
   }
 
@@ -224,12 +225,12 @@ class NotificationService {
     const count = queue.length;
 
     // Create a single digest notification
-    await db.hitlNotification.create({
+    await db.hitlNotificationLog.create({
       data: {
-        userId,
-        type: "approval_pending",
+        recipientId: userId,
+        event: "approval_pending",
         title: `${count} pending approval notifications`,
-        message: `You have ${count} approval-related notifications in your digest queue.`,
+        body: `You have ${count} approval-related notifications in your digest queue.`,
         requestId: "digest",
         priority: NotificationPriorityEnum.NORMAL,
         channel: NotificationChannelEnum.IN_APP,

@@ -57,7 +57,8 @@ class TaskLockMixin:
             self._task_index[task_id] = task
             logger.debug(
                 "MemoryBackend: Enqueued task %s in queue '%s'",
-                task_id[:8], queue_name,
+                task_id[:8],
+                queue_name,
             )
             return True
 
@@ -120,7 +121,10 @@ class TaskLockMixin:
                 task["error"] = error
                 logger.info(
                     "MemoryBackend: Task %s failed (retry %d/%d): %s",
-                    task_id[:8], task["retry_count"], task["max_retries"], error,
+                    task_id[:8],
+                    task["retry_count"],
+                    task["max_retries"],
+                    error,
                 )
             else:
                 task["status"] = "failed"
@@ -129,7 +133,8 @@ class TaskLockMixin:
                 task["lease_expires_at"] = None
                 logger.warning(
                     "MemoryBackend: Task %s permanently failed: %s",
-                    task_id[:8], error,
+                    task_id[:8],
+                    error,
                 )
             return True
 
@@ -146,11 +151,7 @@ class TaskLockMixin:
         expired_count = 0
         with self._lock:
             for task in self._tasks.get(queue_name, []):
-                if (
-                    task["status"] == "running"
-                    and task["lease_expires_at"]
-                    and task["lease_expires_at"] < now
-                ):
+                if task["status"] == "running" and task["lease_expires_at"] and task["lease_expires_at"] < now:
                     task["status"] = "pending"
                     task["worker_id"] = None
                     task["lease_expires_at"] = None

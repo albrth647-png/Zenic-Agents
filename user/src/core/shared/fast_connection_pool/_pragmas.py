@@ -24,14 +24,14 @@ __all__ = [
 
 _ARM_PRAGMAS = [
     "PRAGMA journal_mode=WAL",
-    "PRAGMA cache_size=-8192",       # 8MB cache (doubled from 4MB)
-    "PRAGMA synchronous=NORMAL",     # Safe with WAL, fast
-    "PRAGMA temp_store=MEMORY",      # Temp tables in RAM
-    "PRAGMA mmap_size=67108864",     # 64MB memory-mapped I/O
-    "PRAGMA wal_autocheckpoint=1000",# Auto-checkpoint every 1000 frames
-    "PRAGMA busy_timeout=5000",      # 5s lock timeout
-    "PRAGMA page_size=4096",         # Optimal for flash storage
-    "PRAGMA foreign_keys=ON",        # Enforce referential integrity
+    "PRAGMA cache_size=-8192",  # 8MB cache (doubled from 4MB)
+    "PRAGMA synchronous=NORMAL",  # Safe with WAL, fast
+    "PRAGMA temp_store=MEMORY",  # Temp tables in RAM
+    "PRAGMA mmap_size=67108864",  # 64MB memory-mapped I/O
+    "PRAGMA wal_autocheckpoint=1000",  # Auto-checkpoint every 1000 frames
+    "PRAGMA busy_timeout=5000",  # 5s lock timeout
+    "PRAGMA page_size=4096",  # Optimal for flash storage
+    "PRAGMA foreign_keys=ON",  # Enforce referential integrity
 ]
 
 
@@ -48,9 +48,11 @@ def _apply_pragmas(conn: sqlite3.Connection) -> None:
 #  Connection Statistics
 # ============================================================
 
+
 @dataclass
 class PoolStats:
     """Statistics for a single database pool."""
+
     db_name: str = ""
     total_gets: int = 0
     thread_local_hits: int = 0

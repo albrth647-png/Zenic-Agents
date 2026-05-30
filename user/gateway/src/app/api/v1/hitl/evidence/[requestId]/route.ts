@@ -2,7 +2,7 @@
 // GET /api/v1/hitl/evidence/[requestId]
 
 import { NextRequest, NextResponse } from "next/server";
-import { getEvidenceService } from "@/lib/hitl";
+import { getEvidenceService } from "@/lib/hitl/evidence-service";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;

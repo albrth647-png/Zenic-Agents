@@ -59,11 +59,8 @@ except ImportError:
 
     def set_current_tenant(ctx):
         """Propagate tenant ID to the thread-local tenant_utils context."""
-        try:
+        with contextlib.suppress(ValueError):
             _set_tenant_context(ctx.tenant_id)
-        except ValueError:
-            # Anonymous tenant in production — silently skip
-            pass
 
 
 logger = logging.getLogger(__name__)
@@ -164,14 +161,15 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?', (client_id, tid)  # noqa: S608
+                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?',  # noqa: S608
+                    (client_id, tid),
                 )
         # Also remove from working memory (thread-safe)
         with self._working_lock:
             self._working_memory = [
                 e for e in self._working_memory if not (e.client_id == client_id and e.tenant_id == tid)
             ]
-        logger.info(f"SmartMemory: Cleared all data for client_id='{client_id}', " f"tenant_id='{tid}'")
+        logger.info(f"SmartMemory: Cleared all data for client_id='{client_id}', tenant_id='{tid}'")
 
     def purge_tenant_data(self, tenant_id: str) -> int:
         """Delete ALL data for a tenant across all tables.
@@ -201,13 +199,14 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE tenant_id=?', (tid,)  # noqa: S608
+                    f'DELETE FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                    (tid,),
                 )
                 total_deleted += cursor.rowcount
         # Also remove from working memory (thread-safe)
         with self._working_lock:
             self._working_memory = [e for e in self._working_memory if e.tenant_id != tid]
-        logger.info(f"SmartMemory: Purged all data for tenant_id='{tid}' " f"({total_deleted} rows deleted)")
+        logger.info(f"SmartMemory: Purged all data for tenant_id='{tid}' ({total_deleted} rows deleted)")
         return total_deleted
 
     def get_tenant_usage_mb(self, tenant_id: str) -> float:
@@ -248,7 +247,8 @@ class TenantMixin:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 try:
                     tenant_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?', (tid,)  # noqa: S608
+                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                        (tid,),
                     ).fetchone()[0]
                     total_tenant_rows += tenant_count
 
@@ -263,5 +263,5 @@ class TenantMixin:
                 total_bytes = (total_tenant_rows / total_all_rows) * db_size_bytes
 
         usage_mb = total_bytes / (1024 * 1024)
-        logger.debug(f"SmartMemory: Tenant '{tid}' usage: {usage_mb:.2f}MB " f"({total_tenant_rows} rows)")
+        logger.debug(f"SmartMemory: Tenant '{tid}' usage: {usage_mb:.2f}MB ({total_tenant_rows} rows)")
         return usage_mb

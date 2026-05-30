@@ -7,6 +7,7 @@ NTP time check, heartbeat, grace period, and remote kill switch.
 
 from __future__ import annotations
 
+import contextlib
 import ipaddress
 import json
 import logging
@@ -281,7 +282,7 @@ class LicenseManager:
                 if data.get("active", False):
                     self.activate_kill_switch(data.get("reason", "Remote kill switch"), "server")
                     return True
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return False
 
@@ -326,10 +327,8 @@ class LicenseManager:
 
     def _heartbeat_loop(self) -> None:
         while self._running:
-            try:
+            with contextlib.suppress(Exception):
                 self._perform_heartbeat()
-            except Exception:  # noqa: S110
-                pass
             time.sleep(self._heartbeat_interval * 3600)
 
     def _perform_heartbeat(self) -> bool:
@@ -370,10 +369,8 @@ class LicenseManager:
 
     def _notify_callbacks(self, event_type: str, data: dict[str, Any]) -> None:
         for cb in self._callbacks:
-            try:
+            with contextlib.suppress(Exception):
                 cb(event_type, data)
-            except Exception:  # noqa: S110
-                pass
 
     # ── Status ─────────────────────────────────────────────
 

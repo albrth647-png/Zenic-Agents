@@ -119,7 +119,7 @@ class SmartChainExecutionMixin:
                             return code, attempt + 1
                         broken_code = code  # Try to fix the fix
                 except Exception as e:
-                    logger.debug(f"SmartPromptChain: Repair attempt {attempt+1} failed: {e}")
+                    logger.debug(f"SmartPromptChain: Repair attempt {attempt + 1} failed: {e}")
 
         return None, MAX_REPAIR_ATTEMPTS
 

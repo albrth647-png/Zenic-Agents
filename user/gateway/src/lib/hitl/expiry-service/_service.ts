@@ -29,7 +29,7 @@ const DEFAULT_NOTIFICATION_SCHEDULE = [60, 30, 10, 5];
 // Expiry Service (Singleton)
 // ═══════════════════════════════════════════════════════════════════════════
 
-class ExpiryService {
+export class ExpiryService {
   private static instance: ExpiryService | null = null;
 
   private constructor() {}

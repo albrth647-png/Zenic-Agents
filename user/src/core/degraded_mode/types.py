@@ -16,10 +16,11 @@ class DegradationLevel(int, Enum):
 
     Values are ordered so that higher integers imply stricter restrictions.
     """
-    NORMAL = 0        # Full functionality
-    DEGRADED = 1      # Limited features (no executors, read-only dashboards)
-    PARALYSIS_1 = 2   # Read-only mode (only viewing, no modifications)
-    PARALYSIS_2 = 3   # Emergency lockdown (admin-only access)
+
+    NORMAL = 0  # Full functionality
+    DEGRADED = 1  # Limited features (no executors, read-only dashboards)
+    PARALYSIS_1 = 2  # Read-only mode (only viewing, no modifications)
+    PARALYSIS_2 = 3  # Emergency lockdown (admin-only access)
 
     @property
     def is_read_only(self) -> bool:
@@ -36,6 +37,7 @@ class DegradationLevel(int, Enum):
 
 class DegradationReason(str, Enum):
     """Why the system entered a degraded state."""
+
     NONE = "none"
     TRIAL_EXPIRED = "trial_expired"
     TAMPERING_DETECTED = "tampering_detected"
@@ -48,6 +50,7 @@ class DegradationReason(str, Enum):
 @dataclass
 class DegradationState:
     """Snapshot of the current degradation status."""
+
     level: DegradationLevel = DegradationLevel.NORMAL
     reason: DegradationReason = DegradationReason.NONE
     message: str = ""

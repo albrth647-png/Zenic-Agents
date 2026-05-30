@@ -52,7 +52,7 @@ def _validate_ai_verdict(raw_output: str) -> str:
     first_word = clean.split()[0] if clean.split() else ""
     if first_word in VALID_VERDICTS:
         _logger.warning(
-            "VerdictEngine: AI added extra output after verdict. " "Using first word only: %s (raw: %s)",
+            "VerdictEngine: AI added extra output after verdict. Using first word only: %s (raw: %s)",
             first_word,
             raw_output[:100],
         )
@@ -60,7 +60,7 @@ def _validate_ai_verdict(raw_output: str) -> str:
 
     # Invalid output → default to NO (precautionary principle)
     _logger.error(
-        "VerdictEngine: AI produced non-binary output: %s. " "Defaulting to NO (precautionary principle).",
+        "VerdictEngine: AI produced non-binary output: %s. Defaulting to NO (precautionary principle).",
         raw_output[:100],
     )
     return "NO"

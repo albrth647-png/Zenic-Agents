@@ -317,7 +317,7 @@ class FasterWhisperBackend(STTBackend):
 
                 duration = time.monotonic() - start
                 _logger.info(
-                    "FasterWhisperBackend: transcribed in %.1fs " "(lang=%s, segments=%d, text_len=%d)",
+                    "FasterWhisperBackend: transcribed in %.1fs (lang=%s, segments=%d, text_len=%d)",
                     duration,
                     info.language,
                     segment_count,
@@ -623,7 +623,7 @@ class Ear:
         self._active: STTBackend = self._select_backend()
 
         _logger.info(
-            "Ear: initialized with active_backend=%s " "(available_backends=%s)",
+            "Ear: initialized with active_backend=%s (available_backends=%s)",
             self._active.name,
             [b.name for b in self._backends if b.is_available],
         )

@@ -20,6 +20,7 @@ from ._types import logger
 #  AgentRunnerCompat
 # ══════════════════════════════════════════════════════════════
 
+
 class AgentRunnerCompat:
     """
     v1-compatible AgentRunner wrapper around v2 infrastructure.
@@ -33,9 +34,9 @@ class AgentRunnerCompat:
       - Internally uses v2 AgentRunner for registered agents
     """
 
-    def __init__(self, mini_ai=None, semantic_engine=None,
-                 smart_memory=None, enable_cache: bool = True,
-                 **kwargs) -> None:
+    def __init__(
+        self, mini_ai=None, semantic_engine=None, smart_memory=None, enable_cache: bool = True, **kwargs
+    ) -> None:
         self._mini_ai = mini_ai
         self._semantic_engine = semantic_engine
         self._smart_memory = smart_memory
@@ -49,6 +50,7 @@ class AgentRunnerCompat:
 
         if enable_cache:
             from ..infrastructure.cache import AgentCache
+
             self._cache = AgentCache()
             if semantic_engine and semantic_engine.is_loaded:
                 self._cache.set_semantic_engine(semantic_engine)
@@ -66,8 +68,11 @@ class AgentRunnerCompat:
             if cached is not None:
                 self._cache_hits += 1
                 return AgentResult(
-                    success=True, data=cached,
-                    source="cache", duration_ms=0, cache_hit=True,
+                    success=True,
+                    data=cached,
+                    source="cache",
+                    duration_ms=0,
+                    cache_hit=True,
                 )
 
         # v2 BaseAgent: use v2 runner
@@ -89,7 +94,7 @@ class AgentRunnerCompat:
             )
 
         # Legacy v1 agent: delegate to its run method
-        if hasattr(agent, 'build_prompt') and hasattr(agent, 'parse_response'):
+        if hasattr(agent, "build_prompt") and hasattr(agent, "parse_response"):
             return self._run_legacy_agent(agent, input_data)
 
         return AgentResult(
@@ -115,8 +120,10 @@ class AgentRunnerCompat:
                         if self._enable_cache and self._cache is not None:
                             self._cache.put(agent.name, input_data, parsed)
                         return AgentResult(
-                            success=True, data=parsed,
-                            source="llm", duration_ms=0,
+                            success=True,
+                            data=parsed,
+                            source="llm",
+                            duration_ms=0,
                         )
             except Exception as e:
                 logger.debug(f"AgentRunnerCompat: LLM call failed: {e}")
@@ -126,20 +133,23 @@ class AgentRunnerCompat:
         try:
             fallback_result = agent.fallback(input_data)
             return AgentResult(
-                success=True, data=fallback_result,
-                source="fallback", duration_ms=0,
+                success=True,
+                data=fallback_result,
+                source="fallback",
+                duration_ms=0,
             )
         except Exception as e:
             return AgentResult(
-                success=False, source="error", error=str(e),
+                success=False,
+                source="error",
+                error=str(e),
             )
 
     def clear_cache(self) -> None:
         if self._cache:
             self._cache.clear()
 
-    def update_engines(self, mini_ai=None, semantic_engine=None,
-                       smart_memory=None) -> None:
+    def update_engines(self, mini_ai=None, semantic_engine=None, smart_memory=None) -> None:
         if mini_ai is not None:
             self._mini_ai = mini_ai
         if semantic_engine is not None:

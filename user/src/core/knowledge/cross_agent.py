@@ -37,7 +37,7 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 0.1) -> Any:
             last_exc = exc
             if attempt == max_retries - 1:
                 raise
-            time.sleep(base_delay * (2 ** attempt))
+            time.sleep(base_delay * (2**attempt))
     raise last_exc  # type: ignore[misc]
 
 
@@ -115,6 +115,7 @@ class CrossAgentKnowledgeBus:
         cb_json = json.dumps(callback_filter or {})
 
         with self._lock:
+
             def _insert() -> None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -134,6 +135,7 @@ class CrossAgentKnowledgeBus:
     def notify_subscribers(self, domain: str, node_id: str) -> int:
         count = 0
         with self._lock:
+
             def _notify() -> int:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -161,6 +163,7 @@ class CrossAgentKnowledgeBus:
 
     def get_subscriptions(self, agent_id: str) -> list[dict[str, Any]]:
         with self._lock:
+
             def _fetch() -> list[dict[str, Any]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -171,13 +174,15 @@ class CrossAgentKnowledgeBus:
                     )
                     results: list[dict[str, Any]] = []
                     for row in cursor.fetchall():
-                        results.append({
-                            "id": row[0],
-                            "domain": row[1],
-                            "agent_id": row[2],
-                            "callback_filter": json.loads(row[3]) if row[3] else {},
-                            "created_at": row[4],
-                        })
+                        results.append(
+                            {
+                                "id": row[0],
+                                "domain": row[1],
+                                "agent_id": row[2],
+                                "callback_filter": json.loads(row[3]) if row[3] else {},
+                                "created_at": row[4],
+                            }
+                        )
                     return results
                 finally:
                     conn.close()
@@ -186,6 +191,7 @@ class CrossAgentKnowledgeBus:
 
     def unsubscribe(self, subscription_id: str) -> bool:
         with self._lock:
+
             def _delete() -> bool:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -216,6 +222,7 @@ class CrossAgentKnowledgeBus:
         engine = get_knowledge_graph()
 
         with self._lock:
+
             def _propagate() -> dict[str, int]:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -245,7 +252,9 @@ class CrossAgentKnowledgeBus:
 
                 existing = engine.query(
                     __import__("src.core.knowledge.types", fromlist=["KnowledgeQuery"]).KnowledgeQuery(
-                        domain=target_domain, concept=node.concept, max_results=1,
+                        domain=target_domain,
+                        concept=node.concept,
+                        max_results=1,
                     )
                 )
                 if existing.nodes:
@@ -268,6 +277,7 @@ class CrossAgentKnowledgeBus:
 
                 if new_id and nid:
                     from .types import KnowledgeEdge
+
                     edge = KnowledgeEdge(
                         id=_new_id("ke"),
                         source_id=nid,

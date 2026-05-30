@@ -33,10 +33,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   isFeatureAvailable,
   SubscriptionTierName,
-  TierLimits,
+  type TierLimits,
   TIER_LIMITS,
   MEMORY_TIER_CONFIG,
-  MemoryTierConfig,
+  type MemoryTierConfig,
   FEATURE_GATES,
 } from './types';
 import { db } from '@/lib/db';
@@ -56,7 +56,7 @@ interface TenantSubscriptionInfo {
  */
 async function lookupSubscription(tenantId: string): Promise<TenantSubscriptionInfo | null> {
   try {
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 

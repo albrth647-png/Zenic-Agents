@@ -149,19 +149,21 @@ class ConfirmManager(ConfirmFlowMixin):
             results: list[dict] = []
             for row in rows:
                 config = json.loads(row["config"]) if row["config"] else {}
-                results.append({
-                    "action_id": row["action_id"],
-                    "action_type": row["action_type"],
-                    "config": config,
-                    "verdict": row["verdict"],
-                    "status": row["status"],
-                    "channel": row["channel"],
-                    "session_id": row["session_id"],
-                    "required_role": row["required_role"],
-                    "created_at": row["created_at"],
-                    "expires_at": row["expires_at"],
-                    "ttl_remaining": max(0, row["expires_at"] - time.time()),
-                })
+                results.append(
+                    {
+                        "action_id": row["action_id"],
+                        "action_type": row["action_type"],
+                        "config": config,
+                        "verdict": row["verdict"],
+                        "status": row["status"],
+                        "channel": row["channel"],
+                        "session_id": row["session_id"],
+                        "required_role": row["required_role"],
+                        "created_at": row["created_at"],
+                        "expires_at": row["expires_at"],
+                        "ttl_remaining": max(0, row["expires_at"] - time.time()),
+                    }
+                )
 
             return results
 

@@ -19,6 +19,7 @@ class DistributedWorkerExtraMixin:
     def current_task(self) -> dict[str, Any] | None:
         """Currently executing task, if any."""
         return self._current_task
+
     def stats(self) -> dict[str, Any]:
         """Worker statistics."""
         with self._lock:
@@ -28,17 +29,12 @@ class DistributedWorkerExtraMixin:
                 "tasks_completed": self._tasks_completed,
                 "tasks_failed": self._tasks_failed,
                 "tasks_stolen": self._tasks_stolen,
-                "current_task": (
-                    self._current_task.get("task_id", "")[:8]
-                    if self._current_task else None
-                ),
+                "current_task": (self._current_task.get("task_id", "")[:8] if self._current_task else None),
                 "registered_handlers": list(self._handlers.keys()),
                 "queue_names": self._config.queue_names,
-                "uptime_s": (
-                    time.time() - self._start_time
-                    if hasattr(self, "_start_time") else 0
-                ),
+                "uptime_s": (time.time() - self._start_time if hasattr(self, "_start_time") else 0),
             }
+
     def _main_loop(self) -> None:
         """Main worker loop: poll for tasks and execute them."""
         self._start_time = time.time()
@@ -64,7 +60,9 @@ class DistributedWorkerExtraMixin:
                 except Exception as exc:
                     logger.error(
                         "Worker %s: Dequeue error from '%s': %s",
-                        self._config.worker_id, queue_name, exc,
+                        self._config.worker_id,
+                        queue_name,
+                        exc,
                     )
 
                 if task is not None:
@@ -80,6 +78,7 @@ class DistributedWorkerExtraMixin:
             self._execute_task(task)
 
         self._state = WorkerState.STOPPED
+
     def _execute_task(self, task: dict[str, Any]) -> None:
         """
         Execute a single task with the appropriate handler.
@@ -101,7 +100,9 @@ class DistributedWorkerExtraMixin:
         if handler is None:
             logger.error(
                 "Worker %s: No handler for task type '%s' (task=%s)",
-                self._config.worker_id, task_type, task_id[:8],
+                self._config.worker_id,
+                task_type,
+                task_id[:8],
             )
             self._report_failure(task_id, f"No handler registered for task type '{task_type}'")
             self._current_task = None
@@ -109,7 +110,9 @@ class DistributedWorkerExtraMixin:
 
         logger.info(
             "Worker %s: Executing task %s (type=%s)",
-            self._config.worker_id, task_id[:8], task_type,
+            self._config.worker_id,
+            task_id[:8],
+            task_type,
         )
 
         try:
@@ -125,7 +128,9 @@ class DistributedWorkerExtraMixin:
         except Exception as exc:
             logger.error(
                 "Worker %s: Task %s failed: %s",
-                self._config.worker_id, task_id[:8], exc,
+                self._config.worker_id,
+                task_id[:8],
+                exc,
                 exc_info=True,
             )
             self._report_failure(task_id, str(exc))
@@ -133,6 +138,7 @@ class DistributedWorkerExtraMixin:
         finally:
             self._current_task = None
             self._task_start_time = 0.0
+
     def _report_success(self, task_id: str, result: Any) -> None:
         """Report a completed task."""
         result_dict = None
@@ -146,7 +152,9 @@ class DistributedWorkerExtraMixin:
         except Exception as exc:
             logger.error(
                 "Worker %s: Failed to report completion for %s: %s",
-                self._config.worker_id, task_id[:8], exc,
+                self._config.worker_id,
+                task_id[:8],
+                exc,
             )
         else:
             with self._lock:
@@ -156,12 +164,15 @@ class DistributedWorkerExtraMixin:
                     try:
                         mc = get_metrics_collector()
                         mc.record_task_completed(
-                            task_type=self._current_task.get("task_type", "unknown") if self._current_task else "unknown",
+                            task_type=self._current_task.get("task_type", "unknown")
+                            if self._current_task
+                            else "unknown",
                             worker_id=self._config.worker_id,
                             duration=time.time() - self._task_start_time if self._task_start_time else 0.0,
                         )
-                    except Exception:  # noqa: S110
+                    except Exception:
                         pass
+
     def _report_failure(self, task_id: str, error: str) -> None:
         """Report a failed task."""
         try:
@@ -169,7 +180,9 @@ class DistributedWorkerExtraMixin:
         except Exception as exc:
             logger.error(
                 "Worker %s: Failed to report failure for %s: %s",
-                self._config.worker_id, task_id[:8], exc,
+                self._config.worker_id,
+                task_id[:8],
+                exc,
             )
         else:
             with self._lock:
@@ -179,11 +192,14 @@ class DistributedWorkerExtraMixin:
                     try:
                         mc = get_metrics_collector()
                         mc.record_task_failed(
-                            task_type=self._current_task.get("task_type", "unknown") if self._current_task else "unknown",
+                            task_type=self._current_task.get("task_type", "unknown")
+                            if self._current_task
+                            else "unknown",
                             worker_id=self._config.worker_id,
                         )
-                    except Exception:  # noqa: S110
+                    except Exception:
                         pass
+
     def _heartbeat_loop(self) -> None:
         """Send periodic heartbeats to the cluster topology."""
         while not self._stop_event.is_set():
@@ -192,23 +208,18 @@ class DistributedWorkerExtraMixin:
                     "state": self._state.value,
                     "tasks_completed": self._tasks_completed,
                     "tasks_failed": self._tasks_failed,
-                    "current_task_type": (
-                        self._current_task.get("task_type")
-                        if self._current_task else None
-                    ),
+                    "current_task_type": (self._current_task.get("task_type") if self._current_task else None),
                 }
-                _run_async(
-                    self._backend.heartbeat(
-                        self._config.worker_id, status
-                    )
-                )
+                _run_async(self._backend.heartbeat(self._config.worker_id, status))
             except Exception as exc:
                 logger.debug(
                     "Worker %s: Heartbeat error: %s",
-                    self._config.worker_id, exc,
+                    self._config.worker_id,
+                    exc,
                 )
 
             self._stop_event.wait(timeout=self._config.heartbeat_interval)
+
     def _lease_renewal_loop(self) -> None:
         """Renew task leases for long-running operations."""
         while not self._stop_event.is_set():
@@ -224,44 +235,49 @@ class DistributedWorkerExtraMixin:
                 except Exception as exc:
                     logger.warning(
                         "Worker %s: Lease renewal failed for %s: %s",
-                        self._config.worker_id, task_id[:8], exc,
+                        self._config.worker_id,
+                        task_id[:8],
+                        exc,
                     )
 
-            self._stop_event.wait(
-                timeout=self._config.lease_renewal_interval
-            )
+            self._stop_event.wait(timeout=self._config.lease_renewal_interval)
+
     def _register_in_topology(self) -> None:
         """Register this worker in the cluster topology."""
         try:
             _run_async(
-                self._backend.register_node({
-                    "node_id": self._config.worker_id,
-                    "hostname": socket.gethostname(),
-                    "ip_address": self._get_local_ip(),
-                    "capabilities": {
-                        "task_types": list(self._handlers.keys()),
-                        "queue_names": self._config.queue_names,
-                        "max_concurrent": self._config.max_concurrent_tasks,
-                        "platform": platform.platform(),
-                    },
-                })
+                self._backend.register_node(
+                    {
+                        "node_id": self._config.worker_id,
+                        "hostname": socket.gethostname(),
+                        "ip_address": self._get_local_ip(),
+                        "capabilities": {
+                            "task_types": list(self._handlers.keys()),
+                            "queue_names": self._config.queue_names,
+                            "max_concurrent": self._config.max_concurrent_tasks,
+                            "platform": platform.platform(),
+                        },
+                    }
+                )
             )
         except Exception as exc:
             logger.warning(
                 "Worker %s: Topology registration failed: %s",
-                self._config.worker_id, exc,
+                self._config.worker_id,
+                exc,
             )
+
     def _deregister_from_topology(self) -> None:
         """Remove this worker from the cluster topology."""
         try:
-            _run_async(
-                self._backend.deregister_node(self._config.worker_id)
-            )
+            _run_async(self._backend.deregister_node(self._config.worker_id))
         except Exception as exc:
             logger.warning(
                 "Worker %s: Topology deregistration failed: %s",
-                self._config.worker_id, exc,
+                self._config.worker_id,
+                exc,
             )
+
     def _get_local_ip(self) -> str:
         """Get the local IP address (best effort)."""
         try:

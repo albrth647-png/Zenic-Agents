@@ -37,6 +37,7 @@ _RETRY_DELAY = 0.1
 
 class EvidenceType(str, Enum):
     """Type of evidence attached to an approval."""
+
     SCREENSHOT = "screenshot"
     LOG = "log"
     DATA_SNAPSHOT = "data_snapshot"
@@ -105,6 +106,7 @@ class EvidenceManager:
 
     def _init_db(self) -> None:
         """Create the evidence table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -171,12 +173,15 @@ class EvidenceManager:
 
         logger.info(
             "EvidenceManager: Attached %s evidence %s to request %s",
-            evidence_type.value, evidence.evidence_id, request_id,
+            evidence_type.value,
+            evidence.evidence_id,
+            request_id,
         )
         return evidence
 
     def get_evidence(self, request_id: str) -> list[ApprovalEvidence]:
         """Get all evidence attached to a request."""
+
         def _do_query() -> list[ApprovalEvidence]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -206,11 +211,14 @@ class EvidenceManager:
         return recomputed == evidence.content_hash
 
     def get_evidence_by_type(
-        self, request_id: str, evidence_type: EvidenceType | str,
+        self,
+        request_id: str,
+        evidence_type: EvidenceType | str,
     ) -> list[ApprovalEvidence]:
         """Get evidence of a specific type for a request."""
         if isinstance(evidence_type, str):
             evidence_type = EvidenceType(evidence_type)
+
         def _do_query() -> list[ApprovalEvidence]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -254,6 +262,7 @@ class EvidenceManager:
 
     def _find_evidence(self, evidence_id: str) -> ApprovalEvidence | None:
         """Find a single evidence record by ID."""
+
         def _do_find() -> ApprovalEvidence | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -270,6 +279,7 @@ class EvidenceManager:
 
     def _persist_evidence(self, evidence: ApprovalEvidence, *, insert: bool) -> None:
         """Insert or update an evidence record in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -319,11 +329,14 @@ class EvidenceManager:
         )
 
     def _record_audit_event(
-        self, request_id: str, evidence: ApprovalEvidence,
+        self,
+        request_id: str,
+        evidence: ApprovalEvidence,
     ) -> None:
         """Record an EVIDENCE_ATTACHED event in the audit merkle trail."""
         try:
             from .audit_merkle import get_approval_audit_merkle
+
             audit = get_approval_audit_merkle()
             audit.record_event(
                 request_id=request_id,
@@ -353,7 +366,10 @@ class EvidenceManager:
             except sqlite3.OperationalError as exc:
                 last_exc = exc
                 logger.warning(
-                    "EvidenceManager: DB retry %d/%d — %s", attempt, max_retries, exc,
+                    "EvidenceManager: DB retry %d/%d — %s",
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

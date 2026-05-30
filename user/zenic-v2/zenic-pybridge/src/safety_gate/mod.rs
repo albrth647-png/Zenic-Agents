@@ -129,7 +129,8 @@ mod tests {
             requires_approval: false,
             risk_score: 0.8,
         };
-        assert!(!result.can_proceed());
+        // can_proceed() is #[pymethods] only — check verdict field directly
+        assert!(matches!(result.verdict, SafetyVerdict::Deny | SafetyVerdict::RateLimited));
     }
 
     #[test]
@@ -144,7 +145,7 @@ mod tests {
             requires_approval: false,
             risk_score: 0.0,
         };
-        assert!(result.can_proceed());
+        assert!(!matches!(result.verdict, SafetyVerdict::Deny | SafetyVerdict::RateLimited));
     }
 
     #[test]

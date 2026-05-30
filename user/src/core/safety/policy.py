@@ -25,6 +25,7 @@ class PolicyAction(str, Enum):
 @dataclass
 class Policy:
     """Una política de seguridad."""
+
     id: str
     name: str
     action_type: str
@@ -35,18 +36,47 @@ class Policy:
 
 # Políticas por defecto
 DEFAULT_POLICIES: list[Policy] = [
-    Policy("p001", "Leer datos locales", "scan", PolicyAction.ALLOW,
-           {"always": True}, "Permitir escaneo de datos locales sin restricción"),
-    Policy("p002", "Notificar usuario", "notify", PolicyAction.ALLOW,
-           {"always": True}, "Permitir notificaciones al usuario"),
-    Policy("p003", "Sugerir acción", "suggest", PolicyAction.ALLOW,
-           {"always": True}, "Permitir sugerencias sin restricción"),
-    Policy("p004", "Actualizar datos", "update", PolicyAction.RESTRICT,
-           {"requires_approval": True}, "Actualizar datos requiere aprobación"),
-    Policy("p005", "Eliminar datos", "delete", PolicyAction.DENY,
-           {"always": True}, "Eliminación siempre bloqueada"),
-    Policy("p006", "Ejecutar comando", "execute", PolicyAction.DENY,
-           {"always": True}, "Ejecución de comandos siempre bloqueada"),
+    Policy(
+        "p001",
+        "Leer datos locales",
+        "scan",
+        PolicyAction.ALLOW,
+        {"always": True},
+        "Permitir escaneo de datos locales sin restricción",
+    ),
+    Policy(
+        "p002",
+        "Notificar usuario",
+        "notify",
+        PolicyAction.ALLOW,
+        {"always": True},
+        "Permitir notificaciones al usuario",
+    ),
+    Policy(
+        "p003",
+        "Sugerir acción",
+        "suggest",
+        PolicyAction.ALLOW,
+        {"always": True},
+        "Permitir sugerencias sin restricción",
+    ),
+    Policy(
+        "p004",
+        "Actualizar datos",
+        "update",
+        PolicyAction.RESTRICT,
+        {"requires_approval": True},
+        "Actualizar datos requiere aprobación",
+    ),
+    Policy("p005", "Eliminar datos", "delete", PolicyAction.DENY, {"always": True}, "Eliminación siempre bloqueada"),
+    Policy(
+        "p006",
+        "Ejecutar comando",
+        "execute",
+        PolicyAction.DENY,
+        {"always": True},
+        "Ejecución de comandos siempre bloqueada",
+    ),
 ]
 
 

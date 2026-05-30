@@ -34,8 +34,10 @@ _SLOT_HEADER_SIZE = struct.calcsize(_SLOT_HEADER_FMT)
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class MessageType(IntEnum):
     """Message type classification for agent communication."""
+
     DATA = 0
     CONTROL = 1
     ERROR = 2
@@ -46,6 +48,7 @@ class Priority(IntEnum):
 
     Lower numeric value = higher priority (retrieved first).
     """
+
     CRITICAL = 0
     HIGH = 1
     NORMAL = 5
@@ -55,6 +58,7 @@ class Priority(IntEnum):
 # ---------------------------------------------------------------------------
 # Data Classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class BusMessage:
@@ -71,6 +75,7 @@ class BusMessage:
         ttl_seconds: Time-to-live in seconds (0 = no expiry).
         correlation_id: Optional ID for request-response correlation.
     """
+
     sender: str
     recipient: str
     msg_type: MessageType

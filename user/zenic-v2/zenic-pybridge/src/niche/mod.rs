@@ -114,8 +114,8 @@ mod tests {
         );
         section.add_field(field);
         assert_eq!(section.section_id(), "contact_info");
-        assert_eq!(section.field_count(), 1);
-        assert_eq!(section.required_count(), 0);
+        assert_eq!(section.fields().len(), 1);
+        assert_eq!(section.required_field_count(), 0);
     }
 
     #[test]
@@ -131,8 +131,8 @@ mod tests {
         assert_eq!(niche.niche_id(), "test_niche");
         assert_eq!(niche.category(), NicheCategory::AiData);
         assert_eq!(niche.data_sensitivity(), DataSensitivity::Low);
-        assert_eq!(niche.total_fields(), 0);
-        assert_eq!(niche.required_fields(), 0);
+        assert_eq!(niche.total_field_count(), 0);
+        assert_eq!(niche.required_field_count(), 0);
     }
 
     #[test]
@@ -162,8 +162,8 @@ mod tests {
             FieldRequirement::Optional,
         ));
         niche.add_section(section);
-        assert_eq!(niche.total_fields(), 2);
-        assert_eq!(niche.required_fields(), 1);
+        assert_eq!(niche.total_field_count(), 2);
+        assert_eq!(niche.required_field_count(), 1);
     }
 
     #[test]
@@ -190,9 +190,10 @@ mod tests {
             DataSensitivity::Critical,
         );
         niche.set_compliance(vec!["HIPAA".to_string(), "GDPR".to_string()]);
-        assert!(niche.has_compliance("HIPAA"));
-        assert!(niche.has_compliance("hipaa"));
-        assert!(niche.has_compliance("GDPR"));
-        assert!(!niche.has_compliance("PCI"));
+        // has_compliance() is a #[pymethods] only — use compliance() field access
+        assert!(niche.compliance().iter().any(|c| c.eq_ignore_ascii_case("HIPAA")));
+        assert!(niche.compliance().iter().any(|c| c.eq_ignore_ascii_case("hipaa")));
+        assert!(niche.compliance().iter().any(|c| c.eq_ignore_ascii_case("GDPR")));
+        assert!(!niche.compliance().iter().any(|c| c.eq_ignore_ascii_case("PCI")));
     }
 }

@@ -45,7 +45,9 @@ _db_instance: DatabaseBackend | None = None
 
 def is_postgresql() -> bool:
     """Check if the configured database backend is PostgreSQL."""
-    return os.environ.get("ZENIC_ENV") == "production" or bool(os.environ.get("DATABASE_URL", "").startswith("postgresql"))
+    return os.environ.get("ZENIC_ENV") == "production" or bool(
+        os.environ.get("DATABASE_URL", "").startswith("postgresql")
+    )
 
 
 def get_db_backend() -> str:

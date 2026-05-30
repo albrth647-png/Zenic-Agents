@@ -19,8 +19,10 @@ def init_model_manager(lazy_load=True, idle_timeout_s=None, ram_budget_mb=None):
     Raises:
         RuntimeError: If ModelManager is already initialized.
     """
+
     def factory():
         from .manager import ModelManager
+
         return ModelManager(
             lazy_load=lazy_load,
             idle_timeout_s=idle_timeout_s,

@@ -13,6 +13,7 @@ FASE 1.1 Performance Fix:
 - Connections are NOT closed — the pool manages their lifecycle.
 """
 
+import contextlib
 import os
 import sqlite3
 import time
@@ -280,13 +281,10 @@ class DatabaseMixin:
         with smart_memory_pool.write(SMART_MEMORY_DB) as conn:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
-                try:
+                with contextlib.suppress(sqlite3.OperationalError):
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         f"ALTER TABLE \"{table}\" ADD COLUMN client_id TEXT DEFAULT 'default'"
                     )
-                except sqlite3.OperationalError:
-                    # Column already exists, ignore
-                    pass
             # write() auto-commits on exit
 
     def _create_client_id_indexes(self):

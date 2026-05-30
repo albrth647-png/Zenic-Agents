@@ -33,7 +33,8 @@ class _FcmHttpMixin:
     """Mixin for FCM HTTP request methods."""
 
     async def _post_fcm(
-        self, payload: dict[str, Any],
+        self,
+        payload: dict[str, Any],
     ) -> ChannelResponse:
         """POST a message to the FCM HTTP v1 API.
 
@@ -78,16 +79,20 @@ class _FcmHttpMixin:
                 if attempt < _MAX_RETRIES:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
-                        "PushChannelProvider: FCM attempt %d/%d failed: %s "
-                        "— retrying in %.1fs",
-                        attempt, _MAX_RETRIES, e, delay,
+                        "PushChannelProvider: FCM attempt %d/%d failed: %s — retrying in %.1fs",
+                        attempt,
+                        _MAX_RETRIES,
+                        e,
+                        delay,
                     )
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
                         "PushChannelProvider: FCM all %d attempts failed: %s",
-                        _MAX_RETRIES, e,
+                        _MAX_RETRIES,
+                        e,
                     )
                     return ChannelResponse(
                         success=False,
@@ -106,7 +111,10 @@ class _FcmHttpMixin:
         )
 
     async def _post_fcm_aiohttp(
-        self, url: str, data: bytes, headers: dict[str, str],
+        self,
+        url: str,
+        data: bytes,
+        headers: dict[str, str],
     ) -> ChannelResponse:
         """Send FCM message via aiohttp."""
         assert self._session is not None
@@ -163,7 +171,10 @@ class _FcmHttpMixin:
                 )
 
     async def _post_fcm_urllib(
-        self, url: str, data: bytes, headers: dict[str, str],
+        self,
+        url: str,
+        data: bytes,
+        headers: dict[str, str],
     ) -> ChannelResponse:
         """Send FCM message via urllib (sync, wrapped in asyncio.to_thread)."""
         import asyncio
@@ -172,9 +183,12 @@ class _FcmHttpMixin:
 
         validated_url = _validate_url(url)
 
-        def _sync_post() -> ChannelResponse:
+        def _sync_post(url=validated_url) -> ChannelResponse:
             req = urllib.request.Request(  # noqa: S310
-                validated_url, data=data, headers=headers, method="POST",
+                url,
+                data=data,
+                headers=headers,
+                method="POST",
             )
             try:
                 with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
@@ -227,7 +241,9 @@ class _FcmHttpMixin:
         return await asyncio.to_thread(_sync_post)
 
     async def _http_post_form(
-        self, url: str, data: dict[str, str],
+        self,
+        url: str,
+        data: dict[str, str],
     ) -> dict[str, Any] | None:
         """POST form-encoded data and return parsed JSON response.
 
@@ -252,7 +268,9 @@ class _FcmHttpMixin:
             try:
                 if _HAS_AIOHTTP and self._session:
                     async with self._session.post(
-                        url, data=encoded, headers=headers,
+                        url,
+                        data=encoded,
+                        headers=headers,
                     ) as resp:
                         body = await resp.text()
                         try:
@@ -271,12 +289,16 @@ class _FcmHttpMixin:
                 elif _HAS_URLLIB:
                     validated_url = _validate_url(url)
 
-                    def _sync_post() -> dict[str, Any]:
+                    def _sync_post(url=validated_url) -> dict[str, Any]:
                         req = urllib.request.Request(  # noqa: S310
-                            validated_url, data=encoded, headers=headers, method="POST",
+                            url,
+                            data=encoded,
+                            headers=headers,
+                            method="POST",
                         )
                         with urllib.request.urlopen(  # noqa: S310
-                            req, timeout=_HTTP_TIMEOUT,
+                            req,
+                            timeout=_HTTP_TIMEOUT,
                         ) as resp:
                             body = resp.read().decode("utf-8")
                             try:
@@ -294,16 +316,17 @@ class _FcmHttpMixin:
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
-                        "PushChannelProvider: HTTP POST form failed after "
-                        "%d attempts: %s",
-                        _MAX_RETRIES, e,
+                        "PushChannelProvider: HTTP POST form failed after %d attempts: %s",
+                        _MAX_RETRIES,
+                        e,
                     )
                     return None
 
         return None
 
     def _update_rate_limit_from_headers(
-        self, headers: Any,
+        self,
+        headers: Any,
     ) -> None:
         """Update rate limit info from response headers.
 

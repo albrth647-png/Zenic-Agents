@@ -173,8 +173,7 @@ class ECDSASigner:
         # HMAC fallback — requires DEV MODE in production
         if os.environ.get("ZENIC_DEV_MODE") != "1" and not self._use_fallback:
             raise RuntimeError(
-                "ECDSA signing failed and HMAC fallback is disabled in production. "
-                "Install the 'cryptography' package."
+                "ECDSA signing failed and HMAC fallback is disabled in production. Install the 'cryptography' package."
             )
 
         mac = hmac.new(
@@ -246,7 +245,7 @@ class ECDSASigner:
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PublicFormat.SubjectPublicKeyInfo,
                 ).decode()
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
         return ""
 

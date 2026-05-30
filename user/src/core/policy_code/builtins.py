@@ -213,6 +213,6 @@ def install_builtin_policies(
             if existing is None:
                 eng.create_policy(policy)
                 installed.append(policy.id)
-        except Exception:  # noqa: S110
+        except Exception:
             pass
     return installed

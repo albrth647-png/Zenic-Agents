@@ -12,6 +12,7 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -63,9 +64,7 @@ class Z3InvariantPatternsMixin:
                         self._unique_sort_name("NullCheck"), ["IS_NULL", "NOT_NULL"]
                     )
                     for var_name in inv_vars:
-                        z3_null_var = z3_module.Const(
-                            f"nullcheck_{var_name}", null_sort
-                        )
+                        z3_null_var = z3_module.Const(f"nullcheck_{var_name}", null_sort)
                         solver.add(z3_null_var == null_consts[0])  # IS_NULL
 
                 elif kind == "range":
@@ -141,10 +140,9 @@ class Z3InvariantPatternsMixin:
             # Collect nodes that are inside annotations (to skip them)
             annotation_nodes = set()
             for node in ast.walk(tree):
-                if isinstance(node, (ast.AnnAssign, ast.arg)):
-                    if hasattr(node, 'annotation') and node.annotation:
-                        for sub in ast.walk(node.annotation):
-                            annotation_nodes.add(id(sub))
+                if isinstance(node, (ast.AnnAssign, ast.arg)) and hasattr(node, "annotation") and node.annotation:
+                    for sub in ast.walk(node.annotation):
+                        annotation_nodes.add(id(sub))
 
             for node in ast.walk(tree):
                 # Skip nodes inside type annotations
@@ -152,46 +150,53 @@ class Z3InvariantPatternsMixin:
                     continue
 
                 # Division -> no_div_zero
-                if isinstance(node, ast.BinOp) and isinstance(
-                    node.op, (ast.Div, ast.FloorDiv)
-                ):
+                if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.FloorDiv)):
                     if isinstance(node.right, ast.Name):
-                        invariants.append({
-                            "kind": "no_div_zero",
-                            "variables": [node.right.id],
-                        })
+                        invariants.append(
+                            {
+                                "kind": "no_div_zero",
+                                "variables": [node.right.id],
+                            }
+                        )
                     elif isinstance(node.right, ast.Constant) and node.right.value == 0:
-                        invariants.append({
-                            "kind": "no_div_zero_literal",
-                            "variables": [],
-                            "proof": "Literal division by zero detected",
-                        })
+                        invariants.append(
+                            {
+                                "kind": "no_div_zero_literal",
+                                "variables": [],
+                                "proof": "Literal division by zero detected",
+                            }
+                        )
 
                 # Subscript -> index_bounds (but not in annotations)
                 if isinstance(node, ast.Subscript) and id(node) not in annotation_nodes:
                     if isinstance(node.slice, ast.Name):
-                        invariants.append({
-                            "kind": "index_bounds",
-                            "variables": [node.slice.id],
-                        })
+                        invariants.append(
+                            {
+                                "kind": "index_bounds",
+                                "variables": [node.slice.id],
+                            }
+                        )
                     elif isinstance(node.slice, ast.Constant):
                         idx_val = node.slice.value
                         if isinstance(idx_val, int) and idx_val < 0:
-                            invariants.append({
-                                "kind": "negative_index",
-                                "variables": [],
-                                "proof": f"Negative index {idx_val} detected",
-                            })
+                            invariants.append(
+                                {
+                                    "kind": "negative_index",
+                                    "variables": [],
+                                    "proof": f"Negative index {idx_val} detected",
+                                }
+                            )
 
                 # Compare with None -> not_null
                 if isinstance(node, ast.Compare):
                     for comp in node.comparators:
-                        if isinstance(comp, ast.Constant) and comp.value is None:
-                            if isinstance(node.left, ast.Name):
-                                invariants.append({
+                        if isinstance(comp, ast.Constant) and comp.value is None and isinstance(node.left, ast.Name):
+                            invariants.append(
+                                {
                                     "kind": "not_null",
                                     "variables": [node.left.id],
-                                })
+                                }
+                            )
 
             if not invariants:
                 # FIX: No patterns detected does NOT mean no violations exist.

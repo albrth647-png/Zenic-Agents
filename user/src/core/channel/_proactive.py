@@ -40,6 +40,7 @@ ALERT_TO_CHANNEL: dict[AlertChannel, ChannelType] = {
 @dataclass
 class ProactiveMessage:
     """Mensaje proactivo listo para enviar."""
+
     text: str
     channel: ChannelType
     recipient: str
@@ -55,6 +56,7 @@ class ProactiveMessage:
 @dataclass
 class ProactiveResult:
     """Resultado del envío proactivo."""
+
     success: bool
     message: ProactiveMessage | None = None
     error: str = ""
@@ -129,7 +131,9 @@ class ProactiveChannelBridge:
         logger.error(f"Error enviando alerta proactiva: {result.error}")
         return ProactiveResult(success=False, error=result.error, message=proactive_msg)
 
-    def send_notification(self, text: str, severity: AlertSeverity = AlertSeverity.INFO, source: str = "autopilot") -> ProactiveResult:
+    def send_notification(
+        self, text: str, severity: AlertSeverity = AlertSeverity.INFO, source: str = "autopilot"
+    ) -> ProactiveResult:
         """Envía una notificación del Autopilot al canal del usuario."""
         channel = self.default_channel
         if severity == AlertSeverity.CRITICAL:
@@ -232,6 +236,7 @@ def create_sna_callback(bridge: ProactiveChannelBridge) -> Callable[[Alert], Non
         bridge = ProactiveChannelBridge(...)
         engine = SNAEngine(on_alert=create_sna_callback(bridge))
     """
+
     def on_sna_alert(alert: Alert):
         bridge.send_alert(alert)
 

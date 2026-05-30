@@ -8,6 +8,7 @@ from ..backend import CoordinationBackend
 
 logger = logging.getLogger("core.distributed.lock_manager._lock")
 
+
 class DistributedLock:
     """
     Distributed lock instance returned by DistributedLockManager.acquire().
@@ -87,14 +88,16 @@ class DistributedLock:
 
         self._stop_extension.set()
         success = await self._backend.release_lock(
-            self._lock_name, self._holder_id,
+            self._lock_name,
+            self._holder_id,
         )
 
         if success:
             self._acquired = False
             logger.debug(
                 "DistributedLock: Released '%s' (holder=%s)",
-                self._lock_name, self._holder_id,
+                self._lock_name,
+                self._holder_id,
             )
         return success
 
@@ -102,6 +105,7 @@ class DistributedLock:
         """Synchronous release wrapper."""
         try:
             import asyncio
+
             loop = asyncio.new_event_loop()
             try:
                 return loop.run_until_complete(self.release())
@@ -110,7 +114,8 @@ class DistributedLock:
         except Exception as exc:
             logger.error(
                 "DistributedLock: Release error for '%s': %s",
-                self._lock_name, exc,
+                self._lock_name,
+                exc,
             )
             return False
 
@@ -131,7 +136,9 @@ class DistributedLock:
         if not self._acquired:
             return False
         return await self._backend.extend_lock(
-            self._lock_name, self._holder_id, additional_seconds,
+            self._lock_name,
+            self._holder_id,
+            additional_seconds,
         )
 
     def start_auto_extension(self, interval_seconds: float = 10.0) -> None:
@@ -158,17 +165,17 @@ class DistributedLock:
             if self._acquired:
                 try:
                     import asyncio
+
                     loop = asyncio.new_event_loop()
                     try:
-                        loop.run_until_complete(
-                            self.extend(self._ttl_seconds * 0.5)
-                        )
+                        loop.run_until_complete(self.extend(self._ttl_seconds * 0.5))
                     finally:
                         loop.close()
                 except Exception as exc:
                     logger.warning(
                         "DistributedLock: Auto-extend failed for '%s': %s",
-                        self._lock_name, exc,
+                        self._lock_name,
+                        exc,
                     )
             self._stop_extension.wait(timeout=interval)
 

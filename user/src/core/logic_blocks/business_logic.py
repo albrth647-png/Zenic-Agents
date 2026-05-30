@@ -24,8 +24,8 @@ class InvoiceCalculatorBlock(LogicBlock):
     name = "invoice_calculator"
     category = "business_logic"
     description = "Calculate invoices with tax, discount, and total"
-    inputs = ["items", "tax_rate", "discount"]
-    outputs = ["subtotal", "tax_amount", "discount_amount", "total"]
+    inputs = ["items", "tax_rate", "discount"]  # noqa: RUF012
+    outputs = ["subtotal", "tax_amount", "discount_amount", "total"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -45,10 +45,12 @@ class InvoiceCalculatorBlock(LogicBlock):
                     price = float(item.get("price", item.get("unit_price", 0)))
                     item_total = qty * price
                     subtotal += item_total
-                    processed_items.append({
-                        **item,
-                        "item_total": round(item_total, 2),
-                    })
+                    processed_items.append(
+                        {
+                            **item,
+                            "item_total": round(item_total, 2),
+                        }
+                    )
                 elif isinstance(item, (list, tuple)) and len(item) >= 2:
                     qty = float(item[0])
                     price = float(item[1])
@@ -86,8 +88,8 @@ class InventoryTrackerBlock(LogicBlock):
     name = "inventory_tracker"
     category = "business_logic"
     description = "Track stock changes and alert on low inventory"
-    inputs = ["product_id", "quantity_change", "operation"]
-    outputs = ["new_quantity", "alerts"]
+    inputs = ["product_id", "quantity_change", "operation"]  # noqa: RUF012
+    outputs = ["new_quantity", "alerts"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -102,10 +104,12 @@ class InventoryTrackerBlock(LogicBlock):
             db = context.get("db")
             if db is not None:
                 try:
-                    cursor = db.execute("SELECT quantity FROM inventory WHERE product_id = ?", (product_id,))  # nosemgrep: sqlalchemy-execute-raw-query
+                    cursor = db.execute(
+                        "SELECT quantity FROM inventory WHERE product_id = ?", (product_id,)
+                    )  # nosemgrep: sqlalchemy-execute-raw-query
                     row = cursor.fetchone()
                     if row:
-                        current_quantity = row[0] if not hasattr(row, 'keys') else row["quantity"]
+                        current_quantity = row[0] if not hasattr(row, "keys") else row["quantity"]
                 except Exception as db_err:
                     logger.debug(f"InventoryTrackerBlock: DB read failed, using data value: {db_err}")
 
@@ -124,19 +128,26 @@ class InventoryTrackerBlock(LogicBlock):
             if new_quantity <= 0:
                 alerts.append({"type": "out_of_stock", "product_id": product_id, "message": "Product is out of stock"})
             elif new_quantity <= low_stock_threshold:
-                alerts.append({"type": "low_stock", "product_id": product_id, "message": f"Low stock: {new_quantity} units remaining"})
+                alerts.append(
+                    {
+                        "type": "low_stock",
+                        "product_id": product_id,
+                        "message": f"Low stock: {new_quantity} units remaining",
+                    }
+                )
 
             # Update DB if available
             if db is not None:
                 try:
                     db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "UPDATE inventory SET quantity = ? WHERE product_id = ?",
-                        (new_quantity, product_id)
+                        "UPDATE inventory SET quantity = ? WHERE product_id = ?", (new_quantity, product_id)
                     )
                 except Exception as db_err:
                     logger.debug(f"InventoryTrackerBlock: DB update failed: {db_err}")
 
-            logger.debug(f"InventoryTrackerBlock: {product_id} {current_quantity}->{new_quantity}, alerts={len(alerts)}")
+            logger.debug(
+                f"InventoryTrackerBlock: {product_id} {current_quantity}->{new_quantity}, alerts={len(alerts)}"
+            )
             return {
                 "success": True,
                 "product_id": product_id,
@@ -156,14 +167,14 @@ class CRMPipelineBlock(LogicBlock):
     name = "crm_pipeline"
     category = "business_logic"
     description = "Move leads through sales pipeline stages"
-    inputs = ["lead_data", "stage", "action"]
-    outputs = ["updated_lead", "next_action"]
+    inputs = ["lead_data", "stage", "action"]  # noqa: RUF012
+    outputs = ["updated_lead", "next_action"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
-            stages = data.get("stages", [
-                "new", "contacted", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"
-            ])
+            stages = data.get(
+                "stages", ["new", "contacted", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"]
+            )
             lead_data = data.get("lead_data", data.get("lead", {}))
             current_stage = data.get("current_stage", lead_data.get("stage", "new"))
             action = data.get("action", "advance")  # advance, regress, close_won, close_lost
@@ -192,8 +203,13 @@ class CRMPipelineBlock(LogicBlock):
 
             # Calculate conversion probability
             stage_probabilities = {
-                "new": 0.10, "contacted": 0.20, "qualified": 0.40,
-                "proposal": 0.60, "negotiation": 0.80, "closed_won": 1.0, "closed_lost": 0.0,
+                "new": 0.10,
+                "contacted": 0.20,
+                "qualified": 0.40,
+                "proposal": 0.60,
+                "negotiation": 0.80,
+                "closed_won": 1.0,
+                "closed_lost": 0.0,
             }
             probability = stage_probabilities.get(new_stage, 0.0)
 
@@ -218,8 +234,8 @@ class TaskSchedulerBlock(LogicBlock):
     name = "task_scheduler"
     category = "business_logic"
     description = "Prioritize and assign tasks to resources"
-    inputs = ["tasks", "resources"]
-    outputs = ["schedule", "assignments"]
+    inputs = ["tasks", "resources"]  # noqa: RUF012
+    outputs = ["schedule", "assignments"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -266,12 +282,14 @@ class TaskSchedulerBlock(LogicBlock):
                         "effort": task.get("effort", 1),
                     }
                     assignments.append(assignment)
-                schedule.append({
-                    "order": idx + 1,
-                    "task": task.get("name", f"Task_{idx}"),
-                    "priority": task.get("priority", "medium"),
-                    "score": task["score"],
-                })
+                schedule.append(
+                    {
+                        "order": idx + 1,
+                        "task": task.get("name", f"Task_{idx}"),
+                        "priority": task.get("priority", "medium"),
+                        "score": task["score"],
+                    }
+                )
 
             logger.debug(f"TaskSchedulerBlock: Scheduled {len(schedule)} tasks, {len(assignments)} assignments")
             return {

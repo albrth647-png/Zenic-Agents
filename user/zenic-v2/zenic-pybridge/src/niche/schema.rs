@@ -94,6 +94,11 @@ impl TemplateFieldSchema {
         self.requirement == FieldRequirement::Required
     }
 
+    /// Check if this field is conditional.
+    pub fn is_conditional(&self) -> bool {
+        self.requirement == FieldRequirement::Conditional
+    }
+
     /// Get the default value.
     pub fn default_value(&self) -> Option<&str> {
         self.default_value.as_deref()

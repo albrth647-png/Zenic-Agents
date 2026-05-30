@@ -18,7 +18,7 @@ import hashlib
 import logging
 import os
 import sqlite3
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING, Any
 
 from src.core.shared.sqlcipher_helper import (
@@ -196,10 +196,8 @@ class SQLCipherAdapter:
     def close_all(self) -> None:
         """Close all connections in the pool."""
         for conn in self._pool:
-            try:
+            with suppress(Exception):
                 conn.close()
-            except Exception:  # noqa: S110
-                pass
         self._pool.clear()
 
     # ── Private methods ──────────────────────────────────────
@@ -239,12 +237,10 @@ class SQLCipherAdapter:
                 conn.execute("SELECT 1")  # nosemgrep: sqlalchemy-execute-raw-query
                 self._pool.append(conn)
                 return
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
-        try:
+        with suppress(Exception):
             conn.close()
-        except Exception:  # noqa: S110
-            pass
 
     def _setup_sqlcipher_pragmas(self, conn: Any) -> None:
         """Apply additional PRAGMAs specific to the adapter after key setup.

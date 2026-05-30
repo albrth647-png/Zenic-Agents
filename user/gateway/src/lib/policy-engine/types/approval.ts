@@ -1,3 +1,5 @@
+import type { PolicyDocument, PolicyEffectV2 } from './core';
+
 // ─── 4. Approval Workflow ───────────────────────────────────────────────
 
 /** Approval request status */

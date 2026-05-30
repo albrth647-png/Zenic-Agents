@@ -32,7 +32,7 @@ class DomainSafetyGate:
     """
 
     # Compliance standards per niche category
-    CATEGORY_COMPLIANCE: dict[str, list[str]] = {
+    CATEGORY_COMPLIANCE: dict[str, list[str]] = {  # noqa: RUF012
         "ai_data": ["gdpr", "iso_27001", "soc2"],
         "fintech": ["pci_dss", "aml_kyc", "sox", "gdpr"],
         "healthtech": ["hipaa", "gdpr", "soc2"],
@@ -51,6 +51,7 @@ class DomainSafetyGate:
         if self._native is None:
             try:
                 import _zenic_native as _native_mod  # type: ignore[import-not-found]
+
                 self._native = _native_mod
             except ImportError:
                 self._native = None
@@ -60,6 +61,7 @@ class DomainSafetyGate:
         """Lazy-load the base SafetyGate."""
         if self._base_gate is None:
             from .._gate import get_default_safety_gate
+
             self._base_gate = get_default_safety_gate()
         return self._base_gate
 
@@ -95,15 +97,11 @@ class DomainSafetyGate:
 
         if native is not None:
             try:
-                return self._rust_check(
-                    native, action_type, config, niche_category, data_sensitivity
-                )
+                return self._rust_check(native, action_type, config, niche_category, data_sensitivity)
             except Exception as e:
                 logger.warning(f"Rust safety_validate_extended failed: {e}, using Python fallback")
 
-        return self._python_check(
-            action_type, config, niche_category, data_sensitivity
-        )
+        return self._python_check(action_type, config, niche_category, data_sensitivity)
 
     def _rust_check(
         self,
@@ -114,19 +112,19 @@ class DomainSafetyGate:
         data_sensitivity: str,
     ) -> DomainSafetyCheckResult:
         """Use the Rust-compiled extended safety gate."""
-        result = native.safety_validate_extended(
-            action_type, config, niche_category, data_sensitivity
-        )
+        result = native.safety_validate_extended(action_type, config, niche_category, data_sensitivity)
 
         compliance_results = []
         for cr in result.compliance_results:
-            compliance_results.append(ComplianceResult(
-                standard=cr.standard,
-                compliant=cr.compliant,
-                violations=cr.violations,
-                recommendations=cr.recommendations,
-                risk_level=cr.risk_level,
-            ))
+            compliance_results.append(
+                ComplianceResult(
+                    standard=cr.standard,
+                    compliant=cr.compliant,
+                    violations=cr.violations,
+                    recommendations=cr.recommendations,
+                    risk_level=cr.risk_level,
+                )
+            )
 
         return DomainSafetyCheckResult(
             base_verdict=result.base_verdict,
@@ -206,7 +204,9 @@ class DomainSafetyGate:
         for cr in compliance_results:
             if cr.risk_level == "critical" and not cr.compliant:
                 current_verdict = "DENY"
-                reason = f"Critical compliance violation ({cr.standard}): {cr.violations[0] if cr.violations else 'Unknown'}"
+                reason = (
+                    f"Critical compliance violation ({cr.standard}): {cr.violations[0] if cr.violations else 'Unknown'}"
+                )
                 break
 
         # ── Layer 4: Sensitivity escalation ─────────────────────
@@ -258,7 +258,7 @@ class DomainSafetyGate:
                     }
                     for r in rules
                 ]
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
         # Python fallback
         return [
@@ -278,7 +278,7 @@ class DomainSafetyGate:
         if native is not None:
             try:
                 return native.safety_get_compliance_for_category(niche_category)
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
         return self.CATEGORY_COMPLIANCE.get(niche_category, [])
 

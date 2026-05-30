@@ -1,3 +1,5 @@
+import type { PolicyTestExpectation, PolicyEffectV2 } from './core';
+
 // ─── Policy Test Results ──────────────────────────────────────────────
 
 /** Result of running a single test case */

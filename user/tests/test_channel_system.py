@@ -7,8 +7,6 @@ import pytest
 
 from src.core.channels._formatter._limits import LIMITS, PlatformLimits
 from src.core.channels._protocol import (
-    ChannelProvider,
-    InboundChannelProvider,
     can_receive_voice,
     can_send_confirmation,
     can_send_voice,
@@ -29,8 +27,8 @@ from src.core.channels._types import (
 #  ChannelCapability enum
 # ════════════════════════════════════════════════════════════════
 
-class TestChannelCapability:
 
+class TestChannelCapability:
     def test_voice_capabilities_exist(self):
         """RECEIVE_VOICE y SEND_VOICE deben estar en el enum."""
         assert ChannelCapability.RECEIVE_VOICE == "receive_voice"
@@ -52,8 +50,8 @@ class TestChannelCapability:
 #  ChannelMessage
 # ════════════════════════════════════════════════════════════════
 
-class TestChannelMessage:
 
+class TestChannelMessage:
     def test_defaults(self):
         msg = ChannelMessage()
         assert msg.text == " "  # __post_init__ sets " " when no content
@@ -118,8 +116,8 @@ class TestChannelMessage:
 #  ChannelResponse
 # ════════════════════════════════════════════════════════════════
 
-class TestChannelResponse:
 
+class TestChannelResponse:
     def test_normal_success(self):
         resp = ChannelResponse(
             success=True,
@@ -171,8 +169,8 @@ class TestChannelResponse:
 #  ProviderConfig
 # ════════════════════════════════════════════════════════════════
 
-class TestProviderConfig:
 
+class TestProviderConfig:
     def test_defaults(self):
         cfg = ProviderConfig()
         assert cfg.enabled is True
@@ -192,8 +190,8 @@ class TestProviderConfig:
 #  RateLimitInfo
 # ════════════════════════════════════════════════════════════════
 
-class TestRateLimitInfo:
 
+class TestRateLimitInfo:
     def test_defaults(self):
         info = RateLimitInfo()
         assert info.remaining == -1
@@ -215,8 +213,8 @@ class TestRateLimitInfo:
 #  PlatformLimits
 # ════════════════════════════════════════════════════════════════
 
-class TestPlatformLimits:
 
+class TestPlatformLimits:
     def test_text_limits_exist(self):
         lim = PlatformLimits()
         assert lim.whatsapp_text > 0
@@ -265,6 +263,7 @@ class TestPlatformLimits:
 #  Protocol functions with real objects
 # ════════════════════════════════════════════════════════════════
 
+
 class _FakeProvider:
     """Minimal real object that satisfies ChannelProvider protocol."""
 
@@ -308,11 +307,13 @@ class _FakeInboundProvider(_FakeProvider):
     """Provider with inbound + voice capability."""
 
     def __init__(self):
-        super().__init__(caps={
-            ChannelCapability.SEND_TEXT,
-            ChannelCapability.RECEIVE_MESSAGE,
-            ChannelCapability.RECEIVE_VOICE,
-        })
+        super().__init__(
+            caps={
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.RECEIVE_MESSAGE,
+                ChannelCapability.RECEIVE_VOICE,
+            }
+        )
 
     def set_message_handler(self, handler):
         self._msg_handler = handler
@@ -326,7 +327,6 @@ class _FakeInboundProvider(_FakeProvider):
 
 
 class TestProtocolFunctions:
-
     def test_has_capability_true(self):
         p = _FakeProvider(caps={ChannelCapability.SEND_TEXT, ChannelCapability.THREAD})
         assert has_capability(p, ChannelCapability.SEND_TEXT) is True
@@ -369,8 +369,8 @@ class TestProtocolFunctions:
 #  ChannelPriority & DeliveryStatus
 # ════════════════════════════════════════════════════════════════
 
-class TestChannelPriority:
 
+class TestChannelPriority:
     def test_all_levels_exist(self):
         assert ChannelPriority.LOW == "low"
         assert ChannelPriority.NORMAL == "normal"
@@ -381,8 +381,13 @@ class TestChannelPriority:
     def test_ordering(self):
         """ChannelPriority values are strings — no numeric ordering guarantee.
         The priority levels are semantic, not lexicographic."""
-        priorities = [ChannelPriority.LOW, ChannelPriority.NORMAL, ChannelPriority.HIGH,
-                      ChannelPriority.URGENT, ChannelPriority.EMERGENCY]
+        priorities = [
+            ChannelPriority.LOW,
+            ChannelPriority.NORMAL,
+            ChannelPriority.HIGH,
+            ChannelPriority.URGENT,
+            ChannelPriority.EMERGENCY,
+        ]
         assert len(priorities) == 5
         # Each priority is distinct
         values = [p.value for p in priorities]
@@ -390,7 +395,6 @@ class TestChannelPriority:
 
 
 class TestDeliveryStatus:
-
     def test_all_statuses(self):
         expected = {"pending", "sent", "delivered", "failed", "rate_limited", "fallback", "dry_run"}
         actual = {s.value for s in DeliveryStatus}

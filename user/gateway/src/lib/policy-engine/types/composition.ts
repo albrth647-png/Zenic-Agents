@@ -1,3 +1,6 @@
+import type { PolicyStatement, PolicyEffectV2, PolicyDocument } from './core';
+import type { PolicyConflict } from './conflict';
+
 // ─── 2. Policy Composition & Merge ──────────────────────────────────────
 
 /** Merge strategy for combining policies */

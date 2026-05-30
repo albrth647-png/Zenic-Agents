@@ -104,7 +104,7 @@ def load_audit_events(
 
         where = " AND ".join(conditions)
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM audit_events WHERE {where} " "ORDER BY created_at ASC LIMIT 2000",  # noqa: S608
+            f"SELECT * FROM audit_events WHERE {where} ORDER BY created_at ASC LIMIT 2000",  # noqa: S608
             params,
         ).fetchall()
         conn.close()
@@ -145,7 +145,7 @@ def load_ledger_entries(
 
         where = " AND ".join(conditions)
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM ledger WHERE {where} " "ORDER BY id ASC LIMIT 2000",  # noqa: S608
+            f"SELECT * FROM ledger WHERE {where} ORDER BY id ASC LIMIT 2000",  # noqa: S608
             params,
         ).fetchall()
         return [dict(r) for r in rows]
@@ -196,11 +196,10 @@ def correlate(
             if abs(audit_ts - ledger_ts) <= 2.0:
                 # Check trace_id overlap
                 audit_trace = arow.get("trace_id") or ""
-                if audit_trace and audit_trace in audit_by_trace:
-                    if audit_by_trace[audit_trace] is arow:
-                        matched_audit = arow
-                        matched_audit_trace_ids.add(audit_trace)
-                        break
+                if audit_trace and audit_trace in audit_by_trace and audit_by_trace[audit_trace] is arow:
+                    matched_audit = arow
+                    matched_audit_trace_ids.add(audit_trace)
+                    break
                 # Also match by timestamp proximity alone if no trace overlap
                 if matched_audit is None:
                     matched_audit = arow

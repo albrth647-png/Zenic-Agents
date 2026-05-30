@@ -124,7 +124,7 @@ class _ReaderMixin:
                 conn.commit()
                 deleted = cursor.rowcount
                 logger.info(
-                    "DBTransactionJournal: prune_journals deleted %d entries " "older than %dh [tenant=%s]",
+                    "DBTransactionJournal: prune_journals deleted %d entries older than %dh [tenant=%s]",
                     deleted,
                     older_than_hours,
                     tenant_id,

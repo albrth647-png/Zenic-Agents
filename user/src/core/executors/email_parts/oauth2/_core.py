@@ -106,7 +106,7 @@ class OAuth2TokenManager:
 
             # Cannot auto-acquire token
             logger.warning(
-                "OAuth2TokenManager: Cannot auto-acquire token for '%s' " "(grant_type=%s, no refresh_token available)",
+                "OAuth2TokenManager: Cannot auto-acquire token for '%s' (grant_type=%s, no refresh_token available)",
                 service_name,
                 config.grant_type.value,
             )
@@ -315,24 +315,27 @@ class OAuth2TokenManager:
 
         if not _HAS_AIOHTTP:  # noqa: F821  # TODO: add import
             logger.debug(
-                "OAuth2TokenManager: aiohttp not available, cannot make token request " "for '%s' (dry-run)",
+                "OAuth2TokenManager: aiohttp not available, cannot make token request for '%s' (dry-run)",
                 service_name,
             )
             return None
 
         try:
-            async with aiohttp.ClientSession() as session, session.post(
-                token_url,
-                data=data,
-                headers={"Accept": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=30),
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
+                    token_url,
+                    data=data,
+                    headers={"Accept": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as response,
+            ):
                 body = await response.json()
 
                 if response.status != 200:
                     error_desc = body.get("error_description", body.get("error", "unknown"))
                     logger.warning(
-                        "OAuth2TokenManager: Token request failed for '%s': " "status=%d, error=%s",
+                        "OAuth2TokenManager: Token request failed for '%s': status=%d, error=%s",
                         service_name,
                         response.status,
                         error_desc,

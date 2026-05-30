@@ -43,7 +43,7 @@ def z3_session(solver_instance):
         solver_instance: The Z3Solver instance (must have _reset_z3_state method).
     """
     try:
-        if hasattr(solver_instance, '_reset_z3_state'):
+        if hasattr(solver_instance, "_reset_z3_state"):
             solver_instance._reset_z3_state()
         yield
     finally:

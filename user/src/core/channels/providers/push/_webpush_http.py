@@ -101,13 +101,13 @@ class _WebPushHttpMixin:
                 content_encoding = "aes128gcm"
             except Exception as e:
                 logger.warning(
-                    "PushChannelProvider: payload encryption failed: %s " "(sending empty body)",
+                    "PushChannelProvider: payload encryption failed: %s (sending empty body)",
                     e,
                 )
                 encrypted_payload = b""
         else:
             logger.debug(
-                "PushChannelProvider: cryptography package not available, " "sending push without payload encryption"
+                "PushChannelProvider: cryptography package not available, sending push without payload encryption"
             )
 
         # Build headers
@@ -158,7 +158,7 @@ class _WebPushHttpMixin:
                 if attempt < _MAX_RETRIES:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
-                        "PushChannelProvider: Web Push attempt %d/%d failed: " "%s — retrying in %.1fs",
+                        "PushChannelProvider: Web Push attempt %d/%d failed: %s — retrying in %.1fs",
                         attempt,
                         _MAX_RETRIES,
                         e,
@@ -169,7 +169,7 @@ class _WebPushHttpMixin:
                     await asyncio.sleep(delay)
                 else:
                     logger.error(
-                        "PushChannelProvider: Web Push all %d attempts " "failed: %s",
+                        "PushChannelProvider: Web Push all %d attempts failed: %s",
                         _MAX_RETRIES,
                         e,
                     )
@@ -177,7 +177,7 @@ class _WebPushHttpMixin:
                         success=False,
                         channel="push",
                         status=DeliveryStatus.FAILED,
-                        error=f"Web Push HTTP error after {_MAX_RETRIES} " f"attempts: {e}",
+                        error=f"Web Push HTTP error after {_MAX_RETRIES} attempts: {e}",
                         timestamp=time.time(),
                     )
 
@@ -371,7 +371,7 @@ class _WebPushHttpMixin:
             elif resp.status == 410:
                 # Subscription has expired or been unsubscribed
                 logger.info(
-                    "PushChannelProvider: subscription expired (410) for " "endpoint %s",
+                    "PushChannelProvider: subscription expired (410) for endpoint %s",
                     endpoint[:60],
                 )
                 return ChannelResponse(

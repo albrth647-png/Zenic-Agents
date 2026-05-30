@@ -30,7 +30,7 @@ class LifecycleMixin:
         if success:
             self._joined = True
             logger.info(
-                "ClusterTopology: Node %s joined cluster " "(hostname=%s, ip=%s)",
+                "ClusterTopology: Node %s joined cluster (hostname=%s, ip=%s)",
                 self._node_info.node_id,
                 self._node_info.hostname,
                 self._node_info.ip_address,
@@ -86,7 +86,7 @@ class LifecycleMixin:
         )
         self._heartbeat_thread.start()
         logger.debug(
-            "ClusterTopology: Heartbeat started for %s " "(interval=%.1fs)",
+            "ClusterTopology: Heartbeat started for %s (interval=%.1fs)",
             self._node_info.node_id,
             self._heartbeat_interval,
         )

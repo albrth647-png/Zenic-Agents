@@ -21,6 +21,9 @@ import type {
   SimulationRiskLevel,
   ConflictSeverity,
   PolicySetEntry,
+  DependencyType,
+  ImpactAnalysisRequest,
+  ImpactAnalysisResult,
 } from "../types";
 import {
   ImpactAnalysisDepth as ImpactAnalysisDepthValues,
@@ -37,6 +40,9 @@ import type {
   AffectedToolRef,
   PolicyDocument,
   PolicyEffectV2,
+  PolicyStatement,
+  PolicyEvaluationResult,
+  PolicyEvaluationRequest,
 } from "../types";
 
 // ─── Composite: Dependency Node ─────────────────────────────────────────
@@ -1050,5 +1056,27 @@ export async function analyzeImpact(
       children: [],
     };
 
+  }
 }
-}
+
+// ─── Re-exports for sibling modules ─────────────────────────────────────
+export type {
+  PolicyDocument,
+  PolicyEffectV2,
+  PolicyStatement,
+  PolicyEvaluationRequest,
+  PolicyEvaluationResult,
+  ImpactAnalysisDepth,
+  DependencyRef,
+  DependencyType,
+  PolicySetEntry,
+  BlastRadius,
+  AffectedSetRef,
+  AffectedPlaybookRef,
+  AffectedToolRef,
+  DownstreamChange,
+  ImpactCategory,
+  SimulationRiskLevel,
+  ImpactAnalysisRequest,
+  ImpactAnalysisResult,
+};

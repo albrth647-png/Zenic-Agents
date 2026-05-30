@@ -3,7 +3,7 @@
 // ⚠️ SECURITY FIX (Phase 0): Added authentication — decisionBy comes from verified session
 
 import { NextRequest, NextResponse } from "next/server";
-import { getApprovalEngine } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
 import { requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 interface RouteParams {

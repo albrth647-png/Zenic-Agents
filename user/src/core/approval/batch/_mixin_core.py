@@ -25,6 +25,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         self._db_path = db_path
         self._lock: Any = None  # set in __init__ but type declared for mixin compat
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -83,7 +84,9 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         logger.info(
             "BatchApproval: Created batch %s — %d requests for '%s'",
-            batch.batch_id, batch.total_count, action_type,
+            batch.batch_id,
+            batch.total_count,
+            action_type,
         )
         return batch
 
@@ -105,6 +108,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
             )
 
         from ..chain import get_approval_chain
+
         chain = get_approval_chain()
 
         approved = 0
@@ -113,13 +117,15 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         for idx, request_id in enumerate(batch.request_ids):
             result = chain.approve(request_id, approver_id, approver_role)
-            individual_results.append({
-                "index": idx,
-                "request_id": request_id,
-                "success": result.success,
-                "message": result.message,
-                "status": result.status.value,
-            })
+            individual_results.append(
+                {
+                    "index": idx,
+                    "request_id": request_id,
+                    "success": result.success,
+                    "message": result.message,
+                    "status": result.status.value,
+                }
+            )
             if result.success:
                 approved += 1
             else:
@@ -134,7 +140,9 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         logger.info(
             "BatchApproval: Batch %s approved %d/%d",
-            batch_id, approved, batch.total_count,
+            batch_id,
+            approved,
+            batch.total_count,
         )
         return BatchResult(
             batch_id=batch_id,
@@ -163,6 +171,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
             )
 
         from ..chain import get_approval_chain
+
         chain = get_approval_chain()
 
         rejected = 0
@@ -171,13 +180,15 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         for idx, request_id in enumerate(batch.request_ids):
             result = chain.reject(request_id, approver_id, reason=reason)
-            individual_results.append({
-                "index": idx,
-                "request_id": request_id,
-                "success": result.success,
-                "message": result.message,
-                "status": result.status.value,
-            })
+            individual_results.append(
+                {
+                    "index": idx,
+                    "request_id": request_id,
+                    "success": result.success,
+                    "message": result.message,
+                    "status": result.status.value,
+                }
+            )
             if result.success:
                 rejected += 1
             else:
@@ -192,7 +203,9 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         logger.info(
             "BatchApproval: Batch %s rejected %d/%d",
-            batch_id, rejected, batch.total_count,
+            batch_id,
+            rejected,
+            batch.total_count,
         )
         return BatchResult(
             batch_id=batch_id,
@@ -222,6 +235,7 @@ class BatchApprovalEngine(BatchPersistenceMixin):
             )
 
         from ..chain import get_approval_chain
+
         chain = get_approval_chain()
 
         approved = 0
@@ -234,13 +248,15 @@ class BatchApprovalEngine(BatchPersistenceMixin):
                 continue
             request_id = batch.request_ids[idx]
             result = chain.approve(request_id, approver_id, approver_role)
-            individual_results.append({
-                "index": idx,
-                "request_id": request_id,
-                "success": result.success,
-                "message": result.message,
-                "status": result.status.value,
-            })
+            individual_results.append(
+                {
+                    "index": idx,
+                    "request_id": request_id,
+                    "success": result.success,
+                    "message": result.message,
+                    "status": result.status.value,
+                }
+            )
             if result.success:
                 approved += 1
             else:
@@ -257,7 +273,8 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
         logger.info(
             "BatchApproval: Batch %s partial-approve %d items",
-            batch_id, approved,
+            batch_id,
+            approved,
         )
         return BatchResult(
             batch_id=batch_id,
@@ -275,9 +292,12 @@ class BatchApprovalEngine(BatchPersistenceMixin):
         return self._get_batch_internal(batch_id)
 
     def list_batches(
-        self, status: str = "", limit: int = 20,
+        self,
+        status: str = "",
+        limit: int = 20,
     ) -> list[BatchRequest]:
         """List batches, optionally filtered by status."""
+
         def _do_query() -> list[BatchRequest]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -301,18 +321,25 @@ class BatchApprovalEngine(BatchPersistenceMixin):
 
     def get_stats(self) -> dict[str, Any]:
         """Return aggregate batch approval statistics."""
+
         def _do_query() -> dict[str, Any]:
             conn = sqlite3.connect(self._db_path)
             try:
                 total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     "SELECT COUNT(*) FROM batch_requests"
                 ).fetchone()[0]
-                total_approved = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT SUM(approved_count) FROM batch_requests"
-                ).fetchone()[0] or 0
-                total_rejected = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT SUM(rejected_count) FROM batch_requests"
-                ).fetchone()[0] or 0
+                total_approved = (
+                    conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                        "SELECT SUM(approved_count) FROM batch_requests"
+                    ).fetchone()[0]
+                    or 0
+                )
+                total_rejected = (
+                    conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                        "SELECT SUM(rejected_count) FROM batch_requests"
+                    ).fetchone()[0]
+                    or 0
+                )
                 by_status: dict[str, int] = {}
                 for st in ("pending", "approved", "rejected", "partial", "completed"):
                     cnt = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query

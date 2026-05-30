@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const billingCycle = body.billingCycle ?? 'monthly';
 
     // Verify subscription exists
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId: body.tenantId },
     });
 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     const totalAmount = baseAmount + addOnCost + setupFeeAmount;
 
-    // Get company wallet — fail-closed if not configured (BUG #2 FIX)
+    // Get company wallet — fail-closed if not configured
     let companyWallet: string;
     try {
       companyWallet = getCompanyWallet();
@@ -99,19 +99,18 @@ export async function POST(req: NextRequest) {
 
     // Payment expires in 24 hours
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const paymentId = `pay_${body.tenantId.slice(0, 8)}_${Date.now().toString(36)}`;
 
-    const payment = await db.usdtPaymentRecord.create({
+    const payment = await db.subscriptionPayment.create({
       data: {
-        subscriptionId: subscription.id,
-        tenantId: body.tenantId,
+        paymentId,
+        subscriptionDbId: subscription.id,
         amountUsdt: totalAmount,
-        method: 'manual',
-        companyWallet,
+        walletFrom: subscription.billingWalletAddress,
+        walletTo: companyWallet,
+        txHash: '',
+        network: 'TRC20',
         status: 'pending',
-        includesSetupFee,
-        setupFeeAmountUsdt: setupFeeAmount,
-        verificationAttempts: 0,
-        maxVerificationAttempts: 5,
         expiresAt,
       },
     });
@@ -133,7 +132,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('[Subscription Payment POST]', error);
-    // BUG #9 FIX: Never expose String(error) to client
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

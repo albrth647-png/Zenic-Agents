@@ -62,7 +62,7 @@ class BreakerOpsMixin:
                     state.half_open_call_count = 0
                     state.opened_at = None
                     logger.info(
-                        "DistCircuit '%s': HALF_OPEN -> CLOSED " "(%d successes)",
+                        "DistCircuit '%s': HALF_OPEN -> CLOSED (%d successes)",
                         self._name,
                         state.success_count,
                     )
@@ -100,7 +100,7 @@ class BreakerOpsMixin:
                     state.state = "open"
                     state.opened_at = time.monotonic()
                     logger.warning(
-                        "DistCircuit '%s': CLOSED -> OPEN " "(%d consecutive failures)",
+                        "DistCircuit '%s': CLOSED -> OPEN (%d consecutive failures)",
                         self._name,
                         state.failure_count,
                     )
@@ -267,18 +267,17 @@ class BreakerOpsMixin:
                         )
 
                         # Check OPEN -> HALF_OPEN transition
-                        if self._local_state.state == "open":
-                            if self._local_state.opened_at is not None:
-                                elapsed = time.monotonic() - self._local_state.opened_at
-                                if elapsed >= self._recovery_timeout:
-                                    self._local_state.state = "half_open"
-                                    self._local_state.failure_count = 0
-                                    self._local_state.success_count = 0
-                                    self._local_state.half_open_call_count = 0
-                                    logger.info(
-                                        "DistCircuit '%s': OPEN -> HALF_OPEN " "(recovery timeout elapsed)",
-                                        self._name,
-                                    )
+                        if self._local_state.state == "open" and self._local_state.opened_at is not None:
+                            elapsed = time.monotonic() - self._local_state.opened_at
+                            if elapsed >= self._recovery_timeout:
+                                self._local_state.state = "half_open"
+                                self._local_state.failure_count = 0
+                                self._local_state.success_count = 0
+                                self._local_state.half_open_call_count = 0
+                                logger.info(
+                                    "DistCircuit '%s': OPEN -> HALF_OPEN (recovery timeout elapsed)",
+                                    self._name,
+                                )
 
                 self._total_syncs += 1
 

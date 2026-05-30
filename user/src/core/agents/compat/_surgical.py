@@ -40,8 +40,7 @@ class SurgicalAgentCompat:
         self._call_count = 0
         self._last_source = "deterministic"
 
-    def classify_with_runner(self, runner: Any, message: str,
-                             context: str = "") -> IntentOutput:
+    def classify_with_runner(self, runner: Any, message: str, context: str = "") -> IntentOutput:
         """Classify intent using v2 agents with multi-cable fusion."""
         self._call_count += 1
 
@@ -59,9 +58,7 @@ class SurgicalAgentCompat:
 
         # Cable 3: v2 IntentClassifier (keyword scoring)
         classify_result = self._intent_classifier.run(message)
-        kw_result = self._v2_result_to_intent_output(
-            classify_result, message, context
-        )
+        kw_result = self._v2_result_to_intent_output(classify_result, message, context)
 
         # Fusion
         if sem_result is not None:
@@ -74,14 +71,20 @@ class SurgicalAgentCompat:
             try:
                 importance = 0.5 if fused.confidence > 0.5 else 0.3
                 self._memory.add_working(
-                    message, f"{fused.operation}/{fused.goal}",
-                    fused.operation, fused.goal, importance,
+                    message,
+                    f"{fused.operation}/{fused.goal}",
+                    fused.operation,
+                    fused.goal,
+                    importance,
                 )
                 self._memory.save_to_cache(
-                    message, f"{fused.operation}/{fused.goal}",
-                    fused.operation, fused.goal, importance,
+                    message,
+                    f"{fused.operation}/{fused.goal}",
+                    fused.operation,
+                    fused.goal,
+                    importance,
                 )
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         self._last_source = fused.source
@@ -103,9 +106,13 @@ class SurgicalAgentCompat:
             scrap_query = f"modern {goal} {op} {output.language}"
 
         return IntentPayload(
-            op=op, target=output.target or "unknown", goal=goal,
-            scrap_query=scrap_query, confidence=output.confidence,
-            language=output.language or "python", raw_code="",
+            op=op,
+            target=output.target or "unknown",
+            goal=goal,
+            scrap_query=scrap_query,
+            confidence=output.confidence,
+            language=output.language or "python",
+            raw_code="",
             context=context,
         )
 
@@ -123,17 +130,16 @@ class SurgicalAgentCompat:
                 return IntentOutput(
                     operation=result.get("operation", "SEARCH"),
                     goal=result.get("goal", "FEATURE_ADD"),
-                    target="", language="python",
+                    target="",
+                    language="python",
                     confidence=result.get("confidence", 0.5),
                     source="semantic",
                 )
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return None
 
-    def _v2_result_to_intent_output(
-        self, run_result: dict, message: str, context: str
-    ) -> IntentOutput:
+    def _v2_result_to_intent_output(self, run_result: dict, message: str, context: str) -> IntentOutput:
         """Convert v2 IntentClassifier run() dict result to v1 IntentOutput."""
         from .schemas import IntentResult
 
@@ -155,15 +161,18 @@ class SurgicalAgentCompat:
         criticality = infer_criticality(operation, goal, target)
 
         return IntentOutput(
-            operation=operation, goal=goal, target=target,
-            language=language, entities=entities,
+            operation=operation,
+            goal=goal,
+            target=target,
+            language=language,
+            entities=entities,
             template_type=infer_template_type(operation, message),
-            criticality=criticality, confidence=confidence, source=source,
+            criticality=criticality,
+            confidence=confidence,
+            source=source,
         )
 
-    def _cached_to_intent_output(
-        self, cached: dict, message: str, context: str
-    ) -> IntentOutput:
+    def _cached_to_intent_output(self, cached: dict, message: str, context: str) -> IntentOutput:
         """Convert cached SmartMemory result to IntentOutput."""
         response = cached.get("response", "")
         parts = response.split("/", 1)
@@ -172,13 +181,15 @@ class SurgicalAgentCompat:
         target, language = extract_target_and_language(message)
 
         return IntentOutput(
-            operation=operation, goal=goal, target=target,
-            language=language, confidence=0.6, source="cache",
+            operation=operation,
+            goal=goal,
+            target=target,
+            language=language,
+            confidence=0.6,
+            source="cache",
         )
 
-    def _fuse_signals(
-        self, primary: IntentOutput, secondary: IntentOutput
-    ) -> IntentOutput:
+    def _fuse_signals(self, primary: IntentOutput, secondary: IntentOutput) -> IntentOutput:
         """Fuse two classification signals (multi-cable fusion)."""
         if primary.operation == secondary.operation and primary.goal == secondary.goal:
             confidence = min(max(primary.confidence, secondary.confidence) + 0.15, 1.0)
@@ -191,11 +202,15 @@ class SurgicalAgentCompat:
             source = "fusion_disagree"
 
         return IntentOutput(
-            operation=primary.operation, goal=primary.goal,
-            target=primary.target, language=primary.language,
-            entities=primary.entities, template_type=primary.template_type,
+            operation=primary.operation,
+            goal=primary.goal,
+            target=primary.target,
+            language=primary.language,
+            entities=primary.entities,
+            template_type=primary.template_type,
             criticality=primary.criticality,
-            confidence=round(confidence, 2), source=source,
+            confidence=round(confidence, 2),
+            source=source,
         )
 
     @property

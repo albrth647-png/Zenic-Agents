@@ -33,8 +33,8 @@ class AuthLoginBlock(LogicBlock):
     name = "auth_login"
     category = "auth"
     description = "Verify credentials and return authentication token"
-    inputs = ["username", "password"]
-    outputs = ["token", "user_id", "role"]
+    inputs = ["username", "password"]  # noqa: RUF012
+    outputs = ["token", "user_id", "role"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -142,8 +142,8 @@ class AuthRegisterBlock(LogicBlock):
     name = "auth_register"
     category = "auth"
     description = "Register new user with validation"
-    inputs = ["username", "email", "password", "role"]
-    outputs = ["user_id", "status"]
+    inputs = ["username", "email", "password", "role"]  # noqa: RUF012
+    outputs = ["user_id", "status"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -222,8 +222,8 @@ class AuthVerifyBlock(LogicBlock):
     name = "auth_verify"
     category = "auth"
     description = "Verify JWT authentication token"
-    inputs = ["token"]
-    outputs = ["valid", "user_id", "role", "decoded"]
+    inputs = ["token"]  # noqa: RUF012
+    outputs = ["valid", "user_id", "role", "decoded"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -287,8 +287,8 @@ class AuthRBACBlock(LogicBlock):
     name = "auth_rbac"
     category = "auth"
     description = "Check role-based access control permissions"
-    inputs = ["user_role", "resource", "action"]
-    outputs = ["allowed", "reason"]
+    inputs = ["user_role", "resource", "action"]  # noqa: RUF012
+    outputs = ["allowed", "reason"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:

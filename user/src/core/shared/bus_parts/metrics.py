@@ -35,17 +35,13 @@ class BusMetrics:
         """Record a message sent by *agent_id*."""
         with self._lock:
             self._agent_sent[agent_id] = self._agent_sent.get(agent_id, 0) + 1
-            self._agent_latency_us[agent_id] = (
-                self._agent_latency_us.get(agent_id, 0.0) + latency_us
-            )
+            self._agent_latency_us[agent_id] = self._agent_latency_us.get(agent_id, 0.0) + latency_us
             self.total_throughput += 1
 
     def record_receive(self, agent_id: str) -> None:
         """Record a message received by *agent_id*."""
         with self._lock:
-            self._agent_received[agent_id] = (
-                self._agent_received.get(agent_id, 0) + 1
-            )
+            self._agent_received[agent_id] = self._agent_received.get(agent_id, 0) + 1
 
     def record_flush(self) -> None:
         """Record a database flush cycle."""

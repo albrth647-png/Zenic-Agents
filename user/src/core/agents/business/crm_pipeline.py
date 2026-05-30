@@ -18,8 +18,13 @@ from ..schemas import CRMResult
 
 # 7-stage sales pipeline
 PIPELINE_STAGES = [
-    "new", "contacted", "qualified", "proposal",
-    "negotiation", "closed_won", "closed_lost",
+    "new",
+    "contacted",
+    "qualified",
+    "proposal",
+    "negotiation",
+    "closed_won",
+    "closed_lost",
 ]
 
 # Conversion probability per stage
@@ -136,7 +141,9 @@ class CRMPipeline(BaseAgent[CRMResult]):
     def fallback(self, input_data: Any) -> CRMResult:
         """Safe fallback: empty CRM result."""
         return CRMResult(
-            stages=[], conversions={}, forecasts={},
+            stages=[],
+            conversions={},
+            forecasts={},
             source="fallback",
         )
 
@@ -157,10 +164,9 @@ class CRMPipeline(BaseAgent[CRMResult]):
             return list(self._clients)
         q = search.lower()
         return [
-            c for c in self._clients
-            if q in c.get("name", "").lower()
-            or q in c.get("email", "").lower()
-            or q in c.get("company", "").lower()
+            c
+            for c in self._clients
+            if q in c.get("name", "").lower() or q in c.get("email", "").lower() or q in c.get("company", "").lower()
         ]
 
     def get_client(self, client_id: str) -> dict[str, Any] | None:
@@ -233,8 +239,11 @@ class CRMPipeline(BaseAgent[CRMResult]):
         self.__init_store()
         return {
             "stages": [
-                {"name": s, "probability": STAGE_PROBABILITIES.get(s, 0.0),
-                 "client_count": sum(1 for c in self._clients if c.get("stage") == s)}
+                {
+                    "name": s,
+                    "probability": STAGE_PROBABILITIES.get(s, 0.0),
+                    "client_count": sum(1 for c in self._clients if c.get("stage") == s),
+                }
                 for s in PIPELINE_STAGES
             ],
             "total_clients": len(self._clients),

@@ -464,9 +464,9 @@ class SimulationEngine:
         risk_b = extract_risk_score(result_b)
 
         if risk_a < risk_b:
-            return f"Scenario A is recommended: lower estimated risk " f"({risk_a:.2f} vs {risk_b:.2f})."
+            return f"Scenario A is recommended: lower estimated risk ({risk_a:.2f} vs {risk_b:.2f})."
         elif risk_b < risk_a:
-            return f"Scenario B is recommended: lower estimated risk " f"({risk_b:.2f} vs {risk_a:.2f})."
+            return f"Scenario B is recommended: lower estimated risk ({risk_b:.2f} vs {risk_a:.2f})."
 
         if result_a.total_duration_ms < result_b.total_duration_ms:
             return (

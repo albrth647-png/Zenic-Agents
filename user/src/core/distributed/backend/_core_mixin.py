@@ -18,15 +18,19 @@ class CoordinationBackendCoreMixin:
         self._config = config
         self._node_id = config.node_id
         self._connected = False
+
     def node_id(self) -> str:
         """Unique identifier for this node."""
         return self._node_id
+
     def config(self) -> BackendConfig:
         """Backend configuration."""
         return self._config
+
     def is_connected(self) -> bool:
         """Whether the backend is currently connected."""
         return self._connected
+
     @classmethod
     def create(cls, config: BackendConfig) -> "CoordinationBackend":
         """
@@ -44,30 +48,33 @@ class CoordinationBackendCoreMixin:
         if config.backend_type == BackendType.POSTGRESQL:
             try:
                 from .pg_backend import PgBackend  # type: ignore[import-unresolved]
+
                 backend = PgBackend(config)
                 logger.info(
-                    "CoordinationBackend: Created PostgreSQL backend "
-                    "(node_id=%s)", config.node_id,
+                    "CoordinationBackend: Created PostgreSQL backend (node_id=%s)",
+                    config.node_id,
                 )
                 return backend
             except ImportError as exc:
                 logger.warning(
-                    "CoordinationBackend: PostgreSQL dependencies not "
-                    "available (%s), falling back to MemoryBackend", exc,
+                    "CoordinationBackend: PostgreSQL dependencies not available (%s), falling back to MemoryBackend",
+                    exc,
                 )
             except Exception as exc:
                 logger.warning(
-                    "CoordinationBackend: PostgreSQL backend creation "
-                    "failed (%s), falling back to MemoryBackend", exc,
+                    "CoordinationBackend: PostgreSQL backend creation failed (%s), falling back to MemoryBackend",
+                    exc,
                 )
 
         # Memory backend (explicit or fallback)
         from .memory_backend import MemoryBackend  # type: ignore[import-unresolved]
+
         logger.info(
-            "CoordinationBackend: Created Memory backend "
-            "(node_id=%s)", config.node_id,
+            "CoordinationBackend: Created Memory backend (node_id=%s)",
+            config.node_id,
         )
         return MemoryBackend(config)
+
     async def connect(self) -> None:
         """
         Initialize the backend connection.
@@ -77,8 +84,10 @@ class CoordinationBackendCoreMixin:
 
         For Memory: initializes in-memory data structures.
         """
+
     async def disconnect(self) -> None:
         """Close the backend connection and release resources."""
+
     async def health_check(self) -> dict[str, Any]:
         """
         Check backend health.
@@ -89,6 +98,7 @@ class CoordinationBackendCoreMixin:
             - backend_type: str
             - latency_ms: float (round-trip time for a simple operation)
         """
+
     async def enqueue_task(
         self,
         queue_name: str,
@@ -114,6 +124,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             True if the task was enqueued successfully.
         """
+
     async def dequeue_task(
         self,
         queue_name: str,
@@ -139,6 +150,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             Dict with task details, or None if no task is available.
         """
+
     async def complete_task(self, task_id: str, result: dict[str, Any] | None = None) -> bool:
         """
         Mark a task as completed.
@@ -150,6 +162,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             True if the task was found and completed.
         """
+
     async def fail_task(
         self,
         task_id: str,
@@ -167,6 +180,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             True if the task was found and marked as failed.
         """
+
     async def renew_lease(self, task_id: str, additional_seconds: float = 60.0) -> bool:
         """
         Extend the lease on a currently-leased task.
@@ -178,6 +192,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             True if the lease was extended successfully.
         """
+
     async def expire_leases(self, queue_name: str) -> int:
         """
         Find and release expired task leases, making them available again.
@@ -190,6 +205,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             Number of leases that were expired.
         """
+
     async def acquire_lock(
         self,
         lock_name: str,
@@ -209,6 +225,7 @@ class CoordinationBackendCoreMixin:
         Returns:
             True if the lock was acquired.
         """
+
     async def release_lock(self, lock_name: str, holder_id: str) -> bool:
         """
         Release a distributed lock.

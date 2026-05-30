@@ -12,6 +12,7 @@ Provides:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 import time
@@ -26,19 +27,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # SQL Injection protection: validate savepoint names
-_SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 # ──────────────────────────────────────────────────────────────
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class Transaction:
     """Represents an active database transaction."""
+
     transaction_id: str = ""
     db_path: str = ""
-    status: str = "active"          # active, committed, rolled_back, timed_out
+    status: str = "active"  # active, committed, rolled_back, timed_out
     started_at: float = 0.0
     savepoints: list[str] = field(default_factory=list)
     operations_count: int = 0
@@ -63,6 +66,7 @@ class Transaction:
 # ──────────────────────────────────────────────────────────────
 #  TRANSACTION MANAGER
 # ──────────────────────────────────────────────────────────────
+
 
 class TransactionManager:
     """Manages database transactions with rollback and savepoint support.
@@ -114,7 +118,9 @@ class TransactionManager:
 
         logger.info(
             "TransactionManager: Began transaction %s on %s (timeout=%0.1fs)",
-            tx.transaction_id, db_path, tx.timeout_seconds,
+            tx.transaction_id,
+            db_path,
+            tx.timeout_seconds,
         )
         return tx
 
@@ -167,10 +173,10 @@ class TransactionManager:
 
         conn = self._connections.get(tx.transaction_id)
         if conn:
-            conn.execute(f'SAVEPOINT "{name}"')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
-        logger.debug(
-            "TransactionManager: Savepoint '%s' in tx %s", name, tx.transaction_id
-        )
+            conn.execute(
+                f'SAVEPOINT "{name}"'
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+        logger.debug("TransactionManager: Savepoint '%s' in tx %s", name, tx.transaction_id)
 
     def rollback_to_savepoint(self, tx: Transaction, name: str) -> None:
         """Rollback to a specific savepoint."""
@@ -182,13 +188,16 @@ class TransactionManager:
         conn = self._connections.get(tx.transaction_id)
         if conn:
             # SECURITY: name was validated when savepoint was created
-            conn.execute(f'ROLLBACK TO SAVEPOINT "{name}"')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            conn.execute(
+                f'ROLLBACK TO SAVEPOINT "{name}"'
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
         # Remove savepoints created after this one
         idx = tx.savepoints.index(name) + 1
         tx.savepoints = tx.savepoints[:idx]
         logger.info(
             "TransactionManager: Rolled back to savepoint '%s' in tx %s",
-            name, tx.transaction_id,
+            name,
+            tx.transaction_id,
         )
 
     def commit(self, tx: Transaction) -> None:
@@ -204,7 +213,9 @@ class TransactionManager:
         self._stats["committed"] += 1
         logger.info(
             "TransactionManager: Committed tx %s (%d operations, %.1fms)",
-            tx.transaction_id, tx.operations_count, tx.elapsed_seconds * 1000,
+            tx.transaction_id,
+            tx.operations_count,
+            tx.elapsed_seconds * 1000,
         )
 
     def rollback(self, tx: Transaction) -> None:
@@ -220,7 +231,8 @@ class TransactionManager:
         self._stats["rolled_back"] += 1
         logger.info(
             "TransactionManager: Rolled back tx %s (%d operations)",
-            tx.transaction_id, tx.operations_count,
+            tx.transaction_id,
+            tx.operations_count,
         )
 
     def register_connection(self, tx: Transaction, connection: Any) -> None:
@@ -283,17 +295,12 @@ class TransactionManager:
     def _check_active(self, tx: Transaction) -> None:
         """Verify that a transaction is still active."""
         if tx.status != "active":
-            raise RuntimeError(
-                f"Transaction {tx.transaction_id} is not active (status={tx.status})"
-            )
+            raise RuntimeError(f"Transaction {tx.transaction_id} is not active (status={tx.status})")
 
     def _cleanup(self, tx: Transaction) -> None:
         """Clean up transaction resources."""
         self._active_transactions.pop(tx.transaction_id, None)
         conn = self._connections.pop(tx.transaction_id, None)
         if conn:
-            try:
+            with contextlib.suppress(Exception):
                 conn.close()
-            except Exception:  # noqa: S110
-                # Close failure should not prevent cleanup of other resources
-                pass

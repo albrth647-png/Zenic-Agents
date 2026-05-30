@@ -26,6 +26,7 @@ class LicenseTier(str, Enum):
     ``SubscriptionTierName`` used in the Rust gateway and zenic-subscription
     crate.  ``from_subscription_tier()`` provides the reverse mapping.
     """
+
     STARTER = "starter"
     BUSINESS = "business"
     ENTERPRISE = "enterprise"
@@ -92,6 +93,7 @@ class LicenseTier(str, Enum):
 
 class LicenseStatus(str, Enum):
     """Status of a license."""
+
     ACTIVE = "active"
     EXPIRED = "expired"
     REVOKED = "revoked"
@@ -103,9 +105,10 @@ class LicenseStatus(str, Enum):
 
 class HardwareBindingStrength(str, Enum):
     """Strength of hardware binding."""
+
     NONE = "none"
-    SOFT = "soft"       # Allows minor hardware changes
-    STRICT = "strict"   # Exact hardware match required
+    SOFT = "soft"  # Allows minor hardware changes
+    STRICT = "strict"  # Exact hardware match required
 
 
 @dataclass
@@ -126,6 +129,7 @@ class LicenseInfo:
         signature: ECDSA signature of the license data.
         metadata: Additional license metadata.
     """
+
     license_id: str = ""
     tier: LicenseTier = LicenseTier.STARTER
     status: LicenseStatus = LicenseStatus.INVALID
@@ -203,6 +207,7 @@ class LicenseInfo:
 @dataclass
 class LicenseVerificationResult:
     """Result of a license verification check."""
+
     valid: bool
     status: LicenseStatus
     license_info: LicenseInfo | None = None
@@ -213,6 +218,7 @@ class LicenseVerificationResult:
 @dataclass
 class KillSwitchStatus:
     """Status of the remote kill switch."""
+
     active: bool
     reason: str = ""
     activated_at: float | None = None

@@ -34,19 +34,24 @@ def _retry_db_operation(
             return func()
         except sqlite3.OperationalError as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "ImpactPreviewEngine: DB retry %d/%d after %.2fs — %s",
-                attempt + 1, max_retries, delay, exc,
+                attempt + 1,
+                max_retries,
+                delay,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)
         except Exception as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "ImpactPreviewEngine: Unexpected error on retry %d/%d — %s",
-                attempt + 1, max_retries, exc,
+                attempt + 1,
+                max_retries,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)

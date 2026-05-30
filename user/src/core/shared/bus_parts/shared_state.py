@@ -40,8 +40,7 @@ class SharedState:
 
     # ── Core Operations ──
 
-    def set(self, namespace: str, key: str, value: Any,
-            ttl: float = 0, tenant_id: str = "default") -> None:
+    def set(self, namespace: str, key: str, value: Any, ttl: float = 0, tenant_id: str = "default") -> None:
         """Set a value. Overwrites existing. O(1) in-memory."""
         ns_key = f"{tenant_id}:{namespace}"
         now = time.monotonic()
@@ -51,8 +50,7 @@ class SharedState:
             self._data[ns_key][key] = (value, now, ttl)
         self._notify_callbacks(namespace, key, value)
 
-    def get(self, namespace: str, key: str, default: Any = None,
-            tenant_id: str = "default") -> Any:
+    def get(self, namespace: str, key: str, default: Any = None, tenant_id: str = "default") -> Any:
         """Get a value. Returns *default* if missing or expired. O(1)."""
         ns_key = f"{tenant_id}:{namespace}"
         with self._rw_lock.acquire_read():
@@ -68,8 +66,7 @@ class SharedState:
                 return default
             return value
 
-    def get_and_set(self, namespace: str, key: str, value: Any,
-                    ttl: float = 0, tenant_id: str = "default") -> Any:
+    def get_and_set(self, namespace: str, key: str, value: Any, ttl: float = 0, tenant_id: str = "default") -> Any:
         """Atomic get-and-set. Returns the previous value (or *default*)."""
         ns_key = f"{tenant_id}:{namespace}"
         now = time.monotonic()
@@ -84,8 +81,7 @@ class SharedState:
         self._notify_callbacks(namespace, key, value)
         return old_value
 
-    def delete(self, namespace: str, key: str,
-               tenant_id: str = "default") -> None:
+    def delete(self, namespace: str, key: str, tenant_id: str = "default") -> None:
         """Delete a key from the namespace."""
         ns_key = f"{tenant_id}:{namespace}"
         with self._rw_lock.acquire_write():
@@ -93,8 +89,7 @@ class SharedState:
             if ns is not None and key in ns:
                 del ns[key]
 
-    def list_keys(self, namespace: str, prefix: str = "",
-                  tenant_id: str = "default") -> list[str]:
+    def list_keys(self, namespace: str, prefix: str = "", tenant_id: str = "default") -> list[str]:
         """List keys in a namespace, optionally filtered by *prefix*."""
         ns_key = f"{tenant_id}:{namespace}"
         with self._rw_lock.acquire_read():
@@ -107,8 +102,7 @@ class SharedState:
 
     # ── Callbacks ──
 
-    def register_callback(self, namespace: str,
-                          callback: Callable[[str, str, Any], None]) -> None:
+    def register_callback(self, namespace: str, callback: Callable[[str, str, Any], None]) -> None:
         """Register a callback invoked when a key in *namespace* changes."""
         self._callbacks.append((namespace, callback))
 
@@ -119,8 +113,7 @@ class SharedState:
                 try:
                     cb(namespace, key, value)
                 except Exception:
-                    logger.exception("SharedState callback error for ns=%s key=%s",
-                                     namespace, key)
+                    logger.exception("SharedState callback error for ns=%s key=%s", namespace, key)
 
     # ── Expiry ──
 
@@ -161,9 +154,14 @@ class SharedState:
                 for k, (v, updated_at, ttl) in ns.items():
                     if ttl > 0 and now - updated_at > ttl:
                         continue
-                    result.append((
-                        namespace, k,
-                        json.dumps(v, default=str),
-                        tenant_id, updated_at, ttl,
-                    ))
+                    result.append(
+                        (
+                            namespace,
+                            k,
+                            json.dumps(v, default=str),
+                            tenant_id,
+                            updated_at,
+                            ttl,
+                        )
+                    )
         return result

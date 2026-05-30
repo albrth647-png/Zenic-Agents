@@ -22,9 +22,7 @@ pub mod types;
 // Re-export all public items so that `crate::engine::PolicyEngine` and
 // `crate::engine::PolicyContext` (and any other public symbol) remain
 // accessible from the same import paths as before the split.
-pub use compiler::*;
 pub use evaluator::*;
-pub use optimizer::*;
 pub use types::*;
 
 // ---------------------------------------------------------------------------

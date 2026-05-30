@@ -18,30 +18,68 @@ from ..schemas import EntityResult
 # ──────────────────────────────────────────────────────────────
 
 EXT_LANG_MAP: dict[str, str] = {
-    ".py": "python", ".kt": "kotlin", ".go": "go", ".js": "javascript",
-    ".ts": "typescript", ".java": "java", ".rs": "rust", ".c": "c",
-    ".cpp": "cpp", ".rb": "ruby", ".cs": "csharp", ".php": "php",
-    ".swift": "swift", ".scala": "scala",
+    ".py": "python",
+    ".kt": "kotlin",
+    ".go": "go",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".java": "java",
+    ".rs": "rust",
+    ".c": "c",
+    ".cpp": "cpp",
+    ".rb": "ruby",
+    ".cs": "csharp",
+    ".php": "php",
+    ".swift": "swift",
+    ".scala": "scala",
 }
 
 FRAMEWORKS = {
-    "django", "flask", "fastapi", "react", "vue", "angular", "spring",
-    "express", "nestjs", "stripe", "twilio", "firebase", "supabase",
-    "postgres", "mongodb", "redis", "docker", "kubernetes",
+    "django",
+    "flask",
+    "fastapi",
+    "react",
+    "vue",
+    "angular",
+    "spring",
+    "express",
+    "nestjs",
+    "stripe",
+    "twilio",
+    "firebase",
+    "supabase",
+    "postgres",
+    "mongodb",
+    "redis",
+    "docker",
+    "kubernetes",
 }
 
 DOMAINS = {
-    "payment", "auth", "notification", "email", "database", "api",
-    "inventory", "crm", "invoice", "scheduler", "analytics", "report",
-    "webhook", "streaming", "cache", "queue",
+    "payment",
+    "auth",
+    "notification",
+    "email",
+    "database",
+    "api",
+    "inventory",
+    "crm",
+    "invoice",
+    "scheduler",
+    "analytics",
+    "report",
+    "webhook",
+    "streaming",
+    "cache",
+    "queue",
 }
 
 # Regex patterns
-FILE_PATTERN = re.compile(r'\b[\w\-]+\.(?:py|kt|go|js|ts|java|rs|c|cpp|rb|cs|php|swift|scala)\b')
-FUNCTION_PATTERN_EN = re.compile(r'\b(?:function|def|fun|func|method|class)\s+(\w+)')
-FUNCTION_PATTERN_ES = re.compile(r'\b(?:funcion|metodo|clase)\s+(\w+)')
-CLASS_PATTERN = re.compile(r'\bclass\s+(\w+)')
-CODE_BLOCK_PATTERN = re.compile(r'```(\w*)\n(.*?)```', re.DOTALL)
+FILE_PATTERN = re.compile(r"\b[\w\-]+\.(?:py|kt|go|js|ts|java|rs|c|cpp|rb|cs|php|swift|scala)\b")
+FUNCTION_PATTERN_EN = re.compile(r"\b(?:function|def|fun|func|method|class)\s+(\w+)")
+FUNCTION_PATTERN_ES = re.compile(r"\b(?:funcion|metodo|clase)\s+(\w+)")
+CLASS_PATTERN = re.compile(r"\bclass\s+(\w+)")
+CODE_BLOCK_PATTERN = re.compile(r"```(\w*)\n(.*?)```", re.DOTALL)
 
 
 class EntityExtractor(BaseAgent[EntityResult]):

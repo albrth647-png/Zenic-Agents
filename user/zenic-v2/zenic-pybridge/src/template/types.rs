@@ -37,4 +37,4 @@
 
 // Re-export niche types that template submodules rely on, so they can
 // `use super::types::NicheDefinition` instead of reaching into `crate::niche`.
-pub(crate) use crate::niche::{FieldRequirement, NicheDefinition, TemplateFieldType};
+pub(crate) use crate::niche::{NicheDefinition, TemplateFieldType};

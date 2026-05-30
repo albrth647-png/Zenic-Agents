@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import { createVersion, rollbackToVersion } from "../versioning";
 import { computeContentHash } from "../yaml-loader";
 import type { PolicyDocument } from "../types/core";
+export type { PolicyDocument };
 import type {
   PolicyApprovalRequest,
   ApprovalStatus,
@@ -18,11 +19,14 @@ import type {
   AutoApproveRule,
   AutoApproveCondition,
 } from "../types/approval";
-import {
-  ApprovalStatus as ApprovalStatusEnum,
-  ApprovalPriority as ApprovalPriorityEnum,
-} from "../types/approval";
-
+export type {
+  PolicyApprovalRequest,
+  ApprovalStatus,
+  ApprovalPriority,
+  ApprovalDecision,
+  AutoApproveRule,
+  AutoApproveCondition,
+};
 // ─── State Machine: Valid Transitions ─────────────────────────────────
 
 /** Valid state transitions for the approval lifecycle */
@@ -228,4 +232,3 @@ export const AUTO_APPROVE_CHECKERS: AutoApproveRuleChecker[] = [
 
 // Also re-export types needed by other files
 export { validateTransition, VALID_TRANSITIONS };
-export type { AutoApproveRuleChecker };

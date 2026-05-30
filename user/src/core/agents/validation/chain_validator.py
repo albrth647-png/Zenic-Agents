@@ -179,13 +179,13 @@ class ChainValidator(BaseAgent[ChainResult]):
             required_ctx = CATEGORY_CONTEXT_REQUIREMENTS.get(category, [])
             for req in required_ctx:
                 if req not in context:
-                    issues.append(f"Block '{block_name or f'block_{i}'}' ({category}) " f"may need '{req}' in context")
+                    issues.append(f"Block '{block_name or f'block_{i}'}' ({category}) may need '{req}' in context")
 
             # Category-specific data requirements
             data_reqs = CATEGORY_DATA_REQUIREMENTS.get(category, {})
             for block_type, req_field in data_reqs.items():
                 if block_name and block_name.startswith(block_type) and req_field not in initial_data:
-                    issues.append(f"Block '{block_name}' ({category}) needs " f"'{req_field}' in initial data")
+                    issues.append(f"Block '{block_name}' ({category}) needs '{req_field}' in initial data")
 
         return issues
 
@@ -204,11 +204,11 @@ class ChainValidator(BaseAgent[ChainResult]):
                     else getattr(current, "name", f"block_{i}")
                 )
                 next_name = (
-                    next_block.get("name", f"block_{i+1}")
+                    next_block.get("name", f"block_{i + 1}")
                     if isinstance(next_block, dict)
-                    else getattr(next_block, "name", f"block_{i+1}")
+                    else getattr(next_block, "name", f"block_{i + 1}")
                 )
-                issues.append(f"Type mismatch: '{current_name}' outputs incompatible " f"with '{next_name}' inputs")
+                issues.append(f"Type mismatch: '{current_name}' outputs incompatible with '{next_name}' inputs")
 
         return issues
 
@@ -258,7 +258,7 @@ class ChainValidator(BaseAgent[ChainResult]):
 
             rule = CHAIN_COMPATIBILITY_RULES.get((current_cat, next_cat))
             if rule == "warning":
-                issues.append(f"Category hint: {current_cat} → {next_cat} at step {i}-{i+1}: " f"consider reordering")
+                issues.append(f"Category hint: {current_cat} → {next_cat} at step {i}-{i + 1}: consider reordering")
 
         return issues
 
@@ -314,7 +314,7 @@ class ChainValidator(BaseAgent[ChainResult]):
         categories = [self._get_block_category(b) for b in blocks]
         for i in range(len(categories) - 1):
             if categories[i] == "business_logic" and categories[i + 1] == "validation":
-                issues.append(f"Validation after business logic at step {i+1} — " f"consider validating first")
+                issues.append(f"Validation after business logic at step {i + 1} — consider validating first")
 
         return issues
 

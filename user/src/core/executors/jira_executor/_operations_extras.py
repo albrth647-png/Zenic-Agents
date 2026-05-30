@@ -30,14 +30,16 @@ class _ExtrasMixin:
         issue_key = config.get("issue_key", "")
         if not issue_key:
             return ActionResult(
-                False, {"operation": "add_comment"},
+                False,
+                {"operation": "add_comment"},
                 "Missing required config key: issue_key",
             )
 
         comment = config.get("comment", "")
         if not comment:
             return ActionResult(
-                False, {"operation": "add_comment", "issue_key": issue_key},
+                False,
+                {"operation": "add_comment", "issue_key": issue_key},
                 "Missing required config key: comment",
             )
 
@@ -53,7 +55,8 @@ class _ExtrasMixin:
             comment_id = body.get("id", "")
             logger.info(
                 "JiraExecutor: added comment %s to issue %s",
-                comment_id, issue_key,
+                comment_id,
+                issue_key,
             )
             return ActionResult(
                 True,
@@ -69,7 +72,8 @@ class _ExtrasMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: add_comment failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -99,12 +103,14 @@ class _ExtrasMixin:
 
         if not inward_issue:
             return ActionResult(
-                False, {"operation": "link_issues"},
+                False,
+                {"operation": "link_issues"},
                 "Missing required config key: inward_issue",
             )
         if not outward_issue:
             return ActionResult(
-                False, {"operation": "link_issues"},
+                False,
+                {"operation": "link_issues"},
                 "Missing required config key: outward_issue",
             )
 
@@ -126,7 +132,9 @@ class _ExtrasMixin:
         if 200 <= status < 300:
             logger.info(
                 "JiraExecutor: linked %s -> %s (%s)",
-                inward_issue, outward_issue, link_type,
+                inward_issue,
+                outward_issue,
+                link_type,
             )
             return ActionResult(
                 True,
@@ -143,7 +151,8 @@ class _ExtrasMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: link_issues failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -205,7 +214,8 @@ class _ExtrasMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: get_issue_types failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -260,7 +270,8 @@ class _ExtrasMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: get_priorities failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -283,9 +294,13 @@ class _ExtrasMixin:
         comment = config.get("comment", "")
 
         logger.info(
-            "[JIRA DRY-RUN] operation=%s project=%s issue=%s "
-            "summary=%.80s jql=%.80s comment=%.80s",
-            operation, project_key, issue_key, summary, jql, comment,
+            "[JIRA DRY-RUN] operation=%s project=%s issue=%s summary=%.80s jql=%.80s comment=%.80s",
+            operation,
+            project_key,
+            issue_key,
+            summary,
+            jql,
+            comment,
         )
 
         data: dict[str, Any] = {
@@ -301,8 +316,7 @@ class _ExtrasMixin:
                 "issue_type": config.get("issue_type", "Task"),
                 "priority": config.get("priority", ""),
             }
-        elif operation in ("update_issue", "transition_issue", "get_issue",
-                           "add_comment", "get_transitions"):
+        elif operation in ("update_issue", "transition_issue", "get_issue", "add_comment", "get_transitions"):
             data["issue_key"] = issue_key
         elif operation == "search_issues":
             data["jql"] = jql

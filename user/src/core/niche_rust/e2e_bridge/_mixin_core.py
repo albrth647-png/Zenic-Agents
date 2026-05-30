@@ -41,14 +41,13 @@ class NichePipeline:
         if self._native is None:
             try:
                 import _zenic_native as _native_mod  # type: ignore[import-not-found]
+
                 self._native = _native_mod
             except ImportError:
                 self._native = None
         return self._native
 
-    def start(
-        self, niche_id: str
-    ) -> tuple:
+    def start(self, niche_id: str) -> tuple:
         """Start a new pipeline by selecting a niche."""
         native = self._get_native()
         if native is not None:
@@ -117,9 +116,7 @@ class NichePipeline:
         native = self._get_native()
         if native is not None and state is not None:
             try:
-                return native.e2e_submit_answer(
-                    state, template_dict, field_name, section_id, value
-                )
+                return native.e2e_submit_answer(state, template_dict, field_name, section_id, value)
             except Exception as e:
                 logger.error(f"Rust e2e_submit_answer failed: {e}")
 

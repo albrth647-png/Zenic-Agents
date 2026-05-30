@@ -88,7 +88,7 @@ def _wire_dispatcher(registry: Any) -> None:
         get_default_dispatcher()
         # ActionDispatcher already uses Blueprint for validation
         # set_blueprint_from_registry is called per-request
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
 

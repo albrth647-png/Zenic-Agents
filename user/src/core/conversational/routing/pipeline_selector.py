@@ -21,28 +21,29 @@ logger = logging.getLogger("zenic_agents.conversational.pipeline")
 
 # ─── Protocolo de step ───────────────────────────────────────
 
+
 @runtime_checkable
 class PipelineStep(Protocol):
     """Un paso dentro de un pipeline de procesamiento."""
 
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
-    async def execute(self, ctx: PipelineContext) -> Result[PipelineContext, Exception]:
-        ...
+    async def execute(self, ctx: PipelineContext) -> Result[PipelineContext, Exception]: ...
 
 
 # ─── Pipeline ejecutable ─────────────────────────────────────
 
+
 @dataclass
 class PipelineDefinition:
     """Definicion de un pipeline con sus steps."""
+
     name: str = ""
     pipeline_type: Pipeline = Pipeline.CONVERSATIONAL
     steps: list[PipelineStep] = field(default_factory=list)
-    timeout_ms: float = 30000.0     # Timeout total del pipeline
-    retry_count: int = 0            # Retries en caso de error
+    timeout_ms: float = 30000.0  # Timeout total del pipeline
+    retry_count: int = 0  # Retries en caso de error
 
     @property
     def step_count(self) -> int:
@@ -55,9 +56,11 @@ class PipelineDefinition:
 
 # ─── Resultado de ejecucion ──────────────────────────────────
 
+
 @dataclass
 class PipelineResult:
     """Resultado de ejecutar un pipeline."""
+
     success: bool = False
     pipeline_name: str = ""
     steps_executed: int = 0
@@ -74,6 +77,7 @@ class PipelineResult:
 
 # ─── Pipeline Selector ───────────────────────────────────────
 
+
 class PipelineSelector:
     """
     Selecciona y ejecuta el pipeline adecuado.
@@ -89,10 +93,7 @@ class PipelineSelector:
     def register(self, definition: PipelineDefinition) -> None:
         """Registra un pipeline."""
         self._pipelines[definition.pipeline_type] = definition
-        logger.info(
-            f"Pipeline registrado: {definition.name} "
-            f"({definition.step_count} steps)"
-        )
+        logger.info(f"Pipeline registrado: {definition.name} ({definition.step_count} steps)")
 
     async def execute(
         self,
@@ -108,9 +109,7 @@ class PipelineSelector:
         pipeline = self._pipelines.get(pipeline_type)
 
         if pipeline is None:
-            return Err(ValueError(
-                f"Pipeline no registrado: {pipeline_type.value}"
-            ))
+            return Err(ValueError(f"Pipeline no registrado: {pipeline_type.value}"))
 
         result = PipelineResult(
             pipeline_name=pipeline.name,
@@ -131,9 +130,7 @@ class PipelineSelector:
                     result.steps_executed += 1
                     result.step_timings[step.name] = step_time
                 else:
-                    result.errors.append(
-                        f"Step '{step.name}' fallo: {step_result.error}"
-                    )
+                    result.errors.append(f"Step '{step.name}' fallo: {step_result.error}")
                     # Continuar con contexto parcial
                     result.step_timings[step.name] = step_time
                     break
@@ -187,6 +184,4 @@ class PipelineSelector:
         # Promedio movil del tiempo
         prev_avg = stats["avg_time_ms"]
         count = stats["total"]
-        stats["avg_time_ms"] = (
-            prev_avg * (count - 1) + result.execution_time_ms
-        ) / count
+        stats["avg_time_ms"] = (prev_avg * (count - 1) + result.execution_time_ms) / count

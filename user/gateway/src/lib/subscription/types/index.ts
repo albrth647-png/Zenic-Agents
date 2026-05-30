@@ -12,6 +12,8 @@ export {
   TIER_PRICES,
   TIER_DISPLAY_NAMES,
   ACTIVE_STATUSES,
+  TIER_LIMITS,
+  MEMORY_TIER_CONFIG,
   canTransitionTo,
   isSubscriptionActive,
   getTierLimits,

@@ -34,15 +34,17 @@ logger = logging.getLogger(__name__)
 
 class TamperSeverity(str, Enum):
     """Severity of a tampering detection event."""
-    LOW = "low"           # Possible false positive
-    MEDIUM = "medium"     # Likely tampering
-    HIGH = "high"         # Confirmed tampering
+
+    LOW = "low"  # Possible false positive
+    MEDIUM = "medium"  # Likely tampering
+    HIGH = "high"  # Confirmed tampering
     CRITICAL = "critical"  # System compromise detected
 
 
 @dataclass
 class TamperEvent:
     """A tampering detection event."""
+
     severity: TamperSeverity
     detection_method: str
     description: str
@@ -226,7 +228,9 @@ class AntiTamperingLayer:
                 self._notify_callbacks(evt)
                 logger.warning(
                     "AntiTampering: %s detected via %s: %s",
-                    evt.severity.value, evt.detection_method, evt.description,
+                    evt.severity.value,
+                    evt.detection_method,
+                    evt.description,
                 )
 
         return events
@@ -244,7 +248,9 @@ class AntiTamperingLayer:
             self.check_code_integrity(fpath)
 
         self._monitor_thread = threading.Thread(
-            target=self._monitor_loop, daemon=True, name="anti-tamper",
+            target=self._monitor_loop,
+            daemon=True,
+            name="anti-tamper",
         )
         self._monitor_thread.start()
         logger.info("AntiTampering: Monitoring started (interval=%ss)", self._check_interval)

@@ -47,8 +47,8 @@ class SagaAsyncMixin:
             context.results[step.name] = result
             context.mark_step_completed(step)
 
-        except asyncio.TimeoutError:
-            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of " f"{step.timeout}s")
+        except asyncio.TimeoutError as e:
+            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of {step.timeout}s") from e
 
         logger.info(
             "Saga[%s][async]: Step '%s' completed successfully",
@@ -188,7 +188,7 @@ class SagaAsyncMixin:
         worker.join(timeout=step.timeout)
 
         if worker.is_alive():
-            raise TimeoutError(f"Compensation for step '{step.name}' exceeded timeout " f"of {step.timeout}s")
+            raise TimeoutError(f"Compensation for step '{step.name}' exceeded timeout of {step.timeout}s")
 
         if error_holder["error"] is not None:
             raise error_holder["error"]

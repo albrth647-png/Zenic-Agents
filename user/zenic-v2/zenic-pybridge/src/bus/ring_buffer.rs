@@ -20,7 +20,7 @@ pub struct RingBuffer {
 #[pymethods]
 impl RingBuffer {
     #[new]
-    fn new(capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         RingBuffer {
             buffer: Arc::new(RwLock::new(VecDeque::with_capacity(capacity))),
             capacity: if capacity == 0 { 1024 } else { capacity },

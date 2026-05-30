@@ -86,8 +86,7 @@ class UnifiedMemoryResult:
         lines: list[str] = []
         for entry in self.entries[:max_entries]:
             lines.append(
-                f"[{entry.memory_type.value}/{entry.category.value}] "
-                f"{entry.content} (rel={entry.relevance_score:.2f})"
+                f"[{entry.memory_type.value}/{entry.category.value}] {entry.content} (rel={entry.relevance_score:.2f})"
             )
         return "\n".join(lines)
 

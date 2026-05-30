@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-MAX_ENTRIES_PER_STORE = 20       # Max entries to collect per store
-RECENCY_DECAY_FACTOR = 0.95      # Exponential decay per 60 seconds
-CONTENT_SNIPPET_LEN = 120        # Max chars per content snippet
+MAX_ENTRIES_PER_STORE = 20  # Max entries to collect per store
+RECENCY_DECAY_FACTOR = 0.95  # Exponential decay per 60 seconds
+CONTENT_SNIPPET_LEN = 120  # Max chars per content snippet
 
 
 class MemoryCollector(BaseAgent[MemoryEntries]):
@@ -127,15 +127,17 @@ class MemoryCollector(BaseAgent[MemoryEntries]):
                 if entry.response:
                     content += f" A:{entry.response[:80]}"
 
-                entries.append({
-                    "content": content[:CONTENT_SNIPPET_LEN],
-                    "source": "working",
-                    "operation": entry.operation,
-                    "goal": entry.goal,
-                    "importance": entry.importance,
-                    "recency": recency,
-                    "token_estimate": len(content.split()),
-                })
+                entries.append(
+                    {
+                        "content": content[:CONTENT_SNIPPET_LEN],
+                        "source": "working",
+                        "operation": entry.operation,
+                        "goal": entry.goal,
+                        "importance": entry.importance,
+                        "recency": recency,
+                        "token_estimate": len(content.split()),
+                    }
+                )
             except Exception as e:
                 logger.debug(f"A05: Working memory entry extraction failed: {e}")
                 continue
@@ -154,20 +156,19 @@ class MemoryCollector(BaseAgent[MemoryEntries]):
             try:
                 similar = self._smart_memory.find_similar_solutions(message, top_k=5)
                 for sol in similar:
-                    content = (
-                        f"[{sol.get('operation', '')}/{sol.get('goal', '')}] "
-                        f"{sol.get('solution', '')[:100]}"
+                    content = f"[{sol.get('operation', '')}/{sol.get('goal', '')}] {sol.get('solution', '')[:100]}"
+                    entries.append(
+                        {
+                            "content": content[:CONTENT_SNIPPET_LEN],
+                            "source": "long_term",
+                            "operation": sol.get("operation", ""),
+                            "goal": sol.get("goal", ""),
+                            "importance": sol.get("importance", 0.5),
+                            "recency": 0.5,  # No reliable timestamp, assume mid
+                            "relevance_score": sol.get("similarity", 0.5),
+                            "token_estimate": len(content.split()),
+                        }
                     )
-                    entries.append({
-                        "content": content[:CONTENT_SNIPPET_LEN],
-                        "source": "long_term",
-                        "operation": sol.get("operation", ""),
-                        "goal": sol.get("goal", ""),
-                        "importance": sol.get("importance", 0.5),
-                        "recency": 0.5,  # No reliable timestamp, assume mid
-                        "relevance_score": sol.get("similarity", 0.5),
-                        "token_estimate": len(content.split()),
-                    })
             except Exception as e:
                 logger.debug(f"A05: Long-term semantic search failed: {e}")
 
@@ -182,18 +183,17 @@ class MemoryCollector(BaseAgent[MemoryEntries]):
             try:
                 episodes = self._smart_memory.find_episodes(event_type="error", limit=3)
                 for ep in episodes:
-                    content = (
-                        f"[error/{ep.get('event_type', '')}] "
-                        f"{ep.get('description', '')[:80]}"
+                    content = f"[error/{ep.get('event_type', '')}] {ep.get('description', '')[:80]}"
+                    entries.append(
+                        {
+                            "content": content[:CONTENT_SNIPPET_LEN],
+                            "source": "episodic",
+                            "event_type": ep.get("event_type", ""),
+                            "importance": ep.get("importance", 0.5),
+                            "recency": 0.4,
+                            "token_estimate": len(content.split()),
+                        }
                     )
-                    entries.append({
-                        "content": content[:CONTENT_SNIPPET_LEN],
-                        "source": "episodic",
-                        "event_type": ep.get("event_type", ""),
-                        "importance": ep.get("importance", 0.5),
-                        "recency": 0.4,
-                        "token_estimate": len(content.split()),
-                    })
             except Exception as e:
                 logger.debug(f"A05: Episodic memory collection failed: {e}")
 
@@ -206,22 +206,19 @@ class MemoryCollector(BaseAgent[MemoryEntries]):
         # Fetch procedural patterns relevant to CREATE/OPTIMIZE
         if operation in ("CREATE", "OPTIMIZE", "REFACTOR"):
             try:
-                patterns = self._smart_memory.find_patterns(
-                    min_success_rate=0.6, limit=3
-                )
+                patterns = self._smart_memory.find_patterns(min_success_rate=0.6, limit=3)
                 for pat in patterns:
-                    content = (
-                        f"[pattern/{pat.get('pattern_type', '')}] "
-                        f"{pat.get('description', '')[:80]}"
+                    content = f"[pattern/{pat.get('pattern_type', '')}] {pat.get('description', '')[:80]}"
+                    entries.append(
+                        {
+                            "content": content[:CONTENT_SNIPPET_LEN],
+                            "source": "procedural",
+                            "pattern_type": pat.get("pattern_type", ""),
+                            "importance": pat.get("success_rate", 0.5),
+                            "recency": 0.3,  # Patterns are more stable
+                            "token_estimate": len(content.split()),
+                        }
                     )
-                    entries.append({
-                        "content": content[:CONTENT_SNIPPET_LEN],
-                        "source": "procedural",
-                        "pattern_type": pat.get("pattern_type", ""),
-                        "importance": pat.get("success_rate", 0.5),
-                        "recency": 0.3,  # Patterns are more stable
-                        "token_estimate": len(content.split()),
-                    })
             except Exception as e:
                 logger.debug(f"A05: Procedural memory collection failed: {e}")
 

@@ -7,14 +7,11 @@ Usa DummyBackend (siempre disponible) para STT, y audio real generado con pydub.
 import io
 
 import pytest
-from pydub import AudioSegment
 from pydub.generators import Sine
 
 from src.core.voice_pipeline._types import (
-    AudioFormat,
     STTBackendConfig,
     TranscriptionResult,
-    VoicePipelineMetrics,
 )
 from src.core.voice_pipeline.ear import (
     _BACKEND_CLASSES,
@@ -29,6 +26,7 @@ from src.core.voice_pipeline.ear import (
 
 # ── Audio fixtures ─────────────────────────────────────────────
 
+
 def _make_wav_bytes(duration_ms: int = 500) -> bytes:
     tone = Sine(440).to_audio_segment(duration=duration_ms)
     buf = io.BytesIO()
@@ -40,8 +38,8 @@ def _make_wav_bytes(duration_ms: int = 500) -> bytes:
 #  DummyBackend
 # ════════════════════════════════════════════════════════════════
 
-class TestDummyBackend:
 
+class TestDummyBackend:
     def test_name(self):
         b = DummyBackend()
         assert b.name == "dummy"
@@ -78,8 +76,8 @@ class TestDummyBackend:
 #  FasterWhisperBackend — availability check (no model loading)
 # ════════════════════════════════════════════════════════════════
 
-class TestFasterWhisperBackend:
 
+class TestFasterWhisperBackend:
     def test_name(self):
         b = FasterWhisperBackend()
         assert b.name == "faster_whisper"
@@ -108,8 +106,8 @@ class TestFasterWhisperBackend:
 #  WhisperBackend — availability check
 # ════════════════════════════════════════════════════════════════
 
-class TestWhisperBackend:
 
+class TestWhisperBackend:
     def test_name(self):
         b = WhisperBackend()
         assert b.name == "whisper"
@@ -129,8 +127,8 @@ class TestWhisperBackend:
 #  CloudBackend — availability check
 # ════════════════════════════════════════════════════════════════
 
-class TestCloudBackend:
 
+class TestCloudBackend:
     def test_name(self):
         b = CloudBackend()
         assert b.name == "cloud"
@@ -156,8 +154,8 @@ class TestCloudBackend:
 #  Backend Registry & Default Fallback Chain
 # ════════════════════════════════════════════════════════════════
 
-class TestBackendRegistry:
 
+class TestBackendRegistry:
     def test_all_backends_registered(self):
         assert "dummy" in _BACKEND_CLASSES
         assert "faster_whisper" in _BACKEND_CLASSES
@@ -167,7 +165,10 @@ class TestBackendRegistry:
     def test_default_fallback_chain_order(self):
         """El orden de fallback es: faster_whisper → whisper → cloud → dummy."""
         assert _DEFAULT_FALLBACK_CHAIN == (
-            "faster_whisper", "whisper", "cloud", "dummy",
+            "faster_whisper",
+            "whisper",
+            "cloud",
+            "dummy",
         )
 
     def test_dummy_always_last_in_chain(self):
@@ -178,14 +179,17 @@ class TestBackendRegistry:
 #  Ear — Initialization & Backend Selection
 # ════════════════════════════════════════════════════════════════
 
-class TestEarInit:
 
+class TestEarInit:
     def test_default_init_selects_available_backend(self):
         """Ear auto-detecta el primer backend disponible."""
         ear = Ear()
         # En este entorno sin modelos, probablemente sea dummy
         assert ear.active_backend in (
-            "faster_whisper", "whisper", "cloud", "dummy",
+            "faster_whisper",
+            "whisper",
+            "cloud",
+            "dummy",
         )
 
     def test_explicit_dummy_backend(self):
@@ -222,8 +226,8 @@ class TestEarInit:
 #  Ear — transcribe() with DummyBackend
 # ════════════════════════════════════════════════════════════════
 
-class TestEarTranscribe:
 
+class TestEarTranscribe:
     def test_transcribe_with_dummy_returns_failure(self):
         """Con DummyBackend, transcribe siempre falla."""
         config = STTBackendConfig(fallback_chain=("dummy",))
@@ -268,8 +272,8 @@ class TestEarTranscribe:
 #  Ear — Backend Switching
 # ════════════════════════════════════════════════════════════════
 
-class TestEarBackendSwitching:
 
+class TestEarBackendSwitching:
     def test_switch_to_dummy(self):
         config = STTBackendConfig(fallback_chain=("dummy",))
         ear = Ear(config=config)
@@ -295,8 +299,8 @@ class TestEarBackendSwitching:
 #  Ear — Metrics
 # ════════════════════════════════════════════════════════════════
 
-class TestEarMetrics:
 
+class TestEarMetrics:
     def test_metrics_snapshot_is_copy(self):
         """metrics retorna una copia — mutar no afecta al Ear."""
         config = STTBackendConfig(fallback_chain=("dummy",))
@@ -317,8 +321,8 @@ class TestEarMetrics:
 #  Ear — Health Check
 # ════════════════════════════════════════════════════════════════
 
-class TestEarHealthCheck:
 
+class TestEarHealthCheck:
     def test_health_check_structure(self):
         config = STTBackendConfig(fallback_chain=("dummy",))
         ear = Ear(config=config)
@@ -341,8 +345,8 @@ class TestEarHealthCheck:
 #  Ear — transcribe_async
 # ════════════════════════════════════════════════════════════════
 
-class TestEarAsync:
 
+class TestEarAsync:
     @pytest.mark.asyncio
     async def test_transcribe_async(self):
         config = STTBackendConfig(fallback_chain=("dummy",))
@@ -357,8 +361,8 @@ class TestEarAsync:
 #  STTBackend ABC — abstract contract enforcement
 # ════════════════════════════════════════════════════════════════
 
-class TestSTTBackendABC:
 
+class TestSTTBackendABC:
     def test_cannot_instantiate_abc(self):
         """STTBackend es abstracto — no se puede instanciar directamente."""
         with pytest.raises(TypeError):
@@ -366,6 +370,7 @@ class TestSTTBackendABC:
 
     def test_concrete_backend_must_implement_methods(self):
         """Un backend sin los métodos abstractos no se puede instanciar."""
+
         class IncompleteBackend(STTBackend):
             pass
 

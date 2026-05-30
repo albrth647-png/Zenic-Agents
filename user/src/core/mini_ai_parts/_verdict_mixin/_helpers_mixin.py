@@ -47,22 +47,28 @@ class VerdictHelpersMixin:
         if self._verdict_resilience:
             self._verdict_resilience.record_success(latency_s, was_ambiguous=False)
 
-    def _record_verdict_failure(self, latency_s: float,
-                                 was_timeout: bool = False,
-                                 was_ambiguous: bool = False) -> None:
+    def _record_verdict_failure(self, latency_s: float, was_timeout: bool = False, was_ambiguous: bool = False) -> None:
         """Record a failed verdict to resilience systems."""
         if self._verdict_resilience:
-            self._verdict_resilience.record_failure(
-                latency_s, was_timeout=was_timeout, was_ambiguous=was_ambiguous
-            )
+            self._verdict_resilience.record_failure(latency_s, was_timeout=was_timeout, was_ambiguous=was_ambiguous)
 
-    def _audit_verdict(self, question: str, verdict: str, source: str,
-                        llm_used: bool, confidence: float, latency_ms: int,
-                        retry_count: int, evidence_for: str = "",
-                        evidence_against: str = "", consensus_score: float = 0.0,
-                        was_timeout: bool = False, was_ambiguous: bool = False,
-                        circuit_breaker_state: str = "",
-                        raw_response: str = "") -> None:
+    def _audit_verdict(
+        self,
+        question: str,
+        verdict: str,
+        source: str,
+        llm_used: bool,
+        confidence: float,
+        latency_ms: int,
+        retry_count: int,
+        evidence_for: str = "",
+        evidence_against: str = "",
+        consensus_score: float = 0.0,
+        was_timeout: bool = False,
+        was_ambiguous: bool = False,
+        circuit_breaker_state: str = "",
+        raw_response: str = "",
+    ) -> None:
         """Record verdict in the audit log."""
         if self._verdict_resilience and _RESILIENCE_AVAILABLE:
             entry = VerdictAuditEntry(
@@ -77,9 +83,7 @@ class VerdictHelpersMixin:
                 evidence_for_count=len(evidence_for) if evidence_for else 0,
                 evidence_against_count=len(evidence_against) if evidence_against else 0,
                 consensus_score=consensus_score,
-                circuit_breaker_state=circuit_breaker_state or (
-                    self._verdict_resilience.circuit_breaker.state.value
-                ),
+                circuit_breaker_state=circuit_breaker_state or (self._verdict_resilience.circuit_breaker.state.value),
                 was_timeout=was_timeout,
                 was_ambiguous=was_ambiguous,
                 raw_llm_response=raw_response[:100],  # Truncate for memory
@@ -124,7 +128,7 @@ class VerdictHelpersMixin:
 
         # Clean Qwen3 thinking blocks
         clean = response.strip()
-        think_match = re.search(r'</think\s*>(.*)', clean, re.DOTALL)
+        think_match = re.search(r"</think\s*>(.*)", clean, re.DOTALL)
         if think_match:
             clean = think_match.group(1).strip()
 

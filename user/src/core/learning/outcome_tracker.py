@@ -59,7 +59,7 @@ def _retry(func: Any, max_retries: int = 3, base_delay: float = 0.1) -> Any:
             last_exc = exc
             if attempt == max_retries - 1:
                 raise
-            time.sleep(base_delay * (2 ** attempt))
+            time.sleep(base_delay * (2**attempt))
     raise last_exc  # type: ignore[misc]
 
 
@@ -115,6 +115,7 @@ class OutcomeTracker:
         meta_json = json.dumps(metadata or {})
 
         with self._lock:
+
             def _insert() -> None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -124,8 +125,17 @@ class OutcomeTracker:
                             status, duration_ms, error_message, feedback_score, timestamp, metadata)
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
-                            outcome_id, action_id, action_type, expected, actual,
-                            status.value, duration_ms, error, score, now, meta_json,
+                            outcome_id,
+                            action_id,
+                            action_type,
+                            expected,
+                            actual,
+                            status.value,
+                            duration_ms,
+                            error,
+                            score,
+                            now,
+                            meta_json,
                         ),
                     )
                     conn.commit()
@@ -137,6 +147,7 @@ class OutcomeTracker:
 
     def get_outcome(self, outcome_id: str) -> ActionOutcome | None:
         with self._lock:
+
             def _fetch() -> ActionOutcome | None:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -152,16 +163,14 @@ class OutcomeTracker:
 
             return _retry(_fetch)
 
-    def get_action_history(
-        self, action_type: str, limit: int = 100
-    ) -> list[ActionOutcome]:
+    def get_action_history(self, action_type: str, limit: int = 100) -> list[ActionOutcome]:
         with self._lock:
+
             def _fetch() -> list[ActionOutcome]:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT * FROM learning_outcomes WHERE action_type = ? "
-                        "ORDER BY timestamp DESC LIMIT ?",
+                        "SELECT * FROM learning_outcomes WHERE action_type = ? ORDER BY timestamp DESC LIMIT ?",
                         (action_type, limit),
                     )
                     return [self._outcome_from_row(row) for row in cursor.fetchall()]
@@ -173,12 +182,12 @@ class OutcomeTracker:
     def get_success_rate(self, action_type: str, hours: int = 24) -> float:
         cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
         with self._lock:
+
             def _calc() -> float:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT COUNT(*) FROM learning_outcomes "
-                        "WHERE action_type = ? AND timestamp >= ?",
+                        "SELECT COUNT(*) FROM learning_outcomes WHERE action_type = ? AND timestamp >= ?",
                         (action_type, cutoff),
                     ).fetchone()[0]
                     if total == 0:
@@ -194,10 +203,9 @@ class OutcomeTracker:
 
             return _retry(_calc)
 
-    def get_performance_trend(
-        self, action_type: str, days: int = 7
-    ) -> list[dict[str, Any]]:
+    def get_performance_trend(self, action_type: str, days: int = 7) -> list[dict[str, Any]]:
         with self._lock:
+
             def _calc() -> list[dict[str, Any]]:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -217,30 +225,34 @@ class OutcomeTracker:
                             "WHERE action_type = ? AND status = 'success' AND timestamp >= ? AND timestamp <= ?",
                             (action_type, day_start, day_end),
                         ).fetchone()[0]
-                        avg_duration = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                            "SELECT AVG(duration_ms) FROM learning_outcomes "
-                            "WHERE action_type = ? AND timestamp >= ? AND timestamp <= ?",
-                            (action_type, day_start, day_end),
-                        ).fetchone()[0] or 0.0
+                        avg_duration = (
+                            conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                                "SELECT AVG(duration_ms) FROM learning_outcomes "
+                                "WHERE action_type = ? AND timestamp >= ? AND timestamp <= ?",
+                                (action_type, day_start, day_end),
+                            ).fetchone()[0]
+                            or 0.0
+                        )
 
-                        results.append({
-                            "date": day_start[:10],
-                            "total": total,
-                            "successes": success,
-                            "success_rate": round(success / total, 4) if total > 0 else 0.0,
-                            "avg_duration_ms": round(avg_duration, 2),
-                        })
+                        results.append(
+                            {
+                                "date": day_start[:10],
+                                "total": total,
+                                "successes": success,
+                                "success_rate": round(success / total, 4) if total > 0 else 0.0,
+                                "avg_duration_ms": round(avg_duration, 2),
+                            }
+                        )
                     return results
                 finally:
                     conn.close()
 
             return _retry(_calc)
 
-    def analyze_failures(
-        self, action_type: str | None = None, hours: int = 24
-    ) -> dict[str, Any]:
+    def analyze_failures(self, action_type: str | None = None, hours: int = 24) -> dict[str, Any]:
         cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
         with self._lock:
+
             def _analyze() -> dict[str, Any]:
                 conn = sqlite3.connect(self._db_path)
                 try:
@@ -253,7 +265,8 @@ class OutcomeTracker:
                     where = " AND ".join(conditions)
 
                     total_failures = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT COUNT(*) FROM learning_outcomes WHERE {where}", params  # noqa: S608
+                        f"SELECT COUNT(*) FROM learning_outcomes WHERE {where}",  # noqa: S608
+                        params,
                     ).fetchone()[0]
 
                     error_counts: dict[str, int] = {}
@@ -275,9 +288,13 @@ class OutcomeTracker:
                     for at, cnt in cursor.fetchall():
                         type_counts[at] = cnt
 
-                    avg_duration = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT AVG(duration_ms) FROM learning_outcomes WHERE {where}", params  # noqa: S608
-                    ).fetchone()[0] or 0.0
+                    avg_duration = (
+                        conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                            f"SELECT AVG(duration_ms) FROM learning_outcomes WHERE {where}",  # noqa: S608
+                            params,
+                        ).fetchone()[0]
+                        or 0.0
+                    )
 
                     return {
                         "total_failures": total_failures,
@@ -293,10 +310,13 @@ class OutcomeTracker:
 
     def get_stats(self) -> dict[str, Any]:
         with self._lock:
+
             def _calc() -> dict[str, Any]:
                 conn = sqlite3.connect(self._db_path)
                 try:
-                    total = conn.execute("SELECT COUNT(*) FROM learning_outcomes").fetchone()[0]  # nosemgrep: sqlalchemy-execute-raw-query
+                    total = conn.execute("SELECT COUNT(*) FROM learning_outcomes").fetchone()[
+                        0
+                    ]  # nosemgrep: sqlalchemy-execute-raw-query
 
                     status_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -312,9 +332,12 @@ class OutcomeTracker:
                     for at, cnt in cursor.fetchall():
                         type_counts[at] = cnt
 
-                    avg_score = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT AVG(feedback_score) FROM learning_outcomes"
-                    ).fetchone()[0] or 0.0
+                    avg_score = (
+                        conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                            "SELECT AVG(feedback_score) FROM learning_outcomes"
+                        ).fetchone()[0]
+                        or 0.0
+                    )
 
                     return {
                         "total_outcomes": total,

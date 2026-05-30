@@ -162,9 +162,8 @@ class DomainValidationMixin:
                 try:
                     tree = ast.parse(code)
                     for node in ast.walk(tree):
-                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                            if not ast.get_docstring(node):
-                                return "fail"
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not ast.get_docstring(node):
+                            return "fail"
                     return "pass"
                 except SyntaxError:
                     return "fail"
@@ -201,9 +200,8 @@ class DomainValidationMixin:
             try:
                 tree = ast.parse(code)
                 for node in ast.walk(tree):
-                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        if not ast.get_docstring(node):
-                            return "fail"
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not ast.get_docstring(node):
+                        return "fail"
                 return "pass"
             except SyntaxError:
                 return "pass"

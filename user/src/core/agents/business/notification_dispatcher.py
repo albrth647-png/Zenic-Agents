@@ -16,10 +16,17 @@ from ..schemas import NotificationResult
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-VALID_CHANNELS = frozenset({
-    "email", "sms", "push", "webhook",
-    "slack", "teams", "log",
-})
+VALID_CHANNELS = frozenset(
+    {
+        "email",
+        "sms",
+        "push",
+        "webhook",
+        "slack",
+        "teams",
+        "log",
+    }
+)
 
 # Channel priority for fallback routing
 CHANNEL_PRIORITY = {
@@ -102,6 +109,8 @@ class NotificationDispatcher(BaseAgent[NotificationResult]):
     def fallback(self, input_data: Any) -> NotificationResult:
         """Safe fallback: notification not sent."""
         return NotificationResult(
-            sent=False, channel="", status="fallback_not_sent",
+            sent=False,
+            channel="",
+            status="fallback_not_sent",
             source="fallback",
         )

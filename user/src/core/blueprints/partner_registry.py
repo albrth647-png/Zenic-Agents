@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 #  PARTNER REGISTRY
 # ──────────────────────────────────────────────────────────────
 
+
 class PartnerRegistry:
     """Registry of partner accounts for Blueprint revenue sharing.
 
@@ -82,11 +83,13 @@ class PartnerRegistry:
         """List all registered partners."""
         results = []
         for pid, info in self._partners.items():
-            results.append({
-                "partner_id": pid,
-                "name": info.partner_name,
-                "revenue_share_pct": info.revenue_share_pct,
-                "certified": info.certified,
-                "total_revenue_cents": self._revenue.get(pid, 0),
-            })
+            results.append(
+                {
+                    "partner_id": pid,
+                    "name": info.partner_name,
+                    "revenue_share_pct": info.revenue_share_pct,
+                    "certified": info.certified,
+                    "total_revenue_cents": self._revenue.get(pid, 0),
+                }
+            )
         return results

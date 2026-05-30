@@ -21,8 +21,13 @@
 
 import { db } from "@/lib/db";
 import { PolicyEffectV2 } from "../types";
-import type { PolicyStatement, PolicyTestCase, PolicyEvaluationRequest, PolicyEvaluationResult } from "../types";
-import type { PolicyDocument } from "../types";
+import type {
+  PolicyStatement,
+  PolicyTestCase,
+  PolicyEvaluationRequest,
+  PolicyEvaluationResult,
+  PolicyDocument,
+} from "../types";
 import {
   SimulationChangeType,
   VerdictChangeCategory,
@@ -42,7 +47,7 @@ import type {
   PolicyConflict,
   ConflictStatementRef,
 } from "../types";
-import { PolicyEvaluator, getPolicyEvaluator } from "./evaluator";
+import { PolicyEvaluator, getPolicyEvaluator } from "../evaluator";
 
 // ─── Local Types ─────────────────────────────────────────────────────
 
@@ -1315,3 +1320,26 @@ function mapDbRecordToResult(
     trace: parsedTrace,
   };
 }
+
+// ─── Re-exports for sibling modules ─────────────────────────────────────
+export type {
+  PolicyDocument,
+  PolicyStatement,
+  PolicyEffectV2,
+  PolicyEvaluationRequest,
+  PolicyEvaluationResult,
+  SimulationChange,
+  SimulationChangeType,
+  SimulationResult,
+  VerdictChange,
+  VerdictChangeCategory,
+  SimulationRisk,
+  SimulationRiskLevel,
+  ComplianceImpact,
+  SimulationTrace,
+  PolicyConflict,
+  ConflictType,
+  ConflictSeverity,
+  ConflictResolutionStrategy,
+  ConflictStatementRef,
+};

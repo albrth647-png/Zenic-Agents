@@ -25,16 +25,33 @@ from ..schemas import Conclusion, DecomposedSteps, ReasoningResult, ReasoningSte
 
 # Markers that introduce a conclusion (ordered by specificity)
 CONCLUSION_MARKERS_EN = [
-    "therefore", "thus", "in conclusion", "conclusion:",
-    "so,", "hence", "as a result", "consequently",
-    "the answer is", "final answer", "in summary",
-    "to summarize", "result:", "output:",
+    "therefore",
+    "thus",
+    "in conclusion",
+    "conclusion:",
+    "so,",
+    "hence",
+    "as a result",
+    "consequently",
+    "the answer is",
+    "final answer",
+    "in summary",
+    "to summarize",
+    "result:",
+    "output:",
 ]
 CONCLUSION_MARKERS_ES = [
-    "por lo tanto", "en conclusión", "en conclusion",
-    "resultado:", "así que", "por consiguiente",
-    "como resultado", "en resumen", "para resumir",
-    "la respuesta es", "respuesta final",
+    "por lo tanto",
+    "en conclusión",
+    "en conclusion",
+    "resultado:",
+    "así que",
+    "por consiguiente",
+    "como resultado",
+    "en resumen",
+    "para resumir",
+    "la respuesta es",
+    "respuesta final",
 ]
 
 # All markers combined for matching
@@ -42,8 +59,14 @@ ALL_CONCLUSION_MARKERS = CONCLUSION_MARKERS_EN + CONCLUSION_MARKERS_ES
 
 # Negative markers — NOT a conclusion
 NEGATIVE_MARKERS = [
-    "however", "but", "although", "on the other hand",
-    "pero", "sin embargo", "aunque", "por otro lado",
+    "however",
+    "but",
+    "although",
+    "on the other hand",
+    "pero",
+    "sin embargo",
+    "aunque",
+    "por otro lado",
 ]
 
 # Maximum conclusion text length
@@ -121,9 +144,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
             return getattr(input_data, "answer", "")
         return ""
 
-    def _extract_from_steps(
-        self, steps: list[ReasoningStep], answer: str
-    ) -> Conclusion:
+    def _extract_from_steps(self, steps: list[ReasoningStep], answer: str) -> Conclusion:
         """
         Extract conclusion from reasoning steps.
 
@@ -133,9 +154,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
           3. Combine step conclusions into a coherent summary
         """
         # Collect all non-empty step conclusions
-        step_conclusions = [
-            s.conclusion for s in steps if s.conclusion
-        ]
+        step_conclusions = [s.conclusion for s in steps if s.conclusion]
 
         if not step_conclusions:
             # Use step descriptions if no conclusions
@@ -212,7 +231,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
                 idx = conclusion_lower.find(marker)
                 if idx >= 0:
                     # Extract text after the marker
-                    extracted = conclusion[idx + len(marker):].strip()
+                    extracted = conclusion[idx + len(marker) :].strip()
                     if extracted:
                         return extracted
         return None
@@ -229,7 +248,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
             idx = text_lower.find(marker)
             if idx >= 0 and idx < best_pos:
                 best_pos = idx
-                extracted = text[idx + len(marker):].strip()
+                extracted = text[idx + len(marker) :].strip()
                 if extracted:
                     best_match = extracted
 
@@ -237,13 +256,11 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
 
     def _last_meaningful_sentence(self, text: str) -> str:
         """Return the last meaningful sentence from text."""
-        sentences = re.split(r'[.!?]\s', text)
+        sentences = re.split(r"[.!?]\s", text)
         meaningful = [s.strip() for s in sentences if len(s.strip()) > 10]
         return meaningful[-1] if meaningful else text[:200]
 
-    def _get_supporting_steps(
-        self, steps: list[ReasoningStep], conclusion: str
-    ) -> list[str]:
+    def _get_supporting_steps(self, steps: list[ReasoningStep], conclusion: str) -> list[str]:
         """Get list of step descriptions that support the conclusion."""
         supporting: list[str] = []
         for step in steps:
@@ -254,9 +271,7 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
         # Cap at 10 supporting entries
         return supporting[:10]
 
-    def _estimate_strength(
-        self, steps: list[ReasoningStep], conclusion: str
-    ) -> float:
+    def _estimate_strength(self, steps: list[ReasoningStep], conclusion: str) -> float:
         """
         Estimate the strength of a conclusion.
 
@@ -294,14 +309,12 @@ class ConclusionExtractor(BaseAgent[Conclusion]):
 
         # Certainty vs hedging
         conc_lower = conclusion.lower()
-        for marker in ["certainly", "clearly", "definitely", "obviously",
-                       "ciertamente", "claramente"]:
+        for marker in ["certainly", "clearly", "definitely", "obviously", "ciertamente", "claramente"]:
             if marker in conc_lower:
                 strength += 0.05
                 break
 
-        for marker in ["maybe", "perhaps", "might", "could be",
-                       "quizás", "tal vez", "puede que"]:
+        for marker in ["maybe", "perhaps", "might", "could be", "quizás", "tal vez", "puede que"]:
             if marker in conc_lower:
                 strength -= 0.05
                 break

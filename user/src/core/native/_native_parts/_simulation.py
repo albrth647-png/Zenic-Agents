@@ -13,11 +13,13 @@ from ._loader import HAS_NATIVE
 
 
 def topological_sort(
-    nodes: list[str], edges: list[tuple[str, str]],
+    nodes: list[str],
+    edges: list[tuple[str, str]],
 ) -> dict[str, Any]:
     """Topological sort of a DAG using Kahn's algorithm."""
     if HAS_NATIVE:
         from ._loader import _rust_topological_sort
+
         return _rust_topological_sort(nodes, edges)
     # Pure Python fallback
     adj: dict[str, list[str]] = defaultdict(list)
@@ -43,21 +45,21 @@ def topological_sort(
     has_cycle = len(sorted_nodes) != len(nodes)
     cycle_nodes = [n for n in nodes if n not in set(sorted_nodes)] if has_cycle else []
 
-    return {"sorted": sorted_nodes, "has_cycle": has_cycle,
-            "cycle_nodes": cycle_nodes}
+    return {"sorted": sorted_nodes, "has_cycle": has_cycle, "cycle_nodes": cycle_nodes}
 
 
 def detect_cycles(
-    nodes: list[str], edges: list[tuple[str, str]],
+    nodes: list[str],
+    edges: list[tuple[str, str]],
 ) -> dict[str, Any]:
     """Detect cycles in a directed graph using DFS."""
     if HAS_NATIVE:
         from ._loader import _rust_detect_cycles
+
         return _rust_detect_cycles(nodes, edges)
     # Pure Python fallback — reuse topological sort
     result = topological_sort(nodes, edges)
-    return {"has_cycle": result["has_cycle"],
-            "cycle_path": result.get("cycle_nodes", [])}
+    return {"has_cycle": result["has_cycle"], "cycle_path": result.get("cycle_nodes", [])}
 
 
 def aggregate_impact(
@@ -69,12 +71,18 @@ def aggregate_impact(
     """Aggregate risk scores across a DAG execution path."""
     if HAS_NATIVE:
         from ._loader import _rust_aggregate_impact
+
         return _rust_aggregate_impact(sorted_nodes, edges, risk_scores, strategy)
     # Pure Python fallback
     if not sorted_nodes:
-        return {"aggregated_score": 0.0, "strategy": strategy,
-                "node_count": 0, "max_score": 0.0, "min_score": 0.0,
-                "high_risk_nodes": []}
+        return {
+            "aggregated_score": 0.0,
+            "strategy": strategy,
+            "node_count": 0,
+            "max_score": 0.0,
+            "min_score": 0.0,
+            "high_risk_nodes": [],
+        }
 
     scores = [risk_scores.get(n, 0.0) for n in sorted_nodes]
     high_risk = [n for n in sorted_nodes if risk_scores.get(n, 0.0) >= 0.7]
@@ -91,11 +99,14 @@ def aggregate_impact(
     else:
         raise ValueError(f"Unknown strategy '{strategy}'. Use: max, sum, avg, weighted_avg")
 
-    return {"aggregated_score": aggregated, "strategy": strategy,
-            "node_count": len(sorted_nodes),
-            "max_score": max(scores) if scores else 0.0,
-            "min_score": min(scores) if scores else 0.0,
-            "high_risk_nodes": high_risk}
+    return {
+        "aggregated_score": aggregated,
+        "strategy": strategy,
+        "node_count": len(sorted_nodes),
+        "max_score": max(scores) if scores else 0.0,
+        "min_score": min(scores) if scores else 0.0,
+        "high_risk_nodes": high_risk,
+    }
 
 
 def simulate_dag(
@@ -105,6 +116,7 @@ def simulate_dag(
     """Simulate a DAG execution without side effects."""
     if HAS_NATIVE:
         from ._loader import _rust_simulate_dag
+
         return _rust_simulate_dag(nodes, edges)
     # Pure Python fallback
     node_ids = [n.get("id", "") for n in nodes]
@@ -120,7 +132,11 @@ def simulate_dag(
     aggregated_risk = max(risks) if risks else 0.0
     high_risk_path = [n for n in sorted_ids if node_risks.get(n, 0.0) >= 0.7]
 
-    return {"total_nodes": len(node_ids), "execution_order": sorted_ids,
-            "total_estimated_duration_ms": total_duration,
-            "aggregated_risk": aggregated_risk,
-            "high_risk_path": high_risk_path, "has_cycle": has_cycle}
+    return {
+        "total_nodes": len(node_ids),
+        "execution_order": sorted_ids,
+        "total_estimated_duration_ms": total_duration,
+        "aggregated_risk": aggregated_risk,
+        "high_risk_path": high_risk_path,
+        "has_cycle": has_cycle,
+    }

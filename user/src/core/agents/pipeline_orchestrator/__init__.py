@@ -325,7 +325,7 @@ class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorEx
             registry=None,  # Registry wired separately via wire_channels()
         )
         logger.info(
-            "PipelineOrchestrator: voice pipeline wired " "(backend=%s, adapter=%s, A52_wired=%s)",
+            "PipelineOrchestrator: voice pipeline wired (backend=%s, adapter=%s, A52_wired=%s)",
             self._voice_pipeline.active_backend,
             self._voice_pipeline.adapter.is_available,
             self._voice_channel_agent.is_wired,

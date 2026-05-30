@@ -30,6 +30,7 @@ class DelegationManager(DelegationPersistenceMixin):
         self._db_path = db_path
         self._default_timeout_hours = default_timeout_hours
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -63,10 +64,14 @@ class DelegationManager(DelegationPersistenceMixin):
             self._persist_rule(rule, insert=True)
 
         logger.info(
-            "DelegationManager: Created rule %s — user %d (%s) → user %d (%s) "
-            "expires=%s reason='%s'",
-            rule.rule_id, from_user_id, from_role, to_user_id, to_role,
-            expires_at, reason[:50],
+            "DelegationManager: Created rule %s — user %d (%s) → user %d (%s) expires=%s reason='%s'",
+            rule.rule_id,
+            from_user_id,
+            from_role,
+            to_user_id,
+            to_role,
+            expires_at,
+            reason[:50],
         )
         return rule
 
@@ -98,8 +103,11 @@ class DelegationManager(DelegationPersistenceMixin):
             logger.warning(
                 "DelegationManager: Delegate user %d has role '%s' (level %d) "
                 "insufficient for delegator role '%s' (level %d) — skipping",
-                rule.to_user_id, rule.to_role, to_level,
-                rule.from_role, from_level,
+                rule.to_user_id,
+                rule.to_role,
+                to_level,
+                rule.from_role,
+                from_level,
             )
 
         return None
@@ -118,7 +126,9 @@ class DelegationManager(DelegationPersistenceMixin):
         return True
 
     def auto_delegate_pending(
-        self, request_id: str, timeout_hours: int = 2,
+        self,
+        request_id: str,
+        timeout_hours: int = 2,
     ) -> int | None:
         """If an approval request is pending beyond *timeout_hours*, auto-delegate."""
         from ..chain import get_approval_chain
@@ -132,7 +142,8 @@ class DelegationManager(DelegationPersistenceMixin):
         if request.status.value != "pending":
             logger.info(
                 "DelegationManager: Request %s is not pending (status=%s)",
-                request_id, request.status.value,
+                request_id,
+                request.status.value,
             )
             return None
 
@@ -148,7 +159,8 @@ class DelegationManager(DelegationPersistenceMixin):
         delegate_id = self.find_delegate(request.requested_by, request.required_role)
         if delegate_id is None:
             logger.info(
-                "DelegationManager: No delegate found for request %s", request_id,
+                "DelegationManager: No delegate found for request %s",
+                request_id,
             )
             return None
 
@@ -164,7 +176,9 @@ class DelegationManager(DelegationPersistenceMixin):
 
         logger.info(
             "DelegationManager: Auto-delegated request %s from user %d → user %d",
-            request_id, request.requested_by, delegate_id,
+            request_id,
+            request.requested_by,
+            delegate_id,
         )
         return delegate_id
 
@@ -172,6 +186,7 @@ class DelegationManager(DelegationPersistenceMixin):
 
     def get_active_delegations(self, user_id: int = 0) -> list[DelegationRule]:
         """Return active delegation rules, optionally filtered by user_id."""
+
         def _do_query() -> list[DelegationRule]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -195,6 +210,7 @@ class DelegationManager(DelegationPersistenceMixin):
 
     def get_delegation_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent delegation records as dictionaries."""
+
         def _do_query() -> list[dict[str, Any]]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row

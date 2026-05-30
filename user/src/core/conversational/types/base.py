@@ -149,7 +149,9 @@ class Processor(Protocol):
 class Classifier(Protocol):
     """Protocolo para clasificadores (intencion, categoria, etc)."""
 
-    def classify(self, text: str, context: Mapping[str, str | int | float | bool] | None = None) -> Result[str, Exception]:
+    def classify(
+        self, text: str, context: Mapping[str, str | int | float | bool] | None = None
+    ) -> Result[str, Exception]:
         """Clasifica texto con contexto opcional."""
         ...
 
@@ -176,7 +178,9 @@ class Generator(Protocol):
 class Store(Protocol):
     """Protocolo para almacenamiento (memoria, cache, etc)."""
 
-    async def store(self, key: str, value: str | int | float | bool | list | dict, ttl: float | None = None) -> Result[bool, Exception]:
+    async def store(
+        self, key: str, value: str | int | float | bool | list | dict, ttl: float | None = None
+    ) -> Result[bool, Exception]:
         """Almacena un valor con TTL opcional."""
         ...
 

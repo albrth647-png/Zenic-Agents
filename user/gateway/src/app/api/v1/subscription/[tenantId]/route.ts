@@ -34,7 +34,7 @@ export async function GET(
       );
     }
 
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
       include: {
         trial: true,

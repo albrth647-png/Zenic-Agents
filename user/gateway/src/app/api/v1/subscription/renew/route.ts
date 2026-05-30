@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     const { tenantId } = body;
 
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updated = await db.tenantSubscription.update({
+    const updated = await db.subscription.update({
       where: { tenantId },
       data: {
         status: targetStatus,

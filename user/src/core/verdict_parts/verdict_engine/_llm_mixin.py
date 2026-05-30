@@ -308,9 +308,7 @@ class VerdictLLMMixin:
                             any_ambiguous = True
                 except concurrent.futures.TimeoutError:
                     any_timeout = True
-                    logger.warning(
-                        f"VerdictEngine: LLM timed out after {VERDICT_TIMEOUT_S}s " f"(attempt {attempt + 1})"
-                    )
+                    logger.warning(f"VerdictEngine: LLM timed out after {VERDICT_TIMEOUT_S}s (attempt {attempt + 1})")
                 except Exception as e:
                     logger.warning(f"VerdictEngine: LLM call failed: {e}")
 

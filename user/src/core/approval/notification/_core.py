@@ -121,7 +121,7 @@ class NotificationDispatcher:
                 messages.append(result)
 
         logger.info(
-            "NotificationDispatcher: Dispatched %s event for request %s " "to %d channels",
+            "NotificationDispatcher: Dispatched %s event for request %s to %d channels",
             event.value,
             request_id,
             len(messages),

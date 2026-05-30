@@ -1,9 +1,11 @@
+import type { PolicyEffectV2 } from './core';
+
 // ─── Hot-Reload ───────────────────────────────────────────────────────
 
 /** A hot-reload event */
 export interface HotReloadEvent {
   /** Event type */
-  type: HotReloadEventType;
+  type: import('./core').HotReloadEventType;
   /** Affected policy ID */
   policyId: string;
   /** Policy version affected */
@@ -79,4 +81,3 @@ export const DEFAULT_POLICY_ENGINE_CONFIG: PolicyEngineConfig = {
   enableHotReload: true,
   hotReloadIntervalSeconds: 30,
 };
-

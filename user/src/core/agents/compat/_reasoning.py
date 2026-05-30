@@ -24,9 +24,9 @@ class ReasoningAgentCompat:
         self._reasoner = TemplateReasoner(**kwargs)
         self._call_count = 0
 
-    def reason_with_runner(self, runner: Any, query: str,
-                           mode: str = "step_by_step",
-                           context: str = "") -> ReasoningOutput:
+    def reason_with_runner(
+        self, runner: Any, query: str, mode: str = "step_by_step", context: str = ""
+    ) -> ReasoningOutput:
         """Reason using v2 TemplateReasoner."""
         self._call_count += 1
 
@@ -56,7 +56,9 @@ class ReasoningAgentCompat:
 
         return ReasoningOutput(
             answer="Unable to reason about this query",
-            confidence=0.1, mode=mode, source="fallback",
+            confidence=0.1,
+            mode=mode,
+            source="fallback",
         )
 
     @property

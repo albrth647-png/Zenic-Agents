@@ -39,6 +39,7 @@ class CostAccumulator:
     def _init_db(self) -> None:
         """Create the _zenic_costs table if it does not exist."""
         try:
+
             def _create() -> None:
                 conn = sqlite3.connect(self._db_path)
                 conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -56,16 +57,13 @@ class CostAccumulator:
                     )
                 """)
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_costs_action "
-                    "ON _zenic_costs(action_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_costs_action ON _zenic_costs(action_id)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_costs_timestamp "
-                    "ON _zenic_costs(timestamp)"
+                    "CREATE INDEX IF NOT EXISTS idx_costs_timestamp ON _zenic_costs(timestamp)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_costs_category "
-                    "ON _zenic_costs(category)"
+                    "CREATE INDEX IF NOT EXISTS idx_costs_category ON _zenic_costs(category)"
                 )
                 conn.commit()
                 conn.close()
@@ -105,7 +103,11 @@ class CostAccumulator:
 
         logger.debug(
             "CostAccumulator: recorded %s cost for '%s': qty=%.4f unit=%.6f total=%.6f",
-            category.value, action_id, quantity, unit_cost, entry.total_cost,
+            category.value,
+            action_id,
+            quantity,
+            unit_cost,
+            entry.total_cost,
         )
         return entry
 
@@ -126,43 +128,55 @@ class CostAccumulator:
             if llm_tokens > 0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.LLM_TOKENS,
-                        float(llm_tokens), tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.LLM_TOKENS,
+                        float(llm_tokens),
+                        tenant_id=tenant_id,
                     )
                 )
             if api_calls > 0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.API_CALLS,
-                        float(api_calls), tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.API_CALLS,
+                        float(api_calls),
+                        tenant_id=tenant_id,
                     )
                 )
             if compute_seconds > 0.0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.COMPUTE_TIME,
-                        compute_seconds, tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.COMPUTE_TIME,
+                        compute_seconds,
+                        tenant_id=tenant_id,
                     )
                 )
             if human_minutes > 0.0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.HUMAN_TIME,
-                        human_minutes, tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.HUMAN_TIME,
+                        human_minutes,
+                        tenant_id=tenant_id,
                     )
                 )
             if storage_mb > 0.0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.STORAGE,
-                        storage_mb, tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.STORAGE,
+                        storage_mb,
+                        tenant_id=tenant_id,
                     )
                 )
             if network_mb > 0.0:
                 entries.append(
                     self.record_cost(
-                        action_id, CostCategory.NETWORK,
-                        network_mb, tenant_id=tenant_id,
+                        action_id,
+                        CostCategory.NETWORK,
+                        network_mb,
+                        tenant_id=tenant_id,
                     )
                 )
         return entries
@@ -177,6 +191,7 @@ class CostAccumulator:
         """Return total cost with optional time-range, category, and tenant filters."""
         with self._lock:
             try:
+
                 def _query() -> float:
                     conn = sqlite3.connect(self._db_path)
                     sql = "SELECT COALESCE(SUM(total_cost), 0) FROM _zenic_costs WHERE 1=1"
@@ -211,12 +226,10 @@ class CostAccumulator:
         """Return cost grouped by category."""
         with self._lock:
             try:
+
                 def _query() -> dict[str, float]:
                     conn = sqlite3.connect(self._db_path)
-                    sql = (
-                        "SELECT category, COALESCE(SUM(total_cost), 0) "
-                        "FROM _zenic_costs WHERE 1=1"
-                    )
+                    sql = "SELECT category, COALESCE(SUM(total_cost), 0) FROM _zenic_costs WHERE 1=1"
                     params: list = []
                     if from_time:
                         sql += " AND timestamp >= ?"
@@ -241,6 +254,7 @@ class CostAccumulator:
         """Return daily cost totals for the last *days* days."""
         with self._lock:
             try:
+
                 def _query() -> list[dict[str, Any]]:
                     conn = sqlite3.connect(self._db_path)
                     cutoff = time.strftime(
@@ -266,6 +280,7 @@ class CostAccumulator:
         """Return summary statistics."""
         with self._lock:
             try:
+
                 def _query() -> dict[str, Any]:
                     conn = sqlite3.connect(self._db_path)
                     total = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -275,8 +290,7 @@ class CostAccumulator:
                         "SELECT COUNT(*) FROM _zenic_costs"
                     ).fetchone()[0]
                     by_cat = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT category, COALESCE(SUM(total_cost), 0), COUNT(*) "
-                        "FROM _zenic_costs GROUP BY category"
+                        "SELECT category, COALESCE(SUM(total_cost), 0), COUNT(*) FROM _zenic_costs GROUP BY category"
                     ).fetchall()
                     conn.close()
 

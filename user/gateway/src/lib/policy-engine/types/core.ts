@@ -174,9 +174,9 @@ export interface PolicyTestCase {
 /** The full declarative policy document */
 export interface PolicyDocument {
   /** API version */
-  apiVersion: typeof POLICY_API_VERSION;
+  apiVersion: string;
   /** Document kind */
-  kind: typeof POLICY_KIND;
+  kind: string;
   /** Policy metadata */
   metadata: PolicyMetadata;
   /** Policy statements (rules) */

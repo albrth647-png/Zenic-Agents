@@ -4,10 +4,9 @@ use zenic_proto::{ExecutionId, SessionId, TenantId, WorkflowId};
 
 use crate::checkpoint::Checkpoint;
 use crate::compensation::NoOpCompensation;
-use crate::errors::FlowError;
 use crate::retry::RetryPolicy;
 use crate::status::{StepStatus, WorkflowStatus};
-use crate::step::{StepResult, WorkflowStep};
+use crate::step::WorkflowStep;
 
 use super::definition::WorkflowDefinition;
 use super::executor::StepExecutor;

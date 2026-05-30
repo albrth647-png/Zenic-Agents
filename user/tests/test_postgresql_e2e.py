@@ -18,7 +18,6 @@ Run with:  pytest tests/test_postgresql_e2e.py -v
 import asyncio
 import os
 import sys
-from typing import Optional
 
 import pytest
 import pytest_asyncio
@@ -31,25 +30,21 @@ from src.core.shared.db_adapters._postgresql import PostgreSQLDatabase
 
 # ── Connection check helper ─────────────────────────────────
 
+
 def _pg_available() -> bool:
     """Check if PostgreSQL is reachable at the configured DSN."""
     try:
-        import asyncpg  # noqa: F401
+        import asyncpg
     except ImportError:
         return False
 
-    dsn = os.environ.get(
-        "DATABASE_URL",
-        "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db"
-    )
+    dsn = os.environ.get("DATABASE_URL", "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db")
     # Convert DSN for asyncpg
     converted = PostgreSQLDatabase._convert_dsn(dsn)
 
     async def _check() -> bool:
         try:
-            conn = await asyncio.wait_for(
-                asyncpg.connect(converted), timeout=5.0
-            )
+            conn = await asyncio.wait_for(asyncpg.connect(converted), timeout=5.0)
             await conn.close()
             return True
         except Exception:
@@ -63,6 +58,7 @@ def _pg_available() -> bool:
     if loop and loop.is_running():
         # We're inside an existing event loop (unlikely in pytest, but safe)
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as pool:
             future = pool.submit(asyncio.run, _check())
             return future.result(timeout=10)
@@ -72,21 +68,16 @@ def _pg_available() -> bool:
 
 # Skip all tests if PostgreSQL is not reachable
 pg_not_available = not _pg_available()
-SKIP_REASON = (
-    "PostgreSQL is not available. "
-    "Start it with: docker compose up -d postgres"
-)
+SKIP_REASON = "PostgreSQL is not available. Start it with: docker compose up -d postgres"
 
 
 # ── Fixtures ─────────────────────────────────────────────────
 
+
 @pytest.fixture(scope="module")
 def pg_dsn() -> str:
     """Return the PostgreSQL DSN for testing."""
-    return os.environ.get(
-        "DATABASE_URL",
-        "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db"
-    )
+    return os.environ.get("DATABASE_URL", "postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db")
 
 
 @pytest_asyncio.fixture(scope="module")
@@ -118,6 +109,7 @@ async def cleanup_ast_nodes(pg_db: PostgreSQLDatabase):
 
 
 # ── 1. Connection and Pool Creation ─────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
@@ -164,6 +156,7 @@ class TestConnectionAndPool:
 
 # ── 2. Table Creation ───────────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestTableCreation:
@@ -188,9 +181,17 @@ class TestTableCreation:
         """)
         col_names = {r["column_name"] for r in columns}
         expected = {
-            "id", "file_path", "node_type", "name",
-            "start_byte", "end_byte", "content_hash",
-            "docstring", "complexity", "connections", "tenant_id"
+            "id",
+            "file_path",
+            "node_type",
+            "name",
+            "start_byte",
+            "end_byte",
+            "content_hash",
+            "docstring",
+            "complexity",
+            "connections",
+            "tenant_id",
         }
         assert expected.issubset(col_names), f"Missing columns: {expected - col_names}"
 
@@ -277,16 +278,23 @@ class TestTableCreation:
     async def test_smart_memory_tables_exist(self, pg_conn):
         """SmartMemory tables (6 total) should exist."""
         expected_tables = [
-            "semantic_cache", "long_term_memory", "episodic_memory",
-            "procedural_memory", "project_memory", "conversation_sessions",
+            "semantic_cache",
+            "long_term_memory",
+            "episodic_memory",
+            "procedural_memory",
+            "project_memory",
+            "conversation_sessions",
         ]
         for table_name in expected_tables:
-            result = await pg_conn.fetchval("""
+            result = await pg_conn.fetchval(
+                """
                 SELECT EXISTS (
                     SELECT 1 FROM information_schema.tables
                     WHERE table_name = $1
                 )
-            """, table_name)
+            """,
+                table_name,
+            )
             assert result is True, f"Table '{table_name}' does not exist"
 
     async def test_ast_nodes_has_tenant_index(self, pg_conn):
@@ -296,8 +304,9 @@ class TestTableCreation:
             WHERE tablename = 'ast_nodes' AND indexname LIKE '%tenant%'
         """)
         index_names = {r["indexname"] for r in indexes}
-        assert any("tenant" in name for name in index_names), \
+        assert any("tenant" in name for name in index_names), (
             f"Expected tenant indexes on ast_nodes, found: {index_names}"
+        )
 
     async def test_tables_are_idempotent(self, pg_db: PostgreSQLDatabase):
         """Calling initialize() again should not fail (IF NOT EXISTS)."""
@@ -311,6 +320,7 @@ class TestTableCreation:
 
 # ── 3. CRUD Operations on ast_nodes ─────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestCRUDOperations:
@@ -323,12 +333,10 @@ class TestCRUDOperations:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("test.py", "function", "hello", 0, 100, "abc123", "tenant_a")
+                ("test.py", "function", "hello", 0, 100, "abc123", "tenant_a"),
             )
             row = await pg_db.fetch_one(
-                conn,
-                "SELECT * FROM ast_nodes WHERE name = ? AND tenant_id = ?",
-                ("hello", "tenant_a")
+                conn, "SELECT * FROM ast_nodes WHERE name = ? AND tenant_id = ?", ("hello", "tenant_a")
             )
             assert row is not None
             assert row["name"] == "hello"
@@ -344,12 +352,10 @@ class TestCRUDOperations:
                     conn,
                     "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (f"file_{i}.py", "class", f"Class{i}", i * 10, i * 10 + 50, f"hash_{i}", "tenant_b")
+                    (f"file_{i}.py", "class", f"Class{i}", i * 10, i * 10 + 50, f"hash_{i}", "tenant_b"),
                 )
             rows = await pg_db.fetch_all(
-                conn,
-                "SELECT * FROM ast_nodes WHERE tenant_id = ? ORDER BY name",
-                ("tenant_b",)
+                conn, "SELECT * FROM ast_nodes WHERE tenant_id = ? ORDER BY name", ("tenant_b",)
             )
             assert len(rows) == 5
             assert rows[0]["name"] == "Class0"
@@ -362,13 +368,9 @@ class TestCRUDOperations:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("val_test.py", "function", "count_fn", 0, 50, "hash_val", "tenant_c")
+                ("val_test.py", "function", "count_fn", 0, 50, "hash_val", "tenant_c"),
             )
-            count = await pg_db.fetch_val(
-                conn,
-                "SELECT COUNT(*) FROM ast_nodes WHERE tenant_id = ?",
-                ("tenant_c",)
-            )
+            count = await pg_db.fetch_val(conn, "SELECT COUNT(*) FROM ast_nodes WHERE tenant_id = ?", ("tenant_c",))
             assert count == 1
 
     async def test_update(self, pg_db: PostgreSQLDatabase):
@@ -378,18 +380,14 @@ class TestCRUDOperations:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("update.py", "function", "old_name", 0, 50, "hash_upd", "tenant_d")
+                ("update.py", "function", "old_name", 0, 50, "hash_upd", "tenant_d"),
             )
             await pg_db.execute(
                 conn,
                 "UPDATE ast_nodes SET name = ? WHERE tenant_id = ? AND name = ?",
-                ("new_name", "tenant_d", "old_name")
+                ("new_name", "tenant_d", "old_name"),
             )
-            row = await pg_db.fetch_one(
-                conn,
-                "SELECT name FROM ast_nodes WHERE tenant_id = ?",
-                ("tenant_d",)
-            )
+            row = await pg_db.fetch_one(conn, "SELECT name FROM ast_nodes WHERE tenant_id = ?", ("tenant_d",))
             assert row is not None
             assert row["name"] == "new_name"
 
@@ -400,38 +398,26 @@ class TestCRUDOperations:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("delete.py", "function", "to_delete", 0, 50, "hash_del", "tenant_e")
+                ("delete.py", "function", "to_delete", 0, 50, "hash_del", "tenant_e"),
             )
             await pg_db.execute(
-                conn,
-                "DELETE FROM ast_nodes WHERE tenant_id = ? AND name = ?",
-                ("tenant_e", "to_delete")
+                conn, "DELETE FROM ast_nodes WHERE tenant_id = ? AND name = ?", ("tenant_e", "to_delete")
             )
             row = await pg_db.fetch_one(
-                conn,
-                "SELECT * FROM ast_nodes WHERE tenant_id = ? AND name = ?",
-                ("tenant_e", "to_delete")
+                conn, "SELECT * FROM ast_nodes WHERE tenant_id = ? AND name = ?", ("tenant_e", "to_delete")
             )
             assert row is None
 
     async def test_fetch_one_returns_none_for_missing(self, pg_db: PostgreSQLDatabase):
         """fetch_one should return None when no row matches."""
         async with pg_db._pool.acquire() as conn:
-            row = await pg_db.fetch_one(
-                conn,
-                "SELECT * FROM ast_nodes WHERE name = ?",
-                ("nonexistent_name_xyz",)
-            )
+            row = await pg_db.fetch_one(conn, "SELECT * FROM ast_nodes WHERE name = ?", ("nonexistent_name_xyz",))
             assert row is None
 
     async def test_fetch_val_returns_none_for_missing(self, pg_db: PostgreSQLDatabase):
         """fetch_val should return None when no value matches."""
         async with pg_db._pool.acquire() as conn:
-            val = await pg_db.fetch_val(
-                conn,
-                "SELECT name FROM ast_nodes WHERE name = ?",
-                ("nonexistent_name_xyz",)
-            )
+            val = await pg_db.fetch_val(conn, "SELECT name FROM ast_nodes WHERE name = ?", ("nonexistent_name_xyz",))
             assert val is None
 
     async def test_execute_without_params(self, pg_db: PostgreSQLDatabase):
@@ -443,19 +429,16 @@ class TestCRUDOperations:
     async def test_jsonb_connections_field(self, pg_db: PostgreSQLDatabase):
         """The connections JSONB field should store and retrieve JSON."""
         import json
+
         async with pg_db._pool.acquire() as conn:
             connections_data = json.dumps(["node_a", "node_b", "node_c"])
             await pg_db.execute(
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, connections, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?)",
-                ("json_test.py", "function", "json_fn", 0, 50, "hash_json", connections_data, "tenant_json")
+                ("json_test.py", "function", "json_fn", 0, 50, "hash_json", connections_data, "tenant_json"),
             )
-            row = await pg_db.fetch_one(
-                conn,
-                "SELECT connections FROM ast_nodes WHERE tenant_id = ?",
-                ("tenant_json",)
-            )
+            row = await pg_db.fetch_one(conn, "SELECT connections FROM ast_nodes WHERE tenant_id = ?", ("tenant_json",))
             assert row is not None
             # asyncpg returns JSONB as a list/dict already deserialized
             connections = row["connections"]
@@ -465,6 +448,7 @@ class TestCRUDOperations:
 
 
 # ── 4. Tenant Isolation ─────────────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
@@ -479,32 +463,24 @@ class TestTenantIsolation:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("iso_a.py", "function", "fn_a", 0, 50, "hash_a", "tenant_iso_a")
+                ("iso_a.py", "function", "fn_a", 0, 50, "hash_a", "tenant_iso_a"),
             )
             # Insert for tenant_isolation_b
             await pg_db.execute(
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("iso_b.py", "function", "fn_b", 0, 50, "hash_b", "tenant_iso_b")
+                ("iso_b.py", "function", "fn_b", 0, 50, "hash_b", "tenant_iso_b"),
             )
 
             # Tenant A should only see their own data
-            rows_a = await pg_db.fetch_all(
-                conn,
-                "SELECT name FROM ast_nodes WHERE tenant_id = ?",
-                ("tenant_iso_a",)
-            )
+            rows_a = await pg_db.fetch_all(conn, "SELECT name FROM ast_nodes WHERE tenant_id = ?", ("tenant_iso_a",))
             names_a = {r["name"] for r in rows_a}
             assert "fn_a" in names_a
             assert "fn_b" not in names_a
 
             # Tenant B should only see their own data
-            rows_b = await pg_db.fetch_all(
-                conn,
-                "SELECT name FROM ast_nodes WHERE tenant_id = ?",
-                ("tenant_iso_b",)
-            )
+            rows_b = await pg_db.fetch_all(conn, "SELECT name FROM ast_nodes WHERE tenant_id = ?", ("tenant_iso_b",))
             names_b = {r["name"] for r in rows_b}
             assert "fn_b" in names_b
             assert "fn_a" not in names_b
@@ -517,20 +493,18 @@ class TestTenantIsolation:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("dup.py", "function", "common_fn", 0, 50, "hash_dup_a", "tenant_dup_a")
+                ("dup.py", "function", "common_fn", 0, 50, "hash_dup_a", "tenant_dup_a"),
             )
             # Same file_path + name + node_type, different tenant — should succeed
             await pg_db.execute(
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("dup.py", "function", "common_fn", 0, 50, "hash_dup_b", "tenant_dup_b")
+                ("dup.py", "function", "common_fn", 0, 50, "hash_dup_b", "tenant_dup_b"),
             )
 
             rows = await pg_db.fetch_all(
-                conn,
-                "SELECT tenant_id, content_hash FROM ast_nodes WHERE name = ? ORDER BY tenant_id",
-                ("common_fn",)
+                conn, "SELECT tenant_id, content_hash FROM ast_nodes WHERE name = ? ORDER BY tenant_id", ("common_fn",)
             )
             assert len(rows) == 2
             tenant_ids = {r["tenant_id"] for r in rows}
@@ -543,19 +517,20 @@ class TestTenantIsolation:
                 conn,
                 "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("uniq.py", "function", "unique_fn", 0, 50, "hash_uniq_1", "tenant_uniq")
+                ("uniq.py", "function", "unique_fn", 0, 50, "hash_uniq_1", "tenant_uniq"),
             )
             # Same (file_path, name, node_type, tenant_id) should violate unique constraint
-            with pytest.raises(Exception):  # asyncpg raises UniqueViolationError
+            with pytest.raises(Exception):  # noqa: B017 — asyncpg raises UniqueViolationError
                 await pg_db.execute(
                     conn,
                     "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    ("uniq.py", "function", "unique_fn", 0, 50, "hash_uniq_2", "tenant_uniq")
+                    ("uniq.py", "function", "unique_fn", 0, 50, "hash_uniq_2", "tenant_uniq"),
                 )
 
 
 # ── 5. adapt_query() Conversion ─────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
@@ -571,9 +546,7 @@ class TestAdaptQuery:
     def test_multiple_placeholders(self):
         """Multiple ? become $1, $2, $3, etc."""
         db = PostgreSQLDatabase.__new__(PostgreSQLDatabase)
-        result = db.adapt_query(
-            "INSERT INTO t (a, b, c) VALUES (?, ?, ?)"
-        )
+        result = db.adapt_query("INSERT INTO t (a, b, c) VALUES (?, ?, ?)")
         assert result == "INSERT INTO t (a, b, c) VALUES ($1, $2, $3)"
 
     def test_no_placeholders(self):
@@ -586,9 +559,7 @@ class TestAdaptQuery:
     def test_placeholders_in_different_positions(self):
         """Placeholders in WHERE and VALUES clauses."""
         db = PostgreSQLDatabase.__new__(PostgreSQLDatabase)
-        result = db.adapt_query(
-            "UPDATE t SET name = ? WHERE id = ? AND tenant_id = ?"
-        )
+        result = db.adapt_query("UPDATE t SET name = ? WHERE id = ? AND tenant_id = ?")
         assert result == "UPDATE t SET name = $1 WHERE id = $2 AND tenant_id = $3"
 
     def test_eight_placeholders(self):
@@ -606,6 +577,7 @@ class TestAdaptQuery:
     def test_sqlite_backend_passthrough(self):
         """SQLite backend should return query unchanged (no conversion)."""
         from src.core.shared.db_adapters._sqlite import SQLiteDatabase
+
         db = SQLiteDatabase.__new__(SQLiteDatabase)
         query = "SELECT * FROM users WHERE id = ?"
         result = db.adapt_query(query)
@@ -620,6 +592,7 @@ class TestAdaptQuery:
 
     def test_adapt_query_with_actual_db_execution(self, pg_db: PostgreSQLDatabase):
         """adapt_query is called automatically by execute/fetch methods."""
+
         async def _run():
             async with pg_db._pool.acquire() as conn:
                 # Use ? placeholders — adapt_query converts them to $1, $2 etc.
@@ -627,12 +600,10 @@ class TestAdaptQuery:
                     conn,
                     "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    ("adapt.py", "function", "adapted_fn", 0, 50, "hash_adapt", "tenant_adapt")
+                    ("adapt.py", "function", "adapted_fn", 0, 50, "hash_adapt", "tenant_adapt"),
                 )
                 row = await pg_db.fetch_one(
-                    conn,
-                    "SELECT * FROM ast_nodes WHERE name = ? AND tenant_id = ?",
-                    ("adapted_fn", "tenant_adapt")
+                    conn, "SELECT * FROM ast_nodes WHERE name = ? AND tenant_id = ?", ("adapted_fn", "tenant_adapt")
                 )
                 assert row is not None
                 assert row["name"] == "adapted_fn"
@@ -641,6 +612,7 @@ class TestAdaptQuery:
 
 
 # ── 6. DSN Conversion ───────────────────────────────────────
+
 
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestDSNConversion:
@@ -693,6 +665,7 @@ class TestDSNConversion:
 
 # ── 7. Connection Pool Behavior ─────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestConnectionPoolBehavior:
@@ -707,18 +680,17 @@ class TestConnectionPoolBehavior:
 
     async def test_concurrent_queries(self, pg_db: PostgreSQLDatabase):
         """Multiple concurrent queries should work without deadlocks."""
+
         async def insert_and_count(idx: int):
             async with pg_db._pool.acquire() as conn:
                 await pg_db.execute(
                     conn,
                     "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (f"concurrent_{idx}.py", "function", f"fn_{idx}", 0, 50, f"hash_c_{idx}", "tenant_concurrent")
+                    (f"concurrent_{idx}.py", "function", f"fn_{idx}", 0, 50, f"hash_c_{idx}", "tenant_concurrent"),
                 )
                 count = await pg_db.fetch_val(
-                    conn,
-                    "SELECT COUNT(*) FROM ast_nodes WHERE tenant_id = ?",
-                    ("tenant_concurrent",)
+                    conn, "SELECT COUNT(*) FROM ast_nodes WHERE tenant_id = ?", ("tenant_concurrent",)
                 )
                 return count
 
@@ -731,6 +703,7 @@ class TestConnectionPoolBehavior:
     async def test_custom_pool_size(self, pg_dsn: str):
         """A custom pool can be created with different min/max sizes."""
         import asyncpg
+
         converted = PostgreSQLDatabase._convert_dsn(pg_dsn)
         pool = await asyncpg.create_pool(
             converted,
@@ -747,6 +720,7 @@ class TestConnectionPoolBehavior:
 
 # ── 8. Error Handling ───────────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestErrorHandling:
@@ -755,31 +729,31 @@ class TestErrorHandling:
     async def test_invalid_query_raises(self, pg_db: PostgreSQLDatabase):
         """An invalid SQL query should raise an exception."""
         async with pg_db._pool.acquire() as conn:
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 await pg_db.execute(conn, "INVALID SQL STATEMENT")
 
     async def test_invalid_table_raises(self, pg_db: PostgreSQLDatabase):
         """Querying a non-existent table should raise an exception."""
         async with pg_db._pool.acquire() as conn:
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 await pg_db.fetch_all(conn, "SELECT * FROM nonexistent_table_xyz")
 
     async def test_type_mismatch_raises(self, pg_db: PostgreSQLDatabase):
         """Inserting wrong types should raise an exception."""
         async with pg_db._pool.acquire() as conn:
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 await pg_db.execute(
                     conn,
                     "INSERT INTO ast_nodes (file_path, node_type, name, start_byte, end_byte, content_hash, tenant_id) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    ("test.py", "function", "fn", "not_an_integer", 50, "hash", "tenant_err")
+                    ("test.py", "function", "fn", "not_an_integer", 50, "hash", "tenant_err"),
                     # start_byte is INTEGER, "not_an_integer" should fail
                 )
 
     async def test_connection_to_bad_host(self):
         """Connecting to a non-existent host should raise an error."""
         db = PostgreSQLDatabase(dsn="postgresql+asyncpg://user:pass@nonexistent.host:5432/db")
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             await db.initialize()
 
     async def test_asyncpg_not_installed_fallback(self, monkeypatch):
@@ -787,6 +761,7 @@ class TestErrorHandling:
         db = PostgreSQLDatabase(dsn="postgresql+asyncpg://zenic:zenic@localhost:5432/zenic_db")
         # Simulate asyncpg not being installed
         import importlib
+
         original_import = importlib.import_module
 
         def mock_import(name, *args, **kwargs):
@@ -797,6 +772,7 @@ class TestErrorHandling:
         monkeypatch.setattr(importlib, "import_module", mock_import)
         # Also patch the import inside the method
         import builtins
+
         original_builtin_import = builtins.__import__
 
         def mock_builtin_import(name, *args, **kwargs):
@@ -812,9 +788,7 @@ class TestErrorHandling:
         """fetch_one on an empty result set returns None (not an error)."""
         async with pg_db._pool.acquire() as conn:
             result = await pg_db.fetch_one(
-                conn,
-                "SELECT * FROM ast_nodes WHERE name = ?",
-                ("surely_nonexistent_12345",)
+                conn, "SELECT * FROM ast_nodes WHERE name = ?", ("surely_nonexistent_12345",)
             )
             assert result is None
 
@@ -822,14 +796,13 @@ class TestErrorHandling:
         """fetch_all on an empty result set returns [] (not an error)."""
         async with pg_db._pool.acquire() as conn:
             result = await pg_db.fetch_all(
-                conn,
-                "SELECT * FROM ast_nodes WHERE name = ?",
-                ("surely_nonexistent_12345",)
+                conn, "SELECT * FROM ast_nodes WHERE name = ?", ("surely_nonexistent_12345",)
             )
             assert result == []
 
 
 # ── 9. Backend Name and Factory Integration ─────────────────
+
 
 @pytest.mark.skipif(pg_not_available, reason=SKIP_REASON)
 class TestBackendIntegration:
@@ -847,6 +820,7 @@ class TestBackendIntegration:
     def test_factory_get_db_backend(self, monkeypatch):
         """get_db_backend() should return 'postgresql' when ZENIC_ENV=production."""
         from src.core.shared.db_adapters import get_db_backend, reset_db
+
         monkeypatch.setenv("ZENIC_ENV", "production")
         reset_db()
         assert get_db_backend() == "postgresql"
@@ -855,6 +829,7 @@ class TestBackendIntegration:
     def test_factory_is_postgresql(self, monkeypatch):
         """is_postgresql() should detect PostgreSQL configuration."""
         from src.core.shared.db_adapters import is_postgresql
+
         monkeypatch.setenv("ZENIC_ENV", "production")
         assert is_postgresql() is True
         monkeypatch.delenv("ZENIC_ENV", raising=False)

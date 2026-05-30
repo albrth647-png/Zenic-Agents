@@ -36,7 +36,7 @@ import {
 // ═══════════════════════════════════════════════════════════════════════════
 
 class ApprovalEngine {
-  private static instance: ApprovalEngine | null = null;
+  public static instance: ApprovalEngine | null = null;
 
   private constructor() {}
 

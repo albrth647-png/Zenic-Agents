@@ -247,7 +247,7 @@ class TriggerMap:
         try:
             import yaml  # type: ignore[import-untyped]
         except ImportError:
-            logger.error("TriggerMap: PyYAML not installed, cannot load from YAML. " "Install with: pip install pyyaml")
+            logger.error("TriggerMap: PyYAML not installed, cannot load from YAML. Install with: pip install pyyaml")
             return 0
 
         try:
@@ -286,7 +286,7 @@ class TriggerMap:
                 condition = m.get("condition")
                 if not event_pattern or not automation_id:
                     logger.warning(
-                        "TriggerMap: skipping mapping with missing " "event_pattern or automation_id: %s",
+                        "TriggerMap: skipping mapping with missing event_pattern or automation_id: %s",
                         m,
                     )
                     continue

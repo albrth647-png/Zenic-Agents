@@ -20,8 +20,8 @@ from src.core.agents.transport.text_channel_agent import TextChannelAgent
 #  A53 — Construction & Wiring
 # ════════════════════════════════════════════════════════════════
 
-class TestA53Construction:
 
+class TestA53Construction:
     def test_default_construction(self):
         agent = TextChannelAgent()
         assert agent.name == "A53_TextChannelAgent"
@@ -39,8 +39,8 @@ class TestA53Construction:
 #  A53 — Input Validation
 # ════════════════════════════════════════════════════════════════
 
-class TestA53InputValidation:
 
+class TestA53InputValidation:
     def test_text_channel_input_passthrough(self):
         agent = TextChannelAgent()
         inp = TextChannelInput(text="Hola", channel="whatsapp")
@@ -105,8 +105,8 @@ class TestA53InputValidation:
 #  A53 — execute() without wiring
 # ════════════════════════════════════════════════════════════════
 
-class TestA53ExecuteUnwired:
 
+class TestA53ExecuteUnwired:
     def test_execute_without_registry_returns_failure(self):
         agent = TextChannelAgent()
         inp = TextChannelInput(text="Hola", channel="whatsapp")
@@ -134,8 +134,8 @@ class TestA53ExecuteUnwired:
 #  A53 — fallback()
 # ════════════════════════════════════════════════════════════════
 
-class TestA53Fallback:
 
+class TestA53Fallback:
     def test_fallback_returns_safe_result(self):
         agent = TextChannelAgent()
         inp = TextChannelInput(text="Hola", channel="whatsapp")
@@ -172,8 +172,8 @@ class TestA53Fallback:
 #  A53 — _make_result helper
 # ════════════════════════════════════════════════════════════════
 
-class TestA53MakeResult:
 
+class TestA53MakeResult:
     def test_make_result_defaults(self):
         data = TextChannelInput(text="Hola", channel="whatsapp")
         result = TextChannelAgent._make_result(data=data)
@@ -206,8 +206,8 @@ class TestA53MakeResult:
 #  A53 — _add_part_indicators helper
 # ════════════════════════════════════════════════════════════════
 
-class TestA53PartIndicators:
 
+class TestA53PartIndicators:
     def test_single_chunk_no_indicator(self):
         result = TextChannelAgent._add_part_indicators(["Hola"], 4096)
         assert result == ["Hola"]
@@ -244,8 +244,8 @@ class TestA53PartIndicators:
 #  A53 — deliver() async without registry
 # ════════════════════════════════════════════════════════════════
 
-class TestA53AsyncDeliver:
 
+class TestA53AsyncDeliver:
     @pytest.mark.asyncio
     async def test_deliver_without_registry(self):
         agent = TextChannelAgent()
@@ -272,8 +272,8 @@ class TestA53AsyncDeliver:
 #  A53 — Edge cases
 # ════════════════════════════════════════════════════════════════
 
-class TestA53EdgeCases:
 
+class TestA53EdgeCases:
     def test_very_long_text_input(self):
         """Texto extremadamente largo — el dataclass lo acepta."""
         agent = TextChannelAgent()

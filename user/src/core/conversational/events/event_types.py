@@ -173,9 +173,7 @@ class EventTypes:
             source=source,
         )
 
-    def session_created(
-        self, session_id: str, source: str = "session_manager"
-    ) -> Event:
+    def session_created(self, session_id: str, source: str = "session_manager") -> Event:
         """Emite evento de sesion creada."""
         return self._bus.emit(
             event_type=EventType.SESSION_CREATED,
@@ -184,9 +182,7 @@ class EventTypes:
             source=source,
         )
 
-    def session_ended(
-        self, session_id: str, source: str = "session_manager"
-    ) -> Event:
+    def session_ended(self, session_id: str, source: str = "session_manager") -> Event:
         """Emite evento de sesion terminada."""
         return self._bus.emit(
             event_type=EventType.SESSION_ENDED,

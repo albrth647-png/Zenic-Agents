@@ -79,9 +79,7 @@ class ViolationCheckerMixin:
                     ):
                         break
                 else:
-                    violations.append(
-                        f"Potential None dereference: '{var_name}' may be None " f"in function '{func_name}'"
-                    )
+                    violations.append(f"Potential None dereference: '{var_name}' may be None in function '{func_name}'")
 
     def _check_division_by_zero(self, path, func_name, violations):
         """Check for potential division by zero on a path."""
@@ -97,7 +95,7 @@ class ViolationCheckerMixin:
                 for expr_str in all_exprs:
                     if f"/SYM({var_name})" in expr_str or f"%SYM({var_name})" in expr_str:
                         violations.append(
-                            f"Potential division by zero: '{var_name}' may be 0 " f"in function '{func_name}'"
+                            f"Potential division by zero: '{var_name}' may be 0 in function '{func_name}'"
                         )
                         break  # One violation per variable is enough
 
@@ -153,7 +151,7 @@ class ViolationCheckerMixin:
                         )
                         if not is_constrained_nonzero:
                             violations.append(
-                                f"Potential division by zero: '{denom_var}' may be 0 " f"in function '{func_name}'"
+                                f"Potential division by zero: '{denom_var}' may be 0 in function '{func_name}'"
                             )
                 else:
                     # No Z3: heuristic check - is the variable constrained away from zero?
@@ -165,7 +163,7 @@ class ViolationCheckerMixin:
                     )
                     if not is_constrained_nonzero and sym_val.concrete is None:
                         violations.append(
-                            f"Potential division by zero: '{denom_var}' may be 0 " f"in function '{func_name}'"
+                            f"Potential division by zero: '{denom_var}' may be 0 in function '{func_name}'"
                         )
 
     def _check_index_out_of_bounds(self, path, func_name, violations):
@@ -266,17 +264,19 @@ class ViolationCheckerMixin:
             desc = str(rv.get("desc", ""))
             # If the description is just a bare name (not SYM(...), not a literal)
             # then the variable was not in the symbolic state when used
-            if not desc.startswith("SYM(") and not desc.startswith(("'", '"', "-", "(")):
-                # It's a bare name - check if it was initialized
-                if (
+            if (
+                not desc.startswith("SYM(")
+                and not desc.startswith(("'", '"', "-", "("))
+                and (
                     desc not in {"None", "True", "False", "UNKNOWN", "SYM_EXPR"}
                     and not desc[0].isdigit()
                     and desc not in path.variables
                     and desc not in initialized
                     and not desc.startswith("_")
                     and "(" not in desc
-                ):
-                    violations.append(f"Potential uninitialized variable: '{desc}' used " f"in function '{func_name}'")
+                )
+            ):
+                violations.append(f"Potential uninitialized variable: '{desc}' used in function '{func_name}'")
 
     # ----------------------------------------------------------------
     #  Return Consistency Check

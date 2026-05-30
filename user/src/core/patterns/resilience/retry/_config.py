@@ -53,7 +53,7 @@ class RetryConfig:
             raise ValueError("jitter_max must be in [0.0, 1.0]")
         if self.backoff_strategy not in ("exponential", "linear", "fixed"):
             raise ValueError(
-                f"backoff_strategy must be 'exponential', 'linear', or 'fixed', " f"got {self.backoff_strategy!r}"
+                f"backoff_strategy must be 'exponential', 'linear', or 'fixed', got {self.backoff_strategy!r}"
             )
 
 

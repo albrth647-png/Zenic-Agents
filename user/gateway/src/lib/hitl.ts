@@ -107,7 +107,7 @@ export async function createApprovalRequest(params: CreateApprovalRequest) {
   // #44 Fix: Shorter expiration — 15 min instead of 30 for approved actions
   const expiresAt = params.expiresAt || new Date(Date.now() + 15 * 60 * 1000);
 
-  return db.approvalRequest.create({
+  return db.hitlApprovalRequest.create({
     data: {
       action: params.action,
       target: params.target,
@@ -293,7 +293,7 @@ export function verifyApprovalToken(token: string, expectedApprovalId: string, e
  * that must be presented to execute the approved action.
  */
 export async function reviewApprovalRequest(params: ReviewApprovalRequest) {
-  const request = await db.approvalRequest.findUnique({
+  const request = await db.hitlApprovalRequest.findUnique({
     where: { id: params.requestId },
   });
 
@@ -307,7 +307,7 @@ export async function reviewApprovalRequest(params: ReviewApprovalRequest) {
 
   // #44 Fix: Check expiration during review too
   if (request.expiresAt && new Date() > request.expiresAt) {
-    await db.approvalRequest.update({
+    await db.hitlApprovalRequest.update({
       where: { id: params.requestId },
       data: { status: 'expired', resolvedAt: new Date() },
     });
@@ -347,7 +347,7 @@ export async function reviewApprovalRequest(params: ReviewApprovalRequest) {
   const resolvedAt = new Date();
 
   // Update request
-  const updated = await db.approvalRequest.update({
+  const updated = await db.hitlApprovalRequest.update({
     where: { id: params.requestId },
     data: {
       status: params.decision === 'approve' ? 'approved' : 'rejected',
@@ -359,7 +359,7 @@ export async function reviewApprovalRequest(params: ReviewApprovalRequest) {
   });
 
   // Create audit trail
-  await db.approvalAction.create({
+  await db.hitlApprovalAction.create({
     data: {
       requestId: params.requestId,
       userId: params.reviewerId,
@@ -388,7 +388,7 @@ export async function reviewApprovalRequest(params: ReviewApprovalRequest) {
  * Get all pending approval requests.
  */
 export async function getPendingApprovals() {
-  return db.approvalRequest.findMany({
+  return db.hitlApprovalRequest.findMany({
     where: { status: 'pending' },
     orderBy: { createdAt: 'desc' },
     include: {
@@ -401,14 +401,14 @@ export async function getPendingApprovals() {
  * Get approval history with audit trail.
  */
 export async function getApprovalHistory(limit = 50) {
-  return db.approvalRequest.findMany({
+  return db.hitlApprovalRequest.findMany({
     where: { status: { in: ['approved', 'rejected', 'expired'] } },
     orderBy: { resolvedAt: 'desc' },
     take: limit,
     include: {
       requester: { select: { id: true, name: true, email: true, role: true } },
       reviewer: { select: { id: true, name: true, email: true, role: true } },
-      actions: true,
+      hitlApprovalActions: true,
     },
   });
 }

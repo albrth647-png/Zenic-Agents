@@ -246,7 +246,7 @@ class BlueprintComposer:
         if self._strategy == ConflictStrategy.LAST_WINS:
             return new
         if self._strategy == ConflictStrategy.FAIL:
-            raise ValueError(f"Entity conflict: {existing.name} — " f"FAIL strategy aborts composition")
+            raise ValueError(f"Entity conflict: {existing.name} — FAIL strategy aborts composition")
 
         # MERGE strategy: combine fields
         field_map: dict[str, DBFieldSchema] = {}

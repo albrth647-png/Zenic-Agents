@@ -123,7 +123,9 @@ class NicheOnboardingPipeline:
 
         logger.info(
             "Pipeline %s: Started for niche=%s category=%s",
-            state.pipeline_id, niche_id, state.niche_category,
+            state.pipeline_id,
+            niche_id,
+            state.niche_category,
         )
         return state
 
@@ -159,7 +161,9 @@ class NicheOnboardingPipeline:
             if result.template_dict is not None:
                 state.template_dict = result.template_dict
             state.fields_auto_filled = len(result.matched_fields)
-            state.add_warning(f"Auto-filled {len(result.matched_fields)} fields from {result.documents_processed} documents")
+            state.add_warning(
+                f"Auto-filled {len(result.matched_fields)} fields from {result.documents_processed} documents"
+            )
         else:
             if result.errors:
                 state.add_warning(f"Document ingestion had errors: {'; '.join(result.errors[:3])}")
@@ -176,7 +180,9 @@ class NicheOnboardingPipeline:
         state.advance(PipelineStep.UPLOAD_DOCUMENTS)
         logger.info(
             "Pipeline %s: Ingested %d documents, auto-filled %d fields",
-            state.pipeline_id, state.documents_ingested, state.fields_auto_filled,
+            state.pipeline_id,
+            state.documents_ingested,
+            state.fields_auto_filled,
         )
         return state
 
@@ -254,7 +260,8 @@ class NicheOnboardingPipeline:
             if validation.get("valid", False):
                 logger.info(
                     "Pipeline %s: Template validation passed (%.1f%% complete)",
-                    state.pipeline_id, validation.get("completion_pct", 0.0),
+                    state.pipeline_id,
+                    validation.get("completion_pct", 0.0),
                 )
             else:
                 missing = validation.get("missing_field_names", [])
@@ -300,13 +307,12 @@ class NicheOnboardingPipeline:
         state.safety_result = safety_result
 
         if not safety_result.can_proceed:
-            state.add_error(
-                f"Safety gate BLOCKED: {safety_result.reason}"
-            )
+            state.add_error(f"Safety gate BLOCKED: {safety_result.reason}")
             state.advance(PipelineStep.FAILED)
             logger.warning(
                 "Pipeline %s: Safety check FAILED — %s",
-                state.pipeline_id, safety_result.reason,
+                state.pipeline_id,
+                safety_result.reason,
             )
             return state
 
@@ -325,7 +331,8 @@ class NicheOnboardingPipeline:
         state.advance(PipelineStep.SAFETY_CHECK)
         logger.info(
             "Pipeline %s: Safety check PASSED (verdict=%s)",
-            state.pipeline_id, safety_result.final_verdict,
+            state.pipeline_id,
+            safety_result.final_verdict,
         )
         return state
 
@@ -347,9 +354,7 @@ class NicheOnboardingPipeline:
             state.advance(PipelineStep.FAILED)
             return state
 
-        cert_result = self._certifier.certify_template(
-            state.template_dict, private_key
-        )
+        cert_result = self._certifier.certify_template(state.template_dict, private_key)
 
         state.cert_result = cert_result
 
@@ -384,10 +389,7 @@ class NicheOnboardingPipeline:
 
         state.advance(PipelineStep.COMPLETED)
 
-        success = (
-            state.current_step == PipelineStep.COMPLETED
-            and len(state.errors) == 0
-        )
+        success = state.current_step == PipelineStep.COMPLETED and len(state.errors) == 0
 
         logger.info(
             "Pipeline %s: %s (niche=%s, safety=%s, certified=%s)",
@@ -483,7 +485,10 @@ class NicheOnboardingPipeline:
     # ── Helpers ───────────────────────────────────────────────
 
     def _auto_fill_field(
-        self, template_dict: dict[str, Any], field_name: str, value: str,
+        self,
+        template_dict: dict[str, Any],
+        field_name: str,
+        value: str,
     ) -> bool:
         """Auto-fill a field by searching all sections."""
         template = template_dict.get("template", template_dict)

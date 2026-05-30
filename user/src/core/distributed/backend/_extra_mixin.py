@@ -21,6 +21,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the lock was extended.
         """
+
     async def is_locked(self, lock_name: str) -> bool:
         """
         Check if a lock is currently held.
@@ -31,6 +32,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the lock is currently held by someone.
         """
+
     async def campaign(self, election_name: str, candidate_id: str, ttl_seconds: float = 30.0) -> bool:
         """
         Attempt to become leader for the given election.
@@ -43,6 +45,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if leadership was acquired.
         """
+
     async def abdicate(self, election_name: str, leader_id: str) -> bool:
         """
         Voluntarily step down as leader.
@@ -54,6 +57,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if leadership was relinquished.
         """
+
     async def get_leader(self, election_name: str) -> str | None:
         """
         Get the current leader for an election.
@@ -64,6 +68,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             Leader ID, or None if no leader.
         """
+
     async def renew_leadership(self, election_name: str, leader_id: str, ttl_seconds: float = 30.0) -> bool:
         """
         Renew leadership before it expires.
@@ -76,6 +81,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if leadership was renewed.
         """
+
     async def get_circuit_state(self, circuit_name: str) -> dict[str, Any] | None:
         """
         Get the shared state of a circuit breaker.
@@ -86,6 +92,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             Dict with circuit state, or None if not found.
         """
+
     async def update_circuit_state(
         self,
         circuit_name: str,
@@ -103,6 +110,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the update succeeded (version matched if specified).
         """
+
     async def create_saga(
         self,
         saga_id: str,
@@ -123,6 +131,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the saga was created.
         """
+
     async def get_saga(self, saga_id: str) -> dict[str, Any] | None:
         """
         Get saga state by ID.
@@ -133,6 +142,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             Dict with saga state, or None if not found.
         """
+
     async def update_saga_step(
         self,
         saga_id: str,
@@ -154,6 +164,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the step was updated.
         """
+
     async def update_saga_status(
         self,
         saga_id: str,
@@ -171,6 +182,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the saga was updated.
         """
+
     async def register_node(self, node_info: dict[str, Any]) -> bool:
         """
         Register this node in the cluster topology.
@@ -181,6 +193,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if registration succeeded.
         """
+
     async def heartbeat(self, node_id: str, status: dict[str, Any] | None = None) -> bool:
         """
         Send a heartbeat for this node.
@@ -192,6 +205,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the heartbeat was recorded.
         """
+
     async def deregister_node(self, node_id: str) -> bool:
         """
         Remove a node from the cluster topology.
@@ -202,6 +216,7 @@ class CoordinationBackendExtraMixin:
         Returns:
             True if the node was found and removed.
         """
+
     async def list_nodes(self, active_only: bool = True) -> list[dict[str, Any]]:
         """
         List nodes in the cluster.

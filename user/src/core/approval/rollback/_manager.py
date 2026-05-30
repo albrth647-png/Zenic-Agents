@@ -92,13 +92,17 @@ class RollbackManager:
 
         with self._lock:
             persist_compensation(
-                self._db_path, request_id, action, insert=True,
+                self._db_path,
+                request_id,
+                action,
+                insert=True,
             )
 
         logger.info(
-            "RollbackManager: Registered compensation %s for request %s "
-            "(type=%s)",
-            action.action_id, request_id, action_type,
+            "RollbackManager: Registered compensation %s for request %s (type=%s)",
+            action.action_id,
+            request_id,
+            action_type,
         )
         return action
 
@@ -142,27 +146,33 @@ class RollbackManager:
         for action in reversed(actions):
             try:
                 result = self._execute_compensation_action(action)
-                results.append({
-                    "action_id": action.action_id,
-                    "action_type": action.action_type,
-                    "success": True,
-                    "result": result,
-                })
+                results.append(
+                    {
+                        "action_id": action.action_id,
+                        "action_type": action.action_type,
+                        "success": True,
+                        "result": result,
+                    }
+                )
                 logger.info(
                     "RollbackManager: Executed compensation %s (%s)",
-                    action.action_id, action.action_type,
+                    action.action_id,
+                    action.action_type,
                 )
             except Exception as exc:
                 all_succeeded = False
-                results.append({
-                    "action_id": action.action_id,
-                    "action_type": action.action_type,
-                    "success": False,
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "action_id": action.action_id,
+                        "action_type": action.action_type,
+                        "success": False,
+                        "error": str(exc),
+                    }
+                )
                 logger.warning(
                     "RollbackManager: Compensation %s failed — %s",
-                    action.action_id, exc,
+                    action.action_id,
+                    exc,
                 )
                 # Continue executing remaining compensations even on failure
 
@@ -184,9 +194,10 @@ class RollbackManager:
         self._record_audit_event(request_id, record)
 
         logger.info(
-            "RollbackManager: Rollback %s for request %s — status=%s "
-            "(%d/%d actions succeeded)",
-            record.rollback_id, request_id, record.status.value,
+            "RollbackManager: Rollback %s for request %s — status=%s (%d/%d actions succeeded)",
+            record.rollback_id,
+            request_id,
+            record.status.value,
             sum(1 for r in results if r.get("success")),
             len(results),
         )
@@ -216,7 +227,8 @@ class RollbackManager:
     # ── Private Helpers ────────────────────────────────────
 
     def _execute_compensation_action(
-        self, action: CompensationAction,
+        self,
+        action: CompensationAction,
     ) -> dict[str, Any]:
         """Execute a single compensation action.
 
@@ -225,7 +237,9 @@ class RollbackManager:
         """
         logger.info(
             "RollbackManager: Executing compensation: %s (%s) — %s",
-            action.action_id, action.action_type, action.description,
+            action.action_id,
+            action.action_type,
+            action.description,
         )
 
         # Stub: log and return success
@@ -237,20 +251,24 @@ class RollbackManager:
         }
 
     def _record_in_merkle_ledger(
-        self, merkle_ledger: Any, record: RollbackRecord,
+        self,
+        merkle_ledger: Any,
+        record: RollbackRecord,
     ) -> None:
         """Record the rollback in the Merkle ledger."""
         # The merkle_ledger parameter is expected to be an object with
         # an append() method or similar interface from level7_merkle_ledger
         if hasattr(merkle_ledger, "append"):
-            merkle_ledger.append({
-                "type": "ROLLBACK_EXECUTED",
-                "rollback_id": record.rollback_id,
-                "request_id": record.request_id,
-                "trigger": record.trigger.value,
-                "merkle_hash": record.merkle_hash,
-                "timestamp": record.executed_at or record.created_at,
-            })
+            merkle_ledger.append(
+                {
+                    "type": "ROLLBACK_EXECUTED",
+                    "rollback_id": record.rollback_id,
+                    "request_id": record.request_id,
+                    "trigger": record.trigger.value,
+                    "merkle_hash": record.merkle_hash,
+                    "timestamp": record.executed_at or record.created_at,
+                }
+            )
         elif hasattr(merkle_ledger, "record_event"):
             merkle_ledger.record_event(
                 request_id=record.request_id,
@@ -265,11 +283,14 @@ class RollbackManager:
             )
 
     def _record_audit_event(
-        self, request_id: str, record: RollbackRecord,
+        self,
+        request_id: str,
+        record: RollbackRecord,
     ) -> None:
         """Record a ROLLBACK_EXECUTED event in the audit merkle trail."""
         try:
             from ..audit_merkle import get_approval_audit_merkle
+
             audit = get_approval_audit_merkle()
             audit.record_event(
                 request_id=request_id,

@@ -35,7 +35,10 @@ class CoreMixin:
     # ------------------------------------------------------------------
 
     def compose_from_event(
-        self, event_type: str, event_data: dict[str, Any], tenant_id: str,
+        self,
+        event_type: str,
+        event_data: dict[str, Any],
+        tenant_id: str,
     ) -> ComposedChain | None:
         """Given an event, select and compose relevant chain templates."""
         with self._lock:
@@ -56,7 +59,10 @@ class CoreMixin:
             return None
 
     def compose_from_intent(
-        self, intent: str, context: dict[str, Any], tenant_id: str,
+        self,
+        intent: str,
+        context: dict[str, Any],
+        tenant_id: str,
     ) -> ComposedChain | None:
         """Compose a chain from a natural language intent."""
         with self._lock:
@@ -103,7 +109,9 @@ class CoreMixin:
 
         for step in chain.steps:
             if step.next_step_id and step.next_step_id not in step_ids:
-                result.errors.append(f"Step '{step.step_id}' references non-existent next_step_id '{step.next_step_id}'")
+                result.errors.append(
+                    f"Step '{step.step_id}' references non-existent next_step_id '{step.next_step_id}'"
+                )
                 result.valid = False
 
         if chain.steps:
@@ -151,7 +159,8 @@ class CoreMixin:
         steps_by_id = {s.step_id: s for s in chain.steps}
         if not chain.steps:
             result = ChainExecutionResult(
-                chain_id=chain.chain_id, success=False,
+                chain_id=chain.chain_id,
+                success=False,
                 error="Chain has no steps to execute",
             )
             with self._lock:
@@ -166,7 +175,8 @@ class CoreMixin:
         while current_step is not None:
             if current_step.step_id in visited and current_step.next_step_id:
                 result = ChainExecutionResult(
-                    chain_id=chain.chain_id, success=False,
+                    chain_id=chain.chain_id,
+                    success=False,
                     step_results=step_results,
                     total_duration_ms=int((time.monotonic() - start_time) * 1000),
                     failed_step=current_step.step_id,
@@ -185,7 +195,8 @@ class CoreMixin:
             if not step_result.success:
                 elapsed_ms = int((time.monotonic() - start_time) * 1000)
                 result = ChainExecutionResult(
-                    chain_id=chain.chain_id, success=False,
+                    chain_id=chain.chain_id,
+                    success=False,
                     step_results=step_results,
                     total_duration_ms=elapsed_ms,
                     failed_step=current_step.step_id,
@@ -206,8 +217,10 @@ class CoreMixin:
 
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         result = ChainExecutionResult(
-            chain_id=chain.chain_id, success=True,
-            step_results=step_results, total_duration_ms=elapsed_ms,
+            chain_id=chain.chain_id,
+            success=True,
+            step_results=step_results,
+            total_duration_ms=elapsed_ms,
         )
         with self._lock:
             chain.status = ChainStatus.COMPLETED
@@ -216,13 +229,16 @@ class CoreMixin:
         return result
 
     def _execute_step_with_retry(
-        self, step: ChainStep, context: dict[str, Any],
+        self,
+        step: ChainStep,
+        context: dict[str, Any],
     ) -> ChainStepResult:
         """Execute a single step with exponential-backoff retry."""
         executor = STEP_EXECUTORS.get(step.step_type)
         if executor is None:
             return ChainStepResult(
-                step_id=step.step_id, success=False,
+                step_id=step.step_id,
+                success=False,
                 error=f"No executor for step_type '{step.step_type}'",
             )
 
@@ -243,15 +259,20 @@ class CoreMixin:
                         time.sleep(delay)
                         continue
                     return ChainStepResult(
-                        step_id=step.step_id, success=False,
-                        output=output, duration_ms=duration_ms,
-                        retry_count=attempt, error=last_error,
+                        step_id=step.step_id,
+                        success=False,
+                        output=output,
+                        duration_ms=duration_ms,
+                        retry_count=attempt,
+                        error=last_error,
                     )
 
                 return ChainStepResult(
-                    step_id=step.step_id, success=True,
+                    step_id=step.step_id,
+                    success=True,
                     output=output if isinstance(output, dict) else {"result": output},
-                    duration_ms=duration_ms, retry_count=attempt,
+                    duration_ms=duration_ms,
+                    retry_count=attempt,
                 )
 
             except Exception as exc:
@@ -264,6 +285,9 @@ class CoreMixin:
                     logger.warning("Step %s failed after %d attempts: %s", step.step_id, max_retries, exc)
 
         return ChainStepResult(
-            step_id=step.step_id, success=False,
-            output={}, retry_count=max_retries, error=last_error,
+            step_id=step.step_id,
+            success=False,
+            output={},
+            retry_count=max_retries,
+            error=last_error,
         )

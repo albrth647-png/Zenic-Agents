@@ -9,7 +9,7 @@ NO espera a que el usuario note inconsistencias.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from src.core.sna.monitors.base import BaseMonitor, MonitorResult, MonitorWeight
 
@@ -28,7 +28,7 @@ class DuplicateRecordsMonitor(BaseMonitor):
     interval_seconds = 7200  # Cada 2 horas
 
     # Tablas y columnas a verificar por duplicados
-    DEFAULT_CHECKS: list[dict[str, Any]] = [  # noqa: F821  # TODO: Phase3 - verify import
+    DEFAULT_CHECKS: ClassVar[list[dict[str, Any]]] = [  # TODO: Phase3 - verify import
         {"table": "clientes", "columns": ["email", "telefono"]},
         {"table": "productos", "columns": ["codigo", "nombre"]},
         {"table": "facturas", "columns": ["numero"]},

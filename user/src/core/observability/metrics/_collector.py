@@ -5,6 +5,7 @@ Centralized Prometheus metrics collection with fallback
 to internal counters when prometheus_client is unavailable.
 """
 
+import contextlib
 import logging
 import threading
 import time
@@ -84,20 +85,16 @@ class MetricsCollector:
         with self._lock:
             self._active_requests += 1
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._active_requests_gauge.inc()
-            except Exception:  # noqa: S110
-                pass
 
     def dec_active_requests(self) -> None:
         """Decrement the active requests counter."""
         with self._lock:
             self._active_requests = max(0, self._active_requests - 1)
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._active_requests_gauge.dec()
-            except Exception:  # noqa: S110
-                pass
 
     # ── Rate Limit Tracking ────────────────────────────────
 
@@ -106,20 +103,16 @@ class MetricsCollector:
         with self._lock:
             self._rate_limit_accepted += 1
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._rate_limit_accepted_total.inc()
-            except Exception:  # noqa: S110
-                pass
 
     def record_rate_limit_rejected(self) -> None:
         """Record a rejected request (rate limiter denied)."""
         with self._lock:
             self._rate_limit_rejected += 1
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._rate_limit_rejected_total.inc()
-            except Exception:  # noqa: S110
-                pass
 
     # ── Auth Tracking ──────────────────────────────────────
 
@@ -128,20 +121,16 @@ class MetricsCollector:
         with self._lock:
             self._auth_success += 1
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._auth_success_total.labels(auth_method=method).inc()
-            except Exception:  # noqa: S110
-                pass
 
     def record_auth_failure(self, method: str = "jwt") -> None:
         """Record a failed authentication."""
         with self._lock:
             self._auth_failure += 1
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._auth_failure_total.labels(auth_method=method).inc()
-            except Exception:  # noqa: S110
-                pass
 
     # ── Circuit Breaker Tracking ───────────────────────────
 
@@ -152,10 +141,8 @@ class MetricsCollector:
         with self._lock:
             self._circuit_breaker_open[name] = state != "closed"
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._circuit_breaker_state_gauge.labels(name=name).set(value)
-            except Exception:  # noqa: S110
-                pass
 
     # ── Task Queue Tracking ────────────────────────────────
 
@@ -164,10 +151,8 @@ class MetricsCollector:
         with self._lock:
             self._task_queue_depth[queue_name] = depth
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._task_queue_depth_gauge.labels(queue_name=queue_name).set(depth)
-            except Exception:  # noqa: S110
-                pass
 
     def record_task_completed(self, task_type: str, worker_id: str, duration: float = 0.0) -> None:
         """Record a completed task."""
@@ -179,19 +164,17 @@ class MetricsCollector:
                 ).inc()
                 if self._config.histograms and duration > 0:
                     self._task_duration_seconds.labels(task_type=task_type).observe(duration)
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
     def record_task_failed(self, task_type: str, worker_id: str) -> None:
         """Record a failed task."""
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._tasks_failed_total.labels(
                     task_type=task_type,
                     worker_id=worker_id,
                 ).inc()
-            except Exception:  # noqa: S110
-                pass
 
     # ── Resource Tracking ──────────────────────────────────
 
@@ -201,24 +184,20 @@ class MetricsCollector:
             try:
                 self._ram_usage_mb_gauge.set(ram_mb)
                 self._cpu_usage_pct_gauge.set(cpu_pct)
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
     def update_uptime(self, seconds: float) -> None:
         """Update uptime metric."""
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._uptime_seconds_gauge.set(seconds)
-            except Exception:  # noqa: S110
-                pass
 
     def update_tenant_count(self, count: int) -> None:
         """Update active tenant count."""
         if self._prom_available:
-            try:
+            with contextlib.suppress(Exception):
                 self._tenant_active_gauge.set(count)
-            except Exception:  # noqa: S110
-                pass
 
     # ── Export ─────────────────────────────────────────────
 
@@ -229,7 +208,7 @@ class MetricsCollector:
                 import prometheus_client
 
                 return prometheus_client.generate_latest().decode("utf-8")
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         # Fallback: custom text format

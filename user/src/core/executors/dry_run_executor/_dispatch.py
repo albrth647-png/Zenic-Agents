@@ -54,7 +54,9 @@ def dry_run_dispatch(
     impact_preview_dict: dict[str, Any] = {}
     try:
         impact_preview_dict = executor.preview_action(
-            action_type, config, context,
+            action_type,
+            config,
+            context,
         )
     except Exception as exc:
         logger.warning("dry_run_dispatch: impact preview failed: %s", exc)
@@ -115,7 +117,10 @@ def dry_run_dispatch(
 
     logger.info(
         "dry_run_dispatch: %s — would_succeed=%s verdict=%s ops=%d",
-        action_type, would_succeed, safety_verdict, len(simulated_ops),
+        action_type,
+        would_succeed,
+        safety_verdict,
+        len(simulated_ops),
     )
 
     return result

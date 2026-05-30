@@ -182,7 +182,7 @@ class SnapshotAuditEngine:
         )
 
         logger.info(
-            "SnapshotAuditEngine: capture_after %s/%s pair=%s " "before=%s after=%s tenant=%s",
+            "SnapshotAuditEngine: capture_after %s/%s pair=%s before=%s after=%s tenant=%s",
             entity_type,
             entity_id,
             pair_id,

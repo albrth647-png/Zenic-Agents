@@ -39,9 +39,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    const response: ApiResponse<typeof tool> = {
+    const response: ApiResponse<Record<string, unknown>> = {
       success: true,
-      data: deserializeTool(tool),
+      data: deserializeTool(tool as unknown as Record<string, unknown>),
     };
 
     return NextResponse.json(response);
@@ -138,9 +138,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       details: { updatedFields: Object.keys(updateData) },
     });
 
-    const response: ApiResponse<typeof tool> = {
+    const response: ApiResponse<Record<string, unknown>> = {
       success: true,
-      data: deserializeTool(tool),
+      data: deserializeTool(tool as unknown as Record<string, unknown>),
       message: "Tool updated successfully",
     };
 

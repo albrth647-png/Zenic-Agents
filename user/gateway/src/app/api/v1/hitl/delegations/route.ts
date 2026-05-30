@@ -3,7 +3,7 @@
 // POST /api/v1/hitl/delegations — Create a delegation rule
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDelegationService } from "@/lib/hitl";
+import { getDelegationService } from "@/lib/hitl/delegation/_delegator";
 
 // GET /api/v1/hitl/delegations
 export async function GET(request: NextRequest) {

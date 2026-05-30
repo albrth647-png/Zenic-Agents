@@ -42,7 +42,7 @@ require (
 
     def _go_model(self, name: str, fields: list[dict], mod_name: str) -> str:
         field_defs = "\n".join(
-            f"\t{f['name'].capitalize()} {f['type']} `json:\"{f['name']}\" gorm:\"column:{f['name']}\"`" for f in fields
+            f'\t{f["name"].capitalize()} {f["type"]} `json:"{f["name"]}" gorm:"column:{f["name"]}"`' for f in fields
         )
         return f"""package models
 
@@ -249,7 +249,7 @@ fun main(args: Array<String>) {{
 
     def _kt_model(self, name: str, fields: list[dict], pkg: str) -> str:
         props = "\n".join(
-            f'\tval {f["name"]}: {f["type"]}' + ("? = null" if f["name"] != "id" else " = null") for f in fields
+            f"\tval {f['name']}: {f['type']}" + ("? = null" if f["name"] != "id" else " = null") for f in fields
         )
         return f"""package {pkg}.models
 

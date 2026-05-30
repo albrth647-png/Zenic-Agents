@@ -26,9 +26,11 @@ from src.core.shared.agent_schemas import (
 #  INTENT AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class IntentInput:
     """Input for IntentAgent."""
+
     message: str = ""
     context: str = ""
 
@@ -36,24 +38,29 @@ class IntentInput:
 @dataclass
 class IntentOutput:
     """Output of IntentAgent."""
-    operation: str = "SEARCH"       # CREATE|REFACTOR|DELETE|SEARCH|ANALYZE|EXPLAIN|DEBUG|OPTIMIZE
-    goal: str = "FEATURE_ADD"       # COMPLEXITY_REDUCTION|MODERN_PATTERN|BUG_FIX|FEATURE_ADD|SECURITY_HARDEN|PERFORMANCE|READABILITY
+
+    operation: str = "SEARCH"  # CREATE|REFACTOR|DELETE|SEARCH|ANALYZE|EXPLAIN|DEBUG|OPTIMIZE
+    goal: str = (
+        "FEATURE_ADD"  # COMPLEXITY_REDUCTION|MODERN_PATTERN|BUG_FIX|FEATURE_ADD|SECURITY_HARDEN|PERFORMANCE|READABILITY
+    )
     target: str = ""
     language: str = "python"
     entities: dict[str, Any] = field(default_factory=dict)
     template_type: str = "generic"
-    criticality: str = "standard"   # standard|moderate|critical
+    criticality: str = "standard"  # standard|moderate|critical
     confidence: float = 0.0
-    source: str = "fallback"        # "llm" or "fallback"
+    source: str = "fallback"  # "llm" or "fallback"
 
 
 # ============================================================
 #  REASONING AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class ReasoningInput:
     """Input for ReasoningAgent."""
+
     query: str = ""
     mode: str = "step_by_step"  # step_by_step|self_reflect|with_context
     context: str = ""
@@ -63,6 +70,7 @@ class ReasoningInput:
 @dataclass
 class ReasoningStep:
     """A reasoning step."""
+
     step_number: int = 0
     description: str = ""
     conclusion: str = ""
@@ -71,6 +79,7 @@ class ReasoningStep:
 @dataclass
 class ReasoningOutput:
     """Output of ReasoningAgent."""
+
     answer: str = ""
     confidence: float = 0.0
     mode: str = "step_by_step"
@@ -86,10 +95,12 @@ class ReasoningOutput:
 #  BUSINESS LOGIC AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class BusinessInput:
     """Input for BusinessLogicAgent."""
-    operation_type: str = ""    # invoice|inventory|crm|task|report|notification|analytics|custom
+
+    operation_type: str = ""  # invoice|inventory|crm|task|report|notification|analytics|custom
     data: dict[str, Any] = field(default_factory=dict)
     context: dict[str, Any] = field(default_factory=dict)
     description: str = ""
@@ -98,6 +109,7 @@ class BusinessInput:
 @dataclass
 class BusinessOutput:
     """Output of BusinessLogicAgent."""
+
     success: bool = False
     data: dict[str, Any] = field(default_factory=dict)
     side_effects: list[str] = field(default_factory=list)
@@ -110,10 +122,12 @@ class BusinessOutput:
 #  CODE AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class CodeInput:
     """Input for CodeAgent."""
-    task: str = "generate"      # generate|transform|scaffold|optimize|fix
+
+    task: str = "generate"  # generate|transform|scaffold|optimize|fix
     requirements: str = ""
     language: str = "python"
     existing_code: str = ""
@@ -123,6 +137,7 @@ class CodeInput:
 @dataclass
 class FileSpec:
     """Specification of a generated file."""
+
     path: str = ""
     content: str = ""
     language: str = ""
@@ -131,6 +146,7 @@ class FileSpec:
 @dataclass
 class CodeOutput:
     """Output of CodeAgent."""
+
     code: str = ""
     language: str = "python"
     files: list[FileSpec] = field(default_factory=list)
@@ -143,9 +159,11 @@ class CodeOutput:
 #  AUTOMATION AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class AutomationInput:
     """Input for AutomationAgent."""
+
     description: str = ""
     context: dict[str, Any] = field(default_factory=dict)
 
@@ -153,6 +171,7 @@ class AutomationInput:
 @dataclass
 class AutomationOutput:
     """Output of AutomationAgent."""
+
     name: str = "unnamed_automation"
     triggers: list[TriggerSpec] = field(default_factory=list)
     actions: list[ActionSpec] = field(default_factory=list)
@@ -166,10 +185,12 @@ class AutomationOutput:
 #  VALIDATION AGENT SCHEMAS
 # ============================================================
 
+
 @dataclass
 class ValidationInput:
     """Input for ValidationAgent."""
-    target: str = "code"        # code|chain|config
+
+    target: str = "code"  # code|chain|config
     content: str = ""
     rules: list[str] = field(default_factory=list)
     language: str = "python"
@@ -178,6 +199,7 @@ class ValidationInput:
 @dataclass
 class ValidationOutput:
     """Output of ValidationAgent."""
+
     is_valid: bool = True
     issues: list[ValidationIssue] = field(default_factory=list)
     suggestions: list[str] = field(default_factory=list)
@@ -189,23 +211,26 @@ class ValidationOutput:
 #  CONTEXT AGENT SCHEMAS (F3)
 # ============================================================
 
+
 @dataclass
 class ContextInput:
     """Input for ContextAgent (F3)."""
+
     message: str = ""
-    intent_output: Any | None = None   # IntentOutput from SurgicalAgent (F2)
-    max_tokens: int = 500                 # Total context budget
+    intent_output: Any | None = None  # IntentOutput from SurgicalAgent (F2)
+    max_tokens: int = 500  # Total context budget
 
 
 @dataclass
 class ContextEntry:
     """Context entry with relevance score."""
+
     content: str = ""
-    source: str = ""          # "working", "long_term", "episodic", "procedural"
+    source: str = ""  # "working", "long_term", "episodic", "procedural"
     operation: str = ""
     goal: str = ""
     importance: float = 0.5
-    recency: float = 1.0      # 0.0-1.0, 1.0 = most recent
+    recency: float = 1.0  # 0.0-1.0, 1.0 = most recent
     relevance_score: float = 0.0
     token_estimate: int = 0
 
@@ -213,7 +238,8 @@ class ContextEntry:
 @dataclass
 class ContextOutput:
     """Output of ContextAgent (F3)."""
-    compressed_context: str = ""            # Compressed context to inject
+
+    compressed_context: str = ""  # Compressed context to inject
     relevant_memories: list[dict[str, Any]] = field(default_factory=list)
     token_budget: dict[str, int] = field(default_factory=dict)
     context_scores: dict[str, float] = field(default_factory=dict)
@@ -228,23 +254,28 @@ class ContextOutput:
 #  CRITICALITY AGENT SCHEMAS (F4)
 # ============================================================
 
+
 @dataclass
 class CriticalityInput:
     """Input for CriticalityAgent (F4)."""
-    operation: str = "SEARCH"        # CREATE|REFACTOR|DELETE|SEARCH|ANALYZE|EXPLAIN|DEBUG|OPTIMIZE
-    goal: str = "FEATURE_ADD"        # COMPLEXITY_REDUCTION|MODERN_PATTERN|BUG_FIX|FEATURE_ADD|SECURITY_HARDEN|PERFORMANCE|READABILITY
-    target: str = ""                 # File name, function name, or component
-    context: str = ""                # Additional context (user message, etc.)
-    code_snippet: str = ""           # Code snippet if available
+
+    operation: str = "SEARCH"  # CREATE|REFACTOR|DELETE|SEARCH|ANALYZE|EXPLAIN|DEBUG|OPTIMIZE
+    goal: str = (
+        "FEATURE_ADD"  # COMPLEXITY_REDUCTION|MODERN_PATTERN|BUG_FIX|FEATURE_ADD|SECURITY_HARDEN|PERFORMANCE|READABILITY
+    )
+    target: str = ""  # File name, function name, or component
+    context: str = ""  # Additional context (user message, etc.)
+    code_snippet: str = ""  # Code snippet if available
     existing_level: int | None = None  # Pre-existing criticality from MacroRouter
 
 
 @dataclass
 class CriticalityOutput:
     """Output of CriticalityAgent (F4)."""
-    level: int = 2                    # 1=FAST_STANDARD, 2=DEEP_MODERATE, 3=SURGICAL_CRITICAL
-    path: str = "standard"            # DAG path: low_crit|standard|high_crit
-    reason: str = ""                  # Explanation of why this level
-    confidence: float = 0.0           # How confident in this assessment
-    source: str = "fallback"          # "llm" or "fallback"
+
+    level: int = 2  # 1=FAST_STANDARD, 2=DEEP_MODERATE, 3=SURGICAL_CRITICAL
+    path: str = "standard"  # DAG path: low_crit|standard|high_crit
+    reason: str = ""  # Explanation of why this level
+    confidence: float = 0.0  # How confident in this assessment
+    source: str = "fallback"  # "llm" or "fallback"
     adjustments: dict[str, Any] = field(default_factory=dict)  # Behavioral adjustments for downstream agents

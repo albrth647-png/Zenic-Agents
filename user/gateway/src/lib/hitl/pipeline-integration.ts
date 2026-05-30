@@ -112,7 +112,7 @@ const REVERSIBLE_ACTION_TYPES = new Set([
 // ═══════════════════════════════════════════════════════════════════════════
 
 class PipelineIntegration {
-  private static instance: PipelineIntegration | null = null;
+  public static instance: PipelineIntegration | null = null;
 
   private constructor() {}
 

@@ -187,7 +187,12 @@ class DefenseManager:
 
         # Calculate score (0-100) and recommendations
         score, active, recs = self._compute_score_and_recs(
-            l1, hardening, enc_status, l4, l5, l6,
+            l1,
+            hardening,
+            enc_status,
+            l4,
+            l5,
+            l6,
         )
 
         return DefenseStatus(

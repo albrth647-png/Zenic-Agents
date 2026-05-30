@@ -5,23 +5,21 @@ vacío + tipo incorrecto + valores extremos + error de sistema.
 """
 
 import io
-import tempfile
 
 import pytest
-from pydub import AudioSegment
 from pydub.generators import Sine
 
-from src.core.voice_pipeline._types import AudioFormat, ConversionResult
+from src.core.voice_pipeline._types import AudioFormat
 from src.core.voice_pipeline.format_adapter import (
     _CANONICAL_CHANNELS,
     _CANONICAL_SAMPLE_RATE,
-    _SUPPORTED_INPUT_FORMATS,
     FormatAdapter,
     _normalize_format,
     get_format_adapter,
 )
 
 # ── Audio fixtures: REAL audio bytes ────────────────────────────
+
 
 def _make_wav_bytes(duration_ms: int = 1000, freq: int = 440) -> bytes:
     """Generate real WAV audio bytes using pydub."""
@@ -51,8 +49,8 @@ def _make_mp3_bytes(duration_ms: int = 1000, freq: int = 440) -> bytes:
 #  _normalize_format
 # ════════════════════════════════════════════════════════════════
 
-class TestNormalizeFormat:
 
+class TestNormalizeFormat:
     def test_simple_extension(self):
         assert _normalize_format("ogg") == "ogg"
         assert _normalize_format("mp3") == "mp3"
@@ -90,8 +88,8 @@ class TestNormalizeFormat:
 #  FormatAdapter — Construction & Availability
 # ════════════════════════════════════════════════════════════════
 
-class TestFormatAdapterInit:
 
+class TestFormatAdapterInit:
     def test_default_construction(self):
         adapter = FormatAdapter()
         assert adapter.is_available is True
@@ -119,8 +117,8 @@ class TestFormatAdapterInit:
 #  FormatAdapter — convert() with REAL audio
 # ════════════════════════════════════════════════════════════════
 
-class TestFormatAdapterConvert:
 
+class TestFormatAdapterConvert:
     def test_convert_wav_to_wav(self):
         """WAV → WAV: passthrough, debe funcionar."""
         adapter = FormatAdapter()
@@ -211,8 +209,8 @@ class TestFormatAdapterConvert:
 #  FormatAdapter — validate_audio()
 # ════════════════════════════════════════════════════════════════
 
-class TestFormatAdapterValidate:
 
+class TestFormatAdapterValidate:
     def test_validate_valid_audio(self):
         adapter = FormatAdapter()
         wav_bytes = _make_wav_bytes(500)
@@ -239,8 +237,8 @@ class TestFormatAdapterValidate:
 #  FormatAdapter — is_format_supported() / detect_format()
 # ════════════════════════════════════════════════════════════════
 
-class TestFormatAdapterSupport:
 
+class TestFormatAdapterSupport:
     def test_supported_formats(self):
         adapter = FormatAdapter()
         supported = adapter.get_supported_formats()
@@ -280,8 +278,8 @@ class TestFormatAdapterSupport:
 #  get_format_adapter — Singleton
 # ════════════════════════════════════════════════════════════════
 
-class TestGetFormatAdapter:
 
+class TestGetFormatAdapter:
     def test_singleton_returns_same_instance(self):
         a = get_format_adapter()
         b = get_format_adapter()
@@ -296,8 +294,8 @@ class TestGetFormatAdapter:
 #  FormatAdapter — convert_async (real async test)
 # ════════════════════════════════════════════════════════════════
 
-class TestFormatAdapterAsync:
 
+class TestFormatAdapterAsync:
     @pytest.mark.asyncio
     async def test_convert_async_ogg(self):
         """convert_async debe producir el mismo resultado que convert."""

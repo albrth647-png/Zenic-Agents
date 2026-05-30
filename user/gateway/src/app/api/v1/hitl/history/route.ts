@@ -2,8 +2,8 @@
 // GET /api/v1/hitl/history — List approval history with filters
 
 import { NextRequest, NextResponse } from "next/server";
-import { getApprovalEngine } from "@/lib/hitl";
-import { ApprovalRequestStatus, ApprovalPriority, ApprovalType } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
+import { ApprovalRequestStatus, ApprovalPriority, ApprovalType } from "@/lib/hitl/types/_core";
 
 // GET /api/v1/hitl/history
 export async function GET(request: NextRequest) {

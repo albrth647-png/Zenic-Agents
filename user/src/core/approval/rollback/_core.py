@@ -59,7 +59,7 @@ class RollbackManager:
             self._persist_compensation(request_id, action, insert=True)
 
         logger.info(
-            "RollbackManager: Registered compensation %s for request %s " "(type=%s)",
+            "RollbackManager: Registered compensation %s for request %s (type=%s)",
             action.action_id,
             request_id,
             action_type,
@@ -154,7 +154,7 @@ class RollbackManager:
         self._record_audit_event(request_id, record)
 
         logger.info(
-            "RollbackManager: Rollback %s for request %s — status=%s " "(%d/%d actions succeeded)",
+            "RollbackManager: Rollback %s for request %s — status=%s (%d/%d actions succeeded)",
             record.rollback_id,
             request_id,
             record.status.value,

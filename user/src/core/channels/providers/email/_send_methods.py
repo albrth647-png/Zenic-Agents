@@ -105,7 +105,8 @@ class _SendMixin:
             )
 
     async def send_confirmation(
-        self, request: ConfirmationRequest,
+        self,
+        request: ConfirmationRequest,
     ) -> ChannelResponse:
         """Send a confirmation email with YES/NO/MORE_INFO action links.
 

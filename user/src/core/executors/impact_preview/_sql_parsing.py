@@ -21,19 +21,19 @@ def extract_table_name(query: str, operation: str) -> str:
     query_upper = query.upper().strip()
 
     if operation in ("DELETE",):
-        match = re.search(r'\bFROM\s+(\w+)', query_upper)
+        match = re.search(r"\bFROM\s+(\w+)", query_upper)
         return match.group(1).lower() if match else ""
 
     if operation in ("UPDATE",):
-        match = re.search(r'\bUPDATE\s+(\w+)', query_upper)
+        match = re.search(r"\bUPDATE\s+(\w+)", query_upper)
         return match.group(1).lower() if match else ""
 
     if operation in ("INSERT",):
-        match = re.search(r'\bINTO\s+(\w+)', query_upper)
+        match = re.search(r"\bINTO\s+(\w+)", query_upper)
         return match.group(1).lower() if match else ""
 
     if operation in ("QUERY", "SELECT"):
-        match = re.search(r'\bFROM\s+(\w+)', query_upper)
+        match = re.search(r"\bFROM\s+(\w+)", query_upper)
         return match.group(1).lower() if match else ""
 
     return ""
@@ -42,14 +42,14 @@ def extract_table_name(query: str, operation: str) -> str:
 def extract_where_clause(query: str) -> str:
     """Extract the WHERE clause from a SQL query (without the WHERE keyword)."""
     match = re.search(
-        r'\bWHERE\s+(.*?)(?:\s*;\s*$|\s*$|\s+GROUP\s+|\s+ORDER\s+|\s+LIMIT\s+)',
+        r"\bWHERE\s+(.*?)(?:\s*;\s*$|\s*$|\s+GROUP\s+|\s+ORDER\s+|\s+LIMIT\s+)",
         query,
         re.IGNORECASE | re.DOTALL,
     )
     if match:
         return match.group(1).strip()
     # Fallback: everything after WHERE to end
-    match = re.search(r'\bWHERE\s+(.*)', query, re.IGNORECASE | re.DOTALL)
+    match = re.search(r"\bWHERE\s+(.*)", query, re.IGNORECASE | re.DOTALL)
     return match.group(1).strip().rstrip(";").strip() if match else ""
 
 
@@ -59,10 +59,10 @@ def extract_set_fields(query: str) -> list[tuple]:
     Returns list of (field_name, value) tuples.
     Note: values from the query string are symbolic; actual values come from params.
     """
-    match = re.search(r'\bSET\s+(.*?)\s+WHERE\b', query, re.IGNORECASE | re.DOTALL)
+    match = re.search(r"\bSET\s+(.*?)\s+WHERE\b", query, re.IGNORECASE | re.DOTALL)
     if not match:
         # No WHERE clause — SET to end
-        match = re.search(r'\bSET\s+(.*)', query, re.IGNORECASE | re.DOTALL)
+        match = re.search(r"\bSET\s+(.*)", query, re.IGNORECASE | re.DOTALL)
 
     if not match:
         return []
@@ -72,7 +72,7 @@ def extract_set_fields(query: str) -> list[tuple]:
 
     for assignment in set_clause.split(","):
         assignment = assignment.strip()
-        eq_match = re.match(r'(\w+)\s*=\s*(.+)', assignment)
+        eq_match = re.match(r"(\w+)\s*=\s*(.+)", assignment)
         if eq_match:
             field_name = eq_match.group(1)
             value_str = eq_match.group(2).strip()
@@ -97,7 +97,7 @@ def extract_set_fields(query: str) -> list[tuple]:
 def extract_insert_columns(query: str) -> list[str]:
     """Extract column names from an INSERT INTO table (col1, col2, ...) statement."""
     match = re.search(
-        r'\bINTO\s+\w+\s*\(([^)]+)\)',
+        r"\bINTO\s+\w+\s*\(([^)]+)\)",
         query,
         re.IGNORECASE,
     )
@@ -118,10 +118,10 @@ def count_set_placeholders(query: str) -> int:
       "UPDATE t SET a = 5 WHERE c = ?"          ->  0
     """
     # Extract the SET clause (between SET and WHERE, or SET to end)
-    match = re.search(r'\bSET\s+(.*?)\s+WHERE\b', query, re.IGNORECASE | re.DOTALL)
+    match = re.search(r"\bSET\s+(.*?)\s+WHERE\b", query, re.IGNORECASE | re.DOTALL)
     if not match:
-        match = re.search(r'\bSET\s+(.*)', query, re.IGNORECASE | re.DOTALL)
+        match = re.search(r"\bSET\s+(.*)", query, re.IGNORECASE | re.DOTALL)
     if not match:
         return 0
     set_clause = match.group(1)
-    return set_clause.count('?')
+    return set_clause.count("?")

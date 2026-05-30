@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 
 class MonitorWeight(IntEnum):
     """Peso del monitor — determina prioridad y frecuencia de escaneo."""
+
     CRITICAL = 3  # Puede causar pérdida de datos/dinero
-    WARNING = 2   # Afecta operaciones
-    INFO = 1      # Información útil
+    WARNING = 2  # Afecta operaciones
+    INFO = 1  # Información útil
 
 
 @dataclass
@@ -41,6 +42,7 @@ class MonitorResult:
         details: Datos adicionales para diagnóstico
         scanned_at: Timestamp del escaneo
     """
+
     monitor_name: str
     weight: MonitorWeight
     findings: list[dict[str, Any]] = field(default_factory=list)
@@ -96,9 +98,7 @@ class BaseMonitor(ABC):
             result = self.check()
             self._last_result = result
             if not result.healthy:
-                logger.warning(
-                    f"[{self.name}] {result.finding_count} hallazgo(s) — severidad={result.severity}"
-                )
+                logger.warning(f"[{self.name}] {result.finding_count} hallazgo(s) — severidad={result.severity}")
             else:
                 logger.debug(f"[{self.name}] Saludable")
             return result

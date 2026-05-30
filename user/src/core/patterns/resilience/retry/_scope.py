@@ -36,7 +36,9 @@ def retry(config: RetryConfig | None = None) -> Callable[..., Any]:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             return with_retry(func, config, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -57,7 +59,9 @@ def retry_async(config: RetryConfig | None = None) -> Callable[..., Any]:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             return await with_retry_async(func, config, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -100,18 +104,14 @@ class RetryScope:
     #  Execution
     # ----------------------------------------------------------
 
-    def execute(
-        self, func: Callable[..., Any], *args: Any, **kwargs: Any
-    ) -> Any:
+    def execute(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """Execute *func* within this scope's retry configuration."""
         self._total_operations += 1
         retry_count_holder = [0]
 
         original_on_retry = self._config.on_retry
 
-        def counting_on_retry(
-            attempt: int, exc: Exception, delay: float
-        ) -> None:
+        def counting_on_retry(attempt: int, exc: Exception, delay: float) -> None:
             retry_count_holder[0] += 1
             self._total_retries += 1
             if original_on_retry is not None:
@@ -130,18 +130,14 @@ class RetryScope:
 
         return result
 
-    async def execute_async(
-        self, func: Callable[..., Any], *args: Any, **kwargs: Any
-    ) -> Any:
+    async def execute_async(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """Execute an async *func* within this scope's retry configuration."""
         self._total_operations += 1
         retry_count_holder = [0]
 
         original_on_retry = self._config.on_retry
 
-        def counting_on_retry(
-            attempt: int, exc: Exception, delay: float
-        ) -> None:
+        def counting_on_retry(attempt: int, exc: Exception, delay: float) -> None:
             retry_count_holder[0] += 1
             self._total_retries += 1
             if original_on_retry is not None:
@@ -180,7 +176,5 @@ class RetryScope:
 
     def __repr__(self) -> str:
         return (
-            f"RetryScope(ops={self._total_operations}, "
-            f"retries={self._total_retries}, "
-            f"failures={self._total_failures})"
+            f"RetryScope(ops={self._total_operations}, retries={self._total_retries}, failures={self._total_failures})"
         )

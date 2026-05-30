@@ -13,8 +13,13 @@ _DEFAULT_SIMILAR_THRESHOLD = 0.7
 class SearchMixin:
     """Semantic search and clustering for SemanticEngine."""
 
-    def search(self, query: str, documents: list[dict[str, Any]],
-               top_k: int = _DEFAULT_SEARCH_TOP_K, threshold: float = _DEFAULT_SEARCH_THRESHOLD) -> list[tuple[dict, float]]:
+    def search(
+        self,
+        query: str,
+        documents: list[dict[str, Any]],
+        top_k: int = _DEFAULT_SEARCH_TOP_K,
+        threshold: float = _DEFAULT_SEARCH_THRESHOLD,
+    ) -> list[tuple[dict, float]]:
         """
         Búsqueda semántica en una lista de documentos.
 
@@ -48,8 +53,9 @@ class SearchMixin:
         results.sort(key=lambda x: x[1], reverse=True)
         return results[:top_k]
 
-    def find_similar_intents(self, text: str, history: list[str],
-                              threshold: float = _DEFAULT_SIMILAR_THRESHOLD) -> list[tuple[str, float]]:
+    def find_similar_intents(
+        self, text: str, history: list[str], threshold: float = _DEFAULT_SIMILAR_THRESHOLD
+    ) -> list[tuple[str, float]]:
         """
         Encuentra consultas previas semánticamente similares.
         Útil para SmartMemory: detectar si ya respondimos algo similar.

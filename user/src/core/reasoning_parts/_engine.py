@@ -31,7 +31,9 @@ class ReasoningEngine(HelpersMixin, ContextMixin, SelfReflectMixin, StepByStepMi
       Capa 3: SmartMemory → experiencia previa
     """
 
-    def __init__(self, mini_ai: Any | None = None, semantic_engine: Any | None = None, smart_memory: Any | None = None) -> None:
+    def __init__(
+        self, mini_ai: Any | None = None, semantic_engine: Any | None = None, smart_memory: Any | None = None
+    ) -> None:
         self._ai = mini_ai
         self._semantic = semantic_engine
         self._memory = smart_memory

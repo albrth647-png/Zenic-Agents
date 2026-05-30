@@ -28,14 +28,16 @@ class _IssuesMixin:
         project_key = config.get("project_key", "")
         if not project_key:
             return ActionResult(
-                False, {"operation": "create_issue"},
+                False,
+                {"operation": "create_issue"},
                 "Missing required config key: project_key",
             )
 
         summary = config.get("summary", "")
         if not summary:
             return ActionResult(
-                False, {"operation": "create_issue"},
+                False,
+                {"operation": "create_issue"},
                 "Missing required config key: summary",
             )
 
@@ -82,7 +84,8 @@ class _IssuesMixin:
         if 200 <= status < 300 and body.get("key"):
             logger.info(
                 "JiraExecutor: created issue %s in project %s",
-                body["key"], project_key,
+                body["key"],
+                project_key,
             )
             return ActionResult(
                 True,
@@ -99,7 +102,8 @@ class _IssuesMixin:
             error_msg = "; ".join(messages) if messages else str(errors)
             logger.warning(
                 "JiraExecutor: create_issue failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -122,7 +126,8 @@ class _IssuesMixin:
         issue_key = config.get("issue_key", "")
         if not issue_key:
             return ActionResult(
-                False, {"operation": "update_issue"},
+                False,
+                {"operation": "update_issue"},
                 "Missing required config key: issue_key",
             )
 
@@ -157,7 +162,8 @@ class _IssuesMixin:
 
         if not fields:
             return ActionResult(
-                False, {"operation": "update_issue", "issue_key": issue_key},
+                False,
+                {"operation": "update_issue", "issue_key": issue_key},
                 "No fields provided to update",
             )
 
@@ -179,7 +185,8 @@ class _IssuesMixin:
             error_msg = "; ".join(messages) if messages else str(errors)
             logger.warning(
                 "JiraExecutor: update_issue failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -202,7 +209,8 @@ class _IssuesMixin:
         issue_key = config.get("issue_key", "")
         if not issue_key:
             return ActionResult(
-                False, {"operation": "get_issue"},
+                False,
+                {"operation": "get_issue"},
                 "Missing required config key: issue_key",
             )
 
@@ -234,7 +242,8 @@ class _IssuesMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: get_issue failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -257,7 +266,8 @@ class _IssuesMixin:
         jql = config.get("jql", "")
         if not jql:
             return ActionResult(
-                False, {"operation": "search_issues"},
+                False,
+                {"operation": "search_issues"},
                 "Missing required config key: jql",
             )
 
@@ -283,7 +293,8 @@ class _IssuesMixin:
             total = body.get("total", 0)
             logger.info(
                 "JiraExecutor: search returned %d/%d issues",
-                len(issues), total,
+                len(issues),
+                total,
             )
             return ActionResult(
                 True,
@@ -301,7 +312,8 @@ class _IssuesMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: search_issues failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,

@@ -5,13 +5,12 @@
 // _saga.ts — Tier limits, display names, payment verification, feature gate map.
 
 import {
-  type SubscriptionTierName,
   type TrialConfigInfo,
-  SubscriptionTierName as SubscriptionTierNameConst,
+  SubscriptionTierName,
 } from "./_core";
 
-// Re-import for local usage
-const SubscriptionTierName = SubscriptionTierNameConst;
+export { SubscriptionTierName };
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Tier Limits — Must match Rust compiled values exactly

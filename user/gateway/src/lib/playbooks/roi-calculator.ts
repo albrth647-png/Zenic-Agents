@@ -96,7 +96,7 @@ export interface RoiProjection {
   /** Savings for this specific month in USD */
   monthlySavingsUsd: number;
   /** Platform cost for this specific month in USD */
-  monthlyCostUsd: number;
+  monthlyCostUsdt: number;
 }
 
 // ─── Core Calculation ───────────────────────────────────────────────
@@ -186,7 +186,7 @@ export async function projectRoi(
 
     // Determine monthly cost from pricing
     const pricing = safeParseJson<{ currency: string; network?: string; tiers: Array<{ name: string; price_usdt: number; price_usd?: number }> }>(playbook.pricing);
-    const monthlyCostUsdt = resolveMonthlyCost(pricing.tiers, activation.selectedTier);
+    const monthlyCostUsdtt = resolveMonthlyCost(pricing.tiers, activation.selectedTier);
 
     // Monthly savings = total_savings_month derived from the ROI calculation
     const totalSavingsMonth = roi.compliance_risk_reduction_usd > 0
@@ -205,7 +205,7 @@ export async function projectRoi(
       const cumulativeSavings = projections.length > 0
         ? projections[projections.length - 1].cumulativeSavingsUsd + monthlySavings
         : monthlySavings;
-      const cumulativeCost = monthlyCostUsdt * m;
+      const cumulativeCost = monthlyCostUsdtt * m;
 
       projections.push({
         month: m,
@@ -213,7 +213,7 @@ export async function projectRoi(
         cumulativeCostUsd: round2(cumulativeCost),
         cumulativeNetRoiUsd: round2(cumulativeSavings - cumulativeCost),
         monthlySavingsUsd: round2(monthlySavings),
-        monthlyCostUsd: round2(monthlyCostUsd),
+        monthlyCostUsdt: round2(monthlyCostUsdtt),
       });
     }
 

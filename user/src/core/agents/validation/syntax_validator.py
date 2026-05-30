@@ -72,16 +72,15 @@ class SyntaxValidator(BaseAgent[SyntaxResult]):
                     )
 
                 # Check for resource leaks (open without with)
-                if isinstance(node, ast.Call):
-                    if isinstance(node.func, ast.Name) and node.func.id == "open":
-                        errors.append(
-                            ValidationIssue(
-                                severity="warning",
-                                code="resource_leak",
-                                message="open() without 'with' context manager may leak resources",
-                                line=node.lineno,
-                            )
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "open":
+                    errors.append(
+                        ValidationIssue(
+                            severity="warning",
+                            code="resource_leak",
+                            message="open() without 'with' context manager may leak resources",
+                            line=node.lineno,
                         )
+                    )
 
                 # Check for bare except
                 if isinstance(node, ast.ExceptHandler) and node.type is None:

@@ -15,7 +15,7 @@ import type {
   PolicyEvaluationResult,
   PolicyEffectV2,
   PolicyStatement,
-} from "./types";
+} from "../types";
 
 // ─── Restrictiveness Ordering ─────────────────────────────────────────
 

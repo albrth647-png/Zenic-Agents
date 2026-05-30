@@ -13,60 +13,97 @@ from ._imports import OperationType, PlanStep, RoutePath
 
 # Mapping from MCTS action names to step properties
 _MCTS_ACTION_MAP = {
-    "ANALYZE_STRUCTURE": {"action": "ANALYZE_STRUCTURE", "source": "LOCAL_GRAPH",
-                           "constraints": {"depth": "full", "include_metrics": True}},
-    "SCRAPE_PATTERNS": {"action": "SCRAPE_PATTERNS", "source": "GITHUB_SCRAPE",
-                         "constraints": {"query": "", "max_results": 3}},
-    "GENERATE_CODE": {"action": "GENERATE_CODE", "source": "TEMPLATE_ENGINE",
-                       "constraints": {"require_validation": True, "security_check": True}},
-    "VALIDATE_SECURITY": {"action": "SYMBOLIC_VALIDATION", "source": "SANDBOX",
-                           "constraints": {"k_path_limit": 10, "mock_externals": True, "security_focus": True}},
-    "SYMBOLIC_VALIDATION": {"action": "SYMBOLIC_VALIDATION", "source": "SANDBOX",
-                             "constraints": {"k_path_limit": 10, "mock_externals": True}},
-    "ANALYZE_PATTERNS": {"action": "ANALYZE_PATTERNS", "source": "LOCAL_GRAPH",
-                          "constraints": {"detect_smells": True, "metrics": True}},
-    "REPLACE_AST_NODE": {"action": "REPLACE_AST_NODE", "source": "SURGICAL_GRAPH",
-                          "constraints": {"preserve_interface": True, "security_check": True}},
-    "VALIDATE_INTERFACE": {"action": "SYMBOLIC_VALIDATION", "source": "SANDBOX",
-                            "constraints": {"k_path_limit": 10, "interface_check": True}},
-    "RUN_TESTS": {"action": "SYNTAX_VALIDATION", "source": "SANDBOX",
-                   "constraints": {"run_unit_tests": True}},
-    "TRACE_EXECUTION": {"action": "TRACE_EXECUTION", "source": "LOCAL_GRAPH",
-                         "constraints": {"symbolic": True, "k_path_limit": 10}},
-    "PATCH_FIX": {"action": "PATCH_FIX", "source": "FIX_ENGINE",
-                   "constraints": {"minimal_change": True}},
-    "VALIDATE_FIX": {"action": "SYMBOLIC_VALIDATION", "source": "SANDBOX",
-                      "constraints": {"k_path_limit": 10, "verify_fix": True}},
-    "CHECK_DEPENDENCIES": {"action": "CHECK_DEPENDENCIES", "source": "LOCAL_GRAPH",
-                            "constraints": {"k_path_limit": 10}},
-    "DELETE_AST_NODE": {"action": "DELETE_AST_NODE", "source": "LOCAL_GRAPH",
-                         "constraints": {"cascade": True}},
-    "VALIDATE_NO_BREAKAGE": {"action": "SYMBOLIC_VALIDATION", "source": "SANDBOX",
-                              "constraints": {"k_path_limit": 10, "verify_no_breakage": True}},
-    "BENCHMARK": {"action": "BENCHMARK", "source": "LOCAL_GRAPH",
-                   "constraints": {"measure_performance": True}},
-    "VALIDATE_PERFORMANCE": {"action": "SYNTAX_VALIDATION", "source": "SANDBOX",
-                              "constraints": {"performance_check": True}},
-    "QUALITY_REPORT": {"action": "QUALITY_REPORT", "source": "LOCAL_GRAPH",
-                        "constraints": {"include_suggestions": True}},
-    "SUGGEST_IMPROVEMENTS": {"action": "QUALITY_REPORT", "source": "LOCAL_GRAPH",
-                              "constraints": {"include_suggestions": True}},
-    "EXPLAIN_CODE": {"action": "EXPLAIN_CODE", "source": "LOCAL_GRAPH",
-                      "constraints": {}},
-    "GENERATE_DOCS": {"action": "EXPLAIN_CODE", "source": "LOCAL_GRAPH",
-                       "constraints": {"generate_docs": True}},
-    "SEARCH_DEFINITION": {"action": "SEARCH_DEFINITION", "source": "LOCAL_GRAPH",
-                           "constraints": {}},
-    "FIND_REFERENCES": {"action": "SEARCH_DEFINITION", "source": "LOCAL_GRAPH",
-                         "constraints": {"find_references": True}},
-    "QUICK_ANALYSIS": {"action": "QUICK_ANALYSIS", "source": "LOCAL_GRAPH",
-                        "constraints": {}},
-    "FULL_ANALYSIS": {"action": "FULL_ANALYSIS", "source": "LOCAL_GRAPH",
-                       "constraints": {"deep": True}},
-    "ANALYZE_AND_RESPOND": {"action": "ANALYZE_AND_RESPOND", "source": "LOCAL_GRAPH",
-                             "constraints": {}},
-    "SYNTAX_VALIDATION": {"action": "SYNTAX_VALIDATION", "source": "SANDBOX",
-                           "constraints": {"basic": True}},
+    "ANALYZE_STRUCTURE": {
+        "action": "ANALYZE_STRUCTURE",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"depth": "full", "include_metrics": True},
+    },
+    "SCRAPE_PATTERNS": {
+        "action": "SCRAPE_PATTERNS",
+        "source": "GITHUB_SCRAPE",
+        "constraints": {"query": "", "max_results": 3},
+    },
+    "GENERATE_CODE": {
+        "action": "GENERATE_CODE",
+        "source": "TEMPLATE_ENGINE",
+        "constraints": {"require_validation": True, "security_check": True},
+    },
+    "VALIDATE_SECURITY": {
+        "action": "SYMBOLIC_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"k_path_limit": 10, "mock_externals": True, "security_focus": True},
+    },
+    "SYMBOLIC_VALIDATION": {
+        "action": "SYMBOLIC_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"k_path_limit": 10, "mock_externals": True},
+    },
+    "ANALYZE_PATTERNS": {
+        "action": "ANALYZE_PATTERNS",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"detect_smells": True, "metrics": True},
+    },
+    "REPLACE_AST_NODE": {
+        "action": "REPLACE_AST_NODE",
+        "source": "SURGICAL_GRAPH",
+        "constraints": {"preserve_interface": True, "security_check": True},
+    },
+    "VALIDATE_INTERFACE": {
+        "action": "SYMBOLIC_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"k_path_limit": 10, "interface_check": True},
+    },
+    "RUN_TESTS": {"action": "SYNTAX_VALIDATION", "source": "SANDBOX", "constraints": {"run_unit_tests": True}},
+    "TRACE_EXECUTION": {
+        "action": "TRACE_EXECUTION",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"symbolic": True, "k_path_limit": 10},
+    },
+    "PATCH_FIX": {"action": "PATCH_FIX", "source": "FIX_ENGINE", "constraints": {"minimal_change": True}},
+    "VALIDATE_FIX": {
+        "action": "SYMBOLIC_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"k_path_limit": 10, "verify_fix": True},
+    },
+    "CHECK_DEPENDENCIES": {
+        "action": "CHECK_DEPENDENCIES",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"k_path_limit": 10},
+    },
+    "DELETE_AST_NODE": {"action": "DELETE_AST_NODE", "source": "LOCAL_GRAPH", "constraints": {"cascade": True}},
+    "VALIDATE_NO_BREAKAGE": {
+        "action": "SYMBOLIC_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"k_path_limit": 10, "verify_no_breakage": True},
+    },
+    "BENCHMARK": {"action": "BENCHMARK", "source": "LOCAL_GRAPH", "constraints": {"measure_performance": True}},
+    "VALIDATE_PERFORMANCE": {
+        "action": "SYNTAX_VALIDATION",
+        "source": "SANDBOX",
+        "constraints": {"performance_check": True},
+    },
+    "QUALITY_REPORT": {
+        "action": "QUALITY_REPORT",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"include_suggestions": True},
+    },
+    "SUGGEST_IMPROVEMENTS": {
+        "action": "QUALITY_REPORT",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"include_suggestions": True},
+    },
+    "EXPLAIN_CODE": {"action": "EXPLAIN_CODE", "source": "LOCAL_GRAPH", "constraints": {}},
+    "GENERATE_DOCS": {"action": "EXPLAIN_CODE", "source": "LOCAL_GRAPH", "constraints": {"generate_docs": True}},
+    "SEARCH_DEFINITION": {"action": "SEARCH_DEFINITION", "source": "LOCAL_GRAPH", "constraints": {}},
+    "FIND_REFERENCES": {
+        "action": "SEARCH_DEFINITION",
+        "source": "LOCAL_GRAPH",
+        "constraints": {"find_references": True},
+    },
+    "QUICK_ANALYSIS": {"action": "QUICK_ANALYSIS", "source": "LOCAL_GRAPH", "constraints": {}},
+    "FULL_ANALYSIS": {"action": "FULL_ANALYSIS", "source": "LOCAL_GRAPH", "constraints": {"deep": True}},
+    "ANALYZE_AND_RESPOND": {"action": "ANALYZE_AND_RESPOND", "source": "LOCAL_GRAPH", "constraints": {}},
+    "SYNTAX_VALIDATION": {"action": "SYNTAX_VALIDATION", "source": "SANDBOX", "constraints": {"basic": True}},
 }
 
 
@@ -188,61 +225,127 @@ class StepsMixin:
         steps = []
         step_id = 1
 
-        steps.append(PlanStep(step_id=step_id, action="ANALYZE_STRUCTURE",
-            target_node_name=intent.target, source="LOCAL_GRAPH",
-            constraints={"depth": "full", "include_metrics": True}))
+        steps.append(
+            PlanStep(
+                step_id=step_id,
+                action="ANALYZE_STRUCTURE",
+                target_node_name=intent.target,
+                source="LOCAL_GRAPH",
+                constraints={"depth": "full", "include_metrics": True},
+            )
+        )
         step_id += 1
 
         if intent.op == OperationType.CREATE:
-            steps.append(PlanStep(step_id=step_id, action="SCRAPE_PATTERNS",
-                target_node_name=intent.target, source="GITHUB_SCRAPE",
-                constraints={"query": intent.scrap_query, "max_results": 3}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="SCRAPE_PATTERNS",
+                    target_node_name=intent.target,
+                    source="GITHUB_SCRAPE",
+                    constraints={"query": intent.scrap_query, "max_results": 3},
+                )
+            )
             step_id += 1
-            steps.append(PlanStep(step_id=step_id, action="GENERATE_CODE",
-                target_node_name=intent.target, source="TEMPLATE_ENGINE",
-                constraints={"require_validation": True, "security_check": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="GENERATE_CODE",
+                    target_node_name=intent.target,
+                    source="TEMPLATE_ENGINE",
+                    constraints={"require_validation": True, "security_check": True},
+                )
+            )
             step_id += 1
 
         elif intent.op in [OperationType.REFACTOR, OperationType.OPTIMIZE]:
-            steps.append(PlanStep(step_id=step_id, action="ANALYZE_PATTERNS",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"detect_smells": True, "metrics": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="ANALYZE_PATTERNS",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"detect_smells": True, "metrics": True},
+                )
+            )
             step_id += 1
-            steps.append(PlanStep(step_id=step_id, action="REPLACE_AST_NODE",
-                target_node_name=intent.target, source="SURGICAL_GRAPH",
-                constraints={"preserve_interface": True, "security_check": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="REPLACE_AST_NODE",
+                    target_node_name=intent.target,
+                    source="SURGICAL_GRAPH",
+                    constraints={"preserve_interface": True, "security_check": True},
+                )
+            )
             step_id += 1
 
         elif intent.op == OperationType.DEBUG:
-            steps.append(PlanStep(step_id=step_id, action="TRACE_EXECUTION",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"symbolic": True, "k_path_limit": 10}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="TRACE_EXECUTION",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"symbolic": True, "k_path_limit": 10},
+                )
+            )
             step_id += 1
-            steps.append(PlanStep(step_id=step_id, action="PATCH_FIX",
-                target_node_name=intent.target, source="FIX_ENGINE",
-                constraints={"minimal_change": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="PATCH_FIX",
+                    target_node_name=intent.target,
+                    source="FIX_ENGINE",
+                    constraints={"minimal_change": True},
+                )
+            )
             step_id += 1
 
         elif intent.op == OperationType.DELETE:
-            steps.append(PlanStep(step_id=step_id, action="CHECK_DEPENDENCIES",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"k_path_limit": 10}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="CHECK_DEPENDENCIES",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"k_path_limit": 10},
+                )
+            )
             step_id += 1
-            steps.append(PlanStep(step_id=step_id, action="DELETE_AST_NODE",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"cascade": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="DELETE_AST_NODE",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"cascade": True},
+                )
+            )
             step_id += 1
 
         else:
-            steps.append(PlanStep(step_id=step_id, action="FULL_ANALYSIS",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"deep": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="FULL_ANALYSIS",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"deep": True},
+                )
+            )
             step_id += 1
 
         # Validacion simbolica obligatoria para ruta quirurgica
-        steps.append(PlanStep(step_id=step_id, action="SYMBOLIC_VALIDATION",
-            target_node_name=intent.target, source="SANDBOX",
-            constraints={"k_path_limit": 10, "mock_externals": True}))
+        steps.append(
+            PlanStep(
+                step_id=step_id,
+                action="SYMBOLIC_VALIDATION",
+                target_node_name=intent.target,
+                source="SANDBOX",
+                constraints={"k_path_limit": 10, "mock_externals": True},
+            )
+        )
 
         return steps
 
@@ -251,47 +354,96 @@ class StepsMixin:
         steps = []
         step_id = 1
 
-        steps.append(PlanStep(step_id=step_id, action="ANALYZE_STRUCTURE",
-            target_node_name=intent.target, source="LOCAL_GRAPH",
-            constraints={"depth": "standard"}))
+        steps.append(
+            PlanStep(
+                step_id=step_id,
+                action="ANALYZE_STRUCTURE",
+                target_node_name=intent.target,
+                source="LOCAL_GRAPH",
+                constraints={"depth": "standard"},
+            )
+        )
         step_id += 1
 
         if intent.op == OperationType.CREATE:
-            steps.append(PlanStep(step_id=step_id, action="SCRAPE_PATTERNS",
-                target_node_name=intent.target, source="GITHUB_SCRAPE",
-                constraints={"query": intent.scrap_query, "max_results": 2}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="SCRAPE_PATTERNS",
+                    target_node_name=intent.target,
+                    source="GITHUB_SCRAPE",
+                    constraints={"query": intent.scrap_query, "max_results": 2},
+                )
+            )
             step_id += 1
-            steps.append(PlanStep(step_id=step_id, action="GENERATE_CODE",
-                target_node_name=intent.target, source="TEMPLATE_ENGINE",
-                constraints={"require_validation": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="GENERATE_CODE",
+                    target_node_name=intent.target,
+                    source="TEMPLATE_ENGINE",
+                    constraints={"require_validation": True},
+                )
+            )
             step_id += 1
 
         elif intent.op in [OperationType.REFACTOR, OperationType.OPTIMIZE]:
-            steps.append(PlanStep(step_id=step_id, action="REPLACE_AST_NODE",
-                target_node_name=intent.target, source="SURGICAL_GRAPH",
-                constraints={"preserve_interface": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="REPLACE_AST_NODE",
+                    target_node_name=intent.target,
+                    source="SURGICAL_GRAPH",
+                    constraints={"preserve_interface": True},
+                )
+            )
             step_id += 1
 
         elif intent.op == OperationType.ANALYZE:
-            steps.append(PlanStep(step_id=step_id, action="QUALITY_REPORT",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"include_suggestions": True}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="QUALITY_REPORT",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"include_suggestions": True},
+                )
+            )
             step_id += 1
 
         elif intent.op == OperationType.DEBUG:
-            steps.append(PlanStep(step_id=step_id, action="TRACE_EXECUTION",
-                target_node_name=intent.target, source="LOCAL_GRAPH",
-                constraints={"k_path_limit": 10}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="TRACE_EXECUTION",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={"k_path_limit": 10},
+                )
+            )
             step_id += 1
 
         else:
-            steps.append(PlanStep(step_id=step_id, action="ANALYZE_AND_RESPOND",
-                target_node_name=intent.target, source="LOCAL_GRAPH", constraints={}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id,
+                    action="ANALYZE_AND_RESPOND",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={},
+                )
+            )
             step_id += 1
 
-        steps.append(PlanStep(step_id=step_id, action="SYNTAX_VALIDATION",
-            target_node_name=intent.target, source="SANDBOX",
-            constraints={"basic": True}))
+        steps.append(
+            PlanStep(
+                step_id=step_id,
+                action="SYNTAX_VALIDATION",
+                target_node_name=intent.target,
+                source="SANDBOX",
+                constraints={"basic": True},
+            )
+        )
 
         return steps
 
@@ -300,14 +452,35 @@ class StepsMixin:
         steps = []
         step_id = 1
 
-        steps.append(PlanStep(step_id=step_id, action="QUICK_ANALYSIS",
-            target_node_name=intent.target, source="LOCAL_GRAPH", constraints={}))
+        steps.append(
+            PlanStep(
+                step_id=step_id,
+                action="QUICK_ANALYSIS",
+                target_node_name=intent.target,
+                source="LOCAL_GRAPH",
+                constraints={},
+            )
+        )
         if intent.op == OperationType.EXPLAIN:
-            steps.append(PlanStep(step_id=step_id+1, action="EXPLAIN_CODE",
-                target_node_name=intent.target, source="LOCAL_GRAPH", constraints={}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id + 1,
+                    action="EXPLAIN_CODE",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={},
+                )
+            )
         elif intent.op == OperationType.SEARCH:
-            steps.append(PlanStep(step_id=step_id+1, action="SEARCH_DEFINITION",
-                target_node_name=intent.target, source="LOCAL_GRAPH", constraints={}))
+            steps.append(
+                PlanStep(
+                    step_id=step_id + 1,
+                    action="SEARCH_DEFINITION",
+                    target_node_name=intent.target,
+                    source="LOCAL_GRAPH",
+                    constraints={},
+                )
+            )
 
         return steps
 

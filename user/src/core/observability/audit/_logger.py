@@ -254,7 +254,8 @@ class AuditLogger:
             if count > 0:
                 logger.info(
                     "AuditLogger: Purged %d events for tenant %s (GDPR)",
-                    count, tenant_id[:8],
+                    count,
+                    tenant_id[:8],
                 )
             return count
         except Exception as exc:
@@ -273,7 +274,9 @@ class AuditLogger:
                     (tenant_id,),
                 ).fetchone()
             else:
-                row = conn.execute("SELECT COUNT(*) FROM audit_events").fetchone()  # nosemgrep: sqlalchemy-execute-raw-query
+                row = conn.execute(
+                    "SELECT COUNT(*) FROM audit_events"
+                ).fetchone()  # nosemgrep: sqlalchemy-execute-raw-query
             conn.close()
             return row[0] if row else 0
         except Exception:

@@ -15,7 +15,7 @@ import { validateProposedDocument } from "./auto-approve";
  * Chain of Responsibility: each rule is evaluated; all enabled rules must pass.
  * Returns true if all active rules pass — auto-approve.
  */
-function evaluateAutoApproveRules(
+export function evaluateAutoApproveRules(
   rules: AutoApproveRule[],
   proposedDocument: PolicyDocument,
   existingDocument: PolicyDocument | null,
@@ -34,7 +34,7 @@ function evaluateAutoApproveRules(
  * Evaluate a single auto-approve rule.
  * All specified conditions in the rule must pass.
  */
-function evaluateSingleRule(
+export function evaluateSingleRule(
   rule: AutoApproveRule,
   proposedDocument: PolicyDocument,
   existingDocument: PolicyDocument | null,
@@ -75,7 +75,7 @@ const PRIORITY_REVIEWER_ROLES: Record<string, string[]> = {
  * Calculate the required number of approvals based on policy risk.
  * Factors: priority, number of deny statements, compliance standards involved.
  */
-function calculateRequiredApprovals(
+export function calculateRequiredApprovals(
   proposedDocument: PolicyDocument,
   priority: ApprovalPriority,
 ): number {
@@ -101,7 +101,7 @@ function calculateRequiredApprovals(
 /**
  * Calculate required reviewer roles based on priority and document content.
  */
-function calculateRequiredReviewerRoles(
+export function calculateRequiredReviewerRoles(
   proposedDocument: PolicyDocument,
   priority: ApprovalPriority,
 ): string[] {
@@ -121,7 +121,7 @@ function calculateRequiredReviewerRoles(
 /**
  * Map a Prisma PolicyApproval record to the domain PolicyApprovalRequest.
  */
-function mapDbToApprovalRequest(record: {
+export function mapDbToApprovalRequest(record: {
   id: string;
   approvalId: string;
   title: string;
@@ -170,7 +170,7 @@ function mapDbToApprovalRequest(record: {
 /**
  * Load the existing PolicyDocument for a target policy (if any).
  */
-async function loadExistingDocument(
+export async function loadExistingDocument(
   targetPolicyId?: string | null,
 ): Promise<PolicyDocument | null> {
   if (!targetPolicyId) return null;
@@ -215,7 +215,7 @@ async function loadExistingDocument(
 /**
  * Generate a unique approval ID.
  */
-function generateApprovalId(): string {
+export function generateApprovalId(): string {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).substring(2, 10);
   return `apr_${ts}_${rand}`;

@@ -147,9 +147,7 @@ class AuditLogger:
             return {
                 "agents_tracked": len(self._per_agent),
                 "total_entries": len(self._global),
-                "per_agent_counts": {
-                    name: len(entries) for name, entries in self._per_agent.items()
-                },
+                "per_agent_counts": {name: len(entries) for name, entries in self._per_agent.items()},
             }
 
     @staticmethod

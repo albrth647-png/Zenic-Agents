@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from typing import Any
@@ -115,10 +116,8 @@ class SNAEngine:
             config = monitor.to_config(tenant_id=tenant_id, blueprint_name=blueprint_name)
             self._scheduler.add_monitor(config)
             # Persist config
-            try:
+            with contextlib.suppress(Exception):
                 self._persistence.save_monitor_config(config)
-            except Exception:  # noqa: S110
-                pass
             loaded += 1
         logger.info("SNAEngine: Loaded %d default monitors", loaded)
         return loaded
@@ -289,7 +288,7 @@ class SNAEngine:
             self._process_result(result, config.tenant_id, config)
 
             # Record check in history
-            try:
+            with contextlib.suppress(Exception):
                 self._persistence.record_check(
                     monitor_id=result.monitor_id,
                     triggered=result.triggered,
@@ -298,8 +297,6 @@ class SNAEngine:
                     duration_ms=result.duration_ms,
                     tenant_id=config.tenant_id,
                 )
-            except Exception:  # noqa: S110
-                pass
 
         except Exception as e:
             logger.error(

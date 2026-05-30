@@ -60,7 +60,8 @@ def with_retry(
                     config.on_retry(attempt, exc, delay)
                 except Exception as callback_err:
                     logger.warning(
-                        "on_retry callback error: %s", callback_err,
+                        "on_retry callback error: %s",
+                        callback_err,
                     )
 
             logger.info(
@@ -129,7 +130,8 @@ async def with_retry_async(
                     config.on_retry(attempt, exc, delay)
                 except Exception as callback_err:
                     logger.warning(
-                        "on_retry callback error: %s", callback_err,
+                        "on_retry callback error: %s",
+                        callback_err,
                     )
 
             logger.info(

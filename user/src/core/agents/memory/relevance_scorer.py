@@ -51,81 +51,150 @@ W_HEURISTIC_BLEND = 0.50
 
 OP_RELEVANCE_WEIGHTS: dict[str, dict[str, float]] = {
     "CREATE": {
-        "CREATE": 1.0, "REFACTOR": 0.6, "OPTIMIZE": 0.5,
-        "DEBUG": 0.2, "SEARCH": 0.3, "ANALYZE": 0.4,
-        "EXPLAIN": 0.2, "DELETE": 0.1,
+        "CREATE": 1.0,
+        "REFACTOR": 0.6,
+        "OPTIMIZE": 0.5,
+        "DEBUG": 0.2,
+        "SEARCH": 0.3,
+        "ANALYZE": 0.4,
+        "EXPLAIN": 0.2,
+        "DELETE": 0.1,
     },
     "REFACTOR": {
-        "REFACTOR": 1.0, "CREATE": 0.5, "OPTIMIZE": 0.7,
-        "DEBUG": 0.3, "SEARCH": 0.3, "ANALYZE": 0.5,
-        "EXPLAIN": 0.3, "DELETE": 0.1,
+        "REFACTOR": 1.0,
+        "CREATE": 0.5,
+        "OPTIMIZE": 0.7,
+        "DEBUG": 0.3,
+        "SEARCH": 0.3,
+        "ANALYZE": 0.5,
+        "EXPLAIN": 0.3,
+        "DELETE": 0.1,
     },
     "DEBUG": {
-        "DEBUG": 1.0, "REFACTOR": 0.4, "OPTIMIZE": 0.3,
-        "CREATE": 0.2, "SEARCH": 0.5, "ANALYZE": 0.6,
-        "EXPLAIN": 0.4, "DELETE": 0.1,
+        "DEBUG": 1.0,
+        "REFACTOR": 0.4,
+        "OPTIMIZE": 0.3,
+        "CREATE": 0.2,
+        "SEARCH": 0.5,
+        "ANALYZE": 0.6,
+        "EXPLAIN": 0.4,
+        "DELETE": 0.1,
     },
     "OPTIMIZE": {
-        "OPTIMIZE": 1.0, "REFACTOR": 0.7, "CREATE": 0.4,
-        "DEBUG": 0.3, "SEARCH": 0.3, "ANALYZE": 0.6,
-        "EXPLAIN": 0.3, "DELETE": 0.1,
+        "OPTIMIZE": 1.0,
+        "REFACTOR": 0.7,
+        "CREATE": 0.4,
+        "DEBUG": 0.3,
+        "SEARCH": 0.3,
+        "ANALYZE": 0.6,
+        "EXPLAIN": 0.3,
+        "DELETE": 0.1,
     },
     "SEARCH": {
-        "SEARCH": 1.0, "ANALYZE": 0.6, "EXPLAIN": 0.5,
-        "CREATE": 0.3, "DEBUG": 0.4, "REFACTOR": 0.2,
-        "OPTIMIZE": 0.2, "DELETE": 0.1,
+        "SEARCH": 1.0,
+        "ANALYZE": 0.6,
+        "EXPLAIN": 0.5,
+        "CREATE": 0.3,
+        "DEBUG": 0.4,
+        "REFACTOR": 0.2,
+        "OPTIMIZE": 0.2,
+        "DELETE": 0.1,
     },
     "ANALYZE": {
-        "ANALYZE": 1.0, "SEARCH": 0.6, "EXPLAIN": 0.5,
-        "DEBUG": 0.5, "OPTIMIZE": 0.4, "REFACTOR": 0.3,
-        "CREATE": 0.3, "DELETE": 0.1,
+        "ANALYZE": 1.0,
+        "SEARCH": 0.6,
+        "EXPLAIN": 0.5,
+        "DEBUG": 0.5,
+        "OPTIMIZE": 0.4,
+        "REFACTOR": 0.3,
+        "CREATE": 0.3,
+        "DELETE": 0.1,
     },
     "EXPLAIN": {
-        "EXPLAIN": 1.0, "ANALYZE": 0.5, "SEARCH": 0.5,
-        "DEBUG": 0.3, "REFACTOR": 0.2, "OPTIMIZE": 0.2,
-        "CREATE": 0.2, "DELETE": 0.1,
+        "EXPLAIN": 1.0,
+        "ANALYZE": 0.5,
+        "SEARCH": 0.5,
+        "DEBUG": 0.3,
+        "REFACTOR": 0.2,
+        "OPTIMIZE": 0.2,
+        "CREATE": 0.2,
+        "DELETE": 0.1,
     },
     "DELETE": {
-        "DELETE": 1.0, "REFACTOR": 0.5, "DEBUG": 0.3,
-        "SEARCH": 0.2, "ANALYZE": 0.2, "CREATE": 0.1,
-        "OPTIMIZE": 0.1, "EXPLAIN": 0.1,
+        "DELETE": 1.0,
+        "REFACTOR": 0.5,
+        "DEBUG": 0.3,
+        "SEARCH": 0.2,
+        "ANALYZE": 0.2,
+        "CREATE": 0.1,
+        "OPTIMIZE": 0.1,
+        "EXPLAIN": 0.1,
     },
 }
 
 GOAL_RELEVANCE_WEIGHTS: dict[str, dict[str, float]] = {
     "FEATURE_ADD": {
-        "FEATURE_ADD": 1.0, "PERFORMANCE": 0.5, "SECURITY_HARDEN": 0.4,
-        "BUG_FIX": 0.3, "READABILITY": 0.3, "COMPLEXITY_REDUCTION": 0.4,
+        "FEATURE_ADD": 1.0,
+        "PERFORMANCE": 0.5,
+        "SECURITY_HARDEN": 0.4,
+        "BUG_FIX": 0.3,
+        "READABILITY": 0.3,
+        "COMPLEXITY_REDUCTION": 0.4,
         "MODERN_PATTERN": 0.5,
     },
     "BUG_FIX": {
-        "BUG_FIX": 1.0, "SECURITY_HARDEN": 0.6, "PERFORMANCE": 0.3,
-        "FEATURE_ADD": 0.2, "READABILITY": 0.3, "COMPLEXITY_REDUCTION": 0.3,
+        "BUG_FIX": 1.0,
+        "SECURITY_HARDEN": 0.6,
+        "PERFORMANCE": 0.3,
+        "FEATURE_ADD": 0.2,
+        "READABILITY": 0.3,
+        "COMPLEXITY_REDUCTION": 0.3,
         "MODERN_PATTERN": 0.2,
     },
     "SECURITY_HARDEN": {
-        "SECURITY_HARDEN": 1.0, "BUG_FIX": 0.6, "PERFORMANCE": 0.2,
-        "FEATURE_ADD": 0.3, "READABILITY": 0.3, "COMPLEXITY_REDUCTION": 0.3,
+        "SECURITY_HARDEN": 1.0,
+        "BUG_FIX": 0.6,
+        "PERFORMANCE": 0.2,
+        "FEATURE_ADD": 0.3,
+        "READABILITY": 0.3,
+        "COMPLEXITY_REDUCTION": 0.3,
         "MODERN_PATTERN": 0.4,
     },
     "PERFORMANCE": {
-        "PERFORMANCE": 1.0, "COMPLEXITY_REDUCTION": 0.7, "MODERN_PATTERN": 0.5,
-        "FEATURE_ADD": 0.3, "BUG_FIX": 0.3, "SECURITY_HARDEN": 0.2,
+        "PERFORMANCE": 1.0,
+        "COMPLEXITY_REDUCTION": 0.7,
+        "MODERN_PATTERN": 0.5,
+        "FEATURE_ADD": 0.3,
+        "BUG_FIX": 0.3,
+        "SECURITY_HARDEN": 0.2,
         "READABILITY": 0.4,
     },
     "READABILITY": {
-        "READABILITY": 1.0, "COMPLEXITY_REDUCTION": 0.7, "MODERN_PATTERN": 0.6,
-        "FEATURE_ADD": 0.3, "BUG_FIX": 0.2, "SECURITY_HARDEN": 0.2,
+        "READABILITY": 1.0,
+        "COMPLEXITY_REDUCTION": 0.7,
+        "MODERN_PATTERN": 0.6,
+        "FEATURE_ADD": 0.3,
+        "BUG_FIX": 0.2,
+        "SECURITY_HARDEN": 0.2,
         "PERFORMANCE": 0.3,
     },
     "COMPLEXITY_REDUCTION": {
-        "COMPLEXITY_REDUCTION": 1.0, "READABILITY": 0.7, "MODERN_PATTERN": 0.6,
-        "PERFORMANCE": 0.5, "REFACTOR": 0.8, "FEATURE_ADD": 0.3,
-        "BUG_FIX": 0.2, "SECURITY_HARDEN": 0.2,
+        "COMPLEXITY_REDUCTION": 1.0,
+        "READABILITY": 0.7,
+        "MODERN_PATTERN": 0.6,
+        "PERFORMANCE": 0.5,
+        "REFACTOR": 0.8,
+        "FEATURE_ADD": 0.3,
+        "BUG_FIX": 0.2,
+        "SECURITY_HARDEN": 0.2,
     },
     "MODERN_PATTERN": {
-        "MODERN_PATTERN": 1.0, "COMPLEXITY_REDUCTION": 0.6, "READABILITY": 0.5,
-        "FEATURE_ADD": 0.4, "PERFORMANCE": 0.4, "SECURITY_HARDEN": 0.3,
+        "MODERN_PATTERN": 1.0,
+        "COMPLEXITY_REDUCTION": 0.6,
+        "READABILITY": 0.5,
+        "FEATURE_ADD": 0.4,
+        "PERFORMANCE": 0.4,
+        "SECURITY_HARDEN": 0.3,
         "BUG_FIX": 0.2,
     },
 }
@@ -224,9 +293,7 @@ class RelevanceScorer(BaseAgent[ScoredEntries]):
 
         return flat
 
-    def _score_all(
-        self, entries: list[dict[str, Any]], current_op: str, current_goal: str
-    ) -> list[ScoredEntry]:
+    def _score_all(self, entries: list[dict[str, Any]], current_op: str, current_goal: str) -> list[ScoredEntry]:
         """Score all entries using the weighted multi-factor formula."""
         scored: list[ScoredEntry] = []
 
@@ -253,20 +320,18 @@ class RelevanceScorer(BaseAgent[ScoredEntries]):
                 relevance = heuristic_relevance
 
             # Combined score
-            combined = (
-                W_IMPORTANCE * importance +
-                W_RECENCY * recency +
-                W_RELEVANCE * relevance
-            )
+            combined = W_IMPORTANCE * importance + W_RECENCY * recency + W_RELEVANCE * relevance
 
-            scored.append(ScoredEntry(
-                content=entry.get("content", ""),
-                importance=importance,
-                recency=recency,
-                relevance=relevance,
-                combined_score=round(combined, 4),
-                source_type=entry.get("source_type", ""),
-            ))
+            scored.append(
+                ScoredEntry(
+                    content=entry.get("content", ""),
+                    importance=importance,
+                    recency=recency,
+                    relevance=relevance,
+                    combined_score=round(combined, 4),
+                    source_type=entry.get("source_type", ""),
+                )
+            )
 
         return scored
 

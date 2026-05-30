@@ -43,7 +43,9 @@ class HelpersMixin:
         try:
             result = subprocess.run(  # noqa: S603
                 [sys.executable, "-m", "venv", venv_dir],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode != 0:
                 logger.error(f"venv creation failed: {result.stderr}")
@@ -65,8 +67,7 @@ class HelpersMixin:
 
         # Read requirements
         with open(req_file) as f:
-            requirements = [line.strip() for line in f
-                          if line.strip() and not line.startswith("#")]
+            requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
         if not requirements:
             return [], []
@@ -102,7 +103,9 @@ class HelpersMixin:
                     cmd = [pip_path, "install", "-q", req]
 
                 result = subprocess.run(  # noqa: S603
-                    cmd, capture_output=True, text=True,
+                    cmd,
+                    capture_output=True,
+                    text=True,
                     timeout=INSTALL_TIMEOUT,
                 )
                 if result.returncode == 0:
@@ -137,10 +140,10 @@ class HelpersMixin:
 
         try:
             result = subprocess.run(  # noqa: S603
-                [python_path, "-c",
-                 "import sys; sys.path.insert(0, '.'); "
-                 "from database import init_db; init_db()"],
-                capture_output=True, text=True, timeout=15,
+                [python_path, "-c", "import sys; sys.path.insert(0, '.'); from database import init_db; init_db()"],
+                capture_output=True,
+                text=True,
+                timeout=15,
                 cwd=project_dir,
             )
             return result.returncode == 0
@@ -148,8 +151,7 @@ class HelpersMixin:
             logger.debug(f"Database init skipped: {e}")
             return False
 
-    def _start_server(self, project_dir: str, venv_dir: str,
-                       port: int) -> int | None:
+    def _start_server(self, project_dir: str, venv_dir: str, port: int) -> int | None:
         """Start the project server as a background process."""
         # Determine python path
         if os.name == "nt":
@@ -206,6 +208,7 @@ class HelpersMixin:
         """Check if the server is responding on the given port."""
         try:
             import urllib.request
+
             url = f"http://localhost:{port}/health"
             req = urllib.request.Request(url, method="GET")  # noqa: S310
             with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
@@ -214,6 +217,7 @@ class HelpersMixin:
             # Try / root as fallback
             try:
                 import urllib.request
+
                 url = f"http://localhost:{port}/"
                 req = urllib.request.Request(url, method="GET")  # noqa: S310
                 with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
@@ -225,6 +229,6 @@ class HelpersMixin:
     def _find_free_port() -> int:
         """Find a free TCP port."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
+            s.bind(("", 0))
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             return s.getsockname()[1]

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       relation,
       destination,
       mechanism,
-      tenant_id = '__anonymous__',
+      tenantId = '__anonymous__',
       tier = 'enterprise',
     } = body;
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     // ── Check mapping quota ──
     if (tierConfig.maxMappings > 0) {
       const currentCount = await db.memoryMapping.count({
-        where: { tenant_id },
+        where: { tenantId },
       });
       if (currentCount >= tierConfig.maxMappings) {
         return NextResponse.json(
@@ -97,12 +97,12 @@ export async function POST(request: NextRequest) {
     // ── Insert mapping ──
     const mapping = await db.memoryMapping.create({
       data: {
-        mapping_id: mappingId,
+        mappingId: mappingId,
         origin: origin.trim(),
         relation,
         destination: destination.trim(),
         mechanism,
-        tenant_id,
+        tenantId,
         approved: false,
       },
     });
@@ -110,12 +110,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        mapping_id: mapping.mapping_id,
+        mappingId: mapping.mappingId,
         origin: mapping.origin,
         relation: mapping.relation,
         destination: mapping.destination,
         mechanism: mapping.mechanism,
-        tenant_id: mapping.tenant_id,
+        tenantId: mapping.tenantId,
         approved: mapping.approved,
       },
     });
@@ -136,17 +136,17 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenant_id') || '__anonymous__';
+    const tenantId = searchParams.get('tenantId') || '__anonymous__';
     const mechanism = searchParams.get('mechanism');
     const approved = searchParams.get('approved');
 
-    const where: Record<string, unknown> = { tenant_id: tenantId };
+    const where: Record<string, unknown> = { tenantId: tenantId };
     if (mechanism) where.mechanism = mechanism;
     if (approved !== null) where.approved = approved === 'true';
 
     const mappings = await db.memoryMapping.findMany({
       where,
-      orderBy: { created_at: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: 100,
     });
 

@@ -209,8 +209,7 @@ def _send_escalation_notification(self, sla: EscalationSLA) -> None:
             recipient_id=sla.target_role,
             title="Approval Escalated",
             body=(
-                f"Approval request {sla.request_id} has been escalated "
-                f"to {sla.current_level.name} ({sla.target_role})."
+                f"Approval request {sla.request_id} has been escalated to {sla.current_level.name} ({sla.target_role})."
             ),
             priority=NotificationPriority.HIGH,
             metadata={

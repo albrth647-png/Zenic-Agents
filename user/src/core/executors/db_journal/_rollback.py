@@ -69,9 +69,7 @@ class _RollbackMixin:
                 elif entry.operation == "INSERT":
                     result.rows_restored = self._rollback_insert(entry, result)
                 else:
-                    result.errors.append(
-                        f"Unsupported operation for rollback: {entry.operation}"
-                    )
+                    result.errors.append(f"Unsupported operation for rollback: {entry.operation}")
 
                 # Mark as rolled back
                 self._mark_rolled_back(journal_id)
@@ -79,14 +77,18 @@ class _RollbackMixin:
                 result.success = len(result.errors) == 0
                 logger.info(
                     "DBTransactionJournal: rollback_to %s op=%s restored=%d success=%s",
-                    journal_id[:12], entry.operation, result.rows_restored, result.success,
+                    journal_id[:12],
+                    entry.operation,
+                    result.rows_restored,
+                    result.success,
                 )
             except Exception as exc:
                 result.errors.append(str(exc))
                 result.success = False
                 logger.error(
                     "DBTransactionJournal: rollback_to %s FAILED: %s",
-                    journal_id[:12], exc,
+                    journal_id[:12],
+                    exc,
                 )
 
             return result
@@ -110,9 +112,7 @@ class _RollbackMixin:
             # For DELETE rollback we need to know the table name
             table, _ = _extract_table_and_where_from_delete(entry.query)
             if not table:
-                result.errors.append(
-                    "Cannot determine table name for DELETE rollback"
-                )
+                result.errors.append("Cannot determine table name for DELETE rollback")
                 return restored
             conn = sqlite3.connect(entry.db_path)
             try:
@@ -179,9 +179,7 @@ class _RollbackMixin:
                     # Use the first column as the identifying column
                     pk_col = columns[0]
                     pk_val = row[pk_col]
-                    update_sql = (
-                        f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
-                    )
+                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
                     conn.execute(update_sql, [*values, pk_val])  # nosemgrep: sqlalchemy-execute-raw-query
                     restored += 1
                 conn.commit()
@@ -206,16 +204,12 @@ class _RollbackMixin:
     ) -> int:
         """Delete the row that was inserted (identified by lastrowid)."""
         if entry.lastrowid is None or entry.lastrowid == 0:
-            result.errors.append(
-                "Cannot rollback INSERT: lastrowid is not available"
-            )
+            result.errors.append("Cannot rollback INSERT: lastrowid is not available")
             return 0
 
         table = _extract_table_from_insert(entry.query)
         if not table:
-            result.errors.append(
-                "Cannot determine table name for INSERT rollback"
-            )
+            result.errors.append("Cannot determine table name for INSERT rollback")
             return 0
 
         restored = 0
@@ -232,9 +226,7 @@ class _RollbackMixin:
                 if cursor.rowcount > 0:
                     restored = cursor.rowcount
                 else:
-                    result.errors.append(
-                        f"INSERT rollback: no row found with rowid={entry.lastrowid}"
-                    )
+                    result.errors.append(f"INSERT rollback: no row found with rowid={entry.lastrowid}")
             except Exception as exc:
                 conn.rollback()
                 result.errors.append(f"INSERT rollback failed: {exc}")

@@ -93,7 +93,9 @@ class CoreMixin:
 
         plan = PlannedAction(
             objective_id=getattr(objective, "objective_id", ""),
-            steps=steps, status="draft", priority=priority_val,
+            steps=steps,
+            status="draft",
+            priority=priority_val,
         )
 
         # Persist the plan
@@ -108,9 +110,14 @@ class CoreMixin:
                         "INSERT INTO _zenic_autopilot_plans "
                         "(plan_id, objective_id, steps, created_at, status, priority) "
                         "VALUES (?,?,?,?,?,?)",
-                        (data["plan_id"], data["objective_id"],
-                         json.dumps(data["steps"]), data["created_at"],
-                         data["status"], data["priority"]),
+                        (
+                            data["plan_id"],
+                            data["objective_id"],
+                            json.dumps(data["steps"]),
+                            data["created_at"],
+                            data["status"],
+                            data["priority"],
+                        ),
                     )
                     conn.commit()
                 finally:
@@ -120,7 +127,9 @@ class CoreMixin:
 
         logger.info(
             "AutopilotPlanner: Created plan %s with %d steps for objective %s",
-            plan.plan_id, len(steps), plan.objective_id,
+            plan.plan_id,
+            len(steps),
+            plan.objective_id,
         )
         return plan
 
@@ -219,10 +228,7 @@ class CoreMixin:
             weight = 1.0 + (0.5 * dependency_count.get(step.step_id, 0))
             total_impact += step.estimated_impact * weight
 
-        max_possible = sum(
-            s.estimated_impact * (1.0 + 0.5 * dependency_count.get(s.step_id, 0))
-            for s in plan.steps
-        )
+        max_possible = sum(s.estimated_impact * (1.0 + 0.5 * dependency_count.get(s.step_id, 0)) for s in plan.steps)
         if max_possible <= 0:
             return 0.0
 
@@ -236,7 +242,10 @@ class CoreMixin:
         steps_data = json.loads(row["steps"])
         steps = [PlanStep(**s) for s in steps_data]
         return PlannedAction(
-            plan_id=row["plan_id"], objective_id=row["objective_id"],
-            steps=steps, created_at=row["created_at"],
-            status=row["status"], priority=row["priority"],
+            plan_id=row["plan_id"],
+            objective_id=row["objective_id"],
+            steps=steps,
+            created_at=row["created_at"],
+            status=row["status"],
+            priority=row["priority"],
         )

@@ -183,10 +183,7 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         results["memory_lookup"] = self.memory_lookup(text, tenant_id)
 
         # If cache hit with high confidence, we can potentially skip ahead
-        cache_hit = (
-            results["memory_lookup"].confidence > 0.8
-            and results["memory_lookup"].result.get("cache_hit")
-        )
+        cache_hit = results["memory_lookup"].confidence > 0.8 and results["memory_lookup"].result.get("cache_hit")
 
         # ── PASO 2: classify_intent ──
         results["classify"] = self.classify_intent(text)
@@ -282,14 +279,18 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         backward_keys = {
             "classify": full_results["classify"],
             "extract": full_results["extract"],
-            "pattern": self.suggest_pattern(
-                full_results["extract"].result.get("file", "target"), text
-            ),
+            "pattern": self.suggest_pattern(full_results["extract"].result.get("file", "target"), text),
             "fill": full_results["validate_schema"],
-            "generate": full_results.get("dry_run", DeterministicResult(
-                task_name="generate_pattern", success=True, result="",
-                confidence=1.0, source="deterministic",
-            )),
+            "generate": full_results.get(
+                "dry_run",
+                DeterministicResult(
+                    task_name="generate_pattern",
+                    success=True,
+                    result="",
+                    confidence=1.0,
+                    source="deterministic",
+                ),
+            ),
             "explain": full_results["dry_run"],
             "subtask": full_results["route_mcp"],
         }

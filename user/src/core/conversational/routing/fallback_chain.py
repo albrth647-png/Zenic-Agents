@@ -80,7 +80,7 @@ class FallbackChain:
         start_time = time.time()
 
         logger.info(
-            f"Fallback chain activada " f"(pipeline fallido: {failed_pipeline.value if failed_pipeline else 'none'})"
+            f"Fallback chain activada (pipeline fallido: {failed_pipeline.value if failed_pipeline else 'none'})"
         )
 
         # Intentar cada fallback registrado
@@ -93,7 +93,7 @@ class FallbackChain:
                 if result.is_ok:
                     elapsed = (time.time() - start_time) * 1000
                     self._stats["successful_fallbacks"] += 1
-                    logger.info(f"Fallback exitoso: {entry.pipeline.value} " f"({elapsed:.0f}ms)")
+                    logger.info(f"Fallback exitoso: {entry.pipeline.value} ({elapsed:.0f}ms)")
                     return result
             except Exception as e:
                 logger.warning(f"Fallback {entry.pipeline.value} fallo: {e}")

@@ -303,13 +303,13 @@ impl ExtractedText {
 #[pyclass(name = "BatchExtractionResult")]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BatchExtractionResult {
-    documents: Vec<ExtractedText>,
-    total_documents: usize,
-    successful: usize,
-    failed: usize,
-    total_chars: usize,
-    total_words: usize,
-    errors: Vec<String>,
+    pub(crate) documents: Vec<ExtractedText>,
+    pub(crate) total_documents: usize,
+    pub(crate) successful: usize,
+    pub(crate) failed: usize,
+    pub(crate) total_chars: usize,
+    pub(crate) total_words: usize,
+    pub(crate) errors: Vec<String>,
 }
 
 #[pymethods]

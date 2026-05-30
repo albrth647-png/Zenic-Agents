@@ -27,8 +27,10 @@ __all__ = ["CircuitBreaker", "CircuitOpenError", "CircuitState"]
 #  ENUMS
 # ============================================================
 
+
 class CircuitState(Enum):
     """Circuit breaker states."""
+
     CLOSED = "closed"
     OPEN = "open"
     HALF_OPEN = "half_open"
@@ -38,21 +40,20 @@ class CircuitState(Enum):
 #  EXCEPTIONS
 # ============================================================
 
+
 class CircuitOpenError(Exception):
     """Raised when a call is attempted while the circuit is open."""
 
     def __init__(self, name: str, remaining_timeout: float = 0.0):
         self.circuit_name = name
         self.remaining_timeout = remaining_timeout
-        super().__init__(
-            f"Circuit '{name}' is OPEN. "
-            f"Retry after {remaining_timeout:.1f}s."
-        )
+        super().__init__(f"Circuit '{name}' is OPEN. Retry after {remaining_timeout:.1f}s.")
 
 
 # ============================================================
 #  CIRCUIT BREAKER
 # ============================================================
+
 
 class CircuitBreaker:
     """
@@ -164,9 +165,9 @@ class CircuitBreaker:
                 if self._success_count >= self._success_threshold:
                     self._transition_to(CircuitState.CLOSED)
                     logger.info(
-                        "Circuit '%s': HALF_OPEN → CLOSED "
-                        "(%d consecutive successes)",
-                        self._name, self._success_count,
+                        "Circuit '%s': HALF_OPEN → CLOSED (%d consecutive successes)",
+                        self._name,
+                        self._success_count,
                     )
             elif self._state == CircuitState.CLOSED:
                 self._failure_count = 0
@@ -192,9 +193,9 @@ class CircuitBreaker:
                 if self._failure_count >= self._failure_threshold:
                     self._transition_to(CircuitState.OPEN)
                     logger.warning(
-                        "Circuit '%s': CLOSED → OPEN "
-                        "(%d consecutive failures)",
-                        self._name, self._failure_count,
+                        "Circuit '%s': CLOSED → OPEN (%d consecutive failures)",
+                        self._name,
+                        self._failure_count,
                     )
 
     # ----------------------------------------------------------
@@ -216,10 +217,7 @@ class CircuitBreaker:
                     elapsed = time.monotonic() - self._opened_at
                     remaining = max(0.0, self._recovery_timeout - elapsed)
                 raise CircuitOpenError(self._name, remaining)
-            if (
-                self._state == CircuitState.HALF_OPEN
-                and self._half_open_call_count >= self._half_open_max_calls
-            ):
+            if self._state == CircuitState.HALF_OPEN and self._half_open_call_count >= self._half_open_max_calls:
                 raise CircuitOpenError(self._name, 0.0)
 
         # Execute outside the lock to avoid blocking other threads
@@ -232,9 +230,7 @@ class CircuitBreaker:
             self.record_success()
             return result
 
-    async def call_async(
-        self, coro_func: Callable[..., Any], *args: Any, **kwargs: Any
-    ) -> Any:
+    async def call_async(self, coro_func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """
         Execute *coro_func* asynchronously through the circuit breaker.
 
@@ -249,10 +245,7 @@ class CircuitBreaker:
                     elapsed = time.monotonic() - self._opened_at
                     remaining = max(0.0, self._recovery_timeout - elapsed)
                 raise CircuitOpenError(self._name, remaining)
-            if (
-                self._state == CircuitState.HALF_OPEN
-                and self._half_open_call_count >= self._half_open_max_calls
-            ):
+            if self._state == CircuitState.HALF_OPEN and self._half_open_call_count >= self._half_open_max_calls:
                 raise CircuitOpenError(self._name, 0.0)
 
         try:
@@ -339,7 +332,4 @@ class CircuitBreaker:
     # ----------------------------------------------------------
 
     def __repr__(self) -> str:
-        return (
-            f"CircuitBreaker(name={self._name!r}, "
-            f"state={self._state.value!r})"
-        )
+        return f"CircuitBreaker(name={self._name!r}, state={self._state.value!r})"

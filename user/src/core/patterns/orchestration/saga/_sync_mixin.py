@@ -61,7 +61,7 @@ class SagaSyncMixin:
                 self._last_execution_time_ms = (time.time() - start_time) * 1000
 
             logger.info(
-                "Saga[%s]: Completed successfully (saga_id=%s, " "steps=%d, time=%.1fms)",
+                "Saga[%s]: Completed successfully (saga_id=%s, steps=%d, time=%.1fms)",
                 self._name,
                 context.saga_id[:8],
                 len(self._steps),
@@ -128,7 +128,7 @@ class SagaSyncMixin:
                 self._last_execution_time_ms = (time.time() - start_time) * 1000
 
             logger.info(
-                "Saga[%s][async]: Completed successfully (saga_id=%s, " "time=%.1fms)",
+                "Saga[%s][async]: Completed successfully (saga_id=%s, time=%.1fms)",
                 self._name,
                 context.saga_id[:8],
                 self._last_execution_time_ms,
@@ -214,7 +214,7 @@ class SagaSyncMixin:
 
         if worker.is_alive():
             # Thread is still running; it timed out
-            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of " f"{step.timeout}s")
+            raise TimeoutError(f"Saga step '{step.name}' exceeded timeout of {step.timeout}s")
 
         if result_holder["error"] is not None:
             raise result_holder["error"]

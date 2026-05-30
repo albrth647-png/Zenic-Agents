@@ -48,6 +48,7 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
 
 class SecretType(str, Enum):
     """Types of server-side secrets."""
+
     LICENSE_VALIDATION = "license_validation"
     FEATURE_UNLOCK = "feature_unlock"
     CONFIG_SIGNATURE = "config_signature"
@@ -58,6 +59,7 @@ class SecretType(str, Enum):
 @dataclass
 class SecretVerification:
     """Result of a server-side secret verification."""
+
     secret_type: SecretType
     verified: bool
     server_url: str = ""
@@ -148,7 +150,9 @@ class ServerSecretsLayer:
         )
 
     def _verify_online(
-        self, secret_type: SecretType, payload: dict[str, Any],
+        self,
+        secret_type: SecretType,
+        payload: dict[str, Any],
     ) -> SecretVerification:
         """Perform online verification against the license server.
 
@@ -163,7 +167,8 @@ class ServerSecretsLayer:
             url = _validate_url(f"{self._server_url}/api/v1/verify/{secret_type.value}")
             data = json.dumps(payload).encode()
             req = urllib.request.Request(  # noqa: S310
-                url, data=data,
+                url,
+                data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
@@ -202,7 +207,9 @@ class ServerSecretsLayer:
             )
 
     def _verify_offline_fallback(
-        self, secret_type: SecretType, payload: dict[str, Any],
+        self,
+        secret_type: SecretType,
+        payload: dict[str, Any],
     ) -> SecretVerification:
         """Provide offline verification fallback.
 

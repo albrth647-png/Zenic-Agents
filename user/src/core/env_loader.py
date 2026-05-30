@@ -64,9 +64,10 @@ def _parse_env_line(line: str) -> tuple | None:
         return None
 
     # Remover comillas si el valor esta envuelto en ellas
-    if len(value) >= 2:
-        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
+    if (len(value) >= 2 and (value.startswith('"') and value.endswith('"'))) or (
+        value.startswith("'") and value.endswith("'")
+    ):
+        value = value[1:-1]
 
     return key, value
 
@@ -96,7 +97,7 @@ def _find_env_file() -> Path | None:
             if parent == current:
                 break
             current = parent
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
     # 3. ~/.zenic_agents/.env (global config)

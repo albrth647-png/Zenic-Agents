@@ -46,12 +46,12 @@ class AIAccessMixin:
         # Check RAM budget before loading
         if not self._check_ram_budget(400):  # Qwen needs ~400MB
             logger.warning(
-                "ModelManager: RAM budget exceeded, cannot load MiniAIEngine. "
-                "Will try unloading SemanticEngine first."
+                "ModelManager: RAM budget exceeded, cannot load MiniAIEngine. Will try unloading SemanticEngine first."
             )
             self._try_free_ram(needed_mb=400)
 
         from src.core.mini_ai_engine import MiniAIEngine
+
         self._mini_ai_engine = MiniAIEngine(auto_load=True)
         self._ai_last_access = time.time()
         self._stats["ai_loads"] += 1

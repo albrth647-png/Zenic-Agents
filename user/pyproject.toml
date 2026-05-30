@@ -83,9 +83,13 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "S101",   # assert usage (OK in tests)
+    "S110",   # try-except-pass (intentional: cleanup/logging/shutdown patterns)
     "S307",   # eval usage (justified in conversational tools)
     "B008",   # function call in default argument (common pattern)
     "SIM108", # ternary operator (readability preference)
+    "RUF001", # ambiguous-unicode-character-string (intentional: en-dash in ranges, info emoji)
+    "RUF002", # ambiguous-unicode-character-docstring (intentional: en-dash in ranges)
+    "RUF003", # ambiguous-unicode-character-comment (intentional: typographic chars)
 ]
 
 [tool.ruff.lint.per-file-ignores]

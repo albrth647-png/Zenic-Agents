@@ -88,7 +88,7 @@ class EventBus:
             # Ordenar por prioridad descendente
             self._subscriptions[event_type].sort(key=lambda s: s.priority, reverse=True)
 
-        logger.debug(f"Suscripcion: {event_type.value} " f"(priority={priority})")
+        logger.debug(f"Suscripcion: {event_type.value} (priority={priority})")
         return sub
 
     def unsubscribe(self, sub: Subscription) -> bool:
@@ -209,7 +209,7 @@ class EventBus:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                asyncio.ensure_future(handler(event))
+                _task = asyncio.ensure_future(handler(event))  # noqa: RUF006
             else:
                 loop.run_until_complete(handler(event))
         except RuntimeError:

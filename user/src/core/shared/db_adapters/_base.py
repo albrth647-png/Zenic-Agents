@@ -61,7 +61,7 @@ class DatabaseBackend:
         result = []
         param_idx = 1
         for char in query:
-            if char == '?':
+            if char == "?":
                 result.append(f"${param_idx}")
                 param_idx += 1
             else:

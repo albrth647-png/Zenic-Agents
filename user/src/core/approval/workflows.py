@@ -349,7 +349,7 @@ class WorkflowEngine:
                 for step in workflow.steps:
                     if step.step_type == WorkflowStepType.APPROVAL and assessment.recommended_role:
                         step.required_role = assessment.recommended_role
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         return execution
@@ -379,7 +379,7 @@ class WorkflowEngine:
                             "delegated_to": delegate_id,
                         }
                     )
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return delegated
 

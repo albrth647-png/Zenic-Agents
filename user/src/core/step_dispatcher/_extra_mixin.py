@@ -44,7 +44,7 @@ class StepDispatcherExtraMixin:
             if nodes:
                 for n in nodes[:5]:
                     explanations.append(
-                        f"Found: {n['node_type']} '{n['name']}' " f"(complexity: {n.get('complexity', 'N/A')})"
+                        f"Found: {n['node_type']} '{n['name']}' (complexity: {n.get('complexity', 'N/A')})"
                     )
             else:
                 explanations.append(f"'{intent.target}' not found in code")
@@ -73,7 +73,7 @@ class StepDispatcherExtraMixin:
             else:
                 explanations.append("Validation (F5): No issues found")
         else:
-            explanations.append("Symbolic validation executed " "(bounded symbolic execution)")
+            explanations.append("Symbolic validation executed (bounded symbolic execution)")
         return result_code, code, explanations
 
     async def _handle_scaffold_fractal(self, step, intent, code, result_code, explanations, lang, ast_analysis, plan):
@@ -98,7 +98,7 @@ class StepDispatcherExtraMixin:
                         project_repr.append(f"# === {f_bp.path} ===\n{content}")
                 result_code = "\n\n".join(project_repr)
                 explanations.append(
-                    f"Fractal: {len(fractal_result.files_generated)} " f"files, phase={fractal_result.current_phase}"
+                    f"Fractal: {len(fractal_result.files_generated)} files, phase={fractal_result.current_phase}"
                 )
             else:
                 explanations.append("Fractal: Fallback to standard generation")

@@ -17,8 +17,10 @@ from .base import EventId, SessionId, new_id
 
 # ─── Tipos de evento ─────────────────────────────────────────
 
+
 class EventType(str, Enum):
     """Tipos de eventos del sistema."""
+
     # Pipeline
     MESSAGE_RECEIVED = "message_received"
     MESSAGE_PROCESSED = "message_processed"
@@ -50,6 +52,7 @@ class EventType(str, Enum):
 
 # ─── Evento ───────────────────────────────────────────────────
 
+
 @dataclass
 class Event:
     """
@@ -58,13 +61,14 @@ class Event:
     Los eventos son la unidad de comunicacion entre componentes.
     Se emiten despues de que algo sucede (never before).
     """
+
     event_id: EventId = field(default_factory=lambda: new_id("evt"))
     event_type: EventType = EventType.MESSAGE_RECEIVED
     session_id: SessionId = ""
     timestamp: float = field(default_factory=time.time)
     payload: dict[str, Any] = field(default_factory=dict)
-    source: str = ""              # Componente que emitio el evento
-    correlation_id: str = ""      # Para rastrear un request a traves del pipeline
+    source: str = ""  # Componente que emitio el evento
+    correlation_id: str = ""  # Para rastrear un request a traves del pipeline
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -81,6 +85,7 @@ AsyncEventHandler = Callable[[Event], Any]
 
 # ─── Subscription ─────────────────────────────────────────────
 
+
 @dataclass
 class Subscription:
     """
@@ -88,12 +93,13 @@ class Subscription:
 
     Mantiene la referencia al handler y permite desuscribirse.
     """
+
     sub_id: str = field(default_factory=lambda: new_id("sub"))
     event_type: EventType = EventType.MESSAGE_RECEIVED
     handler: EventHandler | None = None
     async_handler: AsyncEventHandler | None = None
     filter_fn: Callable[[Event], bool] | None = None
-    priority: int = 0             # Mayor = se ejecuta primero
+    priority: int = 0  # Mayor = se ejecuta primero
     active: bool = True
 
     def matches(self, event: Event) -> bool:
@@ -107,9 +113,11 @@ class Subscription:
 
 # ─── Evento especificos del pipeline ─────────────────────────
 
+
 @dataclass
 class MessageReceivedPayload:
     """Payload para MESSAGE_RECEIVED."""
+
     user_message: str = ""
     session_id: SessionId = ""
     language: str = "es"
@@ -118,6 +126,7 @@ class MessageReceivedPayload:
 @dataclass
 class IntentClassifiedPayload:
     """Payload para INTENT_CLASSIFIED."""
+
     category: str = ""
     confidence: float = 0.0
     mode: str = ""
@@ -128,6 +137,7 @@ class IntentClassifiedPayload:
 @dataclass
 class ResponseGeneratedPayload:
     """Payload para RESPONSE_GENERATED."""
+
     content_length: int = 0
     format: str = "markdown"
     source: str = "deterministic"
@@ -138,6 +148,7 @@ class ResponseGeneratedPayload:
 @dataclass
 class ToolCalledPayload:
     """Payload para TOOL_CALLED."""
+
     tool_name: str = ""
     arguments: dict[str, Any] = field(default_factory=dict)
     call_id: str = ""
@@ -146,6 +157,7 @@ class ToolCalledPayload:
 @dataclass
 class ErrorPayload:
     """Payload para ERROR_OCCURRED."""
+
     error_type: str = ""
     error_message: str = ""
     component: str = ""

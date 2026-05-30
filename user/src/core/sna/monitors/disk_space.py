@@ -50,12 +50,14 @@ class DiskSpaceMonitor(BaseMonitor):
             return MonitorResult(
                 monitor_name=self.name,
                 weight=MonitorWeight.CRITICAL,
-                findings=[{
-                    "type": "disk_critical",
-                    "percent_used": percent,
-                    "free_gb": disk_info.get("free_gb", 0),
-                    "message": f"DISCO CRÍTICO: {percent}% usado, {disk_info.get('free_gb', 0)}GB libre",
-                }],
+                findings=[
+                    {
+                        "type": "disk_critical",
+                        "percent_used": percent,
+                        "free_gb": disk_info.get("free_gb", 0),
+                        "message": f"DISCO CRÍTICO: {percent}% usado, {disk_info.get('free_gb', 0)}GB libre",
+                    }
+                ],
                 healthy=False,
                 details=disk_info,
             )
@@ -64,12 +66,14 @@ class DiskSpaceMonitor(BaseMonitor):
             return MonitorResult(
                 monitor_name=self.name,
                 weight=MonitorWeight.WARNING,
-                findings=[{
-                    "type": "disk_warning",
-                    "percent_used": percent,
-                    "free_gb": disk_info.get("free_gb", 0),
-                    "message": f"Disco bajo: {percent}% usado, {disk_info.get('free_gb', 0)}GB libre",
-                }],
+                findings=[
+                    {
+                        "type": "disk_warning",
+                        "percent_used": percent,
+                        "free_gb": disk_info.get("free_gb", 0),
+                        "message": f"Disco bajo: {percent}% usado, {disk_info.get('free_gb', 0)}GB libre",
+                    }
+                ],
                 healthy=False,
                 details=disk_info,
             )

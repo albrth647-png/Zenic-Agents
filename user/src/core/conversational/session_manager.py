@@ -94,9 +94,9 @@ class SessionManager:
                 key_prefix="zenic:session",
                 default_ttl=self._default_timeout,
             )
-            logger.info(f"RedisSessionStore created for {redis_url} " f"(will connect on first async operation)")
+            logger.info(f"RedisSessionStore created for {redis_url} (will connect on first async operation)")
         except ImportError:
-            logger.warning("redis_session_store not available — " "running without Redis session persistence")
+            logger.warning("redis_session_store not available — running without Redis session persistence")
             self._redis_store = None
 
     def _get_or_create_event_loop(self) -> asyncio.AbstractEventLoop:
@@ -179,13 +179,12 @@ class SessionManager:
             restored = 0
             with self._lock:
                 for session in sessions:
-                    if session.session_id not in self._sessions:
-                        if len(self._sessions) < self._max_sessions:
-                            self._sessions[session.session_id] = session
-                            restored += 1
+                    if session.session_id not in self._sessions and len(self._sessions) < self._max_sessions:
+                        self._sessions[session.session_id] = session
+                        restored += 1
 
             if restored > 0:
-                logger.info(f"Restored {restored} sessions from Redis " f"(total in-memory: {len(self._sessions)})")
+                logger.info(f"Restored {restored} sessions from Redis (total in-memory: {len(self._sessions)})")
             return restored
         except Exception as exc:
             logger.warning(f"Failed to restore sessions from Redis: {exc}")
@@ -239,8 +238,7 @@ class SessionManager:
             self._sessions[session.session_id] = session
             self._stats["created"] += 1
             logger.info(
-                f"Sesion creada: {session.session_id[:8]}... "
-                f"(user={user_id or 'anon'}, total={len(self._sessions)})"
+                f"Sesion creada: {session.session_id[:8]}... (user={user_id or 'anon'}, total={len(self._sessions)})"
             )
 
             # Phase 3.3: Dual-write to Redis
@@ -255,7 +253,7 @@ class SessionManager:
         try:
             self._run_async(self._async_store_to_redis(session))
         except Exception as exc:
-            logger.debug(f"Redis store failed for session {session.session_id[:8]}... " f"({exc}) — in-memory only")
+            logger.debug(f"Redis store failed for session {session.session_id[:8]}... ({exc}) — in-memory only")
 
     async def _async_store_to_redis(self, session: Session) -> None:
         """Async implementation of Redis store."""

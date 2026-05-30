@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 #  RETRY HELPER
 # ──────────────────────────────────────────────────────────────
 
+
 def _retry_db_operation(
     func: Any,
     max_retries: int = 3,
@@ -46,19 +47,24 @@ def _retry_db_operation(
             return func()
         except sqlite3.OperationalError as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "AutopilotPlanner: DB retry %d/%d after %.2fs — %s",
-                attempt + 1, max_retries, delay, exc,
+                attempt + 1,
+                max_retries,
+                delay,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)
         except Exception as exc:
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "AutopilotPlanner: Unexpected error on retry %d/%d — %s",
-                attempt + 1, max_retries, exc,
+                attempt + 1,
+                max_retries,
+                exc,
             )
             if attempt < max_retries - 1:
                 time.sleep(delay)
@@ -68,6 +74,7 @@ def _retry_db_operation(
 # ──────────────────────────────────────────────────────────────
 #  IMPACT ESTIMATION
 # ──────────────────────────────────────────────────────────────
+
 
 def estimate_plan_impact(plan: PlannedAction) -> float:
     """Estimate the total impact of a plan.
@@ -98,10 +105,7 @@ def estimate_plan_impact(plan: PlannedAction) -> float:
         total_impact += step.estimated_impact * weight
 
     # Normalize to [0, 1]
-    max_possible = sum(
-        s.estimated_impact * (1.0 + 0.5 * dependency_count.get(s.step_id, 0))
-        for s in plan.steps
-    )
+    max_possible = sum(s.estimated_impact * (1.0 + 0.5 * dependency_count.get(s.step_id, 0)) for s in plan.steps)
     if max_possible <= 0:
         return 0.0
 

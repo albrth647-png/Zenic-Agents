@@ -15,26 +15,28 @@ from typing import Any
 
 class ResponseFormat(str, Enum):
     """Formato de la respuesta del asistente."""
-    TEXT = "text"                    # Texto plano
-    MARKDOWN = "markdown"            # Markdown formateado
-    CODE_BLOCK = "code_block"        # Bloque de codigo
-    MIXED = "mixed"                  # Mixto: texto + codigo
-    TOOL_RESULT = "tool_result"      # Resultado de herramienta
-    ERROR = "error"                  # Mensaje de error
+
+    TEXT = "text"  # Texto plano
+    MARKDOWN = "markdown"  # Markdown formateado
+    CODE_BLOCK = "code_block"  # Bloque de codigo
+    MIXED = "mixed"  # Mixto: texto + codigo
+    TOOL_RESULT = "tool_result"  # Resultado de herramienta
+    ERROR = "error"  # Mensaje de error
 
 
 @dataclass
 class ResponseMetadata:
     """Metadata de la respuesta generada."""
+
     timestamp: float = 0.0
     latency_ms: float = 0.0
     token_count: int = 0
     format: ResponseFormat = ResponseFormat.MARKDOWN
-    source: str = "deterministic"     # deterministic, cached, llm, fallback
+    source: str = "deterministic"  # deterministic, cached, llm, fallback
     intent_category: str = ""
     route_taken: str = ""
     confidence: float = 0.0
-    engine_used: bool = False         # Si uso el motor Zenic-Agents
+    engine_used: bool = False  # Si uso el motor Zenic-Agents
     tools_used: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -51,6 +53,7 @@ class AssistantResponse:
     Contiene el contenido principal, formato, metadata
     y opcionalmente tool calls y resultados.
     """
+
     content: str = ""
     format: ResponseFormat = ResponseFormat.MARKDOWN
     metadata: ResponseMetadata = field(default_factory=ResponseMetadata)
@@ -118,6 +121,7 @@ class StreamingChunk:
     Cada chunk es una parte incremental de la respuesta
     que se envia al cliente conforme se genera.
     """
+
     chunk_id: str = ""
     content: str = ""
     is_final: bool = False
@@ -135,6 +139,7 @@ class StreamingChunk:
     def to_sse(self) -> str:
         """Convierte a formato Server-Sent Events."""
         import json
+
         data = {
             "id": self.chunk_id,
             "content": self.content,

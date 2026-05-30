@@ -245,7 +245,7 @@ class RiskPredictionEngine:
                     blast_radius_size=result.get("blast_radius_size", 0),
                     risk_level=self._determine_risk_level(result.get("blast_radius_size", 0)),
                 )
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return self._py_multi_blast(failed_nodes, edges)
 

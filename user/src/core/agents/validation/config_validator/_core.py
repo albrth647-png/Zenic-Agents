@@ -124,7 +124,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
                     return parsed, issues
             except ImportError:
                 pass
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
             issues.append(
@@ -286,9 +286,9 @@ class ConfigValidator(BaseAgent[ConfigResult]):
 
         # Check for DEBUG mode enabled
         for key in SECURITY_SENSITIVE_KEYS["debug_keys"]:
-            if key in config and (config[key] is True or (
-                isinstance(config[key], str) and config[key].lower() in ("true", "1", "yes")
-            )):
+            if key in config and (
+                config[key] is True or (isinstance(config[key], str) and config[key].lower() in ("true", "1", "yes"))
+            ):
                 issues.append(
                     ValidationIssue(
                         severity="info",

@@ -5,7 +5,6 @@ use zenic_proto::{NodeCriticality, SessionId, TenantId};
 use crate::audit::{AuditLog, DenialReason, PolicyDecision};
 use crate::errors::PolicyError;
 use crate::gate::{CriticalityGate, SafetyVeto, SafetyVetoRegistry};
-use crate::permission::Permission;
 use crate::role::{CriticalityClearance, Role, RoleAssignment, RoleId, RoleRegistry};
 use crate::rule::{RuleEffect, RuleSet};
 

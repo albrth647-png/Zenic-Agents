@@ -18,23 +18,27 @@ from ..types.intent import ConversationMode, IntentCategory
 
 # ─── Fase de la conversacion ──────────────────────────────────
 
+
 class ConversationPhase(str, Enum):
     """Fases de una conversacion."""
-    GREETING = "greeting"           # Inicio, saludo
-    EXPLORING = "exploring"         # El usuario esta explorando
-    WORKING = "working"             # Trabajo activo en una tarea
-    CLARIFYING = "clarifying"       # Pidiendo aclaraciones
-    DELIVERING = "delivering"       # Entregando resultados
-    FOLLOW_UP = "follow_up"        # Seguimiento post-entrega
-    CLOSING = "closing"            # Despedida o fin
-    IDLE = "idle"                  # Sin actividad
+
+    GREETING = "greeting"  # Inicio, saludo
+    EXPLORING = "exploring"  # El usuario esta explorando
+    WORKING = "working"  # Trabajo activo en una tarea
+    CLARIFYING = "clarifying"  # Pidiendo aclaraciones
+    DELIVERING = "delivering"  # Entregando resultados
+    FOLLOW_UP = "follow_up"  # Seguimiento post-entrega
+    CLOSING = "closing"  # Despedida o fin
+    IDLE = "idle"  # Sin actividad
 
 
 # ─── Topic de conversacion ────────────────────────────────────
 
+
 @dataclass
 class ConversationTopic:
     """Topic activo en la conversacion."""
+
     name: str = ""
     category: IntentCategory = IntentCategory.UNKNOWN
     started_at: float = field(default_factory=time.time)
@@ -55,6 +59,7 @@ class ConversationTopic:
 
 # ─── Estado de conversacion ───────────────────────────────────
 
+
 @dataclass
 class ConversationState:
     """
@@ -63,6 +68,7 @@ class ConversationState:
     Rastrea la fase, topics activos, intenciones previas,
     modo de conversacion y metadata de telemetria.
     """
+
     state_id: str = field(default_factory=lambda: new_id("conv"))
     session_id: str = ""
     phase: ConversationPhase = ConversationPhase.GREETING
@@ -174,8 +180,7 @@ class ConversationState:
             "turn_count": self.turn_count,
             "last_intent": self.last_intent.value,
             "active_topics": [
-                {"name": t.name, "category": t.category.value, "mentions": t.mention_count}
-                for t in self.active_topics
+                {"name": t.name, "category": t.category.value, "mentions": t.mention_count} for t in self.active_topics
             ],
             "has_clarifications": self.has_pending_clarifications,
             "context_summary": self.context_summary[:500] if self.context_summary else "",

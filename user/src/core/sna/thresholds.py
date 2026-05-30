@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Threshold:
     """Un umbral configurable."""
+
     monitor_name: str
     key: str
     value: Any
@@ -141,8 +142,7 @@ class ThresholdEngine:
         data = {}
         for monitor_name, thresholds in self._thresholds.items():
             data[monitor_name] = {
-                k: {"value": t.value, "type": t.type, "description": t.description}
-                for k, t in thresholds.items()
+                k: {"value": t.value, "type": t.type, "description": t.description} for k, t in thresholds.items()
             }
         path = Path(config_path)
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -75,6 +75,7 @@ from .format_adapter import (
 #  VOICE PIPELINE — UNIFIED ENTRY POINT
 # ──────────────────────────────────────────────────────────────
 
+
 class VoicePipeline:
     """Unified entry point for the voice → text pipeline.
 
@@ -150,10 +151,7 @@ class VoicePipeline:
         # Step 1: Convert to WAV if adapter is available
         if self._adapter.is_available:
             # Only convert if not already WAV 16kHz mono
-            needs_conversion = (
-                audio_format.lower().strip().lstrip(".")
-                not in ("wav", "x-wav", "wave", "")
-            )
+            needs_conversion = audio_format.lower().strip().lstrip(".") not in ("wav", "x-wav", "wave", "")
 
             if needs_conversion:
                 conv = self._adapter.convert(audio_bytes, audio_format)
@@ -194,8 +192,12 @@ class VoicePipeline:
         Runs the full pipeline in a thread pool.
         """
         import asyncio
+
         return await asyncio.to_thread(
-            self.process, audio_bytes, audio_format, language,
+            self.process,
+            audio_bytes,
+            audio_format,
+            language,
         )
 
     # ── Delegate Properties ───────────────────────────────────

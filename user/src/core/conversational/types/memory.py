@@ -17,25 +17,29 @@ from .base import MemoryId, new_id
 
 # ─── Niveles de memoria ──────────────────────────────────────
 
+
 class MemoryType(str, Enum):
     """Tipo de almacenamiento de memoria."""
-    WORKING = "working"        # En contexto inmediato (ultimos N mensajes)
+
+    WORKING = "working"  # En contexto inmediato (ultimos N mensajes)
     SHORT_TERM = "short_term"  # En la sesion actual
-    LONG_TERM = "long_term"    # Persistente entre sesiones
+    LONG_TERM = "long_term"  # Persistente entre sesiones
 
 
 class MemoryCategory(str, Enum):
     """Categoria del contenido almacenado."""
-    FACT = "fact"              # Hecho o dato
+
+    FACT = "fact"  # Hecho o dato
     PREFERENCE = "preference"  # Preferencia del usuario
-    CONTEXT = "context"        # Contexto de conversacion
-    SKILL = "skill"            # Habilidad o patron aprendido
+    CONTEXT = "context"  # Contexto de conversacion
+    SKILL = "skill"  # Habilidad o patron aprendido
     CORRECTION = "correction"  # Correccion del usuario
-    TOPIC = "topic"            # Tema de conversacion
-    EMOTION = "emotion"        # Estado emocional detectado
+    TOPIC = "topic"  # Tema de conversacion
+    EMOTION = "emotion"  # Estado emocional detectado
 
 
 # ─── Entrada de memoria ──────────────────────────────────────
+
 
 @dataclass
 class MemoryEntry:
@@ -45,19 +49,20 @@ class MemoryEntry:
     Cada entrada tiene scoring de relevancia, categoria,
     TTL y metadata para retrieval eficiente.
     """
+
     memory_id: MemoryId = field(default_factory=lambda: new_id("mem"))
     content: str = ""
     category: MemoryCategory = MemoryCategory.FACT
     memory_type: MemoryType = MemoryType.SHORT_TERM
     session_id: str = ""
-    importance: float = 0.5       # 0.0 - 1.0, umbral para LTM
+    importance: float = 0.5  # 0.0 - 1.0, umbral para LTM
     relevance_score: float = 0.0  # Score calculado al recuperar
-    access_count: int = 0         # Veces accedida
+    access_count: int = 0  # Veces accedida
     created_at: float = field(default_factory=time.time)
     last_accessed: float = field(default_factory=time.time)
-    expires_at: float = 0.0       # 0 = sin expiracion
+    expires_at: float = 0.0  # 0 = sin expiracion
     tags: list[str] = field(default_factory=list)
-    source: str = "user"          # user, assistant, system, tool
+    source: str = "user"  # user, assistant, system, tool
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -99,9 +104,11 @@ class MemoryEntry:
 
 # ─── Query de memoria ────────────────────────────────────────
 
+
 @dataclass
 class MemoryQuery:
     """Query para buscar en la memoria."""
+
     text: str = ""
     categories: list[MemoryCategory] = field(default_factory=list)
     memory_types: list[MemoryType] = field(default_factory=list)
@@ -130,9 +137,11 @@ class MemoryQuery:
 
 # ─── Resultado de memoria ────────────────────────────────────
 
+
 @dataclass
 class MemoryResult:
     """Resultado de una busqueda en memoria."""
+
     entries: list[MemoryEntry] = field(default_factory=list)
     total_matches: int = 0
     query: MemoryQuery = field(default_factory=MemoryQuery)
@@ -155,18 +164,17 @@ class MemoryResult:
             return ""
         lines: list[str] = []
         for entry in self.entries[:max_entries]:
-            lines.append(
-                f"[{entry.category.value}] {entry.content} "
-                f"(relevance={entry.relevance_score:.2f})"
-            )
+            lines.append(f"[{entry.category.value}] {entry.content} (relevance={entry.relevance_score:.2f})")
         return "\n".join(lines)
 
 
 # ─── Estadisticas de memoria ─────────────────────────────────
 
+
 @dataclass
 class MemoryStats:
     """Estadisticas del sistema de memoria."""
+
     working_count: int = 0
     short_term_count: int = 0
     long_term_count: int = 0

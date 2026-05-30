@@ -29,6 +29,7 @@ class PolicyCondition:
 
     Supported operators: eq, neq, gt, lt, gte, lte, contains, in, regex.
     """
+
     field: str
     operator: ConditionOperator
     value: Any = None
@@ -164,7 +165,8 @@ class PolicyCondition:
                 return bool(re.search(str(expected), str(actual)))
             except re.error:
                 logger.warning(
-                    "PolicyCondition: Invalid regex pattern '%s'", expected,
+                    "PolicyCondition: Invalid regex pattern '%s'",
+                    expected,
                 )
                 return False
 

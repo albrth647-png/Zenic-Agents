@@ -31,6 +31,7 @@ but all NEW hashes use BLAKE3.
 Sin dependencias externas. Compatible con Android.
 """
 
+import contextlib
 import hashlib
 import logging
 import sqlite3
@@ -235,10 +236,8 @@ class MerkleLedgerHelpersMixin:
             return {}
         finally:
             if db_path and conn:
-                try:
+                with contextlib.suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
 
     def _get_last_hash(self, file_path, db_path=None, tenant_id=None):
         """Obtiene el ultimo hash para un archivo y un tenant.
@@ -263,10 +262,8 @@ class MerkleLedgerHelpersMixin:
             return "GENESIS"
         finally:
             if db_path and conn:
-                try:
+                with contextlib.suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
 
     def _record_operation(self, file_path, content_hash, parent_hash, operation, db_path=None, tenant_id=None):
         """Register an operation in the ledger with tenant_id.
@@ -293,14 +290,12 @@ class MerkleLedgerHelpersMixin:
 
         try:
             with_retry(_insert, label="MerkleLedger record_operation")
-        except Exception:  # noqa: S110
+        except Exception:
             pass  # with_retry already logged the failure
         finally:
             if db_path and conn:
-                try:
+                with contextlib.suppress(Exception):
                     conn.close()
-                except Exception:  # noqa: S110
-                    pass
 
     @staticmethod
     def _validate_rel_path(rel_path: str, base_dir: Path) -> Path:
@@ -314,6 +309,6 @@ class MerkleLedgerHelpersMixin:
         base_resolved = base_dir.resolve()
         if not resolved.is_relative_to(base_resolved):
             raise ValueError(
-                f"Path traversal detected: '{rel_path}' resolves to " f"'{resolved}' which is outside '{base_resolved}'"
+                f"Path traversal detected: '{rel_path}' resolves to '{resolved}' which is outside '{base_resolved}'"
             )
         return resolved

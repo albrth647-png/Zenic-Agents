@@ -52,7 +52,7 @@ class DemandProjectionMonitor(MonitorBase):
             # Get daily sales for the last 30 days
             cutoff = time.time() - (30 * 86400)
             rows = self._execute_query(
-                f"SELECT date, SUM(amount) FROM {sales_table} " f"WHERE date >= ? GROUP BY date ORDER BY date",  # noqa: S608
+                f"SELECT date, SUM(amount) FROM {sales_table} WHERE date >= ? GROUP BY date ORDER BY date",  # noqa: S608
                 (cutoff,),
                 db_name=db_name,
             )
@@ -172,7 +172,7 @@ class MultiSourceAnalysisMonitor(MonitorBase):
             # Source 1: Request volume trend
             cutoff = time.time() - 86400
             req_rows = self._execute_query(
-                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests " "WHERE created_at >= ?",
+                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests WHERE created_at >= ?",
                 (cutoff,),
                 db_name="request_log.sqlite",
             )
@@ -201,7 +201,7 @@ class MultiSourceAnalysisMonitor(MonitorBase):
                     ram_mb = status.get("ram_usage_mb", 0)
                     ram_limit = status.get("ram_limit_mb", 1)
                     ram_pct = (ram_mb / ram_limit * 100) if ram_limit > 0 else 0
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
             # Anomaly detection: high error rate + slow responses + high resources
@@ -296,7 +296,7 @@ class CapacityPlanningMonitor(MonitorBase):
             # Get request volume trend for capacity projection
             cutoff = time.time() - (7 * 86400)
             rows = self._execute_query(
-                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests " "WHERE created_at >= ?",
+                "SELECT COUNT(*), AVG(processing_time_ms) FROM requests WHERE created_at >= ?",
                 (cutoff,),
                 db_name="request_log.sqlite",
             )
@@ -313,8 +313,7 @@ class CapacityPlanningMonitor(MonitorBase):
                 f"CAPACIDAD CRITICA: RAM {ram_pct:.1f}% actual, "
                 f"proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
                 if triggered
-                else f"Capacidad OK: RAM {ram_pct:.1f}%, "
-                f"proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
+                else f"Capacidad OK: RAM {ram_pct:.1f}%, proyectada {projected_ram_pct:.1f}% en {projection_days} dias"
             )
             return self._make_result(
                 triggered=triggered,

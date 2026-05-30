@@ -47,13 +47,15 @@ class StaleInventoryMonitor(BaseMonitor):
         for item in items:
             name_val = item.get("nombre", item.get("name", item.get("producto", str(item.get("id", "?")))))
             last_sold = item.get("ultima_venta", item.get("last_sold", "nunca"))
-            findings.append({
-                "type": "stale_inventory",
-                "product": name_val,
-                "last_sold": last_sold,
-                "days_threshold": self.stale_days,
-                "message": f"Inventario estancado: {name_val} (última venta: {last_sold})",
-            })
+            findings.append(
+                {
+                    "type": "stale_inventory",
+                    "product": name_val,
+                    "last_sold": last_sold,
+                    "days_threshold": self.stale_days,
+                    "message": f"Inventario estancado: {name_val} (última venta: {last_sold})",
+                }
+            )
 
         return MonitorResult(
             monitor_name=self.name,

@@ -25,14 +25,16 @@ logger = logging.getLogger("zenic_agents.conversational.tools.permissions")
 
 # ─── Override de permiso ─────────────────────────────────────
 
+
 @dataclass
 class PermissionOverride:
     """Override de permiso para una sesion."""
+
     session_id: str = ""
     tool_name: str = ""
     permission: ToolPermission = ToolPermission.ALLOWED
     granted_at: float = field(default_factory=time.time)
-    expires_at: float = 0.0       # 0 = sin expiracion
+    expires_at: float = 0.0  # 0 = sin expiracion
     reason: str = ""
 
     @property
@@ -44,16 +46,16 @@ class PermissionOverride:
 
 # ─── Session permissions ─────────────────────────────────────
 
+
 @dataclass
 class SessionPermissions:
     """Permisos de una sesion."""
+
     session_id: str = ""
-    allowed_categories: list[str] = field(
-        default_factory=lambda: ["general", "web", "code"]
-    )
+    allowed_categories: list[str] = field(default_factory=lambda: ["general", "web", "code"])
     denied_tools: list[str] = field(default_factory=list)
     overrides: dict[str, PermissionOverride] = field(default_factory=dict)
-    auto_approve_safe: bool = True       # Auto-aprobar tools seguras
+    auto_approve_safe: bool = True  # Auto-aprobar tools seguras
     require_confirmation_dangerous: bool = True
 
     def can_use(self, tool_name: str, category: str) -> ToolPermission:
@@ -138,9 +140,7 @@ class PermissionManager:
         session_perms = self._sessions.get(session_id)
 
         if session_perms:
-            session_decision = session_perms.can_use(
-                tool_name, spec.category
-            )
+            session_decision = session_perms.can_use(tool_name, spec.category)
             # Si la sesion dice DENIED, es DENIED
             if session_decision == ToolPermission.DENIED:
                 return ToolPermission.DENIED
@@ -150,9 +150,7 @@ class PermissionManager:
             return ToolPermission.DENIED
 
         # Si la sesion dice ALLOWED y el spec no es DENIED
-        if session_perms and session_perms.can_use(
-            tool_name, spec.category
-        ) == ToolPermission.ALLOWED:
+        if session_perms and session_perms.can_use(tool_name, spec.category) == ToolPermission.ALLOWED:
             # Pero si el spec requiere confirmacion, mantener
             if spec.permission == ToolPermission.CONFIRM_REQUIRED:
                 return ToolPermission.CONFIRM_REQUIRED
@@ -188,10 +186,7 @@ class PermissionManager:
                 reason=reason,
             )
             session.overrides[tool_name] = override
-            logger.info(
-                f"Override concedido: {tool_name} → {permission.value} "
-                f"(sesion={session_id[:8]}...)"
-            )
+            logger.info(f"Override concedido: {tool_name} → {permission.value} (sesion={session_id[:8]}...)")
             return True
 
     def revoke_override(self, session_id: str, tool_name: str) -> bool:
@@ -219,7 +214,5 @@ class PermissionManager:
         """Estadisticas del gestor de permisos."""
         return {
             "active_sessions": len(self._sessions),
-            "total_overrides": sum(
-                len(s.overrides) for s in self._sessions.values()
-            ),
+            "total_overrides": sum(len(s.overrides) for s in self._sessions.values()),
         }

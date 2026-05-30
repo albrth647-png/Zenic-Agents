@@ -43,10 +43,13 @@ class Phase2Handlers:
             # Fallback a conversacional
             from .engine_parts import ResponseGenerator
             from .personality_manager import PersonalityManager
+
             gen = ResponseGenerator()
             profile = personality or PersonalityManager().get_default()
             content = gen.generate_chat(
-                enriched.text.lower().strip(), profile, session,
+                enriched.text.lower().strip(),
+                profile,
+                session,
             )
             return AssistantResponse(
                 content=content,

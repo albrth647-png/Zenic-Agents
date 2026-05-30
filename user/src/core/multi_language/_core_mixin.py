@@ -49,12 +49,12 @@ class MultiLanguageCoreMixin:
                 parts = field_def.split(":", 1)
                 name = parts[0].strip()
                 yaml_type = parts[1].strip().lower()
-                target_type = type_map.get(yaml_type, "string" if language != "go" else "string")
+                target_type = type_map.get(yaml_type, "string")
                 parsed.append({"name": name, "yaml_type": yaml_type, "type": target_type})
             elif isinstance(field_def, dict):
                 name = field_def.get("name", "field")
                 yaml_type = field_def.get("type", "str").lower()
-                target_type = type_map.get(yaml_type, "string" if language != "go" else "string")
+                target_type = type_map.get(yaml_type, "string")
                 parsed.append({"name": name, "yaml_type": yaml_type, "type": target_type})
 
         return parsed

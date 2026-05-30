@@ -43,6 +43,7 @@ class AgentsConfig:
     Cargada desde variables de entorno con defaults seguros.
     Inmutable por diseno — no se modifica en runtime.
     """
+
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
     log_level: str = LOG_LEVEL_DEFAULT
@@ -56,7 +57,7 @@ class AgentsConfig:
     debug: bool = False
     cors_origins: list[str] = field(default_factory=lambda: ["*"])
     database_url: str = ""
-    api_key: str = ""                # API key opcional para proteccion
+    api_key: str = ""  # API key opcional para proteccion
 
     def to_dict(self) -> dict[str, object]:
         """Convierte la config a diccionario (sin datos sensibles)."""

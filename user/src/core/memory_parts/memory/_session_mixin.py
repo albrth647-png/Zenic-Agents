@@ -53,8 +53,7 @@ class SessionMixin:
             )
 
         logger.info(
-            f"SmartMemory: Session {self._session_id} started "
-            f"(tenant='{self._tenant_id}', client='{self._client_id}')"
+            f"SmartMemory: Session {self._session_id} started (tenant='{self._tenant_id}', client='{self._client_id}')"
         )
         return self._session_id
 
@@ -88,8 +87,7 @@ class SessionMixin:
         with self._working_lock:
             self._working_memory.clear()
         logger.info(
-            f"SmartMemory: Session {self._session_id} ended "
-            f"({exchange_count} exchanges, tenant='{self._tenant_id}')"
+            f"SmartMemory: Session {self._session_id} ended ({exchange_count} exchanges, tenant='{self._tenant_id}')"
         )
         return {"session_id": self._session_id, "summary": summary, "exchanges": exchange_count}
 
@@ -190,7 +188,8 @@ class SessionMixin:
                     )
 
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})", ids_to_remove  # noqa: S608
+                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})",  # noqa: S608
+                        ids_to_remove,
                     )
                     consolidated_episodes += len(ids_to_remove)
 

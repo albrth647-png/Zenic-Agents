@@ -17,9 +17,9 @@ class DeterministicTasks5To7Mixin:
     #  TASK 5: generate_pattern (reemplaza MiniAIEngine.generate_pattern)
     # ================================================================
 
-    def generate_pattern(self, pattern_desc: str,
-                         language: str = "python",
-                         context: dict[str, Any] | None = None) -> DeterministicResult:
+    def generate_pattern(
+        self, pattern_desc: str, language: str = "python", context: dict[str, Any] | None = None
+    ) -> DeterministicResult:
         """
         Genera un snippet de código desde la librería de templates.
 
@@ -73,8 +73,7 @@ class DeterministicTasks5To7Mixin:
     #  TASK 6: explain_violation (reemplaza MiniAIEngine.explain_violation)
     # ================================================================
 
-    def explain_violation(self, code: str,
-                          violations: list[str]) -> DeterministicResult:
+    def explain_violation(self, code: str, violations: list[str]) -> DeterministicResult:
         """
         Explica violaciones usando el catálogo de mensajes.
 
@@ -118,19 +117,18 @@ class DeterministicTasks5To7Mixin:
     #  TASK 7: describe_subtask (reemplaza MiniAIEngine.describe_subtask)
     # ================================================================
 
-    def describe_subtask(self, target: str, action: str,
-                         context: str = "") -> DeterministicResult:
+    def describe_subtask(self, target: str, action: str, context: str = "") -> DeterministicResult:
         """
         Genera un nombre descriptivo para un subtask.
 
         Reemplaza: MiniAIEngine.describe_subtask() (que usaba LLM ~30 tokens)
         Mejora: Nombres consistentes y limpios
         """
-        safe_target = re.sub(r'[^a-z0-9_]', '_', target.lower()).strip('_')
-        safe_action = re.sub(r'[^a-z0-9_]', '_', action.lower()).strip('_')
+        safe_target = re.sub(r"[^a-z0-9_]", "_", target.lower()).strip("_")
+        safe_action = re.sub(r"[^a-z0-9_]", "_", action.lower()).strip("_")
 
         # Limpiar underscores duplicados
-        name = re.sub(r'_+', '_', f"{safe_action}_{safe_target}").strip('_')
+        name = re.sub(r"_+", "_", f"{safe_action}_{safe_target}").strip("_")
 
         if not name or len(name) < 3:
             name = "unnamed_subtask"

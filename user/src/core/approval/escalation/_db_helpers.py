@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 # ── Retry helper ──────────────────────────────────────────
 
+
 def with_retry(
     fn: Any,
     fallback: Any = None,
@@ -42,7 +43,9 @@ def with_retry(
             last_exc = exc
             logger.warning(
                 "EscalationManager: DB retry %d/%d — %s",
-                attempt, max_retries, exc,
+                attempt,
+                max_retries,
+                exc,
             )
             if attempt < max_retries:
                 time.sleep(_RETRY_DELAY * attempt)
@@ -55,6 +58,7 @@ def with_retry(
 
 
 # ── Row conversion ────────────────────────────────────────
+
 
 def row_to_escalation_sla(row: sqlite3.Row) -> EscalationSLA:
     """Convert a database row to an EscalationSLA."""
@@ -71,8 +75,10 @@ def row_to_escalation_sla(row: sqlite3.Row) -> EscalationSLA:
 
 # ── DB Initialisation ─────────────────────────────────────
 
+
 def init_db(db_path: str) -> None:
     """Create the escalation tables if they do not exist."""
+
     def _do_init() -> None:
         conn = sqlite3.connect(db_path)
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -122,6 +128,7 @@ def init_db(db_path: str) -> None:
 
 # ── SLA Policy persistence ────────────────────────────────
 
+
 def load_sla_policies(
     db_path: str,
     sla_policies: dict[EscalationLevel, SLAPolicy],
@@ -130,6 +137,7 @@ def load_sla_policies(
 
     Mutates *sla_policies* in place.
     """
+
     def _do_load() -> None:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -149,6 +157,7 @@ def load_sla_policies(
 
 def persist_sla_policy(db_path: str, policy: SLAPolicy) -> None:
     """Persist an SLA policy to the database."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(db_path)
         conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -170,6 +179,7 @@ def persist_sla_policy(db_path: str, policy: SLAPolicy) -> None:
 
 # ── Escalation SLA persistence ────────────────────────────
 
+
 def persist_escalation_sla(
     db_path: str,
     sla: EscalationSLA,
@@ -177,6 +187,7 @@ def persist_escalation_sla(
     insert: bool,
 ) -> None:
     """Insert or update an escalation SLA record."""
+
     def _do_persist() -> None:
         conn = sqlite3.connect(db_path)
         if insert:
@@ -220,6 +231,7 @@ def persist_escalation_sla(
 
 # ── Escalation history ────────────────────────────────────
 
+
 def record_escalation_history(
     db_path: str,
     request_id: str,
@@ -257,11 +269,13 @@ def record_escalation_history(
 
 # ── Query helpers ─────────────────────────────────────────
 
+
 def find_escalation_sla(
     db_path: str,
     request_id: str,
 ) -> EscalationSLA | None:
     """Find an escalation SLA by request ID."""
+
     def _do_find() -> EscalationSLA | None:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -279,6 +293,7 @@ def find_escalation_sla(
 
 def get_active_slas(db_path: str) -> list[EscalationSLA]:
     """Get all active (non-breached) SLA records."""
+
     def _do_query() -> list[EscalationSLA]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -298,6 +313,7 @@ def get_escalation_history_rows(
     request_id: str,
 ) -> list[dict[str, Any]]:
     """Get the escalation history for a request as a list of dicts."""
+
     def _do_query() -> list[dict[str, Any]]:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row

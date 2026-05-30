@@ -59,6 +59,7 @@ class NotificationDispatcher:
 
     def _init_db(self) -> None:
         """Create the notifications and channel_config tables."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -100,7 +101,9 @@ class NotificationDispatcher:
     # ── Channel Management ─────────────────────────────────
 
     def register_channel(
-        self, channel_type: NotificationChannel | str, config: ChannelConfig | dict[str, Any],
+        self,
+        channel_type: NotificationChannel | str,
+        config: ChannelConfig | dict[str, Any],
     ) -> None:
         """Register or update a notification channel configuration."""
         # Coerce string to enum
@@ -119,11 +122,13 @@ class NotificationDispatcher:
 
         logger.info(
             "NotificationDispatcher: Registered channel %s (enabled=%s)",
-            channel_type.value, config.enabled,
+            channel_type.value,
+            config.enabled,
         )
 
     def _load_channel_configs(self) -> None:
         """Load channel configurations from the database."""
+
         def _do_load() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -143,6 +148,7 @@ class NotificationDispatcher:
 
     def _persist_channel_config(self, config: ChannelConfig) -> None:
         """Persist a channel configuration to the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -219,9 +225,10 @@ class NotificationDispatcher:
                 messages.append(result)
 
         logger.info(
-            "NotificationDispatcher: Dispatched %s event for request %s "
-            "to %d channels",
-            event.value, request_id, len(messages),
+            "NotificationDispatcher: Dispatched %s event for request %s to %d channels",
+            event.value,
+            request_id,
+            len(messages),
         )
         return messages
 
@@ -259,7 +266,8 @@ class NotificationDispatcher:
         except Exception as exc:
             logger.warning(
                 "NotificationDispatcher: Failed to send via %s — %s",
-                channel.value, exc,
+                channel.value,
+                exc,
             )
             message.status = "failed"
 
@@ -270,9 +278,11 @@ class NotificationDispatcher:
         return message
 
     def get_notification_history(
-        self, request_id: str,
+        self,
+        request_id: str,
     ) -> list[NotificationMessage]:
         """Get all notifications sent for a request."""
+
         def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -289,6 +299,7 @@ class NotificationDispatcher:
 
     def get_pending_notifications(self) -> list[NotificationMessage]:
         """Get all notifications with 'pending' or 'failed' status."""
+
         def _do_query() -> list[NotificationMessage]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -324,49 +335,63 @@ class NotificationDispatcher:
         """Store an in-app notification (always succeeds)."""
         logger.info(
             "NotificationDispatcher: [IN_APP] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_email(self, message: NotificationMessage) -> None:
         """Send an email notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [EMAIL] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_slack(self, message: NotificationMessage) -> None:
         """Send a Slack notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [SLACK] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_teams(self, message: NotificationMessage) -> None:
         """Send a Microsoft Teams notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [TEAMS] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_whatsapp(self, message: NotificationMessage) -> None:
         """Send a WhatsApp notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [WHATSAPP] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_sms(self, message: NotificationMessage) -> None:
         """Send an SMS notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [SMS] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_push(self, message: NotificationMessage) -> None:
         """Send a push notification (stub — logs to console)."""
         logger.info(
             "NotificationDispatcher: [PUSH] To: %s — %s: %s",
-            message.recipient_id, message.title, message.body[:80],
+            message.recipient_id,
+            message.title,
+            message.body[:80],
         )
 
     def _send_webhook(self, message: NotificationMessage) -> None:
@@ -375,13 +400,17 @@ class NotificationDispatcher:
         webhook_url = config.config.get("webhook_url", "")
         logger.info(
             "NotificationDispatcher: [WEBHOOK] To: %s — URL: %s — %s: %s",
-            message.recipient_id, webhook_url, message.title, message.body[:80],
+            message.recipient_id,
+            webhook_url,
+            message.title,
+            message.body[:80],
         )
 
     # ── Private Helpers ────────────────────────────────────
 
     def _find_message(self, notification_id: str) -> NotificationMessage | None:
         """Find a notification by ID."""
+
         def _do_find() -> NotificationMessage | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -397,9 +426,13 @@ class NotificationDispatcher:
         return self._with_retry(_do_find, fallback=None)
 
     def _persist_message(
-        self, message: NotificationMessage, *, insert: bool,
+        self,
+        message: NotificationMessage,
+        *,
+        insert: bool,
     ) -> None:
         """Insert or update a notification in the database."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             if insert:
@@ -466,7 +499,9 @@ class NotificationDispatcher:
                 last_exc = exc
                 logger.warning(
                     "NotificationDispatcher: DB retry %d/%d — %s",
-                    attempt, max_retries, exc,
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)
@@ -475,7 +510,8 @@ class NotificationDispatcher:
                 logger.error("NotificationDispatcher: DB error — %s", exc)
                 break
         logger.error(
-            "NotificationDispatcher: All retries exhausted — %s", last_exc,
+            "NotificationDispatcher: All retries exhausted — %s",
+            last_exc,
         )
         return fallback
 

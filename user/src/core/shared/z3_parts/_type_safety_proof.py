@@ -15,6 +15,7 @@ import logging
 
 try:
     import z3 as z3_module  # type: ignore[import-unresolved]
+
     _HAS_Z3 = True
 except ImportError:
     _HAS_Z3 = False
@@ -84,20 +85,9 @@ class Z3TypeSafetyProofMixin:
                 for var_info in variables_with_types:
                     name = var_info["name"]
                     allowed = var_info.get("types", ["unknown"])
-                    allowed_consts = [
-                        type_name_to_const[t]
-                        for t in allowed
-                        if t in type_name_to_const
-                    ]
+                    allowed_consts = [type_name_to_const[t] for t in allowed if t in type_name_to_const]
                     if allowed_consts:
-                        slv.add(
-                            z3_module.Or(
-                                *[
-                                    z3_type_vars[name] == c
-                                    for c in allowed_consts
-                                ]
-                            )
-                        )
+                        slv.add(z3_module.Or(*[z3_type_vars[name] == c for c in allowed_consts]))
 
             # ============================================================
             #  Phase 1: Consistency check
@@ -127,20 +117,32 @@ class Z3TypeSafetyProofMixin:
                     # assignable to left type
                     if op in ("assign", "="):
                         self._add_assign_compat(
-                            consistency_solver, type_sort, type_name_to_const,
-                            left_var, right_var, left_type, right_type,
+                            consistency_solver,
+                            type_sort,
+                            type_name_to_const,
+                            left_var,
+                            right_var,
+                            left_type,
+                            right_type,
                         )
                     # Binary operation compatibility
                     elif op in ("add", "+", "sub", "-", "mul", "*", "div", "/"):
                         self._add_binop_compat(
-                            consistency_solver, type_sort, type_name_to_const,
-                            left_var, right_var, op,
+                            consistency_solver,
+                            type_sort,
+                            type_name_to_const,
+                            left_var,
+                            right_var,
+                            op,
                         )
                     # Comparison: both sides must be comparable
                     elif op in ("eq", "==", "lt", "<", "gt", ">", "le", "<=", "ge", ">="):
                         self._add_compare_compat(
-                            consistency_solver, type_sort, type_name_to_const,
-                            left_var, right_var,
+                            consistency_solver,
+                            type_sort,
+                            type_name_to_const,
+                            left_var,
+                            right_var,
                         )
 
             consistency_result = consistency_solver.check()
@@ -195,8 +197,12 @@ class Z3TypeSafetyProofMixin:
                     right_var = z3_type_vars[right]
 
                     unsafe_expr = self._build_unsafe_type_constraint(
-                        type_name_to_const, left_var, right_var,
-                        op, left_type, right_type,
+                        type_name_to_const,
+                        left_var,
+                        right_var,
+                        op,
+                        left_type,
+                        right_type,
                     )
                     if unsafe_expr is not None:
                         violation_constraints.append(unsafe_expr)
@@ -254,9 +260,7 @@ class Z3TypeSafetyProofMixin:
                         assignment[name] = val_str
 
                 # Identify which operations are violated in this counterexample
-                type_violations = self._check_type_violations(
-                    assignment, operations
-                )
+                type_violations = self._check_type_violations(assignment, operations)
 
                 return {
                     "status": "VIOLATED",

@@ -10,6 +10,23 @@ import { AuditEntry, MerkleVerificationResult, AuditQueryParams } from "./types"
 /** Maximum entries in the in-memory chain before flush is required (INVARIANT 3) */
 const MAX_CHAIN_SIZE = 500;
 
+// ─── Singleton ─────────────────────────────────────────────────────
+
+let merkleAuditInstance: MerkleAuditService | null = null;
+
+/** Get or create the MerkleAuditService singleton */
+export function getMerkleAuditService(): MerkleAuditService {
+  if (!merkleAuditInstance) {
+    merkleAuditInstance = new MerkleAuditService();
+  }
+  return merkleAuditInstance;
+}
+
+/** Reset the MerkleAuditService singleton (for testing) */
+export function resetMerkleAuditService(): void {
+  merkleAuditInstance = null;
+}
+
 export class MerkleAuditService {
   private chain: AuditEntry[] = [];
   private genesisHash = "0000000000000000000000000000000000000000000000000000000000000000";

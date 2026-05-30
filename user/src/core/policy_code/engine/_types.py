@@ -1,4 +1,5 @@
 """Types and constants for engine."""
+
 from __future__ import annotations
 
 import logging

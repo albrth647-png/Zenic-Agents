@@ -129,10 +129,7 @@ class ReportGenerator(BaseAgent[ReportResult]):
 
         stats: dict[str, dict[str, Any]] = {}
         for key in data[0]:
-            values = [
-                item[key] for item in data
-                if isinstance(item, dict) and isinstance(item.get(key), (int, float))
-            ]
+            values = [item[key] for item in data if isinstance(item, dict) and isinstance(item.get(key), (int, float))]
             if values:
                 stats[key] = {
                     "min": min(values),
@@ -145,6 +142,8 @@ class ReportGenerator(BaseAgent[ReportResult]):
     def fallback(self, input_data: Any) -> ReportResult:
         """Safe fallback: empty report."""
         return ReportResult(
-            content="", format="text", charts=[],
+            content="",
+            format="text",
+            charts=[],
             source="fallback",
         )

@@ -4,7 +4,10 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
+  password  String?
   avatar    String?
+  role      String   @default("user") // user | operator | admin
+  isActive  Boolean  @default(true)
   status    String   @default("active") // active | suspended | deactivated
   lastLogin DateTime?
   createdAt DateTime @default(now())
@@ -13,6 +16,7 @@ model User {
   roles     UserRole[]
   auditLogs AuditLog[]
   toolExecs ToolExecution[]
+  hitlDecisions HitlApprovalDecision[]
 
   @@map("users")
 }
@@ -253,4 +257,65 @@ model MetricSnapshot {
 
   @@unique([metricKey, dimensions])
   @@map("metric_snapshots")
+}
+
+// ─── Feature Gates, Cache, Password Reset & HITL Actions ────────────
+
+model FeatureGate {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  name             String
+  description      String   @default("")
+  enabled          Boolean  @default(true)
+  minRole          String   @default("admin")
+  requireApproval  Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("feature_gates")
+}
+
+model ScanCache {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  mtimeMs   Float
+  filePath  String?  @unique
+  issues    String?  // JSON: array of Issue
+  fileHash  String?
+  fileSize  Int?
+  lineCount Int?
+  scanDurationMs Int?
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("scan_caches")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+model HitlApprovalAction {
+  id              String   @id @default(cuid())
+  requestId       String
+  userId          String
+  action          String   // approve | reject
+  role            String   @default("")
+  metadata        String   @default("{}")
+  createdAt       DateTime @default(now())
+
+  @@index([requestId])
+  @@index([userId])
+  @@map("hitl_approval_actions")
 }

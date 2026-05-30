@@ -190,7 +190,6 @@ class DeterministicTasks1To4Mixin:
         }
 
         result = template
-        filled_count = 0
         for gap in gaps:
             gap_lower = gap.lower()
             # Try context first (case-insensitive)
@@ -205,7 +204,7 @@ class DeterministicTasks1To4Mixin:
                 value = f"placeholder_{gap_lower}"
 
             result = result.replace(f"__GAP_{gap}__", str(value))
-            filled_count += 1
+            # filled_count is tracked implicitly via the loop
 
         all_filled = not re.search(r"__GAP_\w+__", result)
         confidence = 1.0 if all_filled else 0.5

@@ -36,7 +36,8 @@ FIX_CATALOG: dict[str, str] = {
 
 # Auto-fixable codes (can be fixed mechanically)
 AUTO_FIXABLE = {
-    "bare_except", "yaml_unsafe",
+    "bare_except",
+    "yaml_unsafe",
 }
 
 

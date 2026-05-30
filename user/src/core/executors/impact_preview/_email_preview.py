@@ -31,10 +31,7 @@ def preview_email(config: dict[str, Any]) -> EmailImpactPreview:
     cc = config.get("cc", [])
     bcc = config.get("bcc", [])
     subject = str(config.get("subject", "No Subject"))
-    from_email = str(
-        config.get("from_email", "")
-        or os.environ.get("SMTP_USER", "noreply@zenic-agents.local")
-    )
+    from_email = str(config.get("from_email", "") or os.environ.get("SMTP_USER", "noreply@zenic-agents.local"))
     html = config.get("html", "")
     attachments = config.get("attachments", [])
     host = config.get("host", os.environ.get("SMTP_HOST", ""))
@@ -50,7 +47,7 @@ def preview_email(config: dict[str, Any]) -> EmailImpactPreview:
         attachments = [attachments] if attachments else []
 
     # Validate email addresses
-    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
     all_recipients = list(to_emails) + list(cc) + list(bcc)
     invalid = [e for e in all_recipients if not email_pattern.match(str(e))]
 
@@ -61,8 +58,14 @@ def preview_email(config: dict[str, Any]) -> EmailImpactPreview:
     body_lower = str(config.get("body", "")).lower()
     combined = subject_lower + " " + body_lower
     financial_keywords = (
-        "invoice", "factura", "payment", "pago",
-        "refund", "reembolso", "charge", "cobro",
+        "invoice",
+        "factura",
+        "payment",
+        "pago",
+        "refund",
+        "reembolso",
+        "charge",
+        "cobro",
     )
     is_financial = any(kw in combined for kw in financial_keywords)
 

@@ -22,6 +22,23 @@ import {
  *    Tokens are expected to be base64-encoded JSON (JWT-like, simplified).
  *    Falls back to API-key lookup if decoding fails.
  */
+// ─── Singleton ─────────────────────────────────────────────────────
+
+let authServiceInstance: AuthService | null = null;
+
+/** Get or create the AuthService singleton */
+export function getAuthService(): AuthService {
+  if (!authServiceInstance) {
+    authServiceInstance = new AuthService();
+  }
+  return authServiceInstance;
+}
+
+/** Reset the AuthService singleton (for testing) */
+export function resetAuthService(): void {
+  authServiceInstance = null;
+}
+
 export class AuthService {
   private apiKeys = new Map<string, ApiKeyConfig>();
   private tenants = new Map<string, TenantConfig>();
@@ -273,6 +290,34 @@ export class AuthService {
       }
     }
     return result;
+  }
+
+  // ─── NextRequest Integration ─────────────────────────────────────
+
+  /** Extract auth context from a Next.js request object */
+  async extractFromRequest(request: { headers: { get(name: string): string | null } | Record<string, string | null> }): Promise<{
+    authenticated: boolean;
+    method: string;
+    executorId?: string;
+    tenantId?: string;
+    roles: string[];
+  }> {
+    const headers: Record<string, string | undefined> = {};
+    if (typeof (request.headers as { get?: Function }).get === 'function') {
+      const headerNames = ['x-api-key', 'authorization'];
+      for (const name of headerNames) {
+        headers[name] = (request.headers as { get: (n: string) => string | null }).get(name) ?? undefined;
+      }
+    }
+
+    const result = this.authenticate(headers);
+    return {
+      authenticated: result.authenticated,
+      method: result.method,
+      executorId: result.executorId,
+      tenantId: result.tenantId,
+      roles: result.roles ?? [],
+    };
   }
 
   // ─── Stats ────────────────────────────────────────────────────────

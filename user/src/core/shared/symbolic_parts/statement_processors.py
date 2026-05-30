@@ -56,9 +56,12 @@ class StatementProcessorMixin:
                 # Update Z3 var if we have a concrete value
                 if HAS_Z3 and sym_val.concrete is not None:
                     z3_var = self._get_or_create_z3_var(var_name)
-                    if z3_var is not None and len(new_path.z3_conditions) < SymbolicPath.MAX_Z3_CONDITIONS:
-                        if isinstance(sym_val.concrete, int):
-                            new_path.z3_conditions.append(z3_var == sym_val.concrete)
+                    if (
+                        z3_var is not None
+                        and len(new_path.z3_conditions) < SymbolicPath.MAX_Z3_CONDITIONS
+                        and isinstance(sym_val.concrete, int)
+                    ):
+                        new_path.z3_conditions.append(z3_var == sym_val.concrete)
 
             elif isinstance(target, (ast.Tuple, ast.List)):
                 # Tuple/list unpacking: simplified handling

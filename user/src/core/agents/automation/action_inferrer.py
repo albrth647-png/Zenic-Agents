@@ -20,39 +20,99 @@ from ..schemas import ActionSpec, AutoDescription
 
 ACTION_KEYWORDS: dict[str, list[str]] = {
     "email": [
-        "email", "correo", "enviar", "mail", "smtp",
-        "notificar por correo", "envío", "envio",
+        "email",
+        "correo",
+        "enviar",
+        "mail",
+        "smtp",
+        "notificar por correo",
+        "envío",
+        "envio",
     ],
     "notification": [
-        "notificar", "alertar", "notification", "alert", "avisar",
-        "push", "slack", "teams",
+        "notificar",
+        "alertar",
+        "notification",
+        "alert",
+        "avisar",
+        "push",
+        "slack",
+        "teams",
     ],
     "report": [
-        "reporte", "report", "informe", "resumen", "summary",
-        "dashboard", "panel",
+        "reporte",
+        "report",
+        "informe",
+        "resumen",
+        "summary",
+        "dashboard",
+        "panel",
     ],
     "db": [
-        "backup", "respaldo", "base de datos", "database", "db",
-        "sql", "consulta", "query", "insertar", "actualizar",
+        "backup",
+        "respaldo",
+        "base de datos",
+        "database",
+        "db",
+        "sql",
+        "consulta",
+        "query",
+        "insertar",
+        "actualizar",
     ],
     "http": [
-        "api", "webhook", "http", "request", "endpoint", "servicio",
-        "rest", "get", "post", "put",
+        "api",
+        "webhook",
+        "http",
+        "request",
+        "endpoint",
+        "servicio",
+        "rest",
+        "get",
+        "post",
+        "put",
     ],
     "file": [
-        "archivo", "file", "csv", "excel", "documento", "exportar",
-        "importar", "download", "descargar", "upload", "subir",
+        "archivo",
+        "file",
+        "csv",
+        "excel",
+        "documento",
+        "exportar",
+        "importar",
+        "download",
+        "descargar",
+        "upload",
+        "subir",
     ],
     "transform": [
-        "transformar", "procesar", "convertir", "parse", "etl",
-        "limpiar", "clean", "filtrar", "filter", "migrar",
+        "transformar",
+        "procesar",
+        "convertir",
+        "parse",
+        "etl",
+        "limpiar",
+        "clean",
+        "filtrar",
+        "filter",
+        "migrar",
     ],
     "schedule": [
-        "programar", "schedule", "planificar", "cron", "calendarizar",
+        "programar",
+        "schedule",
+        "planificar",
+        "cron",
+        "calendarizar",
     ],
     "log": [
-        "log", "registrar", "audit", "auditoría", "auditoria",
-        "historial", "track", "seguimiento",
+        "log",
+        "registrar",
+        "audit",
+        "auditoría",
+        "auditoria",
+        "historial",
+        "track",
+        "seguimiento",
     ],
 }
 
@@ -137,12 +197,14 @@ class ActionInferrer(BaseAgent[ActionSpec]):
         description = self._extract_description(input_data)
 
         if not description:
-            return [ActionSpec(
-                type="log",
-                config=DEFAULT_ACTION_CONFIGS["log"],
-                description="Default log action (no description)",
-                source="deterministic",
-            )]
+            return [
+                ActionSpec(
+                    type="log",
+                    config=DEFAULT_ACTION_CONFIGS["log"],
+                    description="Default log action (no description)",
+                    source="deterministic",
+                )
+            ]
 
         desc_lower = description.lower()
         actions: list[ActionSpec] = []
@@ -150,21 +212,25 @@ class ActionInferrer(BaseAgent[ActionSpec]):
         for action_type, keywords in ACTION_KEYWORDS.items():
             if any(kw in desc_lower for kw in keywords):
                 config = self._build_action_config(action_type, description)
-                actions.append(ActionSpec(
-                    type=action_type,
-                    config=config,
-                    description=f"Auto-detected {action_type} action",
-                    source="deterministic",
-                ))
+                actions.append(
+                    ActionSpec(
+                        type=action_type,
+                        config=config,
+                        description=f"Auto-detected {action_type} action",
+                        source="deterministic",
+                    )
+                )
 
         # Default: log action if nothing detected
         if not actions:
-            actions.append(ActionSpec(
-                type="log",
-                config={"level": "info", "message": description[:100]},
-                description="Default log action (no keywords matched)",
-                source="deterministic",
-            ))
+            actions.append(
+                ActionSpec(
+                    type="log",
+                    config={"level": "info", "message": description[:100]},
+                    description="Default log action (no keywords matched)",
+                    source="deterministic",
+                )
+            )
 
         return actions[:MAX_ACTIONS]
 
@@ -178,9 +244,7 @@ class ActionInferrer(BaseAgent[ActionSpec]):
             return input_data
         return ""
 
-    def _build_action_config(
-        self, action_type: str, description: str
-    ) -> dict[str, Any]:
+    def _build_action_config(self, action_type: str, description: str) -> dict[str, Any]:
         """Build configuration for a detected action type."""
         base_config = DEFAULT_ACTION_CONFIGS.get(action_type, {}).copy()
 
@@ -188,14 +252,16 @@ class ActionInferrer(BaseAgent[ActionSpec]):
         if action_type == "email":
             # Try to extract email addresses
             import re
-            email_match = re.search(r'[\w.+-]+@[\w-]+\.[\w.]+', description)
+
+            email_match = re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", description)
             if email_match:
                 base_config["to"] = email_match.group(0)
 
         elif action_type == "http":
             # Try to extract URLs
             import re
-            url_match = re.search(r'https?://[\w\-./]+', description)
+
+            url_match = re.search(r"https?://[\w\-./]+", description)
             if url_match:
                 base_config["url"] = url_match.group(0)
 

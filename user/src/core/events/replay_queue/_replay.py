@@ -255,7 +255,7 @@ class ReplayMixin:
                     result.exhausted += 1
 
         logger.info(
-            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — " "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
+            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
             since_timestamp,
             tenant_id,
             result.total_attempted,

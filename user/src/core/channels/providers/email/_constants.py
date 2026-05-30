@@ -2,7 +2,6 @@
 Email Channel Provider — Constants and configuration mappings.
 """
 
-
 # Valid send modes
 VALID_MODES = frozenset({"smtp", "graph_api", "auto"})
 

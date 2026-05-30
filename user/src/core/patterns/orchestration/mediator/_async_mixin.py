@@ -30,7 +30,7 @@ class AsyncDispatchMixin:
             async_pipelines = list(self._async_pipelines)
 
         logger.info(
-            "Mediator[async]: Dispatching request_type='%s' " "(sync_pipelines=%d, async_pipelines=%d)",
+            "Mediator[async]: Dispatching request_type='%s' (sync_pipelines=%d, async_pipelines=%d)",
             request.request_type,
             len(pipelines),
             len(async_pipelines),

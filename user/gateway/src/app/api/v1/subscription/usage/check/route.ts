@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const requestedAmount = body.requestedAmount ?? 1;
 
     // Verify subscription exists and is active
-    const subscription = await db.tenantSubscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: { tenantId },
     });
 
@@ -71,10 +71,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the usage record
-    const usageRecord = await db.usageRecordDb.findUnique({
-      where: {
-        tenantId_usageType: { tenantId, usageType },
-      },
+    const usageRecord = await db.usageRecord.findFirst({
+      where: { tenantId, resource: usageType },
     });
 
     if (!usageRecord) {
@@ -86,7 +84,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const currentValue = usageRecord.currentValue;
+    const currentValue = usageRecord.usageCount;
     const limitValue = usageRecord.limitValue;
     const projectedValue = currentValue + requestedAmount;
 

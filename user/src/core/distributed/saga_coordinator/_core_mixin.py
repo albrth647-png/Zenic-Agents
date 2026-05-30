@@ -10,11 +10,13 @@ from ._types import DistributedSagaState, DistributedSagaStep
 # Phase 5: Audit logging
 try:
     from src.core.observability.audit import AuditEventType, AuditSeverity, get_audit_logger
+
     _AUDIT_AVAILABLE = True
 except ImportError:
     _AUDIT_AVAILABLE = False
 
 logger = logging.getLogger("zenic_agents.distributed.saga_coordinator")
+
 
 class DistributedSagaCoordinatorCoreMixin:
     """Core methods mixin — see DistributedSagaCoordinator for full docs."""
@@ -102,7 +104,9 @@ class DistributedSagaCoordinatorCoreMixin:
 
         logger.info(
             "SagaCoordinator: Started saga %s (name=%s, steps=%d)",
-            saga_id[:8], name, len(steps),
+            saga_id[:8],
+            name,
+            len(steps),
         )
         # Phase 5: Audit event
         if _AUDIT_AVAILABLE:
@@ -114,7 +118,7 @@ class DistributedSagaCoordinatorCoreMixin:
                     tenant_id=tenant_id or "__anonymous__",
                     metadata={"saga_id": saga_id, "steps": len(steps)},
                 )
-            except Exception:  # noqa: S110
+            except Exception:
                 # Audit failure must not block saga execution
                 pass
         return saga_id
@@ -148,14 +152,18 @@ class DistributedSagaCoordinatorCoreMixin:
         saga = await self._backend.get_saga(saga_id)
         if saga is None:
             logger.error(
-                "SagaCoordinator: Saga %s not found", saga_id[:8],
+                "SagaCoordinator: Saga %s not found",
+                saga_id[:8],
             )
             return DistributedSagaState.FAILED
 
         if success:
             # Mark step as completed
             await self._backend.update_saga_step(
-                saga_id, step_name, "COMPLETED", result=result,
+                saga_id,
+                step_name,
+                "COMPLETED",
+                result=result,
             )
 
             # Update context with step result
@@ -174,7 +182,8 @@ class DistributedSagaCoordinatorCoreMixin:
             if current_idx is None:
                 logger.error(
                     "SagaCoordinator: Step '%s' not found in saga %s",
-                    step_name, saga_id[:8],
+                    step_name,
+                    saga_id[:8],
                 )
                 return DistributedSagaState.FAILED
 
@@ -198,7 +207,8 @@ class DistributedSagaCoordinatorCoreMixin:
             else:
                 # All steps completed
                 await self._backend.update_saga_status(
-                    saga_id, "COMPLETED",
+                    saga_id,
+                    "COMPLETED",
                 )
                 self._active_sagas.pop(saga_id, None)
                 logger.info(
@@ -215,7 +225,7 @@ class DistributedSagaCoordinatorCoreMixin:
                             tenant_id=saga.get("context_data", {}).get("tenant_id", "__anonymous__"),
                             metadata={"saga_id": saga_id},
                         )
-                    except Exception:  # noqa: S110
+                    except Exception:
                         # Audit failure must not block saga completion
                         pass
                 return DistributedSagaState.COMPLETED
@@ -223,10 +233,15 @@ class DistributedSagaCoordinatorCoreMixin:
         else:
             # Step failed — initiate compensation
             await self._backend.update_saga_step(
-                saga_id, step_name, "FAILED", error=error,
+                saga_id,
+                step_name,
+                "FAILED",
+                error=error,
             )
             await self._backend.update_saga_status(
-                saga_id, "COMPENSATING", error=error,
+                saga_id,
+                "COMPENSATING",
+                error=error,
             )
 
             # Compensate all completed steps in reverse order
@@ -274,21 +289,24 @@ class DistributedSagaCoordinatorCoreMixin:
             comp_type = step.get("compensation_task_type")
             if comp_type is None:
                 logger.warning(
-                    "SagaCoordinator: Step '%s' has no compensation "
-                    "(saga=%s)",
-                    step["step_name"], saga_id[:8],
+                    "SagaCoordinator: Step '%s' has no compensation (saga=%s)",
+                    step["step_name"],
+                    saga_id[:8],
                 )
                 continue
 
             logger.info(
                 "SagaCoordinator: Compensating step '%s' (saga=%s)",
-                step["step_name"], saga_id[:8],
+                step["step_name"],
+                saga_id[:8],
             )
 
             try:
                 # Mark step as COMPENSATING
                 await self._backend.update_saga_step(
-                    saga_id, step["step_name"], "COMPENSATING",
+                    saga_id,
+                    step["step_name"],
+                    "COMPENSATING",
                 )
 
                 # Dispatch compensation task
@@ -310,22 +328,26 @@ class DistributedSagaCoordinatorCoreMixin:
 
                 # Mark step as COMPENSATED (optimistic — could wait for worker)
                 await self._backend.update_saga_step(
-                    saga_id, step["step_name"], "COMPENSATED",
+                    saga_id,
+                    step["step_name"],
+                    "COMPENSATED",
                 )
 
             except Exception as exc:
-                error_msg = (
-                    f"Compensation failed for step '{step['step_name']}': {exc}"
-                )
+                error_msg = f"Compensation failed for step '{step['step_name']}': {exc}"
                 compensation_errors.append(error_msg)
                 logger.error(
-                    "SagaCoordinator: %s (saga=%s)", error_msg, saga_id[:8],
+                    "SagaCoordinator: %s (saga=%s)",
+                    error_msg,
+                    saga_id[:8],
                 )
 
         # Determine final status
         if compensation_errors:
             await self._backend.update_saga_status(
-                saga_id, "FAILED", error="; ".join(compensation_errors),
+                saga_id,
+                "FAILED",
+                error="; ".join(compensation_errors),
             )
         else:
             await self._backend.update_saga_status(saga_id, "COMPENSATED")
@@ -342,7 +364,7 @@ class DistributedSagaCoordinatorCoreMixin:
                     tenant_id=saga.get("context_data", {}).get("tenant_id", "__anonymous__"),
                     metadata={"saga_id": saga_id, "compensation_errors": compensation_errors},
                 )
-            except Exception:  # noqa: S110
+            except Exception:
                 # Audit failure must not block saga compensation
                 pass
 
@@ -351,4 +373,3 @@ class DistributedSagaCoordinatorCoreMixin:
     # ----------------------------------------------------------
     #  STEP DISPATCH
     # ----------------------------------------------------------
-

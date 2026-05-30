@@ -110,7 +110,7 @@ def register_subscription(
         provider._subscriptions[user_id] = subscription
 
     logger.debug(
-        "PushChannelProvider: registered subscription for user '%s' " "(endpoint=%s)",
+        "PushChannelProvider: registered subscription for user '%s' (endpoint=%s)",
         user_id,
         subscription.get("endpoint", "N/A")[:60],
     )

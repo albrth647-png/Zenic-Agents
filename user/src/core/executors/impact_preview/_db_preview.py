@@ -86,7 +86,9 @@ def preview_db_operation(
     except Exception as exc:
         logger.warning(
             "ImpactPreviewEngine: DB preview failed for %s on %s: %s",
-            operation, table, exc,
+            operation,
+            table,
+            exc,
         )
         preview.summary = f"Could not preview DB {operation}: {exc}"
         preview.warnings.append(f"Preview error: {exc}")
@@ -250,14 +252,16 @@ def _preview_update(
                 changed = True
                 if sample and field_name in sample:
                     current_value = sample[field_name]
-                    changed = (current_value != proposed_value)
-                preview.fields.append(ImpactField(
-                    name=field_name,
-                    current_value=current_value,
-                    proposed_value=proposed_value,
-                    field_type=type(proposed_value).__name__ if proposed_value is not None else "unknown",
-                    changed=changed,
-                ))
+                    changed = current_value != proposed_value
+                preview.fields.append(
+                    ImpactField(
+                        name=field_name,
+                        current_value=current_value,
+                        proposed_value=proposed_value,
+                        field_type=type(proposed_value).__name__ if proposed_value is not None else "unknown",
+                        changed=changed,
+                    )
+                )
 
         # Risk assessment
         preview.reversible = False
@@ -309,7 +313,7 @@ def _preview_insert(
 
     # Inspect table schema to validate constraints
     # SECURITY: Validate table/index names before interpolation into PRAGMA
-    _safe_id_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+    _safe_id_re = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     if not _safe_id_re.match(table):
         preview.warnings.append(f"Invalid table name: {table!r}")
         preview.constraints_valid = False
@@ -319,7 +323,9 @@ def _preview_insert(
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         try:
-            cursor = conn.execute(f'PRAGMA table_info("{table}")')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+            cursor = conn.execute(
+                f'PRAGMA table_info("{table}")'
+            )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
             return [dict(row) for row in cursor.fetchall()]
         finally:
             conn.close()
@@ -356,9 +362,7 @@ def _preview_insert(
                 if col_idx is not None and col_idx < len(params):
                     if params[col_idx] is None:
                         preview.constraints_valid = False
-                        preview.constraint_violations.append(
-                            f"NOT NULL violation: column '{col_name}' cannot be NULL"
-                        )
+                        preview.constraint_violations.append(f"NOT NULL violation: column '{col_name}' cannot be NULL")
                 elif col_idx is None and not query.upper().startswith("INSERT INTO"):
                     # Fallback: if we can't parse, warn
                     pass
@@ -367,7 +371,9 @@ def _preview_insert(
         def _get_unique_constraints() -> list[list[str]]:
             conn = sqlite3.connect(db_path)
             try:
-                cursor = conn.execute(f'PRAGMA index_list("{table}")')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                cursor = conn.execute(
+                    f'PRAGMA index_list("{table}")'
+                )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 indexes = cursor.fetchall()
                 unique_constraints: list[list[str]] = []
                 for idx_row in indexes:
@@ -376,7 +382,9 @@ def _preview_insert(
                         # SECURITY: Validate index name from DB before interpolation
                         if not _safe_id_re.match(str(idx_name)):
                             continue
-                        col_cursor = conn.execute(f'PRAGMA index_info("{idx_name}")')  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+                        col_cursor = conn.execute(
+                            f'PRAGMA index_info("{idx_name}")'
+                        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                         cols = [row[2] for row in col_cursor.fetchall()]
                         unique_constraints.append(cols)
                 return unique_constraints
@@ -407,7 +415,7 @@ def _preview_insert(
                     check_query = f"SELECT COUNT(*) FROM {table} WHERE {' AND '.join(where_parts)}"  # noqa: S608
                     check_params = [params[i] for i in matching_indices if i < len(params)]
 
-                    def _check_unique() -> int:
+                    def _check_unique(check_query=check_query, check_params=check_params) -> int:
                         conn = sqlite3.connect(db_path)
                         try:
                             cursor = conn.execute(check_query, check_params)  # nosemgrep: sqlalchemy-execute-raw-query
@@ -431,9 +439,7 @@ def _preview_insert(
         preview.estimated_rows = 1
         preview.reversible = True  # DELETE can undo INSERT
         insert_cols = extract_insert_columns(query)
-        preview.summary = (
-            f"INSERT into {table}: 1 row, columns: {', '.join(insert_cols) if insert_cols else 'unknown'}"
-        )
+        preview.summary = f"INSERT into {table}: 1 row, columns: {', '.join(insert_cols) if insert_cols else 'unknown'}"
 
         if preview.constraints_valid:
             preview.risk_level = ImpactRiskLevel.LOW

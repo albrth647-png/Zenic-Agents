@@ -17,6 +17,7 @@ logger = logging.getLogger("zenic_agents.distributed.pg_backend")
 #  TASK QUEUE MIXIN
 # ============================================================
 
+
 class PgTaskMixin:
     """
     Mixin providing PostgreSQL task queue operations.
@@ -50,9 +51,14 @@ class PgTaskMixin:
                 ON CONFLICT (task_id) DO NOTHING
                 """,
                 (
-                    task_id, queue_name, task_type,
-                    json.dumps(payload), priority,
-                    delay_until, tenant_id, time.time(),
+                    task_id,
+                    queue_name,
+                    task_type,
+                    json.dumps(payload),
+                    priority,
+                    delay_until,
+                    tenant_id,
+                    time.time(),
                 ),
             )
             return True
@@ -245,7 +251,8 @@ class PgTaskMixin:
             if affected > 0:
                 logger.info(
                     "PgBackend: Expired %d leases in queue '%s'",
-                    affected, queue_name,
+                    affected,
+                    queue_name,
                 )
             return affected
         except Exception as exc:

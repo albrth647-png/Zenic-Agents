@@ -95,7 +95,7 @@ def ensure_db(db_path: str | None, history_db_name: str) -> str:
                 """
             )
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "CREATE INDEX IF NOT EXISTS idx_sim_created " "ON _simulation_history(created_at)"
+                "CREATE INDEX IF NOT EXISTS idx_sim_created ON _simulation_history(created_at)"
             )
             conn.commit()
         finally:

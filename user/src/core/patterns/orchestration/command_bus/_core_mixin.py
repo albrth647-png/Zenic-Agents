@@ -195,7 +195,7 @@ class CommandBusCoreMixin:
 
         # Log dispatch
         logger.info(
-            "CommandBus: Dispatching command_type='%s' id='%s' " "(middlewares=%d, validators=%d)",
+            "CommandBus: Dispatching command_type='%s' id='%s' (middlewares=%d, validators=%d)",
             command.command_type,
             command.command_id[:8],
             len(middlewares),
@@ -219,7 +219,7 @@ class CommandBusCoreMixin:
 
         # Check handler exists
         if handler is None:
-            error_msg = f"No handler registered for command_type " f"'{command.command_type}'"
+            error_msg = f"No handler registered for command_type '{command.command_type}'"
             logger.warning("CommandBus: %s", error_msg)
             self._error_count_inc()
             return CommandResult(

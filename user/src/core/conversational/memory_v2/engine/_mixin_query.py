@@ -75,7 +75,7 @@ class MemoryQueryMixin:
                 conn = sqlite3.connect(self._db_path)
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        "SELECT * FROM memory_v2_records WHERE session_id = ? " "ORDER BY created_at ASC",
+                        "SELECT * FROM memory_v2_records WHERE session_id = ? ORDER BY created_at ASC",
                         (session_id,),
                     )
                     records = [self._record_from_row(row) for row in cursor.fetchall()]

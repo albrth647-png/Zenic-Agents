@@ -171,7 +171,7 @@ class ComplexityVisitor(ASTVisitor):
     """
 
     # Node types that add 1 to the decision count
-    _DECISION_NODES: set[str] = {
+    _DECISION_NODES: set[str] = {  # noqa: RUF012
         "If",
         "For",
         "While",

@@ -14,18 +14,20 @@ from typing import Any
 
 class ToneLevel(str, Enum):
     """Niveles de tono del asistente."""
-    CASUAL = "casual"          # Informal, amigable
+
+    CASUAL = "casual"  # Informal, amigable
     PROFESSIONAL = "professional"  # Profesional, directo
-    TECHNICAL = "technical"    # Tecnico, detallado
-    FRIENDLY = "friendly"      # Calido, cercano
-    FORMAL = "formal"          # Formal, respetuoso
+    TECHNICAL = "technical"  # Tecnico, detallado
+    FRIENDLY = "friendly"  # Calido, cercano
+    FORMAL = "formal"  # Formal, respetuoso
 
 
 class LanguagePreference(str, Enum):
     """Preferencia de idioma del usuario."""
+
     SPANISH = "es"
     ENGLISH = "en"
-    BILINGUAL = "bi"   # Responde en el idioma de la pregunta
+    BILINGUAL = "bi"  # Responde en el idioma de la pregunta
 
 
 # ─── Personalidades predefinidas ─────────────────────────────
@@ -66,12 +68,13 @@ class PersonalityProfile:
     Define como el asistente se comunica: tono, idioma,
     nivel de detalle, saludo y rasgos de personalidad.
     """
+
     name: str = "zenic"
     tone: ToneLevel = ToneLevel.PROFESSIONAL
     language: LanguagePreference = LanguagePreference.BILINGUAL
-    detail_level: int = 2         # 1=conciso, 2=normal, 3=detallado
-    use_emoji: bool = False       # Usar emojis en respuestas
-    code_comments: bool = True    # Incluir comentarios en codigo
+    detail_level: int = 2  # 1=conciso, 2=normal, 3=detallado
+    use_emoji: bool = False  # Usar emojis en respuestas
+    code_comments: bool = True  # Incluir comentarios en codigo
     greeting: str = ""
     traits: list[str] = field(default_factory=lambda: ["helpful", "precise", "bilingual"])
     custom_instructions: str = ""  # Instrucciones adicionales del usuario

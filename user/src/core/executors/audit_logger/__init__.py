@@ -101,11 +101,15 @@ class ExecutorAuditLogger:
 
         # Structured log output
         logger.info(
-            "ExecutorAudit: action=%s op=%s executor=%s verdict=%s "
-            "success=%s risk=%.2f duration=%.1fms merkle=%s",
-            entry.action_type, entry.operation, entry.executor_class,
-            entry.verdict, entry.success, entry.risk_score,
-            entry.duration_ms, entry.merkle_hash[:16],
+            "ExecutorAudit: action=%s op=%s executor=%s verdict=%s success=%s risk=%.2f duration=%.1fms merkle=%s",
+            entry.action_type,
+            entry.operation,
+            entry.executor_class,
+            entry.verdict,
+            entry.success,
+            entry.risk_score,
+            entry.duration_ms,
+            entry.merkle_hash[:16],
         )
 
         # Buffer and flush

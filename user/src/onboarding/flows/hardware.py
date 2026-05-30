@@ -157,7 +157,7 @@ class HardwareFlow(BaseFlow):
                 if serials:
                     result.disk_serial = serials[0]
                     components_used.append("disk_serial")
-        except (FileNotFoundError, Exception):  # noqa: S110
+        except (FileNotFoundError, Exception):
             pass
 
         # Compute fingerprint via license module
@@ -184,7 +184,7 @@ class HardwareFlow(BaseFlow):
                         result.match_score = 80
                     else:
                         result.match_score = 30
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         except ImportError:

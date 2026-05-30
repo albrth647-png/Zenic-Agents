@@ -18,80 +18,210 @@ from ..schemas import IntentResult
 # VALID OPERATIONS & GOALS
 # ──────────────────────────────────────────────────────────────
 
-VALID_OPERATIONS = frozenset({
-    "CREATE", "REFACTOR", "DELETE", "SEARCH",
-    "ANALYZE", "EXPLAIN", "DEBUG", "OPTIMIZE",
-})
+VALID_OPERATIONS = frozenset(
+    {
+        "CREATE",
+        "REFACTOR",
+        "DELETE",
+        "SEARCH",
+        "ANALYZE",
+        "EXPLAIN",
+        "DEBUG",
+        "OPTIMIZE",
+    }
+)
 
-VALID_GOALS = frozenset({
-    "COMPLEXITY_REDUCTION", "MODERN_PATTERN", "BUG_FIX",
-    "FEATURE_ADD", "SECURITY_HARDEN", "PERFORMANCE", "READABILITY",
-})
+VALID_GOALS = frozenset(
+    {
+        "COMPLEXITY_REDUCTION",
+        "MODERN_PATTERN",
+        "BUG_FIX",
+        "FEATURE_ADD",
+        "SECURITY_HARDEN",
+        "PERFORMANCE",
+        "READABILITY",
+    }
+)
 
 # Bilingual keyword maps (EN + ES)
 OP_KEYWORDS: dict[str, list] = {
     "CREATE": [
-        "create", "build", "generate", "make", "add", "new", "implement",
-        "crear", "construir", "generar", "hacer", "agregar", "nuevo", "implementar",
+        "create",
+        "build",
+        "generate",
+        "make",
+        "add",
+        "new",
+        "implement",
+        "crear",
+        "construir",
+        "generar",
+        "hacer",
+        "agregar",
+        "nuevo",
+        "implementar",
     ],
     "REFACTOR": [
-        "refactor", "restructure", "reorganize", "clean", "rewrite",
-        "refactorizar", "reestructurar", "reorganizar", "limpiar", "reescribir",
+        "refactor",
+        "restructure",
+        "reorganize",
+        "clean",
+        "rewrite",
+        "refactorizar",
+        "reestructurar",
+        "reorganizar",
+        "limpiar",
+        "reescribir",
     ],
     "DELETE": [
-        "delete", "remove", "erase", "drop", "clear", "destroy",
-        "eliminar", "borrar", "quitar", "destruir",
+        "delete",
+        "remove",
+        "erase",
+        "drop",
+        "clear",
+        "destroy",
+        "eliminar",
+        "borrar",
+        "quitar",
+        "destruir",
     ],
     "SEARCH": [
-        "search", "find", "lookup", "query", "filter", "locate",
-        "buscar", "encontrar", "consultar", "filtrar", "localizar",
+        "search",
+        "find",
+        "lookup",
+        "query",
+        "filter",
+        "locate",
+        "buscar",
+        "encontrar",
+        "consultar",
+        "filtrar",
+        "localizar",
     ],
     "ANALYZE": [
-        "analyze", "review", "examine", "inspect", "assess", "evaluate",
-        "analizar", "revisar", "examinar", "inspeccionar", "evaluar",
+        "analyze",
+        "review",
+        "examine",
+        "inspect",
+        "assess",
+        "evaluate",
+        "analizar",
+        "revisar",
+        "examinar",
+        "inspeccionar",
+        "evaluar",
     ],
     "EXPLAIN": [
-        "explain", "describe", "clarify", "understand", "what is",
-        "explicar", "describir", "aclarar", "entender", "que es",
+        "explain",
+        "describe",
+        "clarify",
+        "understand",
+        "what is",
+        "explicar",
+        "describir",
+        "aclarar",
+        "entender",
+        "que es",
     ],
     "DEBUG": [
-        "debug", "fix", "troubleshoot", "error", "bug", "issue", "problem",
-        "depurar", "corregir", "solucionar", "error", "fallo", "problema",
+        "debug",
+        "fix",
+        "troubleshoot",
+        "error",
+        "bug",
+        "issue",
+        "problem",
+        "depurar",
+        "corregir",
+        "solucionar",
+        "error",
+        "fallo",
+        "problema",
     ],
     "OPTIMIZE": [
-        "optimize", "improve", "enhance", "speed up", "performance",
-        "optimizar", "mejorar", "acelerar", "rendimiento",
+        "optimize",
+        "improve",
+        "enhance",
+        "speed up",
+        "performance",
+        "optimizar",
+        "mejorar",
+        "acelerar",
+        "rendimiento",
     ],
 }
 
 GOAL_KEYWORDS: dict[str, list] = {
     "COMPLEXITY_REDUCTION": [
-        "simplify", "reduce complexity", "clean up", "less complex",
-        "simplificar", "reducir complejidad", "limpiar",
+        "simplify",
+        "reduce complexity",
+        "clean up",
+        "less complex",
+        "simplificar",
+        "reducir complejidad",
+        "limpiar",
     ],
     "MODERN_PATTERN": [
-        "modernize", "update pattern", "latest", "best practice",
-        "modernizar", "actualizar", "mejor practica",
+        "modernize",
+        "update pattern",
+        "latest",
+        "best practice",
+        "modernizar",
+        "actualizar",
+        "mejor practica",
     ],
     "BUG_FIX": [
-        "fix bug", "patch", "hotfix", "bugfix", "resolve error",
-        "corregir fallo", "parche", "solucionar error",
+        "fix bug",
+        "patch",
+        "hotfix",
+        "bugfix",
+        "resolve error",
+        "corregir fallo",
+        "parche",
+        "solucionar error",
     ],
     "FEATURE_ADD": [
-        "add feature", "new feature", "implement", "extend",
-        "agregar funcion", "nueva funcion", "implementar", "extender",
+        "add feature",
+        "new feature",
+        "implement",
+        "extend",
+        "agregar funcion",
+        "nueva funcion",
+        "implementar",
+        "extender",
     ],
     "SECURITY_HARDEN": [
-        "security", "secure", "vulnerability", "encrypt", "auth",
-        "seguridad", "seguro", "vulnerabilidad", "encriptar", "autenticar",
+        "security",
+        "secure",
+        "vulnerability",
+        "encrypt",
+        "auth",
+        "seguridad",
+        "seguro",
+        "vulnerabilidad",
+        "encriptar",
+        "autenticar",
     ],
     "PERFORMANCE": [
-        "performance", "fast", "speed", "optimize", "efficient",
-        "rendimiento", "rapido", "velocidad", "eficiente",
+        "performance",
+        "fast",
+        "speed",
+        "optimize",
+        "efficient",
+        "rendimiento",
+        "rapido",
+        "velocidad",
+        "eficiente",
     ],
     "READABILITY": [
-        "readability", "readable", "clean code", "documentation",
-        "legibilidad", "legible", "codigo limpio", "documentacion",
+        "readability",
+        "readable",
+        "clean code",
+        "documentation",
+        "legibilidad",
+        "legible",
+        "codigo limpio",
+        "documentacion",
     ],
 }
 
@@ -119,7 +249,9 @@ class IntentClassifier(BaseAgent[IntentResult]):
             compiled = []
             for kw in kws:
                 # Word boundary match
-                compiled.append(re.compile(r'\b' + re.escape(kw) + r'\b', re.IGNORECASE))  # nosemgrep: detect-non-literal-regexp
+                compiled.append(
+                    re.compile(r"\b" + re.escape(kw) + r"\b", re.IGNORECASE)
+                )  # nosemgrep: detect-non-literal-regexp
             patterns[key] = (kws, compiled)
         return patterns
 
@@ -156,9 +288,7 @@ class IntentClassifier(BaseAgent[IntentResult]):
             },
         )
 
-    def _score_category(
-        self, text: str, patterns: dict, default: str
-    ) -> tuple:
+    def _score_category(self, text: str, patterns: dict, default: str) -> tuple:
         """Score text against keyword patterns, return (best_key, score)."""
         scores: dict[str, float] = {}
 

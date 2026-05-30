@@ -137,11 +137,13 @@ def generic_preview(
     fields: list[ImpactField] = []
     for key, value in config.items():
         if isinstance(value, (str, int, float, bool)):
-            fields.append(ImpactField(
-                name=key,
-                proposed_value=value,
-                field_type=type(value).__name__,
-            ))
+            fields.append(
+                ImpactField(
+                    name=key,
+                    proposed_value=value,
+                    field_type=type(value).__name__,
+                )
+            )
 
     return ImpactPreview(
         action_type=action_type,

@@ -26,6 +26,7 @@ __all__ = ["Constraint", "ConstraintSolver"]
 #  CONSTRAINT SOLVER (AC-3 + Backtracking) - Fallback sin Z3
 # ============================================================
 
+
 class Constraint:
     """Representa una restriccion entre variables."""
 
@@ -78,7 +79,9 @@ class ConstraintSolver:
             return {"status": "SATISFIED", "assignment": result}
         return {"status": "UNSATISFIABLE", "assignment": None}
 
-    def verify_invariant(self, condition_func: Callable[..., bool], variables: list[str], domains: dict[str, list[Any]]) -> dict[str, Any]:
+    def verify_invariant(
+        self, condition_func: Callable[..., bool], variables: list[str], domains: dict[str, list[Any]]
+    ) -> dict[str, Any]:
         """Verifica si una invariante se cumple en todos los estados posibles."""
         self._start_time = time.time()
         self._timed_out = False
@@ -125,27 +128,12 @@ class ConstraintSolver:
         enumerate_all(0, {})
 
         if self._timed_out:
-            return {
-                "status": "TIMEOUT",
-                "verified": False,
-                "counterexamples": counterexamples,
-                "checked": checked
-            }
+            return {"status": "TIMEOUT", "verified": False, "counterexamples": counterexamples, "checked": checked}
 
         if counterexamples:
-            return {
-                "status": "VIOLATED",
-                "verified": False,
-                "counterexamples": counterexamples,
-                "checked": checked
-            }
+            return {"status": "VIOLATED", "verified": False, "counterexamples": counterexamples, "checked": checked}
 
-        return {
-            "status": "PROVEN",
-            "verified": True,
-            "counterexamples": [],
-            "checked": checked
-        }
+        return {"status": "PROVEN", "verified": True, "counterexamples": [], "checked": checked}
 
     def _sample_verify(self, condition_func, variables, domains, samples):
         """Verificacion por muestreo cuando hay demasiadas combinaciones."""
@@ -172,7 +160,12 @@ class ConstraintSolver:
             return {"status": "TIMEOUT", "verified": False, "counterexamples": violations}
         if violations:
             return {"status": "LIKELY_VIOLATED", "verified": False, "counterexamples": violations}
-        return {"status": "LIKELY_PROVEN", "verified": False, "counterexamples": [], "checked": samples}  # LIKELY_PROVEN ≠ PROVEN; bounded sampling is not formal proof
+        return {
+            "status": "LIKELY_PROVEN",
+            "verified": False,
+            "counterexamples": [],
+            "checked": samples,
+        }  # LIKELY_PROVEN ≠ PROVEN; bounded sampling is not formal proof
 
     def _ac3(self, domains, constraints):
         """Algoritmo AC-3 para consistencia de arcos.
@@ -230,10 +223,7 @@ class ConstraintSolver:
         if len(assignment) == len(domains):
             return dict(assignment)
 
-        var = min(
-            (v for v in domains if v not in assignment),
-            key=lambda v: len(domains[v])
-        )
+        var = min((v for v in domains if v not in assignment), key=lambda v: len(domains[v]))
 
         for val in domains[var]:
             assignment[var] = val

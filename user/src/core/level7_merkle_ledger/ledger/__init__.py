@@ -1,5 +1,5 @@
-'''ledger - refactored into sub-modules.'''
+"""ledger - refactored into sub-modules."""
 
 from ._core import MerkleLedger
 
-__all__ = ['MerkleLedger']
+__all__ = ["MerkleLedger"]

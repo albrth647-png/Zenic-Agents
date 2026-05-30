@@ -123,7 +123,7 @@ class MonitorMixin:
                     self._thermal_throttle = max(0.4, self._thermal_throttle * 0.8)
                     self.stats["thermal_throttles"] += 1
                     logger.warning(
-                        "Thermal throttle: CPU >70%% por %.0fs, " "reduciendo agresividad a %.0f%%",
+                        "Thermal throttle: CPU >70%% por %.0fs, reduciendo agresividad a %.0f%%",
                         elapsed,
                         self._thermal_throttle * 100,
                     )

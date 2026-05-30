@@ -39,8 +39,8 @@ pub use matching::{
     is_value_type_compatible, normalize_for_comparison, score_field_match,
 };
 pub use types::{
-    ExtractionResult, FieldMatch, CONFIDENCE_DISPLAY, CONFIDENCE_EXACT, CONFIDENCE_HEURISTIC,
-    CONFIDENCE_KEYWORD, CONFIDENCE_STEM, FIELD_ALIASES, MAX_CANDIDATES_PER_FIELD,
+    CONFIDENCE_DISPLAY, CONFIDENCE_EXACT, CONFIDENCE_HEURISTIC, CONFIDENCE_KEYWORD,
+    CONFIDENCE_STEM, ExtractionResult, FieldMatch, MAX_CANDIDATES_PER_FIELD,
     MIN_CONFIDENCE_THRESHOLD,
 };
 

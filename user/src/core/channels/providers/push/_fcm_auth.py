@@ -44,12 +44,12 @@ class _FcmAuthMixin:
                 self._fcm_service_account_data = json.load(f)
 
             logger.debug(
-                "PushChannelProvider: loaded FCM service account " "(client_email=%s)",
+                "PushChannelProvider: loaded FCM service account (client_email=%s)",
                 self._fcm_service_account_data.get("client_email", "N/A"),
             )
         except Exception as e:
             logger.warning(
-                "PushChannelProvider: failed to load FCM service account " "key from '%s': %s",
+                "PushChannelProvider: failed to load FCM service account key from '%s': %s",
                 self._fcm_service_account_key_path,
                 e,
             )
@@ -101,7 +101,7 @@ class _FcmAuthMixin:
         token_uri = sa_data.get("token_uri", _FCM_TOKEN_URL)
 
         if not client_email or not private_key:
-            logger.warning("PushChannelProvider: FCM service account missing " "client_email or private_key")
+            logger.warning("PushChannelProvider: FCM service account missing client_email or private_key")
             return None
 
         now = int(time.time())
@@ -145,7 +145,7 @@ class _FcmAuthMixin:
                 )
 
         if jwt_token is None:
-            logger.warning("PushChannelProvider: no crypto library available for " "RS256 JWT signing")
+            logger.warning("PushChannelProvider: no crypto library available for RS256 JWT signing")
             return None
 
         # Exchange JWT for access token

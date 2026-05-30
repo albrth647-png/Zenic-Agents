@@ -49,7 +49,7 @@ class GraphAPITransportMixin:
                     # Server error — retry with backoff
                     backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                     __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                        "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs " "(attempt %d/%d)",
+                        "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs (attempt %d/%d)",
                         status_code,
                         backoff,
                         attempt + 1,
@@ -66,7 +66,7 @@ class GraphAPITransportMixin:
             except asyncio.TimeoutError:
                 backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                 __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                    "GraphAPIEmailProvider: Request timed out, retrying in %.1fs " "(attempt %d/%d)",
+                    "GraphAPIEmailProvider: Request timed out, retrying in %.1fs (attempt %d/%d)",
                     backoff,
                     attempt + 1,
                     _MAX_RETRIES,
@@ -77,7 +77,7 @@ class GraphAPITransportMixin:
             except Exception as exc:
                 backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                 __import__("logging").getLogger("zenic_agents.executors.graph_api").warning(
-                    "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs " "(attempt %d/%d)",
+                    "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs (attempt %d/%d)",
                     exc,
                     backoff,
                     attempt + 1,

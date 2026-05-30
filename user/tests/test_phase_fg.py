@@ -6,15 +6,12 @@ Tests for MEDIUM (F1-F6) and LOW (G1-G3) security fixes from FASE 3.
 Run: pytest tests/test_phase_fg.py -v
 """
 
-import json
 import os
 import re
 import sys
 import time
 import unittest
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 # ──────────────────────────────────────────────────────────────
 #  Test Configuration
@@ -32,6 +29,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT))
 #  F1: Query Param Sanitization (#20)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestQueryParamSanitization(unittest.TestCase):
     """Test SQL injection, XSS, and path traversal detection in query params."""
 
@@ -40,8 +38,11 @@ class TestQueryParamSanitization(unittest.TestCase):
         payload = "1 UNION SELECT * FROM users--"
         # Simulate the regex check from middleware
         sql_patterns = [
-            re.compile(r'(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)', re.IGNORECASE),
-            re.compile(r'(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})', re.IGNORECASE),
+            re.compile(
+                r"(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})", re.IGNORECASE),
             re.compile(r"('.*\b(or|and)\b.*')", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in sql_patterns)
@@ -51,8 +52,11 @@ class TestQueryParamSanitization(unittest.TestCase):
         """SQL injection with DROP TABLE should be detected."""
         payload = "1; DROP TABLE users; --"
         sql_patterns = [
-            re.compile(r'(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)', re.IGNORECASE),
-            re.compile(r'(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})', re.IGNORECASE),
+            re.compile(
+                r"(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in sql_patterns)
         self.assertTrue(detected, "DROP TABLE injection should be detected")
@@ -70,7 +74,7 @@ class TestQueryParamSanitization(unittest.TestCase):
         """SQL injection with comment should be detected."""
         payload = "admin'--"
         sql_patterns = [
-            re.compile(r'(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})', re.IGNORECASE),
+            re.compile(r"(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in sql_patterns)
         self.assertTrue(detected, "Comment injection should be detected")
@@ -85,8 +89,11 @@ class TestQueryParamSanitization(unittest.TestCase):
             "100",
         ]
         sql_patterns = [
-            re.compile(r'(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)', re.IGNORECASE),
-            re.compile(r'(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})', re.IGNORECASE),
+            re.compile(
+                r"(\b(union\s+select|select\s+.+\s+from|insert\s+into|delete\s+from|drop\s+table|alter\s+table|exec\s*\(|execute\s*\()\b)",
+                re.IGNORECASE,
+            ),
+            re.compile(r"(--|;|/\*|\*/|xp_|0x[0-9a-f]{2})", re.IGNORECASE),
             re.compile(r"('.*\b(or|and)\b.*')", re.IGNORECASE),
         ]
         for value in legitimate_values:
@@ -97,9 +104,9 @@ class TestQueryParamSanitization(unittest.TestCase):
         """XSS with script tag should be detected."""
         payload = '<script>alert("xss")</script>'
         xss_patterns = [
-            re.compile(r'<script[\s>]', re.IGNORECASE),
-            re.compile(r'javascript\s*:', re.IGNORECASE),
-            re.compile(r'on\w+\s*=', re.IGNORECASE),
+            re.compile(r"<script[\s>]", re.IGNORECASE),
+            re.compile(r"javascript\s*:", re.IGNORECASE),
+            re.compile(r"on\w+\s*=", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in xss_patterns)
         self.assertTrue(detected, "Script tag XSS should be detected")
@@ -108,7 +115,7 @@ class TestQueryParamSanitization(unittest.TestCase):
         """XSS with event handler should be detected."""
         payload = '<img onerror="alert(1)" src=x>'
         xss_patterns = [
-            re.compile(r'on\w+\s*=', re.IGNORECASE),
+            re.compile(r"on\w+\s*=", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in xss_patterns)
         self.assertTrue(detected, "Event handler XSS should be detected")
@@ -117,7 +124,7 @@ class TestQueryParamSanitization(unittest.TestCase):
         """XSS with javascript: URI should be detected."""
         payload = '<a href="javascript:alert(1)">'
         xss_patterns = [
-            re.compile(r'javascript\s*:', re.IGNORECASE),
+            re.compile(r"javascript\s*:", re.IGNORECASE),
         ]
         detected = any(p.search(payload) for p in xss_patterns)
         self.assertTrue(detected, "javascript: URI XSS should be detected")
@@ -140,6 +147,7 @@ class TestQueryParamSanitization(unittest.TestCase):
 #  F2: Error Message Information Leakage (#31)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestErrorSanitization(unittest.TestCase):
     """Test that error messages don't leak internal information."""
 
@@ -152,7 +160,7 @@ class TestErrorSanitization(unittest.TestCase):
         ]
         for msg in messages:
             # Simulate the stripping regex
-            stripped = re.sub(r'(/[\w.-]+)+|([A-Za-z]:\\[\w.-\\]+)', '[PATH]', msg)
+            stripped = re.sub(r"(/[\w.-]+)+|([A-Za-z]:\\[\w.-\\]+)", "[PATH]", msg)
             self.assertNotIn("/home/", stripped)
             self.assertNotIn("C:\\Users", stripped)
 
@@ -165,8 +173,8 @@ class TestErrorSanitization(unittest.TestCase):
         ]
         for msg in messages:
             stripped = re.sub(
-                r'(postgresql|postgres|mysql|mongodb(\+srv)?|redis|mssql)://[^\s]+',
-                '[DB_URL]',
+                r"(postgresql|postgres|mysql|mongodb(\+srv)?|redis|mssql)://[^\s]+",
+                "[DB_URL]",
                 msg,
                 flags=re.IGNORECASE,
             )
@@ -183,8 +191,8 @@ class TestErrorSanitization(unittest.TestCase):
         ]
         for msg in messages:
             stripped = re.sub(
-                r'([A-Z_]{3,})=(\S+)',
-                r'\1=[ENV_VAR]',
+                r"([A-Z_]{3,})=(\S+)",
+                r"\1=[ENV_VAR]",
                 msg,
             )
             self.assertNotIn("mysecret123", stripped)
@@ -199,8 +207,8 @@ class TestErrorSanitization(unittest.TestCase):
             "Client IP: 172.16.254.1",
         ]
         for msg in messages:
-            stripped = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '[IP]', msg)
-            self.assertNotRegex(stripped, r'\d+\.\d+\.\d+\.\d+')
+            stripped = re.sub(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "[IP]", msg)
+            self.assertNotRegex(stripped, r"\d+\.\d+\.\d+\.\d+")
 
     def test_strip_prisma_details(self):
         """Prisma internal details should be stripped."""
@@ -210,8 +218,8 @@ class TestErrorSanitization(unittest.TestCase):
         ]
         for msg in messages:
             stripped = re.sub(
-                r'PrismaClient\w+Error',
-                'DatabaseError',
+                r"PrismaClient\w+Error",
+                "DatabaseError",
                 msg,
             )
             # Should not expose Prisma internal class names
@@ -222,8 +230,15 @@ class TestErrorSanitization(unittest.TestCase):
         # Production errors should never contain internal details
         production_msg = "An internal error occurred"
         sensitive_info = [
-            "stack", "trace", "Error:", "at ", ".py:", ".ts:",
-            "line 42", "cannot read", "undefined is not",
+            "stack",
+            "trace",
+            "Error:",
+            "at ",
+            ".py:",
+            ".ts:",
+            "line 42",
+            "cannot read",
+            "undefined is not",
         ]
         for info in sensitive_info:
             self.assertNotIn(info, production_msg.lower())
@@ -233,13 +248,18 @@ class TestErrorSanitization(unittest.TestCase):
 #  F3: Audit Logging (#32)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestAuditLogging(unittest.TestCase):
     """Test audit logging for critical operations."""
 
     def test_audit_event_structure(self):
         """Audit events should have required fields."""
         required_fields = [
-            "timestamp", "eventType", "action", "result", "severity",
+            "timestamp",
+            "eventType",
+            "action",
+            "result",
+            "severity",
         ]
         # Verify the required fields are defined
         self.assertEqual(len(required_fields), 5)
@@ -247,8 +267,13 @@ class TestAuditLogging(unittest.TestCase):
     def test_audit_event_types(self):
         """Audit events should cover critical operations."""
         expected_types = [
-            "auth", "data_access", "admin_action", "security_event",
-            "hitl_decision", "subscription", "payment",
+            "auth",
+            "data_access",
+            "admin_action",
+            "security_event",
+            "hitl_decision",
+            "subscription",
+            "payment",
         ]
         self.assertEqual(len(expected_types), 7)
 
@@ -276,6 +301,7 @@ class TestAuditLogging(unittest.TestCase):
 # ══════════════════════════════════════════════════════════════
 #  F4: Session Management (#37)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestSessionManagement(unittest.TestCase):
     """Test session lifecycle management."""
@@ -332,6 +358,7 @@ class TestSessionManagement(unittest.TestCase):
 #  F5: Sensitive Data in Logs (#33)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestLogRedaction(unittest.TestCase):
     """Test that sensitive data is redacted from logs."""
 
@@ -343,7 +370,7 @@ class TestLogRedaction(unittest.TestCase):
             ("api_key=mysecret123", True),
             ("regular text", False),
         ]
-        api_key_pattern = re.compile(r'(sk-|zk_)[\w-]+|api[_-]?key[=:]\s*\S+', re.IGNORECASE)
+        api_key_pattern = re.compile(r"(sk-|zk_)[\w-]+|api[_-]?key[=:]\s*\S+", re.IGNORECASE)
         for text, should_match in patterns:
             match = api_key_pattern.search(text)
             if should_match:
@@ -354,7 +381,7 @@ class TestLogRedaction(unittest.TestCase):
     def test_redact_bearer_tokens(self):
         """Bearer tokens should be redacted."""
         text = "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.sig"
-        bearer_pattern = re.compile(r'Bearer\s+\S+', re.IGNORECASE)
+        bearer_pattern = re.compile(r"Bearer\s+\S+", re.IGNORECASE)
         match = bearer_pattern.search(text)
         self.assertIsNotNone(match, "Bearer token should be detected")
 
@@ -365,7 +392,7 @@ class TestLogRedaction(unittest.TestCase):
             "passwd=hunter2",
             "pwd=admin123",
         ]
-        pwd_pattern = re.compile(r'(password|passwd|pwd)[=:]\s*\S+', re.IGNORECASE)
+        pwd_pattern = re.compile(r"(password|passwd|pwd)[=:]\s*\S+", re.IGNORECASE)
         for text in patterns:
             match = pwd_pattern.search(text)
             self.assertIsNotNone(match, f"Password in '{text}' should be detected")
@@ -373,28 +400,28 @@ class TestLogRedaction(unittest.TestCase):
     def test_redact_email_addresses(self):
         """Email addresses should be redacted."""
         text = "User email: admin@zenic-agents.com"
-        email_pattern = re.compile(r'[\w.-]+@[\w.-]+\.\w{2,}')
+        email_pattern = re.compile(r"[\w.-]+@[\w.-]+\.\w{2,}")
         match = email_pattern.search(text)
         self.assertIsNotNone(match, "Email should be detected")
 
     def test_redact_trc20_wallet(self):
         """TRC20 wallet addresses should be redacted."""
         text = "Wallet: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
-        wallet_pattern = re.compile(r'T[A-HJ-NP-Za-km-z1-9]{33}')
+        wallet_pattern = re.compile(r"T[A-HJ-NP-Za-km-z1-9]{33}")
         match = wallet_pattern.search(text)
         self.assertIsNotNone(match, "TRC20 wallet address should be detected")
 
     def test_redact_ip_addresses(self):
         """IP addresses should be partially masked."""
         text = "Connection from 192.168.1.100"
-        ip_pattern = re.compile(r'\b(\d{1,3})\.\d{1,3}\.\d{1,3}\.\d{1,3}\b')
+        ip_pattern = re.compile(r"\b(\d{1,3})\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
         match = ip_pattern.search(text)
         self.assertIsNotNone(match, "IP address should be detected")
 
     def test_redact_jwt_tokens(self):
         """JWT tokens should be redacted."""
         text = "Token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abc123def456"
-        jwt_pattern = re.compile(r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+        jwt_pattern = re.compile(r"eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+")
         match = jwt_pattern.search(text)
         self.assertIsNotNone(match, "JWT token should be detected")
 
@@ -406,7 +433,7 @@ class TestLogRedaction(unittest.TestCase):
             "mongodb://user:p@cluster.mongodb.net/test",
             "redis://default:password@localhost:6379",
         ]
-        db_pattern = re.compile(r'(postgresql|postgres|mysql|mongodb|redis|mssql|cockroach)://[^\s]+', re.IGNORECASE)
+        db_pattern = re.compile(r"(postgresql|postgres|mysql|mongodb|redis|mssql|cockroach)://[^\s]+", re.IGNORECASE)
         for text in patterns:
             match = db_pattern.search(text)
             self.assertIsNotNone(match, f"DB connection string should be detected: {text}")
@@ -416,15 +443,30 @@ class TestLogRedaction(unittest.TestCase):
 #  F6: Insecure Default Configurations (#34)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSecureDefaults(unittest.TestCase):
     """Test that default configurations are secure."""
 
     def test_insecure_default_detection(self):
         """Known insecure defaults should be detected."""
         insecure_values = [
-            "default-key", "change-me", "changeme", "secret", "password",
-            "admin", "test", "1234", "abcd", "root", "default", "example",
-            "placeholder", "todo", "fixme", "temp", "temporary",
+            "default-key",
+            "change-me",
+            "changeme",
+            "secret",
+            "password",
+            "admin",
+            "test",
+            "1234",
+            "abcd",
+            "root",
+            "default",
+            "example",
+            "placeholder",
+            "todo",
+            "fixme",
+            "temp",
+            "temporary",
         ]
         self.assertGreaterEqual(len(insecure_values), 15)
 
@@ -452,7 +494,6 @@ class TestSecureDefaults(unittest.TestCase):
         """Rate limiting should have secure defaults."""
         # Default: 100 req/min
         default_max = 100
-        window_ms = 60_000
         self.assertLessEqual(default_max, 1000)  # Not too permissive
         self.assertGreater(default_max, 0)  # Not zero (disabled)
 
@@ -472,6 +513,7 @@ class TestSecureDefaults(unittest.TestCase):
 # ══════════════════════════════════════════════════════════════
 #  G1: HTTPS Enforcement
 # ══════════════════════════════════════════════════════════════
+
 
 class TestHttpsEnforcement(unittest.TestCase):
     """Test HTTPS enforcement in production."""
@@ -503,14 +545,17 @@ class TestHttpsEnforcement(unittest.TestCase):
 #  G2: Security Headers
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSecurityHeaders(unittest.TestCase):
     """Test that security headers are properly set."""
 
     def test_csp_header_default(self):
         """Content-Security-Policy should have restrictive default."""
-        csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " \
-              "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; " \
-              "base-uri 'self'; form-action 'self'"
+        csp = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; "
+            "base-uri 'self'; form-action 'self'"
+        )
         self.assertIn("default-src 'self'", csp)
         self.assertIn("frame-ancestors 'none'", csp)
         self.assertNotIn("'unsafe-eval'", csp)
@@ -557,17 +602,35 @@ class TestSecurityHeaders(unittest.TestCase):
 #  G3: Dependency Integrity
 # ══════════════════════════════════════════════════════════════
 
+
 class TestDependencyIntegrity(unittest.TestCase):
     """Test dependency and environment integrity checks."""
 
     def test_insecure_values_set(self):
         """INSECURE_VALUES should contain known bad defaults."""
         insecure = {
-            "password", "admin", "change-me", "changeme", "default",
-            "secret", "test", "1234", "abcd", "root", "example",
-            "placeholder", "todo", "fixme", "temp", "temporary",
-            "default-key", "changeme!", "letmein", "welcome",
-            "qwerty", "master",
+            "password",
+            "admin",
+            "change-me",
+            "changeme",
+            "default",
+            "secret",
+            "test",
+            "1234",
+            "abcd",
+            "root",
+            "example",
+            "placeholder",
+            "todo",
+            "fixme",
+            "temp",
+            "temporary",
+            "default-key",
+            "changeme!",
+            "letmein",
+            "welcome",
+            "qwerty",
+            "master",
         }
         self.assertGreaterEqual(len(insecure), 20)
 
@@ -589,7 +652,11 @@ class TestDependencyIntegrity(unittest.TestCase):
     def test_integrity_report_structure(self):
         """Integrity report should have required fields."""
         required_fields = [
-            "timestamp", "modules", "envVars", "overallStatus", "recommendations",
+            "timestamp",
+            "modules",
+            "envVars",
+            "overallStatus",
+            "recommendations",
         ]
         self.assertEqual(len(required_fields), 5)
 
@@ -603,13 +670,15 @@ class TestDependencyIntegrity(unittest.TestCase):
 #  IPC Auth (E3)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestIPCAuth(unittest.TestCase):
     """Test IPC bridge authentication."""
 
     def test_verify_valid_token(self):
         """Valid IPC token should verify successfully."""
         try:
-            from src.core.ipc_auth import generate_ipc_token, verify_ipc_token
+            from src.core.ipc_auth import generate_ipc_token
+
             # Generate a token
             token = generate_ipc_token()
             self.assertEqual(len(token), 64)  # 32 bytes = 64 hex chars
@@ -620,6 +689,7 @@ class TestIPCAuth(unittest.TestCase):
         """Empty token should fail verification."""
         try:
             from src.core.ipc_auth import verify_ipc_token
+
             result = verify_ipc_token("")
             self.assertFalse(result, "Empty token should fail")
         except ImportError:
@@ -629,12 +699,14 @@ class TestIPCAuth(unittest.TestCase):
         """Invalid token should fail verification."""
         try:
             from src.core.ipc_auth import verify_ipc_token
+
             # Set a known expected token
             with patch.dict(os.environ, {"ZENIC_IPC_TOKEN": "known-token-123"}):
                 # Clear any cached token
-                if hasattr(verify_ipc_token, '__module__'):
+                if hasattr(verify_ipc_token, "__module__"):
                     from src.core import ipc_auth
-                    if hasattr(ipc_auth._get_expected_token, '_dev_token'):
+
+                    if hasattr(ipc_auth._get_expected_token, "_dev_token"):
                         del ipc_auth._get_expected_token._dev_token
                 result = verify_ipc_token("wrong-token-456")
                 self.assertFalse(result, "Wrong token should fail")
@@ -645,6 +717,7 @@ class TestIPCAuth(unittest.TestCase):
         """Generated tokens should have sufficient entropy."""
         try:
             from src.core.ipc_auth import generate_ipc_token
+
             tokens = {generate_ipc_token() for _ in range(100)}
             # All tokens should be unique
             self.assertEqual(len(tokens), 100, "Generated tokens should be unique")
@@ -671,6 +744,7 @@ class TestIPCAuth(unittest.TestCase):
 # ══════════════════════════════════════════════════════════════
 #  CORS Configuration (E1)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestCORSConfiguration(unittest.TestCase):
     """Test CORS configuration security."""
@@ -700,13 +774,14 @@ class TestCORSConfiguration(unittest.TestCase):
 #  Rate Limiting (E2)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRateLimiting(unittest.TestCase):
     """Test rate limiting configuration."""
 
     def test_payment_tier_most_restrictive(self):
         """Payment routes should have the most restrictive rate limit."""
         payment_max = 5  # 5/min
-        hitl_max = 30    # 30/min
+        hitl_max = 30  # 30/min
         default_max = 100  # 100/min
         self.assertLess(payment_max, hitl_max)
         self.assertLess(payment_max, default_max)
@@ -730,6 +805,7 @@ class TestRateLimiting(unittest.TestCase):
 # ══════════════════════════════════════════════════════════════
 #  Security Module File Existence
 # ══════════════════════════════════════════════════════════════
+
 
 class TestSecurityModuleFiles(unittest.TestCase):
     """Verify that all security module files were created."""
@@ -786,7 +862,7 @@ class TestSecurityModuleFiles(unittest.TestCase):
 
     def test_middleware_updated(self):
         """Middleware should include FASE 3 changes."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         # Check for key FASE 3 additions
         self.assertIn("handleCors", content, "Middleware should include CORS")
@@ -800,12 +876,13 @@ class TestSecurityModuleFiles(unittest.TestCase):
 #  Integration Tests
 # ══════════════════════════════════════════════════════════════
 
+
 class TestMiddlewareIntegration(unittest.TestCase):
     """Test middleware integration of all security layers."""
 
     def test_middleware_has_cors(self):
         """Middleware should have CORS handling."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         self.assertIn("ALLOWED_ORIGINS", content)
         self.assertIn("ZENIC_CORS_ORIGINS", content)
@@ -813,7 +890,7 @@ class TestMiddlewareIntegration(unittest.TestCase):
 
     def test_middleware_has_rate_limiting(self):
         """Middleware should have rate limiting."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         self.assertIn("RATE_LIMIT_TIERS", content)
         self.assertIn("429", content)
@@ -821,7 +898,7 @@ class TestMiddlewareIntegration(unittest.TestCase):
 
     def test_middleware_has_query_sanitization(self):
         """Middleware should have query param sanitization."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         self.assertIn("SQL_INJECTION_PATTERNS", content)
         self.assertIn("XSS_PATTERNS", content)
@@ -829,7 +906,7 @@ class TestMiddlewareIntegration(unittest.TestCase):
 
     def test_middleware_has_security_headers(self):
         """Middleware should apply security headers."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         self.assertIn("Content-Security-Policy", content)
         self.assertIn("X-Frame-Options", content)
@@ -838,14 +915,14 @@ class TestMiddlewareIntegration(unittest.TestCase):
 
     def test_middleware_has_https_enforcement(self):
         """Middleware should enforce HTTPS in production."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         self.assertIn("enforceHttps", content)
         self.assertIn("x-forwarded-proto", content)
 
     def test_middleware_processing_order(self):
         """Middleware should process security layers in correct order."""
-        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts"), "r") as f:
+        with open(os.path.join(PROJECT_ROOT, "gateway", "src", "middleware.ts")) as f:
             content = f.read()
         # Verify the processing order in middleware function body
         func_start = content.find("export function middleware")

@@ -1,3 +1,10 @@
+import {
+  Heart, Landmark, GraduationCap, Scale, Factory,
+  Building2, Pill, Microscope, Stethoscope, ShieldCheck,
+  Truck, ShoppingCart, Megaphone, Plane, Zap,
+  Cpu, Smartphone, Workflow, Lock, Waves, TreePine,
+} from "lucide-react";
+
 const ICONO_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Heart,
   Landmark,
@@ -23,13 +30,13 @@ const ICONO_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 /** Renderiza el icono de un nicho por su nombre — lazy, sin crear elementos al nivel del módulo */
-function getIcono(nombre: string, className = "h-4 w-4") {
+export function getIcono(nombre: string, className = "h-4 w-4") {
   const Icon = ICONO_MAP[nombre];
   return Icon ? <Icon className={className} /> : null;
 }
 
 // Colores por categoría para los badges de categoría
-const COLOR_CATEGORIA: Record<string, { bg: string; text: string }> = {
+export const COLOR_CATEGORIA: Record<string, { bg: string; text: string }> = {
   salud: { bg: "bg-emerald-100", text: "text-emerald-700" },
   financiero: { bg: "bg-amber-100", text: "text-amber-700" },
   educacion: { bg: "bg-blue-100", text: "text-blue-700" },
@@ -41,7 +48,7 @@ const COLOR_CATEGORIA: Record<string, { bg: string; text: string }> = {
   servicios: { bg: "bg-pink-100", text: "text-pink-700" },
 };
 
-const ETIQUETA_CATEGORIA: Record<string, string> = {
+export const ETIQUETA_CATEGORIA: Record<string, string> = {
   salud: "Salud",
   financiero: "Financiero",
   educacion: "Educación",
@@ -57,7 +64,7 @@ const ETIQUETA_CATEGORIA: Record<string, string> = {
 // UTILIDADES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function tiempoRelativo(fechaStr: string): string {
+export function tiempoRelativo(fechaStr: string): string {
   const d = new Date(fechaStr);
   const ahora = new Date();
   const diff = Math.floor((ahora.getTime() - d.getTime()) / 1000);
@@ -67,7 +74,7 @@ function tiempoRelativo(fechaStr: string): string {
   return `hace ${Math.floor(diff / 86400)}d`;
 }
 
-function formatoTamañoArchivo(bytes: number): string {
+export function formatoTamañoArchivo(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

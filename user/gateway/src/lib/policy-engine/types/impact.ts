@@ -1,3 +1,7 @@
+import type { PolicyDocument, PolicyEffectV2 } from './core';
+import type { ConflictSeverity } from './conflict';
+import type { SimulationRiskLevel } from './simulation';
+
 // ─── 6. Policy Impact Analysis ──────────────────────────────────────────
 
 /** Impact analysis request */

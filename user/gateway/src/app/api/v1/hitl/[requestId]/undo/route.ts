@@ -2,7 +2,7 @@
 // POST /api/v1/hitl/[requestId]/undo
 
 import { NextRequest, NextResponse } from "next/server";
-import { getReversibleActionService } from "@/lib/hitl";
+import { getReversibleActionService } from "@/lib/hitl/reversible-action/_undo";
 
 interface RouteParams {
   params: Promise<{ requestId: string }>;

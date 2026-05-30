@@ -22,11 +22,11 @@ const MIN_SESSION_ID_LEN = 32;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { mapping_id } = body;
+    const { mappingId } = body;
 
-    if (!mapping_id || typeof mapping_id !== 'string' || mapping_id.trim().length === 0) {
+    if (!mappingId || typeof mappingId !== 'string' || mappingId.trim().length === 0) {
       return NextResponse.json(
-        { success: false, error: 'mapping_id is required' },
+        { success: false, error: 'mappingId is required' },
         { status: 400 },
       );
     }
@@ -64,41 +64,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mapping = await db.memoryMapping.findUnique({ where: { mapping_id } });
+    const mapping = await db.memoryMapping.findUnique({ where: { mappingId } });
     if (!mapping) {
-      return NextResponse.json({ success: false, error: `Mapping '${mapping_id}' not found` }, { status: 404 });
+      return NextResponse.json({ success: false, error: `Mapping '${mappingId}' not found` }, { status: 404 });
     }
     if (mapping.approved) {
-      return NextResponse.json({ success: false, error: `Mapping '${mapping_id}' is already approved` }, { status: 409 });
+      return NextResponse.json({ success: false, error: `Mapping '${mappingId}' is already approved` }, { status: 409 });
     }
 
     const approvalRecord = await db.memoryApprovalRecord.create({
       data: {
-        mapping_id,
-        admin_evidence_review: body.admin_evidence_review,
-        admin_justification: body.admin_justification.trim(),
-        risk_acknowledgment: body.risk_acknowledgment,
-        admin_session_id: body.admin_session_id.trim(),
-        ia_question: body.ia_question || '',
-        ia_response: body.ia_response ?? false,
-        evidence_for: body.evidence_for || [],
-        evidence_against: body.evidence_against || [],
-        consensus_score: body.consensus_score ?? 0.0,
+        mappingId,
+        adminEvidenceReview: body.admin_evidence_review,
+        adminJustification: body.admin_justification.trim(),
+        riskAcknowledgment: body.risk_acknowledgment,
+        adminSessionId: body.admin_session_id.trim(),
+        iaQuestion: body.ia_question || '',
+        iaResponse: body.ia_response ?? false,
+        evidenceFor: body.evidence_for || [],
+        evidenceAgainst: body.evidence_against || [],
+        consensusScore: body.consensus_score ?? 0.0,
       },
     });
 
-    const merkleHash = `blake3:${mapping_id}:${Date.now()}`;
+    const merkleHash = `blake3:${mappingId}:${Date.now()}`;
     const updatedMapping = await db.memoryMapping.update({
-      where: { mapping_id },
-      data: { approved: true, merkle_hash: merkleHash },
+      where: { mappingId },
+      data: { approved: true, merkleHash: merkleHash },
     });
 
     return NextResponse.json({
       success: true,
       data: {
-        mapping_id: updatedMapping.mapping_id,
+        mappingId: updatedMapping.mappingId,
         approved: updatedMapping.approved,
-        merkle_hash: updatedMapping.merkle_hash,
+        merkleHash: updatedMapping.merkleHash,
         approval_id: approvalRecord.id,
         yaml_rendered: true,
         message: 'Mapping approved and sealed. YAML rendered for hot-reload. Next time: Layer 1 resolves in <5ms, IA not activated.',

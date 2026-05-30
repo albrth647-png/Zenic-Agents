@@ -32,6 +32,7 @@ class TracingConfig:
         sample_rate: Trace sample rate (0.0 to 1.0).
         max_span_attributes: Maximum attributes per span.
     """
+
     enabled: bool = False
     exporter: str = "console"
     endpoint: str = ""
@@ -80,10 +81,12 @@ def init_tracing(config: TracingConfig | None = None) -> bool:
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 
-        resource = Resource.create({
-            "service.name": config.service_name,
-            "service.version": ZENIC_VERSION,
-        })
+        resource = Resource.create(
+            {
+                "service.name": config.service_name,
+                "service.version": ZENIC_VERSION,
+            }
+        )
 
         sampler = TraceIdRatioBased(rate=config.sample_rate)
         provider = TracerProvider(
@@ -100,14 +103,14 @@ def init_tracing(config: TracingConfig | None = None) -> bool:
 
         logger.info(
             "Tracing: ENABLED (exporter=%s, sample_rate=%.2f, service=%s)",
-            config.exporter, config.sample_rate, config.service_name,
+            config.exporter,
+            config.sample_rate,
+            config.service_name,
         )
         return True
 
     except ImportError:
-        logger.info(
-            "Tracing: OpenTelemetry not installed — using correlation-ID fallback"
-        )
+        logger.info("Tracing: OpenTelemetry not installed — using correlation-ID fallback")
         _tracing_enabled = False
         return False
     except Exception as exc:
@@ -124,6 +127,7 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
     if config.exporter == "console":
         try:
             from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
             provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
         except ImportError:
             pass
@@ -137,6 +141,7 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
                 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-unresolved]
                     OTLPSpanExporter,
                 )
+
                 endpoint = config.endpoint or "http://localhost:4317"
                 exporter = OTLPSpanExporter(endpoint=endpoint)
             else:
@@ -144,15 +149,19 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
                     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-unresolved]
                         OTLPSpanExporter,
                     )
+
                     endpoint = config.endpoint or "http://localhost:4317"
                     exporter = OTLPSpanExporter(endpoint=endpoint)
                 except ImportError:
                     from opentelemetry.exporter.jaeger.thrift import (  # type: ignore[import-unresolved]
                         JaegerExporter,
                     )
+
                     endpoint = config.endpoint or "http://localhost:14268/api/traces"
                     exporter = JaegerExporter(
-                        agent_host_name=config.endpoint.split("://")[-1].split(":")[0] if config.endpoint else "localhost",
+                        agent_host_name=config.endpoint.split("://")[-1].split(":")[0]
+                        if config.endpoint
+                        else "localhost",
                         agent_port=6831,
                     )
 

@@ -56,6 +56,7 @@ class ApprovalChain:
 
         # Use the extracted persistence module
         from ..chain_parts.persistence import ApprovalChainDB
+
         self._db = ApprovalChainDB(db_path)
 
     # ── Core Operations ────────────────────────────────────
@@ -79,7 +80,9 @@ class ApprovalChain:
         # Phase C3: Risk-based role routing
         if required_role == "gerente":
             risk_role = self.check_risk_routing(
-                action_type, action_config, metadata or {},
+                action_type,
+                action_config,
+                metadata or {},
             )
             if risk_role:
                 required_role = risk_role
@@ -101,12 +104,17 @@ class ApprovalChain:
         self._notify_callbacks(request)
         logger.info(
             "ApprovalChain: Request %s created for action '%s' (role=%s)",
-            request.request_id, action_type, required_role,
+            request.request_id,
+            action_type,
+            required_role,
         )
         return request
 
     def approve(
-        self, request_id: str, approver_id: int, approver_role: str,
+        self,
+        request_id: str,
+        approver_id: int,
+        approver_role: str,
     ) -> ApprovalResult:
         """Approve a pending request."""
         request = self._db.get_request(request_id)
@@ -114,18 +122,16 @@ class ApprovalChain:
             return ApprovalResult(False, request_id, ApprovalStatus.PENDING, "Request not found")
 
         if request.status != ApprovalStatus.PENDING:
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Request is already {request.status.value}")
+            return ApprovalResult(False, request_id, request.status, f"Request is already {request.status.value}")
 
         # auth_parts removed — use fallback ROLE_HIERARCHY from auth_service stub
         from src.core.auth_service import ROLE_HIERARCHY
+
         if ROLE_HIERARCHY.get(approver_role, -1) < ROLE_HIERARCHY.get(request.required_role, -1):
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Approver role '{approver_role}' insufficient")
+            return ApprovalResult(False, request_id, request.status, f"Approver role '{approver_role}' insufficient")
 
         if approver_id == request.requested_by:
-            return ApprovalResult(False, request_id, request.status,
-                                  "Cannot approve your own request")
+            return ApprovalResult(False, request_id, request.status, "Cannot approve your own request")
 
         now = datetime.now(timezone.utc).isoformat()
         request.status = ApprovalStatus.APPROVED
@@ -140,7 +146,10 @@ class ApprovalChain:
         return ApprovalResult(True, request_id, ApprovalStatus.APPROVED, "Request approved")
 
     def reject(
-        self, request_id: str, approver_id: int, reason: str = "",
+        self,
+        request_id: str,
+        approver_id: int,
+        reason: str = "",
     ) -> ApprovalResult:
         """Reject a pending request."""
         request = self._db.get_request(request_id)
@@ -148,8 +157,7 @@ class ApprovalChain:
             return ApprovalResult(False, request_id, ApprovalStatus.PENDING, "Request not found")
 
         if request.status != ApprovalStatus.PENDING:
-            return ApprovalResult(False, request_id, request.status,
-                                  f"Request is already {request.status.value}")
+            return ApprovalResult(False, request_id, request.status, f"Request is already {request.status.value}")
 
         request.status = ApprovalStatus.REJECTED
         request.approved_by = approver_id
@@ -184,11 +192,15 @@ class ApprovalChain:
         return self._db.get_request(request_id)
 
     def list_pending(
-        self, required_role: str | None = None, tenant_id: str | None = None,
+        self,
+        required_role: str | None = None,
+        tenant_id: str | None = None,
     ) -> list[ApprovalRequest]:
         """List all pending approval requests."""
         return self._db.query_requests(
-            status=ApprovalStatus.PENDING, required_role=required_role, tenant_id=tenant_id,
+            status=ApprovalStatus.PENDING,
+            required_role=required_role,
+            tenant_id=tenant_id,
         )
 
     def list_by_requester(self, requested_by: int) -> list[ApprovalRequest]:
@@ -254,9 +266,12 @@ class ApprovalChain:
 
         try:
             from ..adaptive import get_adaptive_approval
+
             adaptive = get_adaptive_approval()
             should_approve, reason = adaptive.check_auto_approve(
-                user_id, action_type, action_config,
+                user_id,
+                action_type,
+                action_config,
             )
             if should_approve:
                 # Create and immediately approve the request
@@ -286,6 +301,7 @@ class ApprovalChain:
         """
         try:
             from ..risk_routing import get_risk_router
+
             router = get_risk_router()
             assessment = router.assess_risk(action_type, action_config, context or {})
             return assessment.recommended_role
@@ -359,19 +375,22 @@ class ApprovalChain:
                 merkle_hash = memory_chip.seal_mapping(payload.mapping_id)
                 logger.info(
                     "Memory HITL: Mapping %s sealed with Merkle hash %s",
-                    payload.mapping_id, merkle_hash,
+                    payload.mapping_id,
+                    merkle_hash,
                 )
 
                 # Render YAML for hot-reload
                 yaml_content = memory_chip.render_yaml(payload.mapping_id)
                 logger.info(
                     "Memory HITL: YAML rendered for mapping %s (%d chars)",
-                    payload.mapping_id, len(yaml_content),
+                    payload.mapping_id,
+                    len(yaml_content),
                 )
             except Exception as exc:
                 logger.error(
                     "Memory HITL: Post-approval sealing failed for %s: %s",
-                    payload.mapping_id, exc,
+                    payload.mapping_id,
+                    exc,
                 )
 
         return result

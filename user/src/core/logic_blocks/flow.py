@@ -25,8 +25,8 @@ class ConditionalBlock(LogicBlock):
     name = "conditional"
     category = "flow"
     description = "If/else branching based on data field value"
-    inputs = ["field", "value", "data"]
-    outputs = ["branch_taken", "data"]
+    inputs = ["field", "value", "data"]  # noqa: RUF012
+    outputs = ["branch_taken", "data"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -65,8 +65,8 @@ class LoopBlock(LogicBlock):
     name = "loop"
     category = "flow"
     description = "Iterate over a list field, apply sub-chain to each item"
-    inputs = ["items_field", "item_name", "sub_chain"]
-    outputs = ["results", "processed_count"]
+    inputs = ["items_field", "item_name", "sub_chain"]  # noqa: RUF012
+    outputs = ["results", "processed_count"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -107,8 +107,8 @@ class ParallelBlock(LogicBlock):
     name = "parallel"
     category = "flow"
     description = "Execute multiple blocks concurrently"
-    inputs = ["blocks", "max_workers"]
-    outputs = ["results", "errors"]
+    inputs = ["blocks", "max_workers"]  # noqa: RUF012
+    outputs = ["results", "errors"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -167,8 +167,8 @@ class SwitchBlock(LogicBlock):
     name = "switch"
     category = "flow"
     description = "Multi-way branching on data value"
-    inputs = ["field", "cases", "default"]
-    outputs = ["matched_case", "data"]
+    inputs = ["field", "cases", "default"]  # noqa: RUF012
+    outputs = ["matched_case", "data"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -208,8 +208,8 @@ class TryCatchBlock(LogicBlock):
     name = "try_catch"
     category = "flow"
     description = "Error handling wrapper for sub-chain execution"
-    inputs = ["try_chain", "catch_chain", "finally_chain"]
-    outputs = ["data", "error", "caught"]
+    inputs = ["try_chain", "catch_chain", "finally_chain"]  # noqa: RUF012
+    outputs = ["data", "error", "caught"]  # noqa: RUF012
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try_chain = data.get("_try_chain")

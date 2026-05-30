@@ -68,7 +68,7 @@ def _get_expected_token() -> str:
     if not hasattr(_get_expected_token, "_dev_token"):
         _get_expected_token._dev_token = secrets.token_hex(32)  # type: ignore[attr-defined]
         logger.warning(
-            "ipc_auth: ZENIC_IPC_TOKEN not set — using ephemeral dev token. " "Only same-process IPC will work."
+            "ipc_auth: ZENIC_IPC_TOKEN not set — using ephemeral dev token. Only same-process IPC will work."
         )
 
     return _get_expected_token._dev_token  # type: ignore[attr-defined]
@@ -173,7 +173,7 @@ def require_ipc_auth(func: Callable[..., Any]) -> Callable[..., Any]:
                 func.__qualname__,
             )
             raise PermissionError(
-                f"IPC authentication required for {func.__qualname__}. " "Provide 'token' keyword argument."
+                f"IPC authentication required for {func.__qualname__}. Provide 'token' keyword argument."
             )
 
         if not verify_ipc_token(token):

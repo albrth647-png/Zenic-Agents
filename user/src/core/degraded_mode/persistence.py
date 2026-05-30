@@ -7,6 +7,7 @@ Extracted from manager.py for the 400-line limit.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import sqlite3
@@ -109,8 +110,7 @@ class DegradationPersistence:
                         reason=DegradationReason(row["reason"]),
                         message=row["message"] or "",
                         entered_at=row["entered_at"] or 0.0,
-                        restricted_features=json.loads(
-                            row["restricted_features"] or "[]"),
+                        restricted_features=json.loads(row["restricted_features"] or "[]"),
                         metadata=json.loads(row["metadata"] or "{}"),
                     )
             except Exception as exc:
@@ -173,8 +173,7 @@ class DegradationPersistence:
                 )
                 conn.commit()
             except Exception as exc:
-                logger.error(
-                    "DegradationPersistence: append_history failed: %s", exc)
+                logger.error("DegradationPersistence: append_history failed: %s", exc)
 
     def get_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Retrieve recent degradation transition records."""
@@ -182,14 +181,12 @@ class DegradationPersistence:
             try:
                 conn = self._get_conn()
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "SELECT * FROM degradation_history "
-                    "ORDER BY timestamp DESC LIMIT ?",
+                    "SELECT * FROM degradation_history ORDER BY timestamp DESC LIMIT ?",
                     (limit,),
                 ).fetchall()
                 return [dict(r) for r in rows]
             except Exception as exc:
-                logger.error(
-                    "DegradationPersistence: get_history failed: %s", exc)
+                logger.error("DegradationPersistence: get_history failed: %s", exc)
                 return []
 
     # ── Maintenance ───────────────────────────────────────
@@ -207,17 +204,13 @@ class DegradationPersistence:
                 conn.commit()
                 return cur.rowcount
             except Exception as exc:
-                logger.error(
-                    "DegradationPersistence: purge_history failed: %s", exc)
+                logger.error("DegradationPersistence: purge_history failed: %s", exc)
                 return 0
 
     def close(self) -> None:
         """Close the persistent database connection."""
         with self._lock:
             if self._conn is not None:
-                try:
+                with contextlib.suppress(Exception):
                     self._conn.close()
-                except Exception:  # noqa: S110
-                    # Close failure is non-critical during shutdown
-                    pass
                 self._conn = None

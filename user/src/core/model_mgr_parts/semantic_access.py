@@ -46,12 +46,12 @@ class SemanticAccessMixin:
         # Check RAM budget before loading
         if not self._check_ram_budget(150):  # fastembed needs ~150MB
             logger.warning(
-                "ModelManager: RAM budget exceeded, cannot load SemanticEngine. "
-                "Will try unloading AI engine first."
+                "ModelManager: RAM budget exceeded, cannot load SemanticEngine. Will try unloading AI engine first."
             )
             self._try_free_ram(needed_mb=150)
 
         from src.core.semantic_engine import SemanticEngine
+
         self._semantic_engine = SemanticEngine(auto_load=True)
         self._semantic_last_access = time.time()
         self._stats["semantic_loads"] += 1

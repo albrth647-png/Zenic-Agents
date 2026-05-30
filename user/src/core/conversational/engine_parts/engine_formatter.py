@@ -19,9 +19,7 @@ class EngineFormatter:
     respuestas legibles del asistente.
     """
 
-    def format(
-        self, engine_result: dict[str, Any], profile: PersonalityProfile
-    ) -> str:
+    def format(self, engine_result: dict[str, Any], profile: PersonalityProfile) -> str:
         """
         Formatea un resultado del motor como respuesta.
 
@@ -59,9 +57,7 @@ class EngineFormatter:
         return "\n".join(parts)
 
     @staticmethod
-    def _format_status(
-        parts: list[str], status: str, verdict: str, error: str
-    ) -> None:
+    def _format_status(parts: list[str], status: str, verdict: str, error: str) -> None:
         """Formatea el encabezado de estado."""
         if status == "SUCCESS":
             parts.append("**Resultado:** Aprobado")
@@ -80,18 +76,14 @@ class EngineFormatter:
             parts.append(f"**Resultado:** {status}")
 
     @staticmethod
-    def _format_explanations(
-        parts: list[str], explanations: list
-    ) -> None:
+    def _format_explanations(parts: list[str], explanations: list) -> None:
         """Formatea la seccion de explicaciones."""
         parts.append("\n**Explicaciones:**")
         for exp in explanations:
             parts.append(f"- {exp}")
 
     @staticmethod
-    def _format_metadata(
-        parts: list[str], route: str, processing_time: float
-    ) -> None:
+    def _format_metadata(parts: list[str], route: str, processing_time: float) -> None:
         """Formatea la metadata del motor."""
         meta_parts = []
         if route:

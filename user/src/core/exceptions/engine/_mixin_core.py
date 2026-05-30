@@ -256,13 +256,13 @@ class ExceptionEngine:
         def _collect(conn: sqlite3.Connection) -> dict[str, Any]:
             by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT category, COUNT(*) FROM _zenic_exceptions " "WHERE resolved = 0 GROUP BY category"
+                "SELECT category, COUNT(*) FROM _zenic_exceptions WHERE resolved = 0 GROUP BY category"
             ):
                 by_category[row[0]] = row[1]
 
             by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT severity, COUNT(*) FROM _zenic_exceptions " "WHERE resolved = 0 GROUP BY severity"
+                "SELECT severity, COUNT(*) FROM _zenic_exceptions WHERE resolved = 0 GROUP BY severity"
             ):
                 by_severity[row[0]] = row[1]
 
@@ -273,7 +273,7 @@ class ExceptionEngine:
             # Recent rate: exceptions in the last hour
             one_hour_ago = datetime.now(timezone.utc).timestamp() - 3600
             recent = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "SELECT COUNT(*) FROM _zenic_exceptions " "WHERE unixepoch(timestamp) >= ?",
+                "SELECT COUNT(*) FROM _zenic_exceptions WHERE unixepoch(timestamp) >= ?",
                 (one_hour_ago,),
             ).fetchone()[0]
 

@@ -30,7 +30,9 @@ class RollbackMixin:
     _lock: object
 
     def _rollback_delete(
-        self, entry: JournalEntry, result: RollbackResult,
+        self,
+        entry: JournalEntry,
+        result: RollbackResult,
     ) -> int:
         """Re-insert rows that were captured before a DELETE."""
         before_data: list[dict[str, any]] = json.loads(entry.before_data)
@@ -69,12 +71,16 @@ class RollbackMixin:
             return restored
 
         return with_retry(
-            _do_restore, max_retries=3, base_delay=0.5,
+            _do_restore,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._rollback_delete({entry.journal_id[:12]})",
         )
 
     def _rollback_update(
-        self, entry: JournalEntry, result: RollbackResult,
+        self,
+        entry: JournalEntry,
+        result: RollbackResult,
     ) -> int:
         """Restore old column values for rows captured before an UPDATE."""
         before_data: list[dict[str, any]] = json.loads(entry.before_data)
@@ -114,12 +120,16 @@ class RollbackMixin:
             return restored
 
         return with_retry(
-            _do_restore, max_retries=3, base_delay=0.5,
+            _do_restore,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._rollback_update({entry.journal_id[:12]})",
         )
 
     def _rollback_insert(
-        self, entry: JournalEntry, result: RollbackResult,
+        self,
+        entry: JournalEntry,
+        result: RollbackResult,
     ) -> int:
         """Delete the row that was inserted (identified by lastrowid)."""
         if entry.lastrowid is None or entry.lastrowid == 0:
@@ -145,9 +155,7 @@ class RollbackMixin:
                 if cursor.rowcount > 0:
                     restored = cursor.rowcount
                 else:
-                    result.errors.append(
-                        f"INSERT rollback: no row found with rowid={entry.lastrowid}"
-                    )
+                    result.errors.append(f"INSERT rollback: no row found with rowid={entry.lastrowid}")
             except Exception as exc:
                 conn.rollback()
                 result.errors.append(f"INSERT rollback failed: {exc}")
@@ -156,6 +164,8 @@ class RollbackMixin:
             return restored
 
         return with_retry(
-            _do_restore, max_retries=3, base_delay=0.5,
+            _do_restore,
+            max_retries=3,
+            base_delay=0.5,
             label=f"db_journal._rollback_insert({entry.journal_id[:12]})",
         )

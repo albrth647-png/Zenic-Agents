@@ -23,11 +23,13 @@ logger = logging.getLogger(__name__)
 
 # ── DB bootstrap ─────────────────────────────────────────────
 
+
 def init_db(db_path: str) -> bool:
     """Create the snapshot_audit SQLite schema.
 
     Returns True if initialization succeeded, False otherwise.
     """
+
     def _create() -> None:
         conn = sqlite3.connect(db_path)
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -80,6 +82,7 @@ def init_db(db_path: str) -> bool:
 
 # ── Row Conversion ──────────────────────────────────────────
 
+
 def row_to_entry(row: dict[str, Any]) -> SnapshotEntry:
     """Convert a raw DB row dict to a SnapshotEntry."""
     data_raw = row.get("data", "{}")
@@ -108,6 +111,7 @@ def row_to_entry(row: dict[str, Any]) -> SnapshotEntry:
 
 
 # ── Persistence ─────────────────────────────────────────────
+
 
 def persist_snapshot(
     snapshot: SnapshotEntry,
@@ -153,7 +157,8 @@ def persist_snapshot(
     except Exception as exc:
         logger.error(
             "SnapshotAuditEngine: failed to persist snapshot %s: %s",
-            snapshot.snapshot_id, exc,
+            snapshot.snapshot_id,
+            exc,
         )
 
 
@@ -170,8 +175,7 @@ def update_pairing(
         with lock:
             conn = sqlite3.connect(db_path)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? "
-                "WHERE snapshot_id = ?",
+                "UPDATE snapshots SET paired_snapshot_id = ?, pair_id = ? WHERE snapshot_id = ?",
                 (paired_snapshot_id, pair_id, snapshot_id),
             )
             conn.commit()
@@ -182,11 +186,13 @@ def update_pairing(
     except Exception as exc:
         logger.error(
             "SnapshotAuditEngine: failed to update pairing for %s: %s",
-            snapshot_id, exc,
+            snapshot_id,
+            exc,
         )
 
 
 # ── Queries ─────────────────────────────────────────────────
+
 
 def load_snapshot(
     snapshot_id: str,
@@ -213,7 +219,8 @@ def load_snapshot(
     except Exception as exc:
         logger.error(
             "SnapshotAuditEngine: failed to load snapshot %s: %s",
-            snapshot_id, exc,
+            snapshot_id,
+            exc,
         )
         return None
 
@@ -227,6 +234,7 @@ def query_entity_history(
     lock: threading.RLock,
 ) -> list[dict[str, Any]]:
     """Query raw snapshot rows for entity history."""
+
     def _query() -> list[dict[str, Any]]:
         with lock:
             conn = sqlite3.connect(db_path)

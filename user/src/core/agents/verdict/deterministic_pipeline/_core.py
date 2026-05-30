@@ -65,19 +65,28 @@ class DeterministicPipeline(DeterministicTasksMixin, BaseAgent[PipelineResult]):
 
         # Task 4: Fill template gaps (only if template provided)
         template = context.get("template", "") if isinstance(context, dict) else ""
-        fill = self._fill_template_gaps(template, context) if template else {
-            "result": "", "confidence": 1.0, "source": "deterministic",
-        }
+        fill = (
+            self._fill_template_gaps(template, context)
+            if template
+            else {
+                "result": "",
+                "confidence": 1.0,
+                "source": "deterministic",
+            }
+        )
 
         # Task 5: Generate pattern (only if code context provided)
         if code:
             generate = self._generate_pattern(
                 pattern.get("result", "default") if isinstance(pattern, dict) else "default",
-                language, context,
+                language,
+                context,
             )
         else:
             generate = {
-                "result": "", "confidence": 1.0, "source": "deterministic",
+                "result": "",
+                "confidence": 1.0,
+                "source": "deterministic",
             }
 
         # Task 6: Explain violation (only if violations provided)

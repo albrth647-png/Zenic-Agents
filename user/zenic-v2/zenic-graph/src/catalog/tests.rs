@@ -2,8 +2,14 @@
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use zenic_proto::NodeCategory;
+    use crate::{
+        catalog::NodeCatalog,
+        descriptor::NodeDescriptor,
+        supernode::SuperNodeDescriptor,
+    };
+    use zenic_proto::{
+        BusinessDomain, LoadPolicy, NodeCategory, NodeCriticality, NodeId, SuperNodeId,
+    };
 
     fn make_node(name: &str, domain: BusinessDomain) -> NodeDescriptor {
         NodeDescriptor {

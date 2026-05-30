@@ -58,7 +58,7 @@ def split_message(text: str, max_length: int, overlap: int = 0) -> list[str]:
                     split_at = space_pos + 1
 
         chunks.append(text[:split_at])
-        text = text[split_at - overlap:] if overlap else text[split_at:]
+        text = text[split_at - overlap :] if overlap else text[split_at:]
 
     return chunks
 

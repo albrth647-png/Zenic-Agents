@@ -56,7 +56,8 @@ class ConditionExtractor(BaseAgent[ConditionResult]):
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A32_ConditionExtractor", **kwargs)
         self._compiled_patterns = [
-            re.compile(p, re.IGNORECASE) for p in CONDITION_INTRODUCERS  # nosemgrep: detect-non-literal-regexp
+            re.compile(p, re.IGNORECASE)
+            for p in CONDITION_INTRODUCERS  # nosemgrep: detect-non-literal-regexp
         ]
 
     def execute(self, input_data: Any) -> ConditionResult:
@@ -142,9 +143,7 @@ class ConditionExtractor(BaseAgent[ConditionResult]):
 
         return condition
 
-    def _build_logic_tree(
-        self, conditions: list[str], description: str
-    ) -> dict[str, Any]:
+    def _build_logic_tree(self, conditions: list[str], description: str) -> dict[str, Any]:
         """
         Build a simple logic tree from conditions and description.
 

@@ -137,10 +137,10 @@ class RedisSessionStore:
                     key = f"{self._key_prefix}:{session.session_id}"
                     await self._redis.hset(key, mapping=data)  # type: ignore[union-attr]
                     await self._redis.expire(key, ttl)  # type: ignore[union-attr]
-                    logger.debug(f"Session stored in Redis: {session.session_id[:8]}... " f"(TTL={ttl}s)")
+                    logger.debug(f"Session stored in Redis: {session.session_id[:8]}... (TTL={ttl}s)")
                 except Exception as exc:
                     logger.warning(
-                        f"Redis store failed for session {session.session_id[:8]}... " f"({exc}) — data in memory only"
+                        f"Redis store failed for session {session.session_id[:8]}... ({exc}) — data in memory only"
                     )
                     self._redis_available = False
 
@@ -172,7 +172,7 @@ class RedisSessionStore:
                         self._memory_store[session_id] = self._serialize_session(session)
                         return session
                 except Exception as exc:
-                    logger.debug(f"Redis get failed for session {session_id[:8]}... " f"({exc}) — trying in-memory")
+                    logger.debug(f"Redis get failed for session {session_id[:8]}... ({exc}) — trying in-memory")
                     self._redis_available = False
 
             # Fall back to in-memory
@@ -212,7 +212,7 @@ class RedisSessionStore:
                     if deleted:
                         found = True
                 except Exception as exc:
-                    logger.debug(f"Redis delete failed for session {session_id[:8]}... " f"({exc})")
+                    logger.debug(f"Redis delete failed for session {session_id[:8]}... ({exc})")
                     self._redis_available = False
 
         return found
@@ -245,7 +245,7 @@ class RedisSessionStore:
                                     session = self._deserialize_session(data)
                                     if not session.is_expired:
                                         sessions.append(session)
-                                except Exception:  # noqa: S110
+                                except Exception:
                                     pass
                         if cursor == 0:
                             break

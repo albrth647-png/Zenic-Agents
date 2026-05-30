@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Provider ABC
 # ======================================================================
 
+
 class LLMProvider(ABC):
     """
     Abstract base for LLM providers.
@@ -49,6 +50,7 @@ class LLMProvider(ABC):
 # Concrete providers
 # ======================================================================
 
+
 class LocalProvider(LLMProvider):
     """
     Provider backed by a local llama-cpp-python engine.
@@ -73,7 +75,7 @@ class LocalProvider(LLMProvider):
             if hasattr(self._engine, "_call_llm"):
                 result = self._engine._call_llm(prompt, **kwargs)
                 return result if isinstance(result, str) else str(result)
-            raise RuntimeError("LocalProvider: engine has no generate/_call_llm method")
+            raise RuntimeError("LocalProvider: engine has no generate/_call_llm method") from None
 
     def embed(self, text: str) -> list[float]:
         if not self.is_ready():
@@ -95,10 +97,11 @@ class LocalProvider(LLMProvider):
     def _pseudo_embed(text: str, dim: int = 64) -> list[float]:
         """Deterministic hash-based pseudo-embedding (not for semantic use)."""
         import hashlib
+
         h = hashlib.sha256(text.encode("utf-8")).hexdigest()
         vec = []
         for i in range(0, min(len(h), dim * 2), 2):
-            vec.append(int(h[i:i + 2], 16) / 255.0)
+            vec.append(int(h[i : i + 2], 16) / 255.0)
         # Pad or truncate
         while len(vec) < dim:
             vec.append(0.0)

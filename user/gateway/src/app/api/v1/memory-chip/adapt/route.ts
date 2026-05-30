@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 
 interface AdaptRequestBody {
   failed_field: string;
-  tenant_id?: string;
+  tenantId?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tenantId = body.tenant_id || '__anonymous__';
+    const tenantId = body.tenantId || '__anonymous__';
     const failedField = body.failed_field.trim().toLowerCase();
 
     // Check tenant subscription for memory chip access
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
       if (!subscription) {
         return NextResponse.json(
-          { success: false, error: 'No subscription found for this tenant', tenant_id: tenantId },
+          { success: false, error: 'No subscription found for this tenant', tenantId: tenantId },
           { status: 403 },
         );
       }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
           {
             success: false,
             error: 'Subscription is not active. Memory chip adapt requires an active subscription.',
-            tenant_id: tenantId,
+            tenantId: tenantId,
           },
           { status: 403 },
         );
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         data: {
           adapted: true,
           corrected_field: mapping.destination,
-          mapping_id: mapping.mappingId,
+          mappingId: mapping.mappingId,
         },
       });
     }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       data: {
         adapted: false,
         corrected_field: null,
-        mapping_id: null,
+        mappingId: null,
       },
     });
   } catch (error) {

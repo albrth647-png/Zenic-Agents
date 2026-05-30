@@ -161,7 +161,7 @@ class OnboardingTUI:
                 if count > 0:
                     self._state = OnboardingState.ACTIVATED
                     return
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         # Check registration

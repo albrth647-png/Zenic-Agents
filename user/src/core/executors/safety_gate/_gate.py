@@ -292,7 +292,7 @@ class SafetyGate:
 
     # SECURITY (A7 fix): Severity ordering so that the most severe
     # matching rule wins when multiple rules match the same action.
-    _SEVERITY_ORDER = {
+    _SEVERITY_ORDER = {  # noqa: RUF012
         SafetyVerdict.ALLOW: 0,
         SafetyVerdict.CONFIRM: 1,
         SafetyVerdict.APPROVE: 2,

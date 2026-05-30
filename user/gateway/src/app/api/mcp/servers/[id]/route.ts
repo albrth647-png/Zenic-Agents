@@ -38,9 +38,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    const response: ApiResponse<typeof server> = {
+    const response: ApiResponse<Record<string, unknown>> = {
       success: true,
-      data: deserializeServer(server),
+      data: deserializeServer(server as unknown as Record<string, unknown>),
     };
 
     return NextResponse.json(response);
@@ -109,9 +109,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       details: { updatedFields: Object.keys(updateData) },
     });
 
-    const response: ApiResponse<typeof server> = {
+    const response: ApiResponse<Record<string, unknown>> = {
       success: true,
-      data: deserializeServer(server),
+      data: deserializeServer(server as unknown as Record<string, unknown>),
       message: "Server updated successfully",
     };
 

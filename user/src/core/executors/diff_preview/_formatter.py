@@ -67,6 +67,6 @@ def format_diff(
                 "modified": "~",
                 "removed": "-",
             }.get(d.change_type, "?")
-            lines.append(f"  [{change_symbol}] {d.field_path}: " f"{truncate(d.old_value)} → {truncate(d.new_value)}")
+            lines.append(f"  [{change_symbol}] {d.field_path}: {truncate(d.old_value)} → {truncate(d.new_value)}")
 
     return "\n".join(lines)

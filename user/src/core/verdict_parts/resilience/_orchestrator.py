@@ -60,9 +60,7 @@ class VerdictResilienceOrchestrator:
             # but log the health warning
             snap = self.health_monitor.snapshot
             logger.warning(
-                f"VerdictResilience: LLM health is LOW "
-                f"(success_rate={snap.success_rate:.2f}), "
-                f"proceeding with caution"
+                f"VerdictResilience: LLM health is LOW (success_rate={snap.success_rate:.2f}), proceeding with caution"
             )
 
         return True

@@ -360,8 +360,6 @@ class CertificationHelper:
                 return False
             content_hash = integrity.get("content_hash", "")
             signature = integrity.get("signature", "")
-            if not content_hash or not signature:
-                return False
-            return True  # Placeholder; real verification needs Rust
+            return bool(content_hash and signature)
 
         return False

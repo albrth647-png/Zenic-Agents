@@ -33,8 +33,10 @@ __all__ = [
 #  DATA CONTRACTS
 # ──────────────────────────────────────────────────────────────
 
+
 class RollbackStatus(str, Enum):
     """Status of a rollback operation."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -56,6 +58,7 @@ class RollbackAction:
         error: Error message if the rollback failed.
         metadata: Additional metadata.
     """
+
     step_id: str
     action_fn: Callable[..., Any]
     description: str = ""
@@ -79,6 +82,7 @@ class RollbackResult:
         errors: List of error messages from failed rollbacks.
         duration_ms: Total rollback duration in milliseconds.
     """
+
     success: bool = True
     actions_total: int = 0
     actions_completed: int = 0
@@ -91,6 +95,7 @@ class RollbackResult:
 # ──────────────────────────────────────────────────────────────
 #  ROLLBACK MANAGER
 # ──────────────────────────────────────────────────────────────
+
 
 class RollbackManager:
     """
@@ -165,7 +170,8 @@ class RollbackManager:
             self._completion_order.append(step_id)
         logger.debug(
             "RollbackManager: Registered rollback for step '%s' (priority=%d)",
-            step_id, priority,
+            step_id,
+            priority,
         )
 
     def unregister(self, step_id: str) -> bool:
@@ -232,8 +238,8 @@ class RollbackManager:
         # Find steps after target in completion order
         try:
             target_idx = self._completion_order.index(target_step_id)
-        except ValueError:
-            raise KeyError(f"Step '{target_step_id}' not found in completion order")
+        except ValueError as e:
+            raise KeyError(f"Step '{target_step_id}' not found in completion order") from e
 
         steps_to_rollback = list(reversed(self._completion_order[target_idx:]))
         return self._execute_rollback(steps_to_rollback)
@@ -270,7 +276,8 @@ class RollbackManager:
             else:
                 result.actions_skipped += 1
                 logger.warning(
-                    "RollbackManager: No action for step '%s', skipping", sid,
+                    "RollbackManager: No action for step '%s', skipping",
+                    sid,
                 )
 
         ordered_actions.sort(key=lambda a: a.priority)
@@ -283,19 +290,19 @@ class RollbackManager:
                 result.actions_completed += 1
                 logger.info(
                     "RollbackManager: Rolled back step '%s' — %s",
-                    action.step_id, action.description,
+                    action.step_id,
+                    action.description,
                 )
             except Exception as exc:
                 action.status = RollbackStatus.FAILED
                 action.error = str(exc)
                 result.actions_failed += 1
-                result.errors.append(
-                    f"Step '{action.step_id}' rollback failed: {exc}"
-                )
+                result.errors.append(f"Step '{action.step_id}' rollback failed: {exc}")
                 result.success = False
                 logger.error(
                     "RollbackManager: Rollback FAILED for step '%s': %s",
-                    action.step_id, exc,
+                    action.step_id,
+                    exc,
                 )
                 if not self._continue_on_failure:
                     break
@@ -332,7 +339,4 @@ class RollbackManager:
         self._rollback_history.clear()
 
     def __repr__(self) -> str:
-        return (
-            f"RollbackManager(registered={len(self._actions)}, "
-            f"history={len(self._rollback_history)})"
-        )
+        return f"RollbackManager(registered={len(self._actions)}, history={len(self._rollback_history)})"

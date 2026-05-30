@@ -2,7 +2,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 use super::blueprint::*;
-use super::schema_types::*;
 use super::types::*;
 
 // ═══════════════════════════════════════════════════════════════

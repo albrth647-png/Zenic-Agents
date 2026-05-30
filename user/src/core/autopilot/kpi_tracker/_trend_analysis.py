@@ -8,6 +8,7 @@ keep the main module under 400 lines.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
@@ -69,10 +70,8 @@ def get_trend(
     # Filter to recent measurements within the lookback window
     now = datetime.now(timezone.utc)
     cutoff_dt = now
-    try:
+    with contextlib.suppress(Exception):
         cutoff_dt = now - timedelta(days=days)
-    except Exception:  # noqa: S110
-        pass
 
     recent: list[KPIMeasurement] = []
     for m in measurements:
@@ -137,7 +136,7 @@ def get_trend(
                 eta_seconds = steps_to_target * seconds_per_step
                 projected = now + timedelta(seconds=eta_seconds)
                 projected_date = projected.isoformat()
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
     return KPITrend(

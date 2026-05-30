@@ -18,24 +18,28 @@ from typing import Any
 #  ENUMS
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintStatus(str, Enum):
     """Lifecycle status of a Blueprint."""
-    DRAFT = "draft"               # Under development
-    CERTIFIED = "certified"       # ECDSA-signed, production-ready
-    DEPRECATED = "deprecated"     # Superseded by newer version
-    REVOKED = "revoked"           # Certificate revoked
+
+    DRAFT = "draft"  # Under development
+    CERTIFIED = "certified"  # ECDSA-signed, production-ready
+    DEPRECATED = "deprecated"  # Superseded by newer version
+    REVOKED = "revoked"  # Certificate revoked
 
 
 class BlueprintTier(str, Enum):
     """Availability tier for a Blueprint."""
-    FREE = "free"                 # Available to all users
-    PRO = "pro"                   # Pro plan required
-    ENTERPRISE = "enterprise"     # Enterprise plan required
-    PARTNER = "partner"           # Partner-created (revenue share)
+
+    FREE = "free"  # Available to all users
+    PRO = "pro"  # Pro plan required
+    ENTERPRISE = "enterprise"  # Enterprise plan required
+    PARTNER = "partner"  # Partner-created (revenue share)
 
 
 class FieldType(str, Enum):
     """Database field types for Blueprint DB schema."""
+
     UUID = "uuid"
     TEXT = "text"
     STR = "str"
@@ -51,14 +55,16 @@ class FieldType(str, Enum):
 
 class ConflictStrategy(str, Enum):
     """Strategy for resolving Blueprint composition conflicts."""
-    LAST_WINS = "last_wins"       # Later Blueprint overrides
-    FIRST_WINS = "first_wins"     # First Blueprint keeps priority
-    MERGE = "merge"               # Merge both (lists concatenated, dicts merged)
-    FAIL = "fail"                 # Raise error on conflict
+
+    LAST_WINS = "last_wins"  # Later Blueprint overrides
+    FIRST_WINS = "first_wins"  # First Blueprint keeps priority
+    MERGE = "merge"  # Merge both (lists concatenated, dicts merged)
+    FAIL = "fail"  # Raise error on conflict
 
 
 class OnboardingStepType(str, Enum):
     """Types of onboarding steps."""
+
     SELECT_BLUEPRINT = "select_blueprint"
     IMPORT_DATA = "import_data"
     CONFIGURE_MONITORS = "configure_monitors"
@@ -71,9 +77,11 @@ class OnboardingStepType(str, Enum):
 #  DATACLASSES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class DBFieldSchema:
     """Schema for a single database field."""
+
     name: str
     field_type: FieldType = FieldType.STR
     required: bool = True
@@ -87,6 +95,7 @@ class DBFieldSchema:
 @dataclass
 class DBEntitySchema:
     """Schema for a database entity/table."""
+
     name: str
     fields: list[DBFieldSchema] = field(default_factory=list)
     primary_key: str = "id"
@@ -98,6 +107,7 @@ class DBEntitySchema:
 @dataclass
 class DBSchema:
     """Complete database schema for a Blueprint."""
+
     entities: list[DBEntitySchema] = field(default_factory=list)
     migrations: list[dict[str, Any]] = field(default_factory=list)
     version: str = "1.0.0"
@@ -106,8 +116,9 @@ class DBSchema:
 @dataclass
 class MonitorHook:
     """SNA monitor configuration embedded in a Blueprint."""
+
     monitor_id: str
-    weight: str = "lightweight"           # lightweight, medium, heavy
+    weight: str = "lightweight"  # lightweight, medium, heavy
     interval_seconds: float = 300.0
     enabled: bool = True
     thresholds: list[dict[str, Any]] = field(default_factory=list)
@@ -118,6 +129,7 @@ class MonitorHook:
 @dataclass
 class BusinessRuleDef:
     """Business rule definition within a Blueprint."""
+
     rule_id: str
     name: str
     description: str = ""
@@ -131,6 +143,7 @@ class BusinessRuleDef:
 @dataclass
 class ActionTemplateDef:
     """Predefined action template in a Blueprint."""
+
     template_id: str
     name: str
     description: str = ""
@@ -144,6 +157,7 @@ class ActionTemplateDef:
 @dataclass
 class BlueprintSignature:
     """ECDSA cryptographic signature for Blueprint certification."""
+
     algorithm: str = "ECDSA-P256"
     signature_hex: str = ""
     public_key_hex: str = ""
@@ -159,8 +173,9 @@ class BlueprintSignature:
 @dataclass
 class BlueprintCompatibility:
     """Compatibility information between Blueprints."""
+
     blueprint_name: str
-    version_range: str = "*"           # Semver range, e.g., ">=1.0.0,<3.0.0"
+    version_range: str = "*"  # Semver range, e.g., ">=1.0.0,<3.0.0"
     composition_notes: str = ""
     known_conflicts: list[str] = field(default_factory=list)
 
@@ -168,6 +183,7 @@ class BlueprintCompatibility:
 @dataclass
 class BlueprintMetadataV2:
     """Enhanced metadata for certified Blueprints."""
+
     name: str
     version: str = "1.0.0"
     domain: str = ""
@@ -180,7 +196,7 @@ class BlueprintMetadataV2:
     compatibility: list[BlueprintCompatibility] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
     icon: str = ""
-    scale: str = "medium"              # small, medium, large, enterprise
+    scale: str = "medium"  # small, medium, large, enterprise
     created_at: float = 0.0
     updated_at: float = 0.0
 
@@ -194,6 +210,7 @@ class BlueprintMetadataV2:
 @dataclass
 class OnboardingStep:
     """A single step in the Blueprint onboarding flow."""
+
     step_type: OnboardingStepType
     title: str = ""
     description: str = ""
@@ -205,6 +222,7 @@ class OnboardingStep:
 @dataclass
 class OnboardingSession:
     """An active onboarding session."""
+
     session_id: str = ""
     blueprint_names: list[str] = field(default_factory=list)
     steps: list[OnboardingStep] = field(default_factory=list)
@@ -224,18 +242,16 @@ class OnboardingSession:
     @property
     def is_complete(self) -> bool:
         """Check if all required steps are completed."""
-        return all(
-            step.completed or not step.required
-            for step in self.steps
-        )
+        return all(step.completed or not step.required for step in self.steps)
 
 
 @dataclass
 class PartnerInfo:
     """Partner information for revenue-shared Blueprints."""
+
     partner_id: str
     partner_name: str
-    revenue_share_pct: float = 0.0     # 0-100
+    revenue_share_pct: float = 0.0  # 0-100
     api_key_prefix: str = ""
     certified: bool = False
     created_at: float = 0.0
@@ -244,8 +260,9 @@ class PartnerInfo:
 @dataclass
 class BlueprintStats:
     """Statistics for a Blueprint."""
+
     installations: int = 0
     active_users: int = 0
     alerts_triggered: int = 0
     actions_executed: int = 0
-    revenue_cents: int = 0             # Revenue in cents
+    revenue_cents: int = 0  # Revenue in cents

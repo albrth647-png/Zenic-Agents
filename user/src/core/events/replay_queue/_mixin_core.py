@@ -370,7 +370,7 @@ class ReplayQueueCoreMixin:
                     result.exhausted += 1
 
         __import__("logging").getLogger("zenic_agents.events.replay_queue").info(
-            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — " "attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
+            "ReplayQueue: replay_since(ts=%.1f, tenant=%s) — attempted=%d, succeeded=%d, failed=%d, exhausted=%d",
             since_timestamp,
             tenant_id,
             result.total_attempted,

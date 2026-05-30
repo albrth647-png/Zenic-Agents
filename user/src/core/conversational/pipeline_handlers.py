@@ -74,7 +74,8 @@ class PipelineHandlers:
             fmt = ResponseFormat.MIXED
 
         return AssistantResponse(
-            content=content, format=fmt,
+            content=content,
+            format=fmt,
             metadata=ResponseMetadata(source="deterministic"),
         )
 
@@ -94,9 +95,7 @@ class PipelineHandlers:
         # Enriquecer con memoria si hay
         if enriched.has_context:
             memory_ctx = enriched.memory_context[:2]
-            memory_str = "\n".join(
-                f"- {m.get('content', '')}" for m in memory_ctx
-            )
+            memory_str = "\n".join(f"- {m.get('content', '')}" for m in memory_ctx)
             if memory_str:
                 content += f"\n\n*Contexto relevante:*\n{memory_str}"
 
@@ -140,8 +139,7 @@ class PipelineHandlers:
         """Maneja mensajes que requieren el motor Zenic-Agents."""
         if self._bridge is None or not self._bridge.is_available:
             return AssistantResponse.from_error(
-                "Motor Zenic-Agents no disponible. "
-                "Funcionando en modo conversacional.",
+                "Motor Zenic-Agents no disponible. Funcionando en modo conversacional.",
                 source="fallback",
             )
 
@@ -150,7 +148,8 @@ class PipelineHandlers:
         content = self._formatter.format(engine_result, profile)
 
         return AssistantResponse(
-            content=content, format=ResponseFormat.MIXED,
+            content=content,
+            format=ResponseFormat.MIXED,
             metadata=ResponseMetadata(source="engine", engine_used=True),
         )
 
@@ -167,8 +166,10 @@ class PipelineHandlers:
         else:
             content = "Estoy aqui para ayudar. Podrias reformular tu solicitud?"
 
-        return Ok(AssistantResponse(
-            content=content,
-            format=ResponseFormat.MARKDOWN,
-            metadata=ResponseMetadata(source="fallback"),
-        ))
+        return Ok(
+            AssistantResponse(
+                content=content,
+                format=ResponseFormat.MARKDOWN,
+                metadata=ResponseMetadata(source="fallback"),
+            )
+        )

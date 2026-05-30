@@ -104,5 +104,6 @@ class _PersistenceMixin:
         except Exception as exc:
             logger.warning(
                 "AutopilotEngine: Failed to persist state for %s: %s",
-                objective_id, exc,
+                objective_id,
+                exc,
             )

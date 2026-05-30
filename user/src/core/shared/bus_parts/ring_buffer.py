@@ -29,8 +29,7 @@ class RingBuffer:
         slot_size: Bytes per slot (default 4096).
     """
 
-    def __init__(self, ring_size: int = _DEFAULT_RING_SIZE,
-                 slot_size: int = _RING_SLOT_SIZE) -> None:
+    def __init__(self, ring_size: int = _DEFAULT_RING_SIZE, slot_size: int = _RING_SLOT_SIZE) -> None:
         self._ring_size = ring_size
         self._slot_size = slot_size
         # Pre-allocated flat buffer: ring_size × slot_size
@@ -57,9 +56,7 @@ class RingBuffer:
         """
         max_payload = self._slot_size - _SLOT_HEADER_SIZE
         if len(data) > max_payload:
-            raise ValueError(
-                f"Data size {len(data)} exceeds max payload {max_payload} bytes"
-            )
+            raise ValueError(f"Data size {len(data)} exceeds max payload {max_payload} bytes")
 
         with self._idx_lock:
             abs_idx = self._write_idx
@@ -80,7 +77,7 @@ class RingBuffer:
             )
             # Write payload
             start = offset + _SLOT_HEADER_SIZE
-            self._buffer[start:start + len(data)] = data
+            self._buffer[start : start + len(data)] = data
             self._slot_meta[slot_idx] = (time.monotonic(), tenant_id)
 
         return abs_idx
@@ -97,13 +94,11 @@ class RingBuffer:
         offset = slot_idx * self._slot_size
 
         with self._slot_locks[slot_idx]:
-            data_len, _tenant_hash = struct.unpack_from(
-                _SLOT_HEADER_FMT, self._buffer, offset
-            )
+            data_len, _tenant_hash = struct.unpack_from(_SLOT_HEADER_FMT, self._buffer, offset)
             if data_len == 0:
                 return None
             start = offset + _SLOT_HEADER_SIZE
-            return bytes(self._view[start:start + data_len])
+            return bytes(self._view[start : start + data_len])
 
     def read_memoryview(self, slot_index: int) -> memoryview | None:
         """Zero-copy read via memoryview slice.
@@ -114,13 +109,11 @@ class RingBuffer:
         offset = slot_idx * self._slot_size
 
         with self._slot_locks[slot_idx]:
-            data_len, _tenant_hash = struct.unpack_from(
-                _SLOT_HEADER_FMT, self._buffer, offset
-            )
+            data_len, _tenant_hash = struct.unpack_from(_SLOT_HEADER_FMT, self._buffer, offset)
             if data_len == 0:
                 return None
             start = offset + _SLOT_HEADER_SIZE
-            return self._view[start:start + data_len]
+            return self._view[start : start + data_len]
 
     # ── Introspection ──
 
@@ -143,11 +136,9 @@ class RingBuffer:
         result: list[tuple[int, bytes, str, float]] = []
         for slot_idx, (ts, tenant_id) in list(self._slot_meta.items()):
             offset = slot_idx * self._slot_size
-            data_len, _ = struct.unpack_from(
-                _SLOT_HEADER_FMT, self._buffer, offset
-            )
+            data_len, _ = struct.unpack_from(_SLOT_HEADER_FMT, self._buffer, offset)
             if data_len > 0:
                 start = offset + _SLOT_HEADER_SIZE
-                blob = bytes(self._buffer[start:start + data_len])
+                blob = bytes(self._buffer[start : start + data_len])
                 result.append((slot_idx, blob, tenant_id, ts))
         return result

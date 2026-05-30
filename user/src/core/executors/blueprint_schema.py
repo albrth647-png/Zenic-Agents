@@ -139,7 +139,7 @@ class BlueprintValidator:
             type_valid = BlueprintValidator._check_type(value, expected_type)
             if not type_valid:
                 errors.append(
-                    f"Field '{field_name}' has wrong type: " f"expected {expected_type}, got {type(value).__name__}"
+                    f"Field '{field_name}' has wrong type: expected {expected_type}, got {type(value).__name__}"
                 )
 
         # Check field validators (regex patterns)

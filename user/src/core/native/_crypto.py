@@ -35,9 +35,7 @@ if HAS_NATIVE:
     )
 
 
-def pbkdf2_derive_key(
-    password: bytes, salt: bytes, iterations: int, key_length: int
-) -> bytes:
+def pbkdf2_derive_key(password: bytes, salt: bytes, iterations: int, key_length: int) -> bytes:
     if HAS_NATIVE:
         return _rust_pbkdf2_derive_key(password, salt, iterations, key_length)
     return _py_pbkdf2_derive_key(password, salt, iterations, key_length)
@@ -51,12 +49,8 @@ def argon2id_hash(
     parallelism: int,
 ) -> bytes:
     if HAS_NATIVE:
-        return _rust_argon2id_hash(
-            password, salt, memory_cost, time_cost, parallelism
-        )
-    return _py_argon2id_hash(
-        password, salt, memory_cost, time_cost, parallelism
-    )
+        return _rust_argon2id_hash(password, salt, memory_cost, time_cost, parallelism)
+    return _py_argon2id_hash(password, salt, memory_cost, time_cost, parallelism)
 
 
 def constant_time_compare(a: bytes, b: bytes) -> bool:

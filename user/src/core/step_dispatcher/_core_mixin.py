@@ -169,7 +169,7 @@ class StepDispatcherCoreMixin:
                     best_source = src
                     break
             if best_content:
-                explanations.append(f"SmartScraper: Found content via {best_source} " f"(fallback)")
+                explanations.append(f"SmartScraper: Found content via {best_source} (fallback)")
                 if not code:
                     code = best_content
             else:
@@ -327,7 +327,7 @@ class StepDispatcherCoreMixin:
             if self._orch.surgeon is not None:
                 result_code = self._orch.surgeon.mutate_node(code, step.target_node_name, new_snippet, lang)
                 explanations.append(
-                    f"Function '{step.target_node_name}' replaced " f"via AST surgery (optimizer received raw_code)"
+                    f"Function '{step.target_node_name}' replaced via AST surgery (optimizer received raw_code)"
                 )
             else:
                 explanations.append(f"ASTSurgeon not available — cannot replace '{step.target_node_name}'")
@@ -344,7 +344,7 @@ class StepDispatcherCoreMixin:
         if code and step.target_node_name:
             if self._orch.surgeon is not None:
                 result_code = self._orch.surgeon.delete_function(code, step.target_node_name, lang)
-                explanations.append(f"Function '{step.target_node_name}' deleted " f"via AST surgery")
+                explanations.append(f"Function '{step.target_node_name}' deleted via AST surgery")
             else:
                 explanations.append(f"ASTSurgeon not available — cannot delete '{step.target_node_name}'")
         return result_code, code, explanations

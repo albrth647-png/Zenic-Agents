@@ -1,3 +1,5 @@
+import type { PolicyEffectV2, PolicyStatement } from './core';
+
 // ─── 7. Constraint Solver (Formal Verification) ─────────────────────────
 
 /** Verification result */

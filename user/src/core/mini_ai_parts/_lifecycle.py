@@ -3,6 +3,7 @@ MiniAIEngine model lifecycle mixin: load_model, unload_model, stats, _call_llm, 
 """
 
 import concurrent.futures
+import contextlib
 import re
 import threading
 import time
@@ -198,10 +199,8 @@ class ModelLifecycleMixin:
                 # and holds the executor's single worker (max_workers=1). All subsequent
                 # calls are blocked until that thread finishes naturally, causing cascading
                 # timeouts. By shutting down and recreating, we get a fresh thread.
-                try:
+                with contextlib.suppress(Exception):
                     self._executor.shutdown(wait=False)
-                except Exception:  # noqa: S110
-                    pass
                 self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
                 with self._lock:
                     self._fallback_count += 1

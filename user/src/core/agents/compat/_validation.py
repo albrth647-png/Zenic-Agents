@@ -26,9 +26,9 @@ class ValidationAgentCompat:
         self._risk_calculator = RiskCalculator(**kwargs)
         self._call_count = 0
 
-    def validate_with_runner(self, runner: Any, target: str, content: str,
-                             rules: list[str] | None = None,
-                             language: str = "python") -> ValidationOutput:
+    def validate_with_runner(
+        self, runner: Any, target: str, content: str, rules: list[str] | None = None, language: str = "python"
+    ) -> ValidationOutput:
         """Validate using v2 agents."""
         self._call_count += 1
         rules = rules or ["security", "quality"]
@@ -40,42 +40,54 @@ class ValidationAgentCompat:
             sec_result = self._security_scanner.run({"code": content, "language": language})
             sec_data = sec_result.get("data")
             if isinstance(sec_data, SecurityResult):
-                all_issues.extend([
-                    SharedValidationIssue(
-                        severity=t.severity, code=t.code,
-                        message=t.message, line=t.line,
-                        suggestion=t.suggestion,
-                    )
-                    for t in sec_data.threats
-                ])
+                all_issues.extend(
+                    [
+                        SharedValidationIssue(
+                            severity=t.severity,
+                            code=t.code,
+                            message=t.message,
+                            line=t.line,
+                            suggestion=t.suggestion,
+                        )
+                        for t in sec_data.threats
+                    ]
+                )
 
         # Syntax validation
         if "quality" in rules and content:
             syn_result = self._syntax_validator.run({"code": content, "language": language})
             syn_data = syn_result.get("data")
             if isinstance(syn_data, SyntaxResult):
-                all_issues.extend([
-                    SharedValidationIssue(
-                        severity=e.severity, code=e.code,
-                        message=e.message, line=e.line,
-                        suggestion=e.suggestion,
-                    )
-                    for e in syn_data.errors
-                ])
+                all_issues.extend(
+                    [
+                        SharedValidationIssue(
+                            severity=e.severity,
+                            code=e.code,
+                            message=e.message,
+                            line=e.line,
+                            suggestion=e.suggestion,
+                        )
+                        for e in syn_data.errors
+                    ]
+                )
 
         # Chain validation
         if target == "chain" and content:
             from .validation import ChainValidator
+
             chain_val = ChainValidator()
             chain_result = chain_val.run({"description": content})
             chain_data = chain_result.get("data")
             if isinstance(chain_data, dict):
                 incompat = chain_data.get("incompatibilities", [])
                 for inc in incompat:
-                    all_issues.append(SharedValidationIssue(
-                        severity="warning", code="chain_incompatibility",
-                        message=str(inc),
-                    ))
+                    all_issues.append(
+                        SharedValidationIssue(
+                            severity="warning",
+                            code="chain_incompatibility",
+                            message=str(inc),
+                        )
+                    )
 
         # Risk calculation
         risk_score = 0.0
@@ -89,8 +101,10 @@ class ValidationAgentCompat:
         is_valid = not any(i.severity == "error" for i in all_issues)
 
         return ValidationOutput(
-            is_valid=is_valid, issues=all_issues,
-            suggestions=suggestions, risk_score=risk_score,
+            is_valid=is_valid,
+            issues=all_issues,
+            suggestions=suggestions,
+            risk_score=risk_score,
             source="deterministic",
         )
 

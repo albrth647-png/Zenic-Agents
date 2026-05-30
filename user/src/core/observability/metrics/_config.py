@@ -167,7 +167,7 @@ def _init_prometheus(config: MetricsConfig) -> dict:
     except ImportError:
         prom_objects["_prom_available"] = False
         logger.info(
-            "MetricsCollector: prometheus_client not installed — " "using internal counters with text format export"
+            "MetricsCollector: prometheus_client not installed — using internal counters with text format export"
         )
 
     return prom_objects

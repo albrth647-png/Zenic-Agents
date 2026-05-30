@@ -90,9 +90,7 @@ async def send_once(
 
                 if response.status == 202:
                     # Success — Graph API returns 202 Accepted
-                    message_id = response.headers.get(
-                        "Location", f"msg-{uuid.uuid4().hex[:12]}"
-                    )
+                    message_id = response.headers.get("Location", f"msg-{uuid.uuid4().hex[:12]}")
                     return {
                         "success": True,
                         "message_id": message_id,
@@ -102,10 +100,7 @@ async def send_once(
                 # Error response
                 try:
                     error_body = await response.json()
-                    error_msg = (
-                        error_body.get("error", {}).get("message", "")
-                        or f"HTTP {response.status}"
-                    )
+                    error_msg = error_body.get("error", {}).get("message", "") or f"HTTP {response.status}"
                 except Exception:
                     error_msg = f"HTTP {response.status}"
 
@@ -166,8 +161,12 @@ async def send_with_retry(
     for attempt in range(_MAX_RETRIES):
         try:
             result = await send_once(
-                provider, payload, sender, service_name,
-                token_manager, rate_limit,
+                provider,
+                payload,
+                sender,
+                service_name,
+                token_manager,
+                rate_limit,
             )
             if result.get("success"):
                 send_count_ref[0] += 1
@@ -192,11 +191,13 @@ async def send_with_retry(
 
             if status_code >= 500:
                 # Server error — retry with backoff
-                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)
+                backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
                 logger.warning(
-                    "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs "
-                    "(attempt %d/%d)",
-                    status_code, backoff, attempt + 1, _MAX_RETRIES,
+                    "GraphAPIEmailProvider: Server error (%d), retrying in %.1fs (attempt %d/%d)",
+                    status_code,
+                    backoff,
+                    attempt + 1,
+                    _MAX_RETRIES,
                 )
                 await asyncio.sleep(backoff)
                 last_error = result.get("error", f"HTTP {status_code}")
@@ -207,21 +208,24 @@ async def send_with_retry(
             return result
 
         except asyncio.TimeoutError:
-            backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)
+            backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
             logger.warning(
-                "GraphAPIEmailProvider: Request timed out, retrying in %.1fs "
-                "(attempt %d/%d)",
-                backoff, attempt + 1, _MAX_RETRIES,
+                "GraphAPIEmailProvider: Request timed out, retrying in %.1fs (attempt %d/%d)",
+                backoff,
+                attempt + 1,
+                _MAX_RETRIES,
             )
             last_error = "Request timed out"
             await asyncio.sleep(backoff)
 
         except Exception as exc:
-            backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER ** attempt)
+            backoff = _INITIAL_BACKOFF_SECONDS * (_BACKOFF_MULTIPLIER**attempt)
             logger.warning(
-                "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs "
-                "(attempt %d/%d)",
-                exc, backoff, attempt + 1, _MAX_RETRIES,
+                "GraphAPIEmailProvider: Unexpected error: %s, retrying in %.1fs (attempt %d/%d)",
+                exc,
+                backoff,
+                attempt + 1,
+                _MAX_RETRIES,
             )
             last_error = str(exc)
             await asyncio.sleep(backoff)
@@ -318,7 +322,7 @@ async def upload_attachment_session(
             offset = 0
 
             while offset < len(content_bytes):
-                chunk = content_bytes[offset:offset + chunk_size]
+                chunk = content_bytes[offset : offset + chunk_size]
                 chunk_len = len(chunk)
                 content_range = f"bytes {offset}-{offset + chunk_len - 1}/{file_size}"
 
@@ -334,7 +338,8 @@ async def upload_attachment_session(
                     if put_response.status not in (200, 201, 202):
                         logger.warning(
                             "GraphAPIEmailProvider: Chunk upload failed at offset %d: HTTP %d",
-                            offset, put_response.status,
+                            offset,
+                            put_response.status,
                         )
                         return None
 
@@ -349,6 +354,7 @@ async def upload_attachment_session(
 
     except Exception as exc:
         logger.warning(
-            "GraphAPIEmailProvider: Attachment upload session failed: %s", exc,
+            "GraphAPIEmailProvider: Attachment upload session failed: %s",
+            exc,
         )
         return None

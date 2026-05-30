@@ -23,7 +23,27 @@ import type {
   NamespaceResolutionStrategy,
   NamespaceIsolationLevel,
 } from "../types";
-import { PolicyEvaluator, getPolicyEvaluator } from "./evaluator";
+
+export type {
+  PolicyDocument,
+  PolicyStatement,
+  PolicyEffectV2,
+  PolicyEvaluationRequest,
+  PolicyEvaluationResult,
+  PolicyNamespace,
+  NamespaceHierarchy,
+  NamespaceResolutionStrategy,
+  NamespaceIsolationLevel,
+  ConflictResolutionStrategy,
+};
+import type { PolicyEvaluator } from "../evaluator";
+
+// Lazy getter for evaluator to avoid circular deps
+function getPolicyEvaluator(): PolicyEvaluator {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const evaluator = require("../simulator/evaluator");
+  return evaluator.getPolicyEvaluator();
+}
 
 // ─── Namespace Engine Error Types ─────────────────────────────────────
 
@@ -133,7 +153,7 @@ function mapDbToRecord(row: {
 
 // ─── Constants ────────────────────────────────────────────────────────
 
-const NS_API_VERSION = "policy.zenic.dev/v1";
+const NS_API_VERSION = "namespace.zenic.dev/v1";
 const NS_KIND = "Namespace";
 
 // ─── Helper: Map DB Record to PolicyNamespace ─────────────────────────
@@ -229,19 +249,19 @@ export async function evaluateInNamespace(
   let evalResult: { result: PolicyEvaluationResult; trace: NamespaceEvaluationTrace[] };
 
   switch (namespaceRec.resolutionStrategy) {
-    case ResolutionStrategy.LOCAL_FIRST:
+    case "local_first":
       evalResult = await evaluateLocalFirst(request, namespaceRec, evaluator, trace, 0);
       break;
 
-    case ResolutionStrategy.PRIORITY_BASED:
+    case "priority_based":
       evalResult = await evaluatePriorityBased(request, namespaceRec, evaluator, trace);
       break;
 
-    case ResolutionStrategy.DENY_WINS:
+    case "deny_wins":
       evalResult = await evaluateDenyWins(request, namespaceRec, evaluator, trace);
       break;
 
-    case ResolutionStrategy.MOST_RESTRICTIVE:
+    case "most_restrictive":
       evalResult = await evaluateMostRestrictive(request, namespaceRec, evaluator, trace);
       break;
 
@@ -945,7 +965,7 @@ function resolveParentChildConflict(
   const strategy = hierarchy.parentChildResolution;
 
   switch (strategy) {
-    case ConflictStrategy.DENY_WINS:
+    case "deny_wins":
       if (childResult.effect === "deny" || parentResult.effect === "deny") {
         const denyResult = childResult.effect === "deny" ? childResult : parentResult;
         return {
@@ -956,7 +976,7 @@ function resolveParentChildConflict(
       // Neither is deny — keep child result (closer to request)
       return childResult;
 
-    case ConflictStrategy.PRIORITY_WINS: {
+    case "priority_based": {
       // Compare by matched statement priority
       const childPrio = childResult.matchedStatements[0]?.priority ?? -1;
       const parentPrio = parentResult.matchedStatements[0]?.priority ?? -1;
@@ -972,7 +992,7 @@ function resolveParentChildConflict(
       };
     }
 
-    case ConflictStrategy.MERGE_CONDITIONS: {
+    case "merge_conditions": {
       // Both conditions must be satisfied — the more restrictive wins
       if (isMoreRestrictive(parentResult.effect, childResult.effect)) {
         return {
@@ -986,11 +1006,11 @@ function resolveParentChildConflict(
       };
     }
 
-    case ConflictStrategy.FIRST_MATCH:
+    case "first_match":
       // Child is evaluated first, so child wins
       return childResult;
 
-    case ConflictStrategy.MANUAL:
+    case "manual":
       // Return child but flag that manual resolution is needed
       return {
         ...childResult,
@@ -1210,6 +1230,8 @@ async function evaluatePriorityBased(
         duration: 0,
         denyByDefault: true,
       },
+      trace,
+    };
   }
 
   const topMatch = allMatched[0]!;
@@ -1312,7 +1334,20 @@ async function evaluateDenyWins(
         reason: `DENY_WINS: no DENY found, closest result preserved — ${closestResult.result.reason}`,
         matchedStatements: results.flatMap((r) => r.result.matchedStatements),
       },
+      trace,
     };
   }
-}
+
+  // No results at all — full deny-by-default
+  return {
+    result: {
+      effect: "deny" as PolicyEffectV2,
+      policyId: "default",
+      reason: "DENY_WINS: no results from any namespace — default deny applied",
+      matchedStatements: [],
+      duration: 0,
+      denyByDefault: true,
+    },
+    trace,
+  };
 }

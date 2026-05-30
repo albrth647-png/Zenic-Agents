@@ -69,9 +69,12 @@ class ChannelRouter:
         """Route a message to the best channel(s) based on priority."""
         exclude = exclude_channels or set()
 
-        candidates = list(_PRIORITY_CHANNEL_MAP.get(
-            priority, _PRIORITY_CHANNEL_MAP[ChannelPriority.NORMAL],
-        ))
+        candidates = list(
+            _PRIORITY_CHANNEL_MAP.get(
+                priority,
+                _PRIORITY_CHANNEL_MAP[ChannelPriority.NORMAL],
+            )
+        )
 
         if user_id and user_id in self._user_preferences:
             user_chans = self._user_preferences[user_id]
@@ -126,7 +129,8 @@ class ChannelRouter:
         self._user_preferences[user_id] = channels
         logger.debug(
             "ChannelRouter: set preferences for '%s' → %s",
-            user_id, channels,
+            user_id,
+            channels,
         )
 
     def get_user_preferences(self, user_id: str) -> list[str]:
@@ -140,7 +144,9 @@ class ChannelRouter:
         self._priority_overrides[alert_type] = priority
 
     def get_effective_priority(
-        self, message: ChannelMessage, alert_type: str = "",
+        self,
+        message: ChannelMessage,
+        alert_type: str = "",
     ) -> ChannelPriority:
         """Get the effective priority considering overrides."""
         if alert_type and alert_type in self._priority_overrides:
@@ -175,6 +181,7 @@ def get_default_registry() -> AdapterRegistry:
             if _default_registry is None:
                 _default_registry = AdapterRegistry()
                 from ._log_provider import LogChannelProvider
+
                 _default_registry.register(LogChannelProvider())
     return _default_registry
 

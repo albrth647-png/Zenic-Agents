@@ -37,11 +37,13 @@ class DashboardTrendsMixin:
                 if ca is not None:
                     try:
                         for d in ca.get_daily_costs(days=days):
-                            points.append(TrendPoint(
-                                timestamp=d.get("date", ""),
-                                value=d.get("cost", 0.0),
-                                label=d.get("date", ""),
-                            ))
+                            points.append(
+                                TrendPoint(
+                                    timestamp=d.get("date", ""),
+                                    value=d.get("cost", 0.0),
+                                    label=d.get("date", ""),
+                                )
+                            )
                     except Exception as exc:
                         logger.error("ROIDashboardData: cost trend failed: %s", exc)
 
@@ -50,11 +52,13 @@ class DashboardTrendsMixin:
                 if vt is not None:
                     try:
                         for d in vt.get_daily_value(days=days):
-                            points.append(TrendPoint(
-                                timestamp=d.get("date", ""),
-                                value=d.get("value", 0.0),
-                                label=d.get("date", ""),
-                            ))
+                            points.append(
+                                TrendPoint(
+                                    timestamp=d.get("date", ""),
+                                    value=d.get("value", 0.0),
+                                    label=d.get("date", ""),
+                                )
+                            )
                     except Exception as exc:
                         logger.error("ROIDashboardData: value trend failed: %s", exc)
 
@@ -70,9 +74,13 @@ class DashboardTrendsMixin:
                             c = cost_days.get(dt, 0.0)
                             v = value_days.get(dt, 0.0)
                             roi = ((v - c) / c * 100) if c > 0 else 0.0
-                            points.append(TrendPoint(
-                                timestamp=dt, value=round(roi, 2), label=dt,
-                            ))
+                            points.append(
+                                TrendPoint(
+                                    timestamp=dt,
+                                    value=round(roi, 2),
+                                    label=dt,
+                                )
+                            )
                     except Exception as exc:
                         logger.error("ROIDashboardData: roi trend failed: %s", exc)
 
@@ -81,13 +89,16 @@ class DashboardTrendsMixin:
                 if vt is not None:
                     try:
                         from ..value_tracker import DEFAULT_UNIT_VALUES, ValueCategory
+
                         uv = DEFAULT_UNIT_VALUES.get(ValueCategory.HOURS_SAVED, 25.0)
                         for d in vt.get_daily_value(days=days):
-                            points.append(TrendPoint(
-                                timestamp=d.get("date", ""),
-                                value=round(d.get("value", 0.0) / max(uv, 1.0), 2),
-                                label=d.get("date", ""),
-                            ))
+                            points.append(
+                                TrendPoint(
+                                    timestamp=d.get("date", ""),
+                                    value=round(d.get("value", 0.0) / max(uv, 1.0), 2),
+                                    label=d.get("date", ""),
+                                )
+                            )
                     except Exception as exc:
                         logger.error("ROIDashboardData: hours_saved trend failed: %s", exc)
 
@@ -96,13 +107,16 @@ class DashboardTrendsMixin:
                 if vt is not None:
                     try:
                         from ..value_tracker import DEFAULT_UNIT_VALUES, ValueCategory
+
                         uv = DEFAULT_UNIT_VALUES.get(ValueCategory.ERRORS_AVOIDED, 150.0)
                         for d in vt.get_daily_value(days=days):
-                            points.append(TrendPoint(
-                                timestamp=d.get("date", ""),
-                                value=round(d.get("value", 0.0) / max(uv, 1.0), 0),
-                                label=d.get("date", ""),
-                            ))
+                            points.append(
+                                TrendPoint(
+                                    timestamp=d.get("date", ""),
+                                    value=round(d.get("value", 0.0) / max(uv, 1.0), 0),
+                                    label=d.get("date", ""),
+                                )
+                            )
                     except Exception as exc:
                         logger.error("ROIDashboardData: errors_avoided trend failed: %s", exc)
 
@@ -124,9 +138,7 @@ class DashboardTrendsMixin:
         with self._lock:
             now = time.time()
 
-            a_start = time.strftime(
-                "%Y-%m-%dT00:00:00Z", time.gmtime(now - period_a_days * 86400)
-            )
+            a_start = time.strftime("%Y-%m-%dT00:00:00Z", time.gmtime(now - period_a_days * 86400))
             b_start = time.strftime(
                 "%Y-%m-%dT00:00:00Z",
                 time.gmtime(now - (period_a_days + period_b_days) * 86400),

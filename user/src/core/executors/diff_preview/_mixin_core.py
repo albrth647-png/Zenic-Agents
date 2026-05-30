@@ -13,10 +13,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.core.executors.db_journal import DBTransactionJournal
 
-# ── Row data type ─────────────────────────────────────────────
-RowData = dict[str, str | int | float | None]
-SQLParams = list[str | int | float | None]
-
 from src.core.executors.diff_preview._helpers import (
     build_db_summary,
     count_placeholders_in_set,
@@ -30,6 +26,10 @@ from src.core.executors.diff_preview._helpers import (
     retry as _retry,
 )
 from src.core.executors.diff_preview._types import DiffEntry, DiffResult
+
+# ── Row data type ─────────────────────────────────────────────
+RowData = dict[str, str | int | float | None]
+SQLParams = list[str | int | float | None]
 
 logger = logging.getLogger(__name__)
 
@@ -449,7 +449,7 @@ class CoreMixin:
                         "removed": "-",
                     }.get(d.change_type, "?")
                     lines.append(
-                        f"  [{change_symbol}] {d.field_path}: " f"{truncate(d.old_value)} → {truncate(d.new_value)}"
+                        f"  [{change_symbol}] {d.field_path}: {truncate(d.old_value)} → {truncate(d.new_value)}"
                     )
 
             return "\n".join(lines)

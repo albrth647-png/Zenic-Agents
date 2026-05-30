@@ -23,9 +23,9 @@ PRIORITY_WEIGHTS = {
     "low": 1,
 }
 
-DEADLINE_BONUS = 10          # Extra points for having a deadline
-OVERDUE_BONUS = 15           # Extra points for overdue tasks
-MAX_TASKS = 200              # Sanity cap
+DEADLINE_BONUS = 10  # Extra points for having a deadline
+OVERDUE_BONUS = 15  # Extra points for overdue tasks
+MAX_TASKS = 200  # Sanity cap
 DEFAULT_PRIORITY = "medium"
 
 
@@ -61,7 +61,9 @@ class TaskScheduler(BaseAgent[TaskResult]):
 
         if not tasks:
             return TaskResult(
-                schedule=[], conflicts=[], priorities={},
+                schedule=[],
+                conflicts=[],
+                priorities={},
                 source="deterministic",
             )
 
@@ -70,6 +72,7 @@ class TaskScheduler(BaseAgent[TaskResult]):
 
         # ── Score each task ──
         import time as _time
+
         now = _time.time()
         scored = []
 
@@ -88,11 +91,13 @@ class TaskScheduler(BaseAgent[TaskResult]):
                 if isinstance(deadline, (int, float)) and deadline < now:
                     base_score += OVERDUE_BONUS
 
-            scored.append({
-                **task,
-                "score": base_score,
-                "original_index": idx,
-            })
+            scored.append(
+                {
+                    **task,
+                    "score": base_score,
+                    "original_index": idx,
+                }
+            )
 
         # Sort by score descending (highest priority first)
         scored.sort(key=lambda t: t["score"], reverse=True)
@@ -100,13 +105,15 @@ class TaskScheduler(BaseAgent[TaskResult]):
         # ── Build schedule ──
         schedule = []
         for order, task in enumerate(scored, 1):
-            schedule.append({
-                "order": order,
-                "name": task.get("name", f"Task_{task.get('original_index', order)}"),
-                "priority": task.get("priority", DEFAULT_PRIORITY),
-                "score": task["score"],
-                "has_deadline": bool(task.get("deadline") or task.get("due_date")),
-            })
+            schedule.append(
+                {
+                    "order": order,
+                    "name": task.get("name", f"Task_{task.get('original_index', order)}"),
+                    "priority": task.get("priority", DEFAULT_PRIORITY),
+                    "score": task["score"],
+                    "has_deadline": bool(task.get("deadline") or task.get("due_date")),
+                }
+            )
 
         # ── Round-robin assignment ──
         assignments = {}
@@ -125,9 +132,7 @@ class TaskScheduler(BaseAgent[TaskResult]):
                 resource_tasks.setdefault(resource_name, []).append(task_name)
             for resource_name, task_names in resource_tasks.items():
                 if len(task_names) > 3:
-                    conflicts.append(
-                        f"Resource overload: {resource_name} has {len(task_names)} tasks"
-                    )
+                    conflicts.append(f"Resource overload: {resource_name} has {len(task_names)} tasks")
 
         # ── Priority summary ──
         priorities: dict[str, int] = {}
@@ -145,6 +150,8 @@ class TaskScheduler(BaseAgent[TaskResult]):
     def fallback(self, input_data: Any) -> TaskResult:
         """Safe fallback: empty task result."""
         return TaskResult(
-            schedule=[], conflicts=[], priorities={},
+            schedule=[],
+            conflicts=[],
+            priorities={},
             source="fallback",
         )

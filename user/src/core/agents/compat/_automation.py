@@ -41,8 +41,7 @@ class AutomationAgentCompat:
         self._serializer = WorkflowSerializer(**kwargs)
         self._call_count = 0
 
-    def design_with_runner(self, runner: Any, description: str,
-                           **kwargs) -> AutomationOutput:
+    def design_with_runner(self, runner: Any, description: str, **kwargs) -> AutomationOutput:
         """Design automation using v2 agents."""
         self._call_count += 1
 
@@ -57,23 +56,21 @@ class AutomationAgentCompat:
         name = self._extract_name(name_result)
 
         return AutomationOutput(
-            name=name, triggers=triggers, actions=actions,
-            schedule=schedule, conditions=[],
-            description=description[:200], source="deterministic",
+            name=name,
+            triggers=triggers,
+            actions=actions,
+            schedule=schedule,
+            conditions=[],
+            description=description[:200],
+            source="deterministic",
         )
 
     def to_workflow_dict(self, output: AutomationOutput) -> dict:
         """Convert AutomationOutput to workflow dict."""
         return {
             "name": output.name,
-            "triggers": [
-                {"type": t.type, "config": t.config, "description": t.description}
-                for t in output.triggers
-            ],
-            "actions": [
-                {"type": a.type, "config": a.config, "description": a.description}
-                for a in output.actions
-            ],
+            "triggers": [{"type": t.type, "config": t.config, "description": t.description} for t in output.triggers],
+            "actions": [{"type": a.type, "config": a.config, "description": a.description} for a in output.actions],
             "schedule": {
                 "type": output.schedule.type,
                 "cron": output.schedule.cron_expression,
@@ -87,7 +84,9 @@ class AutomationAgentCompat:
             raw = data["triggers"]
             if isinstance(raw, list):
                 return [
-                    t if isinstance(t, SharedTriggerSpec) else SharedTriggerSpec(
+                    t
+                    if isinstance(t, SharedTriggerSpec)
+                    else SharedTriggerSpec(
                         type=t.get("type", "manual") if isinstance(t, dict) else "manual",
                         config=t.get("config", {}) if isinstance(t, dict) else {},
                         description=t.get("description", "") if isinstance(t, dict) else str(t),
@@ -102,7 +101,9 @@ class AutomationAgentCompat:
             raw = data["actions"]
             if isinstance(raw, list):
                 return [
-                    a if isinstance(a, SharedActionSpec) else SharedActionSpec(
+                    a
+                    if isinstance(a, SharedActionSpec)
+                    else SharedActionSpec(
                         type=a.get("type", "log") if isinstance(a, dict) else "log",
                         config=a.get("config", {}) if isinstance(a, dict) else {},
                         description=a.get("description", "") if isinstance(a, dict) else str(a),

@@ -14,4 +14,5 @@ class BoundedTasksMixin(BoundedTasks1To4Mixin, BoundedTasks5To7Mixin):
     Composed from BoundedTasks1To4Mixin (tasks 1-4) and
     BoundedTasks5To7Mixin (tasks 5-7).
     """
+
     pass

@@ -24,9 +24,11 @@ logger = logging.getLogger(__name__)
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class CRUDValidationResult:
     """Result of a CRUD operation validation."""
+
     valid: bool
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -38,12 +40,13 @@ class CRUDValidationResult:
 @dataclass
 class TableSchema:
     """Schema definition for a database table."""
+
     table_name: str
-    columns: dict[str, str] = field(default_factory=dict)   # column_name → type
+    columns: dict[str, str] = field(default_factory=dict)  # column_name → type
     required_columns: list[str] = field(default_factory=list)
     unique_columns: list[str] = field(default_factory=list)
     protected_columns: list[str] = field(default_factory=list)  # Cannot be modified
-    max_records: int = 0                         # 0 = unlimited
+    max_records: int = 0  # 0 = unlimited
 
 
 # ──────────────────────────────────────────────────────────────
@@ -72,6 +75,7 @@ _TABLE_NAME_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 #  CRUD VALIDATOR
 # ──────────────────────────────────────────────────────────────
 
+
 class CRUDValidator:
     """Validates CRUD operations against Blueprint schemas.
 
@@ -87,7 +91,9 @@ class CRUDValidator:
         self._schemas: dict[str, TableSchema] = {}
         self._global_max_records: int = 10000
         self._denied_tables: set[str] = {
-            "sqlite_master", "sqlite_sequence", "sqlite_temp_master",
+            "sqlite_master",
+            "sqlite_sequence",
+            "sqlite_temp_master",
         }
 
     def register_schema(self, schema: TableSchema) -> None:
@@ -95,9 +101,7 @@ class CRUDValidator:
         self._schemas[schema.table_name] = schema
         logger.debug(f"CRUDValidator: Registered schema for '{schema.table_name}'")
 
-    def register_schema_from_dict(
-        self, table_name: str, schema_dict: dict[str, Any]
-    ) -> None:
+    def register_schema_from_dict(self, table_name: str, schema_dict: dict[str, Any]) -> None:
         """Register a table schema from a dictionary."""
         schema = TableSchema(
             table_name=table_name,
@@ -211,9 +215,7 @@ class CRUDValidator:
             return False
         return not _DANGEROUS_TABLE_PATTERNS.search(table_name)
 
-    def _validate_delete(
-        self, table_name: str, query: str, where_clause: str
-    ) -> tuple[list[str], list[str], str]:
+    def _validate_delete(self, table_name: str, query: str, where_clause: str) -> tuple[list[str], list[str], str]:
         """Validate DELETE operation."""
         errors: list[str] = []
         warnings: list[str] = []
@@ -266,8 +268,7 @@ class CRUDValidator:
                 expected_type = schema.columns.get(key)
                 if expected_type and not self._check_type(value, expected_type):
                     warnings.append(
-                        f"Field '{key}' may have wrong type: "
-                        f"expected {expected_type}, got {type(value).__name__}"
+                        f"Field '{key}' may have wrong type: expected {expected_type}, got {type(value).__name__}"
                     )
 
         return errors, warnings, risk_level
@@ -298,8 +299,7 @@ class CRUDValidator:
                 expected_type = schema.columns.get(key)
                 if expected_type and not self._check_type(value, expected_type):
                     warnings.append(
-                        f"Field '{key}' may have wrong type: "
-                        f"expected {expected_type}, got {type(value).__name__}"
+                        f"Field '{key}' may have wrong type: expected {expected_type}, got {type(value).__name__}"
                     )
 
         return errors, warnings, risk_level
@@ -308,10 +308,18 @@ class CRUDValidator:
     def _check_type(value: Any, expected: str) -> bool:
         """Check if a value matches an expected SQL type."""
         type_map = {
-            "TEXT": str, "VARCHAR": str, "CHAR": str,
-            "INTEGER": int, "INT": int, "BIGINT": int,
-            "REAL": float, "FLOAT": float, "DOUBLE": float, "DECIMAL": (int, float),
-            "BOOLEAN": bool, "BOOL": bool,
+            "TEXT": str,
+            "VARCHAR": str,
+            "CHAR": str,
+            "INTEGER": int,
+            "INT": int,
+            "BIGINT": int,
+            "REAL": float,
+            "FLOAT": float,
+            "DOUBLE": float,
+            "DECIMAL": (int, float),
+            "BOOLEAN": bool,
+            "BOOL": bool,
             "BLOB": bytes,
         }
         base_type = expected.split("(")[0].strip().upper()

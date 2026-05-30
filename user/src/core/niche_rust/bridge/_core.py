@@ -94,9 +94,7 @@ class NicheBridge:
         value: Any,
     ) -> bool:
         """Fill a field in the template."""
-        return self._template.set_field(
-            template_dict, section_id, field_name, value
-        )
+        return self._template.set_field(template_dict, section_id, field_name, value)
 
     def template_status(self, template_dict: dict[str, Any]) -> dict[str, Any]:
         """Get validation status of a template."""

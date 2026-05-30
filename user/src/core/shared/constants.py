@@ -15,47 +15,98 @@ Constants defined:
 
 # ────────────────────────────── Intent Operations ──────────────────────────────
 
-VALID_INTENT_OPERATIONS: frozenset[str] = frozenset({
-    "CREATE", "REFACTOR", "DELETE", "SEARCH",
-    "ANALYZE", "EXPLAIN", "DEBUG", "OPTIMIZE",
-})
+VALID_INTENT_OPERATIONS: frozenset[str] = frozenset(
+    {
+        "CREATE",
+        "REFACTOR",
+        "DELETE",
+        "SEARCH",
+        "ANALYZE",
+        "EXPLAIN",
+        "DEBUG",
+        "OPTIMIZE",
+    }
+)
 
-VALID_INTENT_GOALS: frozenset[str] = frozenset({
-    "COMPLEXITY_REDUCTION", "MODERN_PATTERN", "BUG_FIX",
-    "FEATURE_ADD", "SECURITY_HARDEN", "PERFORMANCE", "READABILITY",
-    "AUTOMATION",
-})
+VALID_INTENT_GOALS: frozenset[str] = frozenset(
+    {
+        "COMPLEXITY_REDUCTION",
+        "MODERN_PATTERN",
+        "BUG_FIX",
+        "FEATURE_ADD",
+        "SECURITY_HARDEN",
+        "PERFORMANCE",
+        "READABILITY",
+        "AUTOMATION",
+    }
+)
 
 
 # ────────────────────────────── Inventory Operations ──────────────────────────────
 
-VALID_INVENTORY_OPERATIONS: frozenset[str] = frozenset({
-    "add", "remove", "set", "adjust",
-})
+VALID_INVENTORY_OPERATIONS: frozenset[str] = frozenset(
+    {
+        "add",
+        "remove",
+        "set",
+        "adjust",
+    }
+)
 
 
 # ────────────────────────────── Languages ──────────────────────────────
 
-VALID_LANGUAGES: frozenset[str] = frozenset({
-    "python", "kotlin", "go", "javascript", "typescript",
-    "java", "rust", "c", "cpp", "ruby", "swift", "scala",
-})
+VALID_LANGUAGES: frozenset[str] = frozenset(
+    {
+        "python",
+        "kotlin",
+        "go",
+        "javascript",
+        "typescript",
+        "java",
+        "rust",
+        "c",
+        "cpp",
+        "ruby",
+        "swift",
+        "scala",
+    }
+)
 
 EXT_LANG_MAP: dict[str, str] = {
-    ".py": "python", ".kt": "kotlin", ".go": "go",
-    ".js": "javascript", ".ts": "typescript", ".java": "java",
-    ".rs": "rust", ".rb": "ruby", ".cpp": "cpp", ".c": "c",
-    ".h": "c", ".hpp": "cpp", ".swift": "swift", ".scala": "scala",
+    ".py": "python",
+    ".kt": "kotlin",
+    ".go": "go",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".java": "java",
+    ".rs": "rust",
+    ".rb": "ruby",
+    ".cpp": "cpp",
+    ".c": "c",
+    ".h": "c",
+    ".hpp": "cpp",
+    ".swift": "swift",
+    ".scala": "scala",
 }
 
 FENCE_LANG_MAP: dict[str, str] = {
-    "python": "python", "py": "python",
-    "kotlin": "kotlin", "kt": "kotlin",
-    "go": "go", "golang": "go",
-    "javascript": "javascript", "js": "javascript",
-    "typescript": "typescript", "ts": "typescript",
+    "python": "python",
+    "py": "python",
+    "kotlin": "kotlin",
+    "kt": "kotlin",
+    "go": "go",
+    "golang": "go",
+    "javascript": "javascript",
+    "js": "javascript",
+    "typescript": "typescript",
+    "ts": "typescript",
     "java": "java",
-    "rust": "rust", "rs": "rust",
-    "ruby": "ruby", "rb": "ruby",
-    "c": "c", "cpp": "cpp", "c++": "cpp",
+    "rust": "rust",
+    "rs": "rust",
+    "ruby": "ruby",
+    "rb": "ruby",
+    "c": "c",
+    "cpp": "cpp",
+    "c++": "cpp",
 }

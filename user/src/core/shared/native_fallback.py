@@ -64,6 +64,7 @@ def call_native(name: str, *args: Any, **kwargs: Any) -> Any:
     """
     try:
         import _zenic_native
+
         fn = getattr(_zenic_native, name)
         return fn(*args, **kwargs)
     except ImportError:
@@ -87,6 +88,7 @@ def call_native(name: str, *args: Any, **kwargs: Any) -> Any:
 # ════════════════════════════════════════════════════════════════
 #  BUILT-IN PYTHON FALLBACKS — Crypto (core)
 # ════════════════════════════════════════════════════════════════
+
 
 def _sha256_hash(data: str) -> str:
     """Python fallback for blake3_hash (uses SHA-256 instead)."""
@@ -117,10 +119,15 @@ def _argon2id_hash(password: bytes, salt: bytes, memory_cost: int, time_cost: in
     """Python fallback for argon2id_hash — tries argon2-cffi, then PBKDF2."""
     try:
         from argon2 import low_level  # type: ignore[import-untyped]
+
         return low_level.hash_secret_raw(
-            secret=password, salt=salt, time_cost=time_cost,
-            memory_cost=memory_cost, parallelism=parallelism,
-            hash_len=32, type=low_level.Type.ID,
+            secret=password,
+            salt=salt,
+            time_cost=time_cost,
+            memory_cost=memory_cost,
+            parallelism=parallelism,
+            hash_len=32,
+            type=low_level.Type.ID,
         )
     except ImportError:
         logger.warning("argon2 not available, falling back to PBKDF2 for argon2id_hash")
@@ -136,10 +143,12 @@ def _constant_time_compare(a: bytes, b: bytes) -> bool:
 #  BUILT-IN PYTHON FALLBACKS — Hash
 # ════════════════════════════════════════════════════════════════
 
+
 def _blake3_hash_fallback(data: bytes) -> str:
     """Python fallback for blake3_hash — tries blake3 package, then SHA-256."""
     try:
         import blake3 as _blake3  # type: ignore[import-untyped]
+
         return _blake3.blake3(data).hexdigest()
     except ImportError:
         return hashlib.sha256(data).hexdigest()
@@ -149,6 +158,7 @@ def _xxhash64_fallback(data: bytes, seed: int) -> int:
     """Python fallback for xxhash64 — tries xxhash package, then FNV-1a."""
     try:
         import xxhash  # type: ignore[import-untyped]
+
         return xxhash.xxh64(data, seed=seed).intdigest()
     except ImportError:
         FNV_OFFSET = 14695981039346656037
@@ -169,6 +179,7 @@ def _merkle_root_fallback(leaves: list[bytes]) -> str:
     def _hash_func(data: bytes) -> bytes:
         try:
             import blake3 as _blake3  # type: ignore[import-untyped]
+
             return _blake3.blake3(data).digest()
         except ImportError:
             return hashlib.sha256(data).digest()
@@ -192,14 +203,21 @@ def _merkle_root_fallback(leaves: list[bytes]) -> str:
 #  BUILT-IN PYTHON FALLBACKS — Forensic Audit (A1)
 # ════════════════════════════════════════════════════════════════
 
+
 def _forensic_hash(
-    entry_id: str, tenant_id: str, event_type: str,
-    description: str, actor: str, timestamp: str, metadata_json: str,
+    entry_id: str,
+    tenant_id: str,
+    event_type: str,
+    description: str,
+    actor: str,
+    timestamp: str,
+    metadata_json: str,
 ) -> str:
     """Python fallback for forensic_hash."""
     payload = "|".join([entry_id, tenant_id, event_type, description, actor, timestamp, metadata_json])
     try:
         import blake3 as _blake3  # type: ignore[import-untyped]
+
         return _blake3.blake3(payload.encode()).hexdigest()
     except ImportError:
         return hashlib.sha256(payload.encode()).hexdigest()
@@ -210,6 +228,7 @@ def _chain_hash(parent_hash: str, entry_hash: str) -> str:
     combined = (parent_hash + entry_hash).encode()
     try:
         import blake3 as _blake3  # type: ignore[import-untyped]
+
         return _blake3.blake3(combined).hexdigest()
     except ImportError:
         return hashlib.sha256(combined).hexdigest()
@@ -218,8 +237,7 @@ def _chain_hash(parent_hash: str, entry_hash: str) -> str:
 def _verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Python fallback for verify_merkle_chain."""
     if not entries:
-        return {"is_valid": True, "total_entries": 0, "valid_entries": 0,
-                "broken_links": [], "root_hash": ""}
+        return {"is_valid": True, "total_entries": 0, "valid_entries": 0, "broken_links": [], "root_hash": ""}
 
     total = len(entries)
     valid_count = 0
@@ -242,29 +260,39 @@ def _verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
                 if parent_exists:
                     valid_count += 1
                 else:
-                    broken_links.append({
-                        "file_path": fp, "entry_id": row.get("id"),
-                        "expected_parent_hash": parent_hash,
-                        "actual_parent_hash": parent_hash,
-                        "entry_hash": row.get("hash_sha256", ""),
-                    })
+                    broken_links.append(
+                        {
+                            "file_path": fp,
+                            "entry_id": row.get("id"),
+                            "expected_parent_hash": parent_hash,
+                            "actual_parent_hash": parent_hash,
+                            "entry_hash": row.get("hash_sha256", ""),
+                        }
+                    )
                 continue
             expected = sorted_group[i - 1].get("hash_sha256", "")
             actual = row.get("parent_hash", "")
             if actual == expected:
                 valid_count += 1
             else:
-                broken_links.append({
-                    "file_path": fp, "entry_id": row.get("id"),
-                    "expected_parent_hash": expected,
-                    "actual_parent_hash": actual,
-                    "entry_hash": row.get("hash_sha256", ""),
-                })
+                broken_links.append(
+                    {
+                        "file_path": fp,
+                        "entry_id": row.get("id"),
+                        "expected_parent_hash": expected,
+                        "actual_parent_hash": actual,
+                        "entry_hash": row.get("hash_sha256", ""),
+                    }
+                )
 
     root_hash = entries[-1].get("hash_sha256", "") if entries else ""
-    return {"is_valid": len(broken_links) == 0, "total_entries": total,
-            "valid_entries": valid_count, "broken_links": broken_links,
-            "root_hash": root_hash}
+    return {
+        "is_valid": len(broken_links) == 0,
+        "total_entries": total,
+        "valid_entries": valid_count,
+        "broken_links": broken_links,
+        "root_hash": root_hash,
+    }
 
 
 def _merkle_proof(entry_hash: str, all_hashes: list[str]) -> dict[str, Any]:
@@ -279,13 +307,13 @@ def _merkle_proof(entry_hash: str, all_hashes: list[str]) -> dict[str, Any]:
     def _hash_func(data: bytes) -> str:
         try:
             import blake3 as _blake3  # type: ignore[import-untyped]
+
             return _blake3.blake3(data).hexdigest()
         except ImportError:
             return hashlib.sha256(data).hexdigest()
 
     if len(all_hashes) == 1:
-        return {"merkle_root": _hash_func(entry_hash.encode()),
-                "proof_path": [], "leaf_index": 0, "verified": True}
+        return {"merkle_root": _hash_func(entry_hash.encode()), "proof_path": [], "leaf_index": 0, "verified": True}
 
     current_level = [_hash_func(h.encode()) for h in all_hashes]
     proof_path: list[str] = []
@@ -307,8 +335,7 @@ def _merkle_proof(entry_hash: str, all_hashes: list[str]) -> dict[str, Any]:
         current_level = next_level
 
     root = _hash_func(current_level[0].encode()) if current_level else ""
-    return {"merkle_root": root, "proof_path": proof_path,
-            "leaf_index": idx, "verified": True}
+    return {"merkle_root": root, "proof_path": proof_path, "leaf_index": idx, "verified": True}
 
 
 def _batch_verify_chains(chains: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, Any]]:
@@ -319,6 +346,7 @@ def _batch_verify_chains(chains: dict[str, list[dict[str, Any]]]) -> dict[str, d
 # ════════════════════════════════════════════════════════════════
 #  BUILT-IN PYTHON FALLBACKS — Rollback (A3)
 # ════════════════════════════════════════════════════════════════
+
 
 def _snapshot_file(file_path: str, snapshot_dir: str) -> str:
     """Python fallback for snapshot_file — copies file to snapshot directory."""
@@ -362,6 +390,7 @@ def _file_hash(file_path: str) -> str:
 #  BUILT-IN PYTHON FALLBACKS — EventBus (B1)
 # ════════════════════════════════════════════════════════════════
 
+
 def _wildcard_match(pattern: str, topic: str) -> bool:
     """Python fallback for wildcard_match — matches event bus topic patterns."""
     regex = pattern.replace(".", r"\.").replace("*", "[^.]+").replace("#", ".*")
@@ -398,6 +427,7 @@ def _sort_by_priority(events: list[dict[str, Any]], priority_field: str = "prior
 # ════════════════════════════════════════════════════════════════
 #  BUILT-IN PYTHON FALLBACKS — Simulation (C1)
 # ════════════════════════════════════════════════════════════════
+
 
 def _topological_sort(nodes: list[str], edges: list[tuple]) -> list[str]:
     """Python fallback for topological_sort — Kahn's algorithm."""
@@ -458,8 +488,7 @@ def _aggregate_impact(changes: list[dict[str, Any]]) -> dict[str, Any]:
             affected_nodes.add(c["node"])
         if "affected_nodes" in c:
             affected_nodes.update(c["affected_nodes"])
-    return {"total_risk": total_risk, "affected_count": len(affected_nodes),
-            "affected_nodes": list(affected_nodes)}
+    return {"total_risk": total_risk, "affected_count": len(affected_nodes), "affected_nodes": list(affected_nodes)}
 
 
 def _simulate_dag(nodes: list[str], edges: list[tuple], change_node: str) -> dict[str, Any]:
@@ -479,13 +508,13 @@ def _simulate_dag(nodes: list[str], edges: list[tuple], change_node: str) -> dic
             if neighbor not in visited:
                 queue.append(neighbor)
 
-    return {"change_node": change_node, "reachable": list(visited),
-            "impact_radius": len(visited)}
+    return {"change_node": change_node, "reachable": list(visited), "impact_radius": len(visited)}
 
 
 # ════════════════════════════════════════════════════════════════
 #  BUILT-IN PYTHON FALLBACKS — Risk (F3)
 # ════════════════════════════════════════════════════════════════
+
 
 def _calculate_blast_radius(node: str, edges: list[tuple], max_depth: int = 10) -> dict[str, Any]:
     """Python fallback for calculate_blast_radius — BFS with depth limit."""

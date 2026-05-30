@@ -17,7 +17,6 @@ export type {
 } from "./tracing";
 
 export type {
-  MetricCategory,
   MetricUnit,
   MetricSeriesRecord,
   MetricPointRecord,

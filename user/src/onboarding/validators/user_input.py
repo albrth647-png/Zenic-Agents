@@ -170,7 +170,7 @@ class _UsernameFormatValidator(BaseValidator):
             return InvalidResult("Username cannot be empty")
         if not _USERNAME_PATTERN.match(sanitized):
             return InvalidResult(
-                "Username must start with a letter and contain only " "letters, digits, and underscores (3-32 chars)"
+                "Username must start with a letter and contain only letters, digits, and underscores (3-32 chars)"
             )
         return ValidResult(sanitized_value=sanitized)
 
@@ -270,7 +270,7 @@ class _EmailDisposableValidator(BaseValidator):
         domain = sanitized.split("@")[-1] if "@" in sanitized else ""
         if domain in _DISPOSABLE_DOMAINS:
             return InvalidResult(
-                f"Disposable email domain '{domain}' is not allowed. " "Please use a permanent email address."
+                f"Disposable email domain '{domain}' is not allowed. Please use a permanent email address."
             )
         return ValidResult(sanitized_value=raw.strip())
 

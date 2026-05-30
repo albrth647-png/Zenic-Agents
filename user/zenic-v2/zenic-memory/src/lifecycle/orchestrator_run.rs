@@ -1,9 +1,7 @@
 //! Learning Lifecycle — Orchestrator episode execution methods.
 
-use std::sync::{Arc, Mutex};
 
 use crate::errors::MemoryError;
-use crate::hitl_bridge::HitlBridge;
 use crate::types::{
     LearningMechanism, LearningVerdict, MemoryApprovalRequest, SemanticMapping,
 };

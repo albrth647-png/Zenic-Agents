@@ -33,7 +33,7 @@ def build_discord_embed(message: ChannelMessage) -> dict[str, Any]:
         embed["color"] = _parse_color(message.color)
 
     if message.url:
-        embed["url"] = message.url if hasattr(message, 'url') else ""
+        embed["url"] = message.url if hasattr(message, "url") else ""
 
     if message.footer:
         embed["footer"] = {"text": truncate(message.footer, LIMITS.discord_embed_footer)}
@@ -46,12 +46,14 @@ def build_discord_embed(message: ChannelMessage) -> dict[str, Any]:
 
     if message.fields:
         embed_fields = []
-        for f in message.fields[:LIMITS.discord_embed_fields]:
-            embed_fields.append({
-                "name": truncate(f.get("title", f.get("name", "")), LIMITS.discord_embed_field_name),
-                "value": truncate(f.get("value", ""), LIMITS.discord_embed_field_value),
-                "inline": f.get("inline", False),
-            })
+        for f in message.fields[: LIMITS.discord_embed_fields]:
+            embed_fields.append(
+                {
+                    "name": truncate(f.get("title", f.get("name", "")), LIMITS.discord_embed_field_name),
+                    "value": truncate(f.get("value", ""), LIMITS.discord_embed_field_value),
+                    "inline": f.get("inline", False),
+                }
+            )
         embed["fields"] = embed_fields
 
     return embed
@@ -73,12 +75,14 @@ def build_discord_confirmation_components(
     buttons: list[dict[str, Any]] = []
     for option in request.options:
         label = option.replace("_", " ").title()
-        buttons.append({
-            "type": 2,  # Button
-            "style": 1,  # Primary
-            "label": label,
-            "custom_id": f"{custom_id_prefix}:{request.action_id}:{option}",
-        })
+        buttons.append(
+            {
+                "type": 2,  # Button
+                "style": 1,  # Primary
+                "label": label,
+                "custom_id": f"{custom_id_prefix}:{request.action_id}:{option}",
+            }
+        )
 
     return [{"type": 1, "components": buttons}]
 

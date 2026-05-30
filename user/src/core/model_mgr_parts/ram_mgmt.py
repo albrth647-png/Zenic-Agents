@@ -52,6 +52,6 @@ class RAMMixin:
             if platform.system() == "Darwin":
                 return usage.ru_maxrss / 1024 / 1024  # macOS: bytes -> MB
             return usage.ru_maxrss / 1024  # Linux: KB -> MB
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return 0.0

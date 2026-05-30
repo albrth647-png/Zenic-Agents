@@ -21,7 +21,9 @@ def format_email_html(message: ChannelMessage) -> str:  # TODO: verify import
 
     # Title
     if message.title:
-        parts.append(f'<h2 style="color:#1a1a1a;margin:0 0 12px 0;">{html_module.escape(message.title)}</h2>')  # TODO: verify import
+        parts.append(
+            f'<h2 style="color:#1a1a1a;margin:0 0 12px 0;">{html_module.escape(message.title)}</h2>'
+        )  # TODO: verify import
 
     # Subtitle
     if message.subtitle:
@@ -46,9 +48,7 @@ def format_email_html(message: ChannelMessage) -> str:  # TODO: verify import
                 f'<tr><td style="padding:6px 12px;font-weight:bold;border-bottom:1px solid #eee;">{key}</td>'
                 f'<td style="padding:6px 12px;border-bottom:1px solid #eee;">{val}</td></tr>'
             )
-        parts.append(
-            f'<table style="border-collapse:collapse;width:100%;margin:0 0 12px 0;">' f'{"".join(rows)}</table>'
-        )
+        parts.append(f'<table style="border-collapse:collapse;width:100%;margin:0 0 12px 0;">{"".join(rows)}</table>')
 
     # Image
     if message.image_url:
@@ -63,7 +63,7 @@ def format_email_html(message: ChannelMessage) -> str:  # TODO: verify import
         )  # TODO: verify import
 
     body = "\n".join(parts)
-    return f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">' f"{body}</div>"
+    return f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">{body}</div>'
 
 
 def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # TODO: verify import
@@ -98,8 +98,8 @@ def format_email_confirmation_html(request: ConfirmationRequest) -> str:  # TODO
         f'<p style="color:#333;">{html_module.escape(request.message)}</p>'  # TODO: verify import
         f'<div style="margin:20px 0;">{"".join(buttons)}</div>'
         f'<p style="color:#999;font-size:12px;">Action ID: {html_module.escape(request.action_id)} | '  # TODO: Phase3 - verify import
-        f'Expires in {request.timeout_seconds // 60} minutes</p>'
-        f'</div>'
+        f"Expires in {request.timeout_seconds // 60} minutes</p>"
+        f"</div>"
     )
 
 

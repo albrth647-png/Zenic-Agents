@@ -33,7 +33,8 @@ class CommandBusExtraMixin:
 
         logger.info(
             "CommandBus[async]: Dispatching command_type='%s' id='%s'",
-            command.command_type, command.command_id[:8],
+            command.command_type,
+            command.command_id[:8],
         )
 
         # Validate
@@ -48,10 +49,7 @@ class CommandBusExtraMixin:
 
         # Check handler
         if handler is None:
-            error_msg = (
-                f"No handler registered for command_type "
-                f"'{command.command_type}'"
-            )
+            error_msg = f"No handler registered for command_type '{command.command_type}'"
             self._error_count_inc()
             return CommandResult(
                 success=False,
@@ -76,9 +74,7 @@ class CommandBusExtraMixin:
                 async def _make_async_mw(
                     cmd: Command,
                     _mw: CommandMiddleware = mw,
-                    _next: Callable[
-                        [Command], Awaitable[CommandResult]
-                    ] = prev_chain,
+                    _next: Callable[[Command], Awaitable[CommandResult]] = prev_chain,
                 ) -> CommandResult:
                     # Run sync middleware; adapt async next
                     def _sync_next(c: Command) -> CommandResult:
@@ -87,9 +83,8 @@ class CommandBusExtraMixin:
                         # "cannot run the event loop while another
                         # loop is running" errors on Xiaomi.
                         import concurrent.futures
-                        with concurrent.futures.ThreadPoolExecutor(
-                            max_workers=1
-                        ) as pool:
+
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                             future = pool.submit(asyncio.run, _next(c))
                             return future.result()
 
@@ -104,7 +99,8 @@ class CommandBusExtraMixin:
             self._error_count_inc()
             logger.error(
                 "CommandBus[async]: Handler failed for command_type '%s': %s",
-                command.command_type, exc,
+                command.command_type,
+                exc,
                 exc_info=True,
             )
             return CommandResult(
@@ -135,7 +131,8 @@ class CommandBusExtraMixin:
 
         results: list[CommandResult] = []
         logger.info(
-            "CommandBus: Batch dispatching %d commands", len(commands),
+            "CommandBus: Batch dispatching %d commands",
+            len(commands),
         )
 
         for command in commands:
@@ -145,7 +142,8 @@ class CommandBusExtraMixin:
         successful = sum(1 for r in results if r.success)
         logger.info(
             "CommandBus: Batch complete: %d/%d successful",
-            successful, len(commands),
+            successful,
+            len(commands),
         )
 
         return results
@@ -189,4 +187,3 @@ class CommandBusExtraMixin:
         """Increment validation reject counter in a thread-safe manner."""
         with self._lock:
             self._validation_reject_count += 1
-

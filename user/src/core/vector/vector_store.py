@@ -24,6 +24,7 @@ Environment variables:
 """
 
 import asyncio
+import contextlib
 import hashlib
 import logging
 import os
@@ -50,6 +51,7 @@ class VectorSearchResult:
         similarity: Cosine similarity score (0.0 to 1.0).
         metadata: Additional metadata (source, category, tags).
     """
+
     id: str
     content: str
     similarity: float
@@ -83,9 +85,7 @@ class VectorStore:
         self._database_url = database_url or os.environ.get("DATABASE_URL", "")
         self._dimensions = dimensions or int(os.environ.get("VECTOR_DIMENSIONS", "384"))
         self._hnsw_m = hnsw_m or int(os.environ.get("VECTOR_HNSW_M", "16"))
-        self._hnsw_ef_construction = hnsw_ef_construction or int(
-            os.environ.get("VECTOR_HNSW_EF_CONSTRUCTION", "64")
-        )
+        self._hnsw_ef_construction = hnsw_ef_construction or int(os.environ.get("VECTOR_HNSW_EF_CONSTRUCTION", "64"))
         self._ef_search = ef_search or int(os.environ.get("VECTOR_EF_SEARCH", "40"))
         self._table_name = table_name or os.environ.get("VECTOR_TABLE_NAME", "zenic_vectors")
 
@@ -207,10 +207,8 @@ class VectorStore:
                     logger.warning(f"VectorStore: HNSW index creation failed (may need more data): {e}")
 
                 # 4. Set ef_search for query-time search quality
-                try:
+                with contextlib.suppress(Exception):
                     await conn.execute(f"SET hnsw.ef_search = {self._ef_search}")
-                except Exception:  # noqa: S110
-                    pass  # Non-critical
 
                 # 5. Create indexes on metadata columns for filtered search
                 await conn.execute(f"""
@@ -302,7 +300,13 @@ class VectorStore:
                             updated_at = NOW(),
                             expires_at = EXCLUDED.expires_at
                         """,  # noqa: S608
-                        id, content, emb_str, source, category, tags_json, content_hash,
+                        id,
+                        content,
+                        emb_str,
+                        source,
+                        category,
+                        tags_json,
+                        content_hash,
                     )
                 return True
             except Exception as e:
@@ -346,23 +350,18 @@ class VectorStore:
 
         if self._pgvector_available and self._pool:
             try:
-                async with self._pool.acquire() as conn:
-                    async with conn.transaction():
-                        for item in items:
-                            try:
-                                emb = item["embedding"]
-                                emb_str = "[" + ",".join(str(v) for v in emb) + "]"
-                                content_hash = hashlib.sha256(
-                                    item["content"].encode()
-                                ).hexdigest()
-                                tags_json = str(item.get("tags", []))
-                                expires_at = item.get("expires_at")
-                                expires_sql = (
-                                    f"to_timestamp({expires_at})" if expires_at else "NULL"
-                                )
+                async with self._pool.acquire() as conn, conn.transaction():
+                    for item in items:
+                        try:
+                            emb = item["embedding"]
+                            emb_str = "[" + ",".join(str(v) for v in emb) + "]"
+                            content_hash = hashlib.sha256(item["content"].encode()).hexdigest()
+                            tags_json = str(item.get("tags", []))
+                            expires_at = item.get("expires_at")
+                            expires_sql = f"to_timestamp({expires_at})" if expires_at else "NULL"
 
-                                await conn.execute(
-                                    f"""  # noqa: S608
+                            await conn.execute(
+                                f"""  # noqa: S608
                                     INSERT INTO {self._table_name}
                                         (id, content, embedding, source, category, tags, content_hash, updated_at, expires_at)
                                     VALUES ($1, $2, $3::vector, $4, $5, $6, $7, NOW(), {expires_sql})
@@ -377,19 +376,17 @@ class VectorStore:
                                         updated_at = NOW(),
                                         expires_at = EXCLUDED.expires_at
                                     """,  # noqa: S608
-                                    item["id"],
-                                    item["content"],
-                                    emb_str,
-                                    item.get("source", ""),
-                                    item.get("category", ""),
-                                    tags_json,
-                                    content_hash,
-                                )
-                                success_count += 1
-                            except Exception as e:
-                                logger.warning(
-                                    f"VectorStore: Batch upsert failed for {item.get('id', '?')}: {e}"
-                                )
+                                item["id"],
+                                item["content"],
+                                emb_str,
+                                item.get("source", ""),
+                                item.get("category", ""),
+                                tags_json,
+                                content_hash,
+                            )
+                            success_count += 1
+                        except Exception as e:
+                            logger.warning(f"VectorStore: Batch upsert failed for {item.get('id', '?')}: {e}")
                 self._stats["upserts"] += success_count
                 return success_count
             except Exception as e:
@@ -483,16 +480,18 @@ class VectorStore:
                     )
 
                     for row in rows:
-                        results.append(VectorSearchResult(
-                            id=row["id"],
-                            content=row["content"],
-                            similarity=round(float(row["similarity"]), 4),
-                            metadata={
-                                "source": row["source"],
-                                "category": row["category"],
-                                "tags": row["tags"],
-                            },
-                        ))
+                        results.append(
+                            VectorSearchResult(
+                                id=row["id"],
+                                content=row["content"],
+                                similarity=round(float(row["similarity"]), 4),
+                                metadata={
+                                    "source": row["source"],
+                                    "category": row["category"],
+                                    "tags": row["tags"],
+                                },
+                            )
+                        )
             except Exception as e:
                 logger.warning(f"VectorStore: pgvector search failed: {e}")
                 # Fall through to memory fallback
@@ -543,19 +542,21 @@ class VectorStore:
 
             similarity = float(np.dot(query, emb))
             if similarity >= threshold:
-                scored.append((
-                    similarity,
-                    VectorSearchResult(
-                        id=id,
-                        content=entry["content"],
-                        similarity=round(similarity, 4),
-                        metadata={
-                            "source": entry.get("source", ""),
-                            "category": entry.get("category", ""),
-                            "tags": entry.get("tags", []),
-                        },
-                    ),
-                ))
+                scored.append(
+                    (
+                        similarity,
+                        VectorSearchResult(
+                            id=id,
+                            content=entry["content"],
+                            similarity=round(similarity, 4),
+                            metadata={
+                                "source": entry.get("source", ""),
+                                "category": entry.get("category", ""),
+                                "tags": entry.get("tags", []),
+                            },
+                        ),
+                    )
+                )
 
         scored.sort(key=lambda x: x[0], reverse=True)
         return [r for _, r in scored[:top_k]]
@@ -612,7 +613,7 @@ class VectorStore:
                             f"SELECT COUNT(*) AS cnt FROM {self._table_name}"  # noqa: S608
                         )
                     return int(row["cnt"])
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         # In-memory fallback
@@ -638,14 +639,13 @@ class VectorStore:
                     # Parse "DELETE N" result
                     parts = result.split()
                     return int(parts[1]) if len(parts) >= 2 and parts[1].isdigit() else 0
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         # In-memory fallback
         now = time.time()
         expired_ids = [
-            id for id, entry in self._memory_store.items()
-            if entry.get("expires_at") and entry["expires_at"] < now
+            id for id, entry in self._memory_store.items() if entry.get("expires_at") and entry["expires_at"] < now
         ]
         for id in expired_ids:
             del self._memory_store[id]
@@ -682,7 +682,7 @@ class VectorStore:
                         SELECT pg_size_pretty(pg_total_relation_size('{self._table_name}')) AS size
                     """)
                     stats["index_size"] = row["size"] if row else "unknown"
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         return stats
@@ -718,10 +718,8 @@ class VectorStore:
     async def close(self) -> None:
         """Close the vector store and release connections."""
         if self._pool:
-            try:
+            with contextlib.suppress(Exception):
                 await self._pool.close()
-            except Exception:  # noqa: S110
-                pass
             self._pool = None
         self._initialized = False
         self._pgvector_available = False

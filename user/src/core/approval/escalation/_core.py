@@ -48,7 +48,7 @@ class EscalationManager:
             self._persist_sla_policy(policy)
 
         logger.info(
-            "EscalationManager: Set SLA policy for %s — role=%s, " "max_response=%dms, auto_escalate=%s",
+            "EscalationManager: Set SLA policy for %s — role=%s, max_response=%dms, auto_escalate=%s",
             level.name,
             role,
             max_response_time_ms,
@@ -95,7 +95,7 @@ class EscalationManager:
             self._persist_escalation_sla(sla, insert=True)
 
         logger.info(
-            "EscalationManager: Created SLA for request %s — level=%s, " "role=%s, deadline=%s",
+            "EscalationManager: Created SLA for request %s — level=%s, role=%s, deadline=%s",
             request_id,
             initial_level.name,
             policy.role,
@@ -143,7 +143,7 @@ class EscalationManager:
             next_level = EscalationLevel(sla.current_level.value + 1)
             if next_level.value > EscalationLevel.L3_C_SUITE.value:
                 logger.warning(
-                    "EscalationManager: Request %s already at max level, " "cannot auto-escalate further",
+                    "EscalationManager: Request %s already at max level, cannot auto-escalate further",
                     sla.request_id,
                 )
                 continue
@@ -251,7 +251,7 @@ class EscalationManager:
         self._record_audit_event(request_id, sla)
 
         logger.info(
-            "EscalationManager: Manually escalated request %s from %s to %s " "by %s — reason: %s",
+            "EscalationManager: Manually escalated request %s from %s to %s by %s — reason: %s",
             request_id,
             from_level.name,
             to_level.name,

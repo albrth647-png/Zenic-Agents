@@ -219,7 +219,7 @@ class RegistrationStore:
             ),
         )
         conn.execute(
-            "INSERT INTO registration_log (registration_id, event, timestamp, details) " "VALUES (?, ?, ?, ?)",
+            "INSERT INTO registration_log (registration_id, event, timestamp, details) VALUES (?, ?, ?, ?)",
             (data.registration_id, "registered", time.time(), json.dumps(data.to_dict())),
         )
         conn.commit()

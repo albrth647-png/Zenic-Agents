@@ -3,6 +3,11 @@
 //! Merkle chain verification, Merkle proof generation, and batch
 //! verification for high-throughput scenarios.
 
+use std::collections::HashMap;
+
+use pyo3::prelude::*;
+use pyo3::types::{PyDict, PyList};
+
 use super::types::*;
 use super::analyzer::{build_merkle_tree_with_proof, verify_merkle_proof};
 

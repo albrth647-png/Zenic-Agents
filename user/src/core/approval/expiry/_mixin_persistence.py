@@ -22,6 +22,7 @@ class ExpiryPersistenceMixin:
 
     def _init_db(self) -> None:
         """Create the expiry records table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -47,6 +48,7 @@ class ExpiryPersistenceMixin:
 
     def _get_active_records(self) -> list[ExpiryRecord]:
         """Get all active expiry records."""
+
         def _do_query() -> list[ExpiryRecord]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -61,9 +63,13 @@ class ExpiryPersistenceMixin:
         return self._with_retry(_do_query, fallback=[])
 
     def _persist_expiry_record(
-        self, record: ExpiryRecord, *, insert: bool,
+        self,
+        record: ExpiryRecord,
+        *,
+        insert: bool,
     ) -> None:
         """Insert or update an expiry record."""
+
         def _do_persist() -> None:
             conn = sqlite3.connect(self._db_path)
             result_json = json.dumps(record.revert_result) if record.revert_result else None
@@ -131,7 +137,9 @@ class ExpiryPersistenceMixin:
                 last_exc = exc
                 logger.warning(
                     "ExpiryManager: DB retry %d/%d — %s",
-                    attempt, max_retries, exc,
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

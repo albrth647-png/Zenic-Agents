@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       details: { displayName: tool.displayName, category: tool.category, riskLevel: tool.riskLevel },
     });
 
-    const response: ApiResponse<typeof tool> = {
+    const response: ApiResponse<Record<string, unknown>> = {
       success: true,
       data: {
         ...tool,
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         metadata: safeJsonParse<Record<string, unknown>>(tool.metadata, {}),
         inputSchema: safeJsonParse<Record<string, unknown>>(tool.inputSchema, {}),
         outputSchema: tool.outputSchema ? safeJsonParse<Record<string, unknown>>(tool.outputSchema, null) : null,
-      },
+      } as unknown as Record<string, unknown>,
       message: "Tool created successfully",
     };
 

@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenant_id') || '__anonymous__';
+    const tenantId = searchParams.get('tenantId') || '__anonymous__';
 
     // Build the where clause based on tenant
     const whereClause = tenantId === '__anonymous__'

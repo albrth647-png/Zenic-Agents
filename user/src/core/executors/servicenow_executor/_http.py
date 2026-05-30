@@ -94,7 +94,7 @@ class _HttpMixin:
                 if attempt < _MAX_RETRIES - 1:
                     delay = _RETRY_BASE_DELAY * (2**attempt)
                     logger.warning(
-                        "ServiceNowExecutor: request failed (attempt %d/%d), " "retrying in %.1fs — %s",
+                        "ServiceNowExecutor: request failed (attempt %d/%d), retrying in %.1fs — %s",
                         attempt + 1,
                         _MAX_RETRIES,
                         delay,
@@ -186,10 +186,8 @@ class _HttpMixin:
                     }
             except urllib.error.HTTPError as exc:
                 body_text = ""
-                try:
+                with contextlib.suppress(Exception):
                     body_text = exc.read().decode("utf-8", errors="replace")
-                except Exception:  # noqa: S110
-                    pass
 
                 try:
                     parsed = json.loads(body_text) if body_text else {}

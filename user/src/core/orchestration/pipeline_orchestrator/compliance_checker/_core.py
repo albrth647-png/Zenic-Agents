@@ -217,4 +217,4 @@ class ComplianceChecker:
         self._audit_trail.clear()
 
     def __repr__(self) -> str:
-        return f"ComplianceChecker(rules={self.rule_count}, " f"standards={len(self._rules_by_standard)})"
+        return f"ComplianceChecker(rules={self.rule_count}, standards={len(self._rules_by_standard)})"

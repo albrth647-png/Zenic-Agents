@@ -194,7 +194,7 @@ class FormatAdapter:
             return ConversionResult(
                 success=False,
                 original_size_bytes=input_size,
-                error=f"Audio too large: {input_size} bytes exceeds " f"limit of {self._max_size} bytes",
+                error=f"Audio too large: {input_size} bytes exceeds limit of {self._max_size} bytes",
                 source="format_adapter",
             )
 
@@ -202,7 +202,7 @@ class FormatAdapter:
             return ConversionResult(
                 success=False,
                 original_size_bytes=input_size,
-                error="pydub not installed — format conversion unavailable. " "Install pydub: pip install pydub",
+                error="pydub not installed — format conversion unavailable. Install pydub: pip install pydub",
                 source="format_adapter",
             )
 
@@ -244,12 +244,12 @@ class FormatAdapter:
                 original_format=fmt,
                 original_size_bytes=input_size,
                 duration_seconds=duration,
-                error=f"Audio too long: {duration:.1f}s exceeds " f"limit of {self._max_duration:.1f}s",
+                error=f"Audio too long: {duration:.1f}s exceeds limit of {self._max_duration:.1f}s",
                 source="format_adapter",
             )
 
         _logger.info(
-            "FormatAdapter: converted %s→wav in %.2fs " "(%d→%d bytes, %.1fs audio)",
+            "FormatAdapter: converted %s→wav in %.2fs (%d→%d bytes, %.1fs audio)",
             fmt or "(auto)",
             elapsed,
             input_size,
@@ -393,12 +393,12 @@ class FormatAdapter:
                     # If we got here, it loaded successfully
                     # but we don't know the exact format from pydub alone
                     return AudioFormat.UNKNOWN
-                except Exception:  # noqa: S110
+                except Exception:
                     pass
                 finally:
                     with contextlib.suppress(OSError):
                         os.unlink(tmp_path)
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         return AudioFormat.UNKNOWN
@@ -457,7 +457,7 @@ class FormatAdapter:
                     duration_seconds = len(audio) / 1000.0
                     duration_valid = duration_seconds <= duration_limit
                     if not duration_valid:
-                        errors.append(f"Duration {duration_seconds:.1f}s exceeds " f"limit {duration_limit:.1f}s")
+                        errors.append(f"Duration {duration_seconds:.1f}s exceeds limit {duration_limit:.1f}s")
                 except Exception as e:
                     errors.append(f"Cannot determine duration: {e}")
                 finally:

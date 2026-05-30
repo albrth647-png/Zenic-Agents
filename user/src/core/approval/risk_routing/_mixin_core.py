@@ -9,9 +9,8 @@ import logging
 import sqlite3
 import time
 import uuid
-from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._types import (
     _ACTION_CATEGORY_SCORES,
@@ -23,6 +22,9 @@ from ._types import (
     _score_to_risk_level,
     _score_to_role,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ class RiskBasedApprovalRouter:
     def __init__(self, db_path: str = "risk_routing.sqlite") -> None:
         self._db_path = db_path
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -44,6 +47,7 @@ class RiskBasedApprovalRouter:
 
     def _init_db(self) -> None:
         """Create the risk_assessments table if it does not exist."""
+
         def _do_init() -> None:
             conn = sqlite3.connect(self._db_path)
             conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -141,7 +145,11 @@ class RiskBasedApprovalRouter:
 
         logger.info(
             "RiskRouter: action='%s' score=%.2f level=%s role=%s auto=%s",
-            action_type, risk_score, risk_level.value, recommended_role, auto_approvable,
+            action_type,
+            risk_score,
+            risk_level.value,
+            recommended_role,
+            auto_approvable,
         )
         return assessment
 
@@ -150,7 +158,9 @@ class RiskBasedApprovalRouter:
         return risk_assessment.recommended_role
 
     def should_escalate(
-        self, current_role: str, risk_assessment: RiskAssessment,
+        self,
+        current_role: str,
+        risk_assessment: RiskAssessment,
     ) -> bool:
         """Check if the current approver role is sufficient for the risk level."""
         recommended = risk_assessment.recommended_role
@@ -163,9 +173,12 @@ class RiskBasedApprovalRouter:
     # ── Query Methods ──────────────────────────────────────
 
     def get_history(
-        self, action_type: str = "", limit: int = 50,
+        self,
+        action_type: str = "",
+        limit: int = 50,
     ) -> list[Mapping[str, str | int | float | bool | list]]:
         """Return recent risk assessments, optionally filtered by action_type."""
+
         def _do_query() -> list[Mapping[str, str | int | float | bool | list]]:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -185,23 +198,26 @@ class RiskBasedApprovalRouter:
             conn.close()
             results: list[dict[str, Any]] = []
             for row in rows:
-                results.append({
-                    "assessment_id": row["assessment_id"],
-                    "action_type": row["action_type"],
-                    "risk_score": row["risk_score"],
-                    "risk_level": row["risk_level"],
-                    "recommended_role": row["recommended_role"],
-                    "auto_approvable": bool(row["auto_approvable"]),
-                    "factors": json.loads(row["factors"] or "[]"),
-                    "explanation": row["explanation"],
-                    "created_at": row["created_at"],
-                })
+                results.append(
+                    {
+                        "assessment_id": row["assessment_id"],
+                        "action_type": row["action_type"],
+                        "risk_score": row["risk_score"],
+                        "risk_level": row["risk_level"],
+                        "recommended_role": row["recommended_role"],
+                        "auto_approvable": bool(row["auto_approvable"]),
+                        "factors": json.loads(row["factors"] or "[]"),
+                        "explanation": row["explanation"],
+                        "created_at": row["created_at"],
+                    }
+                )
             return results
 
         return self._with_retry(_do_query, fallback=[])
 
     def get_stats(self) -> Mapping[str, str | int | float | dict]:
         """Return aggregate risk-routing statistics."""
+
         def _do_query() -> Mapping[str, str | int | float | dict]:
             conn = sqlite3.connect(self._db_path)
             try:
@@ -250,6 +266,7 @@ class RiskBasedApprovalRouter:
         amount = action_config.get("amount", 0)
         if isinstance(amount, (int, float)) and amount > 0:
             import math
+
             try:
                 return min(0.7, max(0.0, math.log10(max(amount, 1)) / 10))
             except (ValueError, OverflowError):
@@ -261,7 +278,8 @@ class RiskBasedApprovalRouter:
 
     @staticmethod
     def _target_score(
-        action_config: dict[str, Any], context: dict[str, Any],
+        action_config: dict[str, Any],
+        context: dict[str, Any],
     ) -> float:
         """Production targets are higher risk than test/dev."""
         target = (
@@ -330,12 +348,16 @@ class RiskBasedApprovalRouter:
                     explanation, context, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    assessment_id, action_type, assessment.risk_score,
-                    assessment.risk_level.value, assessment.recommended_role,
+                    assessment_id,
+                    action_type,
+                    assessment.risk_score,
+                    assessment.risk_level.value,
+                    assessment.recommended_role,
                     int(assessment.auto_approvable),
                     json.dumps(assessment.factors),
                     assessment.explanation,
-                    json.dumps(context), now,
+                    json.dumps(context),
+                    now,
                 ),
             )
             conn.commit()
@@ -359,7 +381,10 @@ class RiskBasedApprovalRouter:
             except sqlite3.OperationalError as exc:
                 last_exc = exc
                 logger.warning(
-                    "RiskRouter: DB retry %d/%d — %s", attempt, max_retries, exc,
+                    "RiskRouter: DB retry %d/%d — %s",
+                    attempt,
+                    max_retries,
+                    exc,
                 )
                 if attempt < max_retries:
                     time.sleep(_RETRY_DELAY * attempt)

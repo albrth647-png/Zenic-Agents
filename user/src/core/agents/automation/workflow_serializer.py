@@ -63,9 +63,7 @@ class WorkflowSerializer(BaseAgent[WorkflowSpec]):
         description = input_data.get("description", "")
 
         # Build executable dict
-        executable = self._build_executable(
-            name, description, trigger, actions, schedule, conditions
-        )
+        executable = self._build_executable(name, description, trigger, actions, schedule, conditions)
 
         # Generate YAML representation
         yaml_str = self._to_yaml(executable)
@@ -101,19 +99,23 @@ class WorkflowSerializer(BaseAgent[WorkflowSpec]):
         if isinstance(actions, list):
             for action in actions:
                 if isinstance(action, ActionSpec):
-                    normalized.append({
-                        "type": action.type,
-                        "config": action.config,
-                        "description": action.description,
-                    })
+                    normalized.append(
+                        {
+                            "type": action.type,
+                            "config": action.config,
+                            "description": action.description,
+                        }
+                    )
                 elif isinstance(action, dict):
                     normalized.append(action)
         elif isinstance(actions, ActionSpec):
-            normalized.append({
-                "type": actions.type,
-                "config": actions.config,
-                "description": actions.description,
-            })
+            normalized.append(
+                {
+                    "type": actions.type,
+                    "config": actions.config,
+                    "description": actions.description,
+                }
+            )
         return normalized
 
     def _normalize_schedule(self, schedule: Any) -> dict[str, Any]:
@@ -182,9 +184,7 @@ class WorkflowSerializer(BaseAgent[WorkflowSpec]):
         self._dict_to_yaml_lines(data, lines, indent=0)
         return "\n".join(lines)
 
-    def _dict_to_yaml_lines(
-        self, data: Any, lines: list[str], indent: int
-    ) -> None:
+    def _dict_to_yaml_lines(self, data: Any, lines: list[str], indent: int) -> None:
         """Recursively convert dict to YAML lines."""
         prefix = "  " * indent
 

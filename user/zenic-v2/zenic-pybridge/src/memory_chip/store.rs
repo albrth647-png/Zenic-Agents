@@ -7,7 +7,7 @@
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
-use zenic_memory::{HitlOutcome, LearningMechanism, SemanticMapping};
+use zenic_memory::{HitlOutcome, SemanticMapping};
 
 use super::types::{mem_err_to_py, parse_mechanism, MemoryChipInner};
 

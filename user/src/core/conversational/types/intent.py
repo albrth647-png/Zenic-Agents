@@ -21,36 +21,38 @@ class IntentCategory(str, Enum):
     con categorias conversacionales que no existian en el motor
     quirurgico original.
     """
+
     # Conversacionales (nuevas para asistente)
-    CHAT = "chat"                # Conversacion general
-    QUESTION = "question"        # Pregunta factual o explicativa
-    COMMAND = "command"          # Comando directo (ej: "limpiar", "reset")
-    FEEDBACK = "feedback"        # Feedback del usuario sobre respuesta
-    CONFIG = "config"            # Cambio de configuracion
+    CHAT = "chat"  # Conversacion general
+    QUESTION = "question"  # Pregunta factual o explicativa
+    COMMAND = "command"  # Comando directo (ej: "limpiar", "reset")
+    FEEDBACK = "feedback"  # Feedback del usuario sobre respuesta
+    CONFIG = "config"  # Cambio de configuracion
 
     # Heredadas de Zenic-Agents (mapean a operaciones del motor)
-    CODE_CREATE = "code_create"      # Mapea a CREATE
+    CODE_CREATE = "code_create"  # Mapea a CREATE
     CODE_REFACTOR = "code_refactor"  # Mapea a REFACTOR
-    CODE_DEBUG = "code_debug"        # Mapea a DEBUG
+    CODE_DEBUG = "code_debug"  # Mapea a DEBUG
     CODE_OPTIMIZE = "code_optimize"  # Mapea a OPTIMIZE
-    CODE_ANALYZE = "code_analyze"    # Mapea a ANALYZE
-    CODE_EXPLAIN = "code_explain"    # Mapea a EXPLAIN
+    CODE_ANALYZE = "code_analyze"  # Mapea a ANALYZE
+    CODE_EXPLAIN = "code_explain"  # Mapea a EXPLAIN
 
     # Operaciones de negocio (mapean a capa 3)
-    BUSINESS = "business"            # Operaciones de negocio
-    AUTOMATION = "automation"        # Automatizaciones
+    BUSINESS = "business"  # Operaciones de negocio
+    AUTOMATION = "automation"  # Automatizaciones
 
     # Especiales
-    UNKNOWN = "unknown"              # No se pudo clasificar
-    MULTI = "multi"                  # Multiples intenciones en un mensaje
+    UNKNOWN = "unknown"  # No se pudo clasificar
+    MULTI = "multi"  # Multiples intenciones en un mensaje
 
 
 class ConversationMode(str, Enum):
     """Modo de conversacion del asistente."""
-    NORMAL = "normal"          # Conversacion estandar
-    CODING = "coding"          # Modo enfocado en codigo
-    REASONING = "reasoning"    # Modo de razonamiento paso a paso
-    TEACHING = "teaching"      # Modo de ensenanza/explicacion
+
+    NORMAL = "normal"  # Conversacion estandar
+    CODING = "coding"  # Modo enfocado en codigo
+    REASONING = "reasoning"  # Modo de razonamiento paso a paso
+    TEACHING = "teaching"  # Modo de ensenanza/explicacion
     AUTOMATION = "automation"  # Configuracion de automatizaciones
 
 
@@ -62,9 +64,10 @@ class AssistantIntent:
     Combina la clasificacion original de Zenic-Agents con
     las nuevas categorias conversacionales.
     """
+
     category: IntentCategory = IntentCategory.UNKNOWN
-    operation: str = ""        # Operacion original de Zenic-Agents (CREATE, etc.)
-    goal: str = ""             # Goal original (FEATURE_ADD, etc.)
+    operation: str = ""  # Operacion original de Zenic-Agents (CREATE, etc.)
+    goal: str = ""  # Goal original (FEATURE_ADD, etc.)
     confidence: float = 0.0
     mode: ConversationMode = ConversationMode.NORMAL
     entities: dict[str, Any] = field(default_factory=dict)
@@ -120,6 +123,7 @@ class AssistantIntent:
 @dataclass
 class IntentResult:
     """Resultado del proceso de deteccion de intencion."""
+
     intent: AssistantIntent = field(default_factory=AssistantIntent)
     alternative_intents: list[AssistantIntent] = field(default_factory=list)
     context_keywords: list[str] = field(default_factory=list)

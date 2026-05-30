@@ -84,8 +84,8 @@ export class DurableWriteLog {
     }
 
     try {
-      this.client = new Redis({
-        url,
+      // Pass URL as first arg, options as second (ioredis v5+)
+      this.client = new Redis(url, {
         retryStrategy(times: number) {
           if (times > 20) {
             console.warn('[WAL] Max reconnection attempts reached. Giving up.')

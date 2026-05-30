@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 #  BLUEPRINT SDK
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintSDK:
     """Public API for partners to create and manage Blueprints.
 
@@ -62,13 +63,23 @@ class BlueprintSDK:
     # ── Blueprint Creation ─────────────────────────────────
 
     def create_blueprint(
-        self, name: str, domain: str = "", subdomain: str = "",
-        description: str = "", author: str = "", tier: str = "partner",
+        self,
+        name: str,
+        domain: str = "",
+        subdomain: str = "",
+        description: str = "",
+        author: str = "",
+        tier: str = "partner",
     ) -> BlueprintBuilder:
         """Create a new Blueprint using the builder pattern."""
         return BlueprintBuilder(
-            sdk=self, name=name, domain=domain, subdomain=subdomain,
-            description=description, author=author, tier=tier,
+            sdk=self,
+            name=name,
+            domain=domain,
+            subdomain=subdomain,
+            description=description,
+            author=author,
+            tier=tier,
         )
 
     # ── Validation ─────────────────────────────────────────
@@ -80,7 +91,9 @@ class BlueprintSDK:
     # ── Certification ──────────────────────────────────────
 
     def submit_for_certification(
-        self, blueprint: CertifiedBlueprint, partner_id: str = "",
+        self,
+        blueprint: CertifiedBlueprint,
+        partner_id: str = "",
     ) -> dict[str, Any]:
         """Submit a Blueprint for certification."""
         validation = self._validator.validate(blueprint)
@@ -138,7 +151,8 @@ class BlueprintSDK:
         self._published[blueprint.metadata.name] = blueprint
         logger.info(
             "BlueprintSDK: Published '%s' v%s",
-            blueprint.metadata.name, blueprint.metadata.version,
+            blueprint.metadata.name,
+            blueprint.metadata.version,
         )
         return True
 
@@ -191,6 +205,7 @@ class BlueprintSDK:
 #  BLUEPRINT BUILDER (Fluent API)
 # ──────────────────────────────────────────────────────────────
 
+
 class BlueprintBuilder:
     """Fluent builder for creating Blueprints step by step.
 
@@ -205,14 +220,22 @@ class BlueprintBuilder:
     """
 
     def __init__(
-        self, sdk: BlueprintSDK, name: str, domain: str = "",
-        subdomain: str = "", description: str = "",
-        author: str = "", tier: str = "partner",
+        self,
+        sdk: BlueprintSDK,
+        name: str,
+        domain: str = "",
+        subdomain: str = "",
+        description: str = "",
+        author: str = "",
+        tier: str = "partner",
     ) -> None:
         self._sdk = sdk
         self._metadata = BlueprintMetadataV2(
-            name=name, domain=domain, subdomain=subdomain,
-            description=description, author=author,
+            name=name,
+            domain=domain,
+            subdomain=subdomain,
+            description=description,
+            author=author,
             tier=BlueprintTier(tier),
         )
         self._db_schema = DBSchema()
@@ -242,7 +265,9 @@ class BlueprintBuilder:
         return self
 
     def add_executor_schema(
-        self, executor_type: str, schema: dict[str, Any],
+        self,
+        executor_type: str,
+        schema: dict[str, Any],
     ) -> BlueprintBuilder:
         self._executor_schemas[executor_type] = schema
         return self
@@ -270,7 +295,8 @@ class BlueprintBuilder:
     def build_and_certify(self) -> dict[str, Any]:
         """Build and submit for certification in one step."""
         return self._sdk.submit_for_certification(
-            self._build_internal(), partner_id=self._metadata.author,
+            self._build_internal(),
+            partner_id=self._metadata.author,
         )
 
     def _build_internal(self) -> CertifiedBlueprint:

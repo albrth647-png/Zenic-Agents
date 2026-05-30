@@ -64,16 +64,13 @@ class _WriterMixin:
                     """
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant "
-                    "ON journal_entries(db_path, tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant ON journal_entries(db_path, tenant_id)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_je_tenant "
-                    "ON journal_entries(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_tenant ON journal_entries(tenant_id)"
                 )
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    "CREATE INDEX IF NOT EXISTS idx_je_created "
-                    "ON journal_entries(created_at)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_created ON journal_entries(created_at)"
                 )
                 conn.commit()
             finally:
@@ -130,7 +127,10 @@ class _WriterMixin:
 
         logger.info(
             "DBTransactionJournal: journal_before %s op=%s db=%s [tenant=%s]",
-            entry.journal_id[:12], op, db_path, tenant_id,
+            entry.journal_id[:12],
+            op,
+            db_path,
+            tenant_id,
         )
         return entry.journal_id
 
@@ -171,7 +171,9 @@ class _WriterMixin:
         )
         logger.debug(
             "DBTransactionJournal: journal_after %s affected=%d lastrowid=%s",
-            journal_id[:12], affected_rows, lastrowid,
+            journal_id[:12],
+            affected_rows,
+            lastrowid,
         )
 
     # ── Before-state capture helpers ─────────────────────────
@@ -235,7 +237,8 @@ class _WriterMixin:
             except Exception as exc:
                 logger.warning(
                     "DBTransactionJournal: failed to capture before-state for %s: %s",
-                    operation, exc,
+                    operation,
+                    exc,
                 )
                 return []
 

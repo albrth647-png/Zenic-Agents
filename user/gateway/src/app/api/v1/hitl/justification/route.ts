@@ -2,7 +2,7 @@
 // POST /api/v1/hitl/justification
 
 import { NextRequest, NextResponse } from "next/server";
-import { getJustificationService } from "@/lib/hitl";
+import { getJustificationService } from "@/lib/hitl/justification-service";
 
 // POST /api/v1/hitl/justification
 export async function POST(request: NextRequest) {

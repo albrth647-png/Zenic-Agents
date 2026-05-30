@@ -19,6 +19,7 @@ If Redis is unavailable, falls back to in-memory AgentCircuitBreaker.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import time
 from typing import Any
@@ -204,7 +205,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
     """
 
     # Default circuit breaker config values
-    DEFAULT_CB_CONFIG = {
+    DEFAULT_CB_CONFIG = {  # noqa: RUF012
         "failure_threshold": 5,
         "recovery_timeout": 30.0,  # seconds (stored as ms in Redis)
         "success_threshold": 2,
@@ -250,10 +251,8 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
         """Gracefully close the Redis connection."""
         if self._redis:
             self._redis_available = False
-            try:
+            with contextlib.suppress(Exception):
                 await self._redis.close()
-            except Exception:  # noqa: S110
-                pass
             self._redis = None
 
     def is_redis_ready(self) -> bool:

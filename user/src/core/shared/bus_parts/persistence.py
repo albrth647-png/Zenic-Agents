@@ -14,7 +14,7 @@ import threading
 from .types import _DB_CACHE_SIZE, _DB_MMAP_SIZE, _FLUSH_BATCH_SIZE, BusMessage
 
 # SQL Injection protection: validate identifiers before interpolation
-_SAFE_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 _SAFE_TABLES = frozenset({"mailbox_messages", "shared_state", "ring_buffer_snapshots"})
 
 logger = logging.getLogger(__name__)
@@ -92,8 +92,12 @@ class PersistenceLayer:
         # validated by type (int). No user input flows here.
         assert isinstance(_DB_CACHE_SIZE, int), f"Invalid cache_size: {_DB_CACHE_SIZE}"
         assert isinstance(_DB_MMAP_SIZE, int), f"Invalid mmap_size: {_DB_MMAP_SIZE}"
-        conn.execute(f"PRAGMA cache_size={_DB_CACHE_SIZE}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
-        conn.execute(f"PRAGMA mmap_size={_DB_MMAP_SIZE}")  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+        conn.execute(
+            f"PRAGMA cache_size={_DB_CACHE_SIZE}"
+        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
+        conn.execute(
+            f"PRAGMA mmap_size={_DB_MMAP_SIZE}"
+        )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
         conn.execute("PRAGMA synchronous=NORMAL")  # nosemgrep: sqlalchemy-execute-raw-query
         conn.execute("PRAGMA temp_store=MEMORY")  # nosemgrep: sqlalchemy-execute-raw-query
         return conn
@@ -138,11 +142,15 @@ class PersistenceLayer:
         # Serialise messages outside the DB lock to minimise contention
         msg_rows = [
             (
-                m.sender, m.recipient, int(m.msg_type),
+                m.sender,
+                m.recipient,
+                int(m.msg_type),
                 int(m.priority),
                 json.dumps(m.payload, default=str),
-                m.timestamp, m.tenant_id,
-                m.ttl_seconds, m.correlation_id,
+                m.timestamp,
+                m.tenant_id,
+                m.ttl_seconds,
+                m.correlation_id,
             )
             for m in msgs
         ]
@@ -151,7 +159,7 @@ class PersistenceLayer:
             try:
                 # Mailbox messages — chunked to avoid huge transactions
                 for offset in range(0, len(msg_rows), _FLUSH_BATCH_SIZE):
-                    chunk = msg_rows[offset:offset + _FLUSH_BATCH_SIZE]
+                    chunk = msg_rows[offset : offset + _FLUSH_BATCH_SIZE]
                     self._conn.executemany(
                         """INSERT INTO mailbox_messages
                            (sender, recipient, msg_type, priority, payload,
@@ -163,7 +171,7 @@ class PersistenceLayer:
 
                 # Shared state (upsert) — chunked
                 for offset in range(0, len(states), _FLUSH_BATCH_SIZE):
-                    chunk = states[offset:offset + _FLUSH_BATCH_SIZE]
+                    chunk = states[offset : offset + _FLUSH_BATCH_SIZE]
                     self._conn.executemany(
                         """INSERT INTO shared_state
                            (namespace, key, value, tenant_id, updated_at, ttl_seconds)
@@ -178,7 +186,7 @@ class PersistenceLayer:
 
                 # Ring buffer snapshots — chunked
                 for offset in range(0, len(rings), _FLUSH_BATCH_SIZE):
-                    chunk = rings[offset:offset + _FLUSH_BATCH_SIZE]
+                    chunk = rings[offset : offset + _FLUSH_BATCH_SIZE]
                     self._conn.executemany(
                         """INSERT OR REPLACE INTO ring_buffer_snapshots
                            (slot_index, data, tenant_id, timestamp)
@@ -214,12 +222,12 @@ class PersistenceLayer:
                 assert table in _SAFE_TABLES, f"Invalid table name: {table}"
                 try:
                     cursor = self._conn.execute(
-                        f'DELETE FROM "{table}" WHERE tenant_id=?', (tenant_id,)  # noqa: S608
+                        f'DELETE FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                        (tenant_id,),
                     )
                     total += cursor.rowcount
                 except Exception:
-                    logger.exception("Purge failed for tenant=%s table=%s",
-                                     tenant_id, table)
+                    logger.exception("Purge failed for tenant=%s table=%s", tenant_id, table)
             self._conn.commit()
             return total
 

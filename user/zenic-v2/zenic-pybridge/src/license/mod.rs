@@ -22,11 +22,10 @@ pub mod types;
 pub mod verification;
 
 // Re-export all public types and functions so that `use crate::license::LicenseTier` still works
-pub use crypto::{constant_time_compare, hex_decode, hex_encode, hmac_sha256};
-pub use hardware::{collect_hw_components, generate_hardware_fingerprint, verify_hardware_binding};
-pub use kill_switch::{check_kill_switch, parse_host_port};
+pub use hardware::{generate_hardware_fingerprint, verify_hardware_binding};
+pub use kill_switch::check_kill_switch;
 pub use signing::{sign_data, verify_signature};
-pub use types::{current_unix_timestamp, LicenseInfo, LicenseStatus, LicenseTier};
+pub use types::{LicenseInfo, LicenseStatus, LicenseTier};
 pub use verification::{check_tampering, verify_license};
 
 // ═══════════════════════════════════════════════════════════════
@@ -36,6 +35,9 @@ pub use verification::{check_tampering, verify_license};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::license::crypto::{constant_time_compare, hex_decode, hex_encode, hmac_sha256};
+    use crate::license::hardware::collect_hw_components;
+    use crate::license::kill_switch::parse_host_port;
 
     #[test]
     fn test_license_tier_str_roundtrip() {

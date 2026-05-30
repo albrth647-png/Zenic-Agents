@@ -257,9 +257,9 @@ class PipelineMixin(ProcessBuilderMixin):
                 if isinstance(inputs, dict):
                     args_str = ", ".join(f"{k}={v!r}" for k, v in inputs.items())
                     test_cases_lines.append(
-                        f"    def test_case_{i+1}(self):\n"
+                        f"    def test_case_{i + 1}(self):\n"
                         f"        result = self.execute({{{args_str}}})\n"
-                        f'        assert result.success, f"Test {i+1} failed: {{result.error}}"'
+                        f'        assert result.success, f"Test {i + 1} failed: {{result.error}}"'
                     )
             if test_cases_lines:
                 test_code = '\n\nclass Test{cls_name}:\n    """Test cases generated from Z3 concrete symbolic inputs."""\n{test_methods}\n'.format(

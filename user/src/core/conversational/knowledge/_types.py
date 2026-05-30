@@ -101,7 +101,7 @@ class KnowledgeResult:
             return ""
         lines: list[str] = []
         for entry in self.entries[:max_entries]:
-            lines.append(f"[{entry.knowledge_type.value}/{entry.category}] " f"{entry.title}: {entry.content[:200]}")
+            lines.append(f"[{entry.knowledge_type.value}/{entry.category}] {entry.title}: {entry.content[:200]}")
         return "\n".join(lines)
 
 

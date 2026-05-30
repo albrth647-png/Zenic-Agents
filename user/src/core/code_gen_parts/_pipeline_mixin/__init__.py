@@ -1,5 +1,5 @@
-'''_pipeline_mixin - refactored into sub-modules.'''
+"""_pipeline_mixin - refactored into sub-modules."""
 
 from ._core import PipelineMixin
 
-__all__ = ['PipelineMixin']
+__all__ = ["PipelineMixin"]

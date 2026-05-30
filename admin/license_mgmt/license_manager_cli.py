@@ -358,7 +358,7 @@ def main() -> None:
             expires_days=args.expires_days,
             notes=args.notes,
         )
-        print(f"License created:")
+        print("License created:")
         print(f"  ID:               {lic.license_id}")
         print(f"  Activation Key:   {lic.activation_key}")
         print(f"  Confirmation Code: {lic.confirmation_code}")

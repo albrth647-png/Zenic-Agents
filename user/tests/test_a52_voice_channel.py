@@ -4,7 +4,6 @@ Rigor: sin mocks, datos reales, cubre normal + vacío + sin pipeline wired +
 tipo incorrecto + extremos + error de sistema.
 """
 
-import asyncio
 import io
 import os
 import tempfile
@@ -24,10 +23,9 @@ from src.core.agents.transport.voice_channel_agent import (
 )
 from src.core.voice_pipeline import VoicePipeline
 from src.core.voice_pipeline._types import STTBackendConfig
-from src.core.voice_pipeline.ear import DummyBackend, Ear
-from src.core.voice_pipeline.format_adapter import FormatAdapter
 
 # ── Audio fixtures ─────────────────────────────────────────────
+
 
 def _make_wav_bytes(duration_ms: int = 500) -> bytes:
     tone = Sine(440).to_audio_segment(duration=duration_ms)
@@ -63,6 +61,7 @@ def _make_ogg_file(duration_ms: int = 500) -> str:
 
 # ── Pipeline fixture ───────────────────────────────────────────
 
+
 def _make_pipeline_with_dummy() -> VoicePipeline:
     """Create VoicePipeline with DummyBackend (no real STT, but conversion works)."""
     config = STTBackendConfig(fallback_chain=("dummy",))
@@ -73,8 +72,8 @@ def _make_pipeline_with_dummy() -> VoicePipeline:
 #  _read_local_file helper
 # ════════════════════════════════════════════════════════════════
 
-class TestReadLocalFile:
 
+class TestReadLocalFile:
     def test_read_existing_file(self):
         path = _make_wav_file()
         try:
@@ -114,8 +113,8 @@ class TestReadLocalFile:
 #  _get_voice_duration_limit / _get_voice_size_limit helpers
 # ════════════════════════════════════════════════════════════════
 
-class TestVoiceLimitHelpers:
 
+class TestVoiceLimitHelpers:
     def test_duration_limit_returns_int(self):
         limit = _get_voice_duration_limit("whatsapp")
         assert isinstance(limit, int)
@@ -139,8 +138,8 @@ class TestVoiceLimitHelpers:
 #  A52 — Construction & Wiring
 # ════════════════════════════════════════════════════════════════
 
-class TestA52Construction:
 
+class TestA52Construction:
     def test_default_construction(self):
         agent = VoiceChannelAgent()
         assert agent.name == "A52_VoiceChannelAgent"
@@ -181,8 +180,8 @@ class TestA52Construction:
 #  A52 — Input Validation
 # ════════════════════════════════════════════════════════════════
 
-class TestA52InputValidation:
 
+class TestA52InputValidation:
     def test_voice_channel_input_passthrough(self):
         agent = VoiceChannelAgent()
         inp = VoiceChannelInput(
@@ -213,12 +212,14 @@ class TestA52InputValidation:
 
     def test_channel_message_like_object(self):
         agent = VoiceChannelAgent()
+
         class FakeMsg:
             voice_url = "https://example.com/voice.ogg"
             voice_format = "ogg"
             recipient = "whatsapp"
             voice_duration = 5.0
-            metadata = {"lang": "es"}
+            metadata: dict | None = None
+
         result = agent._validate_input(FakeMsg())
         assert result.audio_url == "https://example.com/voice.ogg"
         assert result.audio_format == "ogg"
@@ -240,8 +241,8 @@ class TestA52InputValidation:
 #  A52 — execute() with unwired pipeline
 # ════════════════════════════════════════════════════════════════
 
-class TestA52ExecuteUnwired:
 
+class TestA52ExecuteUnwired:
     def test_execute_without_wiring_returns_failure(self):
         agent = VoiceChannelAgent()
         inp = VoiceChannelInput(
@@ -278,8 +279,8 @@ class TestA52ExecuteUnwired:
 #  A52 — execute() with local file (real audio)
 # ════════════════════════════════════════════════════════════════
 
-class TestA52ExecuteLocalFile:
 
+class TestA52ExecuteLocalFile:
     def test_execute_wav_file_with_dummy(self):
         """WAV file → conversion pass-through → DummyBackend → failure (no STT).
         This verifies the full pipeline executes without errors."""
@@ -340,8 +341,8 @@ class TestA52ExecuteLocalFile:
 #  A52 — fallback()
 # ════════════════════════════════════════════════════════════════
 
-class TestA52Fallback:
 
+class TestA52Fallback:
     def test_fallback_returns_safe_result(self):
         agent = VoiceChannelAgent()
         inp = VoiceChannelInput(
@@ -372,8 +373,8 @@ class TestA52Fallback:
 #  A52 — _make_result helper
 # ════════════════════════════════════════════════════════════════
 
-class TestA52MakeResult:
 
+class TestA52MakeResult:
     def test_make_result_defaults(self):
         data = VoiceChannelInput(channel="whatsapp")
         result = VoiceChannelAgent._make_result(data=data)
@@ -399,8 +400,8 @@ class TestA52MakeResult:
 #  A52 — transcribe() async entry point
 # ════════════════════════════════════════════════════════════════
 
-class TestA52AsyncTranscribe:
 
+class TestA52AsyncTranscribe:
     @pytest.mark.asyncio
     async def test_transcribe_unwired(self):
         agent = VoiceChannelAgent()
@@ -442,8 +443,8 @@ class TestA52AsyncTranscribe:
 #  A52 — INBOUND ONLY invariant
 # ════════════════════════════════════════════════════════════════
 
-class TestA52InboundOnly:
 
+class TestA52InboundOnly:
     def test_no_tts_methods(self):
         """A52 NO tiene métodos de TTS — solo audio→text."""
         agent = VoiceChannelAgent()

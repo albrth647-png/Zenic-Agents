@@ -10,8 +10,9 @@ from ._imports import SubtaskDescriptor
 class PartialMixin:
     """Mixin providing partial reasoning response construction."""
 
-    def build_partial_reasoning_response(self, intent, routing, plan, ast_analysis, trial, start_time,
-                                          subtask_results=None, combined_code=""):
+    def build_partial_reasoning_response(
+        self, intent, routing, plan, ast_analysis, trial, start_time, subtask_results=None, combined_code=""
+    ):
         """
         Construye la respuesta de Razonamiento Parcial como especifica el documento.
         (Gap 5 Fix): Now includes resumption_token and state for resume_from_partial().
@@ -80,7 +81,8 @@ class PartialMixin:
             # Remove entries older than TTL
             now = time.time()
             expired_keys = [
-                k for k, v in orch._pending_resumptions.items()
+                k
+                for k, v in orch._pending_resumptions.items()
                 if now - v.get("created_at", 0) > _RESUMPTION_TTL_SECONDS
             ]
             for k in expired_keys:
@@ -89,10 +91,9 @@ class PartialMixin:
             # Also enforce max count
             if len(orch._pending_resumptions) > 100:
                 oldest_keys = sorted(
-                    orch._pending_resumptions.keys(),
-                    key=lambda k: orch._pending_resumptions[k].get("created_at", 0)
+                    orch._pending_resumptions.keys(), key=lambda k: orch._pending_resumptions[k].get("created_at", 0)
                 )
-                for k in oldest_keys[:len(oldest_keys) - 100]:
+                for k in oldest_keys[: len(oldest_keys) - 100]:
                     del orch._pending_resumptions[k]
 
         return {
@@ -116,11 +117,13 @@ class PartialMixin:
                         "type": "function",
                         "function": {
                             "name": "zenith_mcts_plan",
-                            "arguments": json.dumps({
-                                "subtask_1_isolation": subtask_1,
-                                "subtask_2_mutation": subtask_2,
-                            })
-                        }
+                            "arguments": json.dumps(
+                                {
+                                    "subtask_1_isolation": subtask_1,
+                                    "subtask_2_mutation": subtask_2,
+                                }
+                            ),
+                        },
                     }
                 ],
                 "finish_reason": "tool_calls",
@@ -137,7 +140,8 @@ class PartialMixin:
                 },
                 "partial_code": combined_code,
                 "completed_subtasks": sum(
-                    1 for r in (subtask_results or [])
+                    1
+                    for r in (subtask_results or [])
                     if isinstance(r, dict) and r.get("status") in ("SUCCESS", "CACHED")
                 ),
                 "total_subtasks": len(subtask_results or []),
@@ -146,7 +150,9 @@ class PartialMixin:
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "total_tokens": 0,
-                f"zenith_{solver_type.lower()}_compute_time_ms": plan.solver_proof.get("timeout_ms", 0) if plan.solver_proof else 0,
+                f"zenith_{solver_type.lower()}_compute_time_ms": plan.solver_proof.get("timeout_ms", 0)
+                if plan.solver_proof
+                else 0,
                 "zenith_k_path_eval": k_path_eval,
                 "structural_theorem_hash": "null_overload",
             },

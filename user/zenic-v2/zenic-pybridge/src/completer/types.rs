@@ -334,6 +334,10 @@ impl CompletionQuestion {
     pub fn section_id(&self) -> &str {
         &self.section_id
     }
+
+    // Note: display_name() and field_type() exist only in #[pymethods]
+    // to avoid E0592 duplicate definitions. Tests should access fields
+    // directly via pub(crate) field access.
 }
 
 #[pymethods]

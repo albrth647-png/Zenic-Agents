@@ -28,12 +28,12 @@ logger = logging.getLogger(__name__)
 # CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-MAX_PREFETCH_RESULTS = 5         # Max total prefetched items
-MAX_SOLUTIONS_PER_PREFETCH = 2   # Max solutions to prefetch
-MAX_EPISODES_PER_PREFETCH = 2    # Max episodes to prefetch
-MAX_PATTERNS_PER_PREFETCH = 2    # Max patterns to prefetch
-SOLUTION_SNIPPET_LEN = 150       # Max chars for solution snippets
-EPISODE_SNIPPET_LEN = 100        # Max chars for episode snippets
+MAX_PREFETCH_RESULTS = 5  # Max total prefetched items
+MAX_SOLUTIONS_PER_PREFETCH = 2  # Max solutions to prefetch
+MAX_EPISODES_PER_PREFETCH = 2  # Max episodes to prefetch
+MAX_PATTERNS_PER_PREFETCH = 2  # Max patterns to prefetch
+SOLUTION_SNIPPET_LEN = 150  # Max chars for solution snippets
+EPISODE_SNIPPET_LEN = 100  # Max chars for episode snippets
 
 # ──────────────────────────────────────────────────────────────
 # PREFETCH STRATEGY MAP
@@ -163,9 +163,7 @@ class ContextPrefetcher(BaseAgent[PrefetchResult]):
 
         return merged
 
-    def _execute_strategy(
-        self, strategy: str, message: str, operation: str, goal: str
-    ) -> tuple:
+    def _execute_strategy(self, strategy: str, message: str, operation: str, goal: str) -> tuple:
         """Execute a single prefetch strategy. Returns (results, hint)."""
         try:
             if strategy == "similar_solutions":
@@ -190,16 +188,16 @@ class ContextPrefetcher(BaseAgent[PrefetchResult]):
         # Try semantic search first (better quality)
         if self._semantic_engine and self._semantic_engine.is_loaded:
             try:
-                similar = self._smart_memory.find_similar_solutions(
-                    message, top_k=MAX_SOLUTIONS_PER_PREFETCH
-                )
+                similar = self._smart_memory.find_similar_solutions(message, top_k=MAX_SOLUTIONS_PER_PREFETCH)
                 for sol in similar[:MAX_SOLUTIONS_PER_PREFETCH]:
-                    results.append({
-                        "type": "similar_solution",
-                        "operation": sol.get("operation", ""),
-                        "solution": sol.get("solution", "")[:SOLUTION_SNIPPET_LEN],
-                        "similarity": sol.get("similarity", 0.0),
-                    })
+                    results.append(
+                        {
+                            "type": "similar_solution",
+                            "operation": sol.get("operation", ""),
+                            "solution": sol.get("solution", "")[:SOLUTION_SNIPPET_LEN],
+                            "similarity": sol.get("similarity", 0.0),
+                        }
+                    )
             except Exception as e:
                 logger.debug(f"A08: Semantic solution prefetch failed: {e}")
 
@@ -211,15 +209,15 @@ class ContextPrefetcher(BaseAgent[PrefetchResult]):
         results: list[dict[str, Any]] = []
 
         try:
-            episodes = self._smart_memory.find_episodes(
-                event_type="error", limit=MAX_EPISODES_PER_PREFETCH
-            )
+            episodes = self._smart_memory.find_episodes(event_type="error", limit=MAX_EPISODES_PER_PREFETCH)
             for ep in episodes[:MAX_EPISODES_PER_PREFETCH]:
-                results.append({
-                    "type": "error_episode",
-                    "description": ep.get("description", "")[:EPISODE_SNIPPET_LEN],
-                    "outcome": ep.get("outcome", ""),
-                })
+                results.append(
+                    {
+                        "type": "error_episode",
+                        "description": ep.get("description", "")[:EPISODE_SNIPPET_LEN],
+                        "outcome": ep.get("outcome", ""),
+                    }
+                )
         except Exception as e:
             logger.debug(f"A08: Episode prefetch failed: {e}")
 
@@ -231,16 +229,16 @@ class ContextPrefetcher(BaseAgent[PrefetchResult]):
         results: list[dict[str, Any]] = []
 
         try:
-            patterns = self._smart_memory.find_patterns(
-                min_success_rate=0.7, limit=MAX_PATTERNS_PER_PREFETCH
-            )
+            patterns = self._smart_memory.find_patterns(min_success_rate=0.7, limit=MAX_PATTERNS_PER_PREFETCH)
             for pat in patterns[:MAX_PATTERNS_PER_PREFETCH]:
-                results.append({
-                    "type": "procedural_pattern",
-                    "name": pat.get("pattern_name", ""),
-                    "success_rate": pat.get("success_rate", 0.0),
-                    "steps": pat.get("steps", [])[:3],
-                })
+                results.append(
+                    {
+                        "type": "procedural_pattern",
+                        "name": pat.get("pattern_name", ""),
+                        "success_rate": pat.get("success_rate", 0.0),
+                        "steps": pat.get("steps", [])[:3],
+                    }
+                )
         except Exception as e:
             logger.debug(f"A08: Pattern prefetch failed: {e}")
 

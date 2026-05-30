@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 @dataclass(order=True)
 class ScheduledCheck:
     """Check programado en la cola de prioridad."""
+
     next_run: float  # timestamp
     weight: int = field(compare=True)
     monitor_name: str = field(compare=False)
@@ -110,7 +111,9 @@ class SNAScheduler:
         self._monitors[monitor.name] = monitor
         scheduled = ScheduledCheck.create(monitor)
         heapq.heappush(self._schedule, scheduled)
-        logger.debug(f"Monitor registrado: {monitor.name} (intervalo={monitor.interval_seconds}s, peso={monitor.weight.name})")
+        logger.debug(
+            f"Monitor registrado: {monitor.name} (intervalo={monitor.interval_seconds}s, peso={monitor.weight.name})"
+        )
 
     def run_once(self) -> list[Alert]:
         """Ejecuta una ronda de checks según schedule.
@@ -159,7 +162,7 @@ class SNAScheduler:
 
         for name, monitor in sorted(
             self._monitors.items(),
-            key=lambda x: -x[1].weight  # CRITICAL primero
+            key=lambda x: -x[1].weight,  # CRITICAL primero
         ):
             result = monitor.run()
             self._results[name] = result
@@ -199,8 +202,12 @@ class SNAScheduler:
             "unhealthy": unhealthy,
             "health_percent": round((healthy / total * 100) if total > 0 else 100, 1),
             "issues_by_severity": {
-                "critical": sum(1 for r in self._results.values() if not r.healthy and r.weight == MonitorWeight.CRITICAL),
-                "warning": sum(1 for r in self._results.values() if not r.healthy and r.weight == MonitorWeight.WARNING),
+                "critical": sum(
+                    1 for r in self._results.values() if not r.healthy and r.weight == MonitorWeight.CRITICAL
+                ),
+                "warning": sum(
+                    1 for r in self._results.values() if not r.healthy and r.weight == MonitorWeight.WARNING
+                ),
                 "info": sum(1 for r in self._results.values() if not r.healthy and r.weight == MonitorWeight.INFO),
             },
             "timestamp": datetime.now().isoformat(),

@@ -133,7 +133,7 @@ class ZenicTUIApp(App):
     }
     """
 
-    BINDINGS = [
+    BINDINGS = [  # noqa: RUF012
         ("q", "quit", "Salir"),
         ("t", "focus_input", "Probar"),
     ]
@@ -148,13 +148,13 @@ class ZenicTUIApp(App):
 
         # Title
         yield Label(
-            f"ZENIC-AGENTS {ZENIC_VERSION_STR}\n" f"Motor de IA Quirurgico Local ({solver_name})",
+            f"ZENIC-AGENTS {ZENIC_VERSION_STR}\nMotor de IA Quirurgico Local ({solver_name})",
             id="title-label",
         )
 
         # Info
         yield Label(
-            "Modo local (sin servidor HTTP)\n" "Usa el campo de texto para probar el motor",
+            "Modo local (sin servidor HTTP)\nUsa el campo de texto para probar el motor",
             id="ip-label",
         )
 
@@ -257,7 +257,7 @@ class ZenicTUIApp(App):
             # Auto-scroll to bottom
             scroll = self.query_one("#log-area", VerticalScroll)
             scroll.scroll_end(animate=False)
-        except Exception:  # noqa: S110
+        except Exception:
             pass
 
 

@@ -3,9 +3,7 @@
 //! Contains the integration tests for the compliance engine and
 //! a utility for formatting compliance results into a human-readable report.
 
-use super::engine_impl::ComplianceEngine;
-use super::types::{ComplianceResult, ComplianceStandard};
-use crate::categories::NicheCategory;
+use super::types::ComplianceResult;
 
 // ---------------------------------------------------------------------------
 // Report Formatting
@@ -41,6 +39,8 @@ pub fn format_compliance_report(results: &[ComplianceResult]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::categories::NicheCategory;
+    use crate::compliance::{ComplianceEngine, ComplianceStandard};
 
     #[test]
     fn compliance_standard_roundtrip() {

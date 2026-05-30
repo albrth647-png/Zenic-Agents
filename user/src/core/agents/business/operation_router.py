@@ -105,10 +105,7 @@ class OperationRouter(BaseAgent[RoutedOperation]):
         if not target_agent:
             canonical = OPERATION_ALIASES.get(op_type)
             if canonical:
-                if canonical in OPERATION_ROUTES:
-                    target_agent = OPERATION_ROUTES[canonical]
-                else:
-                    target_agent = canonical  # Already an agent name (e.g., custom)
+                target_agent = OPERATION_ROUTES.get(canonical, canonical)  # Already an agent name (e.g., custom)
 
         # Step 3: Default route
         if not target_agent:

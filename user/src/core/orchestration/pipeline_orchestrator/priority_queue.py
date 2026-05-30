@@ -29,6 +29,7 @@ __all__ = [
 #  DATA CONTRACTS
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class PrioritizedItem:
     """
@@ -43,6 +44,7 @@ class PrioritizedItem:
         category: Optional category for filtering.
         metadata: Additional metadata.
     """
+
     item_id: str
     data: Any = None
     priority: float = 0.0
@@ -71,6 +73,7 @@ class PrioritizedItem:
 # ──────────────────────────────────────────────────────────────
 #  PRIORITY QUEUE
 # ──────────────────────────────────────────────────────────────
+
 
 class PriorityQueue:
     """
@@ -119,7 +122,9 @@ class PriorityQueue:
         self._total_enqueued += 1
         logger.debug(
             "PriorityQueue: Enqueued '%s' (priority=%.1f, category='%s')",
-            item.item_id, item.priority, item.category,
+            item.item_id,
+            item.priority,
+            item.category,
         )
 
     def dequeue(self) -> PrioritizedItem | None:
@@ -205,7 +210,9 @@ class PriorityQueue:
         heapq.heappush(self._heap, updated)
         logger.debug(
             "PriorityQueue: Updated '%s' priority %.1f -> %.1f",
-            item_id, old_item.priority, new_priority,
+            item_id,
+            old_item.priority,
+            new_priority,
         )
         return True
 
@@ -324,11 +331,7 @@ class PriorityQueue:
     @property
     def categories(self) -> set[str]:
         """Set of all categories currently in the queue."""
-        return {
-            item.category
-            for item in self._items.values()
-            if item.item_id not in self._cancelled and item.category
-        }
+        return {item.category for item in self._items.values() if item.item_id not in self._cancelled and item.category}
 
     @property
     def stats(self) -> dict[str, Any]:

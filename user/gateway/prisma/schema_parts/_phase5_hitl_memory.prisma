@@ -10,6 +10,12 @@ model HitlApprovalRequest {
   priority        String   @default("medium") // low, medium, high, critical, emergency
   requesterId     String
   requesterName   String
+  riskLevel       String   @default("low") // low, high, critical
+  expiresAt       DateTime? // Cuando la solicitud expira
+  resolvedAt      DateTime? // Cuando se resolvió (approved/rejected)
+  reviewedBy      String?  // ID del revisor
+  reviewNote      String?  // Nota del revisor
+  identityVerified Boolean @default(false) // Si se verificó la identidad del revisor
   targetResource  String   // What resource is affected
   targetAction    String   // What action is being requested
   actionPayload   String   @default("{}") // JSON: action parameters
@@ -30,11 +36,12 @@ model HitlApprovalRequest {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  decisions       HitlApprovalDecision[]
-  delegations     HitlDelegation[]
-  escalations     HitlEscalation[]
-  undoActions     HitlUndoAction[]
-  auditRecords    HitlApprovalAudit[]
+  decisions            HitlApprovalDecision[]
+  delegations          HitlDelegation[]
+  escalations          HitlEscalation[]
+  undoActions          HitlUndoAction[]
+  auditRecords         HitlApprovalAudit[]
+  hitlApprovalActions  HitlApprovalAction[]
 
   @@index([requesterId])
   @@index([status])
@@ -247,6 +254,7 @@ model HitlNotificationLog {
   body            String
   priority        String   @default("normal")    // low, normal, high, urgent
   status          String   @default("pending")   // pending, sent, failed, delivered
+  isRead          Boolean  @default(false)
   metadata        String   @default("{}")        // JSON: additional metadata
   sentAt          DateTime?
   deliveredAt     DateTime?

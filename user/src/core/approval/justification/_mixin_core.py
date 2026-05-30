@@ -71,7 +71,7 @@ class JustificationManager:
         if isinstance(justification, str):
             reason = justification.strip()
             if len(reason) < requirement.min_length:
-                errors.append(f"Reason must be at least {requirement.min_length} characters " f"(got {len(reason)})")
+                errors.append(f"Reason must be at least {requirement.min_length} characters (got {len(reason)})")
             if requirement.require_risk_acknowledgment:
                 errors.append("Risk acknowledgment is required")
             if requirement.require_compliance_check:
@@ -82,8 +82,7 @@ class JustificationManager:
 
         if len(justification.reason.strip()) < requirement.min_length:
             errors.append(
-                f"Reason must be at least {requirement.min_length} characters "
-                f"(got {len(justification.reason.strip())})"
+                f"Reason must be at least {requirement.min_length} characters (got {len(justification.reason.strip())})"
             )
 
         if requirement.require_risk_acknowledgment and not justification.risk_acknowledgment:

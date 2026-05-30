@@ -77,12 +77,19 @@ def with_retry(
                 delay = base_delay * (2 ** (attempt - 1))
                 logger.debug(
                     "%s error (attempt %d/%d): %s — retrying in %.2fs",
-                    label, attempt, max_retries, e, delay,
+                    label,
+                    attempt,
+                    max_retries,
+                    e,
+                    delay,
                 )
                 time.sleep(delay)
             else:
                 logger.warning(
-                    "%s failed after %d attempts: %s", label, max_retries, e,
+                    "%s failed after %d attempts: %s",
+                    label,
+                    max_retries,
+                    e,
                 )
 
     # All retries exhausted

@@ -47,6 +47,7 @@ DANGEROUS_PATTERNS = [
 @dataclass
 class TextMessage:
     """Mensaje de texto entrante/saliente."""
+
     channel: ChannelType
     recipient: str
     text: str
@@ -58,6 +59,7 @@ class TextMessage:
 @dataclass
 class TextResult:
     """Resultado del pipeline de texto."""
+
     success: bool
     delivered: bool = False
     sanitized_text: str = ""

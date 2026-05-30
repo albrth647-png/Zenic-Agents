@@ -47,31 +47,31 @@ class AuditMerkleChain:
         if algorithm == "blake3":
             try:
                 import blake3 as _blake3
+
                 return lambda data: _blake3.blake3(data.encode() if isinstance(data, str) else data).hexdigest()
             except ImportError:
                 logger.warning(
                     "AuditMerkleChain: blake3 package not available, "
                     "falling back to SHA-256. Install 'blake3' for Rust compatibility."
                 )
-                return lambda data: hashlib.sha256(
-                    data.encode() if isinstance(data, str) else data
-                ).hexdigest()
+                return lambda data: hashlib.sha256(data.encode() if isinstance(data, str) else data).hexdigest()
         # Default: SHA-256 (compatible with TypeScript merkle-audit.ts)
-        return lambda data: hashlib.sha256(
-            data.encode() if isinstance(data, str) else data
-        ).hexdigest()
+        return lambda data: hashlib.sha256(data.encode() if isinstance(data, str) else data).hexdigest()
 
     def compute_hash(self, entry: AuditEntry) -> str:
         """Compute merkle hash for an entry."""
-        entry_data = json.dumps({
-            "action_type": entry.action_type,
-            "operation": entry.operation,
-            "executor_class": entry.executor_class,
-            "verdict": entry.verdict,
-            "success": entry.success,
-            "timestamp": entry.timestamp,
-            "prev_hash": self._last_hash,
-        }, sort_keys=True)
+        entry_data = json.dumps(
+            {
+                "action_type": entry.action_type,
+                "operation": entry.operation,
+                "executor_class": entry.executor_class,
+                "verdict": entry.verdict,
+                "success": entry.success,
+                "timestamp": entry.timestamp,
+                "prev_hash": self._last_hash,
+            },
+            sort_keys=True,
+        )
         return self._hash_fn(entry_data.encode())
 
     def seal(self, entry: AuditEntry) -> str:
@@ -111,20 +111,26 @@ class AuditMerkleChain:
         """Verify integrity of a list of audit entries."""
         prev = self.GENESIS_HASH
         for entry in entries:
-            expected = self._hash_fn(json.dumps({
-                "action_type": entry.action_type,
-                "operation": entry.operation,
-                "executor_class": entry.executor_class,
-                "verdict": entry.verdict,
-                "success": entry.success,
-                "timestamp": entry.timestamp,
-                "prev_hash": prev,
-            }, sort_keys=True).encode())
+            expected = self._hash_fn(
+                json.dumps(
+                    {
+                        "action_type": entry.action_type,
+                        "operation": entry.operation,
+                        "executor_class": entry.executor_class,
+                        "verdict": entry.verdict,
+                        "success": entry.success,
+                        "timestamp": entry.timestamp,
+                        "prev_hash": prev,
+                    },
+                    sort_keys=True,
+                ).encode()
+            )
             if entry.merkle_hash != expected:
                 logger.error(
-                    "AuditMerkleChain: Tampering detected at entry %s. "
-                    "Expected hash=%s, got=%s",
-                    entry.entry_id, expected[:16], entry.merkle_hash[:16],
+                    "AuditMerkleChain: Tampering detected at entry %s. Expected hash=%s, got=%s",
+                    entry.entry_id,
+                    expected[:16],
+                    entry.merkle_hash[:16],
                 )
                 return False
             prev = entry.merkle_hash

@@ -63,8 +63,7 @@ class MerkleLedger(MerkleLedgerHelpersMixin):
                 logger.debug("Snapshot (sandbox): %s in workspace %s [tenant=%s]", rel_path, workspace.sandbox_id, tid)
             else:
                 logger.debug(
-                    "Snapshot (sandbox): %s does not exist in workspace %s — "
-                    "no backup needed (new file) [tenant=%s]",
+                    "Snapshot (sandbox): %s does not exist in workspace %s — no backup needed (new file) [tenant=%s]",
                     rel_path,
                     workspace.sandbox_id,
                     tid,

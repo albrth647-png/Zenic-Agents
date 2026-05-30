@@ -26,28 +26,33 @@ def new_session_id() -> SessionId:
 
 # ─── Enums ────────────────────────────────────────────────────
 
+
 class SessionState(str, Enum):
     """Estados posibles de una sesion de conversacion."""
+
     ACTIVE = "active"
-    IDLE = "idle"          # Sin actividad reciente
-    PAUSED = "paused"      # Pausada por el usuario
-    ENDED = "ended"        # Sesion terminada
-    ERROR = "error"        # Sesion en estado de error
+    IDLE = "idle"  # Sin actividad reciente
+    PAUSED = "paused"  # Pausada por el usuario
+    ENDED = "ended"  # Sesion terminada
+    ERROR = "error"  # Sesion en estado de error
 
 
 class MessageRole(str, Enum):
     """Roles de los mensajes en la conversacion."""
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
-    TOOL = "tool"          # Resultado de tool execution
+    TOOL = "tool"  # Resultado de tool execution
 
 
 # ─── Metadata ─────────────────────────────────────────────────
 
+
 @dataclass
 class MessageMetadata:
     """Metadata adjunta a un mensaje."""
+
     timestamp: float = 0.0
     latency_ms: float = 0.0
     token_count: int = 0
@@ -63,9 +68,11 @@ class MessageMetadata:
 
 # ─── Mensaje ──────────────────────────────────────────────────
 
+
 @dataclass
 class Message:
     """Mensaje individual dentro de una conversacion."""
+
     role: MessageRole = MessageRole.USER
     content: str = ""
     metadata: MessageMetadata = field(default_factory=MessageMetadata)
@@ -100,21 +107,24 @@ class Message:
 
 # ─── Configuracion de sesion ─────────────────────────────────
 
+
 @dataclass
 class SessionConfig:
     """Configuracion de una sesion individual."""
+
     max_history_messages: int = 100
     max_context_tokens: int = 4000
     idle_timeout_seconds: int = 1800  # 30 minutos
-    language: str = "es"               # Idioma preferido
-    tone: str = "professional"         # Tono del asistente
+    language: str = "es"  # Idioma preferido
+    tone: str = "professional"  # Tono del asistente
     streaming_enabled: bool = True
     tools_enabled: bool = True
     memory_enabled: bool = True
-    personality_name: str = "zenic"    # Perfil de personalidad
+    personality_name: str = "zenic"  # Perfil de personalidad
 
 
 # ─── Sesion ───────────────────────────────────────────────────
+
 
 @dataclass
 class Session:
@@ -124,6 +134,7 @@ class Session:
     Contiene historial de mensajes, estado, configuracion
     y datos de telemetria de la sesion.
     """
+
     session_id: SessionId = field(default_factory=new_session_id)
     user_id: str = ""
     state: SessionState = SessionState.ACTIVE

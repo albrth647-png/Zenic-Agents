@@ -4,9 +4,9 @@
 // Phase 2: Now wraps engine with ObservableGatewayEngine for tracing.
 
 import { createHmac, randomBytes } from "crypto";
-import { RateLimiter } from "./rate-limiter";
-import { AuthService } from "./auth";
-import { MerkleAuditService } from "./audit/merkle-audit";
+import { RateLimiter, getRateLimiter } from "./rate-limiter";
+import { AuthService, getAuthService } from "./auth";
+import { MerkleAuditService, getMerkleAuditService } from "./audit/merkle-audit";
 import { GatewayEngine, ObservableGatewayEngine } from "./engine";
 import { getRegistry } from "./sdk/sdk";
 import { registerNativeExecutors, type ZenicExecutorType } from "./adapters/native-adapter";
@@ -34,10 +34,10 @@ export function initializeGateway(): GatewayEngine { // NOTE: Uses sync crypto f
   // The real fix for concurrent requests is to ensure this is called once
   // at server startup, not per-request.
 
-  // 1. Create services
-  const rateLimiter = new RateLimiter();
-  const authService = new AuthService();
-  const auditService = new MerkleAuditService();
+  // 1. Create services (using singleton getters so API routes share the same instances)
+  const rateLimiter = getRateLimiter();
+  const authService = getAuthService();
+  const auditService = getMerkleAuditService();
   auditServiceRef = auditService;
   const registry = getRegistry();
 

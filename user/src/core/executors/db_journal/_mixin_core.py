@@ -57,13 +57,13 @@ class CoreMixin:
                     """
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant " "ON journal_entries(db_path, tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_db_tenant ON journal_entries(db_path, tenant_id)"
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_tenant " "ON journal_entries(tenant_id)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_tenant ON journal_entries(tenant_id)"
                 )
                 conn.execute(  # nosemgrep
-                    "CREATE INDEX IF NOT EXISTS idx_je_created " "ON journal_entries(created_at)"
+                    "CREATE INDEX IF NOT EXISTS idx_je_created ON journal_entries(created_at)"
                 )
                 conn.commit()
             finally:
@@ -252,7 +252,7 @@ class CoreMixin:
             conn = sqlite3.connect(self._db_path)
             try:
                 cursor = conn.execute(  # nosemgrep
-                    "DELETE FROM journal_entries " "WHERE created_at < ? AND tenant_id = ? AND rolled_back = 0",
+                    "DELETE FROM journal_entries WHERE created_at < ? AND tenant_id = ? AND rolled_back = 0",
                     (cutoff, tenant_id),
                 )
                 conn.commit()

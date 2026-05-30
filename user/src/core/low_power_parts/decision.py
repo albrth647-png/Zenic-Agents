@@ -99,14 +99,23 @@ class DecisionMixin:
         """Internal: agents based on pre-evaluated mode."""
         # All agents (normal mode)
         all_agents = [
-            "INTENT", "DECOMPOSER", "EXTRACTOR",
-            "ARCHITECT", "PLANNER", "RISK",
-            "WRITER", "ASSEMBLER", "FORMATTER",
+            "INTENT",
+            "DECOMPOSER",
+            "EXTRACTOR",
+            "ARCHITECT",
+            "PLANNER",
+            "RISK",
+            "WRITER",
+            "ASSEMBLER",
+            "FORMATTER",
         ]
 
         # Critical agents only (emergency mode)
         critical_agents = [
-            "INTENT", "EXTRACTOR", "WRITER", "FORMATTER",
+            "INTENT",
+            "EXTRACTOR",
+            "WRITER",
+            "FORMATTER",
         ]
 
         if mode == PowerMode.EMERGENCY:

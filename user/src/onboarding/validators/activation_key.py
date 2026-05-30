@@ -179,16 +179,14 @@ class ActivationKeyValidator:
         parts = key.split("-")[1:]  # Skip ZENIC prefix
         for i, group in enumerate(parts):
             # All same character
-            if len(set(group)) == 1:
-                # Allow in the checksum position only if it's valid
-                if i < 3:
-                    return InvalidResult(f"Group {i+1} contains all identical characters — invalid key")
+            if len(set(group)) == 1 and i < 3:
+                return InvalidResult(f"Group {i + 1} contains all identical characters — invalid key")
             # All zeros
             if group == "0000" and i < 3:
-                return InvalidResult(f"Group {i+1} is all zeros — invalid key")
+                return InvalidResult(f"Group {i + 1} is all zeros — invalid key")
             # Sequential (1234, ABCD)
             if group in ("1234", "ABCD", "4321", "DCBA") and i < 3:
-                return InvalidResult(f"Group {i+1} is a sequential pattern — invalid key")
+                return InvalidResult(f"Group {i + 1} is a sequential pattern — invalid key")
         return ValidResult(sanitized_value=key)
 
 

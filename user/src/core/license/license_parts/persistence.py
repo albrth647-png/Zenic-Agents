@@ -79,7 +79,7 @@ class LicenseDB:
                     signature=row["signature"] or "",
                     metadata=json.loads(row["metadata"] or "{}"),
                 )
-        except Exception:  # noqa: S110
+        except Exception:
             pass
         return None
 
@@ -125,5 +125,5 @@ class LicenseDB:
             )
             conn.commit()
             conn.close()
-        except Exception:  # noqa: S110
+        except Exception:
             pass

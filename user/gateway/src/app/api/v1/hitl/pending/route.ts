@@ -2,7 +2,7 @@
 // GET /api/v1/hitl/pending — List pending approvals for current user
 
 import { NextRequest, NextResponse } from "next/server";
-import { getApprovalEngine } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
 
 // GET /api/v1/hitl/pending
 export async function GET(request: NextRequest) {

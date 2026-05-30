@@ -51,10 +51,20 @@ class MacroRouter:
     - Patrones criticos desde YAML
     """
 
-    MODERATE_PATTERNS = [
-        "api", "endpoint", "route", "controller", "service",
-        "model", "repository", "factory", "builder",
-        "config", "settings", "environment", "deploy",
+    MODERATE_PATTERNS = [  # noqa: RUF012
+        "api",
+        "endpoint",
+        "route",
+        "controller",
+        "service",
+        "model",
+        "repository",
+        "factory",
+        "builder",
+        "config",
+        "settings",
+        "environment",
+        "deploy",
     ]
 
     def __init__(self):
@@ -62,7 +72,7 @@ class MacroRouter:
         self.critical_patterns = get_critical_patterns(self.settings)
         self.critical_keywords = get_critical_nodes(self.settings)
 
-    def route(self, intent: 'IntentPayload') -> 'RoutingPayload':
+    def route(self, intent: "IntentPayload") -> "RoutingPayload":
         """Enruta basado en criticidad semantica + firmas topologicas del grafo AST."""
         target_lower = (intent.target or "unknown").lower()
         context_lower = (intent.context or "").lower()
@@ -88,13 +98,13 @@ class MacroRouter:
                     intent=intent,
                     criticality=CriticalityLevel.SURGICAL_CRITICAL,
                     route=RoutePath.SURGICAL_PATH,
-                    reason="Operacion de riesgo en nodo critico. Pipeline completo + Z3 activado."
+                    reason="Operacion de riesgo en nodo critico. Pipeline completo + Z3 activado.",
                 )
             return RoutingPayload(
                 intent=intent,
                 criticality=CriticalityLevel.SURGICAL_CRITICAL,
                 route=RoutePath.SURGICAL_PATH,
-                reason="Nodo critico detectado. Pipeline completo + Constraint Solver activado."
+                reason="Nodo critico detectado. Pipeline completo + Constraint Solver activado.",
             )
 
         # Operaciones de modificacion en nodos no-criticos
@@ -103,7 +113,7 @@ class MacroRouter:
                 intent=intent,
                 criticality=CriticalityLevel.DEEP_MODERATE,
                 route=RoutePath.DEEP_PATH,
-                reason="Operacion de modificacion requiere planificacion y validacion."
+                reason="Operacion de modificacion requiere planificacion y validacion.",
             )
 
         if intent.op == OperationType.CREATE:
@@ -111,7 +121,7 @@ class MacroRouter:
                 intent=intent,
                 criticality=CriticalityLevel.DEEP_MODERATE,
                 route=RoutePath.DEEP_PATH,
-                reason="Creacion de codigo requiere busqueda de patrones y validacion."
+                reason="Creacion de codigo requiere busqueda de patrones y validacion.",
             )
 
         if is_moderate or intent.op in [OperationType.ANALYZE, OperationType.DEBUG]:
@@ -119,7 +129,7 @@ class MacroRouter:
                 intent=intent,
                 criticality=CriticalityLevel.DEEP_MODERATE,
                 route=RoutePath.DEEP_PATH,
-                reason="Analisis de componente moderado."
+                reason="Analisis de componente moderado.",
             )
 
         # Nivel 1: Rapido
@@ -127,7 +137,7 @@ class MacroRouter:
             intent=intent,
             criticality=CriticalityLevel.FAST_STANDARD,
             route=RoutePath.FAST_PATH,
-            reason="Operacion estandar. Respuesta directa."
+            reason="Operacion estandar. Respuesta directa.",
         )
 
     def _check_critical_keywords(self, target_lower: str, context_lower: str) -> bool:
@@ -136,7 +146,9 @@ class MacroRouter:
             # Security: Skip empty keywords to prevent regex match-everywhere bug
             if not keyword:
                 continue
-            if re.search(r'\b' + re.escape(keyword) + r'\b', target_lower) or re.search(r'\b' + re.escape(keyword) + r'\b', context_lower):
+            if re.search(r"\b" + re.escape(keyword) + r"\b", target_lower) or re.search(
+                r"\b" + re.escape(keyword) + r"\b", context_lower
+            ):
                 return True
         return False
 
@@ -156,13 +168,14 @@ class MacroRouter:
 
         Uses shared retry utility for transient SQLite failures.
         """
+
         def _query_ast():
             conn = get_connection("graph_ast.sqlite")
             # Security: Use shared escape utility to prevent LIKE injection
             escaped_name = escape_sql_like(target_name)
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT name, node_type, connections, complexity FROM ast_nodes WHERE name LIKE ? ESCAPE '\\'",
-                (f"%{escaped_name}%",)
+                (f"%{escaped_name}%",),
             ).fetchall()
 
             if not rows:

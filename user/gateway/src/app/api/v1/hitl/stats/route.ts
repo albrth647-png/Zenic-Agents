@@ -2,7 +2,7 @@
 // GET /api/v1/hitl/stats — Get approval statistics
 
 import { NextResponse } from "next/server";
-import { getApprovalEngine } from "@/lib/hitl";
+import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
 
 // GET /api/v1/hitl/stats
 export async function GET() {

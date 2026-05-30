@@ -12,6 +12,7 @@ Design Patterns:
 
 from __future__ import annotations
 
+import contextlib
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -234,10 +235,8 @@ class ProgressRenderer:
     def _notify(self, step: StepIndicator) -> None:
         """Notify all registered callbacks."""
         for cb in self._callbacks:
-            try:
+            with contextlib.suppress(Exception):
                 cb(step)
-            except Exception:  # noqa: S110
-                pass
 
     # ── Rendering ────────────────────────────────────────────
 

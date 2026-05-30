@@ -59,7 +59,7 @@ def _parse_pdf(file_path: str) -> tuple[str, list[str]]:
 
     # No parser available
     if not text_parts:
-        errors.append("No PDF parser available. Install PyPDF2 or pdfminer.six: " "pip install PyPDF2 pdfminer.six")
+        errors.append("No PDF parser available. Install PyPDF2 or pdfminer.six: pip install PyPDF2 pdfminer.six")
 
     return ("", errors)
 

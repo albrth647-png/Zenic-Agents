@@ -269,9 +269,7 @@ class CoordinatedRollbackManager:
                     mark_record_compensated(self._db_path, action_id, record)
                     result.compensations_succeeded += 1
                 except Exception as exc:
-                    error_msg = (
-                        f"Compensation failed for {record.resource_type.value}" f" ({record.resource_id}): {exc}"
-                    )
+                    error_msg = f"Compensation failed for {record.resource_type.value} ({record.resource_id}): {exc}"
                     result.errors.append(error_msg)
                     logger.error(
                         "CoordinatedRollbackManager: %s",
@@ -284,7 +282,7 @@ class CoordinatedRollbackManager:
 
             result.success = len(result.errors) == 0
             logger.info(
-                "CoordinatedRollbackManager: rollback complete action=%s " "attempted=%d succeeded=%d errors=%d",
+                "CoordinatedRollbackManager: rollback complete action=%s attempted=%d succeeded=%d errors=%d",
                 action_id[:12],
                 result.compensations_attempted,
                 result.compensations_succeeded,

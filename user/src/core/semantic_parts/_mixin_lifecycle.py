@@ -100,7 +100,7 @@ class LifecycleMixin:
                 if attempt < _MAX_LOAD_ATTEMPTS:
                     delay = _LOAD_RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     logger.warning(
-                        "SemanticEngine: Model load attempt %d/%d failed: %s. " "Retrying in %.1fs...",
+                        "SemanticEngine: Model load attempt %d/%d failed: %s. Retrying in %.1fs...",
                         attempt,
                         _MAX_LOAD_ATTEMPTS,
                         e,

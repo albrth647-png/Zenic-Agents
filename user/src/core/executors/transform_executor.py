@@ -169,7 +169,7 @@ class TransformExecutor(ActionExecutor):
             for f in fields:
                 v = str(item.get(f, ""))
                 if sep in v or '"' in v or "\n" in v:
-                    v = f'"{v.replace(chr(34), chr(34)+chr(34))}"'
+                    v = f'"{v.replace(chr(34), chr(34) + chr(34))}"'
                 row.append(v)
             lines.append(sep.join(row))
         return "\n".join(lines)

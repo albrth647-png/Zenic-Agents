@@ -218,7 +218,7 @@ class AssistantRouter:
             # Fallback: code engine no disponible → conversacional
             pipeline = Pipeline.CONVERSATIONAL
             fallback_used = True
-            logger.info(f"Engine no disponible. " f"Fallback: {matched_rule.pipeline.value} → {pipeline.value}")
+            logger.info(f"Engine no disponible. Fallback: {matched_rule.pipeline.value} → {pipeline.value}")
             self._stats["fallbacks"] += 1
         else:
             # Actualizar stat del pipeline seleccionado

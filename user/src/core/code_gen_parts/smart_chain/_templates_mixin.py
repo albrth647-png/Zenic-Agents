@@ -55,8 +55,7 @@ class SmartChainTemplatesMixin:
             )
         else:
             return (
-                "import logging\nfrom typing import Any, List  # noqa: UP035\n\n"
-                "logger = logging.getLogger(__name__)\n"
+                "import logging\nfrom typing import Any, List  # noqa: UP035\n\nlogger = logging.getLogger(__name__)\n"
             )
 
     def _fallback_schema(self, desc: str) -> str:

@@ -18,6 +18,7 @@ from .base import MonitorBase, register_monitor
 #  LOW STOCK MONITOR
 # ──────────────────────────────────────────────────────────────
 
+
 @register_monitor
 class LowStockMonitor(MonitorBase):
     """Detects products with stock below a configurable threshold."""
@@ -38,8 +39,7 @@ class LowStockMonitor(MonitorBase):
     def description(self) -> str:
         return "Detecta productos con inventario por debajo del minimo configurado"
 
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         threshold = params.get("min_stock", 5)
         db_name = params.get("db_name", "sna_data.sqlite")
@@ -55,7 +55,8 @@ class LowStockMonitor(MonitorBase):
             triggered = len(low_items) > 0
             detail = (
                 f"{len(low_items)} productos con stock < {threshold}"
-                if triggered else "Todos los productos con stock suficiente"
+                if triggered
+                else "Todos los productos con stock suficiente"
             )
             return self._make_result(
                 triggered=triggered,
@@ -67,7 +68,8 @@ class LowStockMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}",
+                triggered=False,
+                detail=f"Error: {e}",
                 start_time=start,
             )
 
@@ -75,6 +77,7 @@ class LowStockMonitor(MonitorBase):
 # ──────────────────────────────────────────────────────────────
 #  OVERDUE INVOICE MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class OverdueInvoiceMonitor(MonitorBase):
@@ -96,8 +99,7 @@ class OverdueInvoiceMonitor(MonitorBase):
     def description(self) -> str:
         return "Detecta facturas vencidas sin pagar"
 
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
         table = params.get("table", "invoices")
@@ -112,15 +114,13 @@ class OverdueInvoiceMonitor(MonitorBase):
                 (overdue_cutoff,),
                 db_name=db_name,
             )
-            overdue = [
-                {"id": r[0], "client": r[1], "amount": r[2], "due_date": r[3]}
-                for r in rows
-            ]
+            overdue = [{"id": r[0], "client": r[1], "amount": r[2], "due_date": r[3]} for r in rows]
             total_amount = sum(item.get("amount", 0) for item in overdue)
             triggered = len(overdue) > 0
             detail = (
                 f"{len(overdue)} facturas vencidas, total: {total_amount:.2f}"
-                if triggered else "No hay facturas vencidas"
+                if triggered
+                else "No hay facturas vencidas"
             )
             return self._make_result(
                 triggered=triggered,
@@ -132,7 +132,8 @@ class OverdueInvoiceMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}",
+                triggered=False,
+                detail=f"Error: {e}",
                 start_time=start,
             )
 
@@ -140,6 +141,7 @@ class OverdueInvoiceMonitor(MonitorBase):
 # ──────────────────────────────────────────────────────────────
 #  TOMORROW APPOINTMENT MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class TomorrowAppointmentMonitor(MonitorBase):
@@ -161,8 +163,7 @@ class TomorrowAppointmentMonitor(MonitorBase):
     def description(self) -> str:
         return "Notifica sobre citas programadas para manana"
 
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         db_name = params.get("db_name", "sna_data.sqlite")
         table = params.get("table", "appointments")
@@ -177,15 +178,9 @@ class TomorrowAppointmentMonitor(MonitorBase):
                 (tomorrow_start, tomorrow_end),
                 db_name=db_name,
             )
-            appointments = [
-                {"id": r[0], "client": r[1], "date": r[2], "desc": r[3]}
-                for r in rows
-            ]
+            appointments = [{"id": r[0], "client": r[1], "date": r[2], "desc": r[3]} for r in rows]
             triggered = len(appointments) > 0
-            detail = (
-                f"{len(appointments)} citas programadas para manana"
-                if triggered else "No hay citas para manana"
-            )
+            detail = f"{len(appointments)} citas programadas para manana" if triggered else "No hay citas para manana"
             return self._make_result(
                 triggered=triggered,
                 value=len(appointments),
@@ -196,7 +191,8 @@ class TomorrowAppointmentMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}",
+                triggered=False,
+                detail=f"Error: {e}",
                 start_time=start,
             )
 
@@ -204,6 +200,7 @@ class TomorrowAppointmentMonitor(MonitorBase):
 # ──────────────────────────────────────────────────────────────
 #  DISK SPACE MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class DiskSpaceMonitor(MonitorBase):
@@ -225,8 +222,7 @@ class DiskSpaceMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea espacio disponible en disco"
 
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         min_free_mb = params.get("min_free_mb", 500)
         path = params.get("path", os.path.expanduser("~"))
@@ -239,7 +235,8 @@ class DiskSpaceMonitor(MonitorBase):
             triggered = free_mb < min_free_mb
             detail = (
                 f"Espacio bajo: {free_mb:.0f}MB libre de {total_mb:.0f}MB ({pct_free:.1f}%)"
-                if triggered else f"Espacio OK: {free_mb:.0f}MB libre ({pct_free:.1f}%)"
+                if triggered
+                else f"Espacio OK: {free_mb:.0f}MB libre ({pct_free:.1f}%)"
             )
             return self._make_result(
                 triggered=triggered,
@@ -251,7 +248,8 @@ class DiskSpaceMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}",
+                triggered=False,
+                detail=f"Error: {e}",
                 start_time=start,
             )
 
@@ -259,6 +257,7 @@ class DiskSpaceMonitor(MonitorBase):
 # ──────────────────────────────────────────────────────────────
 #  SYSTEM HEALTH MONITOR
 # ──────────────────────────────────────────────────────────────
+
 
 @register_monitor
 class SystemHealthMonitor(MonitorBase):
@@ -280,18 +279,19 @@ class SystemHealthMonitor(MonitorBase):
     def description(self) -> str:
         return "Monitorea uso de CPU y RAM del sistema"
 
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         start = time.monotonic()
         cpu_threshold = params.get("cpu_threshold_pct", 90)
         ram_threshold = params.get("ram_threshold_pct", 90)
 
         try:
             from src.core.shared.resource_governor import get_governor
+
             gov = get_governor()
             if gov is None:
                 return self._make_result(
-                    triggered=False, detail="ResourceGovernor not available",
+                    triggered=False,
+                    detail="ResourceGovernor not available",
                     start_time=start,
                 )
             status = gov.get_status()
@@ -302,7 +302,8 @@ class SystemHealthMonitor(MonitorBase):
             triggered = cpu > cpu_threshold or ram_pct > ram_threshold
             detail = (
                 f"Recursos altos: CPU={cpu:.1f}% RAM={ram_pct:.1f}%"
-                if triggered else f"Recursos OK: CPU={cpu:.1f}% RAM={ram_pct:.1f}%"
+                if triggered
+                else f"Recursos OK: CPU={cpu:.1f}% RAM={ram_pct:.1f}%"
             )
             return self._make_result(
                 triggered=triggered,
@@ -314,6 +315,7 @@ class SystemHealthMonitor(MonitorBase):
             )
         except Exception as e:
             return self._make_result(
-                triggered=False, detail=f"Error: {e}",
+                triggered=False,
+                detail=f"Error: {e}",
                 start_time=start,
             )

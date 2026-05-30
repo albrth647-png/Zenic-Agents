@@ -161,12 +161,14 @@ async def _download_url(url: str) -> bytes | None:
     try:
         import aiohttp
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
-                if resp.status == 200:
-                    return await resp.read()
-                _logger.error("URL download failed: HTTP %d", resp.status)
-                return None
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp,
+        ):
+            if resp.status == 200:
+                return await resp.read()
+            _logger.error("URL download failed: HTTP %d", resp.status)
+            return None
     except ImportError:
         pass
 
@@ -455,7 +457,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             return self._make_result(
                 data=data,
                 success=False,
-                error=f"Audio too large: {len(audio_bytes)} bytes " f"(limit: {size_limit} bytes for {channel})",
+                error=f"Audio too large: {len(audio_bytes)} bytes (limit: {size_limit} bytes for {channel})",
             )
 
         # ── Step 3 + 4: Convert → Transcribe via VoicePipeline ──
@@ -473,7 +475,7 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
 
         if transcription.success:
             _logger.info(
-                "A52: transcription succeeded in %.2fs " "(text_len=%d, lang=%s, backend=%s)",
+                "A52: transcription succeeded in %.2fs (text_len=%d, lang=%s, backend=%s)",
                 elapsed,
                 len(transcription.transcribed_text),
                 transcription.language,
@@ -521,12 +523,10 @@ class VoiceChannelAgent(BaseAgent[VoiceChannelResult]):
             try:
                 # Get the provider for this channel
                 provider = self._registry.get_provider(data.channel)
-                if provider is not None:
-                    # Check voice capability
-                    if _can_receive_voice_fn and _can_receive_voice_fn(provider):
-                        result = await _download_from_provider(provider, audio_url)
-                        if result is not None:
-                            return result
+                if provider is not None and _can_receive_voice_fn and _can_receive_voice_fn(provider):
+                    result = await _download_from_provider(provider, audio_url)
+                    if result is not None:
+                        return result
             except Exception as e:
                 _logger.debug(
                     "A52: provider download failed for %s: %s",

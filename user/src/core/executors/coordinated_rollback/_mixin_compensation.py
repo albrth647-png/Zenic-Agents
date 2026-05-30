@@ -231,7 +231,7 @@ class CompensationMixin:
 
         if not url:
             logger.warning(
-                "CoordinatedRollbackManager: no cancellation URL for webhook " "record in action %s — skipping",
+                "CoordinatedRollbackManager: no cancellation URL for webhook record in action %s — skipping",
                 action_id[:12],
             )
             return
@@ -260,7 +260,7 @@ class CompensationMixin:
                 with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
                     status = resp.status
                     logger.info(
-                        "CoordinatedRollbackManager: cancellation webhook sent to %s " "status=%d",
+                        "CoordinatedRollbackManager: cancellation webhook sent to %s status=%d",
                         url[:50],
                         status,
                     )

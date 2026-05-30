@@ -55,19 +55,14 @@ pub mod types;
 pub mod validation;
 
 // Re-export all public items so `crate::completer::*` works unchanged.
+pub use validation::{
+    generate_session_id, get_suggestions_for_field, sanitize_value,
+    validate_value_for_type, validation_hint_for_type,
+};
+
 pub use types::{
-    CompletionSession,
-    CompletionQuestion,
-    AUTO_ACCEPT_CONFIDENCE,
-    MAX_ANSWER_LENGTH,
-    MAX_QUESTIONS_PER_ROUND,
-    MAX_ROUNDS,
-    SUGGESTIONS_BY_TYPE,
-    EMAIL_PATTERN,
-    URL_PATTERN,
-    PHONE_PATTERN,
-    DATE_PATTERN,
-    DATETIME_PATTERN,
+    AUTO_ACCEPT_CONFIDENCE, MAX_ANSWER_LENGTH, MAX_QUESTIONS_PER_ROUND, MAX_ROUNDS,
+    CompletionQuestion, CompletionSession,
 };
 
 pub use result_types::{
@@ -75,14 +70,6 @@ pub use result_types::{
     CompletionResult,
 };
 
-pub use validation::{
-    validate_value_for_type,
-    validation_hint_for_type,
-    get_suggestions_for_field,
-    generate_session_id,
-    sanitize_value,
-    get_field_type_from_template,
-};
 
 pub use api_session::{
     completer_start_session,
@@ -124,11 +111,12 @@ mod tests {
         );
         assert_eq!(session.session_id(), "test-session-001");
         assert_eq!(session.niche_id(), "telemedicine");
-        assert_eq!(session.category(), "healthtech");
-        assert_eq!(session.total_fields(), 45);
-        assert_eq!(session.required_fields(), 30);
-        assert_eq!(session.round_count(), 0);
-        assert_eq!(session.status(), "initialized");
+        // Fields are pub(crate) — accessible from tests in same crate
+        assert_eq!(session.category, "healthtech");
+        assert_eq!(session.total_fields, 45);
+        assert_eq!(session.required_fields, 30);
+        assert_eq!(session.round_count, 0);
+        assert_eq!(session.status, "initialized");
     }
 
     #[test]
@@ -148,10 +136,10 @@ mod tests {
         session.increment_round();
         session.set_status("in_progress");
         assert_eq!(session.documents_ingested(), 3);
-        assert_eq!(session.fields_auto_filled(), 12);
-        assert_eq!(session.fields_manual_filled(), 5);
-        assert_eq!(session.round_count(), 1);
-        assert_eq!(session.status(), "in_progress");
+        assert_eq!(session.fields_auto_filled, 12);
+        assert_eq!(session.fields_manual_filled, 5);
+        assert_eq!(session.round_count, 1);
+        assert_eq!(session.status, "in_progress");
     }
 
     #[test]
@@ -163,8 +151,8 @@ mod tests {
             "business_identity".to_string(),
         );
         assert_eq!(question.field_name(), "business_name");
-        assert_eq!(question.display_name(), "Business Name");
-        assert_eq!(question.field_type(), "text");
+        assert_eq!(question.display_name, "Business Name");
+        assert_eq!(question.field_type, "text");
         assert_eq!(question.section_id(), "business_identity");
         assert!(question.is_required);
     }
@@ -308,11 +296,11 @@ mod tests {
             warnings: Vec::new(),
             errors: Vec::new(),
         };
-        assert_eq!(result.session_id(), "test-session-003");
-        assert_eq!(result.niche_id(), "telemedicine");
-        assert!(result.is_complete());
-        assert_eq!(result.auto_filled(), 20);
-        assert_eq!(result.manual_filled(), 25);
+        assert_eq!(result.session_id, "test-session-003");
+        assert_eq!(result.niche_id, "telemedicine");
+        assert_eq!(result.status, "complete");
+        assert_eq!(result.auto_filled, 20);
+        assert_eq!(result.manual_filled, 25);
     }
 
     #[test]
@@ -332,8 +320,8 @@ mod tests {
             warnings: vec!["5 optional fields remain unfilled".to_string()],
             errors: Vec::new(),
         };
-        assert!(!result.is_complete());
-        assert_eq!(result.warnings().len(), 1);
+        assert_eq!(result.status, "partial");
+        assert_eq!(result.warnings.len(), 1);
     }
 
     #[test]
@@ -347,10 +335,10 @@ mod tests {
             still_missing: 3,
             completion_pct: 75.0,
         };
-        assert_eq!(round.round_number(), 1);
-        assert_eq!(round.questions_asked(), 10);
-        assert_eq!(round.answers_applied(), 7);
-        assert_eq!(round.still_missing(), 3);
+        assert_eq!(round.round_number, 1);
+        assert_eq!(round.questions_asked, 10);
+        assert_eq!(round.answers_applied, 7);
+        assert_eq!(round.still_missing, 3);
     }
 
     #[test]

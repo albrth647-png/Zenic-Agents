@@ -35,6 +35,7 @@ __all__ = [
 #  OPERACIONES Y OBJETIVOS
 # ============================================================
 
+
 class OperationType(str, enum.Enum):
     CREATE = "CREATE"
     REFACTOR = "REFACTOR"
@@ -119,10 +120,19 @@ class RoutePath(str, enum.Enum):
 #  PAYLOADS DE COMUNICACION ENTRE NIVELES
 # ============================================================
 
+
 class IntentPayload:
-    def __init__(self, op: str | OperationType = OperationType.SEARCH.value, target: str = "unknown",
-                 goal: str | GoalType = GoalType.FEATURE_ADD.value, scrap_query: str = "", confidence: float = 0.0,
-                 language: str = "python", raw_code: str = "", context: str = "") -> None:
+    def __init__(
+        self,
+        op: str | OperationType = OperationType.SEARCH.value,
+        target: str = "unknown",
+        goal: str | GoalType = GoalType.FEATURE_ADD.value,
+        scrap_query: str = "",
+        confidence: float = 0.0,
+        language: str = "python",
+        raw_code: str = "",
+        context: str = "",
+    ) -> None:
         self.op = op.value if isinstance(op, enum.Enum) else op
         self.target = target
         self.goal = goal.value if isinstance(goal, enum.Enum) else goal
@@ -134,8 +144,13 @@ class IntentPayload:
 
 
 class RoutingPayload:
-    def __init__(self, intent: IntentPayload | None = None, criticality: int | CriticalityLevel = CriticalityLevel.FAST_STANDARD.value,
-                 route: str | RoutePath = RoutePath.FAST_PATH.value, reason: str = "") -> None:
+    def __init__(
+        self,
+        intent: IntentPayload | None = None,
+        criticality: int | CriticalityLevel = CriticalityLevel.FAST_STANDARD.value,
+        route: str | RoutePath = RoutePath.FAST_PATH.value,
+        reason: str = "",
+    ) -> None:
         self.intent = intent or IntentPayload()
         self.criticality = criticality.value if isinstance(criticality, enum.Enum) else criticality
         self.route = route.value if isinstance(route, enum.Enum) else route
@@ -143,8 +158,14 @@ class RoutingPayload:
 
 
 class PlanStep:
-    def __init__(self, step_id: int = 0, action: str = "ANALYZE_CODE", target_node_name: str = "",
-                 source: str = "LOCAL_GRAPH", constraints: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        step_id: int = 0,
+        action: str = "ANALYZE_CODE",
+        target_node_name: str = "",
+        source: str = "LOCAL_GRAPH",
+        constraints: dict[str, Any] | None = None,
+    ) -> None:
         self.step_id = step_id
         self.action = action
         self.target_node_name = target_node_name
@@ -153,8 +174,15 @@ class PlanStep:
 
 
 class ExecutionPlan:
-    def __init__(self, plan_id: str = "", steps: list[PlanStep] | None = None, solver_status: str = "HEURISTIC_FALLBACK",
-                 solver_proof: Any | None = None, mcts_simulations: int = 0, mcts_depth_reached: int = 0) -> None:
+    def __init__(
+        self,
+        plan_id: str = "",
+        steps: list[PlanStep] | None = None,
+        solver_status: str = "HEURISTIC_FALLBACK",
+        solver_proof: Any | None = None,
+        mcts_simulations: int = 0,
+        mcts_depth_reached: int = 0,
+    ) -> None:
         self.plan_id = plan_id
         self.steps = steps or []
         self.solver_status = solver_status
@@ -164,9 +192,16 @@ class ExecutionPlan:
 
 
 class SandboxResult:
-    def __init__(self, status: str = "PASS", error_message: str = "", error_node: str | None = None,
-                 warnings: list[str] | None = None, metrics: dict[str, Any] | None = None,
-                 paths_explored: int = 0, paths_pruned: int = 0) -> None:
+    def __init__(
+        self,
+        status: str = "PASS",
+        error_message: str = "",
+        error_node: str | None = None,
+        warnings: list[str] | None = None,
+        metrics: dict[str, Any] | None = None,
+        paths_explored: int = 0,
+        paths_pruned: int = 0,
+    ) -> None:
         self.status = status
         self.error_message = error_message
         self.error_node = error_node
@@ -177,8 +212,9 @@ class SandboxResult:
 
 
 class MerkleNode:
-    def __init__(self, file_path: str = "", hash_sha256: str = "", parent_hash: str = "",
-                 timestamp: int = 0, operation: str = "") -> None:
+    def __init__(
+        self, file_path: str = "", hash_sha256: str = "", parent_hash: str = "", timestamp: int = 0, operation: str = ""
+    ) -> None:
         self.file_path = file_path
         self.hash_sha256 = hash_sha256
         self.parent_hash = parent_hash
@@ -193,8 +229,14 @@ class ChatMessage:
 
 
 class ChatRequest:
-    def __init__(self, model: str = "zenic-agents", messages: list[ChatMessage] | None = None, temperature: float = 0.1,
-                 max_tokens: int = 2000, stream: bool = False) -> None:
+    def __init__(
+        self,
+        model: str = "zenic-agents",
+        messages: list[ChatMessage] | None = None,
+        temperature: float = 0.1,
+        max_tokens: int = 2000,
+        stream: bool = False,
+    ) -> None:
         self.model = model
         self.messages = messages or []
         self.temperature = temperature

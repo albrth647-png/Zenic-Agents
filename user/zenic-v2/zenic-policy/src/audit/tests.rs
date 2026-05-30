@@ -3,8 +3,9 @@
 #[cfg(test)]
 mod tests {
     use super::super::types::{PolicyAuditEntry, AuditLog, DenialReason, PolicyDecision};
-    use crate::permission::{Action, Resource};
-    use zenic_proto::{NodeId, RoleId, SessionId, TenantId};
+    use crate::permission::{Action, Permission, Resource};
+    use crate::role::RoleId;
+    use zenic_proto::{NodeId, SessionId, TenantId};
 
     #[test]
     fn policy_decision_display() {

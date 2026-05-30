@@ -73,6 +73,7 @@ class _VapidMixin:
         if _HAS_PYJWT:
             try:
                 import jwt as pyjwt_mod
+
                 encoded = pyjwt_mod.encode(
                     payload,
                     self._vapid_private_key,
@@ -82,7 +83,8 @@ class _VapidMixin:
                 return encoded
             except Exception as e:
                 logger.debug(
-                    "PushChannelProvider: PyJWT encoding failed: %s", e,
+                    "PushChannelProvider: PyJWT encoding failed: %s",
+                    e,
                 )
 
         # Manual JWT with cryptography package
@@ -97,13 +99,14 @@ class _VapidMixin:
                 return None
 
         logger.warning(
-            "PushChannelProvider: no crypto library available for VAPID JWT "
-            "signing (install `cryptography` or `PyJWT`)"
+            "PushChannelProvider: no crypto library available for VAPID JWT signing (install `cryptography` or `PyJWT`)"
         )
         return None
 
     def _sign_vapid_jwt_manual(
-        self, header: dict[str, Any], payload: dict[str, Any],
+        self,
+        header: dict[str, Any],
+        payload: dict[str, Any],
     ) -> str:
         """Manually sign a VAPID JWT using the cryptography package.
 
@@ -209,12 +212,13 @@ class _VapidMixin:
                         # Convert raw private key to object
                         private_number = int.from_bytes(raw_bytes, "big")
                         self._vapid_private_key_obj = ec.derive_private_key(
-                            private_number, SECP256R1(), default_backend(),
+                            private_number,
+                            SECP256R1(),
+                            default_backend(),
                         )
                     else:
                         logger.warning(
-                            "PushChannelProvider: VAPID private key is %d "
-                            "bytes (expected 32 for P-256)",
+                            "PushChannelProvider: VAPID private key is %d bytes (expected 32 for P-256)",
                             len(raw_bytes),
                         )
                 except Exception:
@@ -226,7 +230,8 @@ class _VapidMixin:
                     )
         except Exception as e:
             logger.warning(
-                "PushChannelProvider: failed to load VAPID private key: %s", e,
+                "PushChannelProvider: failed to load VAPID private key: %s",
+                e,
             )
             self._vapid_private_key_obj = None
 

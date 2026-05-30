@@ -104,7 +104,7 @@ class AdaptiveApprovalEngine:
                 self._persist_record(record, insert=False)
 
         logger.info(
-            "AdaptiveApproval: Recorded approval for user=%d action='%s' " "consecutive=%d was_auto=%s",
+            "AdaptiveApproval: Recorded approval for user=%d action='%s' consecutive=%d was_auto=%s",
             user_id,
             action_type,
             record.consecutive_approvals,
@@ -128,7 +128,7 @@ class AdaptiveApprovalEngine:
                 record.consecutive_approvals = 0
                 self._persist_record(record, insert=False)
                 logger.info(
-                    "AdaptiveApproval: Rejection reset consecutive_approvals " "for user=%d action='%s' reason='%s'",
+                    "AdaptiveApproval: Rejection reset consecutive_approvals for user=%d action='%s' reason='%s'",
                     user_id,
                     action_type,
                     reason[:80],
@@ -167,7 +167,7 @@ class AdaptiveApprovalEngine:
 
         return (
             False,
-            f"Only {record.consecutive_approvals}/{self._auto_approve_threshold} " f"consecutive approvals",
+            f"Only {record.consecutive_approvals}/{self._auto_approve_threshold} consecutive approvals",
         )
 
     # ── Query Methods ──────────────────────────────────────

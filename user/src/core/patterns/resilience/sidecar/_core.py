@@ -354,7 +354,7 @@ class Sidecar:
     # ----------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"Sidecar(name={self._name!r}, " f"calls={self._call_count}, " f"errors={self._error_count})"
+        return f"Sidecar(name={self._name!r}, calls={self._call_count}, errors={self._error_count})"
 
 
 # ============================================================

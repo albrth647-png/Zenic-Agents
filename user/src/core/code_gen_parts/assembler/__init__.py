@@ -50,9 +50,8 @@ class CodeAssembler(AssemblerGeneratorsMixin, AssemblerScaffoldingMixin, Assembl
                     blocks.add(b)
 
         # 3. Always add crud_service if entities exist (every app needs CRUD)
-        if niche_plan and hasattr(niche_plan, "entities") and niche_plan.entities:
-            if len(niche_plan.entities) > 0:
-                blocks.add("crud_service")
+        if niche_plan and hasattr(niche_plan, "entities") and niche_plan.entities and len(niche_plan.entities) > 0:
+            blocks.add("crud_service")
 
         # 4. Resolve dependency order
         return self._resolve_dependencies(list(blocks))

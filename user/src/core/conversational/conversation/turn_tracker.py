@@ -259,10 +259,13 @@ class TurnTracker:
         # Shift de categoria de intencion
         if self._turns:
             last_intent = self._turns[-1].intent
-            if intent != last_intent and intent != IntentCategory.UNKNOWN and last_intent != IntentCategory.UNKNOWN:
-                # Solo es shift si las categorias son muy diferentes
-                if intent.is_conversational != last_intent.is_conversational:
-                    return True
+            if (
+                intent != last_intent
+                and intent != IntentCategory.UNKNOWN
+                and last_intent != IntentCategory.UNKNOWN
+                and intent.is_conversational != last_intent.is_conversational
+            ):
+                return True
 
         return False
 

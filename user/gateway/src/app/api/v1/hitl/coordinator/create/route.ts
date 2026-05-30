@@ -3,7 +3,7 @@
 // ⚠️ SECURITY FIX (Phase 0): Added authentication — requesterId from verified session
 
 import { NextRequest, NextResponse } from "next/server";
-import { getHITLCoordinator } from "@/lib/hitl";
+import { getHITLCoordinator } from "@/lib/hitl/hitl-coordinator/_coordinator";
 import { requireAuthAndPermission, handleAuthError } from "@/lib/auth";
 
 // POST /api/v1/hitl/coordinator/create

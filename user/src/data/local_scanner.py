@@ -96,7 +96,9 @@ class LocalDataScanner:
         """Obtiene tendencia de ventas de la BD del usuario."""
         return self.db.get_sales_trend(days=days)
 
-    def scan_orphan_records(self, child_table: str, child_fk: str, parent_table: str, parent_pk: str = "id") -> list[dict[str, Any]]:
+    def scan_orphan_records(
+        self, child_table: str, child_fk: str, parent_table: str, parent_pk: str = "id"
+    ) -> list[dict[str, Any]]:
         """Busca registros huérfanos en la BD del usuario."""
         if not self.db.table_exists(child_table) or not self.db.table_exists(parent_table):
             return []

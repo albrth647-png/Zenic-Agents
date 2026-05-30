@@ -17,12 +17,13 @@ from ..types import MonitorConfig, MonitorResult, MonitorWeight
 
 logger = logging.getLogger(__name__)
 
-_SAFE_TABLE_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_TABLE_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 # ──────────────────────────────────────────────────────────────
 #  MONITOR BASE CLASS
 # ──────────────────────────────────────────────────────────────
+
 
 class MonitorBase(ABC):
     """Abstract base class for SNA monitors.
@@ -59,6 +60,7 @@ class MonitorBase(ABC):
     def default_interval_seconds(self) -> float:
         """Default check interval in seconds."""
         from ..types import DEFAULT_INTERVALS
+
         return DEFAULT_INTERVALS.get(self.weight, 300.0)
 
     @property
@@ -67,8 +69,7 @@ class MonitorBase(ABC):
         return ""
 
     @abstractmethod
-    async def check(self, params: dict[str, Any],
-                    tenant_id: str = "") -> MonitorResult:
+    async def check(self, params: dict[str, Any], tenant_id: str = "") -> MonitorResult:
         """Execute the monitoring check.
 
         Args:
@@ -91,6 +92,7 @@ class MonitorBase(ABC):
     ) -> MonitorResult:
         """Helper to construct a MonitorResult with timing."""
         from ..types import AlertSeverity
+
         elapsed = (time.monotonic() - start_time) * 1000 if start_time else 0.0
         return MonitorResult(
             monitor_id=self.monitor_id,
@@ -107,6 +109,7 @@ class MonitorBase(ABC):
     def _get_db_connection(self, db_name: str = "sna_data.sqlite"):
         """Get a database connection with tenant-aware isolation."""
         from src.core.shared.db_initializer import get_connection
+
         return get_connection(db_name)
 
     def _execute_query(
@@ -122,7 +125,9 @@ class MonitorBase(ABC):
             return conn.execute(query, params).fetchall()  # nosemgrep: sqlalchemy-execute-raw-query
         except Exception as e:
             logger.warning(
-                "Monitor %s: Query failed: %s", self.monitor_id, e,
+                "Monitor %s: Query failed: %s",
+                self.monitor_id,
+                e,
             )
             return []
 
@@ -146,13 +151,16 @@ class MonitorBase(ABC):
             return row[0] if row else 0
         except Exception as e:
             logger.warning(
-                "Monitor %s: Count query failed: %s", self.monitor_id, e,
+                "Monitor %s: Count query failed: %s",
+                self.monitor_id,
+                e,
             )
             return 0
 
     def _get_env_int(self, key: str, default: int = 0) -> int:
         """Read an integer from environment variables."""
         import os
+
         try:
             return int(os.environ.get(key, str(default)))
         except (ValueError, TypeError):
@@ -161,13 +169,13 @@ class MonitorBase(ABC):
     def _get_env_float(self, key: str, default: float = 0.0) -> float:
         """Read a float from environment variables."""
         import os
+
         try:
             return float(os.environ.get(key, str(default)))
         except (ValueError, TypeError):
             return default
 
-    def to_config(self, tenant_id: str = "",
-                  blueprint_name: str = "") -> MonitorConfig:
+    def to_config(self, tenant_id: str = "", blueprint_name: str = "") -> MonitorConfig:
         """Create a MonitorConfig from this monitor's defaults."""
         return MonitorConfig(
             monitor_id=self.monitor_id,

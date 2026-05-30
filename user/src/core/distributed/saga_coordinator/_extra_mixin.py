@@ -32,7 +32,9 @@ class DistributedSagaCoordinatorExtraMixin:
         """
         # Mark step as RUNNING
         await self._backend.update_saga_step(
-            saga_id, step.name, "RUNNING",
+            saga_id,
+            step.name,
+            "RUNNING",
         )
 
         await self._task_queue.enqueue(
@@ -53,7 +55,8 @@ class DistributedSagaCoordinatorExtraMixin:
 
         logger.info(
             "SagaCoordinator: Dispatched step '%s' for saga %s",
-            step.name, saga_id[:8],
+            step.name,
+            saga_id[:8],
         )
 
     # ----------------------------------------------------------
@@ -86,12 +89,14 @@ class DistributedSagaCoordinatorExtraMixin:
                     recovered.append(saga_id)
                     logger.info(
                         "SagaCoordinator: Recovered saga %s (status=%s)",
-                        saga_id[:8], state.get("status"),
+                        saga_id[:8],
+                        state.get("status"),
                     )
             except Exception as exc:
                 logger.error(
                     "SagaCoordinator: Recovery failed for %s: %s",
-                    saga_id[:8], exc,
+                    saga_id[:8],
+                    exc,
                 )
 
         return recovered
@@ -125,4 +130,3 @@ class DistributedSagaCoordinatorExtraMixin:
             if state:
                 result.append(state)
         return result
-

@@ -105,6 +105,7 @@ class EncryptionManager:
             if self._kms_manager is None:
                 try:
                     from .kms_backend import create_kms_manager
+
                     self._kms_manager = create_kms_manager()
                 except ImportError:
                     self._kms_manager = None
@@ -381,7 +382,7 @@ class EncryptionManager:
                 )
                 return f"ZENIC_UNENCRYPTED:{base64.b64encode(plaintext.encode()).decode()}"
             raise EncryptionUnavailableError(
-                "Fernet encryption is not available. " "Install the 'cryptography' package or set ZENIC_DB_PASSPHRASE."
+                "Fernet encryption is not available. Install the 'cryptography' package or set ZENIC_DB_PASSPHRASE."
             )
 
         with self._lock:
@@ -421,11 +422,11 @@ class EncryptionManager:
                 if self._previous_fernet is not None:
                     try:
                         return self._previous_fernet.decrypt(ciphertext.encode()).decode()
-                    except Exception:  # noqa: S110
+                    except Exception:
                         # Secondary key decryption failed; full failure logged below
                         pass
                 logger.error("EncryptionManager: Decryption failed with both current and previous keys")
-                raise ValueError("Decryption failed with both current and previous keys")
+                raise ValueError("Decryption failed with both current and previous keys") from None
 
     def encrypt_dict(self, data: dict[str, Any], sensitive_keys: list | None = None) -> dict[str, Any]:
         """Encrypt sensitive fields in a dictionary."""
@@ -714,8 +715,8 @@ class EncryptionManager:
             "error": status.error,
         }
 
-
     # ── Singleton ─────────────────────────────────────────────
+
 
 _encryption_manager: EncryptionManager | None = None
 _lock = threading.Lock()

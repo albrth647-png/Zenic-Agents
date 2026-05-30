@@ -28,10 +28,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # ── Connection check helper ─────────────────────────────────
 
+
 def _redis_available() -> bool:
     """Check if Redis is reachable at the configured URL."""
     try:
-        import redis  # noqa: F401
+        import redis
     except ImportError:
         return False
 
@@ -48,13 +49,11 @@ def _redis_available() -> bool:
 
 # Skip all tests if Redis is not reachable
 redis_not_available = not _redis_available()
-SKIP_REASON = (
-    "Redis is not available. "
-    "Start it with: docker compose up -d redis"
-)
+SKIP_REASON = "Redis is not available. Start it with: docker compose up -d redis"
 
 
 # ── Fixtures ─────────────────────────────────────────────────
+
 
 @pytest_asyncio.fixture
 async def redis_session_store():
@@ -79,14 +78,12 @@ async def redis_session_store():
             pattern = "test:zenic:session:*"
             cursor = 0
             while True:
-                cursor, keys = await store._redis.scan(
-                    cursor=cursor, match=pattern, count=100
-                )
+                cursor, keys = await store._redis.scan(cursor=cursor, match=pattern, count=100)
                 if keys:
                     await store._redis.delete(*keys)
                 if cursor == 0:
                     break
-        except Exception:  # noqa: S110
+        except Exception:
             pass
 
     await store.close()
@@ -112,23 +109,28 @@ def sample_session():
         ),
     )
     # Add a system message
-    session.add_message(Message(
-        role=MessageRole.SYSTEM,
-        content="Test system message",
-    ))
+    session.add_message(
+        Message(
+            role=MessageRole.SYSTEM,
+            content="Test system message",
+        )
+    )
     # Add a user message
-    session.add_message(Message(
-        role=MessageRole.USER,
-        content="Hello, test!",
-        metadata=MessageMetadata(
-            latency_ms=42.5,
-            token_count=5,
-        ),
-    ))
+    session.add_message(
+        Message(
+            role=MessageRole.USER,
+            content="Hello, test!",
+            metadata=MessageMetadata(
+                latency_ms=42.5,
+                token_count=5,
+            ),
+        )
+    )
     return session
 
 
 # ── 1. Store and Retrieve ───────────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
@@ -195,6 +197,7 @@ class TestStoreAndRetrieve:
 
 # ── 2. TTL Expiration ──────────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestTTLExpiration:
@@ -202,7 +205,6 @@ class TestTTLExpiration:
 
     async def test_ttl_set_on_store(self, redis_session_store, sample_session):
         """Redis key should have TTL set matching session's idle_timeout."""
-        from src.core.conversational.types.session import SessionConfig
 
         # Use a specific timeout
         sample_session.config.idle_timeout_seconds = 120
@@ -255,6 +257,7 @@ class TestTTLExpiration:
 
 # ── 3. Dual-Write Pattern ──────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestDualWritePattern:
@@ -292,6 +295,7 @@ class TestDualWritePattern:
 
 
 # ── 4. Fallback to In-Memory ──────────────────────────────
+
 
 @pytest.mark.asyncio
 class TestInMemoryFallback:
@@ -386,6 +390,7 @@ class TestInMemoryFallback:
 
 # ── 5. Concurrent Access ──────────────────────────────────
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestConcurrentAccess:
@@ -417,10 +422,7 @@ class TestConcurrentAccess:
         """Multiple concurrent gets for the same session should work."""
         await redis_session_store.store(sample_session)
 
-        results = await asyncio.gather(*[
-            redis_session_store.get(sample_session.session_id)
-            for _ in range(10)
-        ])
+        results = await asyncio.gather(*[redis_session_store.get(sample_session.session_id) for _ in range(10)])
 
         for result in results:
             assert result is not None
@@ -428,6 +430,7 @@ class TestConcurrentAccess:
 
 
 # ── 6. SessionManager Integration ──────────────────────────
+
 
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
 class TestSessionManagerIntegration:
@@ -464,7 +467,7 @@ class TestSessionManagerIntegration:
             del manager._sessions[session_id]
 
         # get_session should find it from Redis
-        retrieved = manager.get_session(session_id)
+        manager.get_session(session_id)
         # Note: This may return None if Redis hasn't connected yet
         # since Redis connection is async and we're in sync context
         # The important thing is it doesn't crash
@@ -511,6 +514,7 @@ class TestSessionManagerIntegration:
 
 
 # ── 7. Cleanup ─────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(redis_not_available, reason=SKIP_REASON)
@@ -560,8 +564,9 @@ class TestCleanup:
             config=SessionConfig(idle_timeout_seconds=1),
         )
         expired_session.last_activity = time.time() - 5
-        redis_session_store._memory_store[expired_session.session_id] = \
-            redis_session_store._serialize_session(expired_session)
+        redis_session_store._memory_store[expired_session.session_id] = redis_session_store._serialize_session(
+            expired_session
+        )
 
         active = await redis_session_store.get_all_active()
 

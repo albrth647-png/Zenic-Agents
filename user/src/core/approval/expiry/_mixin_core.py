@@ -31,6 +31,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
         self._db_path = db_path
         self._config = config or ExpiryConfig()
         import threading
+
         self._lock = threading.RLock()
         self._init_db()
 
@@ -73,6 +74,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
         if effective_config.revert_action:
             try:
                 from ..rollback import get_rollback_manager
+
                 rm = get_rollback_manager()
                 rm.register_compensation(
                     request_id=request_id,
@@ -85,7 +87,9 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
         logger.info(
             "ExpiryManager: Set expiry for request %s — TTL=%ds, expires_at=%s",
-            request_id, ttl, expires_at,
+            request_id,
+            ttl,
+            expires_at,
         )
         return record
 
@@ -109,7 +113,8 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
                 logger.info(
                     "ExpiryManager: Request %s expired — auto_revert=%s",
-                    record.request_id, self._config.auto_revert_enabled,
+                    record.request_id,
+                    self._config.auto_revert_enabled,
                 )
 
         return newly_expired
@@ -124,12 +129,14 @@ class ExpiryManager(ExpiryPersistenceMixin):
         if record.status not in ("active", "expired"):
             logger.info(
                 "ExpiryManager: Request %s is %s, cannot revert",
-                request_id, record.status,
+                request_id,
+                record.status,
             )
             return {"success": False, "error": f"Request is {record.status}"}
 
         try:
             from ..rollback import RollbackTrigger, get_rollback_manager
+
             rm = get_rollback_manager()
             rollback_record = rm.execute_rollback(
                 request_id=request_id,
@@ -147,14 +154,16 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
             logger.info(
                 "ExpiryManager: Reverted request %s — rollback_id=%s",
-                request_id, rollback_record.rollback_id,
+                request_id,
+                rollback_record.rollback_id,
             )
             return {"success": True, "rollback": rollback_record.to_dict()}
 
         except Exception as exc:
             logger.error(
                 "ExpiryManager: Revert failed for request %s — %s",
-                request_id, exc,
+                request_id,
+                exc,
             )
             return {"success": False, "error": str(exc)}
 
@@ -164,14 +173,16 @@ class ExpiryManager(ExpiryPersistenceMixin):
             record = self.get_expiry_record(request_id)
             if record is None:
                 logger.warning(
-                    "ExpiryManager: No expiry record for request %s", request_id,
+                    "ExpiryManager: No expiry record for request %s",
+                    request_id,
                 )
                 return False
 
             if record.status != "active":
                 logger.info(
                     "ExpiryManager: Request %s is %s, cannot cancel",
-                    request_id, record.status,
+                    request_id,
+                    record.status,
                 )
                 return False
 
@@ -183,6 +194,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
 
     def get_expiry_record(self, request_id: str) -> ExpiryRecord | None:
         """Get the expiry record for a request."""
+
         def _do_find() -> ExpiryRecord | None:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
@@ -226,6 +238,7 @@ class ExpiryManager(ExpiryPersistenceMixin):
                 NotificationPriority,
                 get_notification_dispatcher,
             )
+
             dispatcher = get_notification_dispatcher()
             dispatcher.dispatch(
                 event=NotificationEvent.APPROVAL_EXPIRED,
@@ -239,11 +252,14 @@ class ExpiryManager(ExpiryPersistenceMixin):
             logger.debug("ExpiryManager: notification dispatch failed: %s", exc)
 
     def _record_audit_event(
-        self, request_id: str, record: ExpiryRecord,
+        self,
+        request_id: str,
+        record: ExpiryRecord,
     ) -> None:
         """Record an EXPIRY_REVERTED event in the audit merkle trail."""
         try:
             from ..audit_merkle import get_approval_audit_merkle
+
             audit = get_approval_audit_merkle()
             audit.record_event(
                 request_id=request_id,

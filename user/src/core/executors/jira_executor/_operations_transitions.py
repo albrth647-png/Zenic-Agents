@@ -34,7 +34,8 @@ class _TransitionsMixin:
         issue_key = config.get("issue_key", "")
         if not issue_key:
             return ActionResult(
-                False, {"operation": "transition_issue"},
+                False,
+                {"operation": "transition_issue"},
                 "Missing required config key: issue_key",
             )
 
@@ -43,7 +44,8 @@ class _TransitionsMixin:
 
         if not transition_id and not transition_name:
             return ActionResult(
-                False, {"operation": "transition_issue", "issue_key": issue_key},
+                False,
+                {"operation": "transition_issue", "issue_key": issue_key},
                 "Either transition_id or transition_name is required",
             )
 
@@ -58,10 +60,7 @@ class _TransitionsMixin:
             transitions = body.get("transitions", [])
             found_id = self._find_transition_by_name(transitions, transition_name)
             if found_id is None:
-                available = [
-                    {"id": t.get("id"), "name": t.get("name")}
-                    for t in transitions
-                ]
+                available = [{"id": t.get("id"), "name": t.get("name")} for t in transitions]
                 return ActionResult(
                     False,
                     {
@@ -90,7 +89,8 @@ class _TransitionsMixin:
         if 200 <= status < 300:
             logger.info(
                 "JiraExecutor: transitioned issue %s with transition %s",
-                issue_key, transition_id,
+                issue_key,
+                transition_id,
             )
             return ActionResult(
                 True,
@@ -107,7 +107,8 @@ class _TransitionsMixin:
             error_msg = "; ".join(messages) if messages else str(errors)
             logger.warning(
                 "JiraExecutor: transition_issue failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -134,7 +135,8 @@ class _TransitionsMixin:
         issue_key = config.get("issue_key", "")
         if not issue_key:
             return ActionResult(
-                False, {"operation": "get_transitions"},
+                False,
+                {"operation": "get_transitions"},
                 "Missing required config key: issue_key",
             )
 
@@ -148,7 +150,8 @@ class _TransitionsMixin:
             transitions = body.get("transitions", [])
             logger.info(
                 "JiraExecutor: retrieved %d transitions for issue %s",
-                len(transitions), issue_key,
+                len(transitions),
+                issue_key,
             )
             return ActionResult(
                 True,
@@ -170,7 +173,8 @@ class _TransitionsMixin:
             error_msg = "; ".join(messages) if messages else f"HTTP {status}"
             logger.warning(
                 "JiraExecutor: get_transitions failed (HTTP %d): %s",
-                status, error_msg,
+                status,
+                error_msg,
             )
             return ActionResult(
                 False,
@@ -185,7 +189,6 @@ class _TransitionsMixin:
     # ── Utility: find transition by name ───────────────────────
 
     @staticmethod
-
     def _find_transition_by_name(
         transitions: list[dict[str, Any]],
         name: str,

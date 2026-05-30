@@ -121,7 +121,9 @@ class IntegrityVerifier:
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[  # noqa: S608
+                    0
+                ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 checksum_parts.append(f"{table_name}:{count}")
             conn.close()
             data = "|".join(checksum_parts).encode()
@@ -197,7 +199,9 @@ class IntegrityVerifier:
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier  # noqa: S608
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[  # noqa: S608
+                    0
+                ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 checksum_parts.append(f"{table_name}:{count}")
             conn.close()
             data = "|".join(checksum_parts).encode()
@@ -243,7 +247,9 @@ class IntegrityVerifier:
         self._running = True
         self._watch_components = watch_components or []
         self._monitor_thread = threading.Thread(
-            target=self._monitor_loop, daemon=True, name="integrity-verify",
+            target=self._monitor_loop,
+            daemon=True,
+            name="integrity-verify",
         )
         self._monitor_thread.start()
         logger.info("IntegrityVerifier: Monitoring started")
@@ -320,12 +326,18 @@ class IntegrityVerifier:
                 """INSERT INTO integrity_checks
                    (component, status, expected_hash, actual_hash, message, checked_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (result.component, result.status.value, result.expected_hash,
-                 result.actual_hash, result.message, result.timestamp),
+                (
+                    result.component,
+                    result.status.value,
+                    result.expected_hash,
+                    result.actual_hash,
+                    result.message,
+                    result.timestamp,
+                ),
             )
             conn.commit()
             conn.close()
-        except Exception:  # noqa: S110
+        except Exception:
             # Logging check result to DB is best-effort; failure is non-critical
             pass
 

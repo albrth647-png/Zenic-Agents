@@ -37,8 +37,10 @@ __all__ = [
 #  DATA CONTRACTS
 # ──────────────────────────────────────────────────────────────
 
+
 class PipelineEventType(str, Enum):
     """Types of pipeline events."""
+
     PIPELINE_CREATED = "pipeline.created"
     PIPELINE_STARTED = "pipeline.started"
     PIPELINE_COMPLETED = "pipeline.completed"
@@ -72,6 +74,7 @@ class PipelineEvent:
         source: Origin identifier for tracing.
         correlation_id: Correlation ID for distributed tracing.
     """
+
     event_type: str
     pipeline_id: str = ""
     step_id: str = ""
@@ -121,6 +124,7 @@ class PipelineEventHandler(ABC):
 # ──────────────────────────────────────────────────────────────
 #  EVENT BUS
 # ──────────────────────────────────────────────────────────────
+
 
 class EventBus:
     """
@@ -185,7 +189,8 @@ class EventBus:
                 self._handlers[event_type].append(handler)
                 logger.debug(
                     "EventBus: Handler %s subscribed to '%s'",
-                    type(handler).__name__, event_type,
+                    type(handler).__name__,
+                    event_type,
                 )
 
     def subscribe_fn(
@@ -243,7 +248,9 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus: Handler %s failed on event '%s': %s",
-                    type(handler).__name__, event.event_type, exc,
+                    type(handler).__name__,
+                    event.event_type,
+                    exc,
                 )
 
     # ── Publish (Async) ──────────────────────────────────────
@@ -270,7 +277,8 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus[async]: Handler %s failed: %s",
-                    type(handler).__name__, exc,
+                    type(handler).__name__,
+                    exc,
                 )
 
         await asyncio.gather(
@@ -305,7 +313,8 @@ class EventBus:
                 self._error_count_inc()
                 logger.error(
                     "EventBus[collect]: Handler %s failed: %s",
-                    type(handler).__name__, exc,
+                    type(handler).__name__,
+                    exc,
                 )
         return results
 
@@ -337,6 +346,7 @@ class EventBus:
 # ──────────────────────────────────────────────────────────────
 #  INTERNAL: Function Handler Adapter
 # ──────────────────────────────────────────────────────────────
+
 
 class _FunctionHandler(PipelineEventHandler):
     """Adapts a plain function to the PipelineEventHandler interface."""

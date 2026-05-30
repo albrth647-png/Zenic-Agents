@@ -14,32 +14,137 @@ import { createHash } from "crypto";
 import { db } from "@/lib/db";
 import { computeContentHash } from "../yaml-loader";
 
-import type {
-  PolicyDocument,
-  PolicyStatement,
-  PolicyCondition,
-  PolicyEffectV2,
-  ConditionOperator,
-} from "../types";
-import {
-  POLICY_API_VERSION,
+import type { PolicyDocument, PolicyStatement, PolicyCondition, PolicyEffectV2, ConditionOperator } from "../types";
+import { POLICY_API_VERSION } from "../types";
 
-  TemplateMetadata,
-  TemplateParameter,
-  PolicyDocumentTemplate,
-  StatementTemplate,
-  ConditionTemplate,
-  TestCaseTemplate,
-  TemplateConstraint,
-  TemplateInstantiationRequest,
-  TemplateInstantiationResult,
-} from "./types";
-import {
-  TEMPLATE_API_VERSION,
-  TEMPLATE_KIND,
-  TemplateParameterType,
-  TemplateConstraintType,
-} from "./types";
+export { POLICY_API_VERSION };
+
+// ─── Template Constants ────────────────────────────────────────────────
+
+export const TEMPLATE_API_VERSION = "template.zenic.dev/v1";
+export const TEMPLATE_KIND = "PolicyTemplate";
+export const POLICY_KIND = "PolicyDocument";
+
+// ─── Template Enums ───────────────────────────────────────────────────
+
+export enum TemplateParameterType {
+  STRING = "string",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  ENUM = "enum",
+  ARRAY = "array",
+  OBJECT = "object",
+  RESOURCE_PATTERN = "resource_pattern",
+  ACTION_PATTERN = "action_pattern",
+}
+
+export enum TemplateConstraintType {
+  MUTUALLY_EXCLUSIVE = "mutually_exclusive",
+  REQUIRES = "requires",
+  RANGE_CONSTRAINT = "range_constraint",
+  REGEX_CONSTRAINT = "regex_constraint",
+  CUSTOM_EXPRESSION = "custom_expression",
+}
+
+// ─── Template Interfaces ──────────────────────────────────────────────
+
+export interface TemplateParameter {
+  name: string;
+  displayName: string;
+  description: string;
+  type: TemplateParameterType;
+  required: boolean;
+  defaultValue?: unknown;
+  allowedValues?: unknown[];
+  validationRegex?: string;
+  minValue?: number;
+  maxValue?: number;
+}
+
+export interface TemplateConstraint {
+  name: string;
+  type: TemplateConstraintType;
+  parameters: Record<string, unknown>;
+  errorMessage: string;
+}
+
+export interface TemplateMetadata {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  category: string;
+  industry?: string;
+  tags?: string[];
+  author?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StatementTemplate {
+  id: string;
+  effect: string;
+  resource: string;
+  action: string;
+  description?: string;
+  priority: number | string;
+  requiredRole?: string;
+  conditions?: ConditionTemplate[];
+  tags?: string[];
+}
+
+export interface ConditionTemplate {
+  field: string;
+  operator: string;
+  value: string;
+  description?: string;
+}
+
+export interface TestCaseTemplate {
+  name: string;
+  resource: string;
+  action: string;
+  context: Record<string, unknown>;
+  expected: string;
+  description?: string;
+}
+
+export interface PolicyDocumentTemplate {
+  name: string;
+  description: string;
+  statements: StatementTemplate[];
+  tests?: TestCaseTemplate[];
+  compliance?: unknown[];
+  labels?: Record<string, string>;
+}
+
+export interface PolicyTemplate {
+  apiVersion: string;
+  kind: string;
+  metadata: TemplateMetadata;
+  parameters: TemplateParameter[];
+  documentTemplate: PolicyDocumentTemplate;
+  defaults: Record<string, unknown>;
+  constraints: TemplateConstraint[];
+  generatedCount?: number;
+}
+
+export interface TemplateInstantiationRequest {
+  templateId: string;
+  parameters: Record<string, unknown>;
+  autoDeploy?: boolean;
+  targetPolicyId?: string;
+  requestedBy?: string;
+}
+
+export interface TemplateInstantiationResult {
+  success: boolean;
+  document?: PolicyDocument;
+  errors: string[];
+  warnings: string[];
+  policyId?: string;
+  unresolvedParameters: string[];
+}
 
 // ─── Validation Errors ────────────────────────────────────────────────
 
@@ -144,162 +249,6 @@ interface ParameterValidationResult {
 }
 
 /** Strategy map for parameter type validation */
-
-  for (const param of template.parameters) {
-    if (param.name in request.parameters && request.parameters[param.name] !== undefined && request.parameters[param.name] !== null) {
-      // Provided value
-      resolvedParams[param.name] = request.parameters[param.name];
-    } else if (param.defaultValue !== undefined) {
-      // Default value from template definition
-      resolvedParams[param.name] = param.defaultValue;
-      warnings.push(`Parameter "${param.name}" using default value: ${JSON.stringify(param.defaultValue)}`);
-    } else if (template.defaults[param.name] !== undefined) {
-      // Default value from defaults map
-      resolvedParams[param.name] = template.defaults[param.name];
-      warnings.push(`Parameter "${param.name}" using default from defaults map: ${JSON.stringify(template.defaults[param.name])}`);
-    } else if (param.required) {
-      // Required but no value — error
-      unresolvedParameters.push(param.name);
-      errors.push(`Required parameter "${param.name}" has no value`);
-    }
-    // Optional parameter with no value → skip (unresolved)
-  }
-
-  // Early return if required parameters are missing
-  if (errors.length > 0) {
-    return {
-      success: false,
-      errors,
-      warnings,
-      unresolvedParameters,
-    };
-  }
-
-  // 4. Apply parameter type validation
-  for (const param of template.parameters) {
-    if (param.name in resolvedParams) {
-      const result = validateParameterType(resolvedParams[param.name], param);
-      if (!result.valid) {
-        errors.push(result.error!);
-      }
-    }
-  }
-
-  if (errors.length > 0) {
-    return {
-      success: false,
-      errors,
-      warnings,
-      unresolvedParameters,
-    };
-  }
-
-  // 5. Validate constraint rules
-  const constraintResult = validateConstraints(template.constraints, resolvedParams);
-  if (!constraintResult.valid) {
-    errors.push(...constraintResult.errors);
-  }
-
-  if (errors.length > 0) {
-    return {
-      success: false,
-      errors,
-      warnings,
-      unresolvedParameters,
-    };
-  }
-
-  // 6 & 7. Build PolicyDocument via Builder with variable substitution
-  const builder = new PolicyDocumentBuilder(
-    template.documentTemplate,
-    resolvedParams,
-    template.metadata,
-  );
-  const document = builder.build();
-
-  // Verify no critical unresolved variables in generated document
-  const docString = JSON.stringify(document);
-  const remainingVars = hasUnresolvedVariables(docString);
-  if (remainingVars.length > 0) {
-    const uniqueVars = [...new Set(remainingVars)];
-    warnings.push(`Unresolved variables remain in generated document: ${uniqueVars.join(", ")}`);
-  }
-
-  // 8. Auto-deploy if requested
-  let policyId: string | undefined;
-  if (request.autoDeploy) {
-    try {
-      const targetId = request.targetPolicyId ?? `${template.metadata.id}-${Date.now()}`;
-      const contentHash = computeContentHash(document);
-
-      // Check if policy already exists
-      const existing = await db.declPolicy.findUnique({
-        where: { policyId: targetId },
-      });
-
-      if (existing) {
-        // Update existing policy
-        await db.declPolicy.update({
-          where: { policyId: targetId },
-          data: {
-            name: document.metadata.name,
-            description: document.metadata.description,
-            version: document.metadata.version,
-            labels: JSON.stringify(document.metadata.labels ?? {}),
-            compliance: JSON.stringify(document.metadata.compliance ?? []),
-            statements: JSON.stringify(document.statements),
-            tests: JSON.stringify(document.tests ?? []),
-            contentHash,
-            author: request.requestedBy,
-          },
-        });
-        policyId = targetId;
-      } else {
-        // Create new policy
-        await db.declPolicy.create({
-          data: {
-            policyId: targetId,
-            name: document.metadata.name,
-            description: document.metadata.description,
-            apiVersion: POLICY_API_VERSION,
-            version: document.metadata.version,
-            labels: JSON.stringify(document.metadata.labels ?? {}),
-            compliance: JSON.stringify(document.metadata.compliance ?? []),
-            statements: JSON.stringify(document.statements),
-            tests: JSON.stringify(document.tests ?? []),
-            isActive: true,
-            contentHash,
-            author: request.requestedBy,
-          },
-        });
-        policyId = targetId;
-      }
-    } catch (error) {
-      errors.push(`Auto-deploy failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  // 9. Increment template's generatedCount
-  try {
-    await db.policyTemplate.update({
-      where: { templateId: request.templateId },
-      data: {
-        generatedCount: { increment: 1 },
-      },
-    });
-  } catch (error) {
-    warnings.push(`Failed to increment generatedCount: ${error instanceof Error ? error.message : String(error)}`);
-  }
-
-  // 10. Return result
-  return {
-    success: errors.length === 0,
-    document: errors.length === 0 ? document : undefined,
-    errors,
-    warnings,
-    policyId,
-    unresolvedParameters: [],
-  };
 
 /**
  * Update a template by templateId.
@@ -1363,4 +1312,160 @@ export async function instantiateTemplate(
   const resolvedParams: Record<string, unknown> = {};
   const unresolvedParameters: string[] = [];
 
+  // 3. Resolve parameters: provided values → defaults → unresolved
+  for (const param of template.parameters) {
+    if (param.name in request.parameters && request.parameters[param.name] !== undefined && request.parameters[param.name] !== null) {
+      // Provided value
+      resolvedParams[param.name] = request.parameters[param.name];
+    } else if (param.defaultValue !== undefined) {
+      // Default value from template definition
+      resolvedParams[param.name] = param.defaultValue;
+      warnings.push(`Parameter "${param.name}" using default value: ${JSON.stringify(param.defaultValue)}`);
+    } else if (template.defaults[param.name] !== undefined) {
+      // Default value from defaults map
+      resolvedParams[param.name] = template.defaults[param.name];
+      warnings.push(`Parameter "${param.name}" using default from defaults map: ${JSON.stringify(template.defaults[param.name])}`);
+    } else if (param.required) {
+      // Required but no value — error
+      unresolvedParameters.push(param.name);
+      errors.push(`Required parameter "${param.name}" has no value`);
+    }
+    // Optional parameter with no value → skip (unresolved)
+  }
+
+  // Early return if required parameters are missing
+  if (errors.length > 0) {
+    return {
+      success: false,
+      errors,
+      warnings,
+      unresolvedParameters,
+    };
+  }
+
+  // 4. Apply parameter type validation
+  for (const param of template.parameters) {
+    if (param.name in resolvedParams) {
+      const result = validateParameterType(resolvedParams[param.name], param);
+      if (!result.valid) {
+        errors.push(result.error!);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return {
+      success: false,
+      errors,
+      warnings,
+      unresolvedParameters,
+    };
+  }
+
+  // 5. Validate constraint rules
+  const constraintResult = validateConstraints(template.constraints, resolvedParams);
+  if (!constraintResult.valid) {
+    errors.push(...constraintResult.errors);
+  }
+
+  if (errors.length > 0) {
+    return {
+      success: false,
+      errors,
+      warnings,
+      unresolvedParameters,
+    };
+  }
+
+  // 6 & 7. Build PolicyDocument via Builder with variable substitution
+  const builder = new PolicyDocumentBuilder(
+    template.documentTemplate,
+    resolvedParams,
+    template.metadata,
+  );
+  const document = builder.build();
+
+  // Verify no critical unresolved variables in generated document
+  const docString = JSON.stringify(document);
+  const remainingVars = hasUnresolvedVariables(docString);
+  if (remainingVars.length > 0) {
+    const uniqueVars = [...new Set(remainingVars)];
+    warnings.push(`Unresolved variables remain in generated document: ${uniqueVars.join(", ")}`);
+  }
+
+  // 8. Auto-deploy if requested
+  let policyId: string | undefined;
+  if (request.autoDeploy) {
+    try {
+      const targetId = request.targetPolicyId ?? `${template.metadata.id}-${Date.now()}`;
+      const contentHash = computeContentHash(document);
+
+      // Check if policy already exists
+      const existing = await db.declPolicy.findUnique({
+        where: { policyId: targetId },
+      });
+
+      if (existing) {
+        // Update existing policy
+        await db.declPolicy.update({
+          where: { policyId: targetId },
+          data: {
+            name: document.metadata.name,
+            description: document.metadata.description,
+            version: document.metadata.version,
+            labels: JSON.stringify(document.metadata.labels ?? {}),
+            compliance: JSON.stringify(document.metadata.compliance ?? []),
+            statements: JSON.stringify(document.statements),
+            tests: JSON.stringify(document.tests ?? []),
+            contentHash,
+            author: request.requestedBy,
+          },
+        });
+        policyId = targetId;
+      } else {
+        // Create new policy
+        await db.declPolicy.create({
+          data: {
+            policyId: targetId,
+            name: document.metadata.name,
+            description: document.metadata.description,
+            apiVersion: POLICY_API_VERSION,
+            version: document.metadata.version,
+            labels: JSON.stringify(document.metadata.labels ?? {}),
+            compliance: JSON.stringify(document.metadata.compliance ?? []),
+            statements: JSON.stringify(document.statements),
+            tests: JSON.stringify(document.tests ?? []),
+            isActive: true,
+            contentHash,
+            author: request.requestedBy,
+          },
+        });
+        policyId = targetId;
+      }
+    } catch (error) {
+      errors.push(`Auto-deploy failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  // 9. Increment template's generatedCount
+  try {
+    await db.policyTemplate.update({
+      where: { templateId: request.templateId },
+      data: {
+        generatedCount: { increment: 1 },
+      },
+    });
+  } catch (error) {
+    warnings.push(`Failed to increment generatedCount: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  // 10. Return result
+  return {
+    success: errors.length === 0,
+    document: errors.length === 0 ? document : undefined,
+    errors,
+    warnings,
+    policyId,
+    unresolvedParameters: [],
+  };
 }

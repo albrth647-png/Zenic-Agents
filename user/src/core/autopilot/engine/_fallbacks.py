@@ -14,6 +14,7 @@ from typing import Any
 #  IMPACT PREVIEW FALLBACKS
 # ──────────────────────────────────────────────────────────────
 
+
 class _NoOpImpactPreview:
     """Fallback ImpactPreviewEngine when the real one is unavailable."""
 
@@ -41,6 +42,7 @@ class _MockImpactPreview:
 # ──────────────────────────────────────────────────────────────
 #  SAFETY GATE FALLBACKS
 # ──────────────────────────────────────────────────────────────
+
 
 class _PermissiveSafetyFallback:
     """Fallback SafetyGate when the real one is unavailable.
@@ -71,6 +73,7 @@ class _MockSafetyResult:
 # ──────────────────────────────────────────────────────────────
 #  ACTION DISPATCHER FALLBACKS
 # ──────────────────────────────────────────────────────────────
+
 
 class _NoOpDispatcher:
     """Fallback ActionDispatcher when the real one is unavailable."""

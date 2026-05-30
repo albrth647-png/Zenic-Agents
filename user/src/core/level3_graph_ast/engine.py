@@ -32,7 +32,7 @@ from src.core.shared.tenant_utils import resolve_tenant_id, set_tenant_context
 
 logger = logging.getLogger(__name__)
 
-SKIP_DIRS = {'.git', 'node_modules', 'venv', '__pycache__', '.venv', 'dist', 'build'}
+SKIP_DIRS = {".git", "node_modules", "venv", "__pycache__", ".venv", "dist", "build"}
 
 
 @lru_cache(maxsize=32)
@@ -82,10 +82,18 @@ class GraphASTEngine:
             connections TEXT DEFAULT '[]',
             tenant_id TEXT NOT NULL DEFAULT '__anonymous__',
             UNIQUE(file_path, name, node_type, tenant_id))""")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)")  # nosemgrep: sqlalchemy-execute-raw-query
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)")  # nosemgrep: sqlalchemy-execute-raw-query
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)")  # nosemgrep: sqlalchemy-execute-raw-query
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)")  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ast_name ON ast_nodes(name)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ast_type ON ast_nodes(node_type)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ast_tenant ON ast_nodes(tenant_id)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ast_tenant_file ON ast_nodes(tenant_id, file_path)"
+        )  # nosemgrep: sqlalchemy-execute-raw-query
         conn.commit()
         # Migrate: add tenant_id column if it doesn't exist
         try:
@@ -173,23 +181,36 @@ class GraphASTEngine:
                     end = node.end_lineno or start
                     content = ast.get_source_segment(code, node) or ""
                     content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
-                    nodes.append({
-                        "file_path": file_path, "node_type": "function",
-                        "name": node.name, "start_byte": start, "end_byte": end,
-                        "content_hash": content_hash, "docstring": docstring,
-                        "complexity": complexity, "connections": json.dumps(connections),
-                    })
+                    nodes.append(
+                        {
+                            "file_path": file_path,
+                            "node_type": "function",
+                            "name": node.name,
+                            "start_byte": start,
+                            "end_byte": end,
+                            "content_hash": content_hash,
+                            "docstring": docstring,
+                            "complexity": complexity,
+                            "connections": json.dumps(connections),
+                        }
+                    )
                 elif isinstance(node, ast.ClassDef):
                     connections = self._extract_class_connections(node)
                     content_hash = hashlib.sha256(node.name.encode()).hexdigest()[:16]
                     docstring = ast.get_docstring(node) or ""
-                    nodes.append({
-                        "file_path": file_path, "node_type": "class",
-                        "name": node.name, "start_byte": node.lineno,
-                        "end_byte": node.end_lineno or node.lineno,
-                        "content_hash": content_hash, "docstring": docstring,
-                        "complexity": 1, "connections": json.dumps(connections),
-                    })
+                    nodes.append(
+                        {
+                            "file_path": file_path,
+                            "node_type": "class",
+                            "name": node.name,
+                            "start_byte": node.lineno,
+                            "end_byte": node.end_lineno or node.lineno,
+                            "content_hash": content_hash,
+                            "docstring": docstring,
+                            "complexity": 1,
+                            "connections": json.dumps(connections),
+                        }
+                    )
                 elif isinstance(node, (ast.Import, ast.ImportFrom)):
                     names = []
                     for alias in node.names:
@@ -197,13 +218,19 @@ class GraphASTEngine:
                     if isinstance(node, ast.ImportFrom) and node.module:
                         names.insert(0, node.module)
                     content_hash = hashlib.sha256(",".join(names).encode()).hexdigest()[:16]
-                    nodes.append({
-                        "file_path": file_path, "node_type": "import",
-                        "name": ",".join(names), "start_byte": node.lineno,
-                        "end_byte": node.end_lineno or node.lineno,
-                        "content_hash": content_hash, "docstring": "",
-                        "complexity": 0, "connections": "[]",
-                    })
+                    nodes.append(
+                        {
+                            "file_path": file_path,
+                            "node_type": "import",
+                            "name": ",".join(names),
+                            "start_byte": node.lineno,
+                            "end_byte": node.end_lineno or node.lineno,
+                            "content_hash": content_hash,
+                            "docstring": "",
+                            "complexity": 0,
+                            "connections": "[]",
+                        }
+                    )
         except SyntaxError as e:
             logging.getLogger(__name__).warning("Syntax error in %s: %s", file_path, e)
         return nodes
@@ -224,25 +251,32 @@ class GraphASTEngine:
         """
         nodes = []
         patterns = {
-            "kotlin": r'(?:fun|companion object)\s+(\w+)\s*[\(<]',
-            "go": r'func\s+(?:\([^)]+\)\s+)?(\w+)\s*\(',
-            "javascript": r'(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>))',
-            "typescript": r'(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>))',
-            "java": r'(?:public|private|protected)?\s*(?:static\s+)?(?:\w+(?:<[^>]+>)?\s+)+(\w+)\s*\(',
-            "rust": r'(?:pub\s+)?fn\s+(\w+)\s*[\(<]',
+            "kotlin": r"(?:fun|companion object)\s+(\w+)\s*[\(<]",
+            "go": r"func\s+(?:\([^)]+\)\s+)?(\w+)\s*\(",
+            "javascript": r"(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>))",
+            "typescript": r"(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>))",
+            "java": r"(?:public|private|protected)?\s*(?:static\s+)?(?:\w+(?:<[^>]+>)?\s+)+(\w+)\s*\(",
+            "rust": r"(?:pub\s+)?fn\s+(\w+)\s*[\(<]",
         }
-        pattern = patterns.get(language, r'(?:def|function|fun|func)\s+(\w+)\s*[\(\{]')
+        pattern = patterns.get(language, r"(?:def|function|fun|func)\s+(\w+)\s*[\(\{]")
         for match in re.finditer(pattern, code):
             name = match.group(1) or (match.group(2) if match.lastindex and match.lastindex >= 2 else None)
             if name is None:
                 continue
             content_hash = hashlib.sha256(match.group(0).encode()).hexdigest()[:16]
-            nodes.append({
-                "file_path": file_path, "node_type": "function",
-                "name": name, "start_byte": match.start(),
-                "end_byte": match.end(), "content_hash": content_hash,
-                "docstring": "", "complexity": 1, "connections": "[]",
-            })
+            nodes.append(
+                {
+                    "file_path": file_path,
+                    "node_type": "function",
+                    "name": name,
+                    "start_byte": match.start(),
+                    "end_byte": match.end(),
+                    "content_hash": content_hash,
+                    "docstring": "",
+                    "complexity": 1,
+                    "connections": "[]",
+                }
+            )
         return nodes
 
     def _store_node(self, node_data):
@@ -250,6 +284,7 @@ class GraphASTEngine:
 
         Uses shared retry utility for transient SQLite failures.
         """
+
         def _insert():
             conn = get_connection("graph_ast.sqlite")
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -257,11 +292,18 @@ class GraphASTEngine:
                 (file_path, node_type, name, start_byte, end_byte,
                  content_hash, docstring, complexity, connections, tenant_id)
                 VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (node_data["file_path"], node_data["node_type"],
-                 node_data["name"], node_data["start_byte"],
-                 node_data["end_byte"], node_data["content_hash"],
-                 node_data["docstring"], node_data["complexity"],
-                 node_data["connections"], self._tenant_id)
+                (
+                    node_data["file_path"],
+                    node_data["node_type"],
+                    node_data["name"],
+                    node_data["start_byte"],
+                    node_data["end_byte"],
+                    node_data["content_hash"],
+                    node_data["docstring"],
+                    node_data["complexity"],
+                    node_data["connections"],
+                    self._tenant_id,
+                ),
             )
             conn.commit()
 
@@ -281,10 +323,21 @@ class GraphASTEngine:
                 (file_path, node_type, name, start_byte, end_byte,
                  content_hash, docstring, complexity, connections, tenant_id)
                 VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                [(n["file_path"], n["node_type"], n["name"],
-                  n["start_byte"], n["end_byte"], n["content_hash"],
-                  n["docstring"], n["complexity"], n["connections"], tid)
-                 for n in nodes]
+                [
+                    (
+                        n["file_path"],
+                        n["node_type"],
+                        n["name"],
+                        n["start_byte"],
+                        n["end_byte"],
+                        n["content_hash"],
+                        n["docstring"],
+                        n["complexity"],
+                        n["connections"],
+                        tid,
+                    )
+                    for n in nodes
+                ],
             )
             conn.commit()
 
@@ -311,9 +364,13 @@ class GraphASTEngine:
         conn = get_connection("graph_ast.sqlite")
         # Security: Use shared escape utility to prevent LIKE injection
         escaped_name = escape_sql_like(target_name)
-        return [dict(r) for r in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            "SELECT * FROM ast_nodes WHERE name LIKE ? ESCAPE '\\' AND tenant_id = ?",
-            (f"%{escaped_name}%", self._tenant_id)).fetchall()]
+        return [
+            dict(r)
+            for r in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                "SELECT * FROM ast_nodes WHERE name LIKE ? ESCAPE '\\' AND tenant_id = ?",
+                (f"%{escaped_name}%", self._tenant_id),
+            ).fetchall()
+        ]
 
     def purge_tenant_data(self, tenant_id: str) -> int:
         """Delete all AST data for a specific tenant (GDPR / deprovisioning)."""
@@ -345,10 +402,17 @@ class GraphASTEngine:
         if nodes:
             self._store_nodes_batch(nodes)
         if not nodes:
-            return {"functions": 0, "classes": 0, "imports": 0,
-                    "max_complexity": 0, "total_complexity": 0,
-                    "avg_complexity": 0, "connections": [],
-                    "function_names": [], "class_names": []}
+            return {
+                "functions": 0,
+                "classes": 0,
+                "imports": 0,
+                "max_complexity": 0,
+                "total_complexity": 0,
+                "avg_complexity": 0,
+                "connections": [],
+                "function_names": [],
+                "class_names": [],
+            }
         functions = [n for n in nodes if n["node_type"] == "function"]
         classes = [n for n in nodes if n["node_type"] == "class"]
         imports = [n for n in nodes if n["node_type"] == "import"]
@@ -360,7 +424,8 @@ class GraphASTEngine:
             except Exception as e:
                 logger.debug(f"GraphASTEngine: Failed to parse connections JSON: {e}")
         return {
-            "functions": len(functions), "classes": len(classes),
+            "functions": len(functions),
+            "classes": len(classes),
             "imports": len(imports),
             "max_complexity": max((n["complexity"] for n in functions), default=0),
             "total_complexity": sum(n["complexity"] for n in functions),

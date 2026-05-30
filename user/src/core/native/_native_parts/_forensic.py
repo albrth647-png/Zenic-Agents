@@ -26,21 +26,35 @@ def forensic_hash(
     """Generate a forensic BLAKE3 hash from audit entry fields."""
     if HAS_NATIVE:
         from ._loader import _rust_forensic_hash
+
         return _rust_forensic_hash(
-            entry_id, tenant_id, event_type, description,
-            actor, timestamp, metadata_json,
+            entry_id,
+            tenant_id,
+            event_type,
+            description,
+            actor,
+            timestamp,
+            metadata_json,
         )
     # Pure Python fallback
     if not entry_id:
         raise ValueError("entry_id must not be empty")
     if not tenant_id:
         raise ValueError("tenant_id must not be empty")
-    payload = "|".join([
-        entry_id, tenant_id, event_type, description,
-        actor, timestamp, metadata_json,
-    ])
+    payload = "|".join(
+        [
+            entry_id,
+            tenant_id,
+            event_type,
+            description,
+            actor,
+            timestamp,
+            metadata_json,
+        ]
+    )
     try:
         import blake3 as _blake3  # type: ignore[import-untyped]
+
         return _blake3.blake3(payload.encode()).hexdigest()
     except ImportError:
         return hashlib.sha256(payload.encode()).hexdigest()
@@ -50,6 +64,7 @@ def chain_hash(parent_hash: str, entry_hash: str) -> str:
     """Generate a chain hash linking an entry to its parent."""
     if HAS_NATIVE:
         from ._loader import _rust_chain_hash
+
         return _rust_chain_hash(parent_hash, entry_hash)
     # Pure Python fallback
     if not parent_hash and not entry_hash:
@@ -57,6 +72,7 @@ def chain_hash(parent_hash: str, entry_hash: str) -> str:
     combined = (parent_hash + entry_hash).encode()
     try:
         import blake3 as _blake3  # type: ignore[import-untyped]
+
         return _blake3.blake3(combined).hexdigest()
     except ImportError:
         return hashlib.sha256(combined).hexdigest()
@@ -66,11 +82,11 @@ def verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Verify Merkle chain integrity for a list of ledger entries."""
     if HAS_NATIVE:
         from ._loader import _rust_verify_merkle_chain
+
         return _rust_verify_merkle_chain(entries)
     # Pure Python fallback
     if not entries:
-        return {"is_valid": True, "total_entries": 0, "valid_entries": 0,
-                "broken_links": [], "root_hash": ""}
+        return {"is_valid": True, "total_entries": 0, "valid_entries": 0, "broken_links": [], "root_hash": ""}
 
     total = len(entries)
     valid_count = 0
@@ -91,34 +107,38 @@ def verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
             if i == 0:
                 # Check if parent exists in any group
                 parent_hash = row.get("parent_hash", "")
-                parent_exists = any(
-                    e.get("hash_sha256") == parent_hash for e in entries
-                )
+                parent_exists = any(e.get("hash_sha256") == parent_hash for e in entries)
                 if parent_exists:
                     valid_count += 1
                 else:
-                    broken_links.append({
-                        "file_path": fp, "entry_id": row.get("id"),
-                        "expected_parent_hash": parent_hash,
-                        "actual_parent_hash": parent_hash,
-                        "entry_hash": row.get("hash_sha256", ""),
-                        "operation": row.get("operation", ""),
-                        "timestamp": row.get("timestamp", 0.0),
-                    })
+                    broken_links.append(
+                        {
+                            "file_path": fp,
+                            "entry_id": row.get("id"),
+                            "expected_parent_hash": parent_hash,
+                            "actual_parent_hash": parent_hash,
+                            "entry_hash": row.get("hash_sha256", ""),
+                            "operation": row.get("operation", ""),
+                            "timestamp": row.get("timestamp", 0.0),
+                        }
+                    )
                 continue
             expected = sorted_group[i - 1].get("hash_sha256", "")
             actual = row.get("parent_hash", "")
             if actual == expected:
                 valid_count += 1
             else:
-                broken_links.append({
-                    "file_path": fp, "entry_id": row.get("id"),
-                    "expected_parent_hash": expected,
-                    "actual_parent_hash": actual,
-                    "entry_hash": row.get("hash_sha256", ""),
-                    "operation": row.get("operation", ""),
-                    "timestamp": row.get("timestamp", 0.0),
-                })
+                broken_links.append(
+                    {
+                        "file_path": fp,
+                        "entry_id": row.get("id"),
+                        "expected_parent_hash": expected,
+                        "actual_parent_hash": actual,
+                        "entry_hash": row.get("hash_sha256", ""),
+                        "operation": row.get("operation", ""),
+                        "timestamp": row.get("timestamp", 0.0),
+                    }
+                )
 
     root_hash = entries[-1].get("hash_sha256", "") if entries else ""
     return {
@@ -131,11 +151,13 @@ def verify_merkle_chain(entries: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def merkle_proof(
-    entry_hash: str, all_hashes: list[str],
+    entry_hash: str,
+    all_hashes: list[str],
 ) -> dict[str, Any]:
     """Generate a Merkle inclusion proof for an entry."""
     if HAS_NATIVE:
         from ._loader import _rust_merkle_proof
+
         return _rust_merkle_proof(entry_hash, all_hashes)
     # Pure Python fallback
     if not all_hashes:
@@ -149,13 +171,13 @@ def merkle_proof(
     def _hash_func(data: bytes) -> str:
         try:
             import blake3 as _blake3  # type: ignore[import-untyped]
+
             return _blake3.blake3(data).hexdigest()
         except ImportError:
             return hashlib.sha256(data).hexdigest()
 
     if len(all_hashes) == 1:
-        return {"merkle_root": _hash_func(entry_hash.encode()),
-                "proof_path": [], "leaf_index": 0, "verified": True}
+        return {"merkle_root": _hash_func(entry_hash.encode()), "proof_path": [], "leaf_index": 0, "verified": True}
 
     current_level = [_hash_func(h.encode()) for h in all_hashes]
     proof_path: list[str] = []
@@ -179,8 +201,7 @@ def merkle_proof(
         current_level = next_level
 
     root = _hash_func(current_level[0].encode()) if current_level else ""
-    return {"merkle_root": root, "proof_path": proof_path,
-            "leaf_index": idx, "verified": True}
+    return {"merkle_root": root, "proof_path": proof_path, "leaf_index": idx, "verified": True}
 
 
 def batch_verify_chains(
@@ -189,7 +210,7 @@ def batch_verify_chains(
     """Batch-verify multiple Merkle chains."""
     if HAS_NATIVE:
         from ._loader import _rust_batch_verify_chains
+
         return _rust_batch_verify_chains(chains)
     # Pure Python fallback
-    return {chain_id: verify_merkle_chain(entries)
-            for chain_id, entries in chains.items()}
+    return {chain_id: verify_merkle_chain(entries) for chain_id, entries in chains.items()}

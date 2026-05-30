@@ -88,8 +88,8 @@ export function mapDbToRecord(row: {
  */
 export function mapRecordToPolicyNamespace(rec: NamespaceDbRecord): PolicyNamespace {
   return {
-    apiVersion: "policy.zenic.dev/v1",
-    kind: "PolicyNamespace",
+    apiVersion: "namespace.zenic.dev/v1",
+    kind: "Namespace",
     metadata: {
       id: rec.namespaceId,
       name: rec.name,

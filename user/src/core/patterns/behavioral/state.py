@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ======================================================================
 
+
 @dataclass
 class State:
     """
@@ -33,6 +34,7 @@ class State:
                  Signature: ``on_exit(to_state: str) -> None``
         allowed_transitions: List of state names this state can transition to.
     """
+
     name: str
     on_enter: Callable[[str], None] | None = None
     on_exit: Callable[[str], None] | None = None
@@ -52,6 +54,7 @@ class Transition:
         action: Optional action executed when the transition fires.
                 Signature: ``action() -> None``
     """
+
     from_state: str
     to_state: str
     condition: Callable[[], bool] | None = None
@@ -61,6 +64,7 @@ class Transition:
 # ======================================================================
 # State Machine
 # ======================================================================
+
 
 class StateMachine:
     """
@@ -130,9 +134,7 @@ class StateMachine:
                 state.allowed_transitions.append(t.to_state)
 
         if self._initial_state not in self._states:
-            raise ValueError(
-                f"StateMachine: initial_state '{initial_state}' not found in states"
-            )
+            raise ValueError(f"StateMachine: initial_state '{initial_state}' not found in states")
 
         logger.debug("StateMachine: initialized in state '%s'", self._initial_state)
 
@@ -177,7 +179,8 @@ class StateMachine:
             if not self._can_transition_internal(to_state):
                 logger.warning(
                     "StateMachine: transition '%s' → '%s' not allowed",
-                    from_state, to_state,
+                    from_state,
+                    to_state,
                 )
                 return False
 
@@ -191,9 +194,7 @@ class StateMachine:
                 try:
                     matched_trans.action()
                 except Exception as exc:
-                    logger.error(
-                        "StateMachine: transition action failed – %s", exc
-                    )
+                    logger.error("StateMachine: transition action failed – %s", exc)
                     return False
 
             # on_exit
@@ -216,11 +217,13 @@ class StateMachine:
                     logger.error("StateMachine: on_enter failed – %s", exc)
 
             # Record history
-            self._history.append({
-                "from": from_state,
-                "to": to_state,
-                "timestamp": self._now(),
-            })
+            self._history.append(
+                {
+                    "from": from_state,
+                    "to": to_state,
+                    "timestamp": self._now(),
+                }
+            )
 
             logger.info("StateMachine: transitioned '%s' → '%s'", from_state, to_state)
             return True
@@ -266,4 +269,5 @@ class StateMachine:
     @staticmethod
     def _now() -> float:
         import time
+
         return time.monotonic()

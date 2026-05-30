@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find payment
-    const payment = await db.usdtPaymentRecord.findUnique({
-      where: { id: paymentId },
+    // Find payment by paymentId
+    const payment = await db.subscriptionPayment.findUnique({
+      where: { paymentId },
     });
 
     if (!payment) {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if payment can accept tx submission
-    if (!['pending', 'tx_submitted'].includes(payment.status)) {
+    if (!['pending', 'awaiting_tx_hash', 'awaiting_payment'].includes(payment.status)) {
       return NextResponse.json(
         { error: `Payment cannot accept tx hash in current status: ${payment.status}` },
         { status: 400 },
@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if payment has expired
-    if (new Date(payment.expiresAt) < new Date()) {
-      await db.usdtPaymentRecord.update({
-        where: { id: paymentId },
+    if (payment.expiresAt && new Date(payment.expiresAt) < new Date()) {
+      await db.subscriptionPayment.update({
+        where: { paymentId },
         data: { status: 'expired' },
       });
       return NextResponse.json(
@@ -72,26 +72,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check verification attempts
-    if (payment.verificationAttempts >= payment.maxVerificationAttempts) {
-      await db.usdtPaymentRecord.update({
-        where: { id: paymentId },
-        data: { status: 'failed' },
-      });
-      return NextResponse.json(
-        { error: 'Maximum verification attempts exceeded. Payment failed.' },
-        { status: 400 },
-      );
-    }
-
     // Update payment with tx hash
-    const updatedPayment = await db.usdtPaymentRecord.update({
-      where: { id: paymentId },
+    const updatedPayment = await db.subscriptionPayment.update({
+      where: { paymentId },
       data: {
         txHash,
-        sourceWallet: sourceWallet ?? payment.sourceWallet,
-        status: 'tx_submitted',
-        verificationAttempts: payment.verificationAttempts + 1,
+        walletFrom: sourceWallet ?? payment.walletFrom,
+        status: 'awaiting_confirmation',
+        metadata: JSON.stringify({
+          ...JSON.parse(payment.metadata || '{}'),
+          txSubmittedAt: new Date().toISOString(),
+          previousStatus: payment.status,
+        }),
       },
     });
 

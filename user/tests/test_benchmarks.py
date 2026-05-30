@@ -22,7 +22,6 @@ import asyncio
 import os
 import random
 import time
-from typing import List
 
 import pytest
 
@@ -30,14 +29,16 @@ import pytest
 
 HAS_NUMPY = False
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
+
     HAS_NUMPY = True
 except ImportError:
     pass
 
 HAS_ASYNCPG = False
 try:
-    import asyncpg
+    import asyncpg  # noqa: F401
+
     HAS_ASYNCPG = True
 except ImportError:
     pass
@@ -45,6 +46,7 @@ except ImportError:
 HAS_REDIS = False
 try:
     import redis.asyncio as aioredis
+
     HAS_REDIS = True
 except ImportError:
     pass
@@ -52,14 +54,15 @@ except ImportError:
 
 # ── Fixtures ─────────────────────────────────────────────────
 
+
 @pytest.fixture
 def sample_embeddings():
     """Generate random sample embeddings for benchmarking."""
     if not HAS_NUMPY:
         pytest.skip("numpy not installed")
-    rng = random.Random(42)  # noqa: S310,S311
+    rng = random.Random(42)  # noqa: S311
     embeddings = []
-    for i in range(1000):
+    for _i in range(1000):
         vec = [rng.gauss(0, 1) for _ in range(384)]
         # Normalize
         norm = sum(v * v for v in vec) ** 0.5
@@ -73,6 +76,7 @@ def sample_embeddings():
 def hnsw_index():
     """Create a fresh HNSW index for benchmarking."""
     from src.core.vector.hnsw_index import HNSWIndex
+
     return HNSWIndex(dimensions=384, M=16, ef_construction=64, seed=42)
 
 
@@ -85,6 +89,7 @@ def populated_hnsw(hnsw_index, sample_embeddings):
 
 
 # ── FastPool Benchmarks ─────────────────────────────────────
+
 
 @pytest.mark.skipif(not HAS_ASYNCPG, reason="asyncpg not installed")
 class BenchmarkFastPool:
@@ -151,6 +156,7 @@ class BenchmarkFastPool:
 
 
 # ── HNSW Index Benchmarks ───────────────────────────────────
+
 
 class BenchmarkHNSW:
     """Benchmarks for the in-memory HNSW index (Phase 4.2)."""
@@ -222,6 +228,7 @@ class BenchmarkHNSW:
 
 # ── VectorStore Benchmarks ──────────────────────────────────
 
+
 class BenchmarkVectorStore:
     """Benchmarks for the pgvector-backed VectorStore (Phase 4.1)."""
 
@@ -237,9 +244,7 @@ class BenchmarkVectorStore:
         def upsert_one():
             nonlocal idx
             emb = [random.gauss(0, 1) for _ in range(384)]
-            asyncio.get_event_loop().run_until_complete(
-                store.upsert(f"bench_{idx}", f"Content {idx}", emb)
-            )
+            asyncio.get_event_loop().run_until_complete(store.upsert(f"bench_{idx}", f"Content {idx}", emb))
             idx += 1
 
         benchmark(upsert_one)
@@ -256,19 +261,19 @@ class BenchmarkVectorStore:
             for i in range(100):
                 emb = [random.gauss(0, 1) for _ in range(384)]
                 await store.upsert(f"doc_{i}", f"Content {i}", emb)
+
         asyncio.get_event_loop().run_until_complete(populate())
 
         query = [random.gauss(0, 1) for _ in range(384)]
 
         def search_top5():
-            asyncio.get_event_loop().run_until_complete(
-                store.search(query, top_k=5, threshold=0.3)
-            )
+            asyncio.get_event_loop().run_until_complete(store.search(query, top_k=5, threshold=0.3))
 
         benchmark(search_top5)
 
 
 # ── Redis Benchmarks ────────────────────────────────────────
+
 
 @pytest.mark.skipif(not HAS_REDIS, reason="redis not installed")
 class BenchmarkRedis:
@@ -307,6 +312,7 @@ class BenchmarkRedis:
 
 
 # ── Circuit Breaker Benchmarks ──────────────────────────────
+
 
 class BenchmarkCircuitBreaker:
     """Benchmarks for circuit breaker state transitions (Phase 3.2)."""
@@ -355,6 +361,7 @@ class BenchmarkCircuitBreaker:
 
 
 # ── Health Aggregator Benchmarks ────────────────────────────
+
 
 class BenchmarkHealthAggregator:
     """Benchmarks for health check aggregation (Phase 3.4)."""

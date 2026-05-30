@@ -22,6 +22,7 @@ class ValidationIssue:
 
     Used by both compat ValidationAgent and validation chain agents.
     """
+
     severity: str = "warning"  # error|warning|info
     code: str = ""
     message: str = ""
@@ -35,6 +36,7 @@ class TriggerSpec:
 
     Used by both compat AutomationAgent and automation subsystem.
     """
+
     type: str = "manual"  # manual|schedule|event|webhook
     config: dict[str, Any] = field(default_factory=dict)
     description: str = ""
@@ -47,6 +49,7 @@ class ActionSpec:
 
     Used by both compat AutomationAgent and automation subsystem.
     """
+
     type: str = "log"  # email|http|db|file|webhook|notification|transform|schedule|log
     config: dict[str, Any] = field(default_factory=dict)
     description: str = ""
@@ -65,16 +68,21 @@ class ScheduleSpec:
     """
 
     # Instance attributes (set by __init__, documented here for IDE support)
-    type: str          # manual|interval|cron|once
+    type: str  # manual|interval|cron|once
     cron: str
     interval_seconds: int
     description: str
     source: str
 
-    def __init__(self, type: str = "manual", cron: str = "",
-                 interval_seconds: int = 0, description: str = "",
-                 source: str = "deterministic",
-                 cron_expression: str = "") -> None:
+    def __init__(
+        self,
+        type: str = "manual",
+        cron: str = "",
+        interval_seconds: int = 0,
+        description: str = "",
+        source: str = "deterministic",
+        cron_expression: str = "",
+    ) -> None:
         """Allow both ``cron`` and ``cron_expression`` for backward compatibility."""
         self.type = type
         self.cron = cron or cron_expression  # cron_expression is an alias

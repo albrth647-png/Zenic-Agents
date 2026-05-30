@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 #  AUTOPILOT PLANNER
 # ──────────────────────────────────────────────────────────────
 
+
 class AutopilotPlanner:
     """Decomposes objectives into actionable automation steps.
 
@@ -114,11 +115,7 @@ class AutopilotPlanner:
         # Resolve dependency names to step IDs
         for i, tmpl in enumerate(template_steps):
             dep_names = tmpl.get("depends_on", [])
-            resolved = [
-                step_id_map[name]
-                for name in dep_names
-                if name in step_id_map
-            ]
+            resolved = [step_id_map[name] for name in dep_names if name in step_id_map]
             steps[i].depends_on = resolved
 
         # Determine priority from objective
@@ -165,7 +162,9 @@ class AutopilotPlanner:
 
         logger.info(
             "AutopilotPlanner: Created plan %s with %d steps for objective %s",
-            plan.plan_id, len(steps), plan.objective_id,
+            plan.plan_id,
+            len(steps),
+            plan.objective_id,
         )
         return plan
 
@@ -232,7 +231,10 @@ class AutopilotPlanner:
             return _retry_db_operation(_list)
 
     def update_step_status(
-        self, plan_id: str, step_id: str, status: str,
+        self,
+        plan_id: str,
+        step_id: str,
+        status: str,
     ) -> bool:
         """Update the status of a specific step within a plan.
 
@@ -279,7 +281,9 @@ class AutopilotPlanner:
             _retry_db_operation(_update)
             logger.info(
                 "AutopilotPlanner: Updated step %s in plan %s to '%s'",
-                step_id, plan_id, status,
+                step_id,
+                plan_id,
+                status,
             )
             return True
 

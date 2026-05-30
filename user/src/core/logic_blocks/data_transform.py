@@ -6,7 +6,7 @@ Extracted from data.py to keep file sizes under 400 lines.
 """
 
 import logging
-from typing import Any
+from typing import Any, ClassVar
 
 from .chain import LogicBlock
 
@@ -24,8 +24,8 @@ class DataTransformBlock(LogicBlock):
     name = "data_transform"
     category = "data"
     description = "Map, filter, and aggregate data transformations"
-    inputs = ["data", "transform_type", "config"]
-    outputs = ["transformed_data", "metadata"]
+    inputs: tuple[str, ...] = ("data", "transform_type", "config")  # type: ignore[assignment]
+    outputs: tuple[str, ...] = ("transformed_data", "metadata")  # type: ignore[assignment]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -112,28 +112,25 @@ class DataTransformBlock(LogicBlock):
         except Exception as e:
             return {"success": False, "error": f"DataTransformBlock: {e!s}"}
 
+    _COMPARATORS: ClassVar[dict] = {
+        "==": lambda a, e: a == e,
+        "!=": lambda a, e: a != e,
+        ">": lambda a, e: a > e,
+        "<": lambda a, e: a < e,
+        ">=": lambda a, e: a >= e,
+        "<=": lambda a, e: a <= e,
+        "in": lambda a, e: a in e if e else False,
+        "contains": lambda a, e: e in a if a else False,
+        "not_null": lambda a, e: a is not None,
+    }
+
     @staticmethod
     def _compare(actual, operator: str, expected) -> bool:
         """Compara valores con operador dado."""
         try:
-            if operator == "==":
-                return actual == expected
-            elif operator == "!=":
-                return actual != expected
-            elif operator == ">":
-                return actual > expected
-            elif operator == "<":
-                return actual < expected
-            elif operator == ">=":
-                return actual >= expected
-            elif operator == "<=":
-                return actual <= expected
-            elif operator == "in":
-                return actual in expected if expected else False
-            elif operator == "contains":
-                return expected in actual if actual else False
-            elif operator == "not_null":
-                return actual is not None
+            comp = DataTransformBlock._COMPARATORS.get(operator)
+            if comp is not None:
+                return comp(actual, expected)
         except (TypeError, ValueError):
             return False
         return False
@@ -178,7 +175,7 @@ class DataTransformBlock(LogicBlock):
                 result = DataTransformBlock._safe_eval_arithmetic(expr, item, _re)
                 if result is not None:
                     return result
-            except Exception:  # noqa: S110
+            except Exception:
                 pass
 
         # Pattern 4: Function call — "len(field)", "str(field)", etc.
@@ -215,7 +212,7 @@ class DataTransformBlock(LogicBlock):
                             args.append(arg)
                 try:
                     return safe_funcs[func_name](*args)
-                except Exception:  # noqa: S110
+                except Exception:
                     pass
 
         # Pattern 5: Conditional — "field if condition else default"

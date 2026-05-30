@@ -55,7 +55,7 @@ class CoreMixin:
         )
 
         if not success:
-            raise ValueError(f"Failed to enqueue task {message.task_id} " f"(queue={message.queue_name})")
+            raise ValueError(f"Failed to enqueue task {message.task_id} (queue={message.queue_name})")
 
         with self._stats_lock:
             self._total_enqueued += 1

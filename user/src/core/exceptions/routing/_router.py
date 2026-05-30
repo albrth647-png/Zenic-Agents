@@ -40,18 +40,23 @@ def _retry_db(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
             return fn(*args, **kwargs)
         except sqlite3.OperationalError as exc:
             last_exc = exc
-            delay = _BASE_DELAY * (2 ** attempt)
+            delay = _BASE_DELAY * (2**attempt)
             logger.warning(
                 "ExceptionRouter: DB retry %d/%d after %.2fs – %s",
-                attempt + 1, _MAX_RETRIES, delay, exc,
+                attempt + 1,
+                _MAX_RETRIES,
+                delay,
+                exc,
             )
             time.sleep(delay)
         except sqlite3.Error as exc:
             last_exc = exc
-            delay = _BASE_DELAY * (2 ** attempt)
+            delay = _BASE_DELAY * (2**attempt)
             logger.warning(
                 "ExceptionRouter: DB error retry %d/%d – %s",
-                attempt + 1, _MAX_RETRIES, exc,
+                attempt + 1,
+                _MAX_RETRIES,
+                exc,
             )
             time.sleep(delay)
     if last_exc is not None:
@@ -187,6 +192,7 @@ class ExceptionRouterBase:
         def _exec(conn: sqlite3.Connection) -> None:
             conn.executescript(_CREATE_TABLE_SQL)
             conn.commit()
+
         _retry_db(self._with_conn, _exec)
 
     def _with_conn(self, fn: Callable[[sqlite3.Connection], Any]) -> Any:
@@ -200,6 +206,7 @@ class ExceptionRouterBase:
 
     def _load_rules_from_db(self) -> None:
         """Load persisted rules into the in-memory list."""
+
         def _query(conn: sqlite3.Connection) -> list[RoutingRule]:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT rule_id, category, min_severity, max_severity, "
@@ -223,7 +230,8 @@ class ExceptionRouterBase:
                 except (ValueError, json.JSONDecodeError) as exc:
                     logger.warning(
                         "ExceptionRouter: skipping malformed rule %s: %s",
-                        row[0], exc,
+                        row[0],
+                        exc,
                     )
             return rules
 
@@ -234,6 +242,7 @@ class ExceptionRouterBase:
 
     def add_rule(self, rule: RoutingRule) -> None:
         """Persist a routing rule."""
+
         def _insert(conn: sqlite3.Connection) -> None:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
@@ -263,6 +272,7 @@ class ExceptionRouterBase:
 
     def remove_rule(self, rule_id: str) -> bool:
         """Remove a rule by ID.  Returns ``True`` if found and deleted."""
+
         def _delete(conn: sqlite3.Connection) -> bool:
             cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "DELETE FROM _zenic_routing_rules WHERE rule_id = ?",
@@ -296,7 +306,9 @@ class ExceptionRouterBase:
                 if rule.matches(signal):
                     logger.info(
                         "ExceptionRouter: signal %s matched rule %s → %s",
-                        signal.signal_id, rule.rule_id, rule.action.value,
+                        signal.signal_id,
+                        rule.rule_id,
+                        rule.action.value,
                     )
                     return rule.action
 
@@ -362,7 +374,9 @@ class ExceptionRouterBase:
             result["detail"] = str(exc)
             logger.error(
                 "ExceptionRouter: error executing action %s for signal %s: %s",
-                action.value, signal.signal_id, exc,
+                action.value,
+                signal.signal_id,
+                exc,
             )
 
         return result
@@ -440,7 +454,8 @@ class ExceptionRouterBase:
                 self.add_rule(rule)
 
         logger.info(
-            "ExceptionRouter: loaded %d default rules", len(defaults),
+            "ExceptionRouter: loaded %d default rules",
+            len(defaults),
         )
 
 
@@ -456,6 +471,7 @@ def get_exception_router(db_path: str = "exception_routing.sqlite") -> Exception
     with _router_lock:
         if _router_instance is None:
             from . import ExceptionRouter
+
             _router_instance = ExceptionRouter(db_path=db_path)
         return _router_instance
 

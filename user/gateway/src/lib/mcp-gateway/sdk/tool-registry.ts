@@ -11,6 +11,23 @@ export interface RegisteredTool {
   registeredAt: number;
 }
 
+// ─── Singleton ─────────────────────────────────────────────────────
+
+let toolRegistryInstance: ToolRegistry | null = null;
+
+/** Get or create the ToolRegistry singleton */
+export function getToolRegistry(): ToolRegistry {
+  if (!toolRegistryInstance) {
+    toolRegistryInstance = new ToolRegistry();
+  }
+  return toolRegistryInstance;
+}
+
+/** Reset the ToolRegistry singleton (for testing) */
+export function resetToolRegistry(): void {
+  toolRegistryInstance = null;
+}
+
 export class ToolRegistry {
   private tools = new Map<string, RegisteredTool>();
 

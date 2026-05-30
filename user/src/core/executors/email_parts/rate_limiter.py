@@ -27,6 +27,7 @@ logger = logging.getLogger("zenic_agents.email_parts.rate_limiter")
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class RateLimitConfig:
     """Configuration for email rate limiting.
@@ -35,14 +36,15 @@ class RateLimitConfig:
     a specific limit. Cooldown and burst settings provide
     fine-grained control over send pacing.
     """
+
     max_per_recipient_per_minute: int = 5
     max_per_recipient_per_hour: int = 20
     max_per_recipient_per_day: int = 100
     max_global_per_minute: int = 30
     max_global_per_hour: int = 500
     max_global_per_day: int = 5000
-    cooldown_seconds: float = 2.0          # Min time between emails to same recipient
-    burst_allowance: int = 3               # Allow short bursts up to N emails in 10s
+    cooldown_seconds: float = 2.0  # Min time between emails to same recipient
+    burst_allowance: int = 3  # Allow short bursts up to N emails in 10s
 
 
 @dataclass
@@ -57,6 +59,7 @@ class RateLimitResult:
         current_count: Current send count in the limiting window.
         limit: The limit that was hit (if denied).
     """
+
     allowed: bool
     reason: str = ""
     retry_after_seconds: float = 0.0
@@ -68,6 +71,7 @@ class RateLimitResult:
 # ──────────────────────────────────────────────────────────────
 #  SLIDING WINDOW COUNTER
 # ──────────────────────────────────────────────────────────────
+
 
 class _SlidingWindowCounter:
     """Memory-efficient sliding window counter using timestamp lists.
@@ -106,6 +110,7 @@ class _SlidingWindowCounter:
 # ──────────────────────────────────────────────────────────────
 #  EMAIL RATE LIMITER
 # ──────────────────────────────────────────────────────────────
+
 
 class EmailRateLimiter:
     """Rate limiter for email sending.
@@ -252,10 +257,7 @@ class EmailRateLimiter:
         if count_min >= self._config.max_global_per_minute:
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Global rate limit: {count_min}/"
-                    f"{self._config.max_global_per_minute} per minute"
-                ),
+                reason=(f"Global rate limit: {count_min}/{self._config.max_global_per_minute} per minute"),
                 retry_after_seconds=60 - (now % 60),
                 current_count=count_min,
                 limit=self._config.max_global_per_minute,
@@ -265,10 +267,7 @@ class EmailRateLimiter:
         if count_hour >= self._config.max_global_per_hour:
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Global rate limit: {count_hour}/"
-                    f"{self._config.max_global_per_hour} per hour"
-                ),
+                reason=(f"Global rate limit: {count_hour}/{self._config.max_global_per_hour} per hour"),
                 retry_after_seconds=3600 - (now % 3600),
                 current_count=count_hour,
                 limit=self._config.max_global_per_hour,
@@ -278,10 +277,7 @@ class EmailRateLimiter:
         if count_day >= self._config.max_global_per_day:
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Global rate limit: {count_day}/"
-                    f"{self._config.max_global_per_day} per day"
-                ),
+                reason=(f"Global rate limit: {count_day}/{self._config.max_global_per_day} per day"),
                 retry_after_seconds=86400 - (now % 86400),
                 current_count=count_day,
                 limit=self._config.max_global_per_day,
@@ -301,10 +297,7 @@ class EmailRateLimiter:
             self._denied_count += 1
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Recipient {recipient}: {count_min}/"
-                    f"{self._config.max_per_recipient_per_minute} per minute"
-                ),
+                reason=(f"Recipient {recipient}: {count_min}/{self._config.max_per_recipient_per_minute} per minute"),
                 retry_after_seconds=60 - (now % 60),
                 recipient=recipient,
                 current_count=count_min,
@@ -317,10 +310,7 @@ class EmailRateLimiter:
             self._denied_count += 1
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Recipient {recipient}: {count_hour}/"
-                    f"{self._config.max_per_recipient_per_hour} per hour"
-                ),
+                reason=(f"Recipient {recipient}: {count_hour}/{self._config.max_per_recipient_per_hour} per hour"),
                 retry_after_seconds=3600 - (now % 3600),
                 recipient=recipient,
                 current_count=count_hour,
@@ -333,10 +323,7 @@ class EmailRateLimiter:
             self._denied_count += 1
             return RateLimitResult(
                 allowed=False,
-                reason=(
-                    f"Recipient {recipient}: {count_day}/"
-                    f"{self._config.max_per_recipient_per_day} per day"
-                ),
+                reason=(f"Recipient {recipient}: {count_day}/{self._config.max_per_recipient_per_day} per day"),
                 retry_after_seconds=86400 - (now % 86400),
                 recipient=recipient,
                 current_count=count_day,

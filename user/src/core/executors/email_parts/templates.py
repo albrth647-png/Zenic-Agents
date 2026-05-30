@@ -30,6 +30,7 @@ logger = logging.getLogger("zenic_agents.email_parts.templates")
 #  TYPES
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class EmailTemplate:
     """A structured email template.
@@ -44,6 +45,7 @@ class EmailTemplate:
         has_attachments: Whether emails from this template typically have attachments.
         description: Human-readable description of the template.
     """
+
     name: str
     subject_template: str
     body_template: str
@@ -202,6 +204,7 @@ BUILTIN_TEMPLATES: dict[str, EmailTemplate] = {
 #  TEMPLATE ENGINE
 # ──────────────────────────────────────────────────────────────
 
+
 class EmailTemplateEngine:
     """Engine for rendering email templates with variable substitution.
 
@@ -292,8 +295,7 @@ class EmailTemplateEngine:
         if not template:
             if fallback_to_raw:
                 logger.warning(
-                    "EmailTemplateEngine: Template '%s' not found, "
-                    "using raw variables",
+                    "EmailTemplateEngine: Template '%s' not found, using raw variables",
                     template_name,
                 )
                 return {
@@ -304,14 +306,12 @@ class EmailTemplateEngine:
             raise ValueError(f"Template '{template_name}' not found")
 
         # Validate required variables
-        missing = [
-            v for v in template.required_variables
-            if v not in variables
-        ]
+        missing = [v for v in template.required_variables if v not in variables]
         if missing:
             logger.warning(
                 "EmailTemplateEngine: Missing variables for '%s': %s",
-                template_name, missing,
+                template_name,
+                missing,
             )
 
         # Render with safe substitution

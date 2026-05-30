@@ -144,7 +144,7 @@ class CRMConversionMonitor(MonitorBase):
 
             triggered = total_leads > 10 and conversion_pct < min_conversion_pct
             detail = (
-                f"Conversion baja: {conversion_pct:.1f}% " f"({converted}/{total_leads} leads)"
+                f"Conversion baja: {conversion_pct:.1f}% ({converted}/{total_leads} leads)"
                 if triggered
                 else f"Conversion OK: {conversion_pct:.1f}% ({converted}/{total_leads})"
             )
@@ -201,7 +201,7 @@ class ResponseTimeMonitor(MonitorBase):
         try:
             cutoff = time.time() - (window_minutes * 60)
             rows = self._execute_query(
-                "SELECT AVG(processing_time_ms), COUNT(*) FROM requests " "WHERE created_at >= ?",
+                "SELECT AVG(processing_time_ms), COUNT(*) FROM requests WHERE created_at >= ?",
                 (cutoff,),
                 db_name="request_log.sqlite",
             )

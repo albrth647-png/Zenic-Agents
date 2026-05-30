@@ -19,8 +19,8 @@ a working deterministic implementation that:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import Any, Dict  # noqa: UP035
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Dict  # noqa: UP035
 
 from ...resilience.base_agent import BaseAgent
 from ._constants import FIELD_SUGGESTIONS, MAX_ANSWER_LENGTH, MAX_QUESTIONS_PER_ROUND
@@ -31,6 +31,9 @@ from ._helpers import (
     validate_field_value,
 )
 from ._types import CompletionSession, InteractiveCollectionResult
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Backward-compatible aliases for the old public names
 _CompletionSession = CompletionSession
@@ -71,6 +74,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         if self._native is None:
             try:
                 import _zenic_native as _native_mod  # type: ignore[import-not-found]
+
                 self._native = {
                     "completer_start_session": _native_mod.completer_start_session,
                     "completer_ingest_documents": _native_mod.completer_ingest_documents,
@@ -161,23 +165,30 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         questions = native["completer_get_questions"](session, template_dict)
         question_dicts = [
             {
-                "field_name": q.field_name, "display_name": q.display_name,
-                "field_type": q.field_type, "section_id": q.section_id,
-                "description": q.description, "is_required": q.is_required,
-                "order": q.order, "suggestions": q.suggestions,
-                "enum_variants": q.enum_variants, "default_value": q.default_value,
+                "field_name": q.field_name,
+                "display_name": q.display_name,
+                "field_type": q.field_type,
+                "section_id": q.section_id,
+                "description": q.description,
+                "is_required": q.is_required,
+                "order": q.order,
+                "suggestions": q.suggestions,
+                "enum_variants": q.enum_variants,
+                "default_value": q.default_value,
                 "validation_hint": q.validation_hint,
             }
             for q in questions[:MAX_QUESTIONS_PER_ROUND]
         ]
         progress = native["completer_get_progress"](session, template_dict)
         return InteractiveCollectionResult(
-            session_id=session.session_id, niche_id=session.niche_id,
+            session_id=session.session_id,
+            niche_id=session.niche_id,
             questions=question_dicts,
             still_missing=progress.get("missing_required", 0),
             completion_pct=progress.get("completion_pct", 0.0),
             is_complete=progress.get("missing_required", 0) == 0,
-            round_number=session.round_count, source="deterministic",
+            round_number=session.round_count,
+            source="deterministic",
         )
 
     def _submit_answer(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -190,12 +201,15 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         updated_session, applied = native["completer_submit_answer"](session, template_dict, field_name, value)
         progress = native["completer_get_progress"](updated_session, template_dict)
         return InteractiveCollectionResult(
-            session_id=updated_session.session_id, niche_id=updated_session.niche_id,
-            answers_applied=1 if applied else 0, answers_rejected=0 if applied else 1,
+            session_id=updated_session.session_id,
+            niche_id=updated_session.niche_id,
+            answers_applied=1 if applied else 0,
+            answers_rejected=0 if applied else 1,
             still_missing=progress.get("missing_required", 0),
             completion_pct=progress.get("completion_pct", 0.0),
             is_complete=progress.get("missing_required", 0) == 0,
-            round_number=updated_session.round_count, source="deterministic",
+            round_number=updated_session.round_count,
+            source="deterministic",
         )
 
     def _submit_answers(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -207,12 +221,15 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         updated_session, count = native["completer_submit_answers"](session, template_dict, answers)
         progress = native["completer_get_progress"](updated_session, template_dict)
         return InteractiveCollectionResult(
-            session_id=updated_session.session_id, niche_id=updated_session.niche_id,
-            answers_applied=count, answers_rejected=len(answers) - count,
+            session_id=updated_session.session_id,
+            niche_id=updated_session.niche_id,
+            answers_applied=count,
+            answers_rejected=len(answers) - count,
             still_missing=progress.get("missing_required", 0),
             completion_pct=progress.get("completion_pct", 0.0),
             is_complete=progress.get("missing_required", 0) == 0,
-            round_number=updated_session.round_count, source="deterministic",
+            round_number=updated_session.round_count,
+            source="deterministic",
         )
 
     def _validate_answer(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -222,7 +239,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         return InteractiveCollectionResult(
             answers_applied=1 if is_valid else 0,
             answers_rejected=0 if is_valid else 1,
-            is_complete=False, source="deterministic",
+            is_complete=False,
+            source="deterministic",
         )
 
     def _get_progress(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -232,11 +250,13 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="deterministic")
         progress = native["completer_get_progress"](session, template_dict)
         return InteractiveCollectionResult(
-            session_id=session.session_id, niche_id=session.niche_id,
+            session_id=session.session_id,
+            niche_id=session.niche_id,
             still_missing=progress.get("missing_required", 0),
             completion_pct=progress.get("completion_pct", 0.0),
             is_complete=progress.get("missing_required", 0) == 0,
-            round_number=session.round_count, source="deterministic",
+            round_number=session.round_count,
+            source="deterministic",
         )
 
     def _is_complete(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -246,8 +266,10 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="deterministic")
         complete = native["completer_is_complete"](session, template_dict)
         return InteractiveCollectionResult(
-            session_id=session.session_id, niche_id=session.niche_id,
-            is_complete=complete, round_number=session.round_count,
+            session_id=session.session_id,
+            niche_id=session.niche_id,
+            is_complete=complete,
+            round_number=session.round_count,
             source="deterministic",
         )
 
@@ -258,9 +280,12 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="deterministic")
         result = native["completer_finalize"](session, template_dict)
         return InteractiveCollectionResult(
-            session_id=result.session_id, niche_id=result.niche_id,
-            completion_pct=result.completion_pct, is_complete=result.is_complete,
-            round_number=result.total_rounds, source="deterministic",
+            session_id=result.session_id,
+            niche_id=result.niche_id,
+            completion_pct=result.completion_pct,
+            is_complete=result.is_complete,
+            round_number=result.total_rounds,
+            source="deterministic",
         )
 
     def _get_suggestions(self, native: dict[str, Callable], data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -276,7 +301,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
 
     # ── Python Fallback ────────────────────────────────────────
 
-    def _python_fallback(self, data: dict[str, Any], action: str) -> InteractiveCollectionResult:  # noqa: PLR0911
+    def _python_fallback(self, data: dict[str, Any], action: str) -> InteractiveCollectionResult:
         """Full deterministic Python fallback when Rust extension is not available."""
         if action == "start":
             return self._py_start(data)
@@ -303,8 +328,11 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         session = CompletionSession(niche_id)
         self._python_sessions[session.session_id] = session
         return InteractiveCollectionResult(
-            session_id=session.session_id, niche_id=niche_id,
-            completion_pct=0.0, is_complete=False, round_number=0,
+            session_id=session.session_id,
+            niche_id=niche_id,
+            completion_pct=0.0,
+            is_complete=False,
+            round_number=0,
             source="python_fallback",
         )
 
@@ -322,7 +350,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         session.round_count += 1
 
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
+            session_id=session_id,
+            niche_id=session.niche_id,
             questions=questions[:MAX_QUESTIONS_PER_ROUND],
             still_missing=progress["missing_required"],
             completion_pct=progress["completion_pct"],
@@ -356,8 +385,10 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         progress = calculate_progress(template_dict, session)
 
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
-            answers_applied=applied, answers_rejected=rejected,
+            session_id=session_id,
+            niche_id=session.niche_id,
+            answers_applied=applied,
+            answers_rejected=rejected,
             still_missing=progress["missing_required"],
             completion_pct=progress["completion_pct"],
             is_complete=progress["missing_required"] == 0,
@@ -388,8 +419,10 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         progress = calculate_progress(template_dict, session)
 
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
-            answers_applied=applied, answers_rejected=rejected,
+            session_id=session_id,
+            niche_id=session.niche_id,
+            answers_applied=applied,
+            answers_rejected=rejected,
             still_missing=progress["missing_required"],
             completion_pct=progress["completion_pct"],
             is_complete=progress["missing_required"] == 0,
@@ -404,7 +437,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
         return InteractiveCollectionResult(
             answers_applied=1 if is_valid else 0,
             answers_rejected=0 if is_valid else 1,
-            is_complete=False, source="python_fallback",
+            is_complete=False,
+            source="python_fallback",
         )
 
     def _py_progress(self, data: dict[str, Any]) -> InteractiveCollectionResult:
@@ -415,7 +449,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="python_fallback")
         progress = calculate_progress(template_dict, session)
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
+            session_id=session_id,
+            niche_id=session.niche_id,
             still_missing=progress["missing_required"],
             completion_pct=progress["completion_pct"],
             is_complete=progress["missing_required"] == 0,
@@ -431,7 +466,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="python_fallback")
         progress = calculate_progress(template_dict, session)
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
+            session_id=session_id,
+            niche_id=session.niche_id,
             is_complete=progress["missing_required"] == 0,
             round_number=session.round_count,
             source="python_fallback",
@@ -445,7 +481,8 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
             return InteractiveCollectionResult(source="python_fallback")
         progress = calculate_progress(template_dict, session)
         return InteractiveCollectionResult(
-            session_id=session_id, niche_id=session.niche_id,
+            session_id=session_id,
+            niche_id=session.niche_id,
             completion_pct=progress["completion_pct"],
             is_complete=progress["missing_required"] == 0,
             round_number=session.round_count,

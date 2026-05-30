@@ -81,9 +81,8 @@ class CoordinationMixin:
     ) -> bool:
         with self._lock:
             current = self._circuits.get(circuit_name)
-            if current is not None and expected_version is not None:
-                if current.get("version", 0) != expected_version:
-                    return False
+            if current is not None and expected_version is not None and current.get("version", 0) != expected_version:
+                return False
             state_copy = copy.deepcopy(state)
             state_copy["version"] = (current.get("version", 0) + 1) if current else 1
             state_copy["updated_at"] = time.time()

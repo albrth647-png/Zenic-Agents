@@ -118,9 +118,7 @@ class NicheTemplate:
             logger.warning("NicheTemplate.set_field: Rust extension not available")
             return False
         try:
-            return _native.template_set_field(
-                template_dict, section_id, field_name, value
-            )
+            return _native.template_set_field(template_dict, section_id, field_name, value)
         except Exception as e:
             logger.error("NicheTemplate.set_field: %s", e)
             return False
