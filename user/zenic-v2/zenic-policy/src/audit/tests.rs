@@ -36,10 +36,13 @@ mod tests {
             TenantId::new(),
             Permission::new(Action::Execute, Resource::AllNodes),
             vec![RoleId::new()],
+            "GENESIS",
         );
         assert!(entry.is_allowance());
         assert!(!entry.is_denial());
         assert!(entry.denial_reason.is_none());
+        assert_eq!(entry.previous_hash, "GENESIS");
+        assert!(!entry.merkle_hash.is_empty());
     }
 
     #[test]
@@ -51,10 +54,41 @@ mod tests {
             Permission::new(Action::Delete, Resource::Node(NodeId::new())),
             DenialReason::SafetyVeto("no_delete".to_string()),
             vec![],
+            "GENESIS",
         );
         assert!(entry.is_denial());
         assert!(!entry.is_allowance());
         assert!(entry.denial_reason.is_some());
+        assert_eq!(entry.previous_hash, "GENESIS");
+        assert!(!entry.merkle_hash.is_empty());
+    }
+
+    #[test]
+    fn audit_entry_hash_deterministic() {
+        let sid = SessionId::new();
+        let tid = TenantId::new();
+        let perm = Permission::new(Action::Execute, Resource::AllNodes);
+        let entry1 = PolicyAuditEntry::allowed(
+            1000, sid, tid, perm.clone(), vec![], "GENESIS",
+        );
+        let entry2 = PolicyAuditEntry::allowed(
+            1000, sid, tid, perm, vec![], "GENESIS",
+        );
+        assert_eq!(entry1.merkle_hash, entry2.merkle_hash);
+    }
+
+    #[test]
+    fn audit_entry_hash_changes_with_previous() {
+        let sid = SessionId::new();
+        let tid = TenantId::new();
+        let perm = Permission::new(Action::Execute, Resource::AllNodes);
+        let entry1 = PolicyAuditEntry::allowed(
+            1000, sid, tid, perm.clone(), vec![], "GENESIS",
+        );
+        let entry2 = PolicyAuditEntry::allowed(
+            1000, sid, tid, perm, vec![], "DIFFERENT_PREV",
+        );
+        assert_ne!(entry1.merkle_hash, entry2.merkle_hash);
     }
 
     #[test]
@@ -68,6 +102,7 @@ mod tests {
         );
         assert_eq!(log.len(), 1);
         assert!(log.entries()[0].is_allowance());
+        assert_eq!(log.entries()[0].previous_hash, "GENESIS");
     }
 
     #[test]
@@ -82,6 +117,7 @@ mod tests {
         );
         assert_eq!(log.len(), 1);
         assert!(log.entries()[0].is_denial());
+        assert_eq!(log.entries()[0].previous_hash, "GENESIS");
     }
 
     #[test]
@@ -169,5 +205,99 @@ mod tests {
     fn audit_log_default_is_new() {
         let log = AuditLog::default();
         assert!(log.is_empty());
+    }
+
+    #[test]
+    fn audit_log_merkle_chain_links() {
+        let mut log = AuditLog::new();
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Execute, Resource::AllNodes),
+            vec![],
+        );
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Read, Resource::AllNodes),
+            vec![],
+        );
+        let entries = log.entries();
+        // First entry links to GENESIS
+        assert_eq!(entries[0].previous_hash, "GENESIS");
+        // Second entry links to first entry's merkle_hash
+        assert_eq!(entries[1].previous_hash, entries[0].merkle_hash);
+    }
+
+    #[test]
+    fn audit_log_verify_chain_valid() {
+        let mut log = AuditLog::new();
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Execute, Resource::AllNodes),
+            vec![],
+        );
+        log.record_denied(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Delete, Resource::AllNodes),
+            DenialReason::DefaultDeny,
+            vec![],
+        );
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Read, Resource::AllNodes),
+            vec![],
+        );
+        assert!(log.verify_chain().is_ok());
+    }
+
+    #[test]
+    fn audit_log_verify_chain_empty() {
+        let log = AuditLog::new();
+        assert!(log.verify_chain().is_ok());
+    }
+
+    #[test]
+    fn audit_log_root_hash_empty() {
+        let log = AuditLog::new();
+        assert_eq!(log.root_hash(), "EMPTY");
+    }
+
+    #[test]
+    fn audit_log_root_hash_single() {
+        let mut log = AuditLog::new();
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Execute, Resource::AllNodes),
+            vec![],
+        );
+        // With a single entry, root hash equals that entry's merkle_hash
+        assert_eq!(log.root_hash(), log.entries()[0].merkle_hash);
+    }
+
+    #[test]
+    fn audit_log_merkle_proof() {
+        let mut log = AuditLog::new();
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Execute, Resource::AllNodes),
+            vec![],
+        );
+        log.record_allowed(
+            SessionId::new(),
+            TenantId::new(),
+            Permission::new(Action::Read, Resource::AllNodes),
+            vec![],
+        );
+        // Proof for index 0 should exist
+        let proof = log.merkle_proof(0);
+        assert!(proof.is_some());
+        // Out of bounds should return None
+        assert!(log.merkle_proof(5).is_none());
     }
 }

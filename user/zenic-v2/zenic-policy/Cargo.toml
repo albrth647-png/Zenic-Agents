@@ -11,9 +11,11 @@ zenic-proto = { workspace = true }
 zenic-graph = { workspace = true }
 zenic-memory = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 indexmap = { workspace = true }
 tracing = { workspace = true }
+blake3 = "1.5"
 
 [dev-dependencies]

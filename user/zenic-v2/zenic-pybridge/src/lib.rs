@@ -35,6 +35,7 @@
 //! - `safety_gate_extended`: Domain-specific safety rules + compliance per NicheCategory (Phase D)
 //! - `e2e_pipeline`: Complete E2E niche onboarding pipeline (Phase D)
 
+mod a2a;
 mod bus;
 mod catalog;
 mod certifier;
@@ -263,6 +264,17 @@ fn _zenic_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<memory_chip::MemoryChip>()?;
     m.add_function(wrap_pyfunction!(memory_chip::theorem_cache_serialize, m)?)?;
     m.add_function(wrap_pyfunction!(memory_chip::theorem_cache_deserialize, m)?)?;
+
+    // A2A Protocol — Agent-to-Agent interoperability
+    m.add_class::<a2a::AgentCard>()?;
+    m.add_class::<a2a::A2ATask>()?;
+    m.add_class::<a2a::A2AResponse>()?;
+    m.add_function(wrap_pyfunction!(a2a::handler::a2a_handle_task, m)?)?;
+    m.add_function(wrap_pyfunction!(a2a::handler::a2a_validate_delegation, m)?)?;
+    m.add_function(wrap_pyfunction!(a2a::discovery::a2a_register_agent, m)?)?;
+    m.add_function(wrap_pyfunction!(a2a::discovery::a2a_discover_agents, m)?)?;
+    m.add_function(wrap_pyfunction!(a2a::discovery::a2a_get_agent_card, m)?)?;
+    m.add_function(wrap_pyfunction!(a2a::discovery::a2a_list_registered_agents, m)?)?;
 
     // Module metadata
     m.add("__version__", "2.5.0")?;

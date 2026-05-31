@@ -27,6 +27,16 @@ from .forensic import (
     get_forensic_engine,
     reset_forensic_engine,
 )
+from .merkle import (
+    MerkleAuditEngine,
+    MerkleAuditEntry,
+    MerkleVerificationResult,
+    MerkleProofResult,
+    ComplianceCertificate,
+    AuditEntryAction,
+    get_merkle_audit_engine,
+    reset_merkle_audit_engine,
+)
 from .health import (
     HealthAggregator,
     HealthCheckResult,
@@ -76,6 +86,13 @@ __all__ = [
     "ForensicEngine",
     "ForensicEntry",
     "ForensicReport",
+    # Merkle Audit Trail
+    "MerkleAuditEngine",
+    "MerkleAuditEntry",
+    "MerkleVerificationResult",
+    "MerkleProofResult",
+    "ComplianceCertificate",
+    "AuditEntryAction",
     # Health
     "HealthAggregator",
     "HealthCheckResult",
@@ -109,6 +126,8 @@ __all__ = [
     "inject_trace_context",
     "metrics_middleware",
     "reset_forensic_engine",
+    "get_merkle_audit_engine",
+    "reset_merkle_audit_engine",
     "reset_snapshot_audit_engine",
     "trace_span",
 ]

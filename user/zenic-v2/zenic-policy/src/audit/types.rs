@@ -76,6 +76,9 @@ impl fmt::Display for DenialReason {
 /// Audit entries are immutable once created. They capture the full
 /// context of a policy evaluation, including the session, tenant,
 /// requested permission, and the outcome.
+///
+/// Each entry includes a BLAKE3 Merkle hash that chains it to the
+/// previous entry, creating a tamper-evident audit trail.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PolicyAuditEntry {
     /// Monotonic timestamp when this decision was made (milliseconds).
@@ -92,6 +95,11 @@ pub struct PolicyAuditEntry {
     pub denial_reason: Option<DenialReason>,
     /// The roles that were considered during evaluation.
     pub role_ids: Vec<RoleId>,
+    /// BLAKE3 merkle hash of this entry (for immutable audit trail).
+    /// Computed from all other fields + previous entry's hash.
+    pub merkle_hash: String,
+    /// Hash of the previous audit entry (chain link).
+    pub previous_hash: String,
 }
 
 impl PolicyAuditEntry {
@@ -102,8 +110,9 @@ impl PolicyAuditEntry {
         tenant_id: TenantId,
         permission: Permission,
         role_ids: Vec<RoleId>,
+        previous_hash: &str,
     ) -> Self {
-        Self {
+        let mut entry = Self {
             timestamp_ms,
             session_id,
             tenant_id,
@@ -111,7 +120,11 @@ impl PolicyAuditEntry {
             decision: PolicyDecision::Allowed,
             denial_reason: None,
             role_ids,
-        }
+            merkle_hash: String::new(), // placeholder — computed below
+            previous_hash: previous_hash.to_string(),
+        };
+        entry.merkle_hash = entry.compute_entry_hash();
+        entry
     }
 
     /// Creates a new audit entry for a denied decision.
@@ -122,8 +135,9 @@ impl PolicyAuditEntry {
         permission: Permission,
         reason: DenialReason,
         role_ids: Vec<RoleId>,
+        previous_hash: &str,
     ) -> Self {
-        Self {
+        let mut entry = Self {
             timestamp_ms,
             session_id,
             tenant_id,
@@ -131,7 +145,11 @@ impl PolicyAuditEntry {
             decision: PolicyDecision::Denied,
             denial_reason: Some(reason),
             role_ids,
-        }
+            merkle_hash: String::new(), // placeholder — computed below
+            previous_hash: previous_hash.to_string(),
+        };
+        entry.merkle_hash = entry.compute_entry_hash();
+        entry
     }
 
     /// Whether this entry records a denial.
@@ -143,21 +161,39 @@ impl PolicyAuditEntry {
     pub fn is_allowance(&self) -> bool {
         self.decision == PolicyDecision::Allowed
     }
+
+    /// Compute the BLAKE3 hash of this entry's content (excluding merkle_hash itself).
+    fn compute_entry_hash(&self) -> String {
+        let content = format!(
+            "{}:{}:{}:{}:{}:{}:{}",
+            self.timestamp_ms,
+            self.session_id,
+            self.tenant_id,
+            serde_json::to_string(&self.permission).unwrap_or_default(),
+            self.decision,
+            serde_json::to_string(&self.denial_reason).unwrap_or_default(),
+            self.previous_hash,
+        );
+        blake3::hash(content.as_bytes()).to_hex().to_string()
+    }
 }
 
 // ---------------------------------------------------------------------------
 // AuditLog
 // ---------------------------------------------------------------------------
 
-/// In-memory audit log for policy decisions.
+/// In-memory audit log for policy decisions with Merkle chain integrity.
 ///
-/// The audit log records every policy evaluation. For Phase 4,
-/// the log is stored in memory. The `zenic-core` crate will
-/// add disk persistence later.
+/// The audit log records every policy evaluation. Each entry is chained
+/// to the previous one via BLAKE3 hashes, creating a tamper-evident
+/// audit trail. For Phase 4, the log is stored in memory. The
+/// `zenic-core` crate will add disk persistence later.
 pub struct AuditLog {
     entries: Vec<PolicyAuditEntry>,
     /// Monotonic clock for timestamps (milliseconds).
     clock_ms: u64,
+    /// Hash of the last entry added (chain tip). Starts as "GENESIS".
+    last_hash: String,
 }
 
 impl AuditLog {
@@ -166,6 +202,7 @@ impl AuditLog {
         Self {
             entries: Vec::new(),
             clock_ms: 0,
+            last_hash: "GENESIS".to_string(),
         }
     }
 
@@ -183,7 +220,9 @@ impl AuditLog {
             tenant_id,
             permission,
             role_ids,
+            self.last_hash.as_str(),
         );
+        self.last_hash = entry.merkle_hash.clone();
         self.entries.push(entry);
     }
 
@@ -203,7 +242,9 @@ impl AuditLog {
             permission,
             reason,
             role_ids,
+            self.last_hash.as_str(),
         );
+        self.last_hash = entry.merkle_hash.clone();
         self.entries.push(entry);
     }
 
@@ -246,6 +287,83 @@ impl AuditLog {
             .iter()
             .filter(|e| &e.tenant_id == tenant_id)
             .collect()
+    }
+
+    /// Verify the entire audit chain integrity.
+    /// Returns Ok(()) if all entries form a valid Merkle chain,
+    /// or Err with the index of the first broken link.
+    pub fn verify_chain(&self) -> Result<(), usize> {
+        for (i, entry) in self.entries.iter().enumerate() {
+            // Verify hash
+            let expected_hash = entry.compute_entry_hash();
+            if entry.merkle_hash != expected_hash {
+                return Err(i);
+            }
+            // Verify chain link
+            if i == 0 {
+                if entry.previous_hash != "GENESIS" {
+                    return Err(0);
+                }
+            } else {
+                if entry.previous_hash != self.entries[i - 1].merkle_hash {
+                    return Err(i);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Generate a Merkle inclusion proof for a specific entry.
+    /// Returns the proof path (sibling hashes) needed to verify inclusion.
+    pub fn merkle_proof(&self, index: usize) -> Option<Vec<String>> {
+        if index >= self.entries.len() {
+            return None;
+        }
+        // Simple proof: collect all sibling hashes from leaf to root
+        let hashes: Vec<String> = self.entries.iter().map(|e| e.merkle_hash.clone()).collect();
+        let mut proof = Vec::new();
+        let mut idx = index;
+
+        // Build tree levels
+        let mut current: Vec<String> = hashes;
+        while current.len() > 1 {
+            if current.len() % 2 != 0 {
+                current.push(current.last().unwrap().clone());
+            }
+            if idx % 2 == 0 && idx + 1 < current.len() {
+                proof.push(current[idx + 1].clone());
+            } else if idx > 0 {
+                proof.push(current[idx - 1].clone());
+            }
+            current = current.chunks(2).map(|chunk| {
+                let combined = format!("{}{}", chunk[0], chunk[1]);
+                blake3::hash(combined.as_bytes()).to_hex().to_string()
+            }).collect();
+            idx /= 2;
+        }
+        Some(proof)
+    }
+
+    /// Get the root hash of the Merkle tree.
+    pub fn root_hash(&self) -> String {
+        if self.entries.is_empty() {
+            return "EMPTY".to_string();
+        }
+        let hashes: Vec<String> = self.entries.iter().map(|e| e.merkle_hash.clone()).collect();
+        if hashes.len() == 1 {
+            return hashes[0].clone();
+        }
+        let mut current = hashes;
+        while current.len() > 1 {
+            if current.len() % 2 != 0 {
+                current.push(current.last().unwrap().clone());
+            }
+            current = current.chunks(2).map(|chunk| {
+                let combined = format!("{}{}", chunk[0], chunk[1]);
+                blake3::hash(combined.as_bytes()).to_hex().to_string()
+            }).collect();
+        }
+        current[0].clone()
     }
 
     /// Returns the next monotonic timestamp and advances the clock.

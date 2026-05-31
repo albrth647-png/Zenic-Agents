@@ -1875,8 +1875,10 @@ dependencies = [
 name = "zenic-policy"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "indexmap",
  "serde",
+ "serde_json",
  "thiserror",
  "tracing",
  "uuid",
