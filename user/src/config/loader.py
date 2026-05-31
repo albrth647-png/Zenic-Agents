@@ -177,12 +177,12 @@ def _parse_value(value: str) -> Any:
     try:
         return int(value)
     except ValueError:
-        pass
+        logger.warning("_parse_value: ValueError handled silently", exc_info=True)
     # Flotantes
     try:
         return float(value)
     except ValueError:
-        pass
+        logger.warning("_parse_value: ValueError handled silently", exc_info=True)
     # Listas (simple: ["a", "b"])
     if value.startswith("[") and value.endswith("]"):
         items = value[1:-1].split(",")

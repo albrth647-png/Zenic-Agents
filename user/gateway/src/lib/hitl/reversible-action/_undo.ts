@@ -16,7 +16,7 @@ import {
 } from "./types";
 import { recordAuditEvent } from "../approval-audit";
 import { notifyApprovalEvent } from "../notifications";
-import { CompensatingActionRegistry, getCompensatingActionRegistry } from "./_action";
+import { CompensatingActionRegistry as _CompensatingActionRegistry, getCompensatingActionRegistry } from "./_action";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Reversible Action Service

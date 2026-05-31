@@ -3,7 +3,7 @@ import type { PasoPipeline } from "../types";
 
 export function PasoPipelineViz({
   paso,
-  esActual,
+  _esActual,
   esUltimo,
   bloqueado,
 }: {

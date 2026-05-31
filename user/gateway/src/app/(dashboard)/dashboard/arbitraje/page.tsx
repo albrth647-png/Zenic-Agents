@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Gavel,
   RefreshCw,
@@ -10,7 +10,7 @@ import {
   Scale,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge as _Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
@@ -25,7 +25,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSubscriptionContext } from "@/hooks/useUserProfile";
 
 export default function ArbitrajePage() {
-  const { propuestas, metricas, cargando } = useDashboardData();
+  const { propuestas, metricas: _metricas, cargando } = useDashboardData();
   const [propuestaSeleccionada, setPropuestaSeleccionada] = useState<
     string | null
   >(null);
@@ -50,8 +50,10 @@ export default function ArbitrajePage() {
   );
 
   // Sync proposals from hook
-  useMemo(() => {
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Sync external data to local state */
     setLocalPropuestas(propuestas);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [propuestas]);
 
   const cargarEvidencia = useCallback(async (requestId: string) => {
@@ -68,7 +70,7 @@ export default function ArbitrajePage() {
         setEvidencia(await res.json());
       }
     } catch (err) {
-      console.error("Error cargando evidencia:", err);
+      console.error("Error cargando evidencia:", err);  
     } finally {
       setCargandoEvidencia(false);
     }
@@ -98,7 +100,7 @@ export default function ArbitrajePage() {
           setCheckRiesgo(false);
         }
       } catch (err) {
-        console.error("Error en acción HITL:", err);
+        console.error("Error en acción HITL:", err);  
       } finally {
         setEnviando(false);
         setSosteniendoBoton(false);

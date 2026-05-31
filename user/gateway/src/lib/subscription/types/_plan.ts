@@ -6,11 +6,7 @@
  */
 
 import type { SubscriptionTierName, SubscriptionStatus } from "./_core";
-import {
-  TIER_RANK,
-  TIER_PRICES,
-  ACTIVE_STATUSES,
-} from "./_core";
+import { TIER_RANK, TIER_PRICES } from "./_core";
 
 // Re-export core types for convenience
 export type { SubscriptionTierName, SubscriptionStatus } from "./_core";

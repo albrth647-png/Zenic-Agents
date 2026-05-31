@@ -46,8 +46,8 @@ __all__ = [
 # ============================================================
 
 
-from ._core_mixin import DistributedWorkerCoreMixin  # noqa: E402
-from ._extra_mixin import DistributedWorkerExtraMixin  # noqa: E402
+from ._core_mixin import DistributedWorkerCoreMixin
+from ._extra_mixin import DistributedWorkerExtraMixin
 
 
 class DistributedWorker(DistributedWorkerCoreMixin, DistributedWorkerExtraMixin):

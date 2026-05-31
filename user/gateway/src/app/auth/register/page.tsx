@@ -103,9 +103,10 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { acceptTerms: undefined as any },
+    defaultValues: { acceptTerms: undefined as unknown },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const password = watch("password", "");
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -251,7 +252,7 @@ export default function RegisterPage() {
             <Checkbox
               id="acceptTerms"
               onCheckedChange={(checked) =>
-                setValue("acceptTerms", checked === true ? true : (undefined as any), {
+                setValue("acceptTerms", checked === true ? true : (undefined as unknown), {
                   shouldValidate: true,
                 })
               }

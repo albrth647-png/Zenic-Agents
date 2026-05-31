@@ -1,14 +1,14 @@
 """Core package exports — re-exports from sub-packages."""
 
-# ruff: noqa: F405 — Star-import re-exports are intentional in this aggregator module
+
 from __future__ import annotations
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-from ._exports_part1 import *  # noqa: F403, E402
-from ._exports_part2 import *  # noqa: F403, E402
+from ._exports_part1 import *
+from ._exports_part2 import *
 
 __all__ = [
     # Native Extension

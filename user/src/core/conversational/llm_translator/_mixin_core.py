@@ -175,7 +175,7 @@ class LLMTranslator(FallbackMixin):
                 if isinstance(parsed, dict):
                     return parsed
             except json.JSONDecodeError:
-                pass
+                logger.warning("_parse_response: json.JSONDecodeError handled silently", exc_info=True)
 
         # Try to extract key-value pairs from freeform text
         return self._extract_structured(cleaned)
@@ -202,13 +202,13 @@ class LLMTranslator(FallbackMixin):
         result: dict[str, Any] = {}
 
         # Look for intent mentions
-        for intent in VALID_INTENTS:  # noqa: F821
+        for intent in VALID_INTENTS:
             if intent in text.lower():
                 result["intent"] = intent
                 break
 
         # Look for action type mentions
-        for action in VALID_ACTION_TYPES:  # noqa: F821
+        for action in VALID_ACTION_TYPES:
             if action in text.upper():
                 result["action_type"] = action
                 break
@@ -230,15 +230,15 @@ class LLMTranslator(FallbackMixin):
 
         # Validate intent
         intent = result.get("intent", "unknown")
-        if intent not in VALID_INTENTS:  # noqa: F821
+        if intent not in VALID_INTENTS:
             logger.warning(f"Unknown intent '{intent}', defaulting to 'unknown'")
             result["intent"] = "unknown"
 
         # Validate action_type
         action_type = result.get("action_type", "")
-        if action_type not in VALID_ACTION_TYPES:  # noqa: F821
+        if action_type not in VALID_ACTION_TYPES:
             # Try to derive from intent
-            result["action_type"] = INTENT_TO_ACTION.get(intent, "SEARCH")  # noqa: F821  # TODO: Phase3 - verify import
+            result["action_type"] = INTENT_TO_ACTION.get(intent, "SEARCH")  # TODO: Phase3 - verify import
 
         # Validate confidence
         confidence = result.get("confidence", 0.0)

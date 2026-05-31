@@ -1,5 +1,8 @@
 """Mixin: RAM budget management for ModelManager."""
 
+import logging
+
+logger = logging.getLogger(__name__)
 import gc
 import platform
 import time
@@ -44,7 +47,7 @@ class RAMMixin:
                     if line.startswith("VmRSS:"):
                         return int(line.split()[1]) / 1024
         except (FileNotFoundError, PermissionError):
-            pass
+            logger.warning("_get_current_ram_mb: (FileNotFoundError, PermissionError) handled silently", exc_info=True)
         try:
             import resource
 

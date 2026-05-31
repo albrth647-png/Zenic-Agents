@@ -137,7 +137,7 @@ function computeRoiCalculation(
   projected: RoiProjected,
   monthlyCostUsd: number,
 ): RoiCalculation {
-  const workingHoursPerMonth = 160;
+  const _workingHoursPerMonth = 160;
   const hourlyCostUsd = 50;
 
   // Time saved per month (hours)

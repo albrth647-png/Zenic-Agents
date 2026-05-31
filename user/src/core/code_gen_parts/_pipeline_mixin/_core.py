@@ -15,7 +15,6 @@ from ._process_builder import ProcessBuilderMixin
 
 logger = logging.getLogger("core.code_gen_parts._pipeline_mixin._core")
 
-
 class PipelineMixin(ProcessBuilderMixin):
     """Pipeline-driven code generation for CodeGenerator."""
 
@@ -153,7 +152,7 @@ class PipelineMixin(ProcessBuilderMixin):
         """
         import_lines = [
             "from dataclasses import dataclass, field",
-            "from typing import Dict  # noqa: UP035, Any",
+            "from typing import Dict",
         ]
         for imp in needed_imports:
             if imp and imp not in ["object", "str", "int", "bool", "list", "dict"]:
@@ -280,7 +279,6 @@ Pipeline: Solver={solver_insights["solver_type"]}, MCTS actions={len(mcts_action
 """
 {chr(10).join(import_lines)}
 
-
 @dataclass
 class Config:
     """Module configuration."""
@@ -288,14 +286,12 @@ class Config:
     debug: bool = False
     max_retries: int = 3
 
-
 @dataclass
 class Result:
     """Operation result with error handling."""
     success: bool
     data: Any = None
     error: Optional[str] = None
-
 
 class {cls_name}Manager:
     """Main module manager - pipeline-driven generation with REAL logic."""
@@ -322,7 +318,6 @@ class {cls_name}Manager:
         except Exception as e:
             return Result(success=False, error=str(e))
 {real_process_code}
-
 
 if __name__ == "__main__":
     manager = {cls_name}Manager()

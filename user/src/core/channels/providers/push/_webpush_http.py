@@ -422,14 +422,14 @@ class _WebPushHttpMixin:
         validated_endpoint = _validate_url(endpoint)
 
         def _sync_post() -> ChannelResponse:
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 validated_endpoint,
                 data=data,
                 headers=headers,
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(  # noqa: S310
+                with urllib.request.urlopen(
                     req,
                     timeout=_HTTP_TIMEOUT,
                 ) as resp:

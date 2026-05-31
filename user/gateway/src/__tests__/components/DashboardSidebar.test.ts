@@ -72,7 +72,7 @@ describe('DashboardSidebar — datos de navegación', () => {
 
   it('no hay hrefs duplicados en items principales', () => {
     const hrefs = navItems.map((item) => item.href);
-    const unicos = new Set(hrefs);
+    const _unicos = new Set(hrefs);
     // POLÍTICAS y Reglas de Seguridad comparten href, pero son items diferentes
     // Eso es correcto — el href base /dashboard/policies aparece en 2 items
     expect(hrefs.length).toBeGreaterThan(0);

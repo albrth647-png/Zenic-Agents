@@ -2,7 +2,7 @@
 // Split from approval-engine.ts — auto-approve evaluation, policy satisfaction, ID generation
 
 import type { AutoApproveRule, ApprovalPolicy, CreateApprovalRequestInput } from "../types";
-import { ApprovalPriority, ApprovalType } from "../types";
+import { ApprovalPriority, ApprovalType as _ApprovalType } from "../types";
 
 /** Evaluates whether an approval request can be auto-approved based on policy */
 export function evaluateAutoApproveRules(

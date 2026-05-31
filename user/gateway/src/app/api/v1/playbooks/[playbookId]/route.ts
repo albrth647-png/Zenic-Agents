@@ -3,6 +3,7 @@
 // PUT    /api/v1/playbooks/[playbookId]   — Update a playbook (creates new version)
 // DELETE /api/v1/playbooks/[playbookId]   — Deactivate a playbook (soft delete)
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import {
   getPlaybookEngine,

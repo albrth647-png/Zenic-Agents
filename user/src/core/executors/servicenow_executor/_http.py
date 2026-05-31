@@ -17,7 +17,7 @@ from ..base import _validate_url_ssrf
 logger = logging.getLogger(__name__)
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _AIOHTTP_AVAILABLE = True
 except ImportError:
@@ -25,7 +25,6 @@ except ImportError:
 
 _MAX_RETRIES = 3
 _RETRY_BASE_DELAY = 0.5
-
 
 class _HttpMixin:
     """Mixin for ServiceNow HTTP request methods."""
@@ -167,10 +166,10 @@ class _HttpMixin:
             if json_data is not None:
                 data = json.dumps(json_data).encode("utf-8")
 
-            req = urllib.request.Request(validated_url, data=data, headers=headers, method=method)  # noqa: S310
+            req = urllib.request.Request(validated_url, data=data, headers=headers, method=method)
 
             try:
-                with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=30) as resp:
                     body_text = resp.read().decode("utf-8")
                     resp_headers = dict(resp.headers)
 

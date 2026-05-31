@@ -51,14 +51,14 @@ pub(crate) fn escalate_by_sensitivity(verdict: &SafetyVerdict, sensitivity: &str
             SafetyVerdict::Allow => (SafetyVerdict::Confirm, true),
             SafetyVerdict::Confirm => (SafetyVerdict::Approve, true),
             SafetyVerdict::Approve => (SafetyVerdict::Deny, true),
-            _ => (verdict.clone(), false),
+            _ => (*verdict, false),
         },
         "high" => match verdict {
             SafetyVerdict::Allow => (SafetyVerdict::Confirm, true),
             SafetyVerdict::Confirm => (SafetyVerdict::Approve, true),
-            _ => (verdict.clone(), false),
+            _ => (*verdict, false),
         },
-        _ => (verdict.clone(), false),
+        _ => (*verdict, false),
     }
 }
 

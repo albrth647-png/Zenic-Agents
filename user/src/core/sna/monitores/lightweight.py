@@ -47,7 +47,7 @@ class LowStockMonitor(MonitorBase):
 
         try:
             rows = self._execute_query(
-                f"SELECT name, quantity FROM {table} WHERE quantity < ?",  # noqa: S608
+                f"SELECT name, quantity FROM {table} WHERE quantity < ?",
                 (threshold,),
                 db_name=db_name,
             )
@@ -109,7 +109,7 @@ class OverdueInvoiceMonitor(MonitorBase):
             now_ts = time.time()
             overdue_cutoff = now_ts - (days_overdue * 86400)
             rows = self._execute_query(
-                f"SELECT id, client, amount, due_date FROM {table} "  # noqa: S608
+                f"SELECT id, client, amount, due_date FROM {table} "
                 f"WHERE status = 'pending' AND due_date < ?",
                 (overdue_cutoff,),
                 db_name=db_name,
@@ -173,7 +173,7 @@ class TomorrowAppointmentMonitor(MonitorBase):
             tomorrow_start = now_ts + 86400
             tomorrow_end = now_ts + (2 * 86400)
             rows = self._execute_query(
-                f"SELECT id, client, date, description FROM {table} "  # noqa: S608
+                f"SELECT id, client, date, description FROM {table} "
                 f"WHERE date >= ? AND date < ?",
                 (tomorrow_start, tomorrow_end),
                 db_name=db_name,

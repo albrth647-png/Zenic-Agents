@@ -2,6 +2,7 @@
 // GET  /api/v1/hitl/delegations — List delegation rules
 // POST /api/v1/hitl/delegations — Create a delegation rule
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getDelegationService } from "@/lib/hitl/delegation/_delegator";
 

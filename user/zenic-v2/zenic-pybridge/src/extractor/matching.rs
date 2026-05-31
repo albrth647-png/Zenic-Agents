@@ -7,8 +7,7 @@ use super::types::*;
 /// Normalize a string for comparison: lowercase, replace underscores/spaces with single form.
 pub fn normalize_for_comparison(s: &str) -> String {
     s.to_lowercase()
-        .replace('_', " ")
-        .replace('-', " ")
+        .replace(['_', '-'], " ")
         .split_whitespace()
         .collect::<Vec<&str>>()
         .join(" ")
@@ -52,7 +51,7 @@ pub fn is_value_type_compatible(field_type: &str, value: &str) -> bool {
         "boolean" => {
             let lower = value.to_lowercase();
             lower == "true" || lower == "false" || lower == "yes" || lower == "no"
-                || lower == "1" || lower == "0" || lower == "si" || lower == "no"
+                || lower == "1" || lower == "0" || lower == "si"
         }
         "date" | "datetime" => {
             // Check for common date patterns

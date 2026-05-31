@@ -142,7 +142,7 @@ class MonitorBase(ABC):
         if not _SAFE_TABLE_RE.match(table):
             logger.warning("Monitor %s: Invalid table name rejected: %s", self.monitor_id, table)
             return 0
-        sql = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
+        sql = f"SELECT COUNT(*) FROM {table}"
         if where:
             sql += f" WHERE {where}"
         try:

@@ -214,11 +214,11 @@ def _extract_risk_score(result: SimulationResult) -> float:
 #  SINGLETON
 # ──────────────────────────────────────────────────────────────
 
-_instance: SimulationEngine | None = None  # noqa: F821
+_instance: SimulationEngine | None = None
 _instance_lock = threading.Lock()
 
 
-def get_simulation_engine() -> SimulationEngine:  # noqa: F821
+def get_simulation_engine() -> SimulationEngine:
     """Return the singleton SimulationEngine instance."""
     global _instance
     if _instance is None:

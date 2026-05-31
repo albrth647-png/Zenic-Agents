@@ -4,16 +4,7 @@
 //
 // Pattern: Visitor — traverses policy structure to detect changes
 
-import type {
-  PolicyDocument,
-  PolicyStatement,
-  PolicyCondition,
-  PolicyTestCase,
-  PolicyDiff,
-  DiffEntry,
-  DiffSummary,
-  DiffChangeType,
-} from "./types";
+import type { PolicyDocument, PolicyStatement, PolicyTestCase, PolicyDiff, DiffEntry, DiffSummary, DiffChangeType } from "./types";
 
 // ─── Main Diff Function ───────────────────────────────────────────────
 

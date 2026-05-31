@@ -115,7 +115,7 @@ class Z3ConstraintMixin:
                                     cond1 = (v1 == val1) if num_type == "int" else (v1 == z3_module.RealVal(str(val1)))
                                     cond2 = (v2 == val2) if num_type == "int" else (v2 == z3_module.RealVal(str(val2)))
                                     valid_conditions.append(z3_module.And(cond1, cond2))
-                            except Exception:  # noqa: S112
+                            except Exception:
                                 continue
 
                     if valid_conditions:
@@ -138,7 +138,7 @@ class Z3ConstraintMixin:
                                     cond1 = (v1 == val1) if num_type == "int" else (v1 == z3_module.RealVal(str(val1)))
                                     cond2 = (v2 == val2) if num_type == "int" else (v2 == z3_module.RealVal(str(val2)))
                                     valid_conditions.append(z3_module.And(cond1, cond2))
-                            except Exception:  # noqa: S112
+                            except Exception:
                                 continue
 
                     if valid_conditions:

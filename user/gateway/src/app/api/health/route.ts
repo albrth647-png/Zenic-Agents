@@ -125,7 +125,7 @@ export async function GET() {
   }
 
   // Phase 3.4: WAL (Write-Ahead Log) pending count
-  let walInfo: { pendingCount: number; mode: string } = { pendingCount: 0, mode: 'unknown' }
+  const walInfo: { pendingCount: number; mode: string } = { pendingCount: 0, mode: 'unknown' }
   try {
     const { db } = await import('@/lib/db')
     // Get WAL mode status

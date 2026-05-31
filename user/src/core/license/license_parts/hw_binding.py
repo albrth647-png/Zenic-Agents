@@ -46,7 +46,7 @@ def get_hardware_fingerprint() -> str:
                     components.append(line.split(":")[1].strip()[:32])
                     break
     except (FileNotFoundError, PermissionError):
-        pass
+        logger.warning("get_hardware_fingerprint: (FileNotFoundError, PermissionError) handled silently", exc_info=True)
 
     # Memory
     try:
@@ -56,14 +56,14 @@ def get_hardware_fingerprint() -> str:
                     components.append(line.split(":")[1].strip()[:16])
                     break
     except (FileNotFoundError, PermissionError):
-        pass
+        logger.warning("get_hardware_fingerprint: (FileNotFoundError, PermissionError) handled silently", exc_info=True)
 
     # Disk serial (best-effort)
     try:
         import subprocess
 
         result = subprocess.run(
-            ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
+            ["lsblk", "-ndo", "SERIAL"],
             capture_output=True,
             text=True,
             timeout=3,
@@ -73,7 +73,7 @@ def get_hardware_fingerprint() -> str:
             if serials:
                 components.append(serials[0][:16])
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
-        pass
+        logger.warning("get_hardware_fingerprint: (FileNotFoundError, subprocess.TimeoutExpired, OSError) handled silently", exc_info=True)
 
     combined = "|".join(components) if components else "default-hw"
     return hashlib.sha256(combined.encode()).hexdigest()[:32]

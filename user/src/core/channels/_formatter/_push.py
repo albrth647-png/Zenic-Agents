@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 
-def format_push_payload(message: ChannelMessage) -> Dict[str, Any]:  # noqa: F821  # TODO: verify import
+def format_push_payload(message: ChannelMessage) -> Dict[str, Any]:  # TODO: verify import
     """Format a ChannelMessage into a push notification payload.  # noqa: F821  # TODO: verify import
 
     Returns a dict with title, body, and optional data fields.
     """
     title = message.title or message.subject or "Notification"
-    body = sanitize_plain_text(message.text)  # noqa: F821  # TODO: verify import
+    body = sanitize_plain_text(message.text)  # TODO: verify import
     if len(body) > 200:
         body = body[:197] + "..."
 
-    payload: Dict[str, Any] = {  # noqa: F821  # TODO: verify import
+    payload: Dict[str, Any] = {  # TODO: verify import
         "title": title,
         "body": body,
     }
@@ -44,7 +44,7 @@ def format_push_payload(message: ChannelMessage) -> Dict[str, Any]:  # noqa: F82
     return payload
 
 
-def format_push_confirmation_payload(request: ConfirmationRequest) -> Dict[str, Any]:  # noqa: F821  # TODO: verify import
+def format_push_confirmation_payload(request: ConfirmationRequest) -> Dict[str, Any]:  # TODO: verify import
     """Format a confirmation request as a push notification payload.
 
     Returns a dict with title, body, and action categories.
@@ -55,7 +55,7 @@ def format_push_confirmation_payload(request: ConfirmationRequest) -> Dict[str, 
 
     return {
         "title": request.title,
-        "body": sanitize_plain_text(request.message)[:200],  # noqa: F821  # TODO: Phase3 - verify import
+        "body": sanitize_plain_text(request.message)[:200],  # TODO: Phase3 - verify import
         "actions": actions,
         "data": {
             "action_id": request.action_id,

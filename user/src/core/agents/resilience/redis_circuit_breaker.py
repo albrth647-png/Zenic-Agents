@@ -17,6 +17,9 @@ Redis key format: zenic:cb:{name} (HASH)
 If Redis is unavailable, falls back to in-memory AgentCircuitBreaker.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
 from __future__ import annotations
 
 import contextlib
@@ -418,7 +421,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
                                 "success_threshold": parsed_config.get("successThreshold", config["success_threshold"]),
                             }
                         except (json.JSONDecodeError, KeyError):
-                            pass
+                            logger.warning("all_stats: (json.JSONDecodeError, KeyError) handled silently", exc_info=True)
 
                     redis_stats = {
                         "name": name,
@@ -471,7 +474,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
                         "success_threshold": parsed_config.get("successThreshold", config["success_threshold"]),
                     }
                 except (json.JSONDecodeError, KeyError):
-                    pass
+                    logger.warning("get_stats: (json.JSONDecodeError, KeyError) handled silently", exc_info=True)
 
             return {
                 "name": agent_name,

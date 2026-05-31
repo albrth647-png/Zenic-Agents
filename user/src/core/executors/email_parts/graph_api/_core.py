@@ -26,7 +26,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
     def __init__(
         self,
-        token_manager: OAuth2TokenManager | None = None,  # noqa: F821
+        token_manager: OAuth2TokenManager | None = None,
         service_name: str = "msgraph",
         from_email: str = "",
     ) -> None:
@@ -41,7 +41,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
         """
         self._service_name = service_name
         self._from_email = from_email
-        self._lock = asyncio.Lock()  # noqa: F821
+        self._lock = asyncio.Lock()
         self._rate_limit = _RateLimitState()
         self._send_count: int = 0
         self._error_count: int = 0
@@ -102,7 +102,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
                 reason="service_not_configured",
             )
 
-        if not _HAS_AIOHTTP:  # noqa: F821
+        if not _HAS_AIOHTTP:
             return self._dry_run_response(
                 to=to,
                 subject=subject,
@@ -140,13 +140,13 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
             "send_count": self._send_count,
             "error_count": self._error_count,
             "dry_run_count": self._dry_run_count,
-            "aiohttp_available": _HAS_AIOHTTP,  # noqa: F821
+            "aiohttp_available": _HAS_AIOHTTP,
             "rate_limit": self._rate_limit.to_dict(),
         }
 
     # ── Private: Configuration ────────────────────────────────
 
-    def _auto_configure(self) -> OAuth2TokenManager:  # noqa: F821
+    def _auto_configure(self) -> OAuth2TokenManager:
         """Auto-configure token manager from environment variables."""
         from .oauth2 import get_default_token_manager
 
@@ -154,7 +154,7 @@ class GraphAPIEmailProvider(GraphAPITransportMixin):
 
         token_status = manager.get_token_status(self._service_name)
         if not token_status.get("registered"):
-            config = config_from_env("MSGRAPH")  # noqa: F821
+            config = config_from_env("MSGRAPH")
             if config.is_configured:
                 if not config.scopes:
                     config.scopes = _DEFAULT_SCOPES

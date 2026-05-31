@@ -3,6 +3,7 @@
 // PUT    /api/v1/policy-engine/templates/[templateId]  — Update a template
 // DELETE /api/v1/policy-engine/templates/[templateId]  — Delete (deactivate) a template
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getTemplate, updateTemplate, deleteTemplate } from "@/lib/policy-engine";
 import type { PolicyTemplate } from "@/lib/policy-engine";

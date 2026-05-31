@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:
@@ -22,7 +22,7 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request  # noqa: F401
+    import urllib.request
 
     _HAS_URLLIB = True
 except ImportError:
@@ -30,13 +30,13 @@ except ImportError:
 
 try:
     from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives import hashes, serialization  # noqa: F401
-    from cryptography.hazmat.primitives.asymmetric import ec, padding, utils  # noqa: F401
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, utils
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        ECDSA,  # noqa: F401
-        SECP256R1,  # noqa: F401
-        EllipticCurvePrivateKey,  # noqa: F401
-        EllipticCurvePublicNumbers,  # noqa: F401
+        ECDSA,
+        SECP256R1,
+        EllipticCurvePrivateKey,
+        EllipticCurvePublicNumbers,
     )
 
     _HAS_CRYPTOGRAPHY = True
@@ -44,12 +44,11 @@ except ImportError:
     _HAS_CRYPTOGRAPHY = False
 
 try:
-    import jwt as pyjwt  # noqa: F401
+    import jwt as pyjwt
 
     _HAS_PYJWT = True
 except ImportError:
     _HAS_PYJWT = False
-
 
 # ── Constants ─────────────────────────────────────────────────
 
@@ -61,16 +60,14 @@ _VAPID_JWT_EXPIRY = 43200  # 12 hours
 
 # FCM HTTP v1 API
 _FCM_BASE_URL = "https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
-_FCM_TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 — URL, not a password
+_FCM_TOKEN_URL = "https://oauth2.googleapis.com/token"
 _FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 
 # Push notification size limits
 _PUSH_PAYLOAD_MAX = 4096  # 4KB max for Web Push
 _FCM_PAYLOAD_MAX = 4096  # 4KB max for FCM data message
 
-
 # ── Utility ───────────────────────────────────────────────────
-
 
 def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks."""
@@ -88,11 +85,9 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
 
-
 def _base64url_encode(data: bytes) -> str:
     """Encode bytes to base64url without padding."""
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
-
 
 def _base64url_decode(s: str) -> bytes:
     """Decode base64url with padding restoration."""
@@ -100,7 +95,6 @@ def _base64url_decode(s: str) -> bytes:
     if padding != 4:
         s += "=" * padding
     return base64.urlsafe_b64decode(s)
-
 
 def _pem_to_base64url(pem_key: str) -> str:
     """Convert a PEM-encoded EC public key to raw base64url (x || y)."""

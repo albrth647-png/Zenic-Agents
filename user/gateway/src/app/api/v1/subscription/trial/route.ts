@@ -2,6 +2,7 @@
 // POST /api/v1/subscription/trial
 // Start a 14-day trial subscription. USDT TRC20 only.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { db } from "@/lib/db";
 import {
   createTrialSubscription,

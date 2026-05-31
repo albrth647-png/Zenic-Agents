@@ -7,7 +7,7 @@ from typing import Any
 from ._types import InteractiveCollectionResult
 
 
-class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # noqa: F821  # TODO: add import
+class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # TODO: add import
     """
     A51: Interactive dialogue for missing template fields.
 
@@ -35,7 +35,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # noqa:
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A51_InteractiveDataCollector", **kwargs)
         self._native = None
-        self._python_sessions: dict[str, _CompletionSession] = {}  # noqa: F821  # TODO: add import
+        self._python_sessions: dict[str, _CompletionSession] = {}  # TODO: add import
 
     def _get_native(self):
         """Lazy-load the zenic Rust extension (if available)."""
@@ -146,7 +146,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # noqa:
                 "default_value": q.default_value,
                 "validation_hint": q.validation_hint,
             }
-            for q in questions[:MAX_QUESTIONS_PER_ROUND]  # noqa: F821  # TODO: add import
+            for q in questions[:MAX_QUESTIONS_PER_ROUND]  # TODO: add import
         ]
         progress = native["completer_get_progress"](session, template_dict)
         return InteractiveCollectionResult(
@@ -164,7 +164,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # noqa:
         session = data.get("session")
         template_dict = data.get("template_dict")
         field_name = data.get("field_name", "")
-        value = str(data.get("value", ""))[:MAX_ANSWER_LENGTH]  # noqa: F821  # TODO: add import
+        value = str(data.get("value", ""))[:MAX_ANSWER_LENGTH]  # TODO: add import
         if session is None or template_dict is None or not field_name:
             return InteractiveCollectionResult(source="deterministic")
         updated_session, applied = native["completer_submit_answer"](session, template_dict, field_name, value)

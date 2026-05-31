@@ -11,10 +11,12 @@ export function useAuth() {
 
   const user = session?.user
     ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         id: (session.user as any).id ?? "",
         name: session.user.name ?? "",
         email: session.user.email ?? "",
         avatar: session.user.image ?? "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: (session.user as any).role ?? "user",
       }
     : null;

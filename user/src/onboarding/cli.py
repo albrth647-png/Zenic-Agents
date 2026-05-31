@@ -193,13 +193,13 @@ def build_parser() -> argparse.ArgumentParser:
 # ── Command Handlers ─────────────────────────────────────────
 
 
-def cmd_welcome(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_welcome(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'welcome' command."""
     app.show_welcome(version=VERSION)
     return 0
 
 
-def cmd_register(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_register(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'register' command."""
     interactive = args.interactive or (not args.username and not args.email)
 
@@ -216,7 +216,7 @@ def cmd_register(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: 
     return 0 if result.success else 1
 
 
-def cmd_activate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_activate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'activate' command."""
     interactive = args.interactive or not args.key
 
@@ -231,7 +231,7 @@ def cmd_activate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: 
     return 0 if result.success else 1
 
 
-def cmd_status(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_status(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'status' command."""
     result = app.check_status()
 
@@ -240,7 +240,7 @@ def cmd_status(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F8
     return 0 if result.success else 1
 
 
-def cmd_hardware(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_hardware(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'hardware' command."""
     result = app.check_hardware()
 
@@ -249,7 +249,7 @@ def cmd_hardware(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: 
     return 0 if result.success else 1
 
 
-def cmd_quickstart(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_quickstart(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'quickstart' command."""
     result = app.quick_start()
 
@@ -258,7 +258,7 @@ def cmd_quickstart(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa
     return 0 if result.success else 1
 
 
-def cmd_validate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # noqa: F821  # TODO: verify import
+def cmd_validate(app: OnboardingTUI, args: argparse.Namespace) -> int:  # TODO: verify import
     """Handle the 'validate' command."""
     from .validators.activation_key import validate_activation_key
 
@@ -312,7 +312,7 @@ COMMAND_MAP = {
 # ── JSON Output Helper ───────────────────────────────────────
 
 
-def _print_json(result: FlowResult) -> None:  # noqa: F821  # TODO: Phase3 - verify import
+def _print_json(result: FlowResult) -> None:  # TODO: Phase3 - verify import
     """Print a FlowResult as JSON."""
     import json
 

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSidebar } from "./_context"
-import { SIDEBAR_WIDTH_MOBILE } from "./_constants"
+import { SIDEBAR_WIDTH_MOBILE as _SIDEBAR_WIDTH_MOBILE } from "./_constants"
 
 export function SidebarTrigger({
   className,
@@ -239,9 +239,11 @@ export function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
 }) {
+  /* eslint-disable react-hooks/purity */
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   }, [])
+  /* eslint-enable react-hooks/purity */
 
   return (
     <div

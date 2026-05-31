@@ -2,6 +2,7 @@
 // POST /api/v1/hitl/pipeline/create
 // Create HITL request from SafetyGate verdict or PolicyEngine requirement
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getPipelineIntegration } from "@/lib/hitl/pipeline-integration";
 

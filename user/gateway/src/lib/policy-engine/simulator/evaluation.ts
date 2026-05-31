@@ -9,15 +9,7 @@
 //   - Memento: Before/after snapshots for verdict comparison
 //   - Strategy: Impact scoring with configurable category weights
 
-import type {
-  PolicyDocument,
-  PolicyEvaluationRequest,
-  PolicyEvaluationResult,
-  PolicyEffectV2,
-  PolicyStatement,
-  VerdictChangeCategory,
-  VerdictChange,
-} from "./types";
+import type { PolicyDocument, PolicyEvaluationRequest, PolicyEvaluationResult, PolicyEffectV2, VerdictChangeCategory, VerdictChange } from "./types";
 
 // ─── Evaluation Against Policy Set ────────────────────────────────────
 

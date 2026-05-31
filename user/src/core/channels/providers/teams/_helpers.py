@@ -4,6 +4,9 @@ Teams Provider — HTTP transport helpers.
 Contains _validate_url, optional dependency detection, and constants.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
 from __future__ import annotations
 
 import ipaddress
@@ -20,17 +23,16 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     try:
         ip = ipaddress.ip_address(parsed.hostname)
     except ValueError:
-        pass
+        logger.warning("_validate_url: ValueError handled silently", exc_info=True)
     else:
         if ip.is_private or ip.is_loopback or ip.is_reserved:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
 
-
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:
@@ -38,12 +40,11 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request  # noqa: F401
+    import urllib.request
 
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
-
 
 # ── Constants ─────────────────────────────────────────────────
 

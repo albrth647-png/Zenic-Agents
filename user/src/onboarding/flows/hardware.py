@@ -140,14 +140,14 @@ class HardwareFlow(BaseFlow):
                         components_used.append("memory")
                         break
         except (FileNotFoundError, PermissionError, ValueError):
-            pass
+            logger.warning("on_execute: (FileNotFoundError, PermissionError, ValueError) handled silently", exc_info=True)
 
         # Disk serial
         try:
             import subprocess
 
             proc = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
+                ["lsblk", "-ndo", "SERIAL"],
                 capture_output=True,
                 text=True,
                 timeout=3,

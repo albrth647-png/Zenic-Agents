@@ -116,9 +116,10 @@ class WorkflowDB:
             if tenant_id:
                 conditions.append("tenant_id = ?")
                 params.append(tenant_id)
+            # WHERE built from hardcoded condition strings; values parameterized
             where = " AND ".join(conditions) if conditions else "1=1"
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM workflows WHERE {where} ORDER BY name",  # noqa: S608
+                f"SELECT * FROM workflows WHERE {where} ORDER BY name",
                 params,
             ).fetchall()
             conn.close()

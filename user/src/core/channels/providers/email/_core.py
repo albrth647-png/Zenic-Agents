@@ -63,7 +63,7 @@ class EmailChannelProvider(EmailTransportMixin):
         self._confirmation_count: int = 0
         self._dry_run_count: int = 0
         self._started: bool = False
-        self._rate_limit_info = RateLimitInfo()  # noqa: F821
+        self._rate_limit_info = RateLimitInfo()
         self._executor: Any | None = None  # Lazy-initialized EmailExecutor
 
     async def start(self) -> None:
@@ -102,7 +102,7 @@ class EmailChannelProvider(EmailTransportMixin):
             }
 
     @property
-    def rate_limit_info(self) -> RateLimitInfo:  # noqa: F821
+    def rate_limit_info(self) -> RateLimitInfo:
         """Current rate limit status."""
         return self._rate_limit_info
 

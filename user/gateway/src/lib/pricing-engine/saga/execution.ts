@@ -8,14 +8,7 @@ import { randomUUID } from "crypto";
 import { validateTrc20Address, calculatePricing } from "../wasm-bridge";
 import { validateUpgradePath, validateDowngradePath, calculateProration, getSagaDefinition } from "./definitions";
 import { compensationHandlers } from "./compensation";
-import type {
-  SagaTypeName,
-  SagaStatusName,
-  SagaStepStatusName,
-  SagaStepResult,
-  SagaOrchestratorResult,
-  StepHandler,
-} from "./types";
+import type { SagaTypeName, SagaStatusName, SagaStepStatusName, SagaOrchestratorResult, StepHandler } from "./types";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Step Action Handlers
@@ -460,7 +453,7 @@ export const stepHandlers: Record<string, StepHandler> = {
   // ─── Audit Steps ──────────────────────────────────────────────────────
 
   async create_audit_entry(input) {
-    const { tenantId, action, resource, outcome } = input as {
+    const { tenantId: _tenantId, action, resource, outcome } = input as {
       tenantId: string; action: string; resource: string; outcome: string;
     };
     try {

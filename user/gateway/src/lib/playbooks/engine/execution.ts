@@ -2,14 +2,9 @@
 // Execution helpers for playbook evaluation, activation, and deactivation.
 // Provides a functional API alongside the class-based PlaybookEngine.
 
-import type {
-  PlaybookEvaluationResult,
-  PlaybookActivationRequest,
-  PlaybookActivationResult,
-  PlaybookSearchCriteria,
-} from "../types";
+import type { PlaybookEvaluationResult, PlaybookActivationRequest, PlaybookActivationResult } from "../types";
 import { getPlaybookEngine } from "./types";
-import type { PlaybookDbRecord } from "./types";
+import type { PlaybookDbRecord as _PlaybookDbRecord } from "./types";
 
 // ─── Evaluation Pipeline ─────────────────────────────────────────────
 

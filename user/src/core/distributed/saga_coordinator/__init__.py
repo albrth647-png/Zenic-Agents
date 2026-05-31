@@ -20,7 +20,7 @@ Designed for PostgreSQL (production) and MemoryBackend (dev/testing).
 """
 
 import logging
-from typing import Any, Dict  # noqa: UP035
+from typing import Any, Dict
 
 from ..backend import CoordinationBackend
 from ..task_queue import DistributedTaskQueue, TaskMessage, TaskPriority
@@ -30,14 +30,12 @@ logger = logging.getLogger("zenic_agents.distributed.saga_coordinator")
 
 __all__ = ["DistributedSagaCoordinator", "DistributedSagaState", "DistributedSagaStep", "TaskMessage", "TaskPriority"]
 
-
 # ============================================================
 #  DISTRIBUTED SAGA COORDINATOR
 # ============================================================
 
-
-from ._core_mixin import DistributedSagaCoordinatorCoreMixin  # noqa: E402
-from ._extra_mixin import DistributedSagaCoordinatorExtraMixin  # noqa: E402
+from ._core_mixin import DistributedSagaCoordinatorCoreMixin
+from ._extra_mixin import DistributedSagaCoordinatorExtraMixin
 
 
 class DistributedSagaCoordinator(DistributedSagaCoordinatorCoreMixin, DistributedSagaCoordinatorExtraMixin):

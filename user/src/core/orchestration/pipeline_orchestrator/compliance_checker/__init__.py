@@ -14,7 +14,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import time
-from typing import Any, Set  # noqa: UP035
+from typing import Any, Set
 
 from ._rules import build_all_default_rules
 from ._types import (
@@ -33,7 +33,6 @@ __all__ = [
     "ComplianceStandard",
     "ComplianceViolation",
 ]
-
 
 class ComplianceChecker:
     """

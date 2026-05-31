@@ -27,11 +27,9 @@ PYTHON_FORMATS: tuple[str, ...] = ("pdf", "docx", "html")
 #: Format string for unknown/unparseable documents.
 FORMAT_UNKNOWN: str = "unknown"
 
-
 # ──────────────────────────────────────────────────────────────
 #  DocumentParser — Main public class
 # ──────────────────────────────────────────────────────────────
-
 
 class DocumentParser:
     """Python document parser for PDF, DOCX, and HTML files.
@@ -139,21 +137,21 @@ class DocumentParser:
         """Check which Python parsers are actually available."""
         available: dict[str, bool] = {}
         try:
-            import PyPDF2  # noqa: F401
+            import PyPDF2
 
             available["pdf_pypdf2"] = True
         except ImportError:
             available["pdf_pypdf2"] = False
 
         try:
-            import pdfminer  # noqa: F401
+            import pdfminer
 
             available["pdf_pdfminer"] = True
         except ImportError:
             available["pdf_pdfminer"] = False
 
         try:
-            import docx  # noqa: F401
+            import docx
 
             available["docx_python_docx"] = True
         except ImportError:

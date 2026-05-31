@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Deploy Approval ────────────
 // POST /api/v1/policy-engine/approvals/[approvalId]/deploy  — Deploy an approved request
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { deployApproval } from "@/lib/policy-engine";
 

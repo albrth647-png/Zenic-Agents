@@ -16,7 +16,9 @@ export function useIsMobile() {
     }
 
     // Inicializar con el valor correcto inmediatamente
+    /* eslint-disable react-hooks/set-state-in-effect -- Must init from matchMedia */
     setIsMobile(mql.matches)
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     mql.addEventListener("change", onChange)
     return () => mql.removeEventListener("change", onChange)

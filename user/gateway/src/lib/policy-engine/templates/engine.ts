@@ -10,8 +10,8 @@
 //   - Interpreter: VariableSubstitutionInterpreter resolves {{variable}} placeholders
 
 import { createHash } from "crypto";
-import { db } from "@/lib/db";
-import { computeContentHash } from "../yaml-loader";
+import { db as _db } from "@/lib/db";
+import { computeContentHash as _computeContentHash } from "../yaml-loader";
 import type {
   PolicyDocument,
   PolicyStatement,

@@ -254,7 +254,7 @@ class RateLimitInfo:
 #  HANDLER TYPE ALIASES
 # ──────────────────────────────────────────────────────────────
 
-from collections.abc import Awaitable, Callable  # noqa: E402
+from collections.abc import Awaitable, Callable
 
 # Inbound message handler: receives ChannelMessage, returns ChannelResponse
 MessageHandler = Callable[[ChannelMessage], Awaitable[ChannelResponse]]

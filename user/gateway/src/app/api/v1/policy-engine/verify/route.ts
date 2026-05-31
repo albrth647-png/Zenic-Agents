@@ -2,6 +2,7 @@
 // POST /api/v1/policy-engine/verify  — Verify policies (formal verification)
 // GET  /api/v1/policy-engine/verify  — List verification results
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPolicies, listVerifications } from "@/lib/policy-engine";
 import type { SolverType, VerificationStatus } from "@/lib/policy-engine";

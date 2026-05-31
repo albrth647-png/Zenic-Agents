@@ -19,7 +19,6 @@ import type {
   ImpactCategory,
   DownstreamChange,
   SimulationRiskLevel,
-  ConflictSeverity,
   PolicySetEntry,
   DependencyType,
   ImpactAnalysisRequest,
@@ -44,6 +43,8 @@ import type {
   PolicyEvaluationResult,
   PolicyEvaluationRequest,
 } from "../types";
+export type { ImpactCategory, DownstreamChange, SimulationRiskLevel, ConflictSeverity, PolicySetEntry, ImpactAnalysisDepth, DependencyRef, BlastRadius, AffectedSetRef, AffectedPlaybookRef, AffectedToolRef, PolicyDocument, PolicyEffectV2 } from "../types";
+export { ImpactAnalysisDepthValues, DependencyTypeValues, SimulationRiskLevelValues, ConflictSeverityValues } from "../types";
 
 // ─── Composite: Dependency Node ─────────────────────────────────────────
 
@@ -163,7 +164,7 @@ class ImpactCollectorVisitor implements DependencyVisitor {
 
 // ─── Utility: Generate analysis ID ──────────────────────────────────────
 
-function generateAnalysisId(): string {
+function _generateAnalysisId(): string {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 10);
   return `impact_${ts}_${rand}`;
@@ -404,7 +405,7 @@ async function findProtectedTools(policyId: string): Promise<Array<{
  * Find approval requests targeting this policy.
  */
 
-async function findReferencingApprovals(policyId: string): Promise<Array<{
+async function _findReferencingApprovals(policyId: string): Promise<Array<{
   approvalId: string;
   title: string;
   status: string;
@@ -445,7 +446,7 @@ async function findReferencingApprovals(policyId: string): Promise<Array<{
 /**
  * Find policies composed with the target in the same PolicySets.
  */
-async function findComposedPolicies(
+async function _findComposedPolicies(
   policySetIds: string[],
   excludePolicyId: string,
 ): Promise<DependencyNode[]> {
@@ -497,7 +498,7 @@ async function findComposedPolicies(
 /**
  * Find other policies referenced by affected playbooks.
  */
-async function findPlaybookSiblingPolicies(
+async function _findPlaybookSiblingPolicies(
   playbookIds: string[],
   excludePolicyId: string,
 ): Promise<DependencyNode[]> {
@@ -552,7 +553,7 @@ async function findPlaybookSiblingPolicies(
  * Predict downstream evaluation changes for affected tools.
  * Compares current verdict vs proposed verdict.
  */
-async function predictDownstreamChanges(
+async function _predictDownstreamChanges(
   currentDocument: PolicyDocument,
   proposedDocument: PolicyDocument | undefined,
   affectedTools: AffectedToolRef[],
@@ -679,7 +680,7 @@ function buildChangeReason(
  *
  * Recovery time: riskScore * 2 minutes
  */
-function calculateBlastRadius(
+function _calculateBlastRadius(
   directDeps: DependencyRef[],
   indirectDeps: DependencyRef[],
   affectedSets: AffectedSetRef[],
@@ -770,7 +771,7 @@ function estimateAffectedUsers(
   }
 
   // Estimate users per playbook activation (industry-based)
-  for (const pb of playbooks) {
+  for (const _pb of playbooks) {
     users += 20; // baseline per playbook
   }
 
@@ -862,7 +863,7 @@ function buildImpactCategories(
 /**
  * Count compliance standards impacted by this policy.
  */
-async function countComplianceStandards(policyId: string): Promise<number> {
+async function _countComplianceStandards(policyId: string): Promise<number> {
   try {
     const policy = await db.declPolicy.findUnique({
       where: { policyId },
@@ -897,7 +898,7 @@ async function countComplianceStandards(policyId: string): Promise<number> {
  * Build full transitive closure of dependencies.
  * Follows indirect references until no new nodes are discovered.
  */
-async function buildTransitiveClosure(
+async function _buildTransitiveClosure(
   initialIndirectNodes: DependencyNode[],
   visited: Set<string>,
   maxDepth: number,
@@ -977,7 +978,7 @@ async function buildTransitiveClosure(
 export async function analyzeImpact(
   request: ImpactAnalysisRequest,
 ): Promise<ImpactAnalysisResult> {
-  const { policyId, proposedVersion, proposedDocument, depth, requestedBy } = request;
+  const { policyId, proposedVersion: _proposedVersion, proposedDocument: _proposedDocument, depth, requestedBy: _requestedBy } = request;
 
   // 1. Load target policy
   const currentDocument = await loadPolicyFromDb(policyId);
@@ -985,7 +986,7 @@ export async function analyzeImpact(
     throw new Error(`[ImpactAnalysis] Policy "${policyId}" not found`);
   }
 
-  const strategy = DEPTH_STRATEGIES[depth];
+  const _strategy = DEPTH_STRATEGIES[depth];
   const visitor = new ImpactCollectorVisitor();
 
   // ── 2. Find direct dependencies ────────────────────────────────────
@@ -1042,12 +1043,12 @@ export async function analyzeImpact(
 
   // 2c. Tools protected by this policy
   const protectedTools = await findProtectedTools(policyId);
-  const toolRefsMap = new Map<string, AffectedToolRef>();
+  const _toolRefsMap = new Map<string, AffectedToolRef>();
 
   for (const tool of protectedTools) {
-    const currentVerdict = (tool.accessPolicyEffect as PolicyEffectV2) || "deny";
+    const _currentVerdict = (tool.accessPolicyEffect as PolicyEffectV2) || "deny";
 
-    const node: DependencyNode = {
+    const _node: DependencyNode = {
       id: tool.toolId,
       type: "tool",
       name: tool.toolName,

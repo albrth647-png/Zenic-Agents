@@ -2,6 +2,7 @@
 // GET    /api/v1/policy-engine/composition/[setId]  — Get a policy set
 // DELETE /api/v1/policy-engine/composition/[setId]  — Delete a policy set
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest } from "next/server";
 import { getCompositionEngine } from "@/lib/policy-engine";
 

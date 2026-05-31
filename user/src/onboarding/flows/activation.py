@@ -260,13 +260,13 @@ class OnlineActivationStrategy:
             if self._firebase_key:
                 url += f"?auth={self._firebase_key}"
 
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 url,
                 data=request_data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 push_result = json.loads(resp.read().decode())
                 request_id = push_result.get("name", "")
 

@@ -97,7 +97,7 @@ async function verifySystemHardening() {
 async function verifyEncryption() {
   // Verificar que el módulo crypto está disponible
   try {
-    const { maskCredentialFields, encrypt, decrypt } = await import("@/lib/crypto");
+    const { maskCredentialFields: _maskCredentialFields, encrypt, decrypt } = await import("@/lib/crypto");
     // Test: encriptar y desencriptar un valor de prueba
     const testPayload = encrypt({ test: "verification-value" });
     const decrypted = decrypt(testPayload);

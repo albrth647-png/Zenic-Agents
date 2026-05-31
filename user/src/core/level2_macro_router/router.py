@@ -203,7 +203,7 @@ class MacroRouter:
                                 logger.debug("AST critical match (connection): %s -> %s", name, conn_str)
                                 return True
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("_query_ast: (json.JSONDecodeError, TypeError) handled silently", exc_info=True)
 
                 # Criterio 3: Alta centralidad (nodo con muchas conexiones = critico)
                 if node_type == "function" and complexity > _CRITICAL_COMPLEXITY_THRESHOLD:

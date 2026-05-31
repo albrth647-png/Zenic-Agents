@@ -22,18 +22,16 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 try:
-    from rich.box import ROUNDED  # noqa: F401
+    from rich.box import ROUNDED
     from rich.console import Console
-    from rich.panel import Panel  # noqa: F401
-    from rich.text import Text  # noqa: F401
+    from rich.panel import Panel
+    from rich.text import Text
 
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
 
-
 # ── Step Status ──────────────────────────────────────────────
-
 
 class StepStatus(str, Enum):
     """Status of a single onboarding step."""
@@ -68,9 +66,7 @@ class StepStatus(str, Enum):
         }
         return styles.get(self, "white")
 
-
 # ── Step Indicator ───────────────────────────────────────────
-
 
 @dataclass(frozen=True, slots=True)
 class StepIndicator:
@@ -100,9 +96,7 @@ class StepIndicator:
         end = self.completed_at or time.monotonic()
         return (end - self.started_at) * 1000
 
-
 # ── Progress Renderer ────────────────────────────────────────
-
 
 class ProgressRenderer:
     """Renders multi-step progress indicators for onboarding flows.
@@ -291,9 +285,7 @@ class ProgressRenderer:
 
         return "\n".join(lines)
 
-
 # ── Convenience Function ────────────────────────────────────
-
 
 def render_progress(title: str = "Progress", steps: list[tuple] | None = None) -> str:
     """One-shot progress rendering with step tuples.

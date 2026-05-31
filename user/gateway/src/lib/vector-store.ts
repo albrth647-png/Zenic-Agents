@@ -295,7 +295,7 @@ class InMemoryHNSW {
  */
 export class VectorStore {
   private config: Required<VectorStoreConfig>;
-  private pgPool: any = null;
+  private pgPool: unknown = null;
   private hnsw: InMemoryHNSW;
   private initialized = false;
   private pgvectorAvailable = false;
@@ -357,7 +357,7 @@ export class VectorStore {
     }
 
     try {
-      const { default: Ioredis } = await import('ioredis');
+      const { default: _Ioredis } = await import('ioredis');
       // Try to import pg for PostgreSQL connection
       // Note: We'll use a simpler approach - call the Python VectorStore
       // via a health check endpoint, and use in-memory HNSW for TS-side search.

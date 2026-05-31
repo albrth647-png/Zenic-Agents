@@ -21,31 +21,29 @@ logger = logging.getLogger(__name__)
 
 # Dependencias opcionales
 try:
-    import aiosmtplib  # type: ignore[import-unresolved]; _HAS_AIOSMTPLIB = True  # noqa: F401
+    import aiosmtplib  # type: ignore[import-unresolved]; _HAS_AIOSMTPLIB = True
 except ImportError:
     _HAS_AIOSMTPLIB = False
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
 
 try:
-    from apscheduler.schedulers.asyncio import AsyncIOScheduler  # noqa: F401
-    from apscheduler.triggers.cron import CronTrigger  # noqa: F401
-    from apscheduler.triggers.interval import IntervalTrigger  # noqa: F401
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from apscheduler.triggers.cron import CronTrigger
+    from apscheduler.triggers.interval import IntervalTrigger
 
     _HAS_APSCHEDULER = True
 except ImportError:
     _HAS_APSCHEDULER = False
 
-
 # ============================================================
 #  RESULTADO DE ACCIÓN (Enhanced)
 # ============================================================
-
 
 @dataclass
 class ActionResult:
@@ -75,11 +73,9 @@ class ActionResult:
             "blueprint_valid": self.blueprint_valid,
         }
 
-
 # ============================================================
 #  CLASE BASE ABSTRACTA
 # ============================================================
-
 
 class ActionExecutor(ABC):
     """Clase base abstracta para todos los ejecutores de acciones.
@@ -104,16 +100,13 @@ class ActionExecutor(ABC):
         """Human-readable name of this executor."""
         return self.__class__.__name__
 
-
 # ============================================================
 #  VALIDADORES UTILITARIOS
 # ============================================================
 
-
 def _validate_email(email: str) -> bool:
     """Valida formato básico de email."""
     return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
-
 
 def _validate_url(url: str) -> bool:
     """Valida formato básico de URL."""
@@ -122,7 +115,6 @@ def _validate_url(url: str) -> bool:
         return all([r.scheme in ("http", "https"), r.netloc])
     except Exception:
         return False
-
 
 def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks.
@@ -145,7 +137,6 @@ def _validate_url_ssrf(url: str, allowed_schemes: tuple = ("http", "https")) -> 
         if ip.is_private or ip.is_loopback or ip.is_reserved:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
-
 
 def _safe_path(path: str, base_dir: str = "") -> str:
     """Resuelve path y verifica que no escape del base_dir (path traversal).
@@ -176,7 +167,6 @@ def _safe_path(path: str, base_dir: str = "") -> str:
         raise ValueError(f"Path traversal detected: '{path}' escapes base directory")
     return resolved
 
-
 def _validate_sql(query: str) -> bool:
     """Valida que un query SQL no contenga patrones de inyección peligrosos."""
     dangerous = [
@@ -194,11 +184,9 @@ def _validate_sql(query: str) -> bool:
             return False
     return True
 
-
 # ============================================================
 #  REGISTRY DE EJECUTORES (Enhanced with Safety Gate + Audit)
 # ============================================================
-
 
 class ExecutorRegistry:
     """Registry centralizado que gestiona todos los action executors.
@@ -394,14 +382,12 @@ class ExecutorRegistry:
             "executors": self.executor_classes,
         }
 
-
 # ============================================================
 #  INSTANCIA GLOBAL DEL REGISTRY
 # ============================================================
 
 _default_registry: ExecutorRegistry | None = None
 _registry_lock = threading.Lock()
-
 
 def get_default_registry() -> ExecutorRegistry:
     """Obtiene la instancia global del ExecutorRegistry.
@@ -415,7 +401,6 @@ def get_default_registry() -> ExecutorRegistry:
             if _default_registry is None:
                 _default_registry = ExecutorRegistry(safety_gate=get_default_safety_gate())
     return _default_registry
-
 
 def reset_default_registry() -> None:
     """Resetea la instancia global del registry (para tests)."""

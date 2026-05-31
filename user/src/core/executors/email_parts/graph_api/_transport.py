@@ -119,7 +119,7 @@ class GraphAPITransportMixin:
             endpoint = f"{_GRAPH_BASE_URL}/me/sendMail"
 
         try:
-            async with aiohttp.ClientSession() as session:  # noqa: F821
+            async with aiohttp.ClientSession() as session:
                 headers = {
                     "Authorization": token.authorization_header,
                     "Content-Type": "application/json",
@@ -130,7 +130,7 @@ class GraphAPITransportMixin:
                     endpoint,
                     json=payload,
                     headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=60),  # noqa: F821
+                    timeout=aiohttp.ClientTimeout(total=60),
                 ) as response:
                     # Update rate limit from headers
                     resp_headers = dict(response.headers.items())

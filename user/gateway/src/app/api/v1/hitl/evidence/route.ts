@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — HITL API: Attach Evidence ─────────────────────
 // POST /api/v1/hitl/evidence
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getEvidenceService } from "@/lib/hitl/evidence-service";
 

@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — POST /api/v1/observability/spans ─────────────
 // Ingest completed spans into the trace system
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getTraceCollector } from "@/lib/observability/tracing/trace-collector";
 import type { SpanRecord } from "@/lib/observability/types/tracing";

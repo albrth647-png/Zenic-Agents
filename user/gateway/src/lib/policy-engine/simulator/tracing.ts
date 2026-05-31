@@ -9,15 +9,7 @@
 //   - Memento: Captures before/after evaluation snapshots
 //   - Chain of Responsibility: Traces through policy evaluation chain
 
-import type {
-  PolicyDocument,
-  PolicyEvaluationRequest,
-  PolicyEvaluationResult,
-  PolicyEffectV2,
-  PolicyStatement,
-  SimulationTrace,
-  SimulationChange,
-} from "./types";
+import type { PolicyEvaluationResult, PolicyEffectV2, SimulationTrace } from "./types";
 
 // ─── Trace Entry ──────────────────────────────────────────────────────
 

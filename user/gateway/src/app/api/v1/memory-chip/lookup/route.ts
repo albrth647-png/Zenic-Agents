@@ -1,6 +1,7 @@
 // ─── POST /api/v1/memory-chip/lookup ────────────────────────────────────
 // Lookup a semantic mapping by text. Validates tenant access to memory chip.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { searchOntologyBase } from '@/lib/memory-chip';

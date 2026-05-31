@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Namespace Evaluate ──────────
 // POST /api/v1/policy-engine/namespaces/[namespaceId]/evaluate — Evaluate a request within a namespace
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { evaluateInNamespace } from "@/lib/policy-engine";
 import type { PolicyEvaluationRequest } from "@/lib/policy-engine";

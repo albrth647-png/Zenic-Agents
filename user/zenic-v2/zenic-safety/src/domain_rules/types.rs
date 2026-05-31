@@ -37,6 +37,7 @@ pub struct DomainRule {
 
 impl DomainRule {
     /// Create a new domain rule.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: &str,
         niche_category: NicheCategory,

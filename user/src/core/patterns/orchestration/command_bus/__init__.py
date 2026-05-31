@@ -18,7 +18,7 @@ No external dependencies beyond Python stdlib.
 
 import logging
 import threading
-from typing import List  # noqa: UP035
+from typing import List
 
 from ._types import (
     Command,
@@ -37,14 +37,12 @@ __all__ = [
     "CommandResult",
 ]
 
-
 # ============================================================
 #  COMMAND BUS
 # ============================================================
 
-
-from ._core_mixin import CommandBusCoreMixin  # noqa: E402
-from ._extra_mixin import CommandBusExtraMixin  # noqa: E402
+from ._core_mixin import CommandBusCoreMixin
+from ._extra_mixin import CommandBusExtraMixin
 
 
 class CommandBus(CommandBusCoreMixin, CommandBusExtraMixin):

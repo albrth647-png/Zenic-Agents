@@ -40,9 +40,9 @@ class WhatsAppChannelProvider:
         self._failed_count: int = 0
         self._confirmation_count: int = 0
         self._started: bool = False
-        self._rate_limit_info = RateLimitInfo()  # noqa: F821  # TODO: add import
-        self._message_handler: MessageHandler | None = None  # noqa: F821  # TODO: add import
-        self._confirmation_handler: ConfirmationHandler | None = None  # noqa: F821  # TODO: add import
+        self._rate_limit_info = RateLimitInfo()  # TODO: add import
+        self._message_handler: MessageHandler | None = None  # TODO: add import
+        self._confirmation_handler: ConfirmationHandler | None = None  # TODO: add import
         self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
@@ -52,15 +52,15 @@ class WhatsAppChannelProvider:
         return "whatsapp"
 
     @property
-    def capabilities(self) -> FrozenSet[ChannelCapability]:  # noqa: F821  # TODO: add import
+    def capabilities(self) -> FrozenSet[ChannelCapability]:  # TODO: add import
         caps = {
-            ChannelCapability.SEND_TEXT,  # noqa: F821  # TODO: add import
-            ChannelCapability.SEND_RICH,  # noqa: F821  # TODO: add import
-            ChannelCapability.SEND_CONFIRMATION,  # noqa: F821  # TODO: add import
-            ChannelCapability.SEND_FILE,  # noqa: F821  # TODO: add import
-            ChannelCapability.RECEIVE_MESSAGE,  # noqa: F821  # TODO: add import
-            ChannelCapability.RECEIVE_CONFIRMATION,  # noqa: F821  # TODO: add import
-            ChannelCapability.REPLY,  # noqa: F821  # TODO: add import
+            ChannelCapability.SEND_TEXT,  # TODO: add import
+            ChannelCapability.SEND_RICH,  # TODO: add import
+            ChannelCapability.SEND_CONFIRMATION,  # TODO: add import
+            ChannelCapability.SEND_FILE,  # TODO: add import
+            ChannelCapability.RECEIVE_MESSAGE,  # TODO: add import
+            ChannelCapability.RECEIVE_CONFIRMATION,  # TODO: add import
+            ChannelCapability.REPLY,  # TODO: add import
         }
         return frozenset(caps)
 
@@ -69,7 +69,7 @@ class WhatsAppChannelProvider:
         """Available if access token and phone number ID are configured."""
         return bool(self._access_token and self._phone_number_id)
 
-    async def send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F821  # TODO: add import
+    async def send(self, message: ChannelMessage) -> ChannelResponse:  # TODO: add import
         """Send a message via WhatsApp Cloud API.
 
         Supports:
@@ -92,7 +92,7 @@ class WhatsAppChannelProvider:
         elif message.file_url:
             payload = self._build_media_payload(message, "document", message.file_url)
         else:
-            payload = format_whatsapp_text(message)  # noqa: F821  # TODO: add import
+            payload = format_whatsapp_text(message)  # TODO: add import
 
         response = await self._post_api(payload)
 
@@ -104,8 +104,8 @@ class WhatsAppChannelProvider:
 
     async def send_confirmation(
         self,
-        request: ConfirmationRequest,  # noqa: F821  # TODO: add import
-    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
+        request: ConfirmationRequest,  # TODO: add import
+    ) -> ChannelResponse:  # TODO: add import
         """Send an interactive confirmation via WhatsApp buttons.
 
         WhatsApp supports up to 3 quick reply buttons.
@@ -120,7 +120,7 @@ class WhatsAppChannelProvider:
             return self._dry_run_confirmation(request)
 
         # WhatsApp limit: 3 buttons max
-        limited_request = ConfirmationRequest(  # noqa: F821  # TODO: add import
+        limited_request = ConfirmationRequest(  # TODO: add import
             action_id=request.action_id,
             action_type=request.action_type,
             title=request.title,
@@ -132,7 +132,7 @@ class WhatsAppChannelProvider:
             metadata=request.metadata,
         )
 
-        payload = build_whatsapp_interactive_buttons(limited_request)  # noqa: F821  # TODO: add import
+        payload = build_whatsapp_interactive_buttons(limited_request)  # TODO: add import
         response = await self._post_api(payload)
 
         with self._lock:
@@ -145,7 +145,7 @@ class WhatsAppChannelProvider:
         if self._started:
             return
 
-        if _HAS_AIOHTTP and not self._session:  # noqa: F821  # TODO: add import
+        if _HAS_AIOHTTP and not self._session:  # TODO: add import
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),
                 headers={
@@ -162,7 +162,7 @@ class WhatsAppChannelProvider:
 
     async def stop(self) -> None:
         """Gracefully shut down."""
-        if self._session and _HAS_AIOHTTP:  # noqa: F821  # TODO: add import
+        if self._session and _HAS_AIOHTTP:  # TODO: add import
             await self._session.close()
             self._session = None
 
@@ -185,18 +185,18 @@ class WhatsAppChannelProvider:
             }
 
     @property
-    def rate_limit_info(self) -> RateLimitInfo:  # noqa: F821  # TODO: add import
+    def rate_limit_info(self) -> RateLimitInfo:  # TODO: add import
         """Current rate limit status."""
         return self._rate_limit_info
 
     # ── InboundChannelProvider Protocol ─────────────────────────
 
-    def set_message_handler(self, handler: MessageHandler) -> None:  # noqa: F821  # TODO: add import
+    def set_message_handler(self, handler: MessageHandler) -> None:  # TODO: add import
         """Register a handler for incoming WhatsApp messages."""
         self._message_handler = handler
         logger.debug("WhatsAppChannelProvider: message handler registered")
 
-    def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:  # noqa: F821  # TODO: add import
+    def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:  # TODO: add import
         """Register a handler for button callback responses."""
         self._confirmation_handler = handler
         logger.debug("WhatsAppChannelProvider: confirmation handler registered")
@@ -251,7 +251,7 @@ class WhatsAppChannelProvider:
 
         return hmac.compare(expected, signature[7:])
 
-    def parse_inbound_message(self, payload: dict[str, Any]) -> ChannelMessage | None:  # noqa: F821  # TODO: add import
+    def parse_inbound_message(self, payload: dict[str, Any]) -> ChannelMessage | None:  # TODO: add import
         """Parse a WhatsApp webhook payload into a ChannelMessage.
 
         Args:
@@ -289,7 +289,7 @@ class WhatsAppChannelProvider:
                 elif interactive_type == "list_reply":
                     text = interactive.get("list_reply", {}).get("title", "")
 
-            return ChannelMessage(  # noqa: F821  # TODO: add import
+            return ChannelMessage(  # TODO: add import
                 text=text,
                 recipient=phone_number,
                 reply_to=msg_id,

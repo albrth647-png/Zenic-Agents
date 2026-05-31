@@ -197,13 +197,13 @@ def _row_to_entry(row: dict[str, Any]) -> SnapshotEntry:
 
 # ── Singleton ────────────────────────────────────────────────
 
-_snapshot_audit_instance: SnapshotAuditEngine | None = None  # noqa: F821  # TODO: verify import
+_snapshot_audit_instance: SnapshotAuditEngine | None = None  # TODO: verify import
 _snapshot_audit_lock = threading.Lock()
 
 
 def get_snapshot_audit_engine(
     db_path: str | None = None,
-) -> SnapshotAuditEngine:  # noqa: F821  # TODO: verify import
+) -> SnapshotAuditEngine:  # TODO: verify import
     """Get or create the singleton SnapshotAuditEngine.  # noqa: F821  # TODO: verify import
 
     Args:
@@ -215,7 +215,7 @@ def get_snapshot_audit_engine(
     global _snapshot_audit_instance
     with _snapshot_audit_lock:
         if _snapshot_audit_instance is None:
-            _snapshot_audit_instance = SnapshotAuditEngine(db_path=db_path)  # noqa: F821  # TODO: Phase3 - verify import
+            _snapshot_audit_instance = SnapshotAuditEngine(db_path=db_path)  # TODO: Phase3 - verify import
         return _snapshot_audit_instance
 
 

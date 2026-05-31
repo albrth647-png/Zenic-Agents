@@ -61,4 +61,4 @@ def limit_open_files(max_files=256):
                 resource.setrlimit(resource.RLIMIT_NOFILE, (max_files, hard))
                 logger.info("Open files limit: %d -> %d", soft, max_files)
         except (ValueError, AttributeError, OSError):
-            pass
+            logger.warning("limit_open_files: (ValueError, AttributeError, OSError) handled silently", exc_info=True)

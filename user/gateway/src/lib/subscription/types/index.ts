@@ -11,6 +11,7 @@ export {
   TIER_RANK,
   TIER_PRICES,
   TIER_DISPLAY_NAMES,
+  TIER_LIMITS,
   ACTIVE_STATUSES,
   TIER_LIMITS,
   MEMORY_TIER_CONFIG,
@@ -21,6 +22,7 @@ export {
   canUpgrade,
 } from "./_core";
 export type { TierLimits, MemoryTierConfig } from "./_core";
+export { MEMORY_TIER_CONFIG } from "./_core";
 
 // ─── Plans, features, and helpers ───
 export type {

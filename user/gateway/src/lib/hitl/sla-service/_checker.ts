@@ -18,7 +18,7 @@ import { mapSLARecordToModel } from "./_monitor";
 
 /** Check for SLA breaches and return breached SLA records */
 export async function checkSLABreaches(
-  slaPolicies: SLALevelPolicy[],
+  _slaPolicies: SLALevelPolicy[],
 ): Promise<EscalationSLA[]> {
   const now = new Date();
 

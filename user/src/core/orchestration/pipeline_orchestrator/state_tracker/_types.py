@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-logger = logging.getLogger(__name__)  # noqa: F821  # TODO: Phase3 - verify import
+logger = logging.getLogger(__name__)  # TODO: Phase3 - verify import
 
 
 class PipelineStatus(str, Enum):

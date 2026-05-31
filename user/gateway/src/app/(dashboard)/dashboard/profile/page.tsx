@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { User, Mail, Shield, Calendar, Save } from "lucide-react";
+import { User, Mail as _Mail, Shield, Calendar, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

@@ -187,7 +187,7 @@ pub fn ingest_process_extracted_text(filename: &str, format_str: &str, text: &st
 /// BatchExtractionResult
 ///     Results for all documents.
 #[pyfunction]
-pub fn ingest_extract_text_batch(py: Python<'_>, documents: &Bound<'_, PyList>) -> PyResult<BatchExtractionResult> {
+pub fn ingest_extract_text_batch(_py: Python<'_>, documents: &Bound<'_, PyList>) -> PyResult<BatchExtractionResult> {
     let mut extracted: Vec<ExtractedText> = Vec::new();
     let mut successful: usize = 0;
     let mut failed: usize = 0;

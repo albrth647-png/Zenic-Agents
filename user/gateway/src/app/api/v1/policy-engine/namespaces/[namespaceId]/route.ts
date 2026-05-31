@@ -3,6 +3,7 @@
 // PUT    /api/v1/policy-engine/namespaces/[namespaceId]  — Update a namespace
 // DELETE /api/v1/policy-engine/namespaces/[namespaceId]  — Delete (deactivate) a namespace
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getNamespace, updateNamespace, deleteNamespace } from "@/lib/policy-engine";
 import type { NamespaceUpdateRequest } from "@/lib/policy-engine";

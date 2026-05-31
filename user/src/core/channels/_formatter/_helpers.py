@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-def _store_and_replace(match: re.Match, store: List[str]) -> str:  # noqa: F821  # TODO: Phase3 - verify import
+def _store_and_replace(match: re.Match, store: List[str]) -> str:  # TODO: Phase3 - verify import
     """Store a regex match and return a placeholder."""
     idx = len(store)
     store.append(match.group(0))

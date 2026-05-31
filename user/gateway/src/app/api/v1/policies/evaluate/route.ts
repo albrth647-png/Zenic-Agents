@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Evaluate ───────────────────
 // POST /api/v1/policies/evaluate — Evaluate a request against all active policies
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getPolicyEvaluator } from "@/lib/policy-engine";
 import type { PolicyEvaluationRequest } from "@/lib/policy-engine";

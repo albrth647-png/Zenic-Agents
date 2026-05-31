@@ -21,13 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { FEATURE_TIER_MAP } from "@/lib/pricing-engine/types";
 import type { FeatureName } from "@/lib/pricing-engine/types";
-import {
-  tiempoRelativo,
-  truncarHash,
-  formatoMoneda,
-  categoriaColor,
-  calcularMonitoresSNA,
-} from "@/app/_page_parts/utils";
+import { tiempoRelativo, truncarHash, formatoMoneda, calcularMonitoresSNA } from "@/app/_page_parts/utils";
 import { MicroIndicadorSNA } from "@/app/_page_parts/components/MicroIndicadorSNA";
 import { WidgetBloqueado } from "@/app/_page_parts/components/WidgetBloqueado";
 import { PasoPipelineViz } from "@/app/_page_parts/components/PasoPipelineViz";

@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
 class ExceptionRouterHandlersMixin:
     """Mixin providing action handler methods for ExceptionRouter.
 
@@ -56,7 +55,7 @@ class ExceptionRouterHandlersMixin:
     def _action_pause_automation(self, signal: ExceptionSignal) -> dict[str, Any]:
         """PAUSE_AUTOMATION: toggle off automation."""
         try:
-            from src.core.automation_engine import AutomationEngine  # noqa: F401
+            from src.core.automation_engine import AutomationEngine
 
             # Lazy: we don't store a reference; just signal the intent.
             logger.warning(
@@ -170,6 +169,5 @@ class ExceptionRouterHandlersMixin:
             "status": "no_alternative_route",
             "detail": "No alternative rule found for rerouting",
         }
-
 
 __all__ = ["ExceptionRouterHandlersMixin"]

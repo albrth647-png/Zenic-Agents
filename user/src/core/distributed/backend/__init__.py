@@ -33,8 +33,8 @@ __all__ = ["ABC", "BackendConfig", "BackendType", "CoordinationBackend", "abstra
 # ============================================================
 
 
-from ._core_mixin import CoordinationBackendCoreMixin  # noqa: E402
-from ._extra_mixin import CoordinationBackendExtraMixin  # noqa: E402
+from ._core_mixin import CoordinationBackendCoreMixin
+from ._extra_mixin import CoordinationBackendExtraMixin
 
 
 class CoordinationBackend(CoordinationBackendCoreMixin, CoordinationBackendExtraMixin):

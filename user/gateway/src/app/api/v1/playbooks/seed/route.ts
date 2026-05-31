@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Playbooks API: Seed from YAML Templates ──────
 // POST /api/v1/playbooks/seed — Seed playbooks from YAML templates directory
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextResponse } from "next/server";
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";

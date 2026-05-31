@@ -15,8 +15,7 @@ from ._constants import (
 )
 
 if _RESILIENCE_AVAILABLE:
-    from ._constants import (  # noqa: F401 — re-export for sibling modules
-        VerdictAuditEntry,
+    from ._constants import (
         VerdictAuditor,
         VerdictCircuitBreaker,
         VerdictHealthMonitor,
@@ -25,7 +24,6 @@ if _RESILIENCE_AVAILABLE:
     )
 
 logger = logging.getLogger(__name__)
-
 
 class VerdictCoreMixin:
     """Core verdict methods: initialization, entry point, prompt construction."""

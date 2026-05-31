@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 
 _ENV_INSTANCE_URL = "SERVICENOW_INSTANCE_URL"
 _ENV_USERNAME = "SERVICENOW_USERNAME"
-_ENV_PASSWORD = "SERVICENOW_PASSWORD"  # noqa: S105
+_ENV_PASSWORD = "SERVICENOW_PASSWORD"
 _ENV_CLIENT_ID = "SERVICENOW_CLIENT_ID"
-_ENV_CLIENT_SECRET = "SERVICENOW_CLIENT_SECRET"  # noqa: S105
-_ENV_TOKEN_URL = "SERVICENOW_TOKEN_URL"  # noqa: S105
+_ENV_CLIENT_SECRET = "SERVICENOW_CLIENT_SECRET"
+_ENV_TOKEN_URL = "SERVICENOW_TOKEN_URL"
 
 _STATE_CLOSED = 7
 _STATE_IN_PROGRESS = 2
@@ -135,14 +135,14 @@ class _AuthMixin:
             ).encode("utf-8")
 
             validated_token_url = _validate_url_ssrf(token_url)
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 validated_token_url,
                 data=token_data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 method="POST",
             )
 
-            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
 
             token = body.get("access_token", "")

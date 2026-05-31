@@ -2,14 +2,7 @@
 // Formatting, mapping, and routing helpers for the notification system.
 // Extracted from notifications.ts for modularity.
 
-import {
-  type HitlNotification,
-  type NotificationChannel,
-  type NotificationPriority,
-  NotificationChannel as NotificationChannelEnum,
-  NotificationPriority as NotificationPriorityEnum,
-  ApprovalPriority,
-} from "../types";
+import { type HitlNotification, type NotificationPriority, NotificationPriority as NotificationPriorityEnum, ApprovalPriority } from "../types";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Notification Formatting

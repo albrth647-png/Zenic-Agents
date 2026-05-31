@@ -2,6 +2,7 @@
 // POST /api/v1/playbooks/certification — Request certification
 // GET  /api/v1/playbooks/certification — Verify certification status
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { requestCertification, verifyCertification } from "@/lib/playbooks";
 

@@ -33,12 +33,10 @@ from src.core.shared.sqlcipher_helper import (
 
 logger = logging.getLogger(__name__)
 
-
 class EncryptionUnavailableError(RuntimeError):
     """Raised when encryption is required but unavailable."""
 
     pass
-
 
 class EncryptionLevel(str, Enum):
     """Level of encryption active."""
@@ -47,7 +45,6 @@ class EncryptionLevel(str, Enum):
     FERNET = "fernet"  # Symmetric encryption for sensitive data
     SQLCIPHER = "sqlcipher"  # Full database encryption
     FULL = "full"  # Both Fernet + SQLCipher
-
 
 @dataclass
 class EncryptionStatus:
@@ -59,7 +56,6 @@ class EncryptionStatus:
     hardware_bound: bool
     key_derivation: str
     iterations: int
-
 
 class EncryptionManager:
     """Defense in Depth Layer 3: Encryption orchestrator.
@@ -141,7 +137,7 @@ class EncryptionManager:
     def _check_fernet(self) -> bool:
         """Check if cryptography.fernet is available."""
         try:
-            from cryptography.fernet import Fernet  # noqa: F401
+            from cryptography.fernet import Fernet
 
             return True
         except ImportError:
@@ -318,7 +314,7 @@ class EncryptionManager:
                         components.append(line.strip())
                         break
         except (FileNotFoundError, PermissionError):
-            pass
+            logger.warning("_get_hardware_fingerprint: (FileNotFoundError, PermissionError) handled silently", exc_info=True)
 
         # Machine ID (Linux)
         for path in ["/etc/machine-id", "/var/lib/dbus/machine-id"]:
@@ -334,7 +330,7 @@ class EncryptionManager:
             import subprocess
 
             result = subprocess.run(
-                ["lsblk", "-ndo", "SERIAL"],  # noqa: S607
+                ["lsblk", "-ndo", "SERIAL"],
                 capture_output=True,
                 text=True,
                 timeout=3,
@@ -344,7 +340,7 @@ class EncryptionManager:
                 if serials:
                     components.append(serials[0])
         except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+            logger.warning("_get_hardware_fingerprint: (FileNotFoundError, subprocess.TimeoutExpired) handled silently", exc_info=True)
 
         # Memory info
         try:
@@ -354,7 +350,7 @@ class EncryptionManager:
                         components.append(line.strip())
                         break
         except (FileNotFoundError, PermissionError):
-            pass
+            logger.warning("_get_hardware_fingerprint: (FileNotFoundError, PermissionError) handled silently", exc_info=True)
 
         fingerprint = "|".join(components) if components else "default-fingerprint"
         return hashlib.sha256(fingerprint.encode()).hexdigest()[:32]
@@ -614,7 +610,7 @@ class EncryptionManager:
 
     # ── Per-Tenant Key Diversification ──────────────────────
 
-    def _derive_tenant_key(self, tenant_id: str) -> Fernet:  # noqa: F821  # TODO: Phase3 - verify import
+    def _derive_tenant_key(self, tenant_id: str) -> Fernet:  # TODO: Phase3 - verify import
         """Derive a tenant-specific Fernet key from the master key.
 
         Uses HKDF-SHA256 with tenant_id as info parameter.
@@ -721,7 +717,6 @@ class EncryptionManager:
 _encryption_manager: EncryptionManager | None = None
 _lock = threading.Lock()
 
-
 def get_encryption_manager(**kwargs: Any) -> EncryptionManager:
     """Get or create the global EncryptionManager instance."""
     global _encryption_manager
@@ -729,7 +724,6 @@ def get_encryption_manager(**kwargs: Any) -> EncryptionManager:
         if _encryption_manager is None:
             _encryption_manager = EncryptionManager(**kwargs)
         return _encryption_manager
-
 
 def reset_encryption_manager() -> None:
     """Reset the global EncryptionManager (for testing)."""

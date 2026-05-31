@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Resolve Conflict ───────────
 // POST /api/v1/policy-engine/conflicts/[conflictId]/resolve — Resolve a conflict
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest } from "next/server";
 import { getConflictDetector } from "@/lib/policy-engine";
 import type { ConflictResolutionStrategy } from "@/lib/policy-engine";

@@ -69,7 +69,7 @@ const EMPTY_ERRORS: DashboardErrors = {
 /** Parse a single API response, returning data or error */
 async function parseResponse<T>(
   res: Response | null,
-  extractData: (json: any) => T,
+  extractData: (json: Record<string, unknown>) => T,
   fallback: T
 ): Promise<{ data: T; error: ApiError | null }> {
   if (!res) {
@@ -85,7 +85,7 @@ async function parseResponse<T>(
   }
   try {
     const json = await res.json();
-    return { data: extractData(json), error: null };
+    return { data: extractData(json as Record<string, unknown>), error: null };
   } catch {
     return { data: fallback, error: { message: "Error al procesar respuesta", code: "PARSE_ERROR", status: 500 } };
   }
@@ -273,6 +273,7 @@ export function useDashboardData(pollInterval = 15000): DashboardData {
     setCargando(false);
   }, []);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Initial data fetch and polling */
   useEffect(() => {
     cargarTodo();
     const intervalo = setInterval(cargarTodo, pollInterval);
@@ -281,6 +282,7 @@ export function useDashboardData(pollInterval = 15000): DashboardData {
       abortRef.current?.abort();
     };
   }, [cargarTodo, pollInterval]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const tieneErrores = Object.values(errores).some((e) => e !== null);
 

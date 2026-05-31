@@ -21,9 +21,11 @@ export async function getAuthUser(req?: NextRequest): Promise<AuthUser | null> {
   const session = await getServerSession(authOptions);
   if (session?.user) {
     return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       id: (session.user as any).id,
       email: session.user.email!,
       name: session.user.name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       role: (session.user as any).role || 'user',
     };
   }

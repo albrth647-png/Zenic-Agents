@@ -328,7 +328,7 @@ function compileCondition(
 function compileTestCase(
   raw: unknown,
   index: number,
-  config: YamlLoaderConfig,
+  _config: YamlLoaderConfig,
 ): PolicyTestCase {
   if (!raw || typeof raw !== "object") {
     throw new PolicyValidationError(`tests[${index}] must be an object`, `tests[${index}]`);

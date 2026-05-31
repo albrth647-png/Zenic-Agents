@@ -4,13 +4,7 @@
 // Contains: fullUndo, processExpired, processSLABreaches,
 //           processExpiryNotifications
 
-import {
-  type ExpiryRecord,
-  type EscalationSLA,
-  type UndoRequestInput,
-  type UndoAction,
-  HitlEventType,
-} from "../types";
+import { type UndoRequestInput, HitlEventType } from "../types";
 import { getApprovalEngine } from "../approval-engine";
 import { getExpiryService } from "../expiry-service";
 import { getSLAService } from "../sla-service";
@@ -18,7 +12,7 @@ import { getReversibleActionService } from "../reversible-action";
 import { notifyApprovalEvent } from "../notifications";
 import { getNotificationLogService } from "../notification-log-service";
 import { recordAuditEvent } from "../approval-audit";
-import { HITLCoordinator, getHITLCoordinator } from "./_coordinator";
+import { HITLCoordinator as _HITLCoordinator, getHITLCoordinator as _getHITLCoordinator } from "./_coordinator";
 import type {
   FullUndoResult,
   ProcessExpiredResult,

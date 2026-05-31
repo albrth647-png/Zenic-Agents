@@ -200,4 +200,4 @@ class ChannelRouter:
 
 def get_default_router() -> ChannelRouter:
     """Get a ChannelRouter backed by the default AdapterRegistry."""
-    return ChannelRouter(get_default_registry())  # noqa: F821  # TODO: Phase3 - verify import
+    return ChannelRouter(get_default_registry())  # TODO: Phase3 - verify import

@@ -18,21 +18,21 @@ class TwilioSMSTransportMixin:
 
     # ── Internal: API ───────────────────────────────────────────
 
-    async def _post_api(self, payload: dict[str, str]) -> ChannelResponse:  # noqa: F821
+    async def _post_api(self, payload: dict[str, str]) -> ChannelResponse:
         """POST to Twilio Messages API (form-encoded)."""
         url = _validate_url(f"{self._api_base}/Accounts/{self._account_sid}/Messages.json")
 
         for attempt in range(1, _MAX_RETRIES + 1):
             try:
-                if _HAS_AIOHTTP and self._session:  # noqa: F821
+                if _HAS_AIOHTTP and self._session:
                     return await self._post_api_aiohttp(url, payload)
-                elif _HAS_URLLIB:  # noqa: F821
+                elif _HAS_URLLIB:
                     return await self._post_api_urllib(url, payload)
                 else:
-                    return ChannelResponse(  # noqa: F821  # TODO: add import
+                    return ChannelResponse(  # TODO: add import
                         success=False,
                         channel="sms",
-                        status=DeliveryStatus.FAILED,  # noqa: F821
+                        status=DeliveryStatus.FAILED,
                         error="No HTTP library available",
                         timestamp=time.time(),
                     )
@@ -41,18 +41,18 @@ class TwilioSMSTransportMixin:
                     delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                     await asyncio.sleep(delay)
                 else:
-                    return ChannelResponse(  # noqa: F821  # TODO: add import
+                    return ChannelResponse(  # TODO: add import
                         success=False,
                         channel="sms",
-                        status=DeliveryStatus.FAILED,  # noqa: F821
+                        status=DeliveryStatus.FAILED,
                         error=f"HTTP error after {_MAX_RETRIES} attempts: {e}",
                         timestamp=time.time(),
                     )
 
-        return ChannelResponse(  # noqa: F821  # TODO: add import
+        return ChannelResponse(  # TODO: add import
             success=False,
             channel="sms",
-            status=DeliveryStatus.FAILED,  # noqa: F821
+            status=DeliveryStatus.FAILED,
             error="Unexpected retry loop exit",
             timestamp=time.time(),
         )
@@ -61,7 +61,7 @@ class TwilioSMSTransportMixin:
         self,
         url: str,
         payload: dict[str, str],
-    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
+    ) -> ChannelResponse:  # TODO: add import
         """Send via aiohttp (form-encoded)."""
         assert self._session is not None
 
@@ -70,28 +70,28 @@ class TwilioSMSTransportMixin:
 
             if resp.status in (201, 200):
                 msg_sid = body.get("sid", "")
-                return ChannelResponse(  # noqa: F821  # TODO: add import
+                return ChannelResponse(  # TODO: add import
                     success=True,
                     channel="sms",
                     message_id=msg_sid,
-                    status=DeliveryStatus.SENT,  # noqa: F821
+                    status=DeliveryStatus.SENT,
                     metadata={"twilio_sid": msg_sid, "status": body.get("status", "")},
                     timestamp=time.time(),
                 )
             elif resp.status == 429:
-                return ChannelResponse(  # noqa: F821  # TODO: add import
+                return ChannelResponse(  # TODO: add import
                     success=False,
                     channel="sms",
-                    status=DeliveryStatus.RATE_LIMITED,  # noqa: F821
+                    status=DeliveryStatus.RATE_LIMITED,
                     error=f"Rate limited: {body}",
                     timestamp=time.time(),
                 )
             else:
                 error_msg = body.get("message", str(body)[:200])
-                return ChannelResponse(  # noqa: F821  # TODO: add import
+                return ChannelResponse(  # TODO: add import
                     success=False,
                     channel="sms",
-                    status=DeliveryStatus.FAILED,  # noqa: F821
+                    status=DeliveryStatus.FAILED,
                     error=f"Twilio API error ({resp.status}): {error_msg}",
                     timestamp=time.time(),
                 )
@@ -100,14 +100,14 @@ class TwilioSMSTransportMixin:
         self,
         url: str,
         payload: dict[str, str],
-    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
+    ) -> ChannelResponse:  # TODO: add import
         """Send via urllib (sync, wrapped in asyncio.to_thread)."""
 
-        def _sync_post() -> ChannelResponse:  # noqa: F821  # TODO: add import
+        def _sync_post() -> ChannelResponse:  # TODO: add import
             credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
 
             encoded = urllib.parse.urlencode(payload).encode("utf-8")
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 url,
                 data=encoded,
                 headers={
@@ -117,39 +117,39 @@ class TwilioSMSTransportMixin:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
                     body = json.loads(resp.read().decode("utf-8"))
                     msg_sid = body.get("sid", "")
-                    return ChannelResponse(  # noqa: F821  # TODO: add import
+                    return ChannelResponse(  # TODO: add import
                         success=True,
                         channel="sms",
                         message_id=msg_sid,
-                        status=DeliveryStatus.SENT,  # noqa: F821
+                        status=DeliveryStatus.SENT,
                         metadata={"twilio_sid": msg_sid},
                         timestamp=time.time(),
                     )
             except urllib.error.HTTPError as e:
                 body = e.read().decode()[:300]
                 if e.code == 429:
-                    return ChannelResponse(  # noqa: F821  # TODO: add import
+                    return ChannelResponse(  # TODO: add import
                         success=False,
                         channel="sms",
-                        status=DeliveryStatus.RATE_LIMITED,  # noqa: F821
+                        status=DeliveryStatus.RATE_LIMITED,
                         error="Rate limited",
                         timestamp=time.time(),
                     )
-                return ChannelResponse(  # noqa: F821  # TODO: add import
+                return ChannelResponse(  # TODO: add import
                     success=False,
                     channel="sms",
-                    status=DeliveryStatus.FAILED,  # noqa: F821
+                    status=DeliveryStatus.FAILED,
                     error=f"HTTP {e.code}: {body}",
                     timestamp=time.time(),
                 )
             except Exception as e:
-                return ChannelResponse(  # noqa: F821  # TODO: add import
+                return ChannelResponse(  # TODO: add import
                     success=False,
                     channel="sms",
-                    status=DeliveryStatus.FAILED,  # noqa: F821
+                    status=DeliveryStatus.FAILED,
                     error=f"urllib error: {e}",
                     timestamp=time.time(),
                 )

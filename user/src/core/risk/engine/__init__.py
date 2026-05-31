@@ -2,13 +2,12 @@
 
 import logging
 import threading
-from typing import Tuple  # noqa: UP035
+from typing import Tuple
 
 from ._mixin_core import RiskPredictionEngine
 
 _engine_instance: RiskPredictionEngine | None = None
 _engine_lock = threading.Lock()
-
 
 def get_risk_prediction_engine() -> RiskPredictionEngine:
     global _engine_instance
@@ -17,12 +16,10 @@ def get_risk_prediction_engine() -> RiskPredictionEngine:
             _engine_instance = RiskPredictionEngine()
         return _engine_instance
 
-
 def reset_risk_prediction_engine() -> None:
     global _engine_instance
     with _engine_lock:
         _engine_instance = None
-
 
 __all__ = [
     "RiskPredictionEngine",

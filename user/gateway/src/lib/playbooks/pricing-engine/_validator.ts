@@ -2,11 +2,7 @@
 // DB-backed validation functions: estimateCost, getRecommendedTier,
 // and the error builder helper.
 
-import type {
-  PlaybookPricing,
-  PricingTierName,
-  PricingTier,
-} from "../types";
+import type { PlaybookPricing, PricingTierName } from "../types";
 import { db } from "@/lib/db";
 import type { CostEstimate } from "./types";
 import { OVERAGE_RATE_PER_ACTION } from "./types";

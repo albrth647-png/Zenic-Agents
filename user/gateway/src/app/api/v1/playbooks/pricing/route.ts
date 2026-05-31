@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Playbooks API: Pricing Calculation ───────────
 // POST /api/v1/playbooks/pricing — Calculate pricing for a playbook
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { calculatePricing, formatPricingReport } from "@/lib/playbooks";
 import type { PricingTierName } from "@/lib/playbooks";

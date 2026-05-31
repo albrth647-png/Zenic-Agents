@@ -28,10 +28,10 @@ export async function collectBusinessMetrics(
     totalAllowed,
     totalDenied,
     totalConditional,
-    totalFailed,
+    _totalFailed,
     executionDurations,
-    verdictDurations,
-    recentExecutions,
+    _verdictDurations,
+    _recentExecutions,
     previousPeriodExecutions,
   ] = await Promise.all([
     // Total executions in period

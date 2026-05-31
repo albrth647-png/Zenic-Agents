@@ -222,7 +222,7 @@ def set_global_seed(seed: int) -> None:
     with _random_patch_lock:
         if _random_patched:
             new_seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(new_seed)  # noqa: S311
+            _random_global_rng = random.Random(new_seed)
 
 
 def get_global_seed() -> int:
@@ -244,7 +244,7 @@ def reset_all_deterministic_state() -> None:
     with _random_patch_lock:
         if _random_patched:
             new_seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(new_seed)  # noqa: S311
+            _random_global_rng = random.Random(new_seed)
 
 
 # ============================================================
@@ -277,7 +277,7 @@ class DeterministicRNG:
             self._seed = seed_override
         else:
             self._seed = SeedManager().derive_seed(module_name)
-        self._rng = random.Random(self._seed)  # noqa: S311
+        self._rng = random.Random(self._seed)
         logger.debug(
             "DeterministicRNG[%s]: seed=%d (0x%X)",
             module_name,
@@ -676,7 +676,7 @@ def _get_global_patched_rng() -> random.Random:
     with _random_patch_lock:
         if _random_global_rng is None:
             seed = SeedManager().derive_seed("__global_random__")
-            _random_global_rng = random.Random(seed)  # noqa: S311
+            _random_global_rng = random.Random(seed)
         return _random_global_rng
 
 
@@ -704,7 +704,7 @@ def install_random_patch() -> None:
             return
         # Create a fresh seeded RNG
         seed = SeedManager().derive_seed("__global_random__")
-        _random_global_rng = random.Random(seed)  # noqa: S311
+        _random_global_rng = random.Random(seed)
         # Patch all common random functions
         random.choice = _patched_random_choice
         random.uniform = _patched_random_uniform
@@ -743,8 +743,8 @@ def uninstall_random_patch() -> None:
 #  DeterministicClock — Virtual Time for Deterministic Replay
 # ============================================================
 
-import time as _time_module  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
+import time as _time_module
+from datetime import datetime, timezone
 
 
 class DeterministicClock:

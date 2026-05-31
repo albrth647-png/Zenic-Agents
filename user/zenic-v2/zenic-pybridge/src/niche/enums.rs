@@ -90,7 +90,9 @@ impl NicheCategory {
 /// Data sensitivity classification for a niche.
 #[pyclass(name = "DataSensitivity", eq, eq_int, frozen, hash)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum DataSensitivity {
+    #[default]
     Low,
     Medium,
     High,
@@ -126,11 +128,6 @@ impl DataSensitivity {
     }
 }
 
-impl Default for DataSensitivity {
-    fn default() -> Self {
-        DataSensitivity::Low
-    }
-}
 
 impl Ord for DataSensitivity {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {

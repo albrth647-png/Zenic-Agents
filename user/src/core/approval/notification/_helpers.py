@@ -272,7 +272,7 @@ def _row_to_message(row: sqlite3.Row) -> NotificationMessage:
 def _with_retry(
     fn: Any,
     fallback: Any = None,
-    max_retries: int = _MAX_RETRIES,  # noqa: F821
+    max_retries: int = _MAX_RETRIES,
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
     last_exc: Exception | None = None
@@ -288,7 +288,7 @@ def _with_retry(
                 exc,
             )
             if attempt < max_retries:
-                time.sleep(_RETRY_DELAY * attempt)  # noqa: F821
+                time.sleep(_RETRY_DELAY * attempt)
         except Exception as exc:
             last_exc = exc
             logger.error("NotificationDispatcher: DB error — %s", exc)
@@ -302,18 +302,18 @@ def _with_retry(
 
 # ── Singleton ─────────────────────────────────────────────
 
-_notification_instance: NotificationDispatcher | None = None  # noqa: F821
+_notification_instance: NotificationDispatcher | None = None
 _notification_lock = threading.Lock()
 
 
 def get_notification_dispatcher(
     db_path: str = "notification.sqlite",
-) -> NotificationDispatcher:  # noqa: F821
+) -> NotificationDispatcher:
     """Get or create the global NotificationDispatcher instance."""
     global _notification_instance
     with _notification_lock:
         if _notification_instance is None:
-            _notification_instance = NotificationDispatcher(db_path=db_path)  # noqa: F821  # TODO: Phase3 - verify import
+            _notification_instance = NotificationDispatcher(db_path=db_path)  # TODO: Phase3 - verify import
         return _notification_instance
 
 

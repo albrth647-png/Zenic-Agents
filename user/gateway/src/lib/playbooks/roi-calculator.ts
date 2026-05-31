@@ -12,14 +12,7 @@
 //   COMPLIANCE_HEAVY — weights compliance risk reduction higher
 
 import { db } from "@/lib/db";
-import type {
-  PlaybookRoiConfig,
-  RoiCalculation,
-  RoiFormulaType,
-  Industry,
-  RoiBaseline,
-  RoiProjected,
-} from "./types";
+import type { PlaybookRoiConfig, RoiCalculation, RoiFormulaType, Industry } from "./types";
 import { INDUSTRY_ROI_FORMULA_MAP, RoiFormulaType as RoiFormulaTypeEnum } from "./types";
 
 // ─── Defaults ────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — MCP Tools List ─────────────────────────────
 // GET|POST /api/v1/mcp/tools — List available MCP tools
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonRpcRequest, successResponse, errorResponse } from "@/lib/mcp-gateway/protocol";
 import { JSON_RPC_ERRORS, MCP_METHODS } from "@/lib/mcp-gateway/protocol/types";

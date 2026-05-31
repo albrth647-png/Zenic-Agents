@@ -9,30 +9,7 @@
 //   - Repository: DB access through Prisma abstraction
 
 import { db } from "@/lib/db";
-import type {
-  PlaybookDocument,
-  PlaybookMetadata,
-  PlaybookCapability,
-  PolicyReference,
-  PlaybookRoiConfig,
-  RoiBaseline,
-  RoiProjected,
-  RoiCalculation,
-  PlaybookPricing,
-  PricingTier,
-  PricingTierName,
-  PlaybookOnboardingConfig,
-  PlaybookCertification,
-  PlaybookEvaluationResult,
-  PlaybookActivationRequest,
-  PlaybookActivationResult,
-  PlaybookSearchCriteria,
-  PlaybookSearchResult,
-  PlaybookEngineConfig,
-  Industry,
-  CertificationStatus,
-  PlaybookStatus,
-} from "../types";
+import type { PlaybookDocument, PlaybookCapability, PolicyReference, PlaybookRoiConfig, RoiBaseline, RoiProjected, RoiCalculation, PlaybookPricing, PricingTierName, PlaybookOnboardingConfig, PlaybookCertification, PlaybookEvaluationResult, PlaybookActivationRequest, PlaybookActivationResult, PlaybookSearchCriteria, PlaybookSearchResult, PlaybookEngineConfig, Industry, CertificationStatus } from "../types";
 import {
   DEFAULT_PLAYBOOK_ENGINE_CONFIG,
   PricingTierName as PricingTierNameEnum,
@@ -401,7 +378,7 @@ export class PlaybookEngine {
    */
   async evaluatePlaybook(
     playbookId: string,
-    tenantId?: string,
+    _tenantId?: string,
   ): Promise<PlaybookEvaluationResult> {
     try {
       const playbook = await db.playbook.findFirst({
@@ -907,7 +884,7 @@ function calculateRoiInline(
   projected: RoiProjected,
   monthlyCostUsd: number,
 ): RoiCalculation {
-  const workingHoursPerMonth = 160;
+  const _workingHoursPerMonth = 160;
   const hourlyCostUsd = 50;
 
   const timeSavedPerActionMin = baseline.manual_time_per_action_min - projected.automated_time_per_action_min;
@@ -974,7 +951,7 @@ async function loadRoiCalculator(): Promise<RoiCalculatorModule> {
 
 let pricingEngineModule: PricingEngineModule | null = null;
 
-async function loadPricingEngine(): Promise<PricingEngineModule> {
+async function _loadPricingEngine(): Promise<PricingEngineModule> {
   if (pricingEngineModule) return pricingEngineModule;
 
   try {

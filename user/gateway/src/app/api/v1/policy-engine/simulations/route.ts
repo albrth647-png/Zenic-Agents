@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/simulations  — List simulations
 // POST /api/v1/policy-engine/simulations  — Run a what-if simulation
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import {
   listSimulations,

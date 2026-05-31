@@ -18,8 +18,8 @@ export async function GET() {
       deniedExecutions,      // ToolExecution count verdict=deny
       executionsToday,       // ToolExecution count createdAt >= today
       completedToday,        // ToolExecution count status=completed AND createdAt >= today
-      totalCompleted,        // ToolExecution count status=completed (ALL TIME)
-      totalExecutions,       // ToolExecution count total (ALL TIME)
+      _totalCompleted,        // ToolExecution count status=completed (ALL TIME)
+      _totalExecutions,       // ToolExecution count total (ALL TIME)
       totalServers,          // McpServer count total
       healthyServers,        // McpServer count active
       criticalAlerts,        // AuditLog count severity=critical last 24h

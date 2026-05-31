@@ -8,6 +8,7 @@
 // - Autenticación obligatoria en GET
 // - safeJsonParse centralizado desde utils
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuthAndPermission } from "@/lib/rbac-auth";

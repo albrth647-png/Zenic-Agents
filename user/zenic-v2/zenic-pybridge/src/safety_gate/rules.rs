@@ -187,8 +187,8 @@ pub(crate) fn check_rules(
                 worst_severity = rule_severity;
                 worst_result = Some(SafetyCheckResult {
                     action_id: String::new(), // Will be assigned by safety_validate()
-                    verdict: rule.verdict.clone(),
-                    category: rule.category.clone(),
+                    verdict: rule.verdict,
+                    category: rule.category,
                     reason: rule.message.to_string(),
                     rule_name: rule.name.to_string(),
                     requires_confirmation: rule.verdict == SafetyVerdict::Confirm,

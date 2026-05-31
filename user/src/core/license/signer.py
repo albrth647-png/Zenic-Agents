@@ -16,7 +16,6 @@ import secrets
 
 logger = logging.getLogger(__name__)
 
-
 class ECDSASigner:
     """ECDSA cryptographic signing for licenses.
 
@@ -68,7 +67,7 @@ class ECDSASigner:
         """Try loading ECDSA keys from PEM format."""
         try:
             from cryptography.hazmat.primitives import serialization
-            from cryptography.hazmat.primitives.asymmetric import ec  # noqa: F401
+            from cryptography.hazmat.primitives.asymmetric import ec
 
             if private_pem:
                 self._private_key = serialization.load_pem_private_key(
@@ -259,11 +258,9 @@ class ECDSASigner:
             return self.ALGO_ECDSA
         return self.ALGO_HMAC
 
-
 # ── Module-level helpers ──────────────────────────────────
 
 _default_signer: ECDSASigner | None = None
-
 
 def get_signer() -> ECDSASigner:
     """Get or create the default ECDSA signer."""
@@ -272,11 +269,9 @@ def get_signer() -> ECDSASigner:
         _default_signer = ECDSASigner()
     return _default_signer
 
-
 def sign_data(data: str) -> str:
     """Sign data using the default signer."""
     return get_signer().sign(data)
-
 
 def verify_signature(data: str, signature: str) -> bool:
     """Verify a signature using the default signer."""

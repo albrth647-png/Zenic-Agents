@@ -6,7 +6,7 @@ import os
 import re
 import threading
 import time
-from typing import Any, List  # noqa: UP035, Optional
+from typing import Any, List
 
 from ..consensus_resolver import ConsensusResolver
 from ..deterministic_pipeline import DeterministicPipeline
@@ -60,7 +60,6 @@ __all__ = [
     "os",
     "re",
 ]
-
 
 class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
     """Motor de Veredicto: la IA solo dice SI o NO."""

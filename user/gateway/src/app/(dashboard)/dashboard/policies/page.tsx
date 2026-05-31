@@ -52,7 +52,7 @@ export default function PoliciesPage() {
       setPolicies(data.data || []);
       setTotal(data.total || 0);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err);
     } finally {
       setCargando(false);
@@ -60,7 +60,9 @@ export default function PoliciesPage() {
   }, [filtroEstado]);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Initial data fetch on mount */
     cargarPoliticas();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [cargarPoliticas]);
 
   const politicasFiltradas = policies.filter((p) => {

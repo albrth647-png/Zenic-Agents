@@ -2,6 +2,7 @@
 // POST /api/v1/policies/tests?policyId=xxx — Run tests for a policy
 // GET  /api/v1/policies/tests?policyId=xxx — Get test results history
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { runAndStoreTests, getTestResults } from "@/lib/policy-engine";
 

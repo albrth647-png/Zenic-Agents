@@ -1,11 +1,7 @@
 // ─── Onboarding Wizard Types ───────────────────────────────────────────
 // Result types for onboarding operations. Extracted from onboarding-wizard.ts.
 
-import type {
-  OnboardingStep,
-  OnboardingStepType,
-  OnboardingSessionStatus,
-} from "../types";
+import type { OnboardingStep, OnboardingSessionStatus } from "../types";
 
 /** Result of processing a single onboarding step */
 export interface OnboardingStepResult {

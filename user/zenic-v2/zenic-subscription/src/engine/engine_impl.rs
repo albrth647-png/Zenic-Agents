@@ -99,7 +99,7 @@ impl SubscriptionEngine {
     ) -> Result<UsdtPayment, SubscriptionError> {
         let subscription = self.subscriptions.get(&tenant_id).ok_or_else(|| {
             SubscriptionError::SubscriptionNotFound(
-                self.subscriptions.get(&tenant_id).map(|s| s.id).unwrap_or_else(SubscriptionId::new)
+                self.subscriptions.get(&tenant_id).map(|s| s.id).unwrap_or_default()
             )
         })?;
 
@@ -130,7 +130,7 @@ impl SubscriptionEngine {
         source_wallet: String,
         block_number: u64,
     ) -> Result<(), SubscriptionError> {
-        let payment = self.payments.get_mut(&payment_id).ok_or_else(|| {
+        let payment = self.payments.get_mut(&payment_id).ok_or({
             SubscriptionError::PaymentNotFound(payment_id)
         })?;
 
@@ -148,7 +148,7 @@ impl SubscriptionEngine {
         notes: Option<String>,
         now_ms: u64,
     ) -> Result<Subscription, SubscriptionError> {
-        let payment = self.payments.get_mut(&payment_id).ok_or_else(|| {
+        let payment = self.payments.get_mut(&payment_id).ok_or({
             SubscriptionError::PaymentNotFound(payment_id)
         })?;
 

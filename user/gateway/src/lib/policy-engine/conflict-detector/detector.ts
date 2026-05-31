@@ -9,14 +9,8 @@ export {
   type ConflictDetectionOptions,
 } from "./types";
 
-import { db } from "@/lib/db";
-import type {
-  PolicyConflict,
-  ConflictReport,
-  ConflictResolutionStrategy,
-  ConflictSeverity,
-  ConflictType,
-} from "./types";
+import { db as _db } from "@/lib/db";
+import type { PolicyConflict, ConflictResolutionStrategy, ConflictSeverity, ConflictType } from "./types";
 
 // ─── Severity Scoring ─────────────────────────────────────────────────
 

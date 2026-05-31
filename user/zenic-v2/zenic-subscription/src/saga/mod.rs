@@ -29,6 +29,10 @@ pub use upgrade::UpgradeSaga;
 
 use crate::errors::SubscriptionError;
 
+// Type aliases for complex saga closure signatures.
+pub type SagaAction = Box<dyn Fn(&mut SagaContext) -> Result<SagaStepResult, SubscriptionError> + Send + Sync>;
+pub type SagaCompensation = Box<dyn Fn(&mut SagaContext) -> Result<(), SubscriptionError> + Send + Sync>;
+
 // ---------------------------------------------------------------------------
 // SubscriptionSaga trait
 // ---------------------------------------------------------------------------
@@ -57,9 +61,9 @@ pub struct SagaStep {
     /// Step name (unique within the saga).
     pub name: String,
     /// The action to execute.
-    pub action: Box<dyn Fn(&mut SagaContext) -> Result<SagaStepResult, SubscriptionError> + Send + Sync>,
+    pub action: SagaAction,
     /// The compensating action (undo) for this step.
-    pub compensation: Box<dyn Fn(&mut SagaContext) -> Result<(), SubscriptionError> + Send + Sync>,
+    pub compensation: SagaCompensation,
 }
 
 impl std::fmt::Debug for SagaStep {

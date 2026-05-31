@@ -6,7 +6,7 @@
 
 import { db } from "@/lib/db";
 import type { JsonExportPayload, JsonTraceExport, JsonMetricExport, ExportQueryParams } from "../types/export";
-import type { TraceRecord, SpanRecord } from "../types/tracing";
+import type { TraceRecord as _TraceRecord, SpanRecord as _SpanRecord } from "../types/tracing";
 import { OBSERVABILITY_SERVICE } from "../types";
 import { collectAllMetrics } from "../metrics/metrics-collector";
 

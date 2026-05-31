@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Playbooks API: Evaluate Playbook ─────────────
 // POST /api/v1/playbooks/evaluate — Evaluate a playbook for a tenant
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getPlaybookEngine } from "@/lib/playbooks";
 

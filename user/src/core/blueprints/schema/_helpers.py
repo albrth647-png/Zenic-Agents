@@ -172,7 +172,7 @@ def _check_version_range(version: str, range_spec: str) -> bool:
                 if v_parts != target:
                     return False
             except ValueError:
-                pass
+                logger.warning("_check_version_range: ValueError handled silently", exc_info=True)
 
     return True
 

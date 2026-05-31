@@ -262,7 +262,7 @@ class EvidenceType(str, Enum):
     KEYWORD_CLASSIFY = "KEYWORD_CLASSIFY"
     STRUCTURAL_MATCH = "STRUCTURAL_MATCH"
     RULE_ENGINE = "RULE_ENGINE"
-    SANDBOX_PASS = "SANDBOX_PASS"  # noqa: S105 — enum value, not a password
+    SANDBOX_PASS = "SANDBOX_PASS"
 
 
 @dataclass

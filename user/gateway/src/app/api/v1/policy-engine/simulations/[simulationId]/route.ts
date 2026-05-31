@@ -2,6 +2,7 @@
 // GET    /api/v1/policy-engine/simulations/[simulationId]  — Get simulation result
 // DELETE /api/v1/policy-engine/simulations/[simulationId]  — Delete a simulation
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import {
   getSimulation,

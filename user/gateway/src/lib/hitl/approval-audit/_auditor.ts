@@ -193,7 +193,7 @@ export async function verifyAuditIntegrity(requestId: string): Promise<{
           valid: false,
           brokenAtIndex: i,
           expectedHash: prevRecord.contentHash,
-          actualHash: record.previousHash,
+          actualHash: record.previousHash ?? undefined,
           totalRecords: records.length,
         };
       }

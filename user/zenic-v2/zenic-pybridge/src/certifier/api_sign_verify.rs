@@ -118,10 +118,7 @@ pub fn certifier_verify(blueprint: &CertifiedBlueprint, public_key: &str) -> boo
     }
 
     // Verify HMAC-SHA256 signature
-    match crate::license::verify_signature(key_trimmed, &blueprint.content_hash, &blueprint.signature) {
-        Ok(valid) => valid,
-        Err(_) => false,
-    }
+    crate::license::verify_signature(key_trimmed, &blueprint.content_hash, &blueprint.signature).unwrap_or_default()
 }
 
 /// Compute the canonical hash of a BlueprintConfig.

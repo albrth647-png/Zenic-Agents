@@ -182,11 +182,11 @@ export class RateLimiter {
     config: RateLimitConfig,
   ): Omit<RateLimitResult, "allowed" | "consumed"> {
     const now = Date.now();
-    let bucket = this.buckets.get(key);
+    const bucket = this.buckets.get(key);
 
     if (!bucket) {
       const maxTokens = config.burstSize ?? config.maxRequests;
-      const refillRatePerMs =
+      const _refillRatePerMs =
         (config.refillRate ?? config.maxRequests) / config.windowMs;
       return {
         remaining: maxTokens,
@@ -295,7 +295,7 @@ export class RateLimiter {
     const now = Date.now();
     const windowIndex = Math.floor(now / config.windowMs);
     const windowKey = `${key}:${windowIndex}`;
-    let window = this.windows.get(windowKey) ?? [];
+    const window = this.windows.get(windowKey) ?? [];
 
     if (window.length < config.maxRequests) {
       window.push(now);

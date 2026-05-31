@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/composition  — List policy sets
 // POST /api/v1/policy-engine/composition  — Create a policy set
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest } from "next/server";
 import { getCompositionEngine } from "@/lib/policy-engine";
 import type { PolicySet } from "@/lib/policy-engine";

@@ -4,14 +4,7 @@
 // Provides validation functions for policy sets, merge strategies,
 // and composition inputs. Complements the CompositionEngine in types.ts.
 
-import type {
-  PolicySet,
-  PolicySetEntry,
-  MergeStrategy,
-  PolicyDocument,
-  PolicyStatement,
-  PolicyEffectV2,
-} from "./types";
+import type { PolicySet, PolicySetEntry, MergeStrategy, PolicyDocument, PolicyStatement } from "./types";
 
 // ─── Merge Strategy Validation ────────────────────────────────────────
 

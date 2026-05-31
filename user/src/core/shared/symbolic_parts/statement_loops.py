@@ -15,13 +15,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..z3_solver import HAS_Z3  # noqa: E402
+from ..z3_solver import HAS_Z3
 
 # Z3 module reference for convenience (only available when HAS_Z3 is True)
 if HAS_Z3:
     pass  # type: ignore[import-unresolved]
 
-from .types import SymbolicPath, SymbolicValue  # noqa: E402
+from .types import SymbolicPath, SymbolicValue
 
 
 class StatementLoopsMixin:

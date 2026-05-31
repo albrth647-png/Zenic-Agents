@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def _init_db(self) -> None:
     """Initialize the SQLite database."""
-    os.makedirs(os.path.dirname(self._db_path), exist_ok=True)  # noqa: F821  # TODO: verify import
+    os.makedirs(os.path.dirname(self._db_path), exist_ok=True)  # TODO: verify import
     conn = sqlite3.connect(self._db_path)
     try:
         conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
@@ -60,7 +60,7 @@ def _load_from_db(self) -> None:
         ).fetchall()
         with self._lock:
             for row in rows:
-                evt = _event_from_row(row)  # noqa: F821  # TODO: Phase3 - verify import
+                evt = _event_from_row(row)  # TODO: Phase3 - verify import
                 self._events[evt.dlq_id] = evt
     finally:
         conn.close()

@@ -1,14 +1,7 @@
 // ─── Zenic-Agents v3 — TypeScript Fallback: Subscription & Payment ────
 // Split from wasm-bridge.ts — subscription, payment, and TRC20 validation functions
 
-import type {
-  SubscriptionTierName,
-  AddressValidation,
-  TrialSubscription,
-  PaidSubscription,
-  PaymentVerificationMethodInfo,
-  ManualPaymentRequest,
-} from "../types";
+import type { AddressValidation, TrialSubscription, PaidSubscription, PaymentVerificationMethodInfo, ManualPaymentRequest } from "../types";
 import {
   SubscriptionTierName as TierName,
   TIER_PRICES_USDT,

@@ -78,7 +78,7 @@ class BinaryHardeningLayer:
             if hasattr(__main__, "__compiled__"):
                 return True
         except (ImportError, AttributeError):
-            pass
+            logger.warning("check_nuitka_compiled: (ImportError, AttributeError) handled silently", exc_info=True)
         return False
 
     def check_rust_ffi(self) -> bool:
@@ -120,7 +120,7 @@ class BinaryHardeningLayer:
                 logger.info("BinaryHardening: Rust FFI loaded from env: %s", rust_path)
                 return True
             except OSError:
-                pass
+                logger.warning("check_rust_ffi: OSError handled silently", exc_info=True)
 
         logger.debug("BinaryHardening: Rust FFI not available")
         return False
@@ -147,14 +147,14 @@ class BinaryHardeningLayer:
                 import subprocess
 
                 # SECURITY: exe_path is sys.executable (trusted), command is hardcoded
-                result = subprocess.run(  # noqa: S603 — trusted args only
-                    ["codesign", "-v", exe_path],  # noqa: S607
+                result = subprocess.run(
+                    ["codesign", "-v", exe_path],
                     capture_output=True,
                     timeout=5,
                 )
                 return result.returncode == 0
             except (FileNotFoundError, subprocess.TimeoutExpired):
-                pass
+                logger.warning("check_binary_signature: (FileNotFoundError, subprocess.TimeoutExpired) handled silently", exc_info=True)
 
         return False
 

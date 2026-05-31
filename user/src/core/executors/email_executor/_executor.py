@@ -417,7 +417,7 @@ class EmailExecutor(ActionExecutor):
         use_tls: bool,
         from_email: str,
         recipients: list[str],
-        msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: verify import
+        msg: email.mime.multipart.MIMEMultipart,  # TODO: verify import
     ) -> tuple[bool, str]:
         """Send via aiosmtplib (async). Returns (success, error_message)."""
         import aiosmtplib  # type: ignore[import-unresolved]
@@ -456,7 +456,7 @@ class EmailExecutor(ActionExecutor):
         use_tls: bool,
         from_email: str,
         recipients: list[str],
-        msg: email.mime.multipart.MIMEMultipart,  # noqa: F821  # TODO: Phase3 - verify import
+        msg: email.mime.multipart.MIMEMultipart,  # TODO: Phase3 - verify import
     ) -> tuple[bool, str]:
         """Send via smtplib (sync, wrapped in asyncio.to_thread)."""
 

@@ -66,7 +66,7 @@ export function isApprovalPolicySatisfied(
   policy: ApprovalPolicy,
   currentApprovals: number,
   requiredApprovals: number,
-  approvedRoles: string[],
+  _approvedRoles: string[],
 ): boolean {
   switch (policy.mode) {
     case "single":

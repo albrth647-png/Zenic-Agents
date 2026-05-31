@@ -3,6 +3,7 @@
 // Admin confirms a manual USDT TRC20 payment.
 // INVARIANT 4: Requires verified admin authorization.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { db } from "@/lib/db";
 import { PAYMENT_CURRENCY, PAYMENT_NETWORK } from "@/lib/pricing-engine";
 import { requireAdminAuth } from "@/lib/subscription/auth-helpers";

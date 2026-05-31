@@ -214,7 +214,7 @@ class JustificationService {
     input: ProvideJustificationInput,
     priority: ApprovalPriority,
   ): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
+    const _errors: string[] = [];
     const rule = VALIDATION_RULES[priority];
 
     if (!rule) {

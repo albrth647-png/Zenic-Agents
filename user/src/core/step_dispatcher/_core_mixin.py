@@ -212,7 +212,7 @@ class StepDispatcherCoreMixin:
                                         fields.append({"name": item.target.id, "type": "str"})
                                 entity_info.append({"name": node.name, "fields": fields})
                     except (SyntaxError, AttributeError):
-                        pass
+                        logger.warning("_handle_generate_code: (SyntaxError, AttributeError) handled silently", exc_info=True)
 
                 real_result = self._orch._code_gen.generate_real_code(
                     description=description,

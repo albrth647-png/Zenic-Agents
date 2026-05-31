@@ -4,11 +4,6 @@ import { useCallback } from "react";
 import {
   Shield,
   Lock,
-  KeyRound,
-  Box,
-  ShieldCheck,
-  FileLock,
-  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +16,7 @@ import { WidgetBloqueado } from "@/app/_page_parts/components/WidgetBloqueado";
 import { useSubscriptionContext } from "@/hooks/useUserProfile";
 
 export default function BovedaPage() {
-  const { capas, reglasDenegacion, ledger, cargando } = useDashboardData();
+  const { capas, reglasDenegacion, ledger: _ledger, cargando } = useDashboardData();
 
   // Sprint 6: Real subscription tier from user profile
   const { ctx: ctxSuscripcion } = useSubscriptionContext();

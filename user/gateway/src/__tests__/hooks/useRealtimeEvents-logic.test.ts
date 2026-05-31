@@ -60,7 +60,7 @@ describe('useRealtimeEvents — lógica de mapeo de eventos', () => {
 
   it('no hay keys duplicadas entre eventos', () => {
     const allKeys = Object.values(EVENT_SWR_KEYS).flat();
-    const unicas = new Set(allKeys);
+    const _unicas = new Set(allKeys);
     // Las keys pueden aparecer en múltiples eventos (ej: ledger en activity_new)
     // pero eso es intencional — verificamos que todas son válidas
     expect(allKeys.length).toBeGreaterThan(0);

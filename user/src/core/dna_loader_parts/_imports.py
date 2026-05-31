@@ -7,7 +7,7 @@ import os
 from dataclasses import dataclass, field
 
 try:
-    import yaml  # noqa: F401
+    import yaml
 
     YAML_AVAILABLE = True
 except ImportError:
@@ -16,7 +16,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 DNA_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "dna")
-
 
 @dataclass
 class LogicModule:
@@ -30,7 +29,6 @@ class LogicModule:
     verification_rule: str = ""
     inputs: list[str] = field(default_factory=list)
     outputs: list[str] = field(default_factory=list)
-
 
 @dataclass
 class DomainRule:
@@ -47,7 +45,6 @@ class DomainRule:
     suggested_entities: list[str] = field(default_factory=list)
     notification_triggers: list[str] = field(default_factory=list)
 
-
 @dataclass
 class ValidationGate:
     """Regla de validación de calidad."""
@@ -61,7 +58,6 @@ class ValidationGate:
     fix_strategy: str = ""
     pattern: str = ""
     applies_to: list[str] = field(default_factory=list)
-
 
 @dataclass
 class GlossaryEntry:

@@ -60,7 +60,7 @@ pub fn safety_validate_extended(
     // Step 1: Base SafetyGate validation
     let base_result = crate::safety_gate::safety_validate(action_type, config)?;
     let base_verdict_str = base_result.verdict().as_str().to_string();
-    let mut current_verdict = base_result.verdict().clone();
+    let mut current_verdict = base_result.verdict();
     let mut domain_rules_matched: Vec<String> = Vec::new();
 
     // Step 2: Domain-specific rules
@@ -75,7 +75,7 @@ pub fn safety_validate_extended(
                 domain_rules_matched.push(rule.name.to_string());
                 // Domain rules can only ESCALATE
                 if can_escalate(&current_verdict, &rule.verdict) {
-                    current_verdict = rule.verdict.clone();
+                    current_verdict = rule.verdict;
                 }
                 // DENY from domain rules is absolute
                 if rule.verdict == SafetyVerdict::Deny {
@@ -101,10 +101,8 @@ pub fn safety_validate_extended(
                     has_critical_violation = true;
                 }
                 // Compliance failures for high-risk violations → at least APPROVE (hard block)
-                if result.risk_level == "high" && !result.compliant && !has_critical_violation {
-                    if can_escalate(&current_verdict, &SafetyVerdict::Approve) {
-                        current_verdict = SafetyVerdict::Approve;
-                    }
+                if result.risk_level == "high" && !result.compliant && !has_critical_violation && can_escalate(&current_verdict, &SafetyVerdict::Approve) {
+                    current_verdict = SafetyVerdict::Approve;
                 }
                 compliance_results.push(result);
             }

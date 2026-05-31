@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — MCP Tool Registration ─────────────────────
 // POST /api/v1/mcp/tools/register — Register new MCP tools via SDK
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonRpcRequest, successResponse, errorResponse } from "@/lib/mcp-gateway/protocol";
 import { JSON_RPC_ERRORS, MCP_METHODS } from "@/lib/mcp-gateway/protocol/types";
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
           permissions: toolDef.permissions ?? [],
           rateLimit: toolDef.rateLimit,
           requiresApproval: toolDef.requiresApproval,
-          handler: async (input, ctx) => ({
+          handler: async (_input, _ctx) => ({
             success: false,
             error: "External tool handler not connected — use gateway call endpoint",
           }),

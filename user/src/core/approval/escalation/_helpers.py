@@ -133,7 +133,7 @@ def _persist_escalation_sla(
                     int(sla.breached),
                     int(sla.auto_escalated),
                     sla.escalated_at,
-                    datetime.now(timezone.utc).isoformat(),  # noqa: F821
+                    datetime.now(timezone.utc).isoformat(),
                 ),
             )
         else:
@@ -167,8 +167,8 @@ def _record_escalation_history(
     escalated_by: str,
 ) -> None:
     """Record an escalation event in the history table."""
-    history_id = f"esh-{uuid.uuid4().hex[:12]}"  # noqa: F821
-    now = datetime.now(timezone.utc).isoformat()  # noqa: F821
+    history_id = f"esh-{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
 
     def _do_record() -> None:
         conn = sqlite3.connect(self._db_path)
@@ -262,7 +262,7 @@ def _row_to_escalation_sla(row: sqlite3.Row) -> EscalationSLA:
 def _with_retry(
     fn: Any,
     fallback: Any = None,
-    max_retries: int = _MAX_RETRIES,  # noqa: F821
+    max_retries: int = _MAX_RETRIES,
 ) -> Any:
     """Execute *fn* with retry logic on database errors."""
     last_exc: Exception | None = None
@@ -278,7 +278,7 @@ def _with_retry(
                 exc,
             )
             if attempt < max_retries:
-                time.sleep(_RETRY_DELAY * attempt)  # noqa: F821
+                time.sleep(_RETRY_DELAY * attempt)
         except Exception as exc:
             last_exc = exc
             logger.error("EscalationManager: DB error — %s", exc)
@@ -289,18 +289,18 @@ def _with_retry(
 
 # ── Singleton ─────────────────────────────────────────────
 
-_escalation_instance: EscalationManager | None = None  # noqa: F821
+_escalation_instance: EscalationManager | None = None
 _escalation_lock = threading.Lock()
 
 
 def get_escalation_manager(
     db_path: str = "escalation.sqlite",
-) -> EscalationManager:  # noqa: F821
+) -> EscalationManager:
     """Get or create the global EscalationManager instance."""
     global _escalation_instance
     with _escalation_lock:
         if _escalation_instance is None:
-            _escalation_instance = EscalationManager(db_path=db_path)  # noqa: F821  # TODO: Phase3 - verify import
+            _escalation_instance = EscalationManager(db_path=db_path)  # TODO: Phase3 - verify import
         return _escalation_instance
 
 

@@ -8,11 +8,7 @@ import type {
   PlaybookCapability,
   PolicyReference,
 } from "../types";
-import type {
-  ComplianceRequirement,
-  StandardCoverage,
-  PlaybookComplianceReport,
-} from "./types";
+import type { StandardCoverage, PlaybookComplianceReport } from "./types";
 import { COMPLIANCE_STANDARDS } from "./_standards";
 import { getIndustryComplianceRequirements } from "./_mapper";
 import { db } from "@/lib/db";

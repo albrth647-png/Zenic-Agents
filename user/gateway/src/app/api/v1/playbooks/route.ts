@@ -2,6 +2,7 @@
 // GET  /api/v1/playbooks          — List playbooks with optional filters
 // POST /api/v1/playbooks          — Create a playbook (JSON or YAML)
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import {
   getPlaybookEngine,

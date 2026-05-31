@@ -101,7 +101,7 @@ export const compensationHandlers: Record<string, CompensationHandler> = {
   mark_audit_as_rolled_back: async () => {},
 
   // Payment steps
-  async finalize_payment_confirmation(_input, stepOutput) {
+  async finalize_payment_confirmation(_input, _stepOutput) {
     const { paymentDbId } = _input as { paymentDbId?: string };
     if (paymentDbId) {
       await db.subscriptionPayment.update({

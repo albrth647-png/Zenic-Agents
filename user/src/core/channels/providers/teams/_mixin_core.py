@@ -136,8 +136,8 @@ class TeamsChannelProvider:
             return
 
         if _HAS_AIOHTTP and not self._session:
-            self._session = aiohttp.ClientSession(  # noqa: F821  # TODO: verify import
-                timeout=aiohttp.ClientTimeout(total=_WEBHOOK_TIMEOUT),  # noqa: F821  # TODO: verify import
+            self._session = aiohttp.ClientSession(  # TODO: verify import
+                timeout=aiohttp.ClientTimeout(total=_WEBHOOK_TIMEOUT),  # TODO: verify import
             )
 
         self._started = True
@@ -284,14 +284,14 @@ class TeamsChannelProvider:
 
         def _sync_post() -> ChannelResponse:
             validated_url = _validate_url(self._webhook_url)
-            req = urllib.request.Request(  # noqa: F821  # TODO: verify import
+            req = urllib.request.Request(  # TODO: verify import
                 validated_url,
                 data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_WEBHOOK_TIMEOUT) as resp:  # noqa: F821  # TODO: verify import
+                with urllib.request.urlopen(req, timeout=_WEBHOOK_TIMEOUT) as resp:  # TODO: verify import
                     body = resp.read().decode("utf-8", errors="replace")
                     return ChannelResponse(
                         success=True,
@@ -300,7 +300,7 @@ class TeamsChannelProvider:
                         metadata={"http_status": resp.status, "body": body[:200]},
                         timestamp=time.time(),
                     )
-            except urllib.error.HTTPError as e:  # noqa: F821  # TODO: Phase3 - verify import
+            except urllib.error.HTTPError as e:  # TODO: Phase3 - verify import
                 if e.code == 429:
                     retry_after = float(e.headers.get("Retry-After", "5"))
                     return ChannelResponse(

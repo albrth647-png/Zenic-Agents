@@ -29,7 +29,7 @@ class EmailExecutorSendMixin:
         subject: str,
         body: str,
         html: str,
-    ) -> ActionResult:  # noqa: F821
+    ) -> ActionResult:
         """Send email via SMTP (aiosmtplib preferred, smtplib fallback)."""
         host = config.get("host", "") or os.environ.get("SMTP_HOST", "")
         port = config.get("port") or int(os.environ.get("SMTP_PORT", "587"))
@@ -56,7 +56,7 @@ class EmailExecutorSendMixin:
             attachments=config.get("attachments", []),
         )
 
-        if _HAS_AIOSMTPLIB_LOCAL:  # noqa: F821
+        if _HAS_AIOSMTPLIB_LOCAL:
             success, error = await self._send_aiosmtplib(
                 host,
                 port,
@@ -87,14 +87,14 @@ class EmailExecutorSendMixin:
                 recipients,
                 subject[:50],
             )
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 True,
                 {"mode": "smtp", "recipients": recipients, "subject": subject, "from": from_email},
             )
         else:
             with self._lock:
                 self._failure_count += 1
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {"mode": "smtp", "recipients": recipients},
                 f"SMTP send failed: {error}",
@@ -109,7 +109,7 @@ class EmailExecutorSendMixin:
         subject: str,
         body: str,
         html: str,
-    ) -> ActionResult:  # noqa: F821
+    ) -> ActionResult:
         """Send email via Microsoft Graph API."""
         provider = self._get_or_create_graph_provider(config)
         from_email = config.get("from_email", "") or os.environ.get("MSGRAPH_FROM_EMAIL", "")
@@ -140,7 +140,7 @@ class EmailExecutorSendMixin:
                 recipients,
                 subject[:50],
             )
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 True,
                 {
                     "mode": "graph_api",
@@ -153,7 +153,7 @@ class EmailExecutorSendMixin:
         else:
             with self._lock:
                 self._failure_count += 1
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {"mode": "graph_api", "recipients": recipients},
                 f"Graph API send failed: {result.get('error', 'unknown')}",
@@ -231,7 +231,7 @@ class EmailExecutorSendMixin:
         """Send via aiosmtplib (async)."""
         try:
             if use_tls:
-                await aiosmtplib.send(  # noqa: F821
+                await aiosmtplib.send(
                     msg,
                     hostname=host,
                     port=port,
@@ -241,7 +241,7 @@ class EmailExecutorSendMixin:
                     timeout=_SMTP_TIMEOUT,
                 )
             else:
-                await aiosmtplib.send(  # noqa: F821  # TODO: add import
+                await aiosmtplib.send(  # TODO: add import
                     msg,
                     hostname=host,
                     port=port,
@@ -295,7 +295,7 @@ class EmailExecutorSendMixin:
     def _get_or_create_graph_provider(
         self,
         config: dict[str, Any],
-    ) -> GraphAPIEmailProvider:  # noqa: F821
+    ) -> GraphAPIEmailProvider:
         """Get or create the GraphAPIEmailProvider instance."""
         with self._lock:
             if self._graph_provider is None:

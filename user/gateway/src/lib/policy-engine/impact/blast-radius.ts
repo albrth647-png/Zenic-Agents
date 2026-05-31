@@ -129,7 +129,7 @@ export function estimateAffectedUsers(
     }
   }
 
-  for (const pb of playbooks) {
+  for (const _pb of playbooks) {
     users += 20;
   }
 

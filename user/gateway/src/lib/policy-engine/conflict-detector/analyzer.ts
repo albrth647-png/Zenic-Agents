@@ -8,14 +8,7 @@
 //   - Visitor: analysis traversal of policy statements
 //   - Strategy: pluggable condition comparison strategies
 
-import type {
-  PolicyStatement,
-  PolicyCondition,
-  PolicyEffectV2,
-  ConflictStatementRef,
-  ConflictType,
-  ConflictSeverity,
-} from "./types";
+import type { PolicyStatement, PolicyCondition } from "./types";
 
 // ─── Pattern Matching ─────────────────────────────────────────────────
 

@@ -1,4 +1,7 @@
-// ─── Zenic-Agents Gateway — Structured Audit Logging Module ──────────
+/**
+ * @module audit
+ */
+/* eslint-disable no-console -- Audit logger outputs to console by design */
 // Provides centralized, structured audit logging for all critical gateway
 // operations. Events are always written to the console as structured JSON
 // and persisted to the Prisma AuditLog table when the database is available.

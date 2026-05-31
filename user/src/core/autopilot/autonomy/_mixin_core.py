@@ -64,7 +64,7 @@ class AutonomyConfigManager:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_init)  # noqa: F821
+            _retry_db_operation(_init)
             self._initialized = True
             logger.info("AutonomyConfigManager: Schema initialized at %s", self._db_path)
 
@@ -72,7 +72,7 @@ class AutonomyConfigManager:
         self,
         objective_id: str = "",
         tenant_id: str = "",
-    ) -> AutonomyConfig:  # noqa: F821
+    ) -> AutonomyConfig:
         """Get or create default autonomy config for an objective/tenant.
 
         If a config exists for the given objective_id, returns it.
@@ -88,7 +88,7 @@ class AutonomyConfigManager:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> AutonomyConfig | None:  # noqa: F821
+            def _fetch() -> AutonomyConfig | None:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -115,19 +115,19 @@ class AutonomyConfigManager:
                 finally:
                     conn.close()
 
-            config = _retry_db_operation(_fetch)  # noqa: F821
+            config = _retry_db_operation(_fetch)
             if config is not None:
                 return config
 
         # Create default config
-        default_config = AutonomyConfig(  # noqa: F821
+        default_config = AutonomyConfig(
             objective_id=objective_id,
             tenant_id=tenant_id,
         )
         self._persist_config(default_config)
         return default_config
 
-    def update_config(self, config: AutonomyConfig) -> AutonomyConfig:  # noqa: F821
+    def update_config(self, config: AutonomyConfig) -> AutonomyConfig:
         """Update an existing autonomy config.
 
         Args:
@@ -148,8 +148,8 @@ class AutonomyConfigManager:
     def set_level(
         self,
         objective_id: str,
-        level: AutonomyLevel,  # noqa: F821
-    ) -> AutonomyConfig:  # noqa: F821
+        level: AutonomyLevel,
+    ) -> AutonomyConfig:
         """Set the autonomy level for an objective.
 
         Args:
@@ -163,7 +163,7 @@ class AutonomyConfigManager:
         config.level = level
         return self.update_config(config)
 
-    def list_configs(self, tenant_id: str = "") -> list[AutonomyConfig]:  # noqa: F821
+    def list_configs(self, tenant_id: str = "") -> list[AutonomyConfig]:
         """List autonomy configs, optionally filtered by tenant.
 
         Args:
@@ -175,7 +175,7 @@ class AutonomyConfigManager:
         self._ensure_schema()
         with self._lock:
 
-            def _list() -> list[AutonomyConfig]:  # noqa: F821
+            def _list() -> list[AutonomyConfig]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -195,11 +195,11 @@ class AutonomyConfigManager:
                 finally:
                     conn.close()
 
-            return _retry_db_operation(_list)  # noqa: F821
+            return _retry_db_operation(_list)
 
     # ── Internal Helpers ────────────────────────────────────
 
-    def _persist_config(self, config: AutonomyConfig) -> None:  # noqa: F821
+    def _persist_config(self, config: AutonomyConfig) -> None:
         """Persist an autonomy config to the database.
 
         Uses INSERT OR REPLACE to handle both create and update.
@@ -243,13 +243,13 @@ class AutonomyConfigManager:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_upsert)  # noqa: F821
+            _retry_db_operation(_upsert)
 
     @staticmethod
-    def _row_to_config(row: sqlite3.Row) -> AutonomyConfig:  # noqa: F821
+    def _row_to_config(row: sqlite3.Row) -> AutonomyConfig:
         """Convert a database row to an AutonomyConfig instance."""
-        return AutonomyConfig(  # noqa: F821
-            level=AutonomyLevel(row["level"]),  # noqa: F821  # TODO: Phase3 - verify import
+        return AutonomyConfig(
+            level=AutonomyLevel(row["level"]),  # TODO: Phase3 - verify import
             objective_id=row["objective_id"],
             tenant_id=row["tenant_id"],
             max_actions_per_cycle=row["max_actions_per_cycle"],

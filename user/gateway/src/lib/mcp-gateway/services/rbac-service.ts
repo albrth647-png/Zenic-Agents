@@ -193,7 +193,7 @@ export async function checkPermission(params: PermissionCheck): Promise<Permissi
  * Create a new role with the given permissions.
  * Uses $transaction to prevent race conditions on duplicate name.
  */
-export async function createRole(roleDto: RoleDTO, createdBy: string) {
+export async function createRole(roleDto: RoleDTO, _createdBy: string) {
   return db.$transaction(async (tx) => {
     // Check for duplicate name inside transaction
     const existing = await tx.role.findUnique({ where: { name: roleDto.name } });

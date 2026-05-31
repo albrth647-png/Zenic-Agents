@@ -2,6 +2,9 @@
 Domain expert rules and validation gates API mixin for DNALoader.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
 import ast
 import re
 from typing import Any
@@ -122,7 +125,7 @@ class DomainValidationMixin:
                     return "fail" if gate.id.startswith("no_") else "pass"
                 return "pass" if gate.id.startswith("no_") else "fail"
             except re.error:
-                pass
+                logger.warning("_check_gate: re.error handled silently", exc_info=True)
 
         # Action-based checks
         action = gate.action.lower()

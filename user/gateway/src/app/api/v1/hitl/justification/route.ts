@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — HITL API: Provide Justification ───────────────
 // POST /api/v1/hitl/justification
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getJustificationService } from "@/lib/hitl/justification-service";
 

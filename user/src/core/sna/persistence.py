@@ -195,9 +195,20 @@ class SNAPersistence:
             extra_val = [now]
 
         with write_lock(self._db_name):
+            # Build SET clause safely — extra_col is one of 3 hardcoded values,
+            # validated by the if/elif above (not user input).
+            set_parts = ["status = ?"]
+            set_params: list[Any] = [status.value]
+            if extra_col and extra_val:
+                # extra_col is a hardcoded literal like ", notified_at = ?"
+                col_name = extra_col.replace(", ", "").replace(" = ?", "").strip()
+                if col_name in ("notified_at", "acknowledged_at", "resolved_at"):
+                    set_parts.append(f"{col_name} = ?")
+                    set_params.extend(extra_val)
+            set_sql = ", ".join(set_parts)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"UPDATE sna_alerts SET status = ?{extra_col} WHERE alert_id = ?",  # noqa: S608
-                [status.value, *extra_val, alert_id],
+                f"UPDATE sna_alerts SET {set_sql} WHERE alert_id = ?",
+                [*set_params, alert_id],
             )
             conn.commit()
 
@@ -262,8 +273,9 @@ class SNAPersistence:
             conditions.append("tenant_id = ?")
             params.append(tenant_id)
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
+        # WHERE clause built from parameterized conditions only — safe
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM sna_thresholds{where}",  # noqa: S608
+            f"SELECT * FROM sna_thresholds{where}",
             params,
         ).fetchall()
         return [self._row_to_threshold(r) for r in rows]

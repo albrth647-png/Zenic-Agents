@@ -18,7 +18,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # ── Phase 6 imports ──────────────────────────────────────
-from src.core._phase6_imports import (  # noqa: E402
+from src.core._phase6_imports import (
     AntiTamperingLayer,
     ApprovalChain,
     ApprovalPriority,
@@ -59,7 +59,7 @@ from src.core._phase6_imports import (  # noqa: E402
 )
 
 # ── Phase A-C imports ────────────────────────────────────
-from src.core._phaseAC_imports import (  # noqa: E402
+from src.core._phaseAC_imports import (
     AnalyticsSnapshot,
     AuditEvent,
     AuditEventType,
@@ -145,7 +145,7 @@ from src.core._phaseAC_imports import (  # noqa: E402
 )
 
 # ── Phase D-F + Native imports ───────────────────────────
-from src.core._phaseDF_imports import (  # noqa: E402
+from src.core._phaseDF_imports import (
     HAS_NATIVE,
     ActionOutcome,
     AutonomyConfig,

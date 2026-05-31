@@ -16,12 +16,11 @@ from typing import Any
 # ──────────────────────────────────────────────────────────────
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:
     _HAS_AIOHTTP = False
-
 
 # ──────────────────────────────────────────────────────────────
 #  CONSTANTS
@@ -36,11 +35,9 @@ _BACKOFF_MULTIPLIER = 2.0
 
 _DEFAULT_SCOPES = ["https://graph.microsoft.com/Mail.Send"]
 
-
 # ──────────────────────────────────────────────────────────────
 #  RATE LIMIT TRACKING
 # ──────────────────────────────────────────────────────────────
-
 
 @dataclass
 class _RateLimitState:
@@ -78,7 +75,6 @@ class _RateLimitState:
             "reset_at": self.reset_at,
             "last_updated": self.last_updated,
         }
-
 
 __all__ = [
     "_BACKOFF_MULTIPLIER",

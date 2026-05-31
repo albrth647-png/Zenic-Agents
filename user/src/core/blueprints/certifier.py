@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 try:
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import ec, utils  # noqa: F401
+    from cryptography.hazmat.primitives.asymmetric import ec, utils
     from cryptography.hazmat.primitives.asymmetric.ec import (
-        EllipticCurvePrivateKey,  # noqa: F401
+        EllipticCurvePrivateKey,
         EllipticCurvePublicKey,
     )
 
@@ -43,11 +43,9 @@ except ImportError:
     _HAS_CRYPTO = False
     logger.debug("certifier: 'cryptography' not available, using HMAC fallback")
 
-
 # ──────────────────────────────────────────────────────────────
 #  KEY MANAGEMENT
 # ──────────────────────────────────────────────────────────────
-
 
 class CertifierKeyPair:
     """Manages ECDSA key pair for Blueprint certification.
@@ -148,11 +146,9 @@ class CertifierKeyPair:
             encryption_algorithm=serialization.NoEncryption(),
         ).decode("utf-8")
 
-
 # ──────────────────────────────────────────────────────────────
 #  CERTIFIER
 # ──────────────────────────────────────────────────────────────
-
 
 class BlueprintCertifier:
     """Signs and verifies Blueprint certificates using ECDSA.
@@ -281,13 +277,11 @@ class BlueprintCertifier:
         """Get the current key pair."""
         return self._key_pair
 
-
 # ──────────────────────────────────────────────────────────────
 #  CONVENIENCE FUNCTIONS
 # ──────────────────────────────────────────────────────────────
 
 _default_certifier: BlueprintCertifier | None = None
-
 
 def get_default_certifier() -> BlueprintCertifier:
     """Get or create the default BlueprintCertifier."""
@@ -295,7 +289,6 @@ def get_default_certifier() -> BlueprintCertifier:
     if _default_certifier is None:
         _default_certifier = BlueprintCertifier()
     return _default_certifier
-
 
 def certify_blueprint(blueprint: CertifiedBlueprint) -> BlueprintSignature:
     """Certify a Blueprint with the default certifier.
@@ -308,7 +301,6 @@ def certify_blueprint(blueprint: CertifiedBlueprint) -> BlueprintSignature:
     blueprint.metadata.signature = signature
     blueprint.metadata.status = BlueprintStatus.CERTIFIED
     return signature
-
 
 def verify_blueprint(blueprint: CertifiedBlueprint) -> bool:
     """Verify a Blueprint's certification signature."""

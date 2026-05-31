@@ -1,7 +1,7 @@
 // ─── Zenic-Agents v3 — HITL Notification & Phase 5 Types ──────────────
 // Split from types.ts — notification types, compensating actions, evidence, justification, expiry, SLA
 
-import type { NotificationChannel, NotificationPriority, EvidenceType, ApprovalType, ApprovalRequestStatus } from "./_enums";
+import type { NotificationChannel, NotificationPriority, EvidenceType, ApprovalType as _ApprovalType, ApprovalRequestStatus as _ApprovalRequestStatus } from "./_enums";
 import type { CreateApprovalRequestInput } from "./_domain-types";
 
 // ─── Notification Types ────────────────────────────────────────────────

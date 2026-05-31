@@ -18,7 +18,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     healthyServers,
     executionsToday,
     completedToday,
-    failedToday,
+    _failedToday,
     deniedToday,
     pendingApprovals,
     recentExecutions,
@@ -83,7 +83,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     data: 0, communication: 0, compute: 0, storage: 0,
     external: 0, security: 0, monitoring: 0,
   } as DashboardMetrics["categoryDistribution"];
-  for (const t of allTools) {
+  for (const _t of allTools) {
     // Also count by category — need another query
   }
   const categoryCounts = await db.mcpTool.groupBy({

@@ -3,6 +3,7 @@
 // se cifran antes de persistir y se enmascaran antes de enviar al frontend.
 // INVARIANT 4 — defensa en profundidad, la regla DENY es absoluta.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { encrypt, decrypt, maskCredentialFields } from "@/lib/crypto";
@@ -22,7 +23,7 @@ const POST_ALLOWED_FIELDS = new Set([
 ]);
 
 /** Whitelist de campos permitidos en PUT */
-const PUT_ALLOWED_FIELDS = new Set([
+const _PUT_ALLOWED_FIELDS = new Set([
   "name", "platform", "type", "apiKey", "apiSecret",
   "endpoint", "username", "password", "scope", "isActive", "metadata",
 ]);

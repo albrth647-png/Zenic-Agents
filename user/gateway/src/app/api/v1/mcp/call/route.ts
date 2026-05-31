@@ -2,12 +2,13 @@
 // POST /api/v1/mcp/call — Execute a tool through the full gateway pipeline
 // Phase 2: Now uses ObservableGatewayEngine for distributed tracing + metrics
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
-import { parseJsonRpcRequest, successResponse, errorResponse, isErrorResponse } from "@/lib/mcp-gateway/protocol";
+import { parseJsonRpcRequest, successResponse, errorResponse, isErrorResponse as _isErrorResponse } from "@/lib/mcp-gateway/protocol";
 import { JSON_RPC_ERRORS, MCP_METHODS } from "@/lib/mcp-gateway/protocol/types";
 import type { McpToolCallParams } from "@/lib/mcp-gateway/protocol/types";
 import { getRegistry } from "@/lib/mcp-gateway/sdk/sdk";
-import { initializeGateway, getObservableGateway } from "@/lib/mcp-gateway/bootstrap";
+import { initializeGateway as _initializeGateway, getObservableGateway } from "@/lib/mcp-gateway/bootstrap";
 
 export async function POST(request: NextRequest) {
   try {

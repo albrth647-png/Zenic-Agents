@@ -3,7 +3,7 @@
 import logging
 import threading
 import uuid
-from typing import Any, List  # noqa: UP035, Optional
+from typing import Any, List
 
 from ._async_mixin import SagaAsyncMixin
 from ._sync_mixin import SagaSyncMixin
@@ -12,7 +12,6 @@ from ._types import SagaContext, SagaStatus, SagaStep
 logger = logging.getLogger("zenic_agents.patterns.orchestration.saga")
 
 __all__ = ["Optional", "Saga", "SagaContext", "SagaStatus", "SagaStep"]
-
 
 class Saga(SagaSyncMixin, SagaAsyncMixin):
     """Orchestrator for multi-step operations with automatic rollback."""

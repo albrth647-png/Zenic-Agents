@@ -18,7 +18,7 @@ M9 Implementation: Pure Python, no external APIs. Uses ast module.
 
 import ast
 import logging
-from typing import List  # noqa: UP035
+from typing import List
 
 from ._analysis_mixin import ASTAnalysisMixin
 from ._codegen_mixin import CodeGenMixin
@@ -31,7 +31,6 @@ from ._helpers import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["TYPE_FIXTURES", "Dict", "List", "TestGenerator"]
-
 
 class TestGenerator(ASTAnalysisMixin, CodeGenMixin):
     """Auto-generate pytest test files from Python source code."""

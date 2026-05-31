@@ -8,7 +8,6 @@ from typing import Any
 
 logger = logging.getLogger("zenic_agents.core.chaos.steady_state")
 
-
 class SteadyStateVerifier:
     """Thread-safe steady state verification for chaos experiments."""
 
@@ -78,8 +77,8 @@ class SteadyStateVerifier:
         """Aggregate health check using observability HealthAggregator."""
         try:
             from src.core.observability.health import (
-                HealthAggregator,  # noqa: F401
-                HealthStatus,  # noqa: F401
+                HealthAggregator,
+                HealthStatus,
                 get_health_aggregator,
             )
 
@@ -128,10 +127,8 @@ class SteadyStateVerifier:
             logger.error("Probe check failed for %s: %s", probe.get("name"), exc)
             return False
 
-
 _verifier_instance: SteadyStateVerifier | None = None
 _verifier_lock = threading.Lock()
-
 
 def get_steady_state_verifier() -> SteadyStateVerifier:
     global _verifier_instance
@@ -139,7 +136,6 @@ def get_steady_state_verifier() -> SteadyStateVerifier:
         if _verifier_instance is None:
             _verifier_instance = SteadyStateVerifier()
         return _verifier_instance
-
 
 def reset_steady_state_verifier() -> None:
     global _verifier_instance

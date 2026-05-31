@@ -12,7 +12,7 @@ Defines tuning constants used by the Z3 constraint encoding mixins:
 import logging
 
 try:
-    import z3 as z3_module  # type: ignore[import-unresolved]  # noqa: F401
+    import z3 as z3_module  # type: ignore[import-unresolved]
 
     _HAS_Z3 = True
 except ImportError:

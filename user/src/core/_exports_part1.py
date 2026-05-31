@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-import logging  # noqa: E402
+import logging
 
 logger = logging.getLogger(__name__)
 

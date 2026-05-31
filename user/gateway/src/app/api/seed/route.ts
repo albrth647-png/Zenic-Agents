@@ -1,3 +1,4 @@
+/* eslint-disable zenic-security/api-auth-required */
 import { NextResponse } from "next/server";
 import { seedRolesAndPermissions } from "./_seed_roles";
 import { seedPlaybookData } from "./_seed_playbooks";

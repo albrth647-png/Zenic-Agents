@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 # ── Optional: aiosmtplib ──────────────────────────────────────────
 
 try:
-    import aiosmtplib  # type: ignore[import-unresolved]  # noqa: F401
+    import aiosmtplib  # type: ignore[import-unresolved]
 
     _HAS_AIOSMTPLIB_LOCAL = True
 except ImportError:
@@ -19,7 +19,7 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request  # noqa: F401
+    import urllib.request
 
     _HAS_URLLIB = True
 except ImportError:

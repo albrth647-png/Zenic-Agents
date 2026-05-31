@@ -41,7 +41,7 @@ use super::analyzer::{build_merkle_tree_with_proof, verify_merkle_proof};
 #[pyfunction]
 #[pyo3(signature = (entries))]
 pub fn verify_merkle_chain(py: Python<'_>, entries: &Bound<'_, PyList>) -> PyResult<Py<PyDict>> {
-    let mut total_entries: usize = 0;
+    let total_entries: usize = entries.len();
     let mut valid_entries: usize = 0;
     let mut root_hash = String::new();
 
@@ -54,8 +54,6 @@ pub fn verify_merkle_chain(py: Python<'_>, entries: &Bound<'_, PyList>) -> PyRes
         result.set_item("root_hash", "")?;
         return Ok(result.unbind());
     }
-
-    total_entries = entries.len();
 
     // Parse all entries into a structured form
     let mut parsed: Vec<(String, String, String, String, String, f64)> = Vec::with_capacity(total_entries);

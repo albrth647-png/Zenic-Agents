@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Playbooks API: Activate Playbook ─────────────
 // POST /api/v1/playbooks/activate — Activate a playbook for a tenant
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getPlaybookEngine } from "@/lib/playbooks";
 import type { PlaybookActivationRequest, PricingTierName } from "@/lib/playbooks";

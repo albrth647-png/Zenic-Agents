@@ -1,7 +1,6 @@
 // ─── Zenic-Agents v3 — HITL Expiry Service (barrel) ────────────────
 
 export {
-  ExpiryService as default,
   getExpiryService,
   resetExpiryService,
   mapExpiryRecordToModel,

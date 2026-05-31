@@ -6,13 +6,7 @@
 // Complements the createNamespace/getNamespace functions in types.ts.
 
 import { db } from "@/lib/db";
-import type {
-  PolicyNamespace,
-  NamespaceHierarchy,
-  NamespaceResolutionStrategy,
-  NamespaceIsolationLevel,
-  ConflictResolutionStrategy,
-} from "./types";
+import type { PolicyNamespace, NamespaceResolutionStrategy, NamespaceIsolationLevel, ConflictResolutionStrategy } from "./types";
 
 // ─── DB Record Mapper ─────────────────────────────────────────────────
 
@@ -179,7 +173,7 @@ const MAX_POLICIES_PER_NAMESPACE = 200;
  */
 export async function loadNamespacePolicies(
   namespaceId: string,
-  tenantId: string,
+  _tenantId: string,
 ): Promise<Array<import("./types").PolicyDocument>> {
   const policies: Array<import("./types").PolicyDocument> = [];
   const seenPolicyIds = new Set<string>();

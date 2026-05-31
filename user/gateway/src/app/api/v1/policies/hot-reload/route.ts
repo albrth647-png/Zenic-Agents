@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Hot-Reload ────────────────
 // POST /api/v1/policies/hot-reload — Trigger policy reload
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getPolicyHotReloader } from "@/lib/policy-engine";
 

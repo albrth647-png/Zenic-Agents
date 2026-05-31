@@ -95,7 +95,9 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
+    /* eslint-disable react-hooks/set-state-in-effect -- Embla carousel API init */
     onSelect(api)
+    /* eslint-enable react-hooks/set-state-in-effect */
     api.on("reInit", onSelect)
     api.on("select", onSelect)
 

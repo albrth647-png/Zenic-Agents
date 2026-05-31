@@ -18,7 +18,7 @@ No external dependencies beyond Python stdlib.
 
 import logging
 import threading
-from typing import Any, List  # noqa: UP035
+from typing import Any, List
 
 from ._async_mixin import AsyncDispatchMixin
 from ._sync_mixin import SyncDispatchMixin
@@ -38,7 +38,6 @@ __all__ = [
     "RequestHandler",
     "Response",
 ]
-
 
 class Mediator(SyncDispatchMixin, AsyncDispatchMixin):
     """

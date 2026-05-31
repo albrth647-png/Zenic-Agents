@@ -180,8 +180,8 @@ class NotificationDispatcher:
         """Get all notifications sent for a request."""
 
         def _do_query() -> list[NotificationMessage]:
-            conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
-            conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
+            conn = sqlite3.connect(self._db_path)  # TODO: add import
+            conn.row_factory = sqlite3.Row  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """SELECT * FROM notifications
                    WHERE request_id = ?
@@ -197,8 +197,8 @@ class NotificationDispatcher:
         """Get all notifications with 'pending' or 'failed' status."""
 
         def _do_query() -> list[NotificationMessage]:
-            conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
-            conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
+            conn = sqlite3.connect(self._db_path)  # TODO: add import
+            conn.row_factory = sqlite3.Row  # TODO: add import
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """SELECT * FROM notifications
                    WHERE status IN ('pending', 'failed')

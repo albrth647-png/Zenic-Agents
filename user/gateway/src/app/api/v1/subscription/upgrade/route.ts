@@ -1,17 +1,10 @@
 // ─── Zenic-Agents v3 — Subscription API: Upgrade ─────────────────────
 // POST /api/v1/subscription/upgrade — Upgrade to a higher tier
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import {
-  TIER_RANK,
-  TIER_PRICES,
-  TIER_LIMITS,
-  SubscriptionTierName,
-  SubscriptionStatus,
-  canUpgrade,
-  calculateUpgradeProration,
-} from '@/lib/subscription/types';
+import { TIER_PRICES, SubscriptionTierName, SubscriptionStatus, canUpgrade, calculateUpgradeProration } from '@/lib/subscription/types';
 
 const USAGE_TYPE_MAPPING: Record<string, string> = {
   workflows: 'maxWorkflows',

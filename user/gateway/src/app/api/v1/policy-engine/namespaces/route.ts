@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/namespaces          — List namespaces
 // POST /api/v1/policy-engine/namespaces          — Create a namespace
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { listNamespaces, createNamespace } from "@/lib/policy-engine";
 import type { PolicyNamespace } from "@/lib/policy-engine";

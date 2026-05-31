@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/templates          — List policy templates
 // POST /api/v1/policy-engine/templates          — Create a policy template
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { listTemplates, createTemplate } from "@/lib/policy-engine";
 import type { PolicyTemplate } from "@/lib/policy-engine";

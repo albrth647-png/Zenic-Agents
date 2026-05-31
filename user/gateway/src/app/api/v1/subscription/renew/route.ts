@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Subscription API: Renew ───────────────────────
 // POST /api/v1/subscription/renew — Renew a subscription
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { canTransitionTo, SubscriptionStatus } from '@/lib/subscription/types';

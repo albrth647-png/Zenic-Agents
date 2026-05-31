@@ -31,7 +31,7 @@ class ReplayQueueCoreMixin:
     def __init__(
         self,
         db_path: str | None = None,
-        trigger_map: TriggerMap | None = None,  # noqa: F821
+        trigger_map: TriggerMap | None = None,
     ) -> None:
         self._lock = __import__("threading").RLock()
         self._db_path = db_path or DB_PATH
@@ -44,9 +44,9 @@ class ReplayQueueCoreMixin:
     # ── Lazy dependency injection ───────────────────────────────
 
     @property
-    def trigger_map(self) -> TriggerMap:  # noqa: F821
+    def trigger_map(self) -> TriggerMap:
         if self._trigger_map is None:
-            self._trigger_map = get_trigger_map()  # noqa: F821
+            self._trigger_map = get_trigger_map()
         return self._trigger_map
 
     # ── Enqueue ─────────────────────────────────────────────────
@@ -77,7 +77,7 @@ class ReplayQueueCoreMixin:
         if not tenant_id or not isinstance(tenant_id, str):
             raise ValueError("tenant_id must be a non-empty string")
 
-        dlq_id = f"dlq_{uuid.uuid4().hex[:12]}"  # noqa: F821
+        dlq_id = f"dlq_{uuid.uuid4().hex[:12]}"
         evt = DeadLetterEvent(
             dlq_id=dlq_id,
             event_type=event_type,

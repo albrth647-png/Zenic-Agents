@@ -21,9 +21,7 @@ from .base import BaseFlow, FlowContext
 
 logger = logging.getLogger(__name__)
 
-
 # ── Status Result ────────────────────────────────────────────
-
 
 @dataclass
 class StatusResult:
@@ -80,9 +78,7 @@ class StatusResult:
             "checks_performed": self.checks_performed,
         }
 
-
 # ── Status Flow ──────────────────────────────────────────────
-
 
 class StatusFlow(BaseFlow):
     """License status check flow for end users.
@@ -110,7 +106,7 @@ class StatusFlow(BaseFlow):
         """Load license and run verification."""
         try:
             from src.core.license import (
-                LicenseStatus,  # noqa: F401
+                LicenseStatus,
                 get_license_manager,
             )
 

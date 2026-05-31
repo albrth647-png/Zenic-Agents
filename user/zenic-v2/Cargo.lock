@@ -1900,7 +1900,7 @@ dependencies = [
 
 [[package]]
 name = "zenic-pybridge"
-version = "2.5.0"
+version = "0.1.0"
 dependencies = [
  "argon2",
  "bincode",
@@ -1917,10 +1917,12 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror",
  "tracing",
  "uuid",
  "xxhash-rust",
  "zenic-memory",
+ "zenic-proto",
  "zenic-safety",
 ]
 

@@ -185,7 +185,7 @@ class PerformanceDashboard {
     let gcCount = 0;
     let gcTotalMs = 0;
     try {
-      const gcStats = (globalThis as any).__gc_stats;
+      const gcStats = (globalThis as Record<string, unknown>).__gc_stats as Record<string, number> | undefined;
       if (gcStats) {
         gcCount = gcStats.count || 0;
         gcTotalMs = gcStats.totalMs || 0;
@@ -202,8 +202,8 @@ class PerformanceDashboard {
       eventLoopLagMs: eventLoopLagMs,
       gcCount,
       gcTotalMs,
-      activeHandles: (process as any)._getActiveHandles?.()?.length ?? 0,
-      activeRequests: (process as any)._getActiveRequests?.()?.length ?? 0,
+      activeHandles: (process as Record<string, unknown>)._getActiveHandles?.()?.length ?? 0,
+      activeRequests: (process as Record<string, unknown>)._getActiveRequests?.()?.length ?? 0,
     };
   }
 
@@ -259,7 +259,7 @@ class PerformanceDashboard {
    */
   private getWriteQueueMetrics(): WriteQueueMetrics {
     try {
-      // Import writeQueue dynamically to avoid circular dependencies
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- Dynamic import to avoid circular dependencies
       const { writeQueue } = require('@/lib/write-queue');
       const stats = writeQueue.getStats();
       return {

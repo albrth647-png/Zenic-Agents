@@ -17,7 +17,7 @@ from ..base import ActionResult
 logger = logging.getLogger(__name__)
 
 # Import the closed-state constant from the auth module
-from ._auth import _STATE_CLOSED  # noqa: E402
+from ._auth import _STATE_CLOSED
 
 
 class _IncidentOpsMixin:

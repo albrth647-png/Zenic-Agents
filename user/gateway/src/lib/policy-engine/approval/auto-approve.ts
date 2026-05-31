@@ -103,7 +103,7 @@ export async function rollbackApproval(
     });
 
     if (supersededVersion) {
-      const supersededDoc = JSON.parse(supersededVersion.document) as PolicyDocument;
+      const _supersededDoc = JSON.parse(supersededVersion.document) as PolicyDocument;
       await rollbackToVersion(
         policyId,
         supersededVersion.version,

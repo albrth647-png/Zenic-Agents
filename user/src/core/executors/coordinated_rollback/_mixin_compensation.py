@@ -250,14 +250,14 @@ class CompensationMixin:
 
             validated_url = validate_url(url)
             data = json.dumps(cancellation_payload).encode("utf-8")
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 validated_url,
                 data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=10) as resp:
                     status = resp.status
                     logger.info(
                         "CoordinatedRollbackManager: cancellation webhook sent to %s status=%d",

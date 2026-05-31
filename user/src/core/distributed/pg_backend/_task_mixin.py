@@ -109,7 +109,7 @@ class PgTaskMixin:
                         ORDER BY t.priority DESC, t.created_at ASC
                         LIMIT 1
                         FOR UPDATE SKIP LOCKED
-                        """,  # noqa: S608
+                        """,
                         tuple(params),
                     )
                     row = cur.fetchone()

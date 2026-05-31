@@ -76,7 +76,7 @@ def _blake3_hash(data: bytes) -> str:
 
         return _blake3_pure.blake3(data).hexdigest()
     except ImportError:
-        pass
+        logger.warning("_blake3_hash: ImportError handled silently", exc_info=True)
 
     # Last resort: SHA-256 with prefix (NOT BLAKE3-compatible!)
     # This exists so the system can still function during development

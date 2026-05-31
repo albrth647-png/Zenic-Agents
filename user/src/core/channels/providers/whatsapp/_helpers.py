@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _build_media_payload(
     self,
-    message: ChannelMessage,  # noqa: F821
+    message: ChannelMessage,
     media_type: str,
     media_url: str,
 ) -> dict[str, Any]:
@@ -49,11 +49,11 @@ async def _post_api(self, payload: dict[str, Any]) -> ChannelResponse:
     """POST to WhatsApp Cloud API."""
     url = f"{self._api_base}/{self._phone_number_id}/messages"
 
-    for attempt in range(1, _MAX_RETRIES + 1):  # noqa: F821
+    for attempt in range(1, _MAX_RETRIES + 1):
         try:
-            if _HAS_AIOHTTP and self._session:  # noqa: F821
+            if _HAS_AIOHTTP and self._session:
                 return await self._post_api_aiohttp(url, payload)
-            elif _HAS_URLLIB:  # noqa: F821
+            elif _HAS_URLLIB:
                 return await self._post_api_urllib(url, payload)
             else:
                 return ChannelResponse(
@@ -64,8 +64,8 @@ async def _post_api(self, payload: dict[str, Any]) -> ChannelResponse:
                     timestamp=time.time(),
                 )
         except Exception as e:
-            if attempt < _MAX_RETRIES:  # noqa: F821
-                delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))  # noqa: F821
+            if attempt < _MAX_RETRIES:
+                delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
                 import asyncio
 
                 await asyncio.sleep(delay)
@@ -74,7 +74,7 @@ async def _post_api(self, payload: dict[str, Any]) -> ChannelResponse:
                     success=False,
                     channel="whatsapp",
                     status=DeliveryStatus.FAILED,
-                    error=f"HTTP error after {_MAX_RETRIES} attempts: {e}",  # noqa: F821
+                    error=f"HTTP error after {_MAX_RETRIES} attempts: {e}",
                     timestamp=time.time(),
                 )
 
@@ -103,11 +103,11 @@ async def _post_api_aiohttp(
         if remaining:
             try:
                 usage = json.loads(remaining)
-                self._rate_limit_info = RateLimitInfo(  # noqa: F821
+                self._rate_limit_info = RateLimitInfo(
                     remaining=max(0, 100 - usage.get("call_count", 0)),
                 )
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("_post_api_aiohttp: (json.JSONDecodeError, TypeError) handled silently", exc_info=True)
 
         if resp.status == 200:
             messages = body.get("messages", [{}])
@@ -146,11 +146,11 @@ async def _post_api_urllib(
 ) -> ChannelResponse:
     """Send via urllib (sync, wrapped in asyncio.to_thread)."""
 
-    validated_url = _validate_url(url)  # noqa: F821
+    validated_url = _validate_url(url)
 
     def _sync_post() -> ChannelResponse:
         data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(  # noqa: S310
+        req = urllib.request.Request(
             validated_url,
             data=data,
             headers={
@@ -160,7 +160,7 @@ async def _post_api_urllib(
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: F821,S310
+            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
                 messages = body.get("messages", [{}])
                 msg_id = messages[0].get("id", "") if messages else ""
@@ -204,7 +204,7 @@ async def _post_api_urllib(
 # ── Internal: Dry Run ───────────────────────────────────────
 
 
-def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F821
+def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:
     """Log message without sending."""
     with self._lock:
         self._sent_count += 1
@@ -227,7 +227,7 @@ def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F8
 
 def _dry_run_confirmation(
     self,
-    request: ConfirmationRequest,  # noqa: F821  # TODO: Phase3 - verify import
+    request: ConfirmationRequest,  # TODO: Phase3 - verify import
 ) -> ChannelResponse:
     """Log confirmation without sending."""
     with self._lock:

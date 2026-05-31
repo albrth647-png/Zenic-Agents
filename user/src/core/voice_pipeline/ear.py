@@ -48,11 +48,9 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger("zenic_agents.voice_pipeline.ear")
 
-
 # ──────────────────────────────────────────────────────────────
 #  STT BACKEND PROTOCOL (Strategy Pattern)
 # ──────────────────────────────────────────────────────────────
-
 
 class STTBackend(ABC):
     """Abstract base class for Speech-to-Text backends.
@@ -107,11 +105,9 @@ class STTBackend(ABC):
         """Return backend health status for monitoring."""
         ...
 
-
 # ──────────────────────────────────────────────────────────────
 #  DUMMY BACKEND — Always available, zero deps
 # ──────────────────────────────────────────────────────────────
-
 
 class DummyBackend(STTBackend):
     """Dummy STT backend — always available, returns empty result.
@@ -169,11 +165,9 @@ class DummyBackend(STTBackend):
             "note": "No real STT backend — transcription disabled",
         }
 
-
 # ──────────────────────────────────────────────────────────────
 #  FASTER-WHISPER BACKEND — Best local STT (CTranslate2)
 # ──────────────────────────────────────────────────────────────
-
 
 class FasterWhisperBackend(STTBackend):
     """STT backend using faster-whisper (CTranslate2-based).
@@ -212,7 +206,7 @@ class FasterWhisperBackend(STTBackend):
     def is_available(self) -> bool:
         """Check if faster-whisper is importable."""
         try:
-            import faster_whisper  # noqa: F401
+            import faster_whisper
 
             return True
         except ImportError:
@@ -365,11 +359,9 @@ class FasterWhisperBackend(STTBackend):
             "load_error": self._load_error,
         }
 
-
 # ──────────────────────────────────────────────────────────────
 #  WHISPER BACKEND — Whisper local (PyTorch)
 # ──────────────────────────────────────────────────────────────
-
 
 class WhisperBackend(STTBackend):
     """STT backend using Whisper local (PyTorch-based).
@@ -404,7 +396,7 @@ class WhisperBackend(STTBackend):
     @property
     def is_available(self) -> bool:
         try:
-            import whisper  # noqa: F401
+            import whisper
 
             return True
         except ImportError:
@@ -537,7 +529,6 @@ class WhisperBackend(STTBackend):
             "load_error": self._load_error,
         }
 
-
 # ──────────────────────────────────────────────────────────────
 #  BACKEND REGISTRY — Known backend classes
 # ──────────────────────────────────────────────────────────────
@@ -555,11 +546,9 @@ _DEFAULT_FALLBACK_CHAIN: Sequence[str] = (
     "dummy",
 )
 
-
 # ──────────────────────────────────────────────────────────────
 #  EAR — The STT Service
 # ──────────────────────────────────────────────────────────────
-
 
 class Ear:
     """Speech-to-Text service — the ONLY entry point for audio transcription.
@@ -883,7 +872,6 @@ class Ear:
                 "success_rate": self._metrics.success_rate,
             },
         }
-
 
 # ──────────────────────────────────────────────────────────────
 #  PUBLIC EXPORTS

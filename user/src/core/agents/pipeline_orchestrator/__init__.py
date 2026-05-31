@@ -157,7 +157,7 @@ __all__ = [
 ]
 
 # Phase D: Niche Onboarding Pipeline
-from .niche_onboarding_pipeline import NicheOnboardingPipeline  # noqa: E402
+from .niche_onboarding_pipeline import NicheOnboardingPipeline
 
 
 class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorExtraMixin):

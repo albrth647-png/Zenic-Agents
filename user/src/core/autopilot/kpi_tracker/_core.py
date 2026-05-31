@@ -96,7 +96,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_insert)  # noqa: F821  # TODO: add import
+            _retry_db_operation(_insert)  # TODO: add import
             logger.info(
                 "KPITracker: Measured %s=%s (target=%s, delta=%.4f) for %s",
                 metric_name,
@@ -158,7 +158,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            return _retry_db_operation(_fetch)  # noqa: F821  # TODO: add import
+            return _retry_db_operation(_fetch)  # TODO: add import
 
     def get_trend(
         self,
@@ -198,7 +198,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            measurements = _retry_db_operation(_fetch_history)  # noqa: F821  # TODO: add import
+            measurements = _retry_db_operation(_fetch_history)  # TODO: add import
 
             if len(measurements) < 2:
                 return KPITrend(
@@ -359,7 +359,7 @@ class KPITracker:
                 finally:
                     conn.close()
 
-            metrics = _retry_db_operation(_get_metrics)  # noqa: F821  # TODO: add import
+            metrics = _retry_db_operation(_get_metrics)  # TODO: add import
 
         if not metrics:
             return {

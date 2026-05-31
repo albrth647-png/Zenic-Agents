@@ -7,14 +7,7 @@ import type {
   PricingCalculation,
   PricingTier,
 } from "../types";
-import {
-  PricingTierName as TierName,
-  DEFAULT_STARTER_TIER,
-  DEFAULT_BUSINESS_TIER,
-  DEFAULT_ENTERPRISE_TIER,
-  DEFAULT_ON_PREMISE_TIER,
-  DEFAULT_TRIAL_TIER,
-} from "../types";
+import { PricingTierName as TierName } from "../types";
 
 // Re-export from parent types so consumers don't break
 export type {

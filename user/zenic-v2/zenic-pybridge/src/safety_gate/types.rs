@@ -81,7 +81,9 @@ impl ActionCategory {
 /// ============ ==================================================
 #[pyclass(name = "SafetyVerdict", eq, eq_int, frozen, hash)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
+#[derive(Default)]
 pub enum SafetyVerdict {
+    #[default]
     Allow,
     Confirm,
     Approve,
@@ -130,11 +132,6 @@ impl SafetyVerdict {
     }
 }
 
-impl Default for SafetyVerdict {
-    fn default() -> Self {
-        SafetyVerdict::Allow
-    }
-}
 
 impl Ord for SafetyVerdict {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {

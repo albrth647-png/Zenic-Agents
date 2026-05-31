@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger("zenic_agents.channels.twilio_sms")
 
-
 def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
     """Validate URL to prevent SSRF attacks."""
     parsed = urlparse(url)
@@ -26,11 +25,10 @@ def _validate_url(url: str, allowed_schemes: tuple = ("http", "https")) -> str:
             raise ValueError(f"Access to internal IPs is not allowed: {parsed.hostname}")
     return url
 
-
 # ── Optional Dependencies ─────────────────────────────────────
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:
@@ -38,12 +36,11 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request  # noqa: F401
+    import urllib.request
 
     _HAS_URLLIB = True
 except ImportError:
     _HAS_URLLIB = False
-
 
 # ── Constants ─────────────────────────────────────────────────
 

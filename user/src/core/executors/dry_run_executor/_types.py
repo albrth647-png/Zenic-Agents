@@ -12,7 +12,7 @@ from typing import Any
 
 logger = None  # Avoid circular import; set by _mixin_core
 
-import logging as _logging  # noqa: E402
+import logging as _logging
 
 logger = _logging.getLogger(__name__)
 

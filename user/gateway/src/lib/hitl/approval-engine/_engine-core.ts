@@ -2,20 +2,7 @@
 // Split from approval-engine.ts — ApprovalEngine class with core CRUD operations
 
 import { db } from "@/lib/db";
-import {
-  type CreateApprovalRequestInput,
-  type ApprovalRequest,
-  type ApproveRequestInput,
-  type RejectRequestInput,
-  type ApprovalPolicy,
-  type ApprovalStats,
-  type ApprovalListOptions,
-  ApprovalRequestStatus,
-  ApprovalPriority,
-  ApprovalType,
-  DecisionType,
-  HitlEventType,
-} from "../types";
+import { type CreateApprovalRequestInput, type ApprovalRequest, type ApproveRequestInput, type RejectRequestInput, type ApprovalPolicy, type ApprovalListOptions, ApprovalRequestStatus, ApprovalPriority, ApprovalType, DecisionType, HitlEventType } from "../types";
 import { recordAuditEvent } from "../approval-audit";
 import { notifyApprovalEvent } from "../notifications";
 import { evaluateAutoApproveRules, isApprovalPolicySatisfied, generateRequestId } from "./_strategy";

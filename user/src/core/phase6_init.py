@@ -105,7 +105,7 @@ def _create_enhanced_safety_gate(
                         rule_name="degraded_mode_block",
                     )
             except ImportError:
-                pass
+                logger.warning("check: ImportError handled silently", exc_info=True)
 
             # If APPROVE, create approval request
             if result.verdict == SafetyVerdict.APPROVE:

@@ -97,11 +97,11 @@ fn find_best_match(
     }
 
     // Try regex-based extraction for specific types
-    if best_match.is_none() || best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_STEM) {
+    if best_match.is_none() || best_match.as_ref().is_none_or(|m| m.confidence() < CONFIDENCE_STEM) {
         match field_type {
             "email" => {
                 if let Some(email) = extract_email_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().is_none_or(|m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),
@@ -128,7 +128,7 @@ fn find_best_match(
             }
             "url" => {
                 if let Some(url) = extract_url_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().is_none_or(|m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),
@@ -142,7 +142,7 @@ fn find_best_match(
             }
             "phone" => {
                 if let Some(phone) = extract_phone_near_keyword(full_text, display_name) {
-                    if best_match.as_ref().map_or(true, |m| m.confidence() < CONFIDENCE_DISPLAY) {
+                    if best_match.as_ref().is_none_or(|m| m.confidence() < CONFIDENCE_DISPLAY) {
                         best_match = Some(FieldMatch::new(
                             field_name.to_string(),
                             String::new(),
@@ -183,7 +183,7 @@ fn find_best_match(
 pub fn extractor_match_fields(
     template_dict: &Bound<'_, PyDict>,
     extracted_texts: &Bound<'_, PyList>,
-    py: Python<'_>,
+    _py: Python<'_>,
 ) -> PyResult<ExtractionResult> {
     // Extract template sections
     let template_obj = match template_dict.get_item("template") {
@@ -285,7 +285,7 @@ pub fn extractor_match_fields(
 
             // Check if field already has a value
             let existing_value = field_dict.get_item("value").ok().flatten();
-            let has_value = existing_value.as_ref().map_or(false, |v| !v.is_none());
+            let has_value = existing_value.as_ref().is_some_and(|v| !v.is_none());
             if has_value {
                 matched_field_names.insert(field_name, true);
                 continue;

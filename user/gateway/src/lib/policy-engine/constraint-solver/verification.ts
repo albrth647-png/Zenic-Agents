@@ -1,14 +1,8 @@
 // ─── Main Verification Function ──────────────────────────────────────────
 // Orchestrates consistency, completeness, and reachability checks.
 
-import type { PolicyDocument } from "../types";
-import type {
-  VerificationResult,
-  VerificationStatus,
-  SolverType,
-  Contradiction,
-  CoverageReport,
-} from "../types/constraints";
+import type { PolicyDocument as _PolicyDocument } from "../types";
+import type { VerificationResult, VerificationStatus, SolverType, Contradiction } from "../types/constraints";
 import {
   VerificationStatus as VerificationStatusEnum,
   SolverType as SolverTypeEnum,
@@ -18,8 +12,8 @@ import { PolicyEvaluator } from "../evaluator";
 import { loadPolicies, analyzeStatements, runAC3Consistency } from "./consistency";
 import { runBruteForceConsistency, runCompletenessCheck } from "./solvers";
 import { runReachabilityCheck } from "./_reachability";
-import { persistVerification, getVerification, listVerifications } from "./_persistence";
-import type { ListVerificationsOptions } from "./_persistence";
+import { persistVerification, getVerification as _getVerification, listVerifications as _listVerifications } from "./_persistence";
+import type { ListVerificationsOptions as _ListVerificationsOptions } from "./_persistence";
 import { DEFAULT_SOLVER_TIMEOUT_MS, BRUTE_FORCE_MAX_POLICIES } from "./types";
 import { generateContradictionIndex } from "./helpers";
 

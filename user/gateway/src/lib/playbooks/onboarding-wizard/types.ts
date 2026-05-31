@@ -1,11 +1,7 @@
 // ─── Onboarding Wizard Types ─────────────────────────────────────────
 // Result types and progress types for the onboarding wizard.
 
-import type {
-  OnboardingStep,
-  OnboardingStepType,
-  OnboardingSessionStatus,
-} from "../types";
+import type { OnboardingStep, OnboardingSessionStatus } from "../types";
 
 /** Result of processing a single onboarding step */
 export interface OnboardingStepResult {

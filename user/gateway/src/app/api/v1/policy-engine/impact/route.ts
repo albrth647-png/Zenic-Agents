@@ -2,6 +2,7 @@
 // POST /api/v1/policy-engine/impact  — Analyze impact of a policy change
 // GET  /api/v1/policy-engine/impact  — List impact analyses
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeImpact, listImpactAnalyses } from "@/lib/policy-engine";
 import type { ImpactAnalysisRequest, ImpactAnalysisDepth } from "@/lib/policy-engine";

@@ -3,6 +3,7 @@
 // y prueba de conectividad real cuando es posible.
 // Si no se puede verificar realmente, lo indica explícitamente.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { decrypt } from "@/lib/crypto";

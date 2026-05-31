@@ -196,7 +196,7 @@ export function detectSqlInjection(input: string): ThreatDetectionResult {
   }
 
   // Multi-signal: count how many SQL keywords appear; if 2+ in a longer string, suspicious
-  const upper = input.toUpperCase();
+  const _upper = input.toUpperCase();
   let keywordHits = 0;
   for (const kw of SQL_KEYWORDS) {
     // Use word-boundary-aware check to avoid false positives inside other words

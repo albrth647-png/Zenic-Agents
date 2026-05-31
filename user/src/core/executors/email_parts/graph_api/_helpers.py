@@ -63,9 +63,9 @@ async def _upload_attachment_session(
     content_type = attachment.get("content_type", "application/octet-stream")
 
     if sender:
-        endpoint = f"{_GRAPH_BASE_URL}/users/{sender}/messages/attachments/createUploadSession"  # noqa: F821
+        endpoint = f"{_GRAPH_BASE_URL}/users/{sender}/messages/attachments/createUploadSession"
     else:
-        endpoint = f"{_GRAPH_BASE_URL}/me/messages/attachments/createUploadSession"  # noqa: F821
+        endpoint = f"{_GRAPH_BASE_URL}/me/messages/attachments/createUploadSession"
 
     try:
         async with self._lock:
@@ -75,7 +75,7 @@ async def _upload_attachment_session(
             logger.warning("GraphAPIEmailProvider: Cannot upload attachment — no valid token")
             return None
 
-        async with aiohttp.ClientSession() as session:  # noqa: F821
+        async with aiohttp.ClientSession() as session:
             headers = {
                 "Authorization": token.authorization_header,
                 "Content-Type": "application/json",
@@ -95,7 +95,7 @@ async def _upload_attachment_session(
                 endpoint,
                 json=upload_body,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=30),  # noqa: F821
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as response:
                 if response.status not in (200, 201):
                     error_body = await response.json()
@@ -129,7 +129,7 @@ async def _upload_attachment_session(
                         "Content-Length": str(chunk_len),
                         "Content-Range": content_range,
                     },
-                    timeout=aiohttp.ClientTimeout(total=120),  # noqa: F821  # TODO: Phase3 - verify import
+                    timeout=aiohttp.ClientTimeout(total=120),  # TODO: Phase3 - verify import
                 ) as put_response:
                     if put_response.status not in (200, 201, 202):
                         logger.warning(

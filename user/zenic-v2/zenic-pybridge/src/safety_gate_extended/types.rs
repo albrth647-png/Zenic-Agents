@@ -93,7 +93,7 @@ impl ComplianceStandard {
     }
 
     fn __repr__(&self) -> String {
-        format!("ComplianceStandard.{}", self.display_name().replace(' ', "").replace('/', "").replace('-', ""))
+        format!("ComplianceStandard.{}", self.display_name().replace([' ', '/', '-'], ""))
     }
 }
 

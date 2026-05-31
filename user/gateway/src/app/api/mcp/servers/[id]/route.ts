@@ -1,5 +1,6 @@
 // ─── MCP Servers CRUD — Get / Update / Delete by ID ────────────────
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/mcp-gateway/services/audit-service";

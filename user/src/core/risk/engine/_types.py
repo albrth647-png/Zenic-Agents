@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 try:
-    from ...native._risk import (  # noqa: F401
+    from ...native._risk import (
         calculate_blast_radius,
         find_critical_path,
         multi_node_blast_radius,

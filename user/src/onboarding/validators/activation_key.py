@@ -91,7 +91,7 @@ class ConfirmationCode:
 
 # ── Validation Result (local, reused from user_input) ────────
 
-from .user_input import InvalidResult, ValidationResult, ValidResult  # noqa: E402
+from .user_input import InvalidResult, ValidationResult, ValidResult
 
 # ── Activation Key Validator ─────────────────────────────────
 

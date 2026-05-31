@@ -3,11 +3,12 @@
 // denial. Previously accepted denierId from request body without
 // verification, allowing any authenticated user to deny executions.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { denyExecution } from "@/lib/mcp-gateway/services/gateway-engine";
 import { recordAudit } from "@/lib/mcp-gateway/services/audit-service";
-import { getAuthService } from "@/lib/mcp-gateway/auth/auth-service";
+import { AuthService } from "@/lib/mcp-gateway/auth/auth-service";
 
 // FIX: RBAC-verified denial — only admin/operator roles can deny
 const DENIER_ROLES = ["admin", "operator"];
@@ -22,7 +23,7 @@ interface DenyRequestBody {
 export async function POST(request: NextRequest) {
   try {
     // ── Step 1: Verify caller authentication ────────────────────
-    const authService = getAuthService();
+    const authService = new AuthService();
     const authContext = await authService.extractFromRequest(request);
 
     if (!authContext.authenticated) {

@@ -8,15 +8,7 @@
 //   - Strategy: pluggable resolution strategies
 //   - Command: resolution operations as discrete actions
 
-import type {
-  PolicyConflict,
-  ConflictResolutionStrategy,
-  ConflictResolution,
-  ConflictSeverity,
-  ConflictType,
-  PolicyStatement,
-  PolicyEffectV2,
-} from "./types";
+import type { PolicyConflict, ConflictResolutionStrategy, ConflictResolution, PolicyStatement, PolicyEffectV2 } from "./types";
 
 // ─── Resolution Strategies ────────────────────────────────────────────
 

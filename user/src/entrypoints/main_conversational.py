@@ -18,7 +18,7 @@ from src.core.env_loader import load_env
 
 load_env()
 
-from src.core.shared._version import ZENIC_VERSION_STR  # noqa: E402
+from src.core.shared._version import ZENIC_VERSION_STR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("ZENIC.CONVERSATIONAL")

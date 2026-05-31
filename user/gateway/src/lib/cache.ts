@@ -367,7 +367,7 @@ export class RedisCache<T = unknown> implements ICache<T> {
       })
 
       this.client.on('reconnecting', () => {
-        console.info('[Cache:Redis] Reconnecting...')
+        console.info('[Cache:Redis] Reconnecting...') // eslint-disable-line no-console -- Redis client lifecycle logging
       })
 
       // Wait for the client to be ready (or timeout)

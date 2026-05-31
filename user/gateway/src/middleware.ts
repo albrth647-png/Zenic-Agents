@@ -113,7 +113,7 @@ function checkRateLimit(request: NextRequest): NextResponse | null {
   // x-real-ip is set by trusted reverse proxies.
   // x-forwarded-for is easily spoofed — only use first (client) IP if present.
   const clientId = request.headers.get("x-real-ip") ||
-    (request as any).ip ||
+    (request as Record<string, unknown>).ip as string | undefined ||
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "anonymous";
 
@@ -514,8 +514,8 @@ async function authenticateRequest(request: NextRequest): Promise<Headers | null
 
     if (token) {
       const headers = new Headers(request.headers);
-      headers.set("x-user-id", (token as any).userId || token.sub || "");
-      headers.set("x-user-role", (token as any).role || "user");
+      headers.set("x-user-id", (token as Record<string, unknown>).userId as string || token.sub || "");
+      headers.set("x-user-role", (token as Record<string, unknown>).role as string || "user");
       headers.set("x-user-email", token.email || "");
       headers.set("x-governor-check", "required"); // FASE 6: Governor context
       return headers;

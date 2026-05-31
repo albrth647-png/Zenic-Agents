@@ -26,8 +26,8 @@ class ToolManager:
     de tool calls en una API limpia y cohesiva.
     """
 
-    def __init__(self, config: ToolManagerConfig | None = None) -> None:  # noqa: F821
-        self._config = config or ToolManagerConfig()  # noqa: F821
+    def __init__(self, config: ToolManagerConfig | None = None) -> None:
+        self._config = config or ToolManagerConfig()
         self._registry = ToolRegistry()
         self._executor = ToolExecutor(
             self._registry,
@@ -121,7 +121,7 @@ class ToolManager:
         tool_name: str,
         arguments: dict[str, Any],
         session_id: str = "",
-    ) -> ToolResolution:  # noqa: F821
+    ) -> ToolResolution:
         """
         Resuelve una tool call sin ejecutarla.
 
@@ -130,7 +130,7 @@ class ToolManager:
         """
         spec = self._registry.get(tool_name)
         if spec is None:
-            return ToolResolution(  # noqa: F821
+            return ToolResolution(
                 tool_name=tool_name,
                 error=f"Tool no registrada: {tool_name}",
             )
@@ -141,7 +141,7 @@ class ToolManager:
             if session_perm == ToolPermission.DENIED:
                 permission = ToolPermission.DENIED
 
-        return ToolResolution(  # noqa: F821  # TODO: Phase3 - verify import
+        return ToolResolution(  # TODO: Phase3 - verify import
             tool_name=tool_name,
             arguments=arguments,
             permission=permission,

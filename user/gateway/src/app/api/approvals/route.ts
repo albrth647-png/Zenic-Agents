@@ -8,7 +8,7 @@ import {
   getApprovalHistory,
   requiresApproval,
   determineRiskLevel,
-} from '@/lib/hitl';
+} from '@/lib/hitl-legacy';
 import { governor } from '@/lib/resource-governor';
 
 /**
@@ -57,9 +57,10 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid mode. Use "pending" or "history"' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     governor.recordFailure('approval:read');
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     governor.release();
   }
@@ -206,9 +207,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid operation. Use "create", "review", or "check"' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     governor.recordFailure('approval:write');
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     governor.release();
   }

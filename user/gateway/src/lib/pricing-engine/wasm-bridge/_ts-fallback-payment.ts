@@ -10,15 +10,7 @@ import type {
   ManualPaymentRequest,
 } from "./types";
 
-import {
-  TierName,
-  TIER_PRICES_USDT,
-  ADDON_PRICES_USDT,
-  TRIAL_CONFIG,
-  PAYMENT_CURRENCY,
-  PAYMENT_NETWORK,
-  TIER_DISPLAY_NAMES,
-} from "./types";
+import { TierName, TIER_PRICES_USDT, TRIAL_CONFIG, PAYMENT_CURRENCY, PAYMENT_NETWORK, TIER_DISPLAY_NAMES } from "./types";
 
 import { resolveTierName } from "./_ts-fallback-core";
 

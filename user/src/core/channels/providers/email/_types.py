@@ -9,7 +9,7 @@ logger = logging.getLogger("zenic_agents.channels.email")
 # ── Optional Dependencies ─────────────────────────────────────────
 
 try:
-    import aiohttp  # noqa: F401
+    import aiohttp
 
     _HAS_AIOHTTP = True
 except ImportError:

@@ -84,7 +84,7 @@ class LLMDrafter:
 
         # Apply channel formatting
         channel = conversation_context.get("channel", self._default_channel)
-        if channel in CHANNEL_FORMATTERS:  # noqa: F821
+        if channel in CHANNEL_FORMATTERS:
             drafted = self._format_by_channel(drafted, channel)
 
         elapsed_ms = (time.time() - start) * 1000
@@ -127,7 +127,7 @@ class LLMDrafter:
         personality: str,
     ) -> str:
         """Build the drafting prompt for the LLM."""
-        personality_prompt = PERSONALITY_PROMPTS.get(personality, PERSONALITY_PROMPTS["zenic"])  # noqa: F821  # TODO: Phase3 - verify import
+        personality_prompt = PERSONALITY_PROMPTS.get(personality, PERSONALITY_PROMPTS["zenic"])  # TODO: Phase3 - verify import
 
         # Build a concise summary of the DAG result
         status = dag_result.get("status", "UNKNOWN")

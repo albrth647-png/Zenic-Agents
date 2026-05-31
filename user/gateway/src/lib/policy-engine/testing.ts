@@ -6,14 +6,7 @@
 
 import { db } from "@/lib/db";
 import { PolicyEvaluator } from "./evaluator";
-import type {
-  PolicyDocument,
-  PolicyTestCase,
-  PolicyTestResult,
-  PolicyTestSuiteResult,
-  PolicyTestExpectation,
-  PolicyEvaluationResult,
-} from "./types";
+import type { PolicyDocument, PolicyTestCase, PolicyTestResult, PolicyTestSuiteResult, PolicyTestExpectation } from "./types";
 
 // ─── Test Runner ──────────────────────────────────────────────────────
 

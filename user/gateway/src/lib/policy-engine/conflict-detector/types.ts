@@ -27,6 +27,8 @@ import {
   ConflictResolutionStrategy,
   PolicyEffectV2,
 } from "../types";
+export type { ConflictResolution, ConflictReport, PolicyConflict, ConflictStatementRef, PolicyStatement, PolicyCondition,  } from "../types";
+export { ConflictType, ConflictSeverity, ConflictResolutionStrategy, PolicyEffectV2 } from "../types";
 
 export type {
   ConflictResolution,
@@ -55,7 +57,7 @@ type ConflictResolutionStrategyType = ConflictResolutionStrategy;
  * Check if a concrete value matches a pattern.
  * Supports wildcard: "*" matches everything, "financial/*" matches "financial/transfer".
  */
-function matchesPattern(pattern: string, value: string): boolean {
+function _matchesPattern(pattern: string, value: string): boolean {
   if (pattern === "*") return true;
   if (pattern === value) return true;
 
@@ -606,7 +608,7 @@ export class ConflictDetector {
 
     if (!record) return null;
 
-    const resolution: ConflictResolution = {
+    const _resolution: ConflictResolution = {
       strategy,
       resolvedBy,
       resolvedAt: new Date().toISOString(),
@@ -1139,7 +1141,7 @@ export class ConflictDetector {
   private buildReport(
     conflicts: PolicyConflict[],
     statements: LoadedStatement[],
-    startTime: number,
+    _startTime: number,
   ): ConflictReport {
     const uniquePolicies = new Set(statements.map((s) => s.policyId));
     const bySeverity = this.emptyBySeverity();

@@ -276,8 +276,8 @@ class LicenseManager:
             import urllib.request
 
             validated_url = _validate_url(f"{server_url}/api/v1/kill-switch")
-            req = urllib.request.Request(validated_url, method="GET")  # noqa: S310
-            with urllib.request.urlopen(req, timeout=5) as resp:  # noqa: S310
+            req = urllib.request.Request(validated_url, method="GET")
+            with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode())
                 if data.get("active", False):
                     self.activate_kill_switch(data.get("reason", "Remote kill switch"), "server")
@@ -346,13 +346,13 @@ class LicenseManager:
                 }
             ).encode()
             validated_url = _validate_url(f"{server_url}/api/v1/heartbeat")
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 validated_url,
                 data=payload,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 body = json.loads(resp.read().decode())
                 self._last_heartbeat = time.time()
                 if body.get("kill_switch", False):

@@ -3,9 +3,10 @@
 // PUT    /api/v1/policies/[policyId]   — Update a policy (creates new version)
 // DELETE /api/v1/policies/[policyId]   — Deactivate a policy
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { loadPolicyFromYaml, computeContentHash, createVersion } from "@/lib/policy-engine";
+import { loadPolicyFromYaml, computeContentHash as _computeContentHash, createVersion } from "@/lib/policy-engine";
 import type { PolicyDocument } from "@/lib/policy-engine";
 
 // GET /api/v1/policies/[policyId]

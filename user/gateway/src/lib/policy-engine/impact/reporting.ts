@@ -5,17 +5,7 @@
 // Formats impact analysis results into human-readable reports and summaries.
 // Complements the analyzeImpact function in types.ts.
 
-import type {
-  ImpactAnalysisResult,
-  ImpactCategory,
-  BlastRadius,
-  DependencyRef,
-  DownstreamChange,
-  AffectedSetRef,
-  AffectedPlaybookRef,
-  AffectedToolRef,
-  SimulationRiskLevel,
-} from "./types";
+import type { ImpactAnalysisResult, ImpactCategory, BlastRadius, DependencyRef, DownstreamChange, SimulationRiskLevel } from "./types";
 
 // ─── Report Formatting ────────────────────────────────────────────────
 

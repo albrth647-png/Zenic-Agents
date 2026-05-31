@@ -1,15 +1,7 @@
 // ─── Zenic-Agents v3 — YAML Loader Compilers: ROI & Pricing ────────────
 // Split from _compilers.ts — ROI baseline/projected/calculation and pricing tier compilation
 
-import type {
-  PlaybookRoiConfig,
-  RoiBaseline,
-  RoiProjected,
-  RoiCalculation,
-  PlaybookPricing,
-  PricingTier,
-  PricingTierName,
-} from "../types";
+import type { PlaybookRoiConfig, RoiBaseline, RoiProjected, RoiCalculation, PlaybookPricing, PricingTier } from "../types";
 import { PricingTierName as PricingTierNameEnum } from "../types";
 import { PlaybookValidationError } from "./_types";
 import type { PlaybookYamlLoaderConfig } from "./_types";
@@ -123,7 +115,7 @@ export function computeRoiCalculation(
   projected: RoiProjected,
   monthlyCostUsd: number,
 ): RoiCalculation {
-  const workingHoursPerMonth = 160;
+  const _workingHoursPerMonth = 160;
   const hourlyCostUsd = 50;
 
   const timeSavedPerActionMin = baseline.manual_time_per_action_min - projected.automated_time_per_action_min;

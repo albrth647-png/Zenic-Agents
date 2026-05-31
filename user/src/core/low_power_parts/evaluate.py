@@ -1,5 +1,8 @@
 """Mixin: Hardware evaluation for LowPowerSequentialMode."""
 
+import logging
+
+logger = logging.getLogger(__name__)
 import os
 import time
 
@@ -177,7 +180,7 @@ class EvaluateMixin:
                     charging = status in ("charging", "full")
 
         except (FileNotFoundError, PermissionError, ValueError):
-            pass
+            logger.warning("_read_battery: (FileNotFoundError, PermissionError, ValueError) handled silently", exc_info=True)
 
         return level, charging
 

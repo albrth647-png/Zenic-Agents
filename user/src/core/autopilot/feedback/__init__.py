@@ -6,14 +6,13 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Any, List  # noqa: UP035
+from typing import Any, List
 
 from ._mixin_core import ClosedLoopFeedback
 from ._types import FeedbackAction, FeedbackCycle
 
 _closed_loop_feedback_instance: ClosedLoopFeedback | None = None
 _closed_loop_feedback_lock = threading.Lock()
-
 
 def get_closed_loop_feedback(
     db_path: str | None = None,
@@ -30,13 +29,11 @@ def get_closed_loop_feedback(
                 )
     return _closed_loop_feedback_instance
 
-
 def reset_closed_loop_feedback() -> None:
     """Reset the singleton (mainly for testing)."""
     global _closed_loop_feedback_instance
     with _closed_loop_feedback_lock:
         _closed_loop_feedback_instance = None
-
 
 __all__ = [
     "Any",

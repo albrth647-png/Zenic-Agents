@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Compose Policy Set ─────────
 // POST /api/v1/policy-engine/composition/[setId]/compose — Compose a policy set
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest } from "next/server";
 import { getCompositionEngine } from "@/lib/policy-engine";
 

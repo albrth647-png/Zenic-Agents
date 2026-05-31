@@ -12,12 +12,15 @@ use sha2::Sha256;
 /// `ConstantTimeEq` which uses compiler barriers.
 /// TODO(security): Migrate to `subtle::ConstantTimeEq` in next iteration.
 pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
+    // FIX 2B-4: Removed early return on length mismatch to prevent timing leak.
     let mut result: u8 = 0;
     for (x, y) in a.iter().zip(b.iter()) {
         result |= x ^ y;
+    }
+    let len_diff = a.len() ^ b.len();
+    result |= (len_diff & 0xFF) as u8;
+    if len_diff > 0xFF {
+        result |= 1;
     }
     result == 0
 }
@@ -37,7 +40,11 @@ pub fn hmac_sha256(secret: &[u8], data: &[u8]) -> [u8; 32] {
 
 /// Encode bytes as a hex string (lowercase).
 pub fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut acc, b| {
+        use std::fmt::Write;
+        write!(acc, "{:02x}", b).unwrap();
+        acc
+    })
 }
 
 /// Decode a hex string to bytes.

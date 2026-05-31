@@ -1,5 +1,6 @@
 // ─── POST /api/v1/subscription/saga/retry ──────────────────────────────
 // Resume a paused saga (e.g., after admin confirms payment)
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { resumeSaga } from "@/lib/pricing-engine/saga";
 

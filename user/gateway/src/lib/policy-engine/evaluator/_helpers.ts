@@ -31,7 +31,7 @@ export const OPERATOR_STRATEGIES: Record<ConditionOperator, OperatorFn> = {
       const re = new RegExp(value);
       // Reject patterns that could cause catastrophic backtracking:
       // nested quantifiers like (a+)+ or (a*){2,}
-      if (/(\+|\*)[^\+\*\|\)]*?(\+|\*)/.test(value)) {
+      if (/([+*])[^+*|)]*?([+*])/.test(value)) {
         console.warn(`[PolicyEngine] Rejected potentially dangerous regex: ${value}`);
         return false;
       }

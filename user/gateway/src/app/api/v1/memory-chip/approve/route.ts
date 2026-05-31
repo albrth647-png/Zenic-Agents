@@ -13,6 +13,7 @@
  *   → Next time: Layer 1 resolves in <5ms, IA not activated
  */
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 

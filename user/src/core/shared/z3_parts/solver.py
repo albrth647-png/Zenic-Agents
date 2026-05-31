@@ -13,7 +13,7 @@ from collections.abc import Callable
 from typing import Any
 
 try:
-    import z3 as z3_module  # type: ignore[import-unresolved]  # noqa: F401
+    import z3 as z3_module  # type: ignore[import-unresolved]
 
     HAS_Z3 = True
 except ImportError:
@@ -30,7 +30,6 @@ from .type_lattice import Z3TypeLatticeMixin
 from .type_safety import Z3TypeSafetyMixin
 
 logger = logging.getLogger(__name__)
-
 
 class Z3Solver(
     Z3NullSafetyMixin,

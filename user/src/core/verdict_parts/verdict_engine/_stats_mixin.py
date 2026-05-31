@@ -7,12 +7,12 @@ from ._config import VERDICT_CONSENSUS_ATTEMPTS, VERDICT_MAX_RETRIES
 
 try:
     from ..resilience import (
-        VerdictAuditEntry,  # noqa: F401
-        VerdictAuditor,  # noqa: F401
-        VerdictCircuitBreaker,  # noqa: F401
-        VerdictHealthMonitor,  # noqa: F401
-        VerdictResilienceOrchestrator,  # noqa: F401
-        VerdictRetryConfig,  # noqa: F401
+        VerdictAuditEntry,
+        VerdictAuditor,
+        VerdictCircuitBreaker,
+        VerdictHealthMonitor,
+        VerdictResilienceOrchestrator,
+        VerdictRetryConfig,
     )
 
     _RESILIENCE_AVAILABLE = True
@@ -20,7 +20,6 @@ except ImportError:
     _RESILIENCE_AVAILABLE = False
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
-
 
 class VerdictStatsMixin:
     """Mixin providing stats, health, and lifecycle methods for VerdictEngine."""

@@ -6,10 +6,7 @@
 // testable, self-contained units that accept all needed context as
 // parameters instead of relying on closure scope.
 
-import type {
-  PolicyEffectV2,
-  PolicyDocument,
-} from "../types";
+import type { PolicyEffectV2 } from "../types";
 import type {
   ImpactAnalysisDepth,
   DependencyRef,
@@ -19,10 +16,7 @@ import type {
   BlastRadius,
   DownstreamChange,
 } from "../types";
-import {
-  ImpactAnalysisDepth as ImpactAnalysisDepthValues,
-  DependencyType as DependencyTypeValues,
-} from "../types";
+import { DependencyType as DependencyTypeValues } from "../types";
 
 // ─── Tool Reference Processing ──────────────────────────────────────────
 

@@ -34,8 +34,11 @@ if (typeof globalThis.EventSource === 'undefined') {
     readonly CLOSED = 2;
     url: string;
     readyState: number = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onopen: ((this: EventSource, ev: Event) => any) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onmessage: ((this: EventSource, ev: MessageEvent) => any) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onerror: ((this: EventSource, ev: Event) => any) | null = null;
 
     constructor(url: string) {

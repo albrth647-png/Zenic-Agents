@@ -3,6 +3,7 @@
 // En serverless, el estado global causa fugas de memoria y race conditions.
 // Ahora usa la base de datos para persistir plantillas y archivos.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 

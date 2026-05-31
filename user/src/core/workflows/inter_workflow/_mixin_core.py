@@ -23,8 +23,8 @@ class InterWorkflowHandoff:
 
     def __init__(self) -> None:
         self._lock = threading.RLock()
-        self._rules: dict[str, HandoffRule] = {}  # noqa: F821
-        os.makedirs(_DB_DIR, exist_ok=True)  # noqa: F821
+        self._rules: dict[str, HandoffRule] = {}
+        os.makedirs(_DB_DIR, exist_ok=True)
         self._init_db()
         self._load_rules()
         logger.info("InterWorkflowHandoff initialized with %d rules", len(self._rules))
@@ -34,7 +34,7 @@ class InterWorkflowHandoff:
     # ------------------------------------------------------------------
 
     def _init_db(self) -> None:
-        with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
+        with sqlite3.connect(_DB_PATH) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 CREATE TABLE IF NOT EXISTS handoff_rules (
@@ -65,7 +65,7 @@ class InterWorkflowHandoff:
             conn.commit()
 
     def _load_rules(self) -> None:
-        with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
+        with sqlite3.connect(_DB_PATH) as conn:
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 "SELECT handoff_id, source_chain_id, target_chain_id, "
                 "field_mapping, condition, enabled, created_at "
@@ -75,7 +75,7 @@ class InterWorkflowHandoff:
         for row in rows:
             handoff_id = row[0]
             try:
-                rule = HandoffRule(  # noqa: F821
+                rule = HandoffRule(
                     handoff_id=handoff_id,
                     source_chain_id=row[1],
                     target_chain_id=row[2],
@@ -88,8 +88,8 @@ class InterWorkflowHandoff:
             except (json.JSONDecodeError, TypeError, KeyError) as exc:
                 logger.warning("Failed to load handoff rule %s: %s", handoff_id, exc)
 
-    def _save_rule(self, rule: HandoffRule) -> None:  # noqa: F821
-        with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
+    def _save_rule(self, rule: HandoffRule) -> None:
+        with sqlite3.connect(_DB_PATH) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 INSERT OR REPLACE INTO handoff_rules
@@ -109,9 +109,9 @@ class InterWorkflowHandoff:
             )
             conn.commit()
 
-    def _log_handoff(self, result: HandoffResult, source_chain_id: str) -> None:  # noqa: F821
+    def _log_handoff(self, result: HandoffResult, source_chain_id: str) -> None:
         log_id = f"hlog_{uuid.uuid4().hex[:12]}"
-        with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
+        with sqlite3.connect(_DB_PATH) as conn:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                 """
                 INSERT INTO handoff_execution_log
@@ -146,7 +146,7 @@ class InterWorkflowHandoff:
         """Register a handoff rule. Returns the handoff_id."""
         with self._lock:
             handoff_id = f"hoff_{uuid.uuid4().hex[:12]}"
-            rule = HandoffRule(  # noqa: F821
+            rule = HandoffRule(
                 handoff_id=handoff_id,
                 source_chain_id=source_chain_id,
                 target_chain_id=target_chain_id,
@@ -172,7 +172,7 @@ class InterWorkflowHandoff:
                 logger.warning("Handoff %s not found for removal", handoff_id)
                 return False
             del self._rules[handoff_id]
-            with sqlite3.connect(_DB_PATH) as conn:  # noqa: F821
+            with sqlite3.connect(_DB_PATH) as conn:
                 conn.execute(
                     "DELETE FROM handoff_rules WHERE handoff_id=?", (handoff_id,)
                 )  # nosemgrep: sqlalchemy-execute-raw-query
@@ -180,7 +180,7 @@ class InterWorkflowHandoff:
             logger.info("Unregistered handoff %s", handoff_id)
             return True
 
-    def list_handoffs(self, source_chain_id: str | None = None) -> list[HandoffRule]:  # noqa: F821
+    def list_handoffs(self, source_chain_id: str | None = None) -> list[HandoffRule]:
         """List handoff rules, optionally filtered by source chain."""
         with self._lock:
             rules = list(self._rules.values())
@@ -197,7 +197,7 @@ class InterWorkflowHandoff:
         source_chain_id: str,
         source_output: dict[str, Any],
         tenant_id: str,
-    ) -> list[HandoffResult]:  # noqa: F821
+    ) -> list[HandoffResult]:
         """Execute all matching handoffs for a completed source chain.
 
         For each enabled rule whose source_chain_id matches and whose
@@ -208,7 +208,7 @@ class InterWorkflowHandoff:
 
         Returns a list of HandoffResult, one per executed rule.  # noqa: F821
         """
-        results: list[HandoffResult] = []  # noqa: F821
+        results: list[HandoffResult] = []
 
         with self._lock:
             matching_rules = [r for r in self._rules.values() if r.source_chain_id == source_chain_id and r.enabled]
@@ -219,7 +219,7 @@ class InterWorkflowHandoff:
 
         for rule in matching_rules:
             # Evaluate condition
-            if rule.condition and not _safe_eval_condition(rule.condition, source_output):  # noqa: F821
+            if rule.condition and not _safe_eval_condition(rule.condition, source_output):
                 logger.debug(
                     "Handoff %s condition not met: %s",
                     rule.handoff_id,
@@ -232,10 +232,10 @@ class InterWorkflowHandoff:
             mapping_errors: list[str] = []
 
             for source_path, target_path in rule.field_mapping.items():
-                value = _resolve_dot_path(source_output, source_path)  # noqa: F821
+                value = _resolve_dot_path(source_output, source_path)
                 if value is not None:
                     # Set value at target_path (support nested dot paths)
-                    _set_dot_path(mapped_data, target_path, value)  # noqa: F821
+                    _set_dot_path(mapped_data, target_path, value)
                 else:
                     mapping_errors.append(f"Source path '{source_path}' not found")
 
@@ -259,10 +259,10 @@ class InterWorkflowHandoff:
 
     def _execute_target_with_retry(
         self,
-        rule: HandoffRule,  # noqa: F821
+        rule: HandoffRule,
         mapped_data: dict[str, Any],
         tenant_id: str,
-    ) -> HandoffResult:  # noqa: F821
+    ) -> HandoffResult:
         """Try to execute the target chain, retrying up to 3 times with 1 s backoff."""
         max_retries = 3
         base_delay = 1.0  # 1 second
@@ -282,7 +282,7 @@ class InterWorkflowHandoff:
 
                     exec_result = composer.execute_chain(target_chain)
                     if exec_result.success:
-                        return HandoffResult(  # noqa: F821
+                        return HandoffResult(
                             handoff_id=rule.handoff_id,
                             success=True,
                             target_chain_id=rule.target_chain_id,
@@ -301,7 +301,7 @@ class InterWorkflowHandoff:
                         template_chain.tenant_id = tenant_id
                         exec_result = composer.execute_chain(template_chain)
                         if exec_result.success:
-                            return HandoffResult(  # noqa: F821
+                            return HandoffResult(
                                 handoff_id=rule.handoff_id,
                                 success=True,
                                 target_chain_id=rule.target_chain_id,
@@ -335,7 +335,7 @@ class InterWorkflowHandoff:
                     last_error,
                 )
 
-        return HandoffResult(  # noqa: F821  # TODO: Phase3 - verify import
+        return HandoffResult(  # TODO: Phase3 - verify import
             handoff_id=rule.handoff_id,
             success=False,
             target_chain_id=rule.target_chain_id,

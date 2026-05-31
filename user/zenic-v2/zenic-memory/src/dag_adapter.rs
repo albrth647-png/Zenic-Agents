@@ -199,13 +199,13 @@ impl DagAdapter {
             if c == '\'' || c == '"' || c == '`' {
                 // Find closing quote
                 let rest = &error_message[i + 1..];
-                if let Some(end) = rest.find(|c2: char| c2 == '\'' || c2 == '"' || c2 == '`') {
+                if let Some(end) = rest.find(['\'', '"', '`']) {
                     let content = &rest[..end];
                     if content.len() > 2
                         && content
                             .chars()
                             .all(|c2| c2.is_alphanumeric() || c2 == '_')
-                        && content.chars().next().map_or(false, |c2| c2.is_lowercase())
+                        && content.chars().next().is_some_and(|c2| c2.is_lowercase())
                     {
                         return content.to_string();
                     }
@@ -218,7 +218,7 @@ impl DagAdapter {
         for kw in &keywords {
             if let Some(pos) = lower.find(kw) {
                 let after = &lower[pos + kw.len()..];
-                let trimmed = after.trim_start_matches(|c: char| c == ' ' || c == ':' || c == '=');
+                let trimmed = after.trim_start_matches([' ', ':', '=']);
                 if let Some(word) = trimmed.split_whitespace().next() {
                     let cleaned = word.trim_matches(|c: char| !c.is_alphanumeric() && c != '_');
                     if cleaned.len() > 2 {
@@ -234,7 +234,7 @@ impl DagAdapter {
             .find(|s| {
                 !s.is_empty()
                     && s.len() > 2
-                    && s.chars().next().map_or(false, |c| c.is_lowercase())
+                    && s.chars().next().is_some_and(|c| c.is_lowercase())
             })
             .unwrap_or("unknown_field")
             .to_string()

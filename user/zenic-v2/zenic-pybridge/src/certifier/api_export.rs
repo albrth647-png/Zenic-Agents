@@ -159,7 +159,7 @@ pub fn certifier_export_yaml(blueprint: &CertifiedBlueprint, py: Python<'_>) -> 
     match yaml_module {
         Ok(ym) => {
             let dump = ym.getattr("dump")?;
-            let default_flow_style = ym.getattr("SafeDumper")?.getattr("default_flow_style")?;
+            let _default_flow_style = ym.getattr("SafeDumper")?.getattr("default_flow_style")?;
             let kwargs = PyDict::new_bound(py);
             kwargs.set_item("default_flow_style", false)?;
             let result = dump.call((blueprint_dict,), Some(&kwargs))?;

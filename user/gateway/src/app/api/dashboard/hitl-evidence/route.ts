@@ -40,9 +40,8 @@ export async function GET(request: Request) {
     });
 
     // ── Parsear payloads ─────────────────────────────────────────────
-    let payload: Record<string, unknown> = {};
     try {
-      payload = JSON.parse(hitlRequest.actionPayload);
+      JSON.parse(hitlRequest.actionPayload);
     } catch {
       // ignore parse errors
     }

@@ -115,11 +115,11 @@ class ReplayQueuePersistenceMixin:
 
 # ─── Singleton ──────────────────────────────────────────────────
 
-_instance: ReplayQueue | None = None  # noqa: F821
+_instance: ReplayQueue | None = None
 _instance_lock = threading.Lock()
 
 
-def get_replay_queue() -> ReplayQueue:  # noqa: F821
+def get_replay_queue() -> ReplayQueue:
     """Return the singleton ReplayQueue instance."""
     global _instance
     if _instance is None:

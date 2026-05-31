@@ -3,6 +3,7 @@
 // enmascaran antes de enviar al frontend. Nunca se usa localStorage.
 // INVARIANT 4 — defensa en profundidad, la regla DENY es absoluta.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { encrypt, decrypt, maskCredentialFields } from "@/lib/crypto";

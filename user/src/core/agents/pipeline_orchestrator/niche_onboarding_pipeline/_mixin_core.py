@@ -13,11 +13,11 @@ class NicheOnboardingCoreMixin:
     """Core initialization and first pipeline steps."""
 
     def __init__(self) -> None:
-        self._bridge = NicheBridge()  # noqa: F821
-        self._ingestor = DocumentIngestor()  # noqa: F821
-        self._collector = InteractiveDataCollector()  # noqa: F821
-        self._domain_gate = get_default_domain_safety_gate()  # noqa: F821
-        self._certifier = BlueprintCertifier()  # noqa: F821
+        self._bridge = NicheBridge()
+        self._ingestor = DocumentIngestor()
+        self._collector = InteractiveDataCollector()
+        self._domain_gate = get_default_domain_safety_gate()
+        self._certifier = BlueprintCertifier()
 
     # ── Step 1: SELECT_NICHE ──────────────────────────────────
 

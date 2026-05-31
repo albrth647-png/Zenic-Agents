@@ -123,7 +123,7 @@ class HNSWIndex:
         self._M_max0 = M * 2  # Layer 0 gets 2x connections
         self._ef_construction = ef_construction
         self._max_level_mult = max_level_mult
-        self._rng = random.Random(seed)  # noqa: S311
+        self._rng = random.Random(seed)
 
         self._nodes: dict[str, HNSWNode] = {}
         self._entry_point: str | None = None

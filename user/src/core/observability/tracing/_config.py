@@ -130,7 +130,7 @@ def _setup_exporter(provider: Any, config: TracingConfig) -> None:
 
             provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
         except ImportError:
-            pass
+            logger.warning("_setup_exporter: ImportError handled silently", exc_info=True)
         return
 
     if config.exporter in ("jaeger", "otlp"):

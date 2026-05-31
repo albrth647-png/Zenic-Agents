@@ -136,7 +136,7 @@ class InputEnricher:
                     query=sanitized.cleaned,
                 )
                 external_ctx.extend(ctx)
-            except Exception:  # noqa: S112
+            except Exception:
                 continue  # Fuentes externas no deben romper el pipeline
 
         # 4. Ajustar prioridad

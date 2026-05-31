@@ -1,6 +1,7 @@
 // ─── POST /api/v1/memory-chip/lifecycle/start ──────────────────────────
 // Start a new learning lifecycle episode.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import {

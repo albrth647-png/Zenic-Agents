@@ -9,15 +9,7 @@
 //   - Strategy: pluggable resolution strategies
 //   - Chain of Responsibility: namespace hierarchy evaluation
 
-import type {
-  PolicyDocument,
-  PolicyEvaluationRequest,
-  PolicyEvaluationResult,
-  PolicyEffectV2,
-  PolicyStatement,
-  NamespaceResolutionStrategy,
-  NamespaceHierarchy,
-} from "./types";
+import type { PolicyEvaluationResult, PolicyEffectV2, NamespaceResolutionStrategy, NamespaceHierarchy } from "./types";
 
 // ─── Restrictiveness Ordering ─────────────────────────────────────────
 

@@ -32,7 +32,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-from ._constraints import Z3ConstraintMixin  # noqa: E402
+from ._constraints import Z3ConstraintMixin
 
 
 class Z3SolverEncodingMixin(Z3ConstraintMixin):

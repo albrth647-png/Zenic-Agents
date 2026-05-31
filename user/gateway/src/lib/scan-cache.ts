@@ -20,7 +20,7 @@
  * - With 100K files and 10 changes: 10 file reads instead of 100K
  */
 
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { readFileSync, readdirSync, statSync, existsSync as _existsSync } from 'fs'
 import { join, extname, relative } from 'path'
 import crypto from 'crypto'
 import { withRetry } from '@/lib/db'
@@ -161,7 +161,7 @@ function walkDir(dir: string, extensions: string[], exclude: string[] = EXCLUDE_
  * Get the max mtime of all files in a directory (recursive).
  * Used to determine if the directory has changed since last scan.
  */
-function getDirectoryMtime(dir: string): DirectoryMtime {
+function _getDirectoryMtime(dir: string): DirectoryMtime {
   const cached = dirMtimeCache.get(dir)
   if (cached) return cached
 
@@ -612,7 +612,13 @@ export async function incrementalScan(
 export async function getProjectStatsCached(): Promise<Record<string, unknown>> {
   const absolutePaths = walkDir(PROJECT_ROOT, SCAN_EXTENSIONS)
 
-  const stats: Record<string, unknown> = {
+  const stats: {
+    totalFiles: number;
+    byExtension: Record<string, number>;
+    totalLines: number;
+    byDirectory: Record<string, number>;
+    cacheInfo: Record<string, unknown>;
+  } = {
     totalFiles: absolutePaths.length,
     byExtension: {} as Record<string, number>,
     totalLines: 0,
@@ -645,13 +651,13 @@ export async function getProjectStatsCached(): Promise<Record<string, unknown>> 
 
       const currentMtime = getFileMtime(filePath)
       if (cached && cached.mtimeMs >= currentMtime) {
-        ;(stats as any).totalLines = ((stats as any).totalLines as number) + cached.lineCount
+        ;(stats).totalLines = (stats.totalLines) + cached.lineCount
         linesFromCache++
       } else {
         // Must read the file
         try {
           const content = readFileSync(filePath, 'utf-8')
-          ;(stats as any).totalLines = ((stats as any).totalLines as number) + content.split('\n').length
+          ;(stats).totalLines = (stats.totalLines) + content.split('\n').length
           linesFromFile++
         } catch { /* skip */ }
       }
@@ -659,13 +665,13 @@ export async function getProjectStatsCached(): Promise<Record<string, unknown>> 
       // DB error — fall back to reading file
       try {
         const content = readFileSync(filePath, 'utf-8')
-        ;(stats as any).totalLines = ((stats as any).totalLines as number) + content.split('\n').length
+        ;(stats as unknown).totalLines = ((stats as unknown).totalLines as number) + content.split('\n').length
         linesFromFile++
       } catch { /* skip */ }
     }
   }
 
-  ;(stats as any).cacheInfo = { linesFromCache, linesFromFile }
+  ;(stats).cacheInfo = { linesFromCache, linesFromFile }
 
   return stats
 }

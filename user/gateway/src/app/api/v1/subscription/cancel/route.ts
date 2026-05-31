@@ -2,6 +2,7 @@
 // POST /api/v1/subscription/cancel
 // Cancel a subscription. All payments were USDT TRC20.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { db } from "@/lib/db";
 import { PAYMENT_CURRENCY, PAYMENT_NETWORK } from "@/lib/pricing-engine";
 

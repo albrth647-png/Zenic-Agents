@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculatePricing, PAID_TIER_NAMES, SubscriptionTierName as PricingTierName } from '@/lib/pricing-engine';
+import { calculatePricing } from '@/lib/pricing-engine';
 import { requireTenantAuth, verifyTenantOwnership } from '@/lib/subscription/auth-helpers';
 
 /**

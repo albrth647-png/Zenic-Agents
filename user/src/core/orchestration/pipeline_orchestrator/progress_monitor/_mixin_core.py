@@ -37,8 +37,8 @@ class _PipelineProgress:
         self.failed_steps = 0
         self.skipped_steps = 0
         self.current_step = ""
-        self.step_states: dict[str, _StepProgress] = {}  # noqa: F821
+        self.step_states: dict[str, _StepProgress] = {}
         self.step_weights = step_weights or {}
         self.started_at = started_at
         self.finished_at: float | None = None
-        self.status = ProgressStatus.RUNNING  # noqa: F821  # TODO: Phase3 - verify import
+        self.status = ProgressStatus.RUNNING  # TODO: Phase3 - verify import

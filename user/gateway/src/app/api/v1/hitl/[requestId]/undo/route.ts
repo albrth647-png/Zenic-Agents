@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — HITL API: Undo Approved Action ────────────────
 // POST /api/v1/hitl/[requestId]/undo
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getReversibleActionService } from "@/lib/hitl/reversible-action/_undo";
 

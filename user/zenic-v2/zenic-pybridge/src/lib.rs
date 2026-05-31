@@ -1,5 +1,13 @@
 //! Zenic-Agents Native Extension Module
 //!
+//! NOTE: PyO3's #[pymethods] and #[pyfunction] macros expand to code that
+//! adds `.into()` on return values. When the function already returns
+//! `PyResult<T>`, Clippy flags these as "useless conversion to the same
+//! type: `pyo3::PyErr`". Since the `.into()` is in macro-generated code
+//! (not in our source), we allow this at the crate level.
+
+#![allow(clippy::useless_conversion)]
+//!
 //! This is the main entry point for the `_zenic_native` Python extension
 //! module built with PyO3. It exposes high-performance cryptographic,
 //! hashing, database, forensic, rollback, event-bus, simulation,
@@ -152,6 +160,7 @@ fn _zenic_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(niche::get_niche_category_display_names, m)?)?;
 
     // Niche Catalog (Phase 6.A) — Static compiled catalog of 24 niches
+    m.add_class::<catalog::CatalogNicheEntry>()?;
     m.add_function(wrap_pyfunction!(catalog::catalog_get_all, m)?)?;
     m.add_function(wrap_pyfunction!(catalog::catalog_get_by_id, m)?)?;
     m.add_function(wrap_pyfunction!(catalog::catalog_get_by_category, m)?)?;

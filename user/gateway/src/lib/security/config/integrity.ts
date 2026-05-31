@@ -1,4 +1,5 @@
 // ─── Zenic-Agents Gateway — Dependency Integrity Checker ──────────────
+/* eslint-disable no-console -- Integrity checker outputs directly to console at startup */
 // Provides runtime integrity checking for critical gateway dependencies
 // and environment configuration. Verifies that required modules are
 // present and haven't been tampered with, and flags known-insecure
@@ -271,9 +272,9 @@ const ENV_VAR_CHECKS: EnvVarCheck[] = [
 function computeModuleHash(moduleName: string): string | null {
   try {
     // Dynamic require to resolve the module path
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const module = require(moduleName);
-    if (module === undefined || module === null) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Dynamic require for integrity checking
+    const mod = require(moduleName);
+    if (mod === undefined || mod === null) {
       return null;
     }
 
@@ -281,7 +282,7 @@ function computeModuleHash(moduleName: string): string | null {
     // This is less precise than hashing the file on disk but works reliably
     // across bundled and ESM environments where require.resolve may not
     // point to a readable file.
-    const serialized = JSON.stringify(module, getCircularReplacer());
+    const serialized = JSON.stringify(mod, getCircularReplacer());
     return createHash('sha256').update(serialized).digest('hex');
   } catch {
     return null;

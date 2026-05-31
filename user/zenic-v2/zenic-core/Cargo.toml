@@ -13,7 +13,7 @@ zenic-runtime = { path = "../zenic-runtime" }
 zenic-flow = { path = "../zenic-flow" }
 zenic-policy = { path = "../zenic-policy" }
 serde = { workspace = true }
-serde_json = { version = "1.0" }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 indexmap = { workspace = true }
 tracing = { workspace = true }

@@ -171,7 +171,7 @@ class NicheOnboardingStepsMixin:
 
     # ── Step 8: EXPORT ────────────────────────────────────────
 
-    def export(self, state: PipelineState) -> PipelineResult:  # noqa: F821
+    def export(self, state: PipelineState) -> PipelineResult:
         """Export the final YAML output."""
         yaml_output = ""
 
@@ -193,7 +193,7 @@ class NicheOnboardingStepsMixin:
             "yes" if state.cert_result and state.cert_result.is_certified else "no",
         )
 
-        return PipelineResult(  # noqa: F821  # TODO: add import
+        return PipelineResult(  # TODO: add import
             success=success,
             pipeline_id=state.pipeline_id,
             niche_id=state.niche_id,
@@ -217,7 +217,7 @@ class NicheOnboardingStepsMixin:
         answers: dict[str, str] | None = None,
         private_key: str = "",
         data_sensitivity: str = "low",
-    ) -> PipelineResult:  # noqa: F821
+    ) -> PipelineResult:
         """Run the full pipeline from start to finish."""
         state = self.start(niche_id)
         if state.current_step == PipelineStep.FAILED:
@@ -246,9 +246,9 @@ class NicheOnboardingStepsMixin:
 
     # ── Progress ──────────────────────────────────────────────
 
-    def get_progress(self, state: PipelineState) -> PipelineProgress:  # noqa: F821
+    def get_progress(self, state: PipelineState) -> PipelineProgress:
         """Get pipeline progress information."""
-        return PipelineProgress(  # noqa: F821
+        return PipelineProgress(
             pipeline_id=state.pipeline_id,
             niche_id=state.niche_id,
             current_step=state.current_step.value,

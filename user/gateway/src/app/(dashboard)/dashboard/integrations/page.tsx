@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Activity, Plus, Cable, Server, RefreshCw, ExternalLink } from "lucide-react";
+import { Activity, Plus, Cable, Server, RefreshCw as _RefreshCw, ExternalLink as _ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export default function IntegrationsPage() {
       );
       setServers(data.data || []);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err);
     } finally {
       setCargando(false);
@@ -47,7 +47,9 @@ export default function IntegrationsPage() {
   }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Initial data fetch on mount */
     cargarServidores();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [cargarServidores]);
 
   const conectados = servers.filter((s) => s.status === "active").length;

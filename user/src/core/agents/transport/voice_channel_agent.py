@@ -170,15 +170,15 @@ async def _download_url(url: str) -> bytes | None:
             _logger.error("URL download failed: HTTP %d", resp.status)
             return None
     except ImportError:
-        pass
+        logger.warning("_download_url: ImportError handled silently", exc_info=True)
 
     # Fallback to urllib
     try:
         import urllib.request
 
         def _sync_download() -> bytes | None:
-            req = urllib.request.Request(url)  # noqa: S310
-            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 return resp.read()
 
         return await asyncio.to_thread(_sync_download)

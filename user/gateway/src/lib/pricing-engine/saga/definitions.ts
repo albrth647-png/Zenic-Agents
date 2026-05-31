@@ -4,7 +4,7 @@
 // WASM-first with TypeScript fallback.
 
 import type { SagaTypeName, SagaDefinition, SagaStepDefinition } from "./types";
-import { validateTrc20Address, calculatePricing } from "../wasm-bridge";
+import { validateTrc20Address as _validateTrc20Address, calculatePricing as _calculatePricing } from "../wasm-bridge";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Step Definitions (mirror the Rust engine exactly)

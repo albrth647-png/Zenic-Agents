@@ -86,26 +86,31 @@ impl NicheDefinition {
     }
 
     /// Set the subdomain (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_subdomain(&mut self, value: String) {
         self.subdomain = value;
     }
 
     /// Set the scale (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_scale(&mut self, value: String) {
         self.scale = value;
     }
 
     /// Set the tags (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_tags(&mut self, value: Vec<String>) {
         self.tags = value;
     }
 
     /// Set the required_documents (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_required_documents(&mut self, value: Vec<String>) {
         self.required_documents = value;
     }
 
     /// Set the compliance list (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_compliance(&mut self, value: Vec<String>) {
         self.compliance = value;
     }

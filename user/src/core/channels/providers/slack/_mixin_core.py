@@ -141,8 +141,8 @@ class SlackChannelProvider:
             return
 
         if _HAS_AIOHTTP and not self._session:
-            self._session = aiohttp.ClientSession(  # noqa: F821  # TODO: verify import
-                timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),  # noqa: F821  # TODO: verify import
+            self._session = aiohttp.ClientSession(  # TODO: verify import
+                timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),  # TODO: verify import
                 headers={
                     "Authorization": f"Bearer {self._bot_token}",
                     "Content-Type": "application/json",
@@ -334,7 +334,7 @@ class SlackChannelProvider:
 
         def _sync_post() -> ChannelResponse:
             data = json.dumps(payload).encode("utf-8")
-            req = urllib.request.Request(  # noqa: F821  # TODO: verify import
+            req = urllib.request.Request(  # TODO: verify import
                 validated_url,
                 data=data,
                 headers={
@@ -344,7 +344,7 @@ class SlackChannelProvider:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: F821  # TODO: verify import
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # TODO: verify import
                     body = json.loads(resp.read().decode("utf-8"))
                     if body.get("ok"):
                         return ChannelResponse(
@@ -363,7 +363,7 @@ class SlackChannelProvider:
                             error=f"Slack API error: {body.get('error', 'unknown')}",
                             timestamp=time.time(),
                         )
-            except urllib.error.HTTPError as e:  # noqa: F821  # TODO: Phase3 - verify import
+            except urllib.error.HTTPError as e:  # TODO: Phase3 - verify import
                 if e.code == 429:
                     retry_after = float(e.headers.get("Retry-After", "5"))
                     return ChannelResponse(

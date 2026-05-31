@@ -124,7 +124,7 @@ function SidebarProvider({
 
 // ─── Sidebar (main shell) ───────────────────────────────────────────
 
-function Sidebar({
+export function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",

@@ -12,12 +12,8 @@ import type {
 import {
   OnboardingSessionStatus as OnboardingSessionStatusEnum,
 } from "../types";
-import type {
-  OnboardingStepResult,
-  OnboardingCompletionResult,
-  OnboardingProgress,
-} from "./_types";
-import { validateStepAnswer, computeProgress, generateConfigFromAnswers } from "./_utils";
+import type { OnboardingProgress } from "./_types";
+import { validateStepAnswer as _validateStepAnswer, computeProgress, generateConfigFromAnswers as _generateConfigFromAnswers } from "./_utils";
 
 /**
  * Create a new onboarding session for a playbook.
@@ -141,7 +137,7 @@ export async function getOnboardingProgress(
     const onboardingConfig: PlaybookOnboardingConfig = JSON.parse(session.playbook.onboarding);
 
     return computeProgress(session.currentStep, onboardingConfig.steps);
-  } catch (error) {
+  } catch {
     return {
       totalSteps: 0,
       completedSteps: 0,

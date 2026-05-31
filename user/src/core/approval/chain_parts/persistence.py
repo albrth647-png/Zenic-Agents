@@ -171,12 +171,13 @@ class ApprovalChainDB:
             conditions.append("tenant_id = ?")
             params.append(tenant_id)
 
-        where = " AND ".join(conditions) if conditions else "1=1"
         try:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
+            # WHERE built from hardcoded condition strings; values parameterized
+            where = " AND ".join(conditions) if conditions else "1=1"
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",  # noqa: S608
+                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",
                 params,
             ).fetchall()
             conn.close()

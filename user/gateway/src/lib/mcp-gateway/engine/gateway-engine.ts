@@ -23,8 +23,11 @@ import type { RateLimitKey } from "../rate-limiter/types";
 import { RISK_LEVEL_CONFIG } from "../types";
 
 // ── Lazy import cache (H-91 fix: avoid repeated dynamic imports in hot path) ──
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _rbacModule: Promise<any> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _policyModule: Promise<any> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _dbModule: Promise<any> | null = null;
 
 const DEFAULT_CONFIG: GatewayConfig = {

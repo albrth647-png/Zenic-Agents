@@ -18,7 +18,7 @@ try:
         get_value_tracker,
     )
 except ImportError as exc:
-    logger.warning("core: ROI import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: ROI import failed: %s", exc)  # TODO: verify import
     CostAccumulator = None  # type: ignore[misc,assignment]
     CostCategory = None  # type: ignore[misc,assignment]
     CostEntry = None  # type: ignore[misc,assignment]
@@ -51,7 +51,7 @@ try:
         reset_knowledge_graph,
     )
 except ImportError as exc:
-    logger.warning("core: Knowledge import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: Knowledge import failed: %s", exc)  # TODO: verify import
     KnowledgeNode = None  # type: ignore[misc,assignment]
     KnowledgeEdge = None  # type: ignore[misc,assignment]
     KnowledgeQuery = None  # type: ignore[misc,assignment]
@@ -81,7 +81,7 @@ try:
         reset_memory_engine_v2,
     )
 except ImportError as exc:
-    logger.warning("core: MemoryV2 import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: MemoryV2 import failed: %s", exc)  # TODO: verify import
     MemoryTier = None  # type: ignore[misc,assignment]
     MemoryType = None  # type: ignore[misc,assignment]
     MemoryRecord = None  # type: ignore[misc,assignment]
@@ -110,7 +110,7 @@ try:
         reset_outcome_tracker,
     )
 except ImportError as exc:
-    logger.warning("core: Learning import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: Learning import failed: %s", exc)  # TODO: verify import
     OutcomeStatus = None  # type: ignore[misc,assignment]
     ActionOutcome = None  # type: ignore[misc,assignment]
     OutcomeTracker = None  # type: ignore[misc,assignment]
@@ -142,7 +142,7 @@ try:
         reset_plugin_registry,
     )
 except ImportError as exc:
-    logger.warning("core: Plugins import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: Plugins import failed: %s", exc)  # TODO: verify import
     PluginState = None  # type: ignore[misc,assignment]
     PluginCapability = None  # type: ignore[misc,assignment]
     PluginManifest = None  # type: ignore[misc,assignment]
@@ -175,7 +175,7 @@ try:
         reset_policy_code_engine,
     )
 except ImportError as exc:
-    logger.warning("core: PolicyCode import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: PolicyCode import failed: %s", exc)  # TODO: verify import
     PolicyEffect = None  # type: ignore[misc,assignment]
     PolicyOperator = None  # type: ignore[misc,assignment]
     PolicyCondition = None  # type: ignore[misc,assignment]
@@ -201,7 +201,7 @@ try:
         reset_risk_prediction_engine,
     )
 except ImportError as exc:
-    logger.warning("core: Risk import failed: %s", exc)  # noqa: F821  # TODO: verify import
+    logger.warning("core: Risk import failed: %s", exc)  # TODO: verify import
     RiskLevel = None  # type: ignore[misc,assignment]
     BlastRadiusReport = None  # type: ignore[misc,assignment]
     RiskPropagationReport = None  # type: ignore[misc,assignment]
@@ -226,7 +226,7 @@ try:
         reset_steady_state_verifier,
     )
 except ImportError as exc:
-    logger.warning("core: Chaos import failed: %s", exc)  # noqa: F821  # TODO: Phase3 - verify import
+    logger.warning("core: Chaos import failed: %s", exc)  # TODO: Phase3 - verify import
     ChaosExperimentState = None  # type: ignore[misc,assignment]
     FaultType = None  # type: ignore[misc,assignment]
     FaultInjection = None  # type: ignore[misc,assignment]

@@ -24,7 +24,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("worker-entrypoint")
 
-
 def main() -> None:
     """Start the distributed worker process."""
     from src.core.distributed import (
@@ -146,7 +145,6 @@ def main() -> None:
         loop.run_until_complete(backend.disconnect())
         loop.close()
 
-
 def _register_handlers(worker: "DistributedWorker") -> None:
     """
     Register task handlers for known task types.
@@ -186,7 +184,7 @@ def _register_handlers(worker: "DistributedWorker") -> None:
 
     # Try to register reasoning handler
     try:
-        from src.core.reasoning_engine import ReasoningEngine  # noqa: F401
+        from src.core.reasoning_engine import ReasoningEngine
 
         worker.register_handler("reasoning", _handle_generic)
     except ImportError:
@@ -225,7 +223,6 @@ def _register_handlers(worker: "DistributedWorker") -> None:
         len(worker._handlers),
         list(worker._handlers.keys()),
     )
-
 
 if __name__ == "__main__":
     main()

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # ── Optional: aiosmtplib ──────────────────────────────────────────
 
 try:
-    import aiosmtplib  # type: ignore[import-unresolved]  # noqa: F401
+    import aiosmtplib  # type: ignore[import-unresolved]
 
     _HAS_AIOSMTPLIB_LOCAL = True
 except ImportError:
@@ -33,7 +33,7 @@ except ImportError:
 
 try:
     import urllib.error
-    import urllib.request  # noqa: F401
+    import urllib.request
 
     _HAS_URLLIB = True
 except ImportError:
@@ -44,7 +44,6 @@ except ImportError:
 _VALID_MODES = frozenset({"smtp", "graph_api", "auto"})
 _VALID_IMPORTANCE = frozenset({"low", "normal", "high"})
 _SMTP_TIMEOUT = 30  # seconds
-
 
 def build_mime_message(
     from_email: str,
@@ -103,7 +102,6 @@ def build_mime_message(
 
     return msg
 
-
 def resolve_recipients(config: dict[str, Any]) -> list[str]:
     """Resolve recipients from config, normalizing to a list."""
     to = config.get("to", [])
@@ -112,7 +110,6 @@ def resolve_recipients(config: dict[str, Any]) -> list[str]:
     if isinstance(to, (list, tuple)):
         return [r.strip() for r in to if r and r.strip()]
     return []
-
 
 def build_dry_run_result(
     recipients: list[str],
@@ -138,7 +135,6 @@ def build_dry_run_result(
             "message_id": dry_run_id,
         },
     )
-
 
 __all__ = [
     "_HAS_AIOSMTPLIB_LOCAL",

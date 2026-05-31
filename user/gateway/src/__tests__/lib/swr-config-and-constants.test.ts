@@ -8,7 +8,7 @@ import { defaultSWRConfig, swrFetcher } from '@/lib/swr-config';
 import { construirContextoSuscripcion, tierMinimo, WIDGET_GATES } from '@/app/_page_parts/constants';
 import { TIER_LIMITS, TIER_DISPLAY_NAMES, FEATURE_TIER_MAP } from '@/lib/pricing-engine/types';
 import type { SubscriptionTierName, FeatureName } from '@/lib/pricing-engine/types';
-import type { ContextoSuscripcion } from '@/app/_page_parts/types';
+import type { ContextoSuscripcion as _ContextoSuscripcion } from '@/app/_page_parts/types';
 
 /** SWR allows shouldRetryOnError to be boolean | function — cast to function for test */
 const shouldRetryOnError = defaultSWRConfig.shouldRetryOnError as (err: unknown) => boolean;

@@ -41,9 +41,9 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         self._failed_count: int = 0
         self._confirmation_count: int = 0
         self._started: bool = False
-        self._rate_limit_info = RateLimitInfo()  # noqa: F821
-        self._message_handler: MessageHandler | None = None  # noqa: F821
-        self._confirmation_handler: ConfirmationHandler | None = None  # noqa: F821
+        self._rate_limit_info = RateLimitInfo()
+        self._message_handler: MessageHandler | None = None
+        self._confirmation_handler: ConfirmationHandler | None = None
         self._session: Any | None = None
 
     # ── ChannelProvider Protocol ────────────────────────────────
@@ -53,15 +53,15 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         return "sms"
 
     @property
-    def capabilities(self) -> frozenset[ChannelCapability]:  # noqa: F821
+    def capabilities(self) -> frozenset[ChannelCapability]:
         return frozenset(
             {
-                ChannelCapability.SEND_TEXT,  # noqa: F821
-                ChannelCapability.SEND_SMS,  # noqa: F821
-                ChannelCapability.SEND_MMS,  # noqa: F821
-                ChannelCapability.SEND_CONFIRMATION,  # noqa: F821
-                ChannelCapability.RECEIVE_MESSAGE,  # noqa: F821
-                ChannelCapability.REPLY,  # noqa: F821
+                ChannelCapability.SEND_TEXT,
+                ChannelCapability.SEND_SMS,
+                ChannelCapability.SEND_MMS,
+                ChannelCapability.SEND_CONFIRMATION,
+                ChannelCapability.RECEIVE_MESSAGE,
+                ChannelCapability.REPLY,
             }
         )
 
@@ -70,21 +70,21 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         """Available if Account SID, Auth Token, and phone number are configured."""
         return bool(self._account_sid and self._auth_token and self._phone_number)
 
-    async def send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F821
+    async def send(self, message: ChannelMessage) -> ChannelResponse:
         """Send an SMS/MMS via Twilio REST API."""
         if not self.is_available:
             return self._dry_run_send(message)
 
         is_mms = bool(message.image_url or message.file_url)
-        text = format_sms_text(message)  # noqa: F821
+        text = format_sms_text(message)
         if not text:
             text = message.text or ""
-        text = sanitize_plain_text(text)  # noqa: F821
+        text = sanitize_plain_text(text)
 
         char_limit = _MMS_CHAR_LIMIT if is_mms else _SMS_CHAR_LIMIT
-        segments = split_message(text, char_limit) if len(text) > char_limit else [text]  # noqa: F821
+        segments = split_message(text, char_limit) if len(text) > char_limit else [text]
 
-        last_response: ChannelResponse | None = None  # noqa: F821  # TODO: add import
+        last_response: ChannelResponse | None = None  # TODO: add import
         total_segments = len(segments)
 
         for i, segment in enumerate(segments):
@@ -109,7 +109,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
                 return response
 
         if last_response and total_segments > 1:
-            return ChannelResponse(  # noqa: F821  # TODO: add import
+            return ChannelResponse(  # TODO: add import
                 success=last_response.success,
                 channel="sms",
                 message_id=last_response.message_id,
@@ -119,18 +119,18 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
                 timestamp=last_response.timestamp,
             )
 
-        return last_response or ChannelResponse(  # noqa: F821  # TODO: add import
+        return last_response or ChannelResponse(  # TODO: add import
             success=False,
             channel="sms",
-            status=DeliveryStatus.FAILED,  # noqa: F821
+            status=DeliveryStatus.FAILED,
             error="No message content to send",
             timestamp=time.time(),
         )
 
     async def send_confirmation(
         self,
-        request: ConfirmationRequest,  # noqa: F821
-    ) -> ChannelResponse:  # noqa: F821  # TODO: add import
+        request: ConfirmationRequest,
+    ) -> ChannelResponse:  # TODO: add import
         """Send a confirmation request via SMS."""
         parts: list[str] = []
         if request.title:
@@ -142,7 +142,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         parts.append(f"Reply {options_text}")
         text = "\n".join(parts)
 
-        msg = ChannelMessage(  # noqa: F821
+        msg = ChannelMessage(
             text=text,
             recipient=request.recipient,
             metadata={"action_id": request.action_id, "type": "confirmation"},
@@ -156,10 +156,10 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         """Initialize the provider."""
         if self._started:
             return
-        if _HAS_AIOHTTP and not self._session:  # noqa: F821
+        if _HAS_AIOHTTP and not self._session:
             credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode("utf-8")
-            self._session = aiohttp.ClientSession(  # noqa: F821
-                timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),  # noqa: F821
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT),
                 headers={"Authorization": f"Basic {credentials}"},
             )
         self._started = True
@@ -170,7 +170,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
 
     async def stop(self) -> None:
         """Gracefully shut down."""
-        if self._session and _HAS_AIOHTTP:  # noqa: F821
+        if self._session and _HAS_AIOHTTP:
             await self._session.close()
             self._session = None
         self._started = False
@@ -192,17 +192,17 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
             }
 
     @property
-    def rate_limit_info(self) -> RateLimitInfo:  # noqa: F821
+    def rate_limit_info(self) -> RateLimitInfo:
         """Current rate limit status."""
         return self._rate_limit_info
 
     # ── InboundChannelProvider Protocol ─────────────────────────
 
-    def set_message_handler(self, handler: MessageHandler) -> None:  # noqa: F821
+    def set_message_handler(self, handler: MessageHandler) -> None:
         """Register a handler for incoming SMS messages."""
         self._message_handler = handler
 
-    def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:  # noqa: F821
+    def set_confirmation_handler(self, handler: ConfirmationHandler) -> None:
         """Register a handler for SMS reply confirmations."""
         self._confirmation_handler = handler
 
@@ -229,7 +229,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         ).decode("utf-8")
         return hmac.compare(computed, signature)
 
-    def parse_inbound_message(self, params: dict[str, str]) -> ChannelMessage | None:  # noqa: F821
+    def parse_inbound_message(self, params: dict[str, str]) -> ChannelMessage | None:
         """Parse a Twilio webhook POST into a ChannelMessage."""
         body = params.get("Body", "")
         from_number = params.get("From", "")
@@ -254,7 +254,7 @@ class TwilioSMSChannelProvider(TwilioSMSTransportMixin):
         if media_urls:
             metadata["media_urls"] = media_urls
 
-        return ChannelMessage(  # noqa: F821  # TODO: add import
+        return ChannelMessage(  # TODO: add import
             text=body,
             recipient=from_number,
             metadata=metadata,

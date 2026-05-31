@@ -51,7 +51,7 @@ class NicheConverter(NicheConverterLegacyMixin):
             if bridge is not None:
                 self._catalog_available = True
         except ImportError:
-            pass
+            logger.warning("__init__: ImportError handled silently", exc_info=True)
 
         if not self._catalog_available:
             logger.warning(

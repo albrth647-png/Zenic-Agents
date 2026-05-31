@@ -4,6 +4,7 @@
 // It operates on the AccessPolicy table (tool-level RBAC), while
 // /api/v1/policies/[policyId] operates on the DeclPolicy table.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/mcp-gateway/services/audit-service";

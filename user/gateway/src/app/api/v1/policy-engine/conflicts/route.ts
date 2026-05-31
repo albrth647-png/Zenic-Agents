@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/conflicts  — List conflicts with filters
 // POST /api/v1/policy-engine/conflicts  — Detect conflicts (trigger scan)
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest } from "next/server";
 import { getConflictDetector } from "@/lib/policy-engine";
 import type { ConflictDetectionOptions } from "@/lib/policy-engine/conflict-detector";

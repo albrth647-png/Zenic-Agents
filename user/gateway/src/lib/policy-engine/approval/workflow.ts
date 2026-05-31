@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
-import type { PolicyDocument, PolicyApprovalRequest, ApprovalStatus, ApprovalPriority, ApprovalDecision, AutoApproveRule, AutoApproveCondition } from "../types";
+import type { PolicyDocument, PolicyApprovalRequest, ApprovalStatus, ApprovalPriority, ApprovalDecision, AutoApproveRule, AutoApproveCondition as _AutoApproveCondition } from "../types";
 import {
   ApprovalStatus as ApprovalStatusEnum,
   ApprovalPriority as ApprovalPriorityEnum,
 } from "../types/approval";
-import { AUTO_APPROVE_CHECKERS, AutoApproveRuleChecker } from "./types";
-import type { CreateApprovalRequestInput, ApprovalListOptions } from "./types";
+import { AUTO_APPROVE_CHECKERS, AutoApproveRuleChecker as _AutoApproveRuleChecker } from "./types";
+import type { CreateApprovalRequestInput, ApprovalListOptions as _ApprovalListOptions } from "./types";
 import { validateProposedDocument } from "./auto-approve";
 
 // ─── Auto-Approve Rule Evaluation ────────────────────────────────────

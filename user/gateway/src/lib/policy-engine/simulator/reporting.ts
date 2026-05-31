@@ -5,15 +5,7 @@
 // Formats simulation results into human-readable reports and summaries.
 // Complements the runSimulation function in types.ts.
 
-import type {
-  SimulationResult,
-  VerdictChange,
-  VerdictChangeCategory,
-  PolicyConflict,
-  SimulationRisk,
-  ComplianceImpact,
-  SimulationRiskLevel,
-} from "./types";
+import type { SimulationResult, VerdictChange, VerdictChangeCategory, PolicyConflict, SimulationRiskLevel } from "./types";
 
 // ─── Report Formatting ────────────────────────────────────────────────
 

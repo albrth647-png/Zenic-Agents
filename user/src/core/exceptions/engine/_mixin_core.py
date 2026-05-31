@@ -37,7 +37,7 @@ class ExceptionEngine:
     def __init__(self, db_path: str = "exception_engine.sqlite") -> None:
         self._db_path = db_path
         self._lock = threading.RLock()
-        self._on_signal_callbacks: list[Callable[[ExceptionSignal], None]] = []  # noqa: F821
+        self._on_signal_callbacks: list[Callable[[ExceptionSignal], None]] = []
         self._init_db()
 
     # ── DB initialisation ─────────────────────────────────
@@ -46,10 +46,10 @@ class ExceptionEngine:
         """Create tables and indexes (idempotent)."""
 
         def _exec(conn: sqlite3.Connection) -> None:
-            conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)  # noqa: F821
+            conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)
             conn.commit()
 
-        _retry_db(self._with_conn, _exec)  # noqa: F821
+        _retry_db(self._with_conn, _exec)
 
     def _with_conn(self, fn: Callable[[sqlite3.Connection], Any]) -> Any:
         """Open a connection, execute *fn*, close the connection."""
@@ -70,7 +70,7 @@ class ExceptionEngine:
         severity: ExceptionSeverity,
         message: str,
         context: dict[str, Any] | None = None,
-    ) -> ExceptionSignal:  # noqa: F821
+    ) -> ExceptionSignal:
         """Create and register an exception signal."""
         # Coerce string arguments to enum instances
         if isinstance(category, str):
@@ -78,7 +78,7 @@ class ExceptionEngine:
         if isinstance(severity, str):
             severity = ExceptionSeverity(severity)
 
-        sig = ExceptionSignal(  # noqa: F821
+        sig = ExceptionSignal(
             source=source,
             category=category,
             severity=severity,
@@ -86,7 +86,7 @@ class ExceptionEngine:
             context=context or {},
         )
 
-        record = ExceptionRecord(signal=sig)  # noqa: F821
+        record = ExceptionRecord(signal=sig)
 
         def _persist(conn: sqlite3.Connection) -> None:
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
@@ -116,7 +116,7 @@ class ExceptionEngine:
             conn.commit()
 
         with self._lock:
-            _retry_db(self._with_conn, _persist)  # noqa: F821
+            _retry_db(self._with_conn, _persist)
 
         self._fire_callbacks(sig)
         logger.info(
@@ -135,7 +135,7 @@ class ExceptionEngine:
         confidence: float,
         message: str,
         context: dict[str, Any] | None = None,
-    ) -> ExceptionSignal:  # noqa: F821
+    ) -> ExceptionSignal:
         """Convenience: derive category and severity from a confidence score."""
         category = ExceptionCategory.LOW_CONFIDENCE
         severity = severity_from_confidence(confidence)
@@ -148,7 +148,7 @@ class ExceptionEngine:
         source: str,
         error: Exception,
         context: dict[str, Any] | None = None,
-    ) -> ExceptionSignal:  # noqa: F821
+    ) -> ExceptionSignal:
         """Convenience: derive category from a Python exception."""
         category = categorize_error(error)
         severity = ExceptionSeverity.ERROR
@@ -164,10 +164,10 @@ class ExceptionEngine:
 
     # ── Query ─────────────────────────────────────────────
 
-    def get_active_exceptions(self, tenant_id: str = "") -> list[ExceptionRecord]:  # noqa: F821
+    def get_active_exceptions(self, tenant_id: str = "") -> list[ExceptionRecord]:
         """Return unresolved exception records, optionally filtered by tenant."""
 
-        def _query(conn: sqlite3.Connection) -> list[ExceptionRecord]:  # noqa: F821
+        def _query(conn: sqlite3.Connection) -> list[ExceptionRecord]:
             if tenant_id:
                 rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     """
@@ -193,7 +193,7 @@ class ExceptionEngine:
                 ).fetchall()
             return [self._row_to_record(r) for r in rows]
 
-        return _retry_db(self._with_conn, _query)  # noqa: F821
+        return _retry_db(self._with_conn, _query)
 
     # ── Resolution ────────────────────────────────────────
 
@@ -214,7 +214,7 @@ class ExceptionEngine:
             return cursor.rowcount > 0
 
         with self._lock:
-            return _retry_db(self._with_conn, _update)  # noqa: F821
+            return _retry_db(self._with_conn, _update)
 
     # ── Auto-brake ────────────────────────────────────────
 
@@ -237,7 +237,7 @@ class ExceptionEngine:
             ).fetchone()
             return row[0] if row else 0
 
-        count = _retry_db(self._with_conn, _count)  # noqa: F821
+        count = _retry_db(self._with_conn, _count)
         triggered = count > threshold
         if triggered:
             logger.warning(
@@ -284,15 +284,15 @@ class ExceptionEngine:
                 "recent_rate_per_hour": recent,
             }
 
-        return _retry_db(self._with_conn, _collect)  # noqa: F821
+        return _retry_db(self._with_conn, _collect)
 
     # ── Callbacks / integration hooks ─────────────────────
 
-    def on_signal(self, callback: Callable[[ExceptionSignal], None]) -> None:  # noqa: F821
+    def on_signal(self, callback: Callable[[ExceptionSignal], None]) -> None:
         """Register a callback invoked whenever a new signal is created."""
         self._on_signal_callbacks.append(callback)
 
-    def _fire_callbacks(self, signal: ExceptionSignal) -> None:  # noqa: F821
+    def _fire_callbacks(self, signal: ExceptionSignal) -> None:
         for cb in self._on_signal_callbacks:
             try:
                 cb(signal)
@@ -310,11 +310,11 @@ class ExceptionEngine:
         confidence: float,
         message: str,
         context: dict[str, Any] | None = None,
-    ) -> ExceptionSignal:  # noqa: F821
+    ) -> ExceptionSignal:
         """Bridge from :class:`ConfidenceEstimator`."""
         return self.signal_from_confidence(source, confidence, message, context)
 
-    def feed_alert(self, alert_data: dict[str, Any]) -> ExceptionSignal:  # noqa: F821
+    def feed_alert(self, alert_data: dict[str, Any]) -> ExceptionSignal:
         """Bridge from :class:`AlertManager`."""
         source = alert_data.get("monitor_name", alert_data.get("source", "alert_manager"))
         category_str = alert_data.get("category", "SYSTEM_ERROR")
@@ -339,7 +339,7 @@ class ExceptionEngine:
     @staticmethod
     def _row_to_record(
         row: tuple,
-    ) -> ExceptionRecord:  # noqa: F821
+    ) -> ExceptionRecord:
         """Convert a DB row tuple to an :class:`ExceptionRecord`."""
         (
             record_id,
@@ -371,7 +371,7 @@ class ExceptionEngine:
         except ValueError:
             severity = ExceptionSeverity.ERROR
 
-        sig = ExceptionSignal(  # noqa: F821
+        sig = ExceptionSignal(
             signal_id=signal_id,
             source=source,
             category=category,
@@ -381,7 +381,7 @@ class ExceptionEngine:
             timestamp=timestamp,
         )
 
-        return ExceptionRecord(  # noqa: F821  # TODO: Phase3 - verify import
+        return ExceptionRecord(  # TODO: Phase3 - verify import
             record_id=record_id,
             signal=sig,
             routing_action=routing_action,

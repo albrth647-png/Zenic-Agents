@@ -43,9 +43,7 @@ pub fn validate_value_for_type(field_type: &str, value: &str) -> (bool, Option<S
             let re = regex::Regex::new(URL_PATTERN);
             match re {
                 Ok(r) => {
-                    if r.is_match(trimmed) {
-                        (true, None)
-                    } else if trimmed.contains('.') && !trimmed.contains(' ') {
+                    if r.is_match(trimmed) || (trimmed.contains('.') && !trimmed.contains(' ')) {
                         (true, None)
                     } else {
                         (false, Some(format!("Invalid URL format: {}", trimmed)))

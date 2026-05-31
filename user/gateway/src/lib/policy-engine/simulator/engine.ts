@@ -10,13 +10,7 @@
 //   - Memento: Before/after snapshots for verdict comparison
 
 import { db } from "@/lib/db";
-import type {
-  PolicyDocument,
-  PolicyStatement,
-  PolicyEffectV2,
-  SimulationChange,
-  SimulationChangeType,
-} from "./types";
+import type { PolicyDocument, SimulationChange, SimulationChangeType } from "./types";
 
 // ─── Deep Clone Helper ───────────────────────────────────────────────
 

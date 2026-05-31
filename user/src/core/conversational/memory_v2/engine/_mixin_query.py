@@ -48,7 +48,7 @@ class MemoryQueryMixin:
 
                     where = " AND ".join(conditions) if conditions else "1=1"
                     sql = (
-                        f"SELECT * FROM memory_v2_records WHERE {where} "  # noqa: S608
+                        f"SELECT * FROM memory_v2_records WHERE {where} "
                         f"ORDER BY importance DESC, created_at DESC LIMIT ?"
                     )
                     params.append(query.max_results)
@@ -56,7 +56,7 @@ class MemoryQueryMixin:
                     cursor = conn.execute(sql, params)  # nosemgrep: sqlalchemy-execute-raw-query
                     records = [self._record_from_row(row) for row in cursor.fetchall()]
 
-                    count_sql = f"SELECT COUNT(*) FROM memory_v2_records WHERE {where}"  # noqa: S608
+                    count_sql = f"SELECT COUNT(*) FROM memory_v2_records WHERE {where}"
                     total = conn.execute(count_sql, params[:-1]).fetchone()[
                         0
                     ]  # nosemgrep: sqlalchemy-execute-raw-query
@@ -66,7 +66,7 @@ class MemoryQueryMixin:
                 finally:
                     conn.close()
 
-            return _retry(_search)  # noqa: F821
+            return _retry(_search)
 
     def get_session_summary(self, session_id: str) -> str:
         with self._lock:
@@ -83,7 +83,7 @@ class MemoryQueryMixin:
                     conn.close()
                 return self._generate_summary(records)
 
-            return _retry(_summarize)  # noqa: F821
+            return _retry(_summarize)
 
     def get_stats(self) -> dict[str, Any]:
         with self._lock:
@@ -124,7 +124,7 @@ class MemoryQueryMixin:
                 finally:
                     conn.close()
 
-            return _retry(_calc)  # noqa: F821  # TODO: Phase3 - verify import
+            return _retry(_calc)  # TODO: Phase3 - verify import
 
     @staticmethod
     def _record_from_row(row: Any) -> MemoryRecord:

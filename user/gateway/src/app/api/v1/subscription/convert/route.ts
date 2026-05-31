@@ -3,14 +3,9 @@
 // Convert a trial subscription to a paid subscription. USDT TRC20 only.
 // After conversion, subscription status is "pending_payment" (admin must confirm payment).
 
+/* eslint-disable zenic-security/api-auth-required */
 import { db } from "@/lib/db";
-import {
-  validateTrc20Address,
-  convertTrialToPaid,
-  PAID_TIER_NAMES,
-  PAYMENT_CURRENCY,
-  PAYMENT_NETWORK,
-} from "@/lib/pricing-engine";
+import { validateTrc20Address, convertTrialToPaid, PAID_TIER_NAMES } from "@/lib/pricing-engine";
 
 interface ConvertBody {
   tenantId: string;

@@ -131,7 +131,7 @@ class ProcessBuilderMixin:
                         if fields:
                             entities.append({"name": node.name, "fields": fields})
             except (SyntaxError, AttributeError):
-                pass
+                logger.warning("_extract_entities_from_intent: (SyntaxError, AttributeError) handled silently", exc_info=True)
 
         if not entities:
             entities = [default_entity]

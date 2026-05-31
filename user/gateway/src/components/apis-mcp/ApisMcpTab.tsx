@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import {
-  Globe,
-  Server,
-  Shield,
-  Lock,
-  RefreshCw,
-} from "lucide-react";
+import { Globe, Shield, Lock, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -45,7 +39,8 @@ export default function ApisMcpTab() {
     return () => {
       controller.abort();
     };
-  }, [cred.loadCredentials, mcp.loadMcpServers, svc.loadServiceCreds]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── Contadores resumen ──────────────────────────────────────────────
   const totalEndpoints = ZENIC_API_GROUPS.reduce((sum, g) => sum + g.endpoints, 0);

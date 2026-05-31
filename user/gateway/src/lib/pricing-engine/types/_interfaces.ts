@@ -2,7 +2,7 @@
 // Response types matching Rust JSON output.
 // Extracted from pricing-engine/types.ts for modularity.
 
-import type { SubscriptionTierName } from "./_enums";
+import type { SubscriptionTierName as _SubscriptionTierName } from "./_enums";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Response Types (matching Rust JSON output)

@@ -202,7 +202,7 @@ class AgentCache:
                 if score > best_score and score >= SIMILARITY_THRESHOLD:
                     best_score = score
                     best_match = entry["result"]
-            except Exception:  # noqa: S112
+            except Exception:
                 continue
 
         return best_match

@@ -102,7 +102,7 @@ pub fn template_validate(template_dict: &Bound<'_, PyDict>, py: Python<'_>) -> P
                 .unwrap_or(false);
 
             let value = field_dict.get_item("value").ok().flatten();
-            let has_value = value.as_ref().map_or(false, |v| !v.is_none());
+            let has_value = value.as_ref().is_some_and(|v| !v.is_none());
 
             total_fields += 1;
 
@@ -223,7 +223,7 @@ pub fn template_missing_fields(template_dict: &Bound<'_, PyDict>, py: Python<'_>
             }
 
             let value = field_dict.get_item("value").ok().flatten();
-            let has_value = value.as_ref().map_or(false, |v| !v.is_none());
+            let has_value = value.as_ref().is_some_and(|v| !v.is_none());
 
             if has_value {
                 continue;

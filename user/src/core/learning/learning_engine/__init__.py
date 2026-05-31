@@ -6,7 +6,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Set  # noqa: UP035
+from typing import Set
 
 from ._helpers import _new_id, _now_iso, _retry
 from ._mixin_core import LearningEngine
@@ -14,7 +14,6 @@ from ._types import LearningInsight, LearningStrategy
 
 _instance: LearningEngine | None = None
 _instance_lock = threading.Lock()
-
 
 def get_learning_engine() -> LearningEngine:
     global _instance
@@ -24,12 +23,10 @@ def get_learning_engine() -> LearningEngine:
                 _instance = LearningEngine()
     return _instance
 
-
 def reset_learning_engine() -> None:
     global _instance
     with _instance_lock:
         _instance = None
-
 
 __all__ = [
     "LearningEngine",

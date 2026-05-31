@@ -26,7 +26,7 @@ from src.core.env_loader import load_env
 
 load_env()
 
-from src.core.shared.resource_governor import (  # noqa: E402
+from src.core.shared.resource_governor import (
     init_governor,
     limit_open_files,
     set_process_priority_low,
@@ -60,16 +60,16 @@ tune_gc_for_arm()
 set_process_priority_low()
 limit_open_files()
 
-from src.core.shared._version import ZENIC_FULL_NAME, ZENIC_VERSION_STR  # noqa: E402
-from src.core.shared.contracts import HAS_Z3  # noqa: E402
-from src.core.shared.db_initializer import initialize_databases  # noqa: E402
+from src.core.shared._version import ZENIC_FULL_NAME, ZENIC_VERSION_STR
+from src.core.shared.contracts import HAS_Z3
+from src.core.shared.db_initializer import initialize_databases
 
 # Feature flags
 _ZENIC_USE_SNA = os.environ.get("ZENIC_USE_SNA", "1") == "1"
 _ZENIC_USE_BLUEPRINTS = os.environ.get("ZENIC_USE_BLUEPRINTS", "1") == "1"
 
 # dag_orchestrator migrated to Rust — use ZenicOrchestrator directly
-from src.core.orchestrator import ZenicOrchestrator  # noqa: E402
+from src.core.orchestrator import ZenicOrchestrator
 
 _ORCHESTRATOR_CLASS = ZenicOrchestrator
 _ORCHESTRATOR_NAME = f"ZenicOrchestrator ({ZENIC_VERSION_STR})"

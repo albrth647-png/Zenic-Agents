@@ -12,12 +12,12 @@ pub(crate) fn log_niche_error(msg: &str) {
 
 /// Get all available niche categories as a list of strings.
 #[pyfunction]
-pub fn get_niche_categories(py: Python<'_>) -> PyResult<Vec<String>> {
+pub fn get_niche_categories(_py: Python<'_>) -> PyResult<Vec<String>> {
     Ok(NicheCategory::all().iter().map(|c| c.as_str().to_string()).collect())
 }
 
 /// Get display names for all niche categories.
 #[pyfunction]
-pub fn get_niche_category_display_names(py: Python<'_>) -> PyResult<Vec<String>> {
+pub fn get_niche_category_display_names(_py: Python<'_>) -> PyResult<Vec<String>> {
     Ok(NicheCategory::all().iter().map(|c| c.display_name().to_string()).collect())
 }

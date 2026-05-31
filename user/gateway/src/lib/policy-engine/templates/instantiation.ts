@@ -12,18 +12,9 @@
 import { db } from "@/lib/db";
 import { computeContentHash } from "../yaml-loader";
 import { POLICY_API_VERSION } from "../types";
-import type {
-  PolicyDocument,
-  PolicyStatement,
-  PolicyEffectV2,
-} from "../types";
-import type {
-  TemplateParameter,
-  TemplateInstantiationRequest,
-  TemplateInstantiationResult,
-  TemplateParameterType,
-} from "./types";
-import { substituteVariables, hasUnresolvedVariables, PolicyDocumentBuilder } from "./engine";
+import type { PolicyDocument } from "../types";
+import type { TemplateParameter, TemplateInstantiationResult, TemplateParameterType } from "./types";
+import { substituteVariables as _substituteVariables, hasUnresolvedVariables, PolicyDocumentBuilder } from "./engine";
 import { validateConstraints } from "./constraints";
 
 // ─── Parameter Type Validation ────────────────────────────────────────

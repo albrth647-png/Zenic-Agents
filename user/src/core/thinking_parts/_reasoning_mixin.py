@@ -3,6 +3,9 @@ Reasoning methods mixin for ThinkingEngine — reason, evaluate_code,
 decompose_problem, design_architecture, chain_of_thought.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
 import json
 import re
 import time
@@ -118,7 +121,7 @@ class ReasoningMixin:
                                 "source": "thinking",
                             }
                 except (json.JSONDecodeError, ValueError):
-                    pass
+                    logger.warning("evaluate_code: (json.JSONDecodeError, ValueError) handled silently", exc_info=True)
 
         base_score = 0.7
         base_score -= len(issues) * 0.1
@@ -148,7 +151,7 @@ class ReasoningMixin:
                     if isinstance(subproblems, list):
                         return subproblems[:5]
             except (json.JSONDecodeError, ValueError):
-                pass
+                logger.warning("decompose_problem: (json.JSONDecodeError, ValueError) handled silently", exc_info=True)
         return self._fallback_decompose(problem)
 
     def _fallback_decompose(self, problem: str) -> list:
@@ -207,7 +210,7 @@ class ReasoningMixin:
                     arch["source"] = "thinking"
                     return arch
             except (json.JSONDecodeError, ValueError):
-                pass
+                logger.warning("design_architecture: (json.JSONDecodeError, ValueError) handled silently", exc_info=True)
         return self._fallback_architecture(plan)
 
     def _fallback_architecture(self, plan: GenerationPlan) -> dict:

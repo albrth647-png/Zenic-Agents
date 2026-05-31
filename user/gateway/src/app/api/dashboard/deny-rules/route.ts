@@ -83,7 +83,7 @@ export async function GET() {
 
     if (denyPolicies.length > 0) {
       // Mapear desde DB — la fuente de verdad
-      const rules = denyPolicies.map((policy, index) => ({
+      const rules = denyPolicies.map((policy, _index) => ({
         id: policy.id,
         rule: policy.name,
         description: policy.description,

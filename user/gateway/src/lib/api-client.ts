@@ -68,7 +68,7 @@ export async function apiFetch<T>(
     }
 
     return (await res.json()) as T;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Re-throw ApiError as-is
     if (err && typeof err === "object" && "status" in err) {
       throw err;

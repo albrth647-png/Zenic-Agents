@@ -147,7 +147,7 @@ class OnboardingTUI:
                     self._state = OnboardingState.REVOKED
                 return
         except ImportError:
-            pass
+            logger.warning("_detect_state: ImportError handled silently", exc_info=True)
 
         # Check activation DB
         import sqlite3

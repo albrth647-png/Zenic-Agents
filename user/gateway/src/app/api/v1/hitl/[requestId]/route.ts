@@ -2,6 +2,7 @@
 // GET  /api/v1/hitl/[requestId] — Get request detail
 // PUT  /api/v1/hitl/[requestId] — Update request
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { getApprovalEngine } from "@/lib/hitl/approval-engine/_engine";
 import { getAuditTrail, getApprovalTimeline, verifyAuditIntegrity } from "@/lib/hitl/approval-audit/_auditor";

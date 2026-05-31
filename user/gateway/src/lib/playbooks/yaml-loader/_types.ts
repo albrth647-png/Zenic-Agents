@@ -1,7 +1,7 @@
 // ─── Zenic-Agents v3 — YAML Loader Types & Constants ───────────────────
 // Split from yaml-loader.ts — interfaces, error classes, default config, validation sets
 
-import type { Industry, CapabilityCategory, CapabilityRiskLevel, OnboardingStepType, PricingTierName, CertificationStatus } from "../types";
+import type { Industry as _Industry, CapabilityCategory as _CapabilityCategory, CapabilityRiskLevel as _CapabilityRiskLevel, OnboardingStepType as _OnboardingStepType, PricingTierName as _PricingTierName, CertificationStatus as _CertificationStatus } from "../types";
 
 // ─── Validation Errors ────────────────────────────────────────────────
 

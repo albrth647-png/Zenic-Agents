@@ -56,6 +56,7 @@ pub struct UsdtPayment {
 
 impl UsdtPayment {
     /// Creates a new pending USDT TRC20 payment.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         subscription_id: SubscriptionId,
         tenant_id: TenantId,

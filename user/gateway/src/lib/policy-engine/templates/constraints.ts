@@ -9,11 +9,7 @@
 //   - Strategy: Pluggable constraint validation strategies
 //   - Validator: ConstraintValidator enforces cross-parameter constraint rules
 
-import type {
-  TemplateConstraint,
-  TemplateParameter,
-  TemplateConstraintType,
-} from "./types";
+import type { TemplateConstraint, TemplateConstraintType } from "./types";
 
 // ─── Constraint Validation Result ─────────────────────────────────────
 

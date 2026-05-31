@@ -10,23 +10,7 @@
 //   - Composite: DependencyNode composes dependency tree with children
 
 import { db } from "@/lib/db";
-import type {
-  PolicyDocument,
-  PolicyStatement,
-  PolicyEffectV2,
-  PolicySetEntry,
-  ImpactAnalysisDepth,
-  ImpactAnalysisRequest,
-  ImpactAnalysisResult,
-  DependencyRef,
-  AffectedSetRef,
-  AffectedPlaybookRef,
-  AffectedToolRef,
-  DownstreamChange,
-  ImpactCategory,
-  BlastRadius,
-  SimulationRiskLevel,
-} from "./types";
+import type { PolicyDocument, PolicySetEntry, DependencyRef } from "./types";
 
 // ─── Dependency Node (Composite Pattern) ──────────────────────────────
 

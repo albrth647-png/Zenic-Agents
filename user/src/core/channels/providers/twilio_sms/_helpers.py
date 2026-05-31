@@ -11,7 +11,7 @@ from ..._types import ChannelResponse, DeliveryStatus
 logger = logging.getLogger(__name__)
 
 
-def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:  # noqa: F821  # TODO: Phase3 - verify import
+def _dry_run_send(self, message: ChannelMessage) -> ChannelResponse:  # TODO: Phase3 - verify import
     """Log message without sending."""
     with self._lock:
         self._sent_count += 1

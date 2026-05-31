@@ -186,7 +186,7 @@ export function runCompletenessCheck(
 
   for (const resource of resourceList) {
     for (const action of actionList) {
-      const key = `${resource}:${action}`;
+      const _key = `${resource}:${action}`;
       const matchingStmts = findMatchingStatements(analyzed, resource, action);
 
       if (matchingStmts.length === 0) {

@@ -11,7 +11,7 @@ import { requireAuth, requireAuthAndPermission, handleAuthError } from "@/lib/au
 // GET /api/v1/hitl
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireAuth(request);
+    const { user: _user } = await requireAuth(request);
 
     const { searchParams } = new URL(request.url);
     const statusParam = searchParams.get("status");

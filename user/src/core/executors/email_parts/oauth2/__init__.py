@@ -19,7 +19,7 @@ import asyncio
 import logging
 import secrets
 import time
-from typing import Any, Tuple  # noqa: UP035
+from typing import Any, Tuple
 
 from ._helpers import (
     build_authorization_url,
@@ -54,7 +54,6 @@ __all__ = [
     "register_service_from_env",
     "reset_default_token_manager",
 ]
-
 
 class OAuth2TokenManager:
     """Manages OAuth2 tokens for multiple services.
@@ -422,13 +421,11 @@ class OAuth2TokenManager:
             id_token=body.get("id_token", ""),
         )
 
-
 # ──────────────────────────────────────────────────────────────
 #  GLOBAL SINGLETON
 # ──────────────────────────────────────────────────────────────
 
 _default_token_manager: OAuth2TokenManager | None = None
-
 
 def get_default_token_manager() -> OAuth2TokenManager:
     """Get the global default OAuth2TokenManager instance.
@@ -443,7 +440,6 @@ def get_default_token_manager() -> OAuth2TokenManager:
         register_service_from_env(_default_token_manager, "msgraph", "MSGRAPH")
         register_service_from_env(_default_token_manager, "servicenow", "SERVICENOW")
     return _default_token_manager
-
 
 def reset_default_token_manager() -> None:
     """Reset the global default token manager (for testing)."""

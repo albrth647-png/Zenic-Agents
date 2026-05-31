@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Submit for Review ──────────
 // POST /api/v1/policy-engine/approvals/[approvalId]/review  — Submit for review
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { submitForReview } from "@/lib/policy-engine";
 

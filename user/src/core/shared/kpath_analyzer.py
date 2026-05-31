@@ -158,7 +158,7 @@ class KPathAnalyzer:
                     elif isinstance(node, ast.ExceptHandler):
                         branch_count += 1
             except SyntaxError:
-                pass
+                logger.warning("estimate_code_k_paths: SyntaxError handled silently", exc_info=True)
         else:
             import re
 

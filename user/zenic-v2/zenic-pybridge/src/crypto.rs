@@ -57,7 +57,7 @@ pub fn pbkdf2_derive_key<'py>(
 
     // PBKDF2-HMAC-SHA256 implementation
     let hmac_len = 32usize; // SHA-256 output length
-    let num_blocks = (key_length + hmac_len - 1) / hmac_len;
+    let num_blocks = key_length.div_ceil(hmac_len);
 
     let mut derived = Vec::with_capacity(num_blocks * hmac_len);
 
@@ -172,14 +172,28 @@ pub fn argon2id_hash<'py>(
 #[pyfunction]
 #[pyo3(signature = (a, b))]
 pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-
+    // FIX 2B-4: Removed early return on length mismatch to prevent timing leak.
+    // Previously, `if a.len() != b.len() { return false; }` leaked the length
+    // of the expected value through response time, enabling partial timing attacks.
+    // Now we always compare the full length of the shorter slice and XOR the
+    // length difference into the result, so the function takes the same time
+    // regardless of whether lengths match.
     let mut result: u8 = 0;
+
+    // XOR all byte pairs (zip stops at the shorter length)
     for (x, y) in a.iter().zip(b.iter()) {
         result |= x ^ y;
     }
+
+    // XOR the length difference into the result so mismatched lengths
+    // always produce a non-zero result without an early return
+    let len_diff = a.len() ^ b.len();
+    result |= (len_diff & 0xFF) as u8;
+    // Handle length differences larger than 255 bytes
+    if len_diff > 0xFF {
+        result |= 1;
+    }
+
     result == 0
 }
 

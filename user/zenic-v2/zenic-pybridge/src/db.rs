@@ -71,9 +71,9 @@ impl EncryptedDb {
             })?;
 
         // Set recommended SQLCipher pragmas
-        conn.pragma_update(None, "cipher_page_size", &4096_i64)
+        conn.pragma_update(None, "cipher_page_size", 4096_i64)
             .map_err(|e| PyRuntimeError::new_err(format!("Failed to set page size: {}", e)))?;
-        conn.pragma_update(None, "kdf_iter", &256000_i64)
+        conn.pragma_update(None, "kdf_iter", 256000_i64)
             .map_err(|e| {
                 PyRuntimeError::new_err(format!("Failed to set KDF iterations: {}", e))
             })?;
@@ -160,7 +160,7 @@ impl EncryptedDb {
                             rusqlite::types::Value::Real(f) => f.to_object(py),
                             rusqlite::types::Value::Text(s) => s.to_object(py),
                             rusqlite::types::Value::Blob(b) => {
-                                PyBytes::new_bound(py, &b).into_any().unbind()
+                                PyBytes::new_bound(py, b).into_any().unbind()
                             }
                         };
                         py_row.append(py_val)?;

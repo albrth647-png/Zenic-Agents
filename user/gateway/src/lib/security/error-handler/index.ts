@@ -320,7 +320,7 @@ function normalizeError(error: unknown): NormalizedError {
     error !== null &&
     "code" in error &&
     typeof (error as Record<string, unknown>).code === "string" &&
-    (error as Record<string, unknown>).code.startsWith("P") &&
+    ((error as Record<string, unknown>).code as string).startsWith("P") &&
     "clientVersion" in error
   ) {
     const prismaErr = error as {

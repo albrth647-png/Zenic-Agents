@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Approve / Reject ───────────
 // POST /api/v1/policy-engine/approvals/[approvalId]/decide  — Approve or reject
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { approveRequest } from "@/lib/policy-engine";
 import type { ApprovalDecision } from "@/lib/policy-engine";

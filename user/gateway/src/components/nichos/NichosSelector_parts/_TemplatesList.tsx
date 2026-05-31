@@ -16,7 +16,7 @@ interface TemplatesListProps {
 export default function TemplatesList({
   plantillas,
   cargandoPlantillas,
-  totalNichos,
+  _totalNichos,
 }: TemplatesListProps) {
   return (
     <Card className="border-0 shadow-sm overflow-hidden">

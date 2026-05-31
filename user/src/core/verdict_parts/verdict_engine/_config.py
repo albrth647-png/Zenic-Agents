@@ -43,12 +43,12 @@ import os
 # Import resilience patterns
 try:
     from ..resilience import (
-        VerdictAuditEntry,  # noqa: F401
-        VerdictAuditor,  # noqa: F401
-        VerdictCircuitBreaker,  # noqa: F401
-        VerdictHealthMonitor,  # noqa: F401
-        VerdictResilienceOrchestrator,  # noqa: F401
-        VerdictRetryConfig,  # noqa: F401
+        VerdictAuditEntry,
+        VerdictAuditor,
+        VerdictCircuitBreaker,
+        VerdictHealthMonitor,
+        VerdictResilienceOrchestrator,
+        VerdictRetryConfig,
     )
 
     _RESILIENCE_AVAILABLE = True

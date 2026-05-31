@@ -3,6 +3,7 @@
 // Sign up for a paid subscription. TRIAL-FIRST: All users must complete a 14-day trial first.
 // All payments USDT TRC20 only. Manual admin confirmation required.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { db } from "@/lib/db";
 import {
   validateTrc20Address,

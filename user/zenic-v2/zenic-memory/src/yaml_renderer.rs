@@ -64,7 +64,7 @@ impl YamlRenderer {
         yaml.push_str(&format!("mechanism: \"{}\"\n", mapping.mechanism));
         yaml.push_str(&format!("confidence: {}\n", mapping.confidence));
         yaml.push_str(&format!("tenant_id: \"{}\"\n", mapping.tenant_id));
-        yaml.push_str(&format!("approved: true\n"));
+        yaml.push_str("approved: true\n");
 
         if let Some(ref hash) = mapping.merkle_hash {
             yaml.push_str(&format!("merkle_hash: \"{}\"\n", hash));

@@ -50,7 +50,6 @@ __all__ = [
     "register_default_checks",
 ]
 
-
 class HealthStatus(str, enum.Enum):
     """Health check result status."""
 
@@ -58,7 +57,6 @@ class HealthStatus(str, enum.Enum):
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     UNKNOWN = "unknown"
-
 
 @dataclass
 class HealthCheckResult:
@@ -78,10 +76,8 @@ class HealthCheckResult:
     latency_ms: float = 0.0
     details: dict[str, Any] = field(default_factory=dict)
 
-
 # Type for health check functions
 HealthCheckFunc = Callable[[], Coroutine[Any, Any, HealthCheckResult]]
-
 
 class HealthAggregator:
     """Aggregates health checks from all subsystems.
@@ -238,9 +234,7 @@ class HealthAggregator:
             return HealthStatus.DEGRADED
         return HealthStatus.HEALTHY
 
-
 # ── Built-in Health Check Functions ───────────────────────
-
 
 async def check_orchestrator(orchestrator: Any) -> HealthCheckResult:
     """Check if the orchestrator is available."""
@@ -255,7 +249,6 @@ async def check_orchestrator(orchestrator: Any) -> HealthCheckResult:
         status=HealthStatus.HEALTHY,
         message="Available",
     )
-
 
 async def check_auth_db(auth_service: Any) -> HealthCheckResult:
     """Check auth database connectivity."""
@@ -279,7 +272,6 @@ async def check_auth_db(auth_service: Any) -> HealthCheckResult:
             status=HealthStatus.UNHEALTHY,
             message=f"Connection failed: {exc}",
         )
-
 
 async def check_coordination_backend(backend: Any) -> HealthCheckResult:
     """Check coordination backend (PostgreSQL/Memory) connectivity."""
@@ -307,7 +299,6 @@ async def check_coordination_backend(backend: Any) -> HealthCheckResult:
             status=HealthStatus.DEGRADED,
             message=f"Health check failed: {exc}",
         )
-
 
 async def check_redis(redis_url: str = "redis://localhost:6379") -> HealthCheckResult:
     """Check Redis connectivity using the modern redis.asyncio client.
@@ -351,7 +342,6 @@ async def check_redis(redis_url: str = "redis://localhost:6379") -> HealthCheckR
             status=HealthStatus.DEGRADED,
             message=f"Connection failed: {exc}",
         )
-
 
 async def check_postgresql(
     database_url: str | None = None,
@@ -423,7 +413,6 @@ async def check_postgresql(
             message=f"Connection failed: {exc}",
         )
 
-
 async def check_circuit_breakers(
     breaker_registry: dict[str, Any] | None = None,
 ) -> HealthCheckResult:
@@ -443,7 +432,7 @@ async def check_circuit_breakers(
     if breaker_registry is None:
         # Try to discover from the module-level registry
         try:
-            from ..patterns.resilience.circuit_breaker import CircuitBreaker  # noqa: F401
+            from ..patterns.resilience.circuit_breaker import CircuitBreaker
 
             # No global registry — check if there's one in observability
             breaker_registry = getattr(check_circuit_breakers, "_registry", {})
@@ -504,7 +493,6 @@ async def check_circuit_breakers(
         },
     )
 
-
 async def check_vector_store(
     vector_store: Any = None,
 ) -> HealthCheckResult:
@@ -558,7 +546,6 @@ async def check_vector_store(
             message=f"Health check failed: {exc}",
         )
 
-
 async def check_resources(governor: Any) -> HealthCheckResult:
     """Check system resources via ResourceGovernor."""
     if governor is None:
@@ -583,7 +570,6 @@ async def check_resources(governor: Any) -> HealthCheckResult:
             message=f"Check failed: {exc}",
         )
 
-
 async def check_disk_space(path: str = ".", min_mb: float = 100.0) -> HealthCheckResult:
     """Check available disk space."""
     try:
@@ -603,9 +589,7 @@ async def check_disk_space(path: str = ".", min_mb: float = 100.0) -> HealthChec
             message=f"Check failed: {exc}",
         )
 
-
 # ── Auto-Registration ─────────────────────────────────────
-
 
 def register_default_checks(
     aggregator: HealthAggregator,
@@ -672,11 +656,9 @@ def register_default_checks(
         f"readiness={list(aggregator._readiness_checks.keys())}"
     )
 
-
 # ── Singleton ─────────────────────────────────────────────
 _health_aggregator: HealthAggregator | None = None
 _health_lock = threading.Lock()
-
 
 def get_health_aggregator(
     check_timeout: float = 5.0,

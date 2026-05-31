@@ -254,11 +254,13 @@ impl TemplateSection {
     }
 
     /// Set the description (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_description(&mut self, value: String) {
         self.description = value;
     }
 
     /// Set the display order (used by catalog builders).
+    #[allow(dead_code)]
     pub(crate) fn set_order(&mut self, value: usize) {
         self.order = value;
     }

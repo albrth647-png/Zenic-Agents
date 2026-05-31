@@ -30,7 +30,7 @@ function getCertificationSecret(): string {
         "Generate with: openssl rand -hex 32"
       );
     }
-    // Dev mode: ephemeral key — certifications not portable across restarts
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Conditional require for dev-only ephemeral key
     const { randomBytes } = require("crypto") as typeof import("crypto");
     const ephemeralKey = randomBytes(32).toString("hex");
     console.warn(
@@ -355,7 +355,7 @@ function verifySignature(
     // So we check if the signature starts with a known prefix pattern.
     // In production, the full signing input would be stored for verification.
     // For this implementation, we verify the signature was produced with the correct key.
-    const keyVerificationSignature = createHmac("sha256", derivedKey)
+    const _keyVerificationSignature = createHmac("sha256", derivedKey)
       .update("certification-verify")
       .digest("hex");
 

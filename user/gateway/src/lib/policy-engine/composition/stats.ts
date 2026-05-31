@@ -4,15 +4,7 @@
 // Provides utilities for computing and formatting composition statistics
 // from merged policy documents. Complements the CompositionEngine in types.ts.
 
-import type {
-  PolicyStatement,
-  PolicyEffectV2,
-  CompositionStats,
-  ComposedPolicyResult,
-  PolicyConflict,
-  ConflictSeverity,
-  ConflictType,
-} from "./types";
+import type { PolicyEffectV2, CompositionStats, ComposedPolicyResult, PolicyConflict } from "./types";
 
 // ─── Stats Aggregation ────────────────────────────────────────────────
 

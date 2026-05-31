@@ -44,7 +44,7 @@ __all__ = [
 ]
 
 # Environment variable for enabling SQLCipher encryption on all connections
-_ZENIC_DB_PASSPHRASE_ENV = "ZENIC_DB_PASSPHRASE"  # noqa: S105
+_ZENIC_DB_PASSPHRASE_ENV = "ZENIC_DB_PASSPHRASE"
 
 # Track whether the old pool is still needed (for backward compat during migration)
 _legacy_connections: dict[str, sqlite3.Connection] = {}
@@ -258,7 +258,7 @@ def close_all_connections() -> None:
 
         close_all_pools()
     except ImportError:
-        pass
+        logger.warning("close_all_connections: ImportError handled silently", exc_info=True)
 
     # Close any legacy connections
     with _legacy_lock:

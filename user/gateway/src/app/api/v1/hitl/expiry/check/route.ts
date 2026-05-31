@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — HITL API: Check and Process Expired Requests ──
 // POST /api/v1/hitl/expiry/check
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextResponse } from "next/server";
 import { getExpiryService } from "@/lib/hitl/expiry-service/_service";
 

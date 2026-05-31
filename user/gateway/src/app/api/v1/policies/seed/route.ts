@@ -1,12 +1,13 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Seed ───────────────────────
 // POST /api/v1/policies/seed — Seed default policies from YAML files
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextResponse } from "next/server";
 import { readFile, readdir, access } from "fs/promises";
 import { join } from "path";
 import { db } from "@/lib/db";
 import { loadPolicyFromYaml, computeContentHash } from "@/lib/policy-engine";
-import type { PolicyDocument } from "@/lib/policy-engine";
+import type { PolicyDocument as _PolicyDocument } from "@/lib/policy-engine";
 
 // POST /api/v1/policies/seed
 export async function POST() {

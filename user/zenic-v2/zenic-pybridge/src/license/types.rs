@@ -185,6 +185,7 @@ impl LicenseInfo {
 impl LicenseInfo {
     /// Create a new LicenseInfo instance.
     #[new]
+    #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (license_key, tier, holder, issued_at, expires_at, hardware_id="".to_string(), features=Vec::new(), max_users=1u32, signature="".to_string()))]
     fn new(
         license_key: String,

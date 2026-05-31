@@ -25,7 +25,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-import threading  # noqa: E402
+import threading
 
 _load_lock = threading.Lock()
 

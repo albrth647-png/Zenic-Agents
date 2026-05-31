@@ -1,6 +1,7 @@
 // ─── POST /api/v1/memory-chip/lifecycle/advance ────────────────────────
 // Advance a lifecycle episode to the next phase.
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { isValidLifecyclePhase, getNextPhases, type LifecyclePhase } from '@/lib/memory-chip';

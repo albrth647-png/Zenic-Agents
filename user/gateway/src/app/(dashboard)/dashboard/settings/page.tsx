@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Settings, Globe, Lock, Bell, Key, Save, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect as _useEffect, useCallback } from "react";
+import { Settings as _Settings, Globe, Lock, Bell, Key, Save, Eye, EyeOff } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EstadoCargando, EstadoError } from "@/components/ui/data-states";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import type { ApiError } from "@/lib/api-client";
+import type { ApiError as _ApiError } from "@/lib/api-client";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Sprint 6: Settings Page — Real data from session + /api/user/profile
@@ -22,7 +22,7 @@ import type { ApiError } from "@/lib/api-client";
 
 export default function SettingsPage() {
   const { profile, cargando, error, recargar } = useUserProfile();
-  const { data: session } = useSession();
+  const { data: _session } = useSession();
 
   // Local state for toggles (would be persisted via API in full impl)
   const [temaOscuro, setTemaOscuro] = useState(false);

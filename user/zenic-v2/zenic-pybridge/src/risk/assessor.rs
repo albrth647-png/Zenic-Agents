@@ -47,7 +47,7 @@ pub fn propagate_risks(
     let edge_pairs: Vec<(String, String)> = edges.extract()?;
     let base: HashMap<String, f64> = base_risks.extract()?;
 
-    if decay < 0.0 || decay > 1.0 {
+    if !(0.0..=1.0).contains(&decay) {
         return Err(PyValueError::new_err("decay must be between 0.0 and 1.0"));
     }
 

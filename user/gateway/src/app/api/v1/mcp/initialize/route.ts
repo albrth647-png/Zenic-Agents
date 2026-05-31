@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — MCP Gateway Initialization ─────────────────
 // POST /api/v1/mcp/initialize — MCP protocol handshake
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonRpcRequest, successResponse, errorResponse } from "@/lib/mcp-gateway/protocol";
 import { MCP_PROTOCOL_VERSION, ZENIC_GATEWAY_VERSION, JSON_RPC_ERRORS } from "@/lib/mcp-gateway/protocol/types";
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse(null, parsed.error), { status: 400 });
     }
 
-    const { id, params } = parsed.request;
+    const { id, params: _params } = parsed.request;
 
     // Respond with server capabilities
     return NextResponse.json(

@@ -16,7 +16,7 @@ import platform
 
 try:
     from rich.align import Align
-    from rich.box import HEAVY, ROUNDED  # noqa: F401
+    from rich.box import HEAVY, ROUNDED
     from rich.console import Console
     from rich.panel import Panel
     from rich.text import Text
@@ -24,7 +24,6 @@ try:
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
-
 
 # ── ASCII Art ────────────────────────────────────────────────
 
@@ -43,7 +42,6 @@ _ZENIC_BANNER = r"""
   ║                                                           ║
   ╚═══════════════════════════════════════════════════════════╝
 """
-
 
 class WelcomeRenderer:
     """Renders the onboarding welcome screen with Rich.
@@ -135,9 +133,7 @@ class WelcomeRenderer:
             f"    zenic-onboard --help       Show all commands\n"
         )
 
-
 # ── Convenience Function ────────────────────────────────────
-
 
 def render_welcome(version: str = "3.0.0") -> str:
     """One-shot welcome screen rendering."""

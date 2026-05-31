@@ -149,7 +149,7 @@ def config_from_env(prefix: str) -> OAuth2Config:
 
 
 def register_service_from_env(
-    manager: OAuth2TokenManager,  # noqa: F821  # TODO: Phase3 - verify import
+    manager: OAuth2TokenManager,  # TODO: Phase3 - verify import
     service_name: str,
     prefix: str,
 ) -> bool:

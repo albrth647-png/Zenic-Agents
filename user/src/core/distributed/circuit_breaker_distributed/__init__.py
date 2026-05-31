@@ -25,7 +25,7 @@ Integration:
 import logging
 import threading
 import time
-from typing import Any, Dict  # noqa: UP035
+from typing import Any, Dict
 
 from src.core.patterns.resilience.circuit_breaker import (
     CircuitBreaker,
@@ -42,7 +42,6 @@ __all__ = [
     "DistributedCircuitBreaker",
     "SharedCircuitState",
 ]
-
 
 class DistributedCircuitBreaker(BreakerOpsMixin):
     """

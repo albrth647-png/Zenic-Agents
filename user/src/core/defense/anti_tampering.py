@@ -117,7 +117,7 @@ class AntiTamperingLayer:
                             )
                         return None
         except (FileNotFoundError, PermissionError, ValueError):
-            pass
+            logger.warning("check_ptrace: (FileNotFoundError, PermissionError, ValueError) handled silently", exc_info=True)
 
         return None
 

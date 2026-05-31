@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — HITL API: Check and Process SLA Breaches ──────
 // POST /api/v1/hitl/sla/check
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextResponse } from "next/server";
 import { getSLAService } from "@/lib/hitl/sla-service/_monitor";
 

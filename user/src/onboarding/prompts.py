@@ -27,15 +27,13 @@ try:
     from rich.console import Console
     from rich.panel import Panel
     from rich.prompt import Prompt as RichPrompt
-    from rich.text import Text  # noqa: F401
+    from rich.text import Text
 
     HAS_RICH = True
 except ImportError:
     HAS_RICH = False
 
-
 # ── Prompt Result ────────────────────────────────────────────
-
 
 @dataclass
 class PromptResult:
@@ -57,9 +55,7 @@ class PromptResult:
     def __bool__(self) -> bool:
         return not self.cancelled and not self.errors
 
-
 # ── Abstract Prompt ──────────────────────────────────────────
-
 
 class BasePrompt(ABC):
     """Abstract base for interactive prompts.
@@ -109,9 +105,7 @@ class BasePrompt(ABC):
         default_hint = f" [{self.default}]" if self.default else ""
         return f"{self.label}{suffix}{default_hint}"
 
-
 # ── Text Prompt ──────────────────────────────────────────────
-
 
 class TextPrompt(BasePrompt):
     """Simple text input prompt with optional validation."""
@@ -159,9 +153,7 @@ class TextPrompt(BasePrompt):
         except (KeyboardInterrupt, EOFError):
             return ("", False)
 
-
 # ── Choice Prompt ────────────────────────────────────────────
-
 
 class ChoicePrompt(BasePrompt):
     """Multiple-choice selection prompt."""
@@ -244,9 +236,7 @@ class ChoicePrompt(BasePrompt):
         except (KeyboardInterrupt, EOFError):
             return ("", False)
 
-
 # ── Confirmation Prompt ──────────────────────────────────────
-
 
 class ConfirmPrompt(BasePrompt):
     """Yes/No confirmation prompt."""
@@ -265,9 +255,7 @@ class ConfirmPrompt(BasePrompt):
         except (KeyboardInterrupt, EOFError):
             return ("no", False)
 
-
 # ── Prompt Builder ───────────────────────────────────────────
-
 
 class PromptBuilder:
     """Builder for composing multi-field prompt sessions.
@@ -371,9 +359,7 @@ class PromptBuilder:
 
         return result
 
-
 # ── Pre-built Prompt Sessions ────────────────────────────────
-
 
 def prompt_registration() -> PromptResult:
     """Pre-built registration prompt session."""
@@ -397,7 +383,6 @@ def prompt_registration() -> PromptResult:
         )
         .run()
     )
-
 
 def prompt_activation() -> PromptResult:
     """Pre-built activation prompt session."""

@@ -2,11 +2,6 @@
 // Error classes, loader configuration, and validation constant sets.
 // Shared across all yaml-loader sub-modules.
 
-import {
-  CertificationStatus,
-  PricingTierName,
-} from "../types";
-
 // ─── Validation Errors ────────────────────────────────────────────────
 
 export class PlaybookValidationError extends Error {

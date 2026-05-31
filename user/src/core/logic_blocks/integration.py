@@ -43,7 +43,7 @@ class FileOperationBlock(LogicBlock):
 
             # Security: prevent path traversal
             if ".." in path or path.startswith("/"):
-                base_dir = context.get("base_dir", context.get("upload_dir", "/tmp"))  # noqa: S108
+                base_dir = context.get("base_dir", context.get("upload_dir", "/tmp"))
                 path = os.path.join(base_dir, os.path.basename(path))
 
             if operation == "read":

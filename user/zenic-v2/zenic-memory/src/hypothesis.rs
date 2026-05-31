@@ -80,7 +80,7 @@ impl HypothesisManager {
             0.5, // Initial confidence before IA
         );
         self.pending.push(hypothesis);
-        Ok(self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))?)
+        self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))
     }
 
     /// Generates an Intent Routing hypothesis.
@@ -103,7 +103,7 @@ impl HypothesisManager {
             0.4, // Lower confidence for ambiguous intents
         );
         self.pending.push(hypothesis);
-        Ok(self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))?)
+        self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))
     }
 
     /// Generates a Policy Refinement hypothesis.
@@ -125,7 +125,7 @@ impl HypothesisManager {
             0.3, // Lowest confidence for gray areas
         );
         self.pending.push(hypothesis);
-        Ok(self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))?)
+        self.pending.last().ok_or_else(|| MemoryError::Internal("no pending hypothesis after push".into()))
     }
 
     /// Classifies a hypothesis with an IA verdict.

@@ -14,9 +14,9 @@ class EmailExecutorCoreMixin:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._template_engine = EmailTemplateEngine()  # noqa: F821
-        self._rate_limiter = EmailRateLimiter()  # noqa: F821
-        self._graph_provider: GraphAPIEmailProvider | None = None  # noqa: F821
+        self._template_engine = EmailTemplateEngine()
+        self._rate_limiter = EmailRateLimiter()
+        self._graph_provider: GraphAPIEmailProvider | None = None
         self._smtp_send_count: int = 0
         self._graph_send_count: int = 0
         self._dry_run_count: int = 0
@@ -29,7 +29,7 @@ class EmailExecutorCoreMixin:
         self,
         config: dict[str, Any],
         context: dict[str, Any],
-    ) -> ActionResult:  # noqa: F821
+    ) -> ActionResult:
         """Execute an email send operation.
 
         Never raises — always returns an ActionResult.
@@ -39,7 +39,7 @@ class EmailExecutorCoreMixin:
         # ── Resolve mode ────────────────────────────────────────
         mode = config.get("mode", "auto").lower()
         if mode not in _VALID_MODES:
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {"mode": mode},
                 f"Invalid mode: '{mode}'. Must be one of {sorted(_VALID_MODES)}",
@@ -49,7 +49,7 @@ class EmailExecutorCoreMixin:
         # ── Resolve recipients ──────────────────────────────────
         recipients = self._resolve_recipients(config)
         if not recipients:
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {"recipients": []},
                 "No recipients specified (config.to is required)",
@@ -57,9 +57,9 @@ class EmailExecutorCoreMixin:
             )
 
         # Validate email addresses
-        invalid = [r for r in recipients if not _validate_email(r)]  # noqa: F821
+        invalid = [r for r in recipients if not _validate_email(r)]
         if invalid:
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {"invalid_recipients": invalid},
                 f"Invalid email addresses: {invalid}",
@@ -73,7 +73,7 @@ class EmailExecutorCoreMixin:
             reasons = "; ".join(r.reason for r in denied)
             with self._lock:
                 self._rate_limited_count += 1
-            return ActionResult(  # noqa: F821  # TODO: add import
+            return ActionResult(  # TODO: add import
                 False,
                 {
                     "rate_limited": True,
@@ -113,7 +113,7 @@ class EmailExecutorCoreMixin:
             )
             with self._lock:
                 self._failure_count += 1
-            result = ActionResult(  # noqa: F821  # TODO: add import
+            result = ActionResult(  # TODO: add import
                 False,
                 {"mode": mode, "recipients": recipients},
                 f"Unexpected error: {exc}",
@@ -141,10 +141,10 @@ class EmailExecutorCoreMixin:
         subject: str,
         body: str,
         html: str,
-    ) -> ActionResult:  # noqa: F821
+    ) -> ActionResult:
         """Try Graph API first, fall back to SMTP."""
         provider = self._get_or_create_graph_provider(config)
-        if provider.is_configured and _HAS_AIOHTTP:  # noqa: F821
+        if provider.is_configured and _HAS_AIOHTTP:
             graph_result = await self._execute_graph_api(config, recipients, subject, body, html)
             if graph_result.success:
                 graph_result.data["mode"] = "auto (graph_api)"
@@ -175,7 +175,7 @@ class EmailExecutorCoreMixin:
         recipients: list[str],
         subject: str,
         reason: str,
-    ) -> ActionResult:  # noqa: F821
+    ) -> ActionResult:
         """Build a dry-run ActionResult."""
         dry_run_id = f"dry-run-{uuid.uuid4().hex[:12]}"
         __import__("logging").getLogger("zenic_agents.executors.email_executor").info(
@@ -184,7 +184,7 @@ class EmailExecutorCoreMixin:
             recipients,
             subject[:50],
         )
-        return ActionResult(  # noqa: F821  # TODO: add import
+        return ActionResult(  # TODO: add import
             True,
             {
                 "mode": "dry_run",
@@ -211,6 +211,6 @@ class EmailExecutorCoreMixin:
                 "rate_limited_count": self._rate_limited_count,
                 "template_engine": self._template_engine.stats,
                 "rate_limiter": self._rate_limiter.stats,
-                "aiosmtplib_available": _HAS_AIOSMTPLIB_LOCAL,  # noqa: F821
-                "aiohttp_available": _HAS_AIOHTTP,  # noqa: F821
+                "aiosmtplib_available": _HAS_AIOSMTPLIB_LOCAL,
+                "aiohttp_available": _HAS_AIOHTTP,
             }

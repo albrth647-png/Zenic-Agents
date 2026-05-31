@@ -7,23 +7,8 @@ import type {
   PolicyCondition,
   PolicyEffectV2,
 } from "../types";
-import type {
-  VerificationStatus,
-  SolverType,
-  Contradiction,
-  ContradictionType,
-  UnreachableRule,
-  CoverageReport,
-  CoverageGap,
-  PartialCoverageEntry,
-  VerificationResult,
-} from "../types/constraints";
-import {
-  VerificationStatus as VerificationStatusEnum,
-  SolverType as SolverTypeEnum,
-  ContradictionType as ContradictionTypeEnum,
-} from "../types/constraints";
-import { PolicyEvaluator } from "../evaluator";
+
+import { PolicyEvaluator as _PolicyEvaluator } from "../evaluator";
 
 // Re-export public types for convenience
 export type {

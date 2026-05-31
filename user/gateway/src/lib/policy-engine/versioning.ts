@@ -23,7 +23,7 @@ import type {
 export async function createVersion(request: CreateVersionRequest): Promise<PolicyVersion> {
   const { policyId, document, changeDescription, createdBy } = request;
   const contentHash = computeContentHash(document);
-  const now = new Date().toISOString();
+  const _now = new Date().toISOString();
 
   // Find the existing policy record
   const policy = await db.declPolicy.findUnique({ where: { policyId } });
@@ -197,7 +197,7 @@ export async function rollbackToVersion(
 export async function activateVersion(
   policyId: string,
   version: string,
-  activatedBy: string,
+  _activatedBy: string,
 ): Promise<PolicyVersion> {
   const policy = await db.declPolicy.findUnique({ where: { policyId } });
   if (!policy) throw new Error(`Policy "${policyId}" not found`);

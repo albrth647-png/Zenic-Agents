@@ -40,7 +40,6 @@ from ._types import AudioFormat, ConversionResult
 
 _logger = logging.getLogger("zenic_agents.voice_pipeline.format_adapter")
 
-
 # ──────────────────────────────────────────────────────────────
 #  CANONICAL OUTPUT SPECIFICATION
 # ──────────────────────────────────────────────────────────────
@@ -49,7 +48,6 @@ _CANONICAL_SAMPLE_RATE = 16000  # 16kHz — standard for STT engines
 _CANONICAL_CHANNELS = 1  # Mono
 _CANONICAL_SAMPLE_WIDTH = 2  # 16-bit = 2 bytes per sample
 _CANONICAL_FORMAT = "wav"
-
 
 # ──────────────────────────────────────────────────────────────
 #  FORMAT VALIDATION
@@ -73,7 +71,6 @@ _SUPPORTED_INPUT_FORMATS: set[str] = {
 # Maximum reasonable audio sizes (safety limits)
 _MAX_AUDIO_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB — hard ceiling
 _MAX_AUDIO_DURATION_SECONDS = 3600.0  # 1 hour — hard ceiling
-
 
 def _normalize_format(audio_format: str) -> str:
     """Normalize an audio format string to a pydub-compatible codec name.
@@ -103,11 +100,9 @@ def _normalize_format(audio_format: str) -> str:
     }
     return aliases.get(fmt, fmt)
 
-
 # ──────────────────────────────────────────────────────────────
 #  FORMAT ADAPTER
 # ──────────────────────────────────────────────────────────────
-
 
 class FormatAdapter:
     """Audio format converter — any format → WAV 16kHz mono PCM.
@@ -155,7 +150,7 @@ class FormatAdapter:
     def _check_pydub() -> bool:
         """Check if pydub is importable."""
         try:
-            import pydub  # noqa: F401
+            import pydub
 
             return True
         except ImportError:
@@ -426,7 +421,7 @@ class FormatAdapter:
             Dict with keys: valid, size_valid, duration_valid,
             size_bytes, duration_seconds, errors.
         """
-        errors: List[str] = []  # noqa: F821  # TODO: Phase3 - verify import
+        errors: List[str] = []  # TODO: Phase3 - verify import
         size_limit = max_size or self._max_size
         duration_limit = max_duration or self._max_duration
 
@@ -494,7 +489,6 @@ class FormatAdapter:
             "max_duration_seconds": self._max_duration,
         }
 
-
 # ──────────────────────────────────────────────────────────────
 #  MODULE-LEVEL CONVENIENCE
 # ──────────────────────────────────────────────────────────────
@@ -502,7 +496,6 @@ class FormatAdapter:
 # Default singleton — lazy-created on first access
 _default_adapter: FormatAdapter | None = None
 _adapter_lock = threading.Lock()
-
 
 def get_format_adapter() -> FormatAdapter:
     """Get the default FormatAdapter singleton.
@@ -517,7 +510,6 @@ def get_format_adapter() -> FormatAdapter:
         if _default_adapter is None:
             _default_adapter = FormatAdapter()
         return _default_adapter
-
 
 # ──────────────────────────────────────────────────────────────
 #  PUBLIC EXPORTS

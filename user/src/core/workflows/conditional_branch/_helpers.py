@@ -56,11 +56,11 @@ def _parse_value(raw: str) -> Any:
     try:
         return int(raw)
     except ValueError:
-        pass
+        logger.warning("_parse_value: ValueError handled silently", exc_info=True)
     try:
         return float(raw)
     except ValueError:
-        pass
+        logger.warning("_parse_value: ValueError handled silently", exc_info=True)
     return raw
 
 

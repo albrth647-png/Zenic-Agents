@@ -149,7 +149,7 @@ class AssemblerGeneratorsMixin:
             return {{"success": True, "total": total, "entity": "{entity_name}"}}
 
         return {{"success": False, "error": "Unknown action: " + str(action)}}
-'''  # noqa: S608
+'''
 
     def _build_analytics_process(self, entity_name: str, table_name: str, fields: list[dict]) -> str:
         """Generate a REAL _process() method with analytics logic.
@@ -244,7 +244,7 @@ class AssemblerGeneratorsMixin:
             return {{"success": True, "trend": rows, "metric": metric, "entity": "{entity_name}"}}
 
         return {{"success": False, "error": "Unknown analytics action: " + str(action)}}
-'''  # noqa: S608
+'''
 
     def _build_notification_process(self, entity_name: str, fields: list[dict]) -> str:
         """Generate a REAL _process() method for notifications.

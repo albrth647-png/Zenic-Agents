@@ -25,7 +25,6 @@ from src.core.shared.constants import (
     FENCE_LANG_MAP,
     VALID_INTENT_GOALS,
     VALID_INTENT_OPERATIONS,
-    VALID_INVENTORY_OPERATIONS,  # noqa: F401 — re-export for backward compat
     VALID_LANGUAGES,
 )
 
@@ -34,7 +33,6 @@ VALID_OPERATIONS = VALID_INTENT_OPERATIONS
 VALID_GOALS = VALID_INTENT_GOALS
 
 logger = logging.getLogger(__name__)
-
 
 # ============================================================
 #  KEYWORD MAPS FOR TF-IDF CLASSIFICATION
@@ -250,11 +248,9 @@ GOAL_KEYWORDS: dict[str, list[str]] = {
     ],
 }
 
-
 # ============================================================
 #  SHARED UTILITY FUNCTIONS
 # ============================================================
-
 
 def extract_target_and_language(message: str) -> tuple[str, str]:
     """
@@ -295,7 +291,6 @@ def extract_target_and_language(message: str) -> tuple[str, str]:
 
     return target, language
 
-
 def extract_code_block(message: str) -> tuple[str, str]:
     """
     Extract code from a fenced block (```lang ... ```).
@@ -319,7 +314,6 @@ def extract_code_block(message: str) -> tuple[str, str]:
             return "python", code
 
     return "", ""
-
 
 def extract_entities(message: str) -> dict[str, Any]:
     """Extract named entities from the message (file names, classes, etc.)."""
@@ -345,7 +339,6 @@ def extract_entities(message: str) -> dict[str, Any]:
         entities["numbers"] = numbers
 
     return entities
-
 
 def infer_criticality(operation: str, goal: str, target: str = "") -> str:
     """
@@ -386,7 +379,6 @@ def infer_criticality(operation: str, goal: str, target: str = "") -> str:
         return "moderate"
 
     return "standard"
-
 
 def infer_template_type(operation: str, description: str = "") -> str:
     """

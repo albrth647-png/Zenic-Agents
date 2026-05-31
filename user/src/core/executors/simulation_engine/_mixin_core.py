@@ -164,7 +164,7 @@ class SimulationEngineCoreMixin:
 
             # Retry up to 2 times on transient errors
             try:
-                result = _retry(  # noqa: F821
+                result = _retry(
                     _run_simulation,
                     max_retries=2,
                     base_delay=0.1,

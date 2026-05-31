@@ -133,13 +133,11 @@ impl ComplianceEngine {
         }
 
         // Rule: Data export without de-identification
-        if action_lower.contains("export") || action_lower.contains("download") {
-            if config_str.contains("phi") && !config_str.contains("deidentify") && !config_str.contains("de-identify") && !config_str.contains("anonymiz") {
-                violations.push("PHI export without de-identification — HIPAA Privacy Rule".to_string());
-                recommendations.push("Apply de-identification before exporting PHI data".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
+        if (action_lower.contains("export") || action_lower.contains("download")) && config_str.contains("phi") && !config_str.contains("deidentify") && !config_str.contains("de-identify") && !config_str.contains("anonymiz") {
+            violations.push("PHI export without de-identification — HIPAA Privacy Rule".to_string());
+            recommendations.push("Apply de-identification before exporting PHI data".to_string());
+            if risk_level != "critical" {
+                risk_level = "high".to_string();
             }
         }
 
@@ -160,22 +158,18 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Card data handling without tokenization
-        if config_str.contains("card") || config_str.contains("credit") || config_str.contains("pan") {
-            if !config_str.contains("tokeniz") && !config_str.contains("token") {
-                violations.push("Card data processing without tokenization — PCI-DSS Requirement 3".to_string());
-                recommendations.push("Use tokenization for all card data storage and processing".to_string());
-                risk_level = "critical".to_string();
-            }
+        if (config_str.contains("card") || config_str.contains("credit") || config_str.contains("pan")) && !config_str.contains("tokeniz") && !config_str.contains("token") {
+            violations.push("Card data processing without tokenization — PCI-DSS Requirement 3".to_string());
+            recommendations.push("Use tokenization for all card data storage and processing".to_string());
+            risk_level = "critical".to_string();
         }
 
         // Rule: Payment processing without logging
-        if config_str.contains("payment") || config_str.contains("charge") || config_str.contains("transaction") {
-            if !config_str.contains("log") && !config_str.contains("audit") {
-                violations.push("Payment processing without audit logging — PCI-DSS Requirement 10".to_string());
-                recommendations.push("Enable audit logging for all payment transactions".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
+        if (config_str.contains("payment") || config_str.contains("charge") || config_str.contains("transaction")) && !config_str.contains("log") && !config_str.contains("audit") {
+            violations.push("Payment processing without audit logging — PCI-DSS Requirement 10".to_string());
+            recommendations.push("Enable audit logging for all payment transactions".to_string());
+            if risk_level != "critical" {
+                risk_level = "high".to_string();
             }
         }
 
@@ -197,34 +191,26 @@ impl ComplianceEngine {
         let action_lower = action_type.to_lowercase();
 
         // Rule: Personal data processing without consent/legal basis
-        if config_str.contains("personal_data") || config_str.contains("pii") || config_str.contains("user_data") {
-            if !config_str.contains("consent") && !config_str.contains("legal_basis") && !config_str.contains("legitimate_interest") {
-                violations.push("Personal data processing without documented legal basis — GDPR Article 6".to_string());
-                recommendations.push("Document legal basis (consent, legitimate interest, etc.) for data processing".to_string());
+        if (config_str.contains("personal_data") || config_str.contains("pii") || config_str.contains("user_data")) && !config_str.contains("consent") && !config_str.contains("legal_basis") && !config_str.contains("legitimate_interest") {
+            violations.push("Personal data processing without documented legal basis — GDPR Article 6".to_string());
+            recommendations.push("Document legal basis (consent, legitimate interest, etc.) for data processing".to_string());
+            risk_level = "high".to_string();
+        }
+
+        // Rule: Data deletion request handling
+        if action_lower.contains("delete") && (config_str.contains("user") || config_str.contains("personal")) && !config_str.contains("right_to_erasure") && !config_str.contains("gdpr_request") {
+            violations.push("User data deletion without GDPR right-to-erasure process — GDPR Article 17".to_string());
+            recommendations.push("Implement right-to-erasure process for user data deletion".to_string());
+            if risk_level != "critical" {
                 risk_level = "high".to_string();
             }
         }
 
-        // Rule: Data deletion request handling
-        if action_lower.contains("delete") && (config_str.contains("user") || config_str.contains("personal")) {
-            if !config_str.contains("right_to_erasure") && !config_str.contains("gdpr_request") {
-                violations.push("User data deletion without GDPR right-to-erasure process — GDPR Article 17".to_string());
-                recommendations.push("Implement right-to-erasure process for user data deletion".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
-            }
-        }
-
         // Rule: Cross-border data transfer
-        if action_lower.contains("transfer") || action_lower.contains("export") || config_str.contains("transfer") {
-            if config_str.contains("international") || config_str.contains("cross_border") || config_str.contains("third_country") {
-                if !config_str.contains("scc") && !config_str.contains("adequacy") && !config_str.contains("standard_contractual") {
-                    violations.push("International data transfer without safeguards — GDPR Chapter V".to_string());
-                    recommendations.push("Ensure adequate safeguards (SCCs, adequacy decision) for international transfers".to_string());
-                    risk_level = "critical".to_string();
-                }
-            }
+        if (action_lower.contains("transfer") || action_lower.contains("export") || config_str.contains("transfer")) && (config_str.contains("international") || config_str.contains("cross_border") || config_str.contains("third_country")) && !config_str.contains("scc") && !config_str.contains("adequacy") && !config_str.contains("standard_contractual") {
+            violations.push("International data transfer without safeguards — GDPR Chapter V".to_string());
+            recommendations.push("Ensure adequate safeguards (SCCs, adequacy decision) for international transfers".to_string());
+            risk_level = "critical".to_string();
         }
 
         if violations.is_empty() {
@@ -244,12 +230,10 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Financial report modification
-        if config_str.contains("financial_report") || config_str.contains("accounting") || config_str.contains("ledger") {
-            if !config_str.contains("dual_control") && !config_str.contains("segregation") && !config_str.contains("approval") {
-                violations.push("Financial data modification without dual control — SOX Section 404".to_string());
-                recommendations.push("Implement dual control / segregation of duties for financial modifications".to_string());
-                risk_level = "critical".to_string();
-            }
+        if (config_str.contains("financial_report") || config_str.contains("accounting") || config_str.contains("ledger")) && !config_str.contains("dual_control") && !config_str.contains("segregation") && !config_str.contains("approval") {
+            violations.push("Financial data modification without dual control — SOX Section 404".to_string());
+            recommendations.push("Implement dual control / segregation of duties for financial modifications".to_string());
+            risk_level = "critical".to_string();
         }
 
         if violations.is_empty() {
@@ -269,22 +253,18 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Transaction without KYC verification
-        if config_str.contains("transfer") || config_str.contains("transaction") || config_str.contains("payment") {
-            if !config_str.contains("kyc_verified") && !config_str.contains("kyc_check") && !config_str.contains("identity_verified") {
-                violations.push("Financial transaction without KYC verification — AML compliance risk".to_string());
-                recommendations.push("Verify customer identity (KYC) before processing transactions".to_string());
-                risk_level = "critical".to_string();
-            }
+        if (config_str.contains("transfer") || config_str.contains("transaction") || config_str.contains("payment")) && !config_str.contains("kyc_verified") && !config_str.contains("kyc_check") && !config_str.contains("identity_verified") {
+            violations.push("Financial transaction without KYC verification — AML compliance risk".to_string());
+            recommendations.push("Verify customer identity (KYC) before processing transactions".to_string());
+            risk_level = "critical".to_string();
         }
 
         // Rule: High-value transaction without enhanced due diligence
-        if config_str.contains("high_value") || config_str.contains("large_amount") {
-            if !config_str.contains("edd") && !config_str.contains("enhanced_due_diligence") {
-                violations.push("High-value transaction without Enhanced Due Diligence — FATF Recommendation".to_string());
-                recommendations.push("Apply Enhanced Due Diligence for high-value transactions".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
+        if (config_str.contains("high_value") || config_str.contains("large_amount")) && !config_str.contains("edd") && !config_str.contains("enhanced_due_diligence") {
+            violations.push("High-value transaction without Enhanced Due Diligence — FATF Recommendation".to_string());
+            recommendations.push("Apply Enhanced Due Diligence for high-value transactions".to_string());
+            if risk_level != "critical" {
+                risk_level = "high".to_string();
             }
         }
 
@@ -305,12 +285,10 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Collection of children's data without parental consent
-        if config_str.contains("minor") || config_str.contains("child") || config_str.contains("under_13") || config_str.contains("student") {
-            if !config_str.contains("parental_consent") && !config_str.contains("guardian_approval") {
-                violations.push("Children's data collection without parental consent — COPPA Section 3".to_string());
-                recommendations.push("Obtain verifiable parental consent before collecting children's data".to_string());
-                risk_level = "critical".to_string();
-            }
+        if (config_str.contains("minor") || config_str.contains("child") || config_str.contains("under_13") || config_str.contains("student")) && !config_str.contains("parental_consent") && !config_str.contains("guardian_approval") {
+            violations.push("Children's data collection without parental consent — COPPA Section 3".to_string());
+            recommendations.push("Obtain verifiable parental consent before collecting children's data".to_string());
+            risk_level = "critical".to_string();
         }
 
         if violations.is_empty() {
@@ -330,12 +308,10 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: System change without change management
-        if config_str.contains("config_change") || config_str.contains("system_modify") || config_str.contains("infrastructure_change") {
-            if !config_str.contains("change_management") && !config_str.contains("change_request") && !config_str.contains("approval") {
-                violations.push("System change without change management process — ISO 27001 Annex A.12".to_string());
-                recommendations.push("Route system changes through formal change management process".to_string());
-                risk_level = "high".to_string();
-            }
+        if (config_str.contains("config_change") || config_str.contains("system_modify") || config_str.contains("infrastructure_change")) && !config_str.contains("change_management") && !config_str.contains("change_request") && !config_str.contains("approval") {
+            violations.push("System change without change management process — ISO 27001 Annex A.12".to_string());
+            recommendations.push("Route system changes through formal change management process".to_string());
+            risk_level = "high".to_string();
         }
 
         if violations.is_empty() {
@@ -355,12 +331,10 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Data access without monitoring
-        if config_str.contains("data_access") || config_str.contains("sensitive_data") || config_str.contains("api_key") {
-            if !config_str.contains("monitored") && !config_str.contains("audit") && !config_str.contains("logging") {
-                violations.push("Sensitive data access without monitoring — SOC 2 CC6.1".to_string());
-                recommendations.push("Enable monitoring and audit logging for sensitive data access".to_string());
-                risk_level = "high".to_string();
-            }
+        if (config_str.contains("data_access") || config_str.contains("sensitive_data") || config_str.contains("api_key")) && !config_str.contains("monitored") && !config_str.contains("audit") && !config_str.contains("logging") {
+            violations.push("Sensitive data access without monitoring — SOC 2 CC6.1".to_string());
+            recommendations.push("Enable monitoring and audit logging for sensitive data access".to_string());
+            risk_level = "high".to_string();
         }
 
         if violations.is_empty() {
@@ -380,22 +354,18 @@ impl ComplianceEngine {
         let config_str = config.to_string().to_lowercase();
 
         // Rule: Cloud service without FIPS 140-2 encryption
-        if config_str.contains("cloud") || config_str.contains("fedramp") || config_str.contains("government") {
-            if !config_str.contains("fips") && !config_str.contains("fips_140") {
-                violations.push("Cloud service processing without FIPS 140-2 validated encryption — FedRAMP SC-13".to_string());
-                recommendations.push("Use FIPS 140-2 validated cryptographic modules for all cloud data processing".to_string());
-                risk_level = "critical".to_string();
-            }
+        if (config_str.contains("cloud") || config_str.contains("fedramp") || config_str.contains("government")) && !config_str.contains("fips") && !config_str.contains("fips_140") {
+            violations.push("Cloud service processing without FIPS 140-2 validated encryption — FedRAMP SC-13".to_string());
+            recommendations.push("Use FIPS 140-2 validated cryptographic modules for all cloud data processing".to_string());
+            risk_level = "critical".to_string();
         }
 
         // Rule: Access control without MFA
-        if config_str.contains("admin") || config_str.contains("privileged") {
-            if !config_str.contains("mfa") && !config_str.contains("multi_factor") {
-                violations.push("Privileged access without multi-factor authentication — FedRAMP IA-2".to_string());
-                recommendations.push("Enforce MFA for all privileged and administrative access".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
+        if (config_str.contains("admin") || config_str.contains("privileged")) && !config_str.contains("mfa") && !config_str.contains("multi_factor") {
+            violations.push("Privileged access without multi-factor authentication — FedRAMP IA-2".to_string());
+            recommendations.push("Enforce MFA for all privileged and administrative access".to_string());
+            if risk_level != "critical" {
+                risk_level = "high".to_string();
             }
         }
 
@@ -423,13 +393,11 @@ impl ComplianceEngine {
         }
 
         // Rule: Unencrypted transmission
-        if config_str.contains("transmit") || config_str.contains("send") || config_str.contains("api_call") {
-            if !config_str.contains("tls") && !config_str.contains("ssl") && !config_str.contains("encrypted") {
-                violations.push("Card data transmission without encryption — PCI-DSS 1.2 Requirement 4".to_string());
-                recommendations.push("Use TLS 1.2+ for all card data transmissions".to_string());
-                if risk_level != "critical" {
-                    risk_level = "high".to_string();
-                }
+        if (config_str.contains("transmit") || config_str.contains("send") || config_str.contains("api_call")) && !config_str.contains("tls") && !config_str.contains("ssl") && !config_str.contains("encrypted") {
+            violations.push("Card data transmission without encryption — PCI-DSS 1.2 Requirement 4".to_string());
+            recommendations.push("Use TLS 1.2+ for all card data transmissions".to_string());
+            if risk_level != "critical" {
+                risk_level = "high".to_string();
             }
         }
 

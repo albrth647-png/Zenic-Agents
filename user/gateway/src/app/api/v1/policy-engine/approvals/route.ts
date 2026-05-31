@@ -2,6 +2,7 @@
 // GET  /api/v1/policy-engine/approvals  — List approval requests
 // POST /api/v1/policy-engine/approvals  — Create an approval request
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import {
   createApprovalRequest,

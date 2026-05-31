@@ -98,11 +98,9 @@ pub fn detect_cycles(
 
     let mut found_cycle = false;
     for node in &node_ids {
-        if *color.get(node).unwrap_or(&0) == 0 {
-            if dfs(node, &adj, &mut color, &mut parent, &mut cycle_path) {
-                found_cycle = true;
-                break;
-            }
+        if *color.get(node).unwrap_or(&0) == 0 && dfs(node, &adj, &mut color, &mut parent, &mut cycle_path) {
+            found_cycle = true;
+            break;
         }
     }
 
@@ -169,7 +167,7 @@ pub fn aggregate_impact(
     let mut scores: Vec<f64> = Vec::with_capacity(nodes.len());
     let mut high_risk_nodes: Vec<String> = Vec::new();
 
-    for (_depth, node) in nodes.iter().enumerate() {
+    for node in nodes.iter() {
         let score = *risk_map.get(node).unwrap_or(&0.0);
         scores.push(score);
         if score >= 0.7 {

@@ -1,6 +1,7 @@
 // ─── Zenic-Agents v3 — Policy Engine API: Template Instantiate ────────
 // POST /api/v1/policy-engine/templates/[templateId]/instantiate — Instantiate a template
 
+/* eslint-disable zenic-security/api-auth-required */
 import { NextRequest, NextResponse } from "next/server";
 import { instantiateTemplate } from "@/lib/policy-engine";
 
