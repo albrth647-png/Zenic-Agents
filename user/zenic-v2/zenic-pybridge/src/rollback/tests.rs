@@ -20,7 +20,7 @@ mod tests {
         let checksum = blake3::hash(&data).to_hex().to_string();
 
         // Snapshot
-        let py_result = pyo3::Python::with_gil(|py| {
+        let _py_result = pyo3::Python::with_gil(|py| {
             super::super::operations::snapshot_file(py, &src_path, &bk_path)
         }).unwrap();
 
@@ -31,7 +31,7 @@ mod tests {
         let target = NamedTempFile::new().unwrap();
         let target_path = target.path().to_str().unwrap().to_string();
 
-        let restore_result = pyo3::Python::with_gil(|py| {
+        let _restore_result = pyo3::Python::with_gil(|py| {
             super::super::operations::restore_file(py, &bk_path, &target_path, &checksum)
         }).unwrap();
 

@@ -33,16 +33,16 @@ class BranchRule:
 # Token patterns for the expression parser
 _TOKEN_RE = re.compile(
     r"""
-    (?P<STRING>  '(?:[^'\\]|\\.)*' | "(?:[^"\\]|\\.)*" )  # quoted strings
-    | (?P<NUMBER>  \d+(?:\.\d+)?)                           # numbers
-    | (?P<BOOL>    True|False|None                           # boolean/none literals
-    | (?P<IDENT>   [a-zA-Z_][\w.]*)                         # identifiers (allow dots)
-    | (?P<OP>      ==|!=|>=|<=|>|<)                         # comparison operators
-    | (?P<LPAREN>  \(                                       # left paren
-    | (?P<RPAREN>  \)                                       # right paren
-    | (?P<KEYWORD> and|or|not|contains|startswith|endswith|exists|not_empty  # keywords
-    | (?P<WS>      \s+                                      # whitespace
-    | (?P<MISMATCH>.)                                       # any other character
+    (?P<STRING>   '(?:[^'\\]|\\.)*' | "(?:[^"\\]|\\.)*" )   # quoted strings
+    | (?P<NUMBER>   \d+(?:\.\d+)?)                              # numbers
+    | (?P<BOOL>     True|False|None)                             # boolean/none literals
+    | (?P<IDENT>    [a-zA-Z_][\w.]*)                            # identifiers (allow dots)
+    | (?P<OP>       ==|!=|>=|<=|>|<)                             # comparison operators
+    | (?P<LPAREN>   \()                                         # left paren
+    | (?P<RPAREN>   \))                                        # right paren
+    | (?P<KEYWORD>  and|or|not|contains|startswith|endswith|exists|not_empty)  # keywords
+    | (?P<WS>       \s+)                                        # whitespace
+    | (?P<MISMATCH> .)                                          # any other character
     """,
     re.VERBOSE,
 )

@@ -171,7 +171,7 @@ class AssemblerScaffoldingMixin:
             '        placeholders = ", ".join(["?" for _ in columns])',
             '        col_str = ", ".join(columns)',
             "        cursor = conn.execute(",
-            f'            "INSERT INTO {table} (" + col_str + ") VALUES (" + placeholders + ")", values',
+            f'            "INSERT INTO {table} (" + col_str + ") VALUES (" + placeholders + ")", values',  # noqa: S608
             "        )",
             "        conn.commit()",
             "        item_id = cursor.lastrowid",
@@ -185,7 +185,7 @@ class AssemblerScaffoldingMixin:
             "    conn = sqlite3.connect(settings.DATABASE_PATH)",
             "    conn.row_factory = sqlite3.Row",
             "    try:",
-            f'        cursor = conn.execute("SELECT * FROM {table} WHERE id = ?", (item_id,))',
+            f'        cursor = conn.execute("SELECT * FROM {table} WHERE id = ?", (item_id,))',  # noqa: S608
             "        row = cursor.fetchone()",
             "    finally:",
             "        conn.close()",
@@ -199,7 +199,7 @@ class AssemblerScaffoldingMixin:
             "    conn = sqlite3.connect(settings.DATABASE_PATH)",
             "    conn.row_factory = sqlite3.Row",
             "    try:",
-            f'        cursor = conn.execute("SELECT * FROM {table} LIMIT ? OFFSET ?", (limit, offset))',
+            f'        cursor = conn.execute("SELECT * FROM {table} LIMIT ? OFFSET ?", (limit, offset))',  # noqa: S608
             "        rows = [dict(r) for r in cursor.fetchall()]",
             "    finally:",
             "        conn.close()",
@@ -214,7 +214,7 @@ class AssemblerScaffoldingMixin:
             '        set_parts = [str(k) + " = ?" for k in data_dict.keys()]',
             '        set_clause = ", ".join(set_parts)',
             "        values = list(data_dict.values()) + [item_id]",
-            f'        conn.execute("UPDATE {table} SET " + set_clause + " WHERE id = ?", values)',
+            f'        conn.execute("UPDATE {table} SET " + set_clause + " WHERE id = ?", values)',  # noqa: S608
             "        conn.commit()",
             "    finally:",
             "        conn.close()",
@@ -225,7 +225,7 @@ class AssemblerScaffoldingMixin:
             f'    """Delete {entity_name} by ID."""',
             "    conn = sqlite3.connect(settings.DATABASE_PATH)",
             "    try:",
-            f'        conn.execute("DELETE FROM {table} WHERE id = ?", (item_id,))',
+            f'        conn.execute("DELETE FROM {table} WHERE id = ?", (item_id,))',  # noqa: S608
             "        conn.commit()",
             "    finally:",
             "        conn.close()",

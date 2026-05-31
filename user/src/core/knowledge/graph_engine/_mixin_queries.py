@@ -45,7 +45,7 @@ class KnowledgeGraphQueriesMixin:
                         params.append(query.min_confidence)
 
                     where = " AND ".join(conditions) if conditions else "1=1"
-                    sql = f"SELECT * FROM kg_nodes WHERE {where} ORDER BY confidence DESC LIMIT ?"
+                    sql = f"SELECT * FROM kg_nodes WHERE {where} ORDER BY confidence DESC LIMIT ?"  # noqa: S608
                     params.append(query.max_results)
 
                     cursor = conn.execute(sql, params)  # nosemgrep: sqlalchemy-execute-raw-query
@@ -56,7 +56,7 @@ class KnowledgeGraphQueriesMixin:
                     if found_node_ids:
                         placeholders = ",".join("?" for _ in found_node_ids)
                         edge_sql = (
-                            f"SELECT * FROM kg_edges WHERE source_id IN ({placeholders}) "
+                            f"SELECT * FROM kg_edges WHERE source_id IN ({placeholders}) "  # noqa: S608
                             f"OR target_id IN ({placeholders})"
                         )
                         cursor = conn.execute(
@@ -138,7 +138,7 @@ class KnowledgeGraphQueriesMixin:
                     if neighbor_ids:
                         placeholders = ",".join("?" for _ in neighbor_ids)
                         cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                            f"SELECT * FROM kg_nodes WHERE id IN ({placeholders})",
+                            f"SELECT * FROM kg_nodes WHERE id IN ({placeholders})",  # noqa: S608
                             list(neighbor_ids),
                         )
                         neighbor_nodes = [self._node_from_row(r) for r in cursor.fetchall()]

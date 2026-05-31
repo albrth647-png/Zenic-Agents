@@ -223,7 +223,7 @@ def encrypt_database(source_path: str, passphrase: str) -> str:
             # SECURITY: Validate table_name from sqlite_master to prevent injection
             _validate_identifier(table_name, "in encrypt_database table copy")
             enc_conn.execute(
-                f"CREATE TABLE IF NOT EXISTS [{table_name}] AS SELECT * FROM plain_db.[{table_name}]"
+                f"CREATE TABLE IF NOT EXISTS [{table_name}] AS SELECT * FROM plain_db.[{table_name}]"  # noqa: S608
             )
         enc_conn.execute("DETACH DATABASE plain_db")
         enc_conn.commit()

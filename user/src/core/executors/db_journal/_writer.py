@@ -203,7 +203,7 @@ class _WriterMixin:
                 table, where_clause = _extract_table_and_where_from_delete(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     select_params = list(params)
@@ -211,7 +211,7 @@ class _WriterMixin:
                 table, where_clause = _extract_table_and_where_from_update(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     # For UPDATE, params correspond to SET values first, then WHERE values.

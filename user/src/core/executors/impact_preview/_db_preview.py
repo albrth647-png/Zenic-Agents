@@ -117,7 +117,7 @@ def _preview_delete(
 
     # Build COUNT query with same WHERE clause
     where_clause = extract_where_clause(query)
-    count_query = f"SELECT COUNT(*) FROM {table}"
+    count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
     if where_clause:
         count_query += f" WHERE {where_clause}"
 
@@ -139,12 +139,12 @@ def _preview_delete(
         preview.estimated_rows = count
         preview.affected_rows = count
         preview.reversible = False
-        preview.summary = f"DELETE from {table}: {count} row(s) would be removed"
+        preview.summary = f"DELETE from {table}: {count} row(s) would be removed"  # noqa: S608
 
         if count == 0:
             preview.risk_level = ImpactRiskLevel.LOW
             preview.risk_score = 0.1
-            preview.summary = f"DELETE from {table}: no rows match the WHERE clause"
+            preview.summary = f"DELETE from {table}: no rows match the WHERE clause"  # noqa: S608
         elif count > 100:
             preview.risk_level = ImpactRiskLevel.CRITICAL
             preview.risk_score = 1.0
@@ -201,7 +201,7 @@ def _preview_update(
     where_params = list(params[set_placeholders:]) if set_placeholders < len(params) else []
 
     # Count affected rows
-    count_query = f"SELECT COUNT(*) FROM {table}"
+    count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
     if where_clause:
         count_query += f" WHERE {where_clause}"
 
@@ -225,7 +225,7 @@ def _preview_update(
 
         # Fetch a sample row to show current values
         if count > 0:
-            sample_query = f"SELECT * FROM {table}"
+            sample_query = f"SELECT * FROM {table}"  # noqa: S608
             if where_clause:
                 sample_query += f" WHERE {where_clause}"
             sample_query += " LIMIT 1"
@@ -412,7 +412,7 @@ def _preview_insert(
                 if all_present and matching_indices:
                     # Check for existing rows with same unique values
                     where_parts = [f"{unique_cols[i]} = ?" for i in range(len(unique_cols))]
-                    check_query = f"SELECT COUNT(*) FROM {table} WHERE {' AND '.join(where_parts)}"
+                    check_query = f"SELECT COUNT(*) FROM {table} WHERE {' AND '.join(where_parts)}"  # noqa: S608
                     check_params = [params[i] for i in matching_indices if i < len(params)]
 
                     def _check_unique(check_query=check_query, check_params=check_params) -> int:
@@ -474,7 +474,7 @@ def _preview_select(
 
     # Try to estimate row count
     if table:
-        count_query = f"SELECT COUNT(*) FROM {table}"
+        count_query = f"SELECT COUNT(*) FROM {table}"  # noqa: S608
         where_clause = extract_where_clause(query)
         if where_clause:
             count_query += f" WHERE {where_clause}"

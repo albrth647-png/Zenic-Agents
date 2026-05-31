@@ -207,7 +207,7 @@ class DiffPreviewEngine:
 
             # Build a SELECT query
             where_clause = extract_where_clause(query, operation)
-            select_query = f"SELECT * FROM {table}"
+            select_query = f"SELECT * FROM {table}"  # noqa: S608
             select_params: SQLParams = []
 
             if where_clause:

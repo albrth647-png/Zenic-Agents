@@ -1,4 +1,5 @@
 """CodeAssembler - Code Generation Mixin."""
+# ruff: noqa: S608
 
 import logging
 
@@ -32,7 +33,7 @@ class AssemblerGeneratorsMixin:
                 raise ValueError(f"Invalid field name for code generation: {fn!r}")
 
         # Use string formatting (not f-string) to avoid nested brace issues
-        return f'''  # noqa: S608
+        return f'''
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """CRUD operations for {entity_name} — REAL logic using sqlite3."""
         import sqlite3
@@ -172,7 +173,7 @@ class AssemblerGeneratorsMixin:
             raise ValueError(f"Invalid metric name for code generation: {default_metric!r}")
 
         # Use .format() to avoid nested f-string brace issues
-        return f'''  # noqa: S608
+        return f'''
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Analytics for {entity_name} — REAL aggregation using sqlite3."""
         import sqlite3

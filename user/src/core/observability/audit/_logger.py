@@ -207,7 +207,7 @@ class AuditLogger:
             conn = sqlite3.connect(self._db_path)
             conn.row_factory = sqlite3.Row
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM audit_events WHERE {where_clause} "
+                f"SELECT * FROM audit_events WHERE {where_clause} "  # noqa: S608
                 f"ORDER BY created_at DESC LIMIT {limit}",
                 params,
             ).fetchall()

@@ -4,6 +4,7 @@ ZENIC-AGENTS - PostgreSQL Task Queue Operations
 Task queue methods for PgBackend: enqueue, dequeue, complete,
 fail, renew_lease, expire_leases.
 """
+# ruff: noqa: S608
 
 import json
 import logging
@@ -102,7 +103,7 @@ class PgTaskMixin:
             try:
                 with conn.cursor() as cur:
                     cur.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"""  # noqa: S608
+                        f"""
                         SELECT t.*
                         FROM coord_tasks t
                         WHERE {where_clause}

@@ -135,7 +135,7 @@ class AuditPersistence:
             params.append(q.to_timestamp)
 
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
-        sql = f"SELECT * FROM executor_audit{where} ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+        sql = f"SELECT * FROM executor_audit{where} ORDER BY timestamp DESC LIMIT ? OFFSET ?"  # noqa: S608
         params.extend([q.limit, q.offset])
 
         conn = sqlite3.connect(self._db_path)

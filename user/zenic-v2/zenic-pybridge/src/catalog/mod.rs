@@ -33,12 +33,12 @@ mod niches_ai_health;
 mod niches_green_legal;
 mod sections;
 
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;  // TODO: create catalog/tests.rs
 
 // Re-export all public catalog functions so they remain accessible as crate::catalog::*
 
 pub use catalog_data::{
     catalog_count, catalog_get_all, catalog_get_by_category, catalog_get_by_id, catalog_ids,
-    catalog_search, ALL_NICHES,
+    catalog_search, all_niches, CatalogNicheEntry,
 };

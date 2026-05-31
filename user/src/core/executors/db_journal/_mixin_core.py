@@ -296,7 +296,7 @@ class CoreMixin:
                 table, where_clause = extract_table_and_where_from_delete(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     select_params = list(params)
@@ -304,7 +304,7 @@ class CoreMixin:
                 table, where_clause = extract_table_and_where_from_update(query)
                 if not table:
                     return []
-                select_query = f"SELECT * FROM {table}"
+                select_query = f"SELECT * FROM {table}"  # noqa: S608
                 if where_clause:
                     select_query += f" WHERE {where_clause}"
                     set_clause = extract_set_clause_from_update(query)

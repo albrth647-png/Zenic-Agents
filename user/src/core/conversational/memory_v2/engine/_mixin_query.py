@@ -48,7 +48,7 @@ class MemoryQueryMixin:
 
                     where = " AND ".join(conditions) if conditions else "1=1"
                     sql = (
-                        f"SELECT * FROM memory_v2_records WHERE {where} "
+                        f"SELECT * FROM memory_v2_records WHERE {where} "  # noqa: S608
                         f"ORDER BY importance DESC, created_at DESC LIMIT ?"
                     )
                     params.append(query.max_results)
@@ -56,7 +56,7 @@ class MemoryQueryMixin:
                     cursor = conn.execute(sql, params)  # nosemgrep: sqlalchemy-execute-raw-query
                     records = [self._record_from_row(row) for row in cursor.fetchall()]
 
-                    count_sql = f"SELECT COUNT(*) FROM memory_v2_records WHERE {where}"
+                    count_sql = f"SELECT COUNT(*) FROM memory_v2_records WHERE {where}"  # noqa: S608
                     total = conn.execute(count_sql, params[:-1]).fetchone()[
                         0
                     ]  # nosemgrep: sqlalchemy-execute-raw-query

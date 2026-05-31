@@ -17,10 +17,11 @@ Redis key format: zenic:cb:{name} (HASH)
 If Redis is unavailable, falls back to in-memory AgentCircuitBreaker.
 """
 
+from __future__ import annotations
+
 import logging
 
 logger = logging.getLogger(__name__)
-from __future__ import annotations
 
 import contextlib
 import json

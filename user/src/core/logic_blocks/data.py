@@ -157,8 +157,8 @@ class CRUDReadBlock(LogicBlock):
                     # SECURITY: table and column names validated by _validate_identifier;
                     # data values use ? parameterization via 'values' tuple
                     count_cursor = db.execute(
-                        f'SELECT COUNT(*) FROM "{table}"{where_str}',
-                        values,  # noqa: S608
+                        f'SELECT COUNT(*) FROM "{table}"{where_str}',  # noqa: S608
+                        values,
                     )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                     total = count_cursor.fetchone()[0]
 
@@ -297,8 +297,8 @@ class CRUDDeleteBlock(LogicBlock):
                     else:
                         # SECURITY: record_id uses ? parameterization
                         cursor = db.execute(
-                            f'DELETE FROM "{table}" WHERE id = ?',
-                            (record_id,),  # noqa: S608
+                            f'DELETE FROM "{table}" WHERE id = ?',  # noqa: S608
+                            (record_id,),
                         )  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
 
                     rows_affected = cursor.rowcount if hasattr(cursor, "rowcount") else 1
