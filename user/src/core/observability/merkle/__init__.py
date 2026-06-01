@@ -11,20 +11,20 @@ into a Merkle tree, enabling:
 
 from ._engine import MerkleAuditEngine, get_merkle_audit_engine, reset_merkle_audit_engine
 from ._types import (
-    MerkleAuditEntry,
-    MerkleVerificationResult,
-    MerkleProofResult,
-    ComplianceCertificate,
     AuditEntryAction,
+    ComplianceCertificate,
+    MerkleAuditEntry,
+    MerkleProofResult,
+    MerkleVerificationResult,
 )
 
 __all__ = [
+    "AuditEntryAction",
+    "ComplianceCertificate",
     "MerkleAuditEngine",
     "MerkleAuditEntry",
-    "MerkleVerificationResult",
     "MerkleProofResult",
-    "ComplianceCertificate",
-    "AuditEntryAction",
+    "MerkleVerificationResult",
     "get_merkle_audit_engine",
     "reset_merkle_audit_engine",
 ]

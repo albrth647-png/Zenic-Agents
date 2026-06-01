@@ -22,14 +22,19 @@ logger = logging.getLogger(__name__)
 
 # Try to import the Rust native module for high-performance operations
 try:
-    from _zenic_native import (  # noqa: F401 — imported for availability check
+    from _zenic_native import (
         a2a_discover_agents as _rust_discover,
-        a2a_get_agent_card as _rust_get_card,
-        a2a_handle_task as _rust_handle_task,
-        a2a_register_agent as _rust_register,
-        a2a_validate_delegation as _rust_validate,  # used by delegate_task policy check
-        a2a_list_registered_agents as _rust_list_agents,  # used by discover fallback
     )
+    from _zenic_native import (
+        a2a_get_agent_card as _rust_get_card,
+    )
+    from _zenic_native import (
+        a2a_handle_task as _rust_handle_task,
+    )
+    from _zenic_native import (
+        a2a_register_agent as _rust_register,
+    )
+
     _HAS_RUST = True
 except ImportError:
     _HAS_RUST = False
@@ -39,6 +44,7 @@ except ImportError:
 @dataclass
 class A2ADiscoveryResult:
     """Result of an agent discovery query."""
+
     agents: list[A2AAgentCard] = field(default_factory=list)
     total_found: int = 0
     query_capability: str = ""
@@ -48,6 +54,7 @@ class A2ADiscoveryResult:
 @dataclass
 class A2ADelegationResult:
     """Result of an A2A task delegation."""
+
     success: bool
     response: A2AResponseMessage | None = None
     policy_allowed: bool = True
@@ -95,16 +102,18 @@ class A2AClient:
                 niche_arg = niche if niche else None
                 rust_cards = _rust_discover(capability, niche_arg)
                 for card in rust_cards:
-                    agents.append(A2AAgentCard(
-                        agent_id=card.id,
-                        name=card.name,
-                        description=card.description,
-                        capabilities=card.capabilities,
-                        endpoint=card.endpoint,
-                        niche_dna=card.niche_dna,
-                        requires_hitl=card.requires_hitl,
-                        policy_constraints=card.policy_constraints,
-                    ))
+                    agents.append(
+                        A2AAgentCard(
+                            agent_id=card.id,
+                            name=card.name,
+                            description=card.description,
+                            capabilities=card.capabilities,
+                            endpoint=card.endpoint,
+                            niche_dna=card.niche_dna,
+                            requires_hitl=card.requires_hitl,
+                            policy_constraints=card.policy_constraints,
+                        )
+                    )
             except Exception as e:
                 logger.warning("Rust A2A discovery failed: %s", e)
 
@@ -151,6 +160,7 @@ class A2AClient:
             try:
                 # Create PyO3 A2ATask object
                 from _zenic_native import A2ATask as RustA2ATask
+
                 rust_task = RustA2ATask(
                     task_id=task.task_id,
                     sender_agent=task.sender_agent,
@@ -190,6 +200,7 @@ class A2AClient:
         if _HAS_RUST:
             try:
                 from _zenic_native import AgentCard as RustAgentCard
+
                 rust_card = RustAgentCard(
                     id=card.agent_id,
                     name=card.name,

@@ -1,8 +1,9 @@
 """
 Conocimiento base del motor de conversacion.
 
-Carga conocimiento predefinido del asistente al
-KnowledgeBase durante la inicializacion.
+HUMANIZADO: Contenido de negocio con tono humano.
+Define lo que el sistema sabe sobre la empresa, sus
+procesos y capacidades.
 """
 
 from __future__ import annotations
@@ -17,47 +18,59 @@ logger = logging.getLogger("zenic_agents.conversational.engine_knowledge")
 
 
 def load_builtin_knowledge(kb: KnowledgeBase) -> None:
-    """Carga conocimiento base del asistente en la KnowledgeBase."""
+    """Carga conocimiento base del sistema en la KnowledgeBase."""
     concepts: list[tuple[str, str, str, list[str]]] = [
         (
-            "Arquitectura Zenic-Agents",
-            "Zenic-Agents es un motor de IA quirurgico con 48 agentes especializados "
-            "organizados en capas. El asistente usa un sistema determinista con "
-            "fallbacks y la IA solo como arbitro binario.",
-            "architecture",
-            ["zenic", "arquitectura", "agentes", "motor"],
+            "Sistema de Facturacion",
+            "El sistema puede crear, consultar y enviar facturas a clientes. "
+            "Soporta facturas electronicas, multiples monedas y descuentos. "
+            "Las facturas se pueden descargar en PDF, enviar por correo o "
+            "compartir por WhatsApp.",
+            "business",
+            ["factura", "facturacion", "invoice", "billing", "pago"],
         ),
         (
-            "Sistema de Memoria",
-            "El asistente tiene 3 niveles de memoria: Working (contexto inmediato), "
-            "Short-Term (datos de sesion) y Long-Term (persistente entre sesiones). "
-            "Las memorias se promueven automaticamente segun su importancia.",
-            "architecture",
-            ["memoria", "working", "short-term", "long-term"],
+            "Gestion de Clientes (CRM)",
+            "El CRM guarda historial de clientes, contactos, oportunidades "
+            "y telefonos. Se pueden agregar notas, registrar interacciones "
+            "y ver el historial completo de cada cliente. Tambien se pueden "
+            "exportar listas de clientes.",
+            "business",
+            ["crm", "clientes", "contactos", "client", "customer", "lead"],
         ),
         (
-            "Sistema de Herramientas",
-            "El asistente puede ejecutar herramientas: busqueda web, calculadora, "
-            "ejecucion de codigo en sandbox, lectura de archivos y busqueda en memoria. "
-            "Cada herramienta tiene permisos configurables.",
-            "architecture",
-            ["herramientas", "tools", "web search", "calculator"],
+            "Inventario y Productos",
+            "Gestiona el inventario de productos: entradas, salidas, "
+            "ajustes y transferencias. Consulta stock en tiempo real, "
+            "recibe alertas de stock minimo y genera reportes de inventario.",
+            "business",
+            ["inventario", "stock", "productos", "almacen", "warehouse"],
         ),
         (
-            "Clasificacion de Intencion",
-            "El sistema clasifica mensajes en 13 categorias de intencion usando "
-            "un motor multi-capa: keywords, patterns, contexto y calibracion. "
-            "Las categorias incluyen chat, preguntas, comandos, config y 6 tipos de codigo.",
-            "architecture",
-            ["intencion", "clasificacion", "intent", "categorias"],
+            "Pedidos y Ventas",
+            "Crea y consulta pedidos de clientes. Cada pedido tiene "
+            "estado (pendiente, confirmado, enviado, entregado), total "
+            "y metodo de pago. Se pueden reenviar facturas de pedidos "
+            "y consultar el historial de ventas.",
+            "business",
+            ["pedido", "venta", "order", "sale", "compra", "purchase"],
         ),
         (
-            "Python Best Practices",
-            "Usa type hints, dataclasses, Protocol para DI, Result monad para errores. "
-            "Archivos max 400 lineas, modulos con __init__.py, imports absolutos. "
-            "Thread-safe con locks, async para I/O.",
-            "programming",
-            ["python", "best practices", "type hints", "dataclasses"],
+            "Reportes y Dashboard",
+            "Genera reportes de ventas, inventario, clientes y "
+            "rendimiento. Los reportes se pueden ver en el dashboard "
+            "o descargar en PDF/Excel. Incluye graficos comparativos "
+            "y tendencias.",
+            "business",
+            ["reporte", "dashboard", "report", "estadistica", "grafico"],
+        ),
+        (
+            "Notificaciones y Alertas",
+            "El sistema envia notificaciones por WhatsApp, Telegram "
+            "y correo electronico. Alertas de stock bajo, facturas "
+            "vencidas, pedidos pendientes y recordatorios de tareas.",
+            "business",
+            ["notificacion", "alerta", "notification", "alert", "recordatorio"],
         ),
     ]
 

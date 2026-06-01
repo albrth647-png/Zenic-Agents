@@ -22,19 +22,19 @@ def _sanitize_client(value: str, visible: int = 4) -> str:
 
 # Tenant module removed — use tenant_utils for multi-tenant context
 # from src.core.tenant._context import get_current_tenant, set_current_tenant, TenantContext
-import contextlib  # noqa: E402
+import contextlib
 
-from src.core.shared.tenant_utils import (  # noqa: E402
+from src.core.shared.tenant_utils import (
     resolve_tenant_id,
     set_tenant_context,
 )
 
-from ..cache import CacheMixin  # noqa: E402
-from ..database import DatabaseMixin  # noqa: E402
-from ..episodes import EpisodesMixin  # noqa: E402
-from ..longterm import LongTermMixin  # noqa: E402
-from ._session_mixin import SessionMixin  # noqa: E402
-from ._tenant_mixin import TenantMixin  # noqa: E402
+from ..cache import CacheMixin
+from ..database import DatabaseMixin
+from ..episodes import EpisodesMixin
+from ..longterm import LongTermMixin
+from ._session_mixin import SessionMixin
+from ._tenant_mixin import TenantMixin
 
 
 class _FallbackTenantContext:
@@ -190,4 +190,4 @@ class SmartMemory(DatabaseMixin, CacheMixin, LongTermMixin, EpisodesMixin, Tenan
 
 
 # Re-export threading for the class
-import threading  # noqa: E402
+import threading

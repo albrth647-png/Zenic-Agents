@@ -38,7 +38,7 @@ class ObjectiveStore:
                 return
 
             def _init() -> None:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
                 try:
                     conn.execute("""  # nosemgrep: sqlalchemy-execute-raw-query
                         CREATE TABLE IF NOT EXISTS _zenic_objectives (
@@ -88,7 +88,7 @@ class ObjectiveStore:
             data = objective.to_dict()
 
             def _insert() -> None:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
                 try:
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         """INSERT INTO _zenic_objectives
@@ -136,8 +136,8 @@ class ObjectiveStore:
         with self._lock:
 
             def _fetch() -> Objective | None:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
-                conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
+                conn.row_factory = sqlite3.Row  # TODO: add import
                 try:
                     row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "SELECT * FROM _zenic_objectives WHERE objective_id = ?",
@@ -166,7 +166,7 @@ class ObjectiveStore:
             data = objective.to_dict()
 
             def _update() -> None:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
                 try:
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         """UPDATE _zenic_objectives
@@ -212,7 +212,7 @@ class ObjectiveStore:
         with self._lock:
 
             def _delete() -> bool:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "DELETE FROM _zenic_objectives WHERE objective_id = ?",
@@ -249,8 +249,8 @@ class ObjectiveStore:
         with self._lock:
 
             def _list() -> list[Objective]:
-                conn = sqlite3.connect(self._db_path)  # noqa: F821  # TODO: add import
-                conn.row_factory = sqlite3.Row  # noqa: F821  # TODO: add import
+                conn = sqlite3.connect(self._db_path)  # TODO: add import
+                conn.row_factory = sqlite3.Row  # TODO: add import
                 try:
                     conditions: list[str] = []
                     params: list[Any] = []
@@ -268,7 +268,7 @@ class ObjectiveStore:
                         params.append(f'%"{tag}"%')
                     where = " WHERE " + " AND ".join(conditions) if conditions else ""
                     rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM _zenic_objectives{where} ORDER BY created_at DESC LIMIT ?",  # noqa: S608
+                        f"SELECT * FROM _zenic_objectives{where} ORDER BY created_at DESC LIMIT ?",
                         [*params, limit],
                     ).fetchall()
                     return [self._row_to_objective(r) for r in rows]
@@ -305,7 +305,7 @@ class ObjectiveStore:
     # ── Row Converter ──────────────────────────────────────
 
     @staticmethod
-    def _row_to_objective(row: sqlite3.Row) -> Objective:  # noqa: F821  # TODO: add import
+    def _row_to_objective(row: sqlite3.Row) -> Objective:  # TODO: add import
         """Convert a database row to an Objective instance."""
         return Objective(
             objective_id=row["objective_id"],

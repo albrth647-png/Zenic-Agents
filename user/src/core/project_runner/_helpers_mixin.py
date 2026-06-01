@@ -41,7 +41,7 @@ class HelpersMixin:
     def _create_venv(self, venv_dir: str) -> bool:
         """Create a Python virtual environment."""
         try:
-            result = subprocess.run(  # noqa: S603
+            result = subprocess.run(
                 [sys.executable, "-m", "venv", venv_dir],
                 capture_output=True,
                 text=True,
@@ -102,7 +102,7 @@ class HelpersMixin:
                 else:
                     cmd = [pip_path, "install", "-q", req]
 
-                result = subprocess.run(  # noqa: S603
+                result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
@@ -139,7 +139,7 @@ class HelpersMixin:
             python_path = sys.executable
 
         try:
-            result = subprocess.run(  # noqa: S603
+            result = subprocess.run(
                 [python_path, "-c", "import sys; sys.path.insert(0, '.'); from database import init_db; init_db()"],
                 capture_output=True,
                 text=True,
@@ -178,7 +178,7 @@ class HelpersMixin:
         env["PORT"] = str(port)
 
         try:
-            process = subprocess.Popen(  # noqa: S603
+            process = subprocess.Popen(
                 [python_path, main_file],
                 cwd=project_dir,
                 env=env,
@@ -210,8 +210,8 @@ class HelpersMixin:
             import urllib.request
 
             url = f"http://localhost:{port}/health"
-            req = urllib.request.Request(url, method="GET")  # noqa: S310
-            with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
+            req = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:
                 return resp.status == 200
         except Exception:
             # Try / root as fallback
@@ -219,8 +219,8 @@ class HelpersMixin:
                 import urllib.request
 
                 url = f"http://localhost:{port}/"
-                req = urllib.request.Request(url, method="GET")  # noqa: S310
-                with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:  # noqa: S310
+                req = urllib.request.Request(url, method="GET")
+                with urllib.request.urlopen(req, timeout=HEALTH_TIMEOUT) as resp:
                     return resp.status in (200, 404)  # 404 means server is running
             except Exception:
                 return False

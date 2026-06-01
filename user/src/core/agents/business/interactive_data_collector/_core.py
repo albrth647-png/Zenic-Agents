@@ -4,10 +4,24 @@ from __future__ import annotations
 
 from typing import Any
 
-from ._types import InteractiveCollectionResult
+from ...resilience import BaseAgent
+from ._types import (
+    MAX_ANSWER_LENGTH,
+    MAX_QUESTIONS_PER_ROUND,
+    InteractiveCollectionResult,
+)
 
 
-class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # TODO: add import
+class _CompletionSession:
+    """Internal session tracking for interactive data collection."""
+    def __init__(self):
+        self.session_id = ""
+        self.niche_id = ""
+        self.round_count = 0
+        self.answers = {}
+
+
+class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):
     """
     A51: Interactive dialogue for missing template fields.
 
@@ -35,7 +49,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # TODO:
     def __init__(self, **kwargs) -> None:
         super().__init__(name="A51_InteractiveDataCollector", **kwargs)
         self._native = None
-        self._python_sessions: dict[str, _CompletionSession] = {}  # TODO: add import
+        self._python_sessions: dict[str, _CompletionSession] = {}
 
     def _get_native(self):
         """Lazy-load the zenic Rust extension (if available)."""
@@ -146,7 +160,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # TODO:
                 "default_value": q.default_value,
                 "validation_hint": q.validation_hint,
             }
-            for q in questions[:MAX_QUESTIONS_PER_ROUND]  # TODO: add import
+            for q in questions[:MAX_QUESTIONS_PER_ROUND]
         ]
         progress = native["completer_get_progress"](session, template_dict)
         return InteractiveCollectionResult(
@@ -164,7 +178,7 @@ class InteractiveDataCollector(BaseAgent[InteractiveCollectionResult]):  # TODO:
         session = data.get("session")
         template_dict = data.get("template_dict")
         field_name = data.get("field_name", "")
-        value = str(data.get("value", ""))[:MAX_ANSWER_LENGTH]  # TODO: add import
+        value = str(data.get("value", ""))[:MAX_ANSWER_LENGTH]
         if session is None or template_dict is None or not field_name:
             return InteractiveCollectionResult(source="deterministic")
         updated_session, applied = native["completer_submit_answer"](session, template_dict, field_name, value)

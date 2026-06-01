@@ -4,10 +4,11 @@ Teams Provider — HTTP transport helpers.
 Contains _validate_url, optional dependency detection, and constants.
 """
 
+from __future__ import annotations
+
 import logging
 
 logger = logging.getLogger(__name__)
-from __future__ import annotations
 
 import ipaddress
 from urllib.parse import urlparse

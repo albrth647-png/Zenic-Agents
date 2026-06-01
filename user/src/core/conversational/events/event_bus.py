@@ -209,7 +209,7 @@ class EventBus:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                _task = asyncio.ensure_future(handler(event))  # noqa: RUF006
+                _task = asyncio.ensure_future(handler(event))
             else:
                 loop.run_until_complete(handler(event))
         except RuntimeError:

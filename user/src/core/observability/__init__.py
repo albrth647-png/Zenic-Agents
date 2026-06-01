@@ -27,16 +27,6 @@ from .forensic import (
     get_forensic_engine,
     reset_forensic_engine,
 )
-from .merkle import (
-    MerkleAuditEngine,
-    MerkleAuditEntry,
-    MerkleVerificationResult,
-    MerkleProofResult,
-    ComplianceCertificate,
-    AuditEntryAction,
-    get_merkle_audit_engine,
-    reset_merkle_audit_engine,
-)
 from .health import (
     HealthAggregator,
     HealthCheckResult,
@@ -48,6 +38,16 @@ from .health import (
     check_redis,
     check_resources,
     get_health_aggregator,
+)
+from .merkle import (
+    AuditEntryAction,
+    ComplianceCertificate,
+    MerkleAuditEngine,
+    MerkleAuditEntry,
+    MerkleProofResult,
+    MerkleVerificationResult,
+    get_merkle_audit_engine,
+    reset_merkle_audit_engine,
 )
 from .metrics import (
     MetricsCollector,
@@ -75,28 +75,28 @@ from .tracing import (
 )
 
 __all__ = [
+    "AuditEntryAction",
     "AuditEvent",
     "AuditEventType",
     # Audit
     "AuditLogger",
     "AuditSeverity",
     "ChainVerificationResult",
+    "ComplianceCertificate",
     "EvidenceBundle",
     # Forensic
     "ForensicEngine",
     "ForensicEntry",
     "ForensicReport",
-    # Merkle Audit Trail
-    "MerkleAuditEngine",
-    "MerkleAuditEntry",
-    "MerkleVerificationResult",
-    "MerkleProofResult",
-    "ComplianceCertificate",
-    "AuditEntryAction",
     # Health
     "HealthAggregator",
     "HealthCheckResult",
     "HealthStatus",
+    # Merkle Audit Trail
+    "MerkleAuditEngine",
+    "MerkleAuditEntry",
+    "MerkleProofResult",
+    "MerkleVerificationResult",
     # Metrics
     "MetricsCollector",
     "MetricsConfig",
@@ -119,6 +119,7 @@ __all__ = [
     "get_current_trace_id",
     "get_forensic_engine",
     "get_health_aggregator",
+    "get_merkle_audit_engine",
     "get_metrics_collector",
     "get_snapshot_audit_engine",
     "get_tracer",
@@ -126,7 +127,6 @@ __all__ = [
     "inject_trace_context",
     "metrics_middleware",
     "reset_forensic_engine",
-    "get_merkle_audit_engine",
     "reset_merkle_audit_engine",
     "reset_snapshot_audit_engine",
     "trace_span",

@@ -101,7 +101,7 @@ class PlainFormatter(logging.Formatter):
     Incluye timestamp, nivel, logger y mensaje con colores simples.
     """
 
-    COLORS = {  # noqa: RUF012
+    COLORS = {
         "DEBUG": "\033[36m",  # Cyan
         "INFO": "\033[32m",  # Green
         "WARNING": "\033[33m",  # Yellow

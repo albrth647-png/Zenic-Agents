@@ -124,7 +124,7 @@ class _RollbackMixin:
                     col_names = ", ".join(columns)
                     values = [row[c] for c in columns]
                     insert_sql = (
-                        f"INSERT OR REPLACE INTO {table}"  # noqa: S608
+                        f"INSERT OR REPLACE INTO {table}"
                         f" ({col_names}) VALUES ({placeholders})"
                     )
                     conn.execute(insert_sql, values)  # nosemgrep: sqlalchemy-execute-raw-query
@@ -179,7 +179,7 @@ class _RollbackMixin:
                     # Use the first column as the identifying column
                     pk_col = columns[0]
                     pk_val = row[pk_col]
-                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
+                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"
                     conn.execute(update_sql, [*values, pk_val])  # nosemgrep: sqlalchemy-execute-raw-query
                     restored += 1
                 conn.commit()
@@ -219,7 +219,7 @@ class _RollbackMixin:
             conn = sqlite3.connect(entry.db_path)
             try:
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f"DELETE FROM {table} WHERE rowid = ?",  # noqa: S608
+                    f"DELETE FROM {table} WHERE rowid = ?",
                     (entry.lastrowid,),
                 )
                 conn.commit()

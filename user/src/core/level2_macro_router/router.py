@@ -51,7 +51,7 @@ class MacroRouter:
     - Patrones criticos desde YAML
     """
 
-    MODERATE_PATTERNS = [  # noqa: RUF012
+    MODERATE_PATTERNS = [
         "api",
         "endpoint",
         "route",

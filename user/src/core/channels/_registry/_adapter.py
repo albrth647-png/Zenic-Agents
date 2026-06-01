@@ -7,8 +7,8 @@ import threading
 import time
 from typing import Any
 
-from ._protocol import ChannelProvider, InboundChannelProvider
-from ._types import (
+from .._protocol import ChannelProvider, InboundChannelProvider
+from .._types import (
     ChannelCapability,
     ChannelMessage,
     ChannelResponse,

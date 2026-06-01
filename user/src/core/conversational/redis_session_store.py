@@ -382,7 +382,7 @@ class RedisSessionStore:
             streaming_enabled=config_data.get("streaming_enabled", True),
             tools_enabled=config_data.get("tools_enabled", True),
             memory_enabled=config_data.get("memory_enabled", True),
-            personality_name=config_data.get("personality_name", "zenic"),
+            personality_name=config_data.get("personality_name", "business_default"),
         )
 
         messages_data = json.loads(data.get("messages", "[]"))

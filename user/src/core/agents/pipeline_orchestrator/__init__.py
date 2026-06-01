@@ -58,6 +58,7 @@ from .memory import (  # type: ignore[import-unresolved]
     MemoryCollector,
     RelevanceScorer,
 )
+from .niche_onboarding_pipeline import NicheOnboardingPipeline
 from .reasoning import (  # type: ignore[import-unresolved]
     ConclusionExtractor,
     ConfidenceEstimator,
@@ -155,9 +156,6 @@ __all__ = [
     "WorkflowSpec",
     "time",
 ]
-
-# Phase D: Niche Onboarding Pipeline
-from .niche_onboarding_pipeline import NicheOnboardingPipeline
 
 
 class PipelineOrchestrator(PipelineOrchestratorCoreMixin, PipelineOrchestratorExtraMixin):

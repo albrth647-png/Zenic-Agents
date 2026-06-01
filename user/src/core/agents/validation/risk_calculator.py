@@ -6,7 +6,7 @@ Deterministic. No AI.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from ..resilience import BaseAgent
 from ..schemas import RiskResult, SecurityResult, SyntaxResult
@@ -25,7 +25,7 @@ class RiskCalculator(BaseAgent[RiskResult]):
         super().__init__(name="A27_RiskCalculator", **kwargs)
 
     # Severity weights
-    SEVERITY_WEIGHTS = {  # noqa: RUF012
+    SEVERITY_WEIGHTS: ClassVar[dict] = {
         "error": 0.3,
         "warning": 0.1,
         "info": 0.02,

@@ -207,7 +207,7 @@ class SNAPersistence:
                     set_params.extend(extra_val)
             set_sql = ", ".join(set_parts)
             conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"UPDATE sna_alerts SET {set_sql} WHERE alert_id = ?",  # noqa: S608
+                f"UPDATE sna_alerts SET {set_sql} WHERE alert_id = ?",
                 [*set_params, alert_id],
             )
             conn.commit()
@@ -275,7 +275,7 @@ class SNAPersistence:
         where = " WHERE " + " AND ".join(conditions) if conditions else ""
         # WHERE clause built from parameterized conditions only — safe
         rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-            f"SELECT * FROM sna_thresholds{where}",  # noqa: S608
+            f"SELECT * FROM sna_thresholds{where}",
             params,
         ).fetchall()
         return [self._row_to_threshold(r) for r in rows]

@@ -65,13 +65,16 @@ class AGUIEmitter:
 
         try:
             import aiohttp
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
+
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
                     f"{self.gateway_url}/api/v1/ag-ui/events",
                     json=data,
                     timeout=aiohttp.ClientTimeout(total=5),
-                ) as resp:
-                    return resp.status == 200
+                ) as resp,
+            ):
+                return resp.status == 200
         except ImportError:
             logger.debug("aiohttp not available, AG-UI event not sent")
             # Store locally for later retrieval

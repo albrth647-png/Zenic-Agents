@@ -7,6 +7,8 @@ import re
 import time
 from typing import Any
 
+from ._types import CHANNEL_FORMATTERS, get_personality_prompt
+
 logger = logging.getLogger("zenic_agents.conversational.llm_drafter")
 
 
@@ -20,7 +22,7 @@ class LLMDrafter:
     def __init__(
         self,
         llm_engine: Any | None = None,
-        default_personality: str = "zenic",
+        default_personality: str = "business_default",
         default_channel: str = "cli",
         max_retries: int = 1,
     ) -> None:
@@ -56,7 +58,7 @@ class LLMDrafter:
         Args:
             dag_result: Structured result from the DAG engine.
             conversation_context: Optional context with session info, history, etc.
-            personality: Personality to use (zenic, logic, nova).
+            personality: Personality to use (business_default, retail, corporate, healthcare, logistics).
 
         Returns:
             Natural language response string.
@@ -127,7 +129,9 @@ class LLMDrafter:
         personality: str,
     ) -> str:
         """Build the drafting prompt for the LLM."""
-        personality_prompt = PERSONALITY_PROMPTS.get(personality, PERSONALITY_PROMPTS["zenic"])  # TODO: Phase3 - verify import
+        # HUMANIZED: selecciona personalidad según idioma del contexto
+        detected_lang = context.get("language", "es")
+        personality_prompt = get_personality_prompt(personality, detected_lang)
 
         # Build a concise summary of the DAG result
         status = dag_result.get("status", "UNKNOWN")
@@ -166,7 +170,6 @@ class LLMDrafter:
                 history_str += f"  {role}: {content}\n"
 
         language_hint = ""
-        detected_lang = context.get("language", "")
         if detected_lang:
             language_hint = f"Respond in {detected_lang}.\n"
 
@@ -319,28 +322,28 @@ class LLMDrafter:
         status = dag_result.get("status", "ERROR")
         error = dag_result.get("error", "An unknown error occurred")
 
-        if personality == "nova":
+        if personality == "retail":
             return (
-                f"Oops! Something went wrong 😅\n\n"
+                f"Oops! Algo salió mal 😅\n\n"
                 f"**Error:** {error}\n\n"
-                f"Don't worry — let's try again! You can rephrase your request "
-                f"or try a simpler version of what you need."
+                f"No te preocupes — ¡intentemos de nuevo! "
+                f"Puedes reformular tu solicitud o pedir algo más simple."
             )
-        elif personality == "logic":
+        elif personality in ("corporate", "healthcare"):
             return (
                 f"ERROR [{status}]\n\n"
-                f"Detail: {error}\n\n"
-                f"Suggested actions:\n"
-                f"  1. Verify input parameters\n"
-                f"  2. Check system status\n"
-                f"  3. Retry with simplified request"
+                f"Detalle: {error}\n\n"
+                f"Acciones sugeridas:\n"
+                f"  1. Verificar parámetros de entrada\n"
+                f"  2. Revisar estado del sistema\n"
+                f"  3. Reintentar con una solicitud más simple"
             )
-        else:  # zenic
+        else:  # business_default, logistics, etc.
             return (
-                f"I encountered an issue while processing your request.\n\n"
+                f"Ocurrió un problema al procesar tu solicitud.\n\n"
                 f"**Error:** {error}\n\n"
-                f"You can try rephrasing your request, or I can help you "
-                f"troubleshoot the issue. What would you prefer?"
+                f"Puedes reformular tu solicitud o pedir ayuda "
+                f"para resolver el problema. ¿Qué prefieres?"
             )
 
     # ─── LLM Helper ────────────────────────────────────────────

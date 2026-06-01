@@ -203,6 +203,7 @@ class AgentCache:
                     best_score = score
                     best_match = entry["result"]
             except Exception:
+                logger.debug("Semantic lookup failed, skipping cache entry")
                 continue
 
         return best_match

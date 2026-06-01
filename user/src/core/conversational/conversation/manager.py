@@ -252,12 +252,11 @@ class ConversationManager:
 
         # Crear nuevo topic basado en intencion
         topic_map: dict[IntentCategory, str] = {
-            IntentCategory.CODE_CREATE: "code_generation",
-            IntentCategory.CODE_DEBUG: "debugging",
-            IntentCategory.CODE_REFACTOR: "refactoring",
-            IntentCategory.CODE_OPTIMIZE: "optimization",
-            IntentCategory.CODE_ANALYZE: "code_analysis",
-            IntentCategory.CODE_EXPLAIN: "code_explanation",
+            IntentCategory.INVOICE: "invoicing",
+            IntentCategory.CRM: "crm",
+            IntentCategory.INVENTORY: "inventory",
+            IntentCategory.REPORT: "reports",
+            IntentCategory.SCHEDULING: "scheduling",
             IntentCategory.QUESTION: "general_questions",
             IntentCategory.CONFIG: "configuration",
             IntentCategory.AUTOMATION: "automation",
@@ -296,12 +295,14 @@ class ConversationManager:
     def _infer_mode(intent: IntentCategory, content: str) -> ConversationMode:
         """Infiere el modo de conversacion."""
         if intent in (
-            IntentCategory.CODE_CREATE,
-            IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR,
-            IntentCategory.CODE_OPTIMIZE,
+            IntentCategory.INVOICE,
+            IntentCategory.CRM,
+            IntentCategory.INVENTORY,
+            IntentCategory.REPORT,
+            IntentCategory.SCHEDULING,
+            IntentCategory.BUSINESS,
         ):
-            return ConversationMode.CODING
+            return ConversationMode.BUSINESS
 
         if intent == IntentCategory.QUESTION:
             step_words = ["paso a paso", "step by step", "explica", "explain"]

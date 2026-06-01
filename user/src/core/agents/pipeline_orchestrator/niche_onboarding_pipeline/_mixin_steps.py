@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ._types import PipelineState, PipelineStep
+from ...infrastructure import AgentCache as PipelineResult
+from ._types import PipelineProgress, PipelineState, PipelineStep
 
 logger = logging.getLogger("zenic_agents.agents.niche_onboarding_pipeline")
 

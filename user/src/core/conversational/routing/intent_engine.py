@@ -111,36 +111,32 @@ _KEYWORD_MAP: dict[IntentCategory, tuple[list[str], float]] = {
         ],
         2.0,
     ),
-    IntentCategory.CODE_CREATE: (
-        ["crear", "generar", "create", "build", "make", "nuevo modulo", "nueva funcion", "escribir"],
+    IntentCategory.INVOICE: (
+        ["factura", "invoice", "pago", "pagar", "adeudo", "estado de cuenta", "recibo", "cobro", "payment", "debe"],
         3.0,
     ),
-    IntentCategory.CODE_DEBUG: (
-        ["debug", "fix", "corregir", "error", "bug", "arreglar", "no funciona", "broken"],
+    IntentCategory.CRM: (
+        ["cliente", "contacto", "crm", "direccion", "registrar", "actualizar datos", "customer", "contact"],
         3.0,
     ),
-    IntentCategory.CODE_REFACTOR: (
-        ["refactor", "limpiar codigo", "reestructurar", "mejorar estructura", "simplify"],
+    IntentCategory.INVENTORY: (
+        ["inventario", "stock", "producto", "existencia", "inventory", "disponible", "cuanto hay"],
         3.0,
     ),
-    IntentCategory.CODE_OPTIMIZE: (
-        ["optimizar", "optimize", "mejorar rendimiento", "speed up", "mas rapido", "efficient"],
+    IntentCategory.REPORT: (
+        ["reporte", "report", "dashboard", "metricas", "estadisticas", "ventas", "transacciones", "resumen", "kpi"],
         3.0,
     ),
-    IntentCategory.CODE_ANALYZE: (
-        ["analizar", "analyze", "revisar", "review", "auditar", "audit", "chequear", "check"],
-        2.5,
-    ),
-    IntentCategory.CODE_EXPLAIN: (
-        ["explica este codigo", "explain code", "que hace", "how does this work", "entender", "understand"],
-        2.5,
+    IntentCategory.SCHEDULING: (
+        ["cita", "agendar", "agenda", "recordatorio", "schedule", "appointment", "programar", "calendario", "calendar", "cuando"],
+        3.0,
     ),
     IntentCategory.AUTOMATION: (
         ["automatizar", "automate", "workflow", "trigger", "cron", "schedule", "programar tarea"],
         3.0,
     ),
     IntentCategory.BUSINESS: (
-        ["negocio", "business", "invoice", "factura", "reporte", "report", "metrica", "kpi"],
+        ["negocio", "business", "operacion", "operation", "procesar", "proceso"],
         2.5,
     ),
 }
@@ -179,10 +175,11 @@ _QUESTION_PATTERNS = [
     re.compile(r"\?$"),
 ]
 
-_CODE_PATTERNS = [
-    re.compile(r"\b(crear|generar|escribir)\s+(un\s+)?(modulo|archivo|script|funcion|clase)", re.I),
-    re.compile(r"\b(create|generate|write)\s+(a\s+)?(module|file|script|function|class)", re.I),
-    re.compile(r"\b(arreglar|corregir|fix)\s+(el\s+)?(error|bug|problema)", re.I),
+_BUSINESS_PATTERNS = [
+    re.compile(r"\b(crear|generar|nueva?)\s+(factura|orden|pedido|folio)", re.I),
+    re.compile(r"\b(create|generate|new)\s+(invoice|order|quote)", re.I),
+    re.compile(r"\b(consultar|ver|mostrar)\s+(factura|cliente|producto|reporte)", re.I),
+    re.compile(r"\b(programar|agendar|reservar)\s+(cita|cita|reunion)", re.I),
 ]
 
 _COMMAND_PATTERNS = [
@@ -215,19 +212,20 @@ def _layer2_patterns(text: str, parsed: ParsedInput) -> list[IntentScore]:
             )
         )
 
-    # Codigo
-    if parsed.is_code_request or parsed.has_code:
-        c_score = 4.0
-        c_evidence = ["parsed:is_code_request"]
-        if parsed.has_code:
-            c_score += 2.0
-            c_evidence.append("parsed:has_code")
+    # Negocio
+    b_score = 0.0
+    b_evidence: list[str] = []
+    for pat in _BUSINESS_PATTERNS:
+        if pat.search(text):
+            b_score += 3.0
+            b_evidence.append(pat.pattern)
+    if b_score > 0:
         scores.append(
             IntentScore(
-                category=IntentCategory.CODE_CREATE,
-                score=c_score,
+                category=IntentCategory.BUSINESS,
+                score=b_score,
                 layer=2,
-                evidence=c_evidence,
+                evidence=b_evidence,
             )
         )
 
@@ -255,24 +253,28 @@ def _layer3_context(
     """Layer 3: Ajusta scores basado en contexto conversacional."""
     adjustments: list[IntentScore] = []
 
-    # Si es continuacion de conversacion sobre codigo
+    # Si es continuacion de conversacion sobre negocio
     if enriched.is_continuation:
         recent = " ".join(enriched.recent_topics)
-        code_words = [
-            "codigo",
-            "code",
-            "funcion",
-            "function",
-            "clase",
-            "class",
-            "modulo",
-            "module",
+        business_words = [
+            "factura",
+            "invoice",
+            "cliente",
+            "customer",
+            "inventario",
+            "inventory",
+            "reporte",
+            "report",
+            "cita",
+            "appointment",
         ]
-        if any(w in recent for w in code_words):
+        if any(w in recent for w in business_words):
             for cat in (
-                IntentCategory.CODE_CREATE,
-                IntentCategory.CODE_DEBUG,
-                IntentCategory.CODE_REFACTOR,
+                IntentCategory.INVOICE,
+                IntentCategory.CRM,
+                IntentCategory.INVENTORY,
+                IntentCategory.REPORT,
+                IntentCategory.SCHEDULING,
             ):
                 if cat in base_scores:
                     adjustments.append(
@@ -280,21 +282,21 @@ def _layer3_context(
                             category=cat,
                             score=2.0,
                             layer=3,
-                            evidence=["continuation:code_context"],
+                            evidence=["continuation:business_context"],
                         )
                     )
 
-    # Si hay memoria relevante sobre codigo
+    # Si hay memoria relevante sobre negocio
     for entry in enriched.memory_context[:3]:
         source = entry.get("source", "")
         cat_str = entry.get("category", "")
-        if source == "code" or cat_str in ("skill", "fact"):
+        if source in ("invoice", "crm", "inventory", "report", "scheduling") or cat_str in ("business", "process"):
             adjustments.append(
                 IntentScore(
-                    category=IntentCategory.CODE_CREATE,
+                    category=IntentCategory.BUSINESS,
                     score=1.0,
                     layer=3,
-                    evidence=["memory:code_relevant"],
+                    evidence=["memory:business_relevant"],
                 )
             )
             break
@@ -383,13 +385,14 @@ class IntentEngine:
     def _infer_mode(category: IntentCategory, text: str) -> ConversationMode:
         """Infiere el modo de conversacion."""
         if category in (
-            IntentCategory.CODE_CREATE,
-            IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR,
-            IntentCategory.CODE_OPTIMIZE,
-            IntentCategory.CODE_ANALYZE,
+            IntentCategory.INVOICE,
+            IntentCategory.CRM,
+            IntentCategory.INVENTORY,
+            IntentCategory.REPORT,
+            IntentCategory.SCHEDULING,
+            IntentCategory.BUSINESS,
         ):
-            return ConversationMode.CODING
+            return ConversationMode.BUSINESS
 
         if category == IntentCategory.QUESTION:
             step_words = ["paso a paso", "step by step", "explica", "explain"]
@@ -399,8 +402,5 @@ class IntentEngine:
 
         if category == IntentCategory.AUTOMATION:
             return ConversationMode.AUTOMATION
-
-        if category == IntentCategory.CODE_EXPLAIN:
-            return ConversationMode.TEACHING
 
         return ConversationMode.NORMAL

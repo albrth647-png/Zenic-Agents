@@ -7,7 +7,7 @@ Collects evidence from all agent results to build a case for the ConsensusResolv
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from ..resilience import BaseAgent
 from ..schemas import (
@@ -34,7 +34,8 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
         super().__init__(name="A41_EvidenceCollector", **kwargs)
 
     # Evidence type weights (higher = more trusted)
-    EVIDENCE_WEIGHTS = {  # noqa: RUF012
+    # Nota: sincronizado con IsingConfig.evidence_weights
+    EVIDENCE_WEIGHTS: ClassVar[dict] = {
         EvidenceType.SECURITY_CHECK: 1.5,
         EvidenceType.SANDBOX_PASS: 1.5,
         EvidenceType.SYNTAX_VALID: 1.2,
@@ -47,6 +48,8 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
         EvidenceType.REGEX_MATCH: 0.6,
         EvidenceType.KEYWORD_CLASSIFY: 0.5,
         EvidenceType.SEMANTIC_SIMILARITY: 0.4,
+        EvidenceType.CRITICALITY: 1.0,
+        EvidenceType.INTENT_CLASSIFY: 0.5,
     }
 
     def execute(self, input_data: Any) -> list[Evidence]:
@@ -120,13 +123,13 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
                     )
                 )
 
-        # Criticality evidence
+        # Criticality evidence (TECE: ahora usa EvidenceType.CRITICALITY)
         criticality = input_data.get("criticality_result")
         if criticality and isinstance(criticality, CriticalityResult):
             if criticality.level <= 2:
                 evidence.append(
                     Evidence(
-                        evidence_type=EvidenceType.RULE_ENGINE,
+                        evidence_type=EvidenceType.CRITICALITY,
                         favors="YES",
                         weight=0.7 * criticality.confidence,
                         source="A04_CriticalityScorer",
@@ -137,7 +140,7 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
                 # High criticality = more scrutiny needed
                 evidence.append(
                     Evidence(
-                        evidence_type=EvidenceType.RULE_ENGINE,
+                        evidence_type=EvidenceType.CRITICALITY,
                         favors="NO",
                         weight=0.5,
                         source="A04_CriticalityScorer",
@@ -145,13 +148,13 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
                     )
                 )
 
-        # Intent evidence
+        # Intent evidence (TECE: ahora usa EvidenceType.INTENT_CLASSIFY)
         intent = input_data.get("intent_result")
         if intent and isinstance(intent, IntentResult):
             if intent.confidence >= 0.5:
                 evidence.append(
                     Evidence(
-                        evidence_type=EvidenceType.KEYWORD_CLASSIFY,
+                        evidence_type=EvidenceType.INTENT_CLASSIFY,
                         favors="YES",
                         weight=0.5 * intent.confidence,
                         source="A01_IntentClassifier",
@@ -161,7 +164,7 @@ class EvidenceCollectorV18(BaseAgent[list[Evidence]]):
             else:
                 evidence.append(
                     Evidence(
-                        evidence_type=EvidenceType.KEYWORD_CLASSIFY,
+                        evidence_type=EvidenceType.INTENT_CLASSIFY,
                         favors="NO",
                         weight=0.3,
                         source="A01_IntentClassifier",

@@ -25,8 +25,8 @@ class ValidateRequiredBlock(LogicBlock):
     name = "validate_required"
     category = "validation"
     description = "Check that required fields exist in data"
-    inputs = ["data", "required_fields"]  # noqa: RUF012
-    outputs = ["valid", "errors", "missing"]  # noqa: RUF012
+    inputs = ["data", "required_fields"]
+    outputs = ["valid", "errors", "missing"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -60,8 +60,8 @@ class ValidateTypesBlock(LogicBlock):
     name = "validate_types"
     category = "validation"
     description = "Check field types match a schema definition"
-    inputs = ["data", "type_schema"]  # noqa: RUF012
-    outputs = ["valid", "errors", "type_mismatches"]  # noqa: RUF012
+    inputs = ["data", "type_schema"]
+    outputs = ["valid", "errors", "type_mismatches"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -120,8 +120,8 @@ class ValidateRangesBlock(LogicBlock):
     name = "validate_ranges"
     category = "validation"
     description = "Check numeric ranges (min, max) for fields"
-    inputs = ["data", "range_schema"]  # noqa: RUF012
-    outputs = ["valid", "errors", "violations"]  # noqa: RUF012
+    inputs = ["data", "range_schema"]
+    outputs = ["valid", "errors", "violations"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -167,8 +167,8 @@ class ValidateUniqueBlock(LogicBlock):
     name = "validate_unique"
     category = "validation"
     description = "Check uniqueness of field value against database"
-    inputs = ["data", "field", "table"]  # noqa: RUF012
-    outputs = ["is_unique", "existing"]  # noqa: RUF012
+    inputs = ["data", "field", "table"]
+    outputs = ["is_unique", "existing"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -189,7 +189,7 @@ class ValidateUniqueBlock(LogicBlock):
                     _validate_identifier(field_name)
                     _validate_identifier(table_name)
                     cursor = db.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?',  # noqa: S608
+                        f'SELECT id, "{field_name}" FROM "{table_name}" WHERE "{field_name}" = ?',
                         (value,),
                     )
                     row = cursor.fetchone() if hasattr(cursor, "fetchone") else None
@@ -219,8 +219,8 @@ class SanitizeBlock(LogicBlock):
     name = "sanitize"
     category = "validation"
     description = "XSS and injection sanitization for string fields"
-    inputs = ["data", "fields"]  # noqa: RUF012
-    outputs = ["data", "sanitized_fields"]  # noqa: RUF012
+    inputs = ["data", "fields"]
+    outputs = ["data", "sanitized_fields"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:

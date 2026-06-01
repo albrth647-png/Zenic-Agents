@@ -143,7 +143,7 @@ class LearningEngine(PatternDetectionMixin):
 
                     where = " AND ".join(conditions)
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT * FROM learning_insights WHERE {where} ORDER BY confidence DESC",  # noqa: S608
+                        f"SELECT * FROM learning_insights WHERE {where} ORDER BY confidence DESC",
                         params,
                     )
                     return [self._insight_from_row(row) for row in cursor.fetchall()]

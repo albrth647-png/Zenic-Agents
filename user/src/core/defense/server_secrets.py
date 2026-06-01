@@ -166,14 +166,14 @@ class ServerSecretsLayer:
 
             url = _validate_url(f"{self._server_url}/api/v1/verify/{secret_type.value}")
             data = json.dumps(payload).encode()
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 url,
                 data=data,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
 
-            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 body = json.loads(resp.read().decode())
                 elapsed_ms = (time.time() - start) * 1000
 

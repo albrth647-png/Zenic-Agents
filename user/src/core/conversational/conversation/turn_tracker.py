@@ -198,10 +198,11 @@ class TurnTracker:
 
         # Si hay turnos de codigo o trabajo
         working_cats = {
-            IntentCategory.CODE_CREATE,
-            IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR,
-            IntentCategory.CODE_OPTIMIZE,
+            IntentCategory.INVOICE,
+            IntentCategory.CRM,
+            IntentCategory.INVENTORY,
+            IntentCategory.REPORT,
+            IntentCategory.SCHEDULING,
             IntentCategory.AUTOMATION,
             IntentCategory.BUSINESS,
         }

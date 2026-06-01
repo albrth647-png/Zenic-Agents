@@ -21,12 +21,20 @@ logger = logging.getLogger(__name__)
 
 # Try to import Rust native module for high-performance operations
 try:
-    from _zenic_native import (  # noqa: F401 — imported for availability check
-        chain_hash as _rust_chain_hash,
-        forensic_hash as _rust_forensic_hash,  # used by forensic integration
-        merkle_proof as _rust_merkle_proof,
-        verify_merkle_chain as _rust_verify_chain,
+    from _zenic_native import (
         batch_verify_chains as _rust_batch_verify,  # used by batch verification
+    )
+    from _zenic_native import (
+        chain_hash as _rust_chain_hash,
+    )
+    from _zenic_native import (
+        forensic_hash as _rust_forensic_hash,  # used by forensic integration
+    )
+    from _zenic_native import (
+        merkle_proof as _rust_merkle_proof,
+    )
+    from _zenic_native import (
+        verify_merkle_chain as _rust_verify_chain,
     )
     _HAS_RUST = True
 except ImportError:

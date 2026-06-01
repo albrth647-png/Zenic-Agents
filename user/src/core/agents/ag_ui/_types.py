@@ -11,6 +11,7 @@ from typing import Any
 
 class AGUIComponentType(Enum):
     """Types of UI components that agents can generate."""
+
     FORM = "form"
     DASHBOARD = "dashboard"
     CHART = "chart"
@@ -25,6 +26,7 @@ class AGUIComponentType(Enum):
 @dataclass
 class AGUIFormField:
     """Definition of a form field for agent-generated forms."""
+
     name: str
     label: str
     type: str = "text"  # text, email, number, select, textarea, checkbox, date, password
@@ -54,6 +56,7 @@ class AGUIFormField:
 @dataclass
 class AGUIChartData:
     """Chart data specification for agent-generated charts."""
+
     type: str = "bar"  # line, bar, pie, area
     title: str = ""
     labels: list[str] = field(default_factory=list)
@@ -71,6 +74,7 @@ class AGUIChartData:
 @dataclass
 class AGUITableColumn:
     """Table column definition for agent-generated tables."""
+
     key: str
     label: str
     sortable: bool = False
@@ -90,6 +94,7 @@ class AGUITableColumn:
 @dataclass
 class AGUIMetricCard:
     """Metric card for agent-generated dashboards."""
+
     title: str
     value: str | int | float
     change: float | None = None
@@ -113,6 +118,7 @@ class AGUIMetricCard:
 @dataclass
 class AGUIApprovalProps:
     """HITL Approval card properties."""
+
     policy_violation: str = ""
     risk_level: str = "medium"  # low, medium, high, critical
     suggested_action: str = ""
@@ -136,6 +142,7 @@ class AGUIApprovalProps:
 @dataclass
 class AGUIComponentSpec:
     """Specification for an agent-generated UI component."""
+
     id: str
     type: AGUIComponentType
     props: dict[str, Any] = field(default_factory=dict)
@@ -167,6 +174,7 @@ class AGUIComponentSpec:
 @dataclass
 class AGUIEventPayload:
     """Payload for an AG-UI event sent to the Gateway."""
+
     type: str  # render, update, action, stream, approval_request, status
     agent_id: str
     session_id: str

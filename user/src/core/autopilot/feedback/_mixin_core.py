@@ -67,7 +67,7 @@ class ClosedLoopFeedback:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_init)  # noqa: F821
+            _retry_db_operation(_init)
             self._initialized = True
             logger.info("ClosedLoopFeedback: Schema initialized at %s", self._db_path)
 
@@ -78,7 +78,7 @@ class ClosedLoopFeedback:
         objective: Any,
         plan: Any,
         kpi_tracker: Any,
-    ) -> FeedbackCycle:  # noqa: F821
+    ) -> FeedbackCycle:
         """Evaluate an autopilot cycle and determine the next action.
 
         Gets latest KPI measurements, compares with the previous cycle,
@@ -126,7 +126,7 @@ class ClosedLoopFeedback:
             targets=getattr(objective, "targets", []),
         )
 
-        cycle = FeedbackCycle(  # noqa: F821
+        cycle = FeedbackCycle(
             objective_id=objective.objective_id,
             plan_id=getattr(plan, "plan_id", ""),
             cycle_number=cycle_number,
@@ -164,7 +164,7 @@ class ClosedLoopFeedback:
                 finally:
                     conn.close()
 
-            _retry_db_operation(_insert)  # noqa: F821
+            _retry_db_operation(_insert)
 
         logger.info(
             "ClosedLoopFeedback: Cycle %d for %s → %s (%s)",
@@ -179,7 +179,7 @@ class ClosedLoopFeedback:
         self,
         objective_id: str,
         limit: int = 20,
-    ) -> list[FeedbackCycle]:  # noqa: F821
+    ) -> list[FeedbackCycle]:
         """Get feedback cycles for an objective.
 
         Args:
@@ -192,7 +192,7 @@ class ClosedLoopFeedback:
         self._ensure_schema()
         with self._lock:
 
-            def _fetch() -> list[FeedbackCycle]:  # noqa: F821
+            def _fetch() -> list[FeedbackCycle]:
                 conn = sqlite3.connect(self._db_path)
                 conn.row_factory = sqlite3.Row
                 try:
@@ -206,12 +206,12 @@ class ClosedLoopFeedback:
                 finally:
                     conn.close()
 
-            return _retry_db_operation(_fetch)  # noqa: F821
+            return _retry_db_operation(_fetch)
 
     def get_latest_cycle(
         self,
         objective_id: str,
-    ) -> FeedbackCycle | None:  # noqa: F821
+    ) -> FeedbackCycle | None:
         """Get the latest feedback cycle for an objective.
 
         Args:
@@ -240,7 +240,7 @@ class ClosedLoopFeedback:
             return False
 
         # Check if latest action already escalated
-        if recent[0].action_taken == FeedbackAction.ESCALATE_TO_HUMAN:  # noqa: F821
+        if recent[0].action_taken == FeedbackAction.ESCALATE_TO_HUMAN:
             return True
 
         # Check for consecutive negative cycles
@@ -329,47 +329,47 @@ class ClosedLoopFeedback:
 
         # Determine action
         if significant_worsening:
-            action = FeedbackAction.PAUSE_OBJECTIVE  # noqa: F821
+            action = FeedbackAction.PAUSE_OBJECTIVE
             analysis = (
                 f"Significant worsening detected (avg_improvement={avg_improvement:.4f}). "
                 f"Objective paused to prevent further damage."
             )
         elif negative_count >= 3:
-            action = FeedbackAction.ESCALATE_TO_HUMAN  # noqa: F821
+            action = FeedbackAction.ESCALATE_TO_HUMAN
             analysis = (
                 f"3+ consecutive negative cycles ({negative_count}). Escalating to human for manual intervention."
             )
         elif avg_improvement < 0:
-            action = FeedbackAction.CHANGE_APPROACH  # noqa: F821
+            action = FeedbackAction.CHANGE_APPROACH
             analysis = (
                 f"Negative improvement ({avg_improvement:.4f}) on cycle {cycle_number}. "
                 f"Current approach is not working; strategy change required."
             )
         elif stagnant_count >= self._max_cycles_without_improvement:
-            action = FeedbackAction.ADJUST_STRATEGY  # noqa: F821
+            action = FeedbackAction.ADJUST_STRATEGY
             analysis = f"No improvement for {stagnant_count} consecutive cycles. Adjusting strategy to break plateau."
         elif avg_improvement > 0:
-            action = FeedbackAction.CONTINUE  # noqa: F821
+            action = FeedbackAction.CONTINUE
             analysis = (
                 f"Positive improvement ({avg_improvement:.4f}) on cycle {cycle_number}. Continuing current strategy."
             )
         else:
-            action = FeedbackAction.CONTINUE  # noqa: F821
+            action = FeedbackAction.CONTINUE
             analysis = f"No change detected on cycle {cycle_number}. Continuing to monitor."
 
         return action, analysis
 
     @staticmethod
-    def _row_to_cycle(row: sqlite3.Row) -> FeedbackCycle:  # noqa: F821
+    def _row_to_cycle(row: sqlite3.Row) -> FeedbackCycle:
         """Convert a database row to a FeedbackCycle instance."""
-        return FeedbackCycle(  # noqa: F821
+        return FeedbackCycle(
             cycle_id=row["cycle_id"],
             objective_id=row["objective_id"],
             plan_id=row["plan_id"],
             cycle_number=row["cycle_number"],
             kpi_before=json.loads(row["kpi_before"]),
             kpi_after=json.loads(row["kpi_after"]),
-            action_taken=FeedbackAction(row["action_taken"]),  # noqa: F821  # TODO: Phase3 - verify import
+            action_taken=FeedbackAction(row["action_taken"]),  # TODO: Phase3 - verify import
             analysis=row["analysis"],
             timestamp=row["timestamp"],
         )

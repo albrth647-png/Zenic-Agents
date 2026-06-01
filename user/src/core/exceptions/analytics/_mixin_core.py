@@ -41,10 +41,10 @@ class ExceptionAnalytics:
 
     def _init_db(self) -> None:
         def _exec(conn: sqlite3.Connection) -> None:
-            conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)  # noqa: F821
+            conn.executescript(_CREATE_TABLE_SQL + _CREATE_INDEX_SQL)
             conn.commit()
 
-        _retry_db(self._with_conn, _exec)  # noqa: F821
+        _retry_db(self._with_conn, _exec)
 
     def _with_conn(self, fn: Callable[[sqlite3.Connection], Any]) -> Any:
         conn = sqlite3.connect(self._db_path, timeout=10)
@@ -86,7 +86,7 @@ class ExceptionAnalytics:
             conn.commit()
 
         with self._lock:
-            _retry_db(self._with_conn, _insert)  # noqa: F821
+            _retry_db(self._with_conn, _insert)
 
     # ── Snapshot ──────────────────────────────────────────
 
@@ -95,7 +95,7 @@ class ExceptionAnalytics:
         from_time: str = "",
         to_time: str = "",
         tenant_id: str = "",
-    ) -> AnalyticsSnapshot:  # noqa: F821
+    ) -> AnalyticsSnapshot:
         """Generate a point-in-time analytics snapshot.
 
         Parameters:
@@ -107,7 +107,7 @@ class ExceptionAnalytics:
         period_end = to_time or now.isoformat()
         period_start = from_time or (now - timedelta(hours=24)).isoformat()
 
-        def _collect(conn: sqlite3.Connection) -> AnalyticsSnapshot:  # noqa: F821
+        def _collect(conn: sqlite3.Connection) -> AnalyticsSnapshot:
             where_clauses = [
                 "timestamp >= ?",
                 "timestamp <= ?",
@@ -122,7 +122,7 @@ class ExceptionAnalytics:
 
             # Total
             total_row = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql}",  # noqa: S608
+                f"SELECT COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql}",
                 params,
             ).fetchone()
             total = total_row[0] if total_row else 0
@@ -130,7 +130,7 @@ class ExceptionAnalytics:
             # By category
             by_category: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY category",  # noqa: S608
+                f"SELECT category, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY category",
                 params,
             ):
                 by_category[row[0]] = row[1]
@@ -138,7 +138,7 @@ class ExceptionAnalytics:
             # By severity
             by_severity: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY severity",  # noqa: S608
+                f"SELECT severity, COUNT(*) FROM _zenic_analytics_signals WHERE {where_sql} GROUP BY severity",
                 params,
             ):
                 by_severity[row[0]] = row[1]
@@ -146,7 +146,7 @@ class ExceptionAnalytics:
             # By source
             by_source: dict[str, int] = {}
             for row in conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT source, COUNT(*) FROM _zenic_analytics_signals "  # noqa: S608
+                f"SELECT source, COUNT(*) FROM _zenic_analytics_signals "
                 f"WHERE {where_sql} GROUP BY source ORDER BY COUNT(*) DESC LIMIT 20",
                 params,
             ):
@@ -158,7 +158,7 @@ class ExceptionAnalytics:
             hours = max((end_dt - start_dt).total_seconds() / 3600, 0.01)
             rate = total / hours
 
-            return AnalyticsSnapshot(  # noqa: F821
+            return AnalyticsSnapshot(
                 total_exceptions=total,
                 by_category=by_category,
                 by_severity=by_severity,
@@ -169,7 +169,7 @@ class ExceptionAnalytics:
                 exception_rate_per_hour=round(rate, 2),
             )
 
-        snapshot = _retry_db(self._with_conn, _collect)  # noqa: F821
+        snapshot = _retry_db(self._with_conn, _collect)
 
         # Add top patterns (uses detect_patterns which does its own DB access)
         try:
@@ -192,7 +192,7 @@ class ExceptionAnalytics:
     def detect_patterns(
         self,
         tenant_id: str = "",
-    ) -> list[ExceptionPattern]:  # noqa: F821
+    ) -> list[ExceptionPattern]:
         """Detect recurring exception patterns.
 
         Groups signals by ``category + source``, then for each group:
@@ -201,7 +201,7 @@ class ExceptionAnalytics:
           - Samples up to 5 messages
         """
 
-        def _query(conn: sqlite3.Connection) -> list[ExceptionPattern]:  # noqa: F821
+        def _query(conn: sqlite3.Connection) -> list[ExceptionPattern]:
             params: list[Any] = []
             tenant_filter = ""
             if tenant_id:
@@ -219,11 +219,11 @@ class ExceptionAnalytics:
                 GROUP BY category, source
                 HAVING freq >= 2
                 ORDER BY freq DESC
-                """,  # noqa: S608
+                """,
                 params,
             ).fetchall()
 
-            patterns: list[ExceptionPattern] = []  # noqa: F821
+            patterns: list[ExceptionPattern] = []
             now = datetime.now(timezone.utc)
 
             for row in group_rows:
@@ -261,12 +261,12 @@ class ExceptionAnalytics:
                     SELECT message FROM _zenic_analytics_signals
                     WHERE category = ? AND source = ? {tenant_filter}
                     ORDER BY timestamp DESC LIMIT 5
-                    """,  # noqa: S608
+                    """,
                     [category_str, source, *params],
                 ).fetchall()
                 sample_messages = [r[0] for r in msg_rows]
 
-                pattern = ExceptionPattern(  # noqa: F821
+                pattern = ExceptionPattern(
                     category=category,
                     source=source,
                     frequency=freq,
@@ -281,7 +281,7 @@ class ExceptionAnalytics:
             return patterns
 
         with self._lock:
-            return _retry_db(self._with_conn, _query)  # noqa: F821
+            return _retry_db(self._with_conn, _query)
 
     def _compute_trend(
         self,
@@ -300,7 +300,7 @@ class ExceptionAnalytics:
                 SELECT COUNT(*) FROM _zenic_analytics_signals
                 WHERE category = ? AND source = ?
                   AND timestamp >= ? {tenant_filter}
-                """,  # noqa: S608
+                """,
                 [category, source, mid_point, *params],
             ).fetchone()[0]
 
@@ -309,7 +309,7 @@ class ExceptionAnalytics:
                 SELECT COUNT(*) FROM _zenic_analytics_signals
                 WHERE category = ? AND source = ?
                   AND timestamp < ? {tenant_filter}
-                """,  # noqa: S608
+                """,
                 [category, source, mid_point, *params],
             ).fetchone()[0]
 
@@ -350,7 +350,7 @@ class ExceptionAnalytics:
             ).fetchall()
             return [{"date": r[0], "count": r[1]} for r in rows]
 
-        return _retry_db(self._with_conn, _query)  # noqa: F821
+        return _retry_db(self._with_conn, _query)
 
     # ── Top sources ───────────────────────────────────────
 
@@ -378,7 +378,7 @@ class ExceptionAnalytics:
                 for r in rows
             ]
 
-        return _retry_db(self._with_conn, _query)  # noqa: F821
+        return _retry_db(self._with_conn, _query)
 
     # ── Hourly distribution ───────────────────────────────
 
@@ -397,7 +397,7 @@ class ExceptionAnalytics:
             ).fetchall()
             return {r[0]: r[1] for r in rows}
 
-        return _retry_db(self._with_conn, _query)  # noqa: F821  # TODO: Phase3 - verify import
+        return _retry_db(self._with_conn, _query)  # TODO: Phase3 - verify import
 
 
 # ── Singleton ─────────────────────────────────────────────────

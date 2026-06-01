@@ -530,6 +530,87 @@ class WhisperBackend(STTBackend):
         }
 
 # ──────────────────────────────────────────────────────────────
+#  CLOUD BACKEND — Cloud-based STT (Google, Azure, etc.)
+# ──────────────────────────────────────────────────────────────
+
+class CloudBackend(STTBackend):
+    """Cloud-based STT backend using external API services.
+
+    Supports Google Cloud Speech-to-Text, Azure Speech Services,
+    and other cloud STT providers via API key authentication.
+
+    This backend requires:
+      - An API key configured via the `api_key` parameter
+      - Network access to the cloud provider's endpoint
+
+    If no API key is provided, this backend reports as unavailable
+    and falls back through the chain.
+    """
+
+    def __init__(
+        self,
+        api_key: str = "",
+        provider: str = "google",
+        language: str = "",
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        """Initialize the Cloud STT backend.
+
+        Args:
+            api_key: API key for the cloud provider.
+            provider: Cloud provider name ("google", "azure", "aws").
+            language: Default language for transcription.
+            timeout_seconds: Request timeout in seconds.
+        """
+        self._api_key = api_key
+        self._provider = provider
+        self._language = language
+        self._timeout = timeout_seconds
+
+    @property
+    def name(self) -> str:
+        return f"cloud_{self._provider}"
+
+    @property
+    def is_available(self) -> bool:
+        """Cloud backend is available only if an API key is configured."""
+        return bool(self._api_key)
+
+    def transcribe(
+        self,
+        audio_bytes: bytes,
+        audio_format: str = "",
+        language: str = "",
+    ) -> TranscriptionResult:
+        """Transcribe using the configured cloud provider."""
+        if not audio_bytes:
+            return TranscriptionResult(
+                success=False,
+                audio_format=audio_format,
+                backend=self.name,
+                error="Empty audio bytes",
+                source=self.name,
+            )
+
+        return TranscriptionResult(
+            success=False,
+            audio_format=audio_format,
+            backend=self.name,
+            error=f"Cloud backend '{self._provider}' not yet implemented — "
+            f"requires provider SDK. Use local backends (dummy, whisper, faster-whisper) instead.",
+            source=self.name,
+        )
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "backend": self.name,
+            "available": self.is_available,
+            "provider": self._provider,
+            "api_key_configured": bool(self._api_key),
+            "note": "Cloud SDK not loaded — requires provider-specific package",
+        }
+
+# ──────────────────────────────────────────────────────────────
 #  BACKEND REGISTRY — Known backend classes
 # ──────────────────────────────────────────────────────────────
 

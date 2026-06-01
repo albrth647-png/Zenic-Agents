@@ -30,7 +30,7 @@ class Pipeline(str, Enum):
     """Pipelines de procesamiento disponibles."""
 
     CONVERSATIONAL = "conversational"  # Chat general, sin motor
-    CODE_ENGINE = "code_engine"  # Via motor Zenic-Agents
+    BUSINESS_ENGINE = "business_engine"  # Via motor de negocio
     QUESTION_ANSWER = "question_answer"  # Preguntas factuales
     COMMAND_HANDLER = "command_handler"  # Comandos directos
     CONFIG_HANDLER = "config_handler"  # Cambios de config
@@ -68,43 +68,36 @@ DEFAULT_RULES: list[RouteRule] = [
         priority=90,
         condition="siempre se maneja localmente",
     ),
-    # Codigo (necesitan engine)
+    # Operaciones de negocio (necesitan engine)
     RouteRule(
-        category=IntentCategory.CODE_CREATE,
-        pipeline=Pipeline.CODE_ENGINE,
+        category=IntentCategory.INVOICE,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=80,
     ),
     RouteRule(
-        category=IntentCategory.CODE_DEBUG,
-        pipeline=Pipeline.CODE_ENGINE,
+        category=IntentCategory.CRM,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=80,
     ),
     RouteRule(
-        category=IntentCategory.CODE_REFACTOR,
-        pipeline=Pipeline.CODE_ENGINE,
+        category=IntentCategory.INVENTORY,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=80,
     ),
     RouteRule(
-        category=IntentCategory.CODE_OPTIMIZE,
-        pipeline=Pipeline.CODE_ENGINE,
+        category=IntentCategory.REPORT,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=80,
     ),
     RouteRule(
-        category=IntentCategory.CODE_ANALYZE,
-        pipeline=Pipeline.CODE_ENGINE,
+        category=IntentCategory.SCHEDULING,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
-        priority=70,
-    ),
-    RouteRule(
-        category=IntentCategory.CODE_EXPLAIN,
-        pipeline=Pipeline.QUESTION_ANSWER,
-        requires_engine=False,
-        priority=70,
-        condition="explicacion puede ser conversacional",
+        priority=80,
     ),
     # Preguntas
     RouteRule(
@@ -112,16 +105,16 @@ DEFAULT_RULES: list[RouteRule] = [
         pipeline=Pipeline.QUESTION_ANSWER,
         priority=50,
     ),
-    # Automatizacion y negocio
+    # Automatizacion y otras operaciones
     RouteRule(
         category=IntentCategory.AUTOMATION,
-        pipeline=Pipeline.CODE_ENGINE,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=60,
     ),
     RouteRule(
         category=IntentCategory.BUSINESS,
-        pipeline=Pipeline.CODE_ENGINE,
+        pipeline=Pipeline.BUSINESS_ENGINE,
         requires_engine=True,
         priority=50,
     ),
@@ -181,7 +174,7 @@ class AssistantRouter:
         self._stats = {
             "total_routed": 0,
             "conversational": 0,
-            "code_engine": 0,
+            "business_engine": 0,
             "fallbacks": 0,
         }
 
@@ -215,15 +208,15 @@ class AssistantRouter:
         fallback_used = False
 
         if engine_required and not self._engine_available:
-            # Fallback: code engine no disponible → conversacional
+            # Fallback: business engine no disponible → conversacional
             pipeline = Pipeline.CONVERSATIONAL
             fallback_used = True
             logger.info(f"Engine no disponible. Fallback: {matched_rule.pipeline.value} → {pipeline.value}")
             self._stats["fallbacks"] += 1
         else:
             # Actualizar stat del pipeline seleccionado
-            if pipeline == Pipeline.CODE_ENGINE:
-                self._stats["code_engine"] += 1
+            if pipeline == Pipeline.BUSINESS_ENGINE:
+                self._stats["business_engine"] += 1
             else:
                 self._stats["conversational"] += 1
 

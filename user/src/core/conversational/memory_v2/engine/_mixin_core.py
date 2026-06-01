@@ -20,7 +20,7 @@ class MemoryEngineV2(MemoryQueryMixin):
 
     def __init__(self, db_path: str | None = None) -> None:
         self._lock = threading.RLock()
-        self._db_path = db_path or str(DB_PATH)  # noqa: F821
+        self._db_path = db_path or str(DB_PATH)
         self._init_db()
 
     def _init_db(self) -> None:
@@ -52,7 +52,7 @@ class MemoryEngineV2(MemoryQueryMixin):
             conn.commit()
             conn.close()
 
-        _retry(_create)  # noqa: F821
+        _retry(_create)
 
     def store(
         self,
@@ -67,9 +67,9 @@ class MemoryEngineV2(MemoryQueryMixin):
         if not content.strip():
             return ""
 
-        record_id = _new_id("mem")  # noqa: F821
-        now = _now_iso()  # noqa: F821
-        ehash = _content_hash(content)  # noqa: F821
+        record_id = _new_id("mem")
+        now = _now_iso()
+        ehash = _content_hash(content)
         meta_json = json.dumps(metadata or {})
         expires = None
         if tier == MemoryTier.EPHEMERAL:
@@ -107,7 +107,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 finally:
                     conn.close()
 
-            _retry(_insert)  # noqa: F821
+            _retry(_insert)
         return record_id
 
     def retrieve(self, record_id: str) -> MemoryRecord | None:
@@ -124,14 +124,14 @@ class MemoryEngineV2(MemoryQueryMixin):
                         return None
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "UPDATE memory_v2_records SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
-                        (_now_iso(), record_id),  # noqa: F821
+                        (_now_iso(), record_id),
                     )
                     conn.commit()
                     return self._record_from_row(row)
                 finally:
                     conn.close()
 
-            return _retry(_fetch)  # noqa: F821
+            return _retry(_fetch)
 
     def promote(self, record_id: str, target_tier: MemoryTier) -> bool:
         with self._lock:
@@ -147,10 +147,10 @@ class MemoryEngineV2(MemoryQueryMixin):
                         return False
 
                     current_tier = MemoryTier(row[0])
-                    if _TIER_ORDER.get(target_tier, 0) <= _TIER_ORDER.get(current_tier, 0):  # noqa: F821
+                    if _TIER_ORDER.get(target_tier, 0) <= _TIER_ORDER.get(current_tier, 0):
                         return False
 
-                    now = _now_iso()  # noqa: F821
+                    now = _now_iso()
                     expires = None
                     if target_tier == MemoryTier.SHORT_TERM:
                         expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
@@ -166,7 +166,7 @@ class MemoryEngineV2(MemoryQueryMixin):
                 finally:
                     conn.close()
 
-            return _retry(_promote)  # noqa: F821
+            return _retry(_promote)
 
     def decay(self, max_age_hours: int = 168) -> int:
         cutoff = (datetime.utcnow() - timedelta(hours=max_age_hours)).isoformat()
@@ -192,14 +192,14 @@ class MemoryEngineV2(MemoryQueryMixin):
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                         "DELETE FROM memory_v2_records "
                         "WHERE tier = 'ephemeral' AND expires_at IS NOT NULL AND expires_at < ?",
-                        (_now_iso(),),  # noqa: F821
+                        (_now_iso(),),
                     )
                     conn.commit()
                     return demoted
                 finally:
                     conn.close()
 
-            demoted = _retry(_apply_decay)  # noqa: F821
+            demoted = _retry(_apply_decay)
         return demoted
 
     def build_context_window(self, session_id: str, max_tokens: int = 4096) -> ContextWindow:
@@ -228,16 +228,16 @@ class MemoryEngineV2(MemoryQueryMixin):
                 summary = self._generate_summary(selected)
 
                 return ContextWindow(
-                    id=_new_id("ctx"),  # noqa: F821
+                    id=_new_id("ctx"),
                     session_id=session_id,
                     records=selected,
                     token_count=int(token_count),
                     max_tokens=max_tokens,
                     summary=summary,
-                    created_at=_now_iso(),  # noqa: F821
+                    created_at=_now_iso(),
                 )
 
-            return _retry(_build)  # noqa: F821  # TODO: Phase3 - verify import
+            return _retry(_build)  # TODO: Phase3 - verify import
 
     def consolidate(self, session_id: str) -> dict[str, int]:
         stats: dict[str, int] = {"merged": 0, "promoted": 0, "removed": 0}

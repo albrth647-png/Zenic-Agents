@@ -17,6 +17,7 @@ from .push import PushChannelProvider
 from .slack import SlackChannelProvider
 from .teams import TeamsChannelProvider
 from .twilio_sms import TwilioSMSChannelProvider
+from .telegram import TelegramChannelProvider
 from .whatsapp import WhatsAppChannelProvider
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "PushChannelProvider",
     "SlackChannelProvider",
     "TeamsChannelProvider",
+    "TelegramChannelProvider",
     "TwilioSMSChannelProvider",
     "WhatsAppChannelProvider",
 ]

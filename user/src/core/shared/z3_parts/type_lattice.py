@@ -27,7 +27,7 @@ class Z3TypeLatticeMixin:
 
     # Type compatibility lattice: subtype relationships
     # key = type, value = set of types that are compatible (assignable to) this type
-    _TYPE_LATTICE = {  # noqa: RUF012
+    _TYPE_LATTICE = {
         "int": {"int", "float", "bool", "object", "unknown"},
         "float": {"float", "object", "unknown"},
         "str": {"str", "object", "unknown"},

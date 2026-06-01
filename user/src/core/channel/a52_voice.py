@@ -61,7 +61,7 @@ class VoiceChannelAgent:
     # Límites
     MAX_FILE_SIZE_MB = 25
     MAX_DURATION_SECONDS = 300  # 5 minutos
-    SUPPORTED_FORMATS = {VoiceFormat.OGG, VoiceFormat.MP3, VoiceFormat.WAV, VoiceFormat.WEBM, VoiceFormat.M4A}  # noqa: RUF012
+    SUPPORTED_FORMATS = {VoiceFormat.OGG, VoiceFormat.MP3, VoiceFormat.WAV, VoiceFormat.WEBM, VoiceFormat.M4A}
 
     def __init__(self, temp_dir: str = "/tmp/zenic_voice"):
         self.temp_dir = Path(temp_dir)

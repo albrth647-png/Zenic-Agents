@@ -299,7 +299,7 @@ class VectorStore:
                             content_hash = EXCLUDED.content_hash,
                             updated_at = NOW(),
                             expires_at = EXCLUDED.expires_at
-                        """,  # noqa: S608
+                        """,
                         id,
                         content,
                         emb_str,
@@ -375,7 +375,7 @@ class VectorStore:
                                         content_hash = EXCLUDED.content_hash,
                                         updated_at = NOW(),
                                         expires_at = EXCLUDED.expires_at
-                                    """,  # noqa: S608
+                                    """,
                                 item["id"],
                                 item["content"],
                                 emb_str,
@@ -475,7 +475,7 @@ class VectorStore:
                         WHERE {where_sql}
                         ORDER BY embedding <=> $1::vector
                         LIMIT ${param_idx}
-                        """,  # noqa: S608
+                        """,
                         *params,
                     )
 
@@ -577,7 +577,7 @@ class VectorStore:
             try:
                 async with self._pool.acquire() as conn:
                     await conn.execute(
-                        f"DELETE FROM {self._table_name} WHERE id = $1",  # noqa: S608
+                        f"DELETE FROM {self._table_name} WHERE id = $1",
                         id,
                     )
                 return True
@@ -605,12 +605,12 @@ class VectorStore:
                 async with self._pool.acquire() as conn:
                     if category:
                         row = await conn.fetchrow(
-                            f"SELECT COUNT(*) AS cnt FROM {self._table_name} WHERE category = $1",  # noqa: S608
+                            f"SELECT COUNT(*) AS cnt FROM {self._table_name} WHERE category = $1",
                             category,
                         )
                     else:
                         row = await conn.fetchrow(
-                            f"SELECT COUNT(*) AS cnt FROM {self._table_name}"  # noqa: S608
+                            f"SELECT COUNT(*) AS cnt FROM {self._table_name}"
                         )
                     return int(row["cnt"])
             except Exception:
@@ -634,7 +634,7 @@ class VectorStore:
             try:
                 async with self._pool.acquire() as conn:
                     result = await conn.execute(
-                        f"DELETE FROM {self._table_name} WHERE expires_at IS NOT NULL AND expires_at < NOW()"  # noqa: S608
+                        f"DELETE FROM {self._table_name} WHERE expires_at IS NOT NULL AND expires_at < NOW()"
                     )
                     # Parse "DELETE N" result
                     parts = result.split()

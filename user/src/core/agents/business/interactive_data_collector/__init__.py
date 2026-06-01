@@ -20,7 +20,7 @@ a working deterministic implementation that:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Dict  # noqa: UP035
+from typing import TYPE_CHECKING, Any
 
 from ...resilience.base_agent import BaseAgent
 from ._constants import FIELD_SUGGESTIONS, MAX_ANSWER_LENGTH, MAX_QUESTIONS_PER_ROUND

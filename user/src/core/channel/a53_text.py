@@ -121,7 +121,7 @@ class TextChannelAgent:
             )
 
         except Exception as e:
-            logger.error(f"A53 error procesando texto: {e}")
+            logger.error(f"Error al procesar mensaje de texto: {e}")
             return TextResult(
                 success=False,
                 error=str(e),
@@ -139,7 +139,7 @@ class TextChannelAgent:
 
         # Limitar a max general
         if len(result) > 100000:
-            result = result[:100000] + "... [truncado]"
+            result = result[:100000] + "... [el mensaje es muy largo, lo cortamos aquí]"
 
         return result
 
@@ -175,11 +175,11 @@ class TextChannelAgent:
         recipient = message.recipient
 
         # En producción, usar la API real del canal
-        logger.info(f"Entrega a {channel}:{recipient} — {len(chunks)} chunk(s)")
+        logger.info(f"Entregado a {channel}:{recipient} — {len(chunks)} parte(s)")
         return True  # Simulado
 
     def _fallback(self, message: TextMessage, chunks: list[str]) -> bool:
         """Fallback a canal alternativo si el primario falla."""
-        logger.warning(f"Fallback: {message.channel.value} → {self.fallback_channel.value}")
+        logger.warning(f"Reintentando por {self.fallback_channel.value} (fallback desde {message.channel.value})")
         # En producción, reintentar en el canal de fallback
         return True  # Simulado

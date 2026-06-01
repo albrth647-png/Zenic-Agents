@@ -58,7 +58,11 @@ class PipelineHandlers:
         session: Session,
         personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
-        """Maneja mensajes conversacionales sin motor."""
+        """Maneja mensajes conversacionales sin motor.
+
+        Fase 5: Usa blueprint_capabilities de la sesion para adaptar
+        las respuestas segun el perfil del tenant.
+        """
         profile = personality or self._get_personality()
         text = message.lower().strip()
 
@@ -127,7 +131,7 @@ class PipelineHandlers:
             metadata=ResponseMetadata(source="config"),
         )
 
-    # ─── Engine ───────────────────────────────────────────────
+    # ─── Business Engine ─────────────────────────────────────────
 
     async def handle_engine(
         self,
@@ -136,10 +140,14 @@ class PipelineHandlers:
         session: Session,
         personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
-        """Maneja mensajes que requieren el motor Zenic-Agents."""
+        """Maneja mensajes que requieren el motor de negocio (Business Engine).
+
+        Fase 5: Si hay blueprint_capabilities en la sesion, las pasa
+        al motor para adaptar la respuesta al perfil del tenant.
+        """
         if self._bridge is None or not self._bridge.is_available:
             return AssistantResponse.from_error(
-                "Motor Zenic-Agents no disponible. Funcionando en modo conversacional.",
+                "Motor de negocio no disponible. Funcionando en modo conversacional.",
                 source="fallback",
             )
 

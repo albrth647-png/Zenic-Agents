@@ -11,19 +11,20 @@ from .._types import ChannelPriority
 # Priority → channel suitability mapping
 _PRIORITY_CHANNEL_MAP: dict[ChannelPriority, list[str]] = {
     ChannelPriority.LOW: ["log", "email", "push"],
-    ChannelPriority.NORMAL: ["log", "email", "push", "teams", "slack"],
-    ChannelPriority.HIGH: ["email", "push", "teams", "slack", "sms"],
-    ChannelPriority.URGENT: ["sms", "push", "teams", "slack", "email"],
-    ChannelPriority.EMERGENCY: ["sms", "whatsapp", "push", "teams", "slack", "email"],
+    ChannelPriority.NORMAL: ["log", "email", "push", "telegram", "teams", "slack"],
+    ChannelPriority.HIGH: ["telegram", "email", "push", "teams", "slack", "sms"],
+    ChannelPriority.URGENT: ["sms", "push", "telegram", "whatsapp", "teams", "slack", "email"],
+    ChannelPriority.EMERGENCY: ["sms", "whatsapp", "telegram", "push", "teams", "slack", "email"],
 }
 
 # Default fallback chains
 _DEFAULT_FALLBACKS: dict[str, list[str]] = {
     "teams": ["email", "log"],
     "slack": ["email", "log"],
-    "whatsapp": ["sms", "email", "log"],
-    "sms": ["email", "log"],
-    "email": ["push", "log"],
+    "telegram": ["whatsapp", "sms", "email", "log"],
+    "whatsapp": ["telegram", "sms", "email", "log"],
+    "sms": ["telegram", "email", "log"],
+    "email": ["telegram", "push", "log"],
     "push": ["email", "log"],
     "log": [],
 }

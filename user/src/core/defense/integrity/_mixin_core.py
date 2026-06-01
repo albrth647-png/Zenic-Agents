@@ -121,7 +121,7 @@ class IntegrityVerifier:
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[  # noqa: S608
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[
                     0
                 ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 checksum_parts.append(f"{table_name}:{count}")
@@ -199,7 +199,7 @@ class IntegrityVerifier:
                 if not _SAFE_IDENTIFIER_RE.match(table_name):
                     logger.warning("Skipping suspicious table name: %r", table_name)
                     continue
-                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[  # noqa: S608
+                count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[
                     0
                 ]  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # validated identifier
                 checksum_parts.append(f"{table_name}:{count}")

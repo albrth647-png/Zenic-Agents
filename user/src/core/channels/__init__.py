@@ -90,6 +90,7 @@ from .providers.slack import SlackChannelProvider
 
 # ── Phase 1: Channel Providers ────────────────────────────────
 from .providers.teams import TeamsChannelProvider
+from .providers.telegram import TelegramChannelProvider
 from .providers.twilio_sms import TwilioSMSChannelProvider
 from .providers.whatsapp import WhatsAppChannelProvider
 
@@ -123,6 +124,7 @@ __all__ = [
     "RateLimitInfo",
     "SlackChannelProvider",
     "TeamsChannelProvider",
+    "TelegramChannelProvider",
     "TwilioSMSChannelProvider",
     "WhatsAppChannelProvider",
     "build_discord_confirmation_components",

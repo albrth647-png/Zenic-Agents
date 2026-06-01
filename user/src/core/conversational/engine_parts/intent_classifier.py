@@ -95,32 +95,58 @@ FEEDBACK_PATTERNS: list[str] = [
     "try again",
 ]
 
-CODE_CREATE_PATTERNS: list[str] = [
-    "crear",
-    "generar",
-    "create",
-    "build",
-    "make",
-    "nuevo modulo",
+INVOICE_PATTERNS: list[str] = [
+    "factura",
+    "invoice",
+    "pago",
+    "pagar",
+    "adeudo",
+    "estado de cuenta",
+    "recibo",
+    "cobro",
+    "payment",
 ]
-CODE_DEBUG_PATTERNS: list[str] = [
-    "debug",
-    "fix",
-    "corregir",
-    "error",
-    "bug",
-    "arreglar",
+CRM_PATTERNS: list[str] = [
+    "cliente",
+    "contacto",
+    "crm",
+    "direccion",
+    "registrar",
+    "actualizar datos",
+    "customer",
+    "contact",
 ]
-CODE_REFACTOR_PATTERNS: list[str] = [
-    "refactor",
-    "limpiar codigo",
-    "reestructurar",
+INVENTORY_PATTERNS: list[str] = [
+    "inventario",
+    "stock",
+    "producto",
+    "existencia",
+    "inventory",
+    "disponible",
+    "cuanto hay",
 ]
-CODE_OPTIMIZE_PATTERNS: list[str] = [
-    "optimizar",
-    "optimize",
-    "mejorar rendimiento",
-    "speed up",
+REPORT_PATTERNS: list[str] = [
+    "reporte",
+    "report",
+    "dashboard",
+    "metricas",
+    "estadisticas",
+    "ventas",
+    "transacciones",
+    "resumen",
+    "kpi",
+]
+SCHEDULING_PATTERNS: list[str] = [
+    "cita",
+    "agendar",
+    "agenda",
+    "recordatorio",
+    "schedule",
+    "appointment",
+    "programar",
+    "calendario",
+    "calendar",
+    "cuando",
 ]
 
 # Mapa de categoria → patrones + peso
@@ -130,10 +156,11 @@ PATTERN_MAP: dict[IntentCategory, tuple[list[str], float]] = {
     IntentCategory.COMMAND: (COMMAND_PATTERNS, 2.0),
     IntentCategory.CONFIG: (CONFIG_PATTERNS, 2.5),
     IntentCategory.FEEDBACK: (FEEDBACK_PATTERNS, 2.0),
-    IntentCategory.CODE_CREATE: (CODE_CREATE_PATTERNS, 3.0),
-    IntentCategory.CODE_DEBUG: (CODE_DEBUG_PATTERNS, 3.0),
-    IntentCategory.CODE_REFACTOR: (CODE_REFACTOR_PATTERNS, 3.0),
-    IntentCategory.CODE_OPTIMIZE: (CODE_OPTIMIZE_PATTERNS, 3.0),
+    IntentCategory.INVOICE: (INVOICE_PATTERNS, 3.0),
+    IntentCategory.CRM: (CRM_PATTERNS, 3.0),
+    IntentCategory.INVENTORY: (INVENTORY_PATTERNS, 3.0),
+    IntentCategory.REPORT: (REPORT_PATTERNS, 3.0),
+    IntentCategory.SCHEDULING: (SCHEDULING_PATTERNS, 3.0),
 }
 
 
@@ -142,7 +169,7 @@ class IntentClassifier:
     Clasificador de intencion para el asistente.
 
     Usa scoring determinista basado en keywords con pesos.
-    Las categorias de codigo tienen peso mayor (3.0) que
+    Las categorias de negocio tienen peso mayor (3.0) que
     las conversacionales (2.0) para priorizar correctamente.
     """
 
@@ -192,12 +219,14 @@ class IntentClassifier:
     def _infer_mode(category: IntentCategory, text: str) -> ConversationMode:
         """Infiere el modo de conversacion basado en la categoria."""
         if category in (
-            IntentCategory.CODE_CREATE,
-            IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_REFACTOR,
-            IntentCategory.CODE_OPTIMIZE,
+            IntentCategory.INVOICE,
+            IntentCategory.CRM,
+            IntentCategory.INVENTORY,
+            IntentCategory.REPORT,
+            IntentCategory.SCHEDULING,
+            IntentCategory.BUSINESS,
         ):
-            return ConversationMode.CODING
+            return ConversationMode.BUSINESS
 
         if category == IntentCategory.QUESTION:
             # Si contiene palabras de paso a paso

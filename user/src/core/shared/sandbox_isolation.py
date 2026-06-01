@@ -1,16 +1,29 @@
 """
-Zenic-Agents — Sandbox Isolation (Facade)
+Zenic-Agents — Sandbox Isolation (Facade) [DEPRECATED]
 
-Sistema de aislamiento para el sandbox.
-If sandbox_parts/ is not available, provides stub implementations.
+⚠️ DEPRECATED: El sandbox esta deprecado desde Fase 6.
+sandbox_parts/ no existe en disco y no se va a implementar.
+
+Esta fachada solo retorna stubs y emite advertencias.
+Se mantiene por compatibilidad con imports existentes.
+En una version futura se eliminara por completo.
 """
 
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+warnings.warn(
+    "Sandbox isolation is deprecated. "
+    "sandbox_parts/ is not available and will not be implemented. "
+    "This module will be removed in a future version.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 try:
     from .sandbox_parts import (  # type: ignore[import-unresolved]

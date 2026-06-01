@@ -11,6 +11,7 @@ from typing import Any
 
 class A2ATaskPriority(Enum):
     """Priority levels for A2A tasks."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -20,6 +21,7 @@ class A2ATaskPriority(Enum):
 @dataclass
 class A2AAgentCard:
     """Agent Card describing an A2A agent's capabilities."""
+
     agent_id: str
     name: str
     description: str
@@ -58,6 +60,7 @@ class A2AAgentCard:
 @dataclass
 class A2ATaskMessage:
     """A2A task message for cross-agent communication."""
+
     task_id: str
     sender_agent: str
     receiver_agent: str
@@ -81,6 +84,7 @@ class A2ATaskMessage:
 @dataclass
 class A2AResponseMessage:
     """Response from an A2A task execution."""
+
     task_id: str
     status: str  # "success", "denied", "error", "pending_approval"
     result: dict[str, Any] = field(default_factory=dict)
@@ -99,6 +103,7 @@ class A2AResponseMessage:
 @dataclass
 class A2ADelegationPolicy:
     """Policy rules for A2A task delegation."""
+
     allowed_agents: list[str] = field(default_factory=list)
     allowed_capabilities: list[str] = field(default_factory=list)
     blocked_agents: list[str] = field(default_factory=list)

@@ -14,11 +14,15 @@ Validates:
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 from ...resilience import BaseAgent
 from ...schemas import ConfigResult, ValidationIssue
 from ._types import OPTIONAL_KEYS_WITH_DEFAULTS, REQUIRED_KEYS, SECURITY_SENSITIVE_KEYS, VALUE_CONSTRAINTS
+
+# Bind address constant — configurable via env var for production
+_BIND_ALL_INTERFACES = os.environ.get("CONFIG_BIND_HOST", "0.0.0.0")  # noqa: S104
 
 
 class ConfigValidator(BaseAgent[ConfigResult]):
@@ -348,7 +352,7 @@ class ConfigValidator(BaseAgent[ConfigResult]):
         # Check for missing TLS in server config
         host = config.get("host", "")
         config.get("port", 0)
-        if isinstance(host, str) and host == "0.0.0.0":  # noqa: S104
+        if isinstance(host, str) and host == _BIND_ALL_INTERFACES:
             issues.append(
                 ValidationIssue(
                     severity="info",

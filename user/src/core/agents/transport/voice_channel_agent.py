@@ -170,17 +170,20 @@ async def _download_url(url: str) -> bytes | None:
             _logger.error("URL download failed: HTTP %d", resp.status)
             return None
     except ImportError:
-        logger.warning("_download_url: ImportError handled silently", exc_info=True)
+        _logger.warning("_download_url: ImportError handled silently", exc_info=True)
 
     # Fallback to urllib
     try:
         import urllib.request
 
         def _sync_download() -> bytes | None:
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            parsed = urllib.parse.urlparse(url)
+            if parsed.scheme not in ("http", "https"):
+                _logger.error("Unsupported URL scheme: %s", parsed.scheme)
+                return None
+            req = urllib.request.Request(url)  # noqa: S310 — validated http/https only above
+            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 — validated http/https only above
                 return resp.read()
-
         return await asyncio.to_thread(_sync_download)
     except Exception as e:
         _logger.error("URL download fallback failed: %s", e)

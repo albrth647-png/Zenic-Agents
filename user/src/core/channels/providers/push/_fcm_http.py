@@ -184,14 +184,14 @@ class _FcmHttpMixin:
         validated_url = _validate_url(url)
 
         def _sync_post(url=validated_url) -> ChannelResponse:
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 url,
                 data=data,
                 headers=headers,
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
                     body = resp.read().decode("utf-8", errors="replace")
                     try:
                         resp_data = json.loads(body)
@@ -290,13 +290,13 @@ class _FcmHttpMixin:
                     validated_url = _validate_url(url)
 
                     def _sync_post(url=validated_url) -> dict[str, Any]:
-                        req = urllib.request.Request(  # noqa: S310
+                        req = urllib.request.Request(
                             url,
                             data=encoded,
                             headers=headers,
                             method="POST",
                         )
-                        with urllib.request.urlopen(  # noqa: S310
+                        with urllib.request.urlopen(
                             req,
                             timeout=_HTTP_TIMEOUT,
                         ) as resp:

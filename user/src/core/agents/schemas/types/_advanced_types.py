@@ -18,13 +18,12 @@ from typing import TYPE_CHECKING, Any
 # ── Re-export shared types from single source of truth ──
 # E-13 FIX: These types now live in shared/agent_schemas.py to break
 # the circular dependency (agents/ → agents/).
+# Re-export shared types from single source of truth
+# These were moved to shared/agent_schemas.py to break circular dependency
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from src.core.shared.agent_schemas import (
-        ValidationIssue,
-    )
 
 # ────────────────────────────── Layer 4: Code ──────────────────────────────
 
@@ -67,7 +66,18 @@ class ScaffoldResult:
 
 # ────────────────────────────── Layer 5: Validation ──────────────────────────────
 
-# ValidationIssue is now imported from shared/agent_schemas.py (see top of file)
+
+@dataclass
+class ValidationIssue:
+    """A validation issue, warning, or error."""
+
+    severity: str = "error"  # error|warning|info
+    code: str = ""
+    message: str = ""
+    suggestion: str = ""
+    line: int | None = None
+    source: str = ""
+    metadata: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
 
 @dataclass
@@ -141,9 +151,35 @@ class AutoDescription:
     context: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
 
-# TriggerSpec, ActionSpec, ScheduleSpec are now imported from
-# shared/agent_schemas.py (see top of file). They are re-exported
-# so existing `from agents.schemas.types import TriggerSpec` still works.
+
+@dataclass
+class TriggerSpec:
+    """Specification for a trigger in automation."""
+
+    type: str = "event"  # event|schedule|condition
+    source: str = ""
+    event: str = ""
+    filter: Mapping[str, str | int | float | bool] = field(default_factory=dict)
+
+
+@dataclass
+class ActionSpec:
+    """Specification for an action in automation."""
+
+    type: str = "function"  # function|api|command|message
+    target: str = ""
+    params: Mapping[str, str | int | float | bool] = field(default_factory=dict)
+    conditions: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ScheduleSpec:
+    """Specification for a schedule in automation."""
+
+    cron: str = ""
+    timezone: str = "UTC"
+    max_runs: int | None = None
+    interval_seconds: int = 0
 
 
 @dataclass
@@ -262,7 +298,10 @@ class EvidenceType(str, Enum):
     KEYWORD_CLASSIFY = "KEYWORD_CLASSIFY"
     STRUCTURAL_MATCH = "STRUCTURAL_MATCH"
     RULE_ENGINE = "RULE_ENGINE"
-    SANDBOX_PASS = "SANDBOX_PASS"
+    SANDBOX_PASS = "SANDBOX_PASS"  # noqa: S105
+    # TECE — Nuevos tipos para el motor termodinámico
+    CRITICALITY = "CRITICALITY"
+    INTENT_CLASSIFY = "INTENT_CLASSIFY"
 
 
 @dataclass

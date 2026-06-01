@@ -57,7 +57,7 @@ class RollbackMixin:
                     col_names = ", ".join(columns)
                     values = [row[c] for c in columns]
                     insert_sql = (
-                        f"INSERT OR REPLACE INTO {table}"  # noqa: S608
+                        f"INSERT OR REPLACE INTO {table}"
                         f" ({col_names}) VALUES ({placeholders})"
                     )
                     conn.execute(insert_sql, values)  # nosemgrep
@@ -108,7 +108,7 @@ class RollbackMixin:
                     values = [row[c] for c in columns]
                     pk_col = columns[0]
                     pk_val = row[pk_col]
-                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"  # noqa: S608
+                    update_sql = f"UPDATE {table} SET {set_clause} WHERE {pk_col} = ?"
                     conn.execute(update_sql, [*values, pk_val])  # nosemgrep
                     restored += 1
                 conn.commit()
@@ -148,7 +148,7 @@ class RollbackMixin:
             conn = sqlite3.connect(entry.db_path)
             try:
                 cursor = conn.execute(  # nosemgrep
-                    f"DELETE FROM {table} WHERE rowid = ?",  # noqa: S608
+                    f"DELETE FROM {table} WHERE rowid = ?",
                     (entry.lastrowid,),
                 )
                 conn.commit()

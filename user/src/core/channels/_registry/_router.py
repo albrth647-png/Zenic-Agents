@@ -1,4 +1,9 @@
-"""_registry._router — ChannelRouter class and singleton accessors."""
+"""_registry._router — ChannelRouter class and singleton accessors.
+
+⚠️ This file is DEPRECATED — use _discovery.py instead.
+    Kept alive only for TYPE_CHECKING references in alert_manager.py.
+    Priority/fallback data now lives in _types.py.
+"""
 
 from __future__ import annotations
 
@@ -8,34 +13,10 @@ import time
 from typing import Any
 
 from ._adapter import AdapterRegistry
-from ._types import (
-    ChannelMessage,
-    ChannelPriority,
-    ChannelResponse,
-    DeliveryStatus,
-)
+from ._types import _DEFAULT_FALLBACKS, _PRIORITY_CHANNEL_MAP, ChannelPriority
+from .._types import ChannelMessage, ChannelResponse, DeliveryStatus
 
 logger = logging.getLogger("zenic_agents.channels.registry")
-
-# Priority → channel suitability mapping
-_PRIORITY_CHANNEL_MAP: dict[ChannelPriority, list[str]] = {
-    ChannelPriority.LOW: ["log", "email", "push"],
-    ChannelPriority.NORMAL: ["log", "email", "push", "teams", "slack"],
-    ChannelPriority.HIGH: ["email", "push", "teams", "slack", "sms"],
-    ChannelPriority.URGENT: ["sms", "push", "teams", "slack", "email"],
-    ChannelPriority.EMERGENCY: ["sms", "whatsapp", "push", "teams", "slack", "email"],
-}
-
-# Default fallback chains
-_DEFAULT_FALLBACKS: dict[str, list[str]] = {
-    "teams": ["email", "log"],
-    "slack": ["email", "log"],
-    "whatsapp": ["sms", "email", "log"],
-    "sms": ["email", "log"],
-    "email": ["push", "log"],
-    "push": ["email", "log"],
-    "log": [],
-}
 
 
 class ChannelRouter:
@@ -43,6 +24,8 @@ class ChannelRouter:
 
     Decides WHICH channel to use based on message priority,
     channel availability, and user preferences.
+
+    ⚠️ This class is DEPRECATED — use ChannelRouter from _discovery.py instead.
 
     Integration point: NotificationExecutor calls ChannelRouter.route()
     instead of if/elif chains.

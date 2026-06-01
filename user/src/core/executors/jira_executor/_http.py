@@ -177,14 +177,14 @@ class _HttpMixin:
 
         def _sync_request() -> dict[str, Any]:
             data = json.dumps(json_data).encode("utf-8") if json_data else None
-            req = urllib.request.Request(  # noqa: S310
+            req = urllib.request.Request(
                 validated_url,
                 data=data,
                 headers=headers,
                 method=method.upper(),
             )
             try:
-                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
                     body_text = resp.read().decode("utf-8")
                     body = json.loads(body_text) if body_text else {}
                     return {

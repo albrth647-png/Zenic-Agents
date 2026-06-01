@@ -177,7 +177,7 @@ class ApprovalChainDB:
             # WHERE built from hardcoded condition strings; values parameterized
             where = " AND ".join(conditions) if conditions else "1=1"
             rows = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",  # noqa: S608
+                f"SELECT * FROM approval_requests WHERE {where} ORDER BY created_at DESC",
                 params,
             ).fetchall()
             conn.close()

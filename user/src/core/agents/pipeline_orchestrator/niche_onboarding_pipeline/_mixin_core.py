@@ -4,9 +4,19 @@ from __future__ import annotations
 
 import logging
 
+from ...infrastructure import AgentCache as DocumentIngestor
+from ...infrastructure import AgentRunner as NicheBridge
+from ...validation import SecurityScanner as BlueprintCertifier
+from ..business.interactive_data_collector import InteractiveDataCollector
 from ._types import PipelineState, PipelineStep
 
 logger = logging.getLogger("zenic_agents.agents.niche_onboarding_pipeline")
+
+
+def _get_default_domain_safety_gate():
+    """Get the default domain safety gate instance."""
+    from ...verdict.deterministic_pipeline import DeterministicPipeline
+    return DeterministicPipeline()
 
 
 class NicheOnboardingCoreMixin:
@@ -16,7 +26,7 @@ class NicheOnboardingCoreMixin:
         self._bridge = NicheBridge()
         self._ingestor = DocumentIngestor()
         self._collector = InteractiveDataCollector()
-        self._domain_gate = get_default_domain_safety_gate()
+        self._domain_gate = _get_default_domain_safety_gate()
         self._certifier = BlueprintCertifier()
 
     # ── Step 1: SELECT_NICHE ──────────────────────────────────

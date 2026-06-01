@@ -222,7 +222,7 @@ class PersistenceLayer:
                 assert table in _SAFE_TABLES, f"Invalid table name: {table}"
                 try:
                     cursor = self._conn.execute(
-                        f'DELETE FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                        f'DELETE FROM "{table}" WHERE tenant_id=?',
                         (tenant_id,),
                     )
                     total += cursor.rowcount

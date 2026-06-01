@@ -264,7 +264,7 @@ def _init_sna(args: argparse.Namespace) -> object:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                _sna_task = loop.create_task(sna_engine.start())  # noqa: RUF006
+                _sna_task = loop.create_task(sna_engine.start())
             else:
                 loop.run_until_complete(sna_engine.start())
         except RuntimeError:

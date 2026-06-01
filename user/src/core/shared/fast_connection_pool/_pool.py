@@ -315,7 +315,7 @@ class FastPool:
                     continue
                 try:
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM {table} WHERE tenant_id = ?",  # noqa: S608
+                        f"DELETE FROM {table} WHERE tenant_id = ?",
                         (tenant_id,),
                     )
                     total_deleted += cursor.rowcount

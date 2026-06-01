@@ -133,7 +133,7 @@ class ZenicTUIApp(App):
     }
     """
 
-    BINDINGS = [  # noqa: RUF012
+    BINDINGS = [
         ("q", "quit", "Salir"),
         ("t", "focus_input", "Probar"),
     ]

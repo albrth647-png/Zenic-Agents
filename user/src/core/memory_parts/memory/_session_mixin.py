@@ -188,7 +188,7 @@ class SessionMixin:
                     )
 
                     conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})",  # noqa: S608
+                        f"DELETE FROM episodic_memory WHERE id IN ({','.join('?' * len(ids_to_remove))})",
                         ids_to_remove,
                     )
                     consolidated_episodes += len(ids_to_remove)

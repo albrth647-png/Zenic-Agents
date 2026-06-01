@@ -24,8 +24,8 @@ class InvoiceCalculatorBlock(LogicBlock):
     name = "invoice_calculator"
     category = "business_logic"
     description = "Calculate invoices with tax, discount, and total"
-    inputs = ["items", "tax_rate", "discount"]  # noqa: RUF012
-    outputs = ["subtotal", "tax_amount", "discount_amount", "total"]  # noqa: RUF012
+    inputs = ["items", "tax_rate", "discount"]
+    outputs = ["subtotal", "tax_amount", "discount_amount", "total"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -88,8 +88,8 @@ class InventoryTrackerBlock(LogicBlock):
     name = "inventory_tracker"
     category = "business_logic"
     description = "Track stock changes and alert on low inventory"
-    inputs = ["product_id", "quantity_change", "operation"]  # noqa: RUF012
-    outputs = ["new_quantity", "alerts"]  # noqa: RUF012
+    inputs = ["product_id", "quantity_change", "operation"]
+    outputs = ["new_quantity", "alerts"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -167,8 +167,8 @@ class CRMPipelineBlock(LogicBlock):
     name = "crm_pipeline"
     category = "business_logic"
     description = "Move leads through sales pipeline stages"
-    inputs = ["lead_data", "stage", "action"]  # noqa: RUF012
-    outputs = ["updated_lead", "next_action"]  # noqa: RUF012
+    inputs = ["lead_data", "stage", "action"]
+    outputs = ["updated_lead", "next_action"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -234,8 +234,8 @@ class TaskSchedulerBlock(LogicBlock):
     name = "task_scheduler"
     category = "business_logic"
     description = "Prioritize and assign tasks to resources"
-    inputs = ["tasks", "resources"]  # noqa: RUF012
-    outputs = ["schedule", "assignments"]  # noqa: RUF012
+    inputs = ["tasks", "resources"]
+    outputs = ["schedule", "assignments"]
 
     def execute(self, data: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         try:

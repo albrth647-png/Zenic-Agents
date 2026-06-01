@@ -17,29 +17,26 @@ class IntentCategory(str, Enum):
     """
     Categorias de intencion del asistente.
 
-    Extiende las operaciones de Zenic-Agents (CREATE, REFACTOR, etc.)
-    con categorias conversacionales que no existian en el motor
-    quirurgico original.
+    Clasifica la intencion del usuario en categorias de negocio
+    y conversacionales. Sin categorias de codigo — el sistema
+    esta enfocado en automatizacion empresarial.
     """
 
-    # Conversacionales (nuevas para asistente)
+    # Conversacionales
     CHAT = "chat"  # Conversacion general
     QUESTION = "question"  # Pregunta factual o explicativa
     COMMAND = "command"  # Comando directo (ej: "limpiar", "reset")
     FEEDBACK = "feedback"  # Feedback del usuario sobre respuesta
     CONFIG = "config"  # Cambio de configuracion
 
-    # Heredadas de Zenic-Agents (mapean a operaciones del motor)
-    CODE_CREATE = "code_create"  # Mapea a CREATE
-    CODE_REFACTOR = "code_refactor"  # Mapea a REFACTOR
-    CODE_DEBUG = "code_debug"  # Mapea a DEBUG
-    CODE_OPTIMIZE = "code_optimize"  # Mapea a OPTIMIZE
-    CODE_ANALYZE = "code_analyze"  # Mapea a ANALYZE
-    CODE_EXPLAIN = "code_explain"  # Mapea a EXPLAIN
-
-    # Operaciones de negocio (mapean a capa 3)
-    BUSINESS = "business"  # Operaciones de negocio
-    AUTOMATION = "automation"  # Automatizaciones
+    # Operaciones de negocio
+    INVOICE = "invoice"  # Facturacion, pagos, estados de cuenta
+    CRM = "crm"  # Clientes, contactos, relaciones
+    INVENTORY = "inventory"  # Inventario, productos, stock
+    REPORT = "report"  # Reportes, metricas, dashboards
+    SCHEDULING = "scheduling"  # Citas, agendas, recordatorios
+    BUSINESS = "business"  # Otras operaciones de negocio no categorizadas
+    AUTOMATION = "automation"  # Automatizaciones, workflows
 
     # Especiales
     UNKNOWN = "unknown"  # No se pudo clasificar
@@ -50,7 +47,7 @@ class ConversationMode(str, Enum):
     """Modo de conversacion del asistente."""
 
     NORMAL = "normal"  # Conversacion estandar
-    CODING = "coding"  # Modo enfocado en codigo
+    BUSINESS = "business"  # Modo enfocado en operaciones de negocio
     REASONING = "reasoning"  # Modo de razonamiento paso a paso
     TEACHING = "teaching"  # Modo de ensenanza/explicacion
     AUTOMATION = "automation"  # Configuracion de automatizaciones
@@ -86,36 +83,33 @@ class AssistantIntent:
         )
 
     @property
-    def is_code_related(self) -> bool:
-        """True si la intencion involucra codigo."""
+    def is_business_operation(self) -> bool:
+        """True si la intencion involucra una operacion de negocio."""
         return self.category in (
-            IntentCategory.CODE_CREATE,
-            IntentCategory.CODE_REFACTOR,
-            IntentCategory.CODE_DEBUG,
-            IntentCategory.CODE_OPTIMIZE,
-            IntentCategory.CODE_ANALYZE,
-            IntentCategory.CODE_EXPLAIN,
-        )
-
-    @property
-    def needs_engine(self) -> bool:
-        """True si necesita pasar por el motor de Zenic-Agents."""
-        return self.is_code_related or self.category in (
+            IntentCategory.INVOICE,
+            IntentCategory.CRM,
+            IntentCategory.INVENTORY,
+            IntentCategory.REPORT,
+            IntentCategory.SCHEDULING,
             IntentCategory.BUSINESS,
             IntentCategory.AUTOMATION,
         )
 
-    def to_zenic_operation(self) -> str:
-        """Mapea la categoria a la operacion de Zenic-Agents."""
+    @property
+    def needs_engine(self) -> bool:
+        """True si necesita pasar por el motor de negocio."""
+        return self.is_business_operation
+
+    def to_business_action(self) -> str:
+        """Mapea la categoria a una accion de negocio."""
         mapping = {
-            IntentCategory.CODE_CREATE: "CREATE",
-            IntentCategory.CODE_REFACTOR: "REFACTOR",
-            IntentCategory.CODE_DEBUG: "DEBUG",
-            IntentCategory.CODE_OPTIMIZE: "OPTIMIZE",
-            IntentCategory.CODE_ANALYZE: "ANALYZE",
-            IntentCategory.CODE_EXPLAIN: "EXPLAIN",
-            IntentCategory.BUSINESS: "ANALYZE",
-            IntentCategory.AUTOMATION: "CREATE",
+            IntentCategory.INVOICE: "GENERATE_INVOICE",
+            IntentCategory.CRM: "MANAGE_CRM",
+            IntentCategory.INVENTORY: "CHECK_INVENTORY",
+            IntentCategory.REPORT: "GENERATE_REPORT",
+            IntentCategory.SCHEDULING: "MANAGE_SCHEDULE",
+            IntentCategory.BUSINESS: "PROCESS_BUSINESS",
+            IntentCategory.AUTOMATION: "RUN_AUTOMATION",
         }
         return mapping.get(self.category, "SEARCH")
 
@@ -129,3 +123,22 @@ class IntentResult:
     context_keywords: list[str] = field(default_factory=list)
     source: str = "deterministic"
     processing_time_ms: float = 0.0
+
+
+# ─── Busqueda de intenciones de negocio ───────────────────────
+
+BUSINESS_INTENTS: set[IntentCategory] = {
+    IntentCategory.INVOICE,
+    IntentCategory.CRM,
+    IntentCategory.INVENTORY,
+    IntentCategory.REPORT,
+    IntentCategory.SCHEDULING,
+}
+
+BUSINESS_INTENT_NAMES: dict[IntentCategory, str] = {
+    IntentCategory.INVOICE: "facturación",
+    IntentCategory.CRM: "clientes",
+    IntentCategory.INVENTORY: "inventario",
+    IntentCategory.REPORT: "reportes",
+    IntentCategory.SCHEDULING: "agendamiento",
+}

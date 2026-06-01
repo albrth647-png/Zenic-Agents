@@ -50,7 +50,7 @@ class SymbolicExecutor(
     """
 
     # Operaciones que son side effects y deben ser podadas
-    IO_OPERATIONS = {  # noqa: RUF012
+    IO_OPERATIONS = {
         "open",
         "read",
         "write",
@@ -71,7 +71,7 @@ class SymbolicExecutor(
     LOOP_UNROLL_LIMIT = 2
 
     # Incompatible type pairs for binary operations
-    INCOMPATIBLE_TYPES = {  # noqa: RUF012
+    INCOMPATIBLE_TYPES = {
         frozenset({"str", "int"}),
         frozenset({"str", "float"}),
         frozenset({"list", "int"}),

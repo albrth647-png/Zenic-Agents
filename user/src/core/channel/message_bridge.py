@@ -51,12 +51,12 @@ class MessageBridge:
         # Registro de canales activos
         self._active_channels: dict[str, ChannelType] = {}
 
-        logger.info("MessageBridge inicializado")
+        logger.info("MessageBridge listo y funcionando")
 
     def register_channel(self, channel_id: str, channel_type: ChannelType):
         """Registra un canal activo."""
         self._active_channels[channel_id] = channel_type
-        logger.info(f"Canal registrado: {channel_id} → {channel_type.value}")
+        logger.info(f"Canal activado: {channel_id} → {channel_type.value}")
 
     def handle_text(self, channel: str, sender: str, text: str) -> TextResult:
         """Maneja un mensaje de texto entrante."""

@@ -4,7 +4,6 @@ ZENIC-AGENTS - PostgreSQL Task Queue Operations
 Task queue methods for PgBackend: enqueue, dequeue, complete,
 fail, renew_lease, expire_leases.
 """
-# ruff: noqa: S608
 
 import json
 import logging

@@ -19,16 +19,15 @@ If Redis is unavailable, falls back to in-memory AgentCircuitBreaker.
 
 from __future__ import annotations
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 import contextlib
 import json
+import logging
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 from .circuit_breaker import CircuitBreakerManager, CircuitState
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "RedisCircuitBreakerConfig",
@@ -209,7 +208,7 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
     """
 
     # Default circuit breaker config values
-    DEFAULT_CB_CONFIG = {  # noqa: RUF012
+    DEFAULT_CB_CONFIG: ClassVar[dict] = {
         "failure_threshold": 5,
         "recovery_timeout": 30.0,  # seconds (stored as ms in Redis)
         "success_threshold": 2,
@@ -422,7 +421,9 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
                                 "success_threshold": parsed_config.get("successThreshold", config["success_threshold"]),
                             }
                         except (json.JSONDecodeError, KeyError):
-                            logger.warning("all_stats: (json.JSONDecodeError, KeyError) handled silently", exc_info=True)
+                            logger.warning(
+                                "all_stats: (json.JSONDecodeError, KeyError) handled silently", exc_info=True
+                            )
 
                     redis_stats = {
                         "name": name,

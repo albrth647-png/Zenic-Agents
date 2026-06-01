@@ -52,7 +52,7 @@ class DemandProjectionMonitor(MonitorBase):
             # Get daily sales for the last 30 days
             cutoff = time.time() - (30 * 86400)
             rows = self._execute_query(
-                f"SELECT date, SUM(amount) FROM {sales_table} WHERE date >= ? GROUP BY date ORDER BY date",  # noqa: S608
+                f"SELECT date, SUM(amount) FROM {sales_table} WHERE date >= ? GROUP BY date ORDER BY date",
                 (cutoff,),
                 db_name=db_name,
             )
@@ -88,7 +88,7 @@ class DemandProjectionMonitor(MonitorBase):
 
             # Get current inventory
             inv_rows = self._execute_query(
-                f"SELECT SUM(quantity) FROM {inventory_table}",  # noqa: S608
+                f"SELECT SUM(quantity) FROM {inventory_table}",
                 (),
                 db_name=db_name,
             )

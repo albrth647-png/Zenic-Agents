@@ -15,6 +15,7 @@ from __future__ import annotations
 import threading
 import time
 from enum import Enum
+from typing import ClassVar
 
 __all__ = [
     "AgentCircuitBreaker",
@@ -153,7 +154,7 @@ class CircuitBreakerManager:
     """Manages per-agent circuit breaker instances."""
 
     # Default configs per agent group
-    DEFAULT_CONFIGS = {  # noqa: RUF012
+    DEFAULT_CONFIGS: ClassVar[dict] = {
         "understanding": {"failure_threshold": 3, "recovery_timeout": 60.0},
         "memory": {"failure_threshold": 5, "recovery_timeout": 30.0},
         "business": {"failure_threshold": 3, "recovery_timeout": 60.0},

@@ -185,8 +185,11 @@ class ToolManager:
         # Aceptar IntentCategory o AssistantIntent
         category = intent.category if hasattr(intent, "category") else intent
         intent_tool_map: dict[IntentCategory, list[str]] = {
-            IntentCategory.CODE_CREATE: ["code_execute", "file_read"],
-            IntentCategory.CODE_DEBUG: ["code_execute", "file_read"],
+            IntentCategory.INVOICE: ["calculator", "memory_recall"],
+            IntentCategory.CRM: ["memory_recall", "web_search"],
+            IntentCategory.INVENTORY: ["memory_recall", "calculator"],
+            IntentCategory.REPORT: ["calculator", "memory_recall"],
+            IntentCategory.SCHEDULING: ["memory_recall"],
             IntentCategory.QUESTION: ["web_search", "memory_recall"],
             IntentCategory.AUTOMATION: ["code_execute"],
         }

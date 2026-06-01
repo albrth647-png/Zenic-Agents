@@ -14,6 +14,7 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any
 
+from .blueprint_adapter import BlueprintAdapter
 from .context_builder import ContextBuilder
 from .conversation import ConversationManager
 from .engine_knowledge import load_builtin_knowledge
@@ -51,10 +52,14 @@ logger = logging.getLogger("zenic_agents.conversational.conversation")
 
 class ConversationEngine:
     """
-    Motor de conversacion principal (Fase 2).
+    Motor de conversacion principal (Fase 5 — Blueprints + Tenant).
 
     Pipeline: input -> intent -> route -> process ->
               memory -> conversation -> knowledge -> context -> events.
+
+    Fase 5: Integra BlueprintAdapter para cargar capacidades y personalidad
+    del tenant desde BlueprintRegistry, permitiendo respuestas adaptadas
+    por cliente.
     """
 
     def __init__(
@@ -62,6 +67,7 @@ class ConversationEngine:
         session_manager: SessionManager | None = None,
         personality_manager: PersonalityManager | None = None,
         zenic_bridge: ZenicBridge | None = None,
+        blueprint_adapter: BlueprintAdapter | None = None,
     ) -> None:
         # Core
         self._sessions = session_manager or SessionManager()
@@ -69,6 +75,11 @@ class ConversationEngine:
         self._bridge = zenic_bridge
         self._generator = ResponseGenerator()
         self._formatter = EngineFormatter()
+
+        # Fase 5: BlueprintAdapter para adaptacion por tenant
+        self._blueprint_adapter = blueprint_adapter or BlueprintAdapter()
+        self._blueprint_adapter.set_personality_manager(self._personalities)
+
         self._handlers = PipelineHandlers(
             generator=self._generator,
             formatter=self._formatter,
@@ -130,7 +141,7 @@ class ConversationEngine:
         user_message: str,
         personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
-        """Procesa un mensaje completo por el pipeline Fase 2."""
+        """Procesa un mensaje completo por el pipeline Fase 5 (Blueprints + Tenant)."""
         start_time = time.time()
         self._increment_stat("total_requests")
         self._events.message_received(session_id=session_id, user_message=user_message)
@@ -139,6 +150,21 @@ class ConversationEngine:
         session = self._sessions.get_session(session_id)
         if session is None:
             return AssistantResponse.from_error("Sesion no encontrada.", source="error")
+
+        # Cargar capacidades del tenant via BlueprintAdapter (Fase 5)
+        tenant_id = session.config.tenant_id
+        if tenant_id and not session.config.blueprint_capabilities:
+            capabilities = self._blueprint_adapter.get_tenant_capabilities(tenant_id)
+            if capabilities:
+                session.config.blueprint_capabilities = capabilities
+                company_info = self._blueprint_adapter.get_tenant_info(tenant_id)
+                if company_info.get("company_name"):
+                    session.config.company_name = company_info["company_name"]
+                logger.info(
+                    "Loaded %d capabilities for tenant=%s",
+                    len(capabilities),
+                    tenant_id,
+                )
 
         # 2. Input pipeline
         sanitized_result = self._sanitizer.sanitize(user_message)
@@ -261,6 +287,20 @@ class ConversationEngine:
         """Busca en la base de conocimiento."""
         return [e.to_context_dict() for e in self._knowledge.search(query, max_results).entries]
 
+    # ─── Fase 5: Blueprint onboarding hook ────────────────────
+
+    def register_onboarding_hook(self, onboarding_engine: object) -> None:
+        """Registra hook para configurar personalidad al completar onboarding.
+
+        Cuando un tenant completa el onboarding via OnboardingEngine,
+        el BlueprintAdapter configura automaticamente el perfil de
+        personalidad segun el dominio del blueprint seleccionado.
+
+        Args:
+            onboarding_engine: Instancia de OnboardingEngine.
+        """
+        self._blueprint_adapter.register_onboarding_hook(onboarding_engine)
+
     # ─── Pipeline ─────────────────────────────────────────────
 
     async def _process_pipeline(
@@ -272,7 +312,7 @@ class ConversationEngine:
         personality: PersonalityProfile | None,
     ) -> AssistantResponse:
         """Despacha al handler del pipeline."""
-        if pipeline == Pipeline.CODE_ENGINE:
+        if pipeline == Pipeline.BUSINESS_ENGINE:
             self._increment_stat("total_engine_calls")
             return await self._handlers.handle_engine(enriched.text, intent, session, personality)
         elif pipeline == Pipeline.QUESTION_ANSWER:
@@ -300,7 +340,7 @@ class ConversationEngine:
         if cat is None:
             cat = (
                 MemoryCategory.SKILL
-                if intent.is_code_related
+                if intent.is_business_operation
                 else (MemoryCategory.FACT if intent.category == IntentCategory.QUESTION else MemoryCategory.CONTEXT)
             )
         result = self._memory.store(
@@ -361,3 +401,8 @@ class ConversationEngine:
     @property
     def router(self) -> AssistantRouter:
         return self._router
+
+    @property
+    def blueprint_adapter(self) -> BlueprintAdapter:
+        """Acceso al BlueprintAdapter para configuracion externa."""
+        return self._blueprint_adapter

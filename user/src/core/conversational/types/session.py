@@ -120,7 +120,12 @@ class SessionConfig:
     streaming_enabled: bool = True
     tools_enabled: bool = True
     memory_enabled: bool = True
-    personality_name: str = "zenic"  # Perfil de personalidad
+    personality_name: str = "business_default"  # Perfil de personalidad
+
+    # Fase 5: Adaptacion por cliente (Blueprints + Tenant)
+    tenant_id: str = ""  # ID del tenant para adaptacion multi-cliente
+    company_name: str = ""  # Nombre de la empresa (reemplaza {{empresa}})
+    blueprint_capabilities: list[dict] = field(default_factory=list)  # Capacidades del blueprint
 
 
 # ─── Sesion ───────────────────────────────────────────────────

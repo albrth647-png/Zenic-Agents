@@ -296,7 +296,7 @@ class BaseFlow(ABC):
 
     # ── Overridable Steps ────────────────────────────────────
 
-    def on_validate(self, ctx: FlowContext) -> None:  # noqa: B027
+    def on_validate(self, ctx: FlowContext) -> None:
         """Validate user inputs before execution. Override for custom validation.
 
         Raises:
@@ -320,7 +320,7 @@ class BaseFlow(ABC):
         """
         return f"Flow '{self.name}' completed successfully."
 
-    def on_finalize(self, ctx: FlowContext) -> None:  # noqa: B027
+    def on_finalize(self, ctx: FlowContext) -> None:
         """Cleanup and side effects after execution. Override for custom cleanup."""
         ...
 

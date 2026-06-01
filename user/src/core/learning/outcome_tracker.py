@@ -265,13 +265,13 @@ class OutcomeTracker:
                     where = " AND ".join(conditions)
 
                     total_failures = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT COUNT(*) FROM learning_outcomes WHERE {where}",  # noqa: S608
+                        f"SELECT COUNT(*) FROM learning_outcomes WHERE {where}",
                         params,
                     ).fetchone()[0]
 
                     error_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT error_message, COUNT(*) FROM learning_outcomes "  # noqa: S608
+                        f"SELECT error_message, COUNT(*) FROM learning_outcomes "
                         f"WHERE {where} AND error_message IS NOT NULL "
                         f"GROUP BY error_message ORDER BY COUNT(*) DESC LIMIT 10",
                         params,
@@ -281,7 +281,7 @@ class OutcomeTracker:
 
                     type_counts: dict[str, int] = {}
                     cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f"SELECT action_type, COUNT(*) FROM learning_outcomes "  # noqa: S608
+                        f"SELECT action_type, COUNT(*) FROM learning_outcomes "
                         f"WHERE {where} GROUP BY action_type ORDER BY COUNT(*) DESC",
                         params,
                     )
@@ -290,7 +290,7 @@ class OutcomeTracker:
 
                     avg_duration = (
                         conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                            f"SELECT AVG(duration_ms) FROM learning_outcomes WHERE {where}",  # noqa: S608
+                            f"SELECT AVG(duration_ms) FROM learning_outcomes WHERE {where}",
                             params,
                         ).fetchone()[0]
                         or 0.0

@@ -77,13 +77,13 @@ class BlueprintValidatorV2:
     """
 
     # Required metadata fields
-    REQUIRED_META_FIELDS = ["name", "version", "domain"]  # noqa: RUF012
+    REQUIRED_META_FIELDS = ["name", "version", "domain"]
 
     # Valid severity levels
-    VALID_SEVERITIES = {"info", "warning", "error", "block", "critical"}  # noqa: RUF012
+    VALID_SEVERITIES = {"info", "warning", "error", "block", "critical"}
 
     # Valid safety categories
-    VALID_SAFETY_CATEGORIES = {  # noqa: RUF012
+    VALID_SAFETY_CATEGORIES = {
         "safe",
         "moderate",
         "destructive",
@@ -91,7 +91,7 @@ class BlueprintValidatorV2:
     }
 
     # Valid executor types
-    KNOWN_EXECUTOR_TYPES = {  # noqa: RUF012
+    KNOWN_EXECUTOR_TYPES = {
         "email",
         "http",
         "database",

@@ -31,14 +31,14 @@ class DataIntegrityMonitor(BaseMonitor):
     interval_seconds = 3600  # Cada hora
 
     # Relaciones FK a verificar (child_table, child_fk, parent_table)
-    DEFAULT_FK_CHECKS: list[dict[str, str]] = [  # noqa: RUF012
+    DEFAULT_FK_CHECKS: list[dict[str, str]] = [
         {"child": "facturas", "fk": "cliente_id", "parent": "clientes"},
         {"child": "detalles_factura", "fk": "factura_id", "parent": "facturas"},
         {"child": "detalles_factura", "fk": "producto_id", "parent": "productos"},
     ]
 
     # Tablas con campos requeridos
-    DEFAULT_NULL_CHECKS: list[dict[str, Any]] = [  # noqa: RUF012
+    DEFAULT_NULL_CHECKS: list[dict[str, Any]] = [
         {"table": "clientes", "required": ["nombre", "email"]},
         {"table": "productos", "required": ["nombre", "precio"]},
         {"table": "facturas", "required": ["cliente_id", "fecha", "monto"]},

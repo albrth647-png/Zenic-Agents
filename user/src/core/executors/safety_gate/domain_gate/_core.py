@@ -32,7 +32,7 @@ class DomainSafetyGate:
     """
 
     # Compliance standards per niche category
-    CATEGORY_COMPLIANCE: dict[str, list[str]] = {  # noqa: RUF012
+    CATEGORY_COMPLIANCE: dict[str, list[str]] = {
         "ai_data": ["gdpr", "iso_27001", "soc2"],
         "fintech": ["pci_dss", "aml_kyc", "sox", "gdpr"],
         "healthtech": ["hipaa", "gdpr", "soc2"],

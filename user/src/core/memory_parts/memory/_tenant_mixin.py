@@ -161,7 +161,7 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?',  # noqa: S608
+                    f'DELETE FROM "{table}" WHERE client_id=? AND tenant_id=?',
                     (client_id, tid),
                 )
         # Also remove from working memory (thread-safe)
@@ -199,7 +199,7 @@ class TenantMixin:
             for table in tables:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 cursor = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                    f'DELETE FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                    f'DELETE FROM "{table}" WHERE tenant_id=?',
                     (tid,),
                 )
                 total_deleted += cursor.rowcount
@@ -247,13 +247,13 @@ class TenantMixin:
                 assert table in self._VALID_TABLES, f"Invalid table: {table}"
                 try:
                     tenant_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?',  # noqa: S608
+                        f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id=?',
                         (tid,),
                     ).fetchone()[0]
                     total_tenant_rows += tenant_count
 
                     all_count = conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
-                        f'SELECT COUNT(*) FROM "{table}"'  # noqa: S608
+                        f'SELECT COUNT(*) FROM "{table}"'
                     ).fetchone()[0]
                     total_all_rows += all_count
                 except sqlite3.OperationalError:

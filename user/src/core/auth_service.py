@@ -76,7 +76,7 @@ except ImportError:
     PASSLIB_AVAILABLE = False
 
 try:
-    from fastapi import HTTPException  # type: ignore[import-untyped]  # noqa: F401
+    from fastapi import HTTPException  # type: ignore[import-untyped]
 
     HAS_FASTAPI = True
 except ImportError:
@@ -132,9 +132,9 @@ PLAN_DEFINITIONS: dict[str, dict[str, Any]] = {
 class AuthMethod(str, Enum):
     """Supported authentication methods."""
 
-    PASSWORD = "password"  # noqa: S105
+    PASSWORD = "password"
     API_KEY = "api_key"
-    TOKEN = "token"  # noqa: S105
+    TOKEN = "token"
 
 
 @dataclass
@@ -999,11 +999,11 @@ class AuthService:
             where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
             offset = (page - 1) * page_size
 
-            count_row = conn.execute(f"SELECT COUNT(*) as cnt FROM users {where}", params).fetchone()  # noqa: S608
+            count_row = conn.execute(f"SELECT COUNT(*) as cnt FROM users {where}", params).fetchone()
             total = count_row["cnt"] if count_row else 0
 
             rows = conn.execute(
-                f"SELECT id, username, email, role, tenant_id, plan, is_active, created_at, updated_at "  # noqa: S608
+                f"SELECT id, username, email, role, tenant_id, plan, is_active, created_at, updated_at "
                 f"FROM users {where} ORDER BY id ASC LIMIT ? OFFSET ?",
                 [*params, page_size, offset],
             ).fetchall()

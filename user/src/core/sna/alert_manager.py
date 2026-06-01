@@ -1,11 +1,14 @@
 """AlertManager — Gestiona alertas del SNA con deduplicación y rate-limit.
 
 Recibe MonitorResults de los monitores y genera alertas limpias.
-Las alertas van a ProactiveChannelBridge para notificar al usuario.
+Las alertas van a ProactiveChannelBridge o SNAChannelBridge para notificar al usuario.
 
 Deduplicación: La misma alerta no se repite dentro de la ventana de cooldown.
 Rate-limit: No más de N alertas por minuto para no spamear al usuario.
 Severidad: Se rutea según peso del monitor (critical → WhatsApp, warning → Telegram, info → log).
+
+Fase 4: Ahora puede integrarse opcionalmente con ChannelRouter para routing
+inteligente basado en prioridad y disponibilidad de canales.
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from src.core.sna.monitors.base import MonitorResult
+    from src.core.channels._registry._router import ChannelRouter
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +86,12 @@ class AlertManager:
         cooldown_seconds: int = 1800,  # 30 min entre alertas duplicadas
         rate_limit_per_minute: int = 5,  # Max 5 alertas/min
         default_channel: AlertChannel = AlertChannel.TELEGRAM,
+        router: Any | None = None,  # ChannelRouter (opcional, type-ignored para evitar circular import)
     ):
         self.cooldown_seconds = cooldown_seconds
         self.rate_limit_per_minute = rate_limit_per_minute
         self.default_channel = default_channel
+        self._router = router
 
         # Estado interno
         self._recent_alerts: dict[str, float] = {}  # fingerprint → timestamp
@@ -93,7 +99,13 @@ class AlertManager:
         self._stats = AlertStats()
         self._pending_alerts: list[Alert] = []
 
-        logger.info(f"AlertManager inicializado (cooldown={cooldown_seconds}s, rate_limit={rate_limit_per_minute}/min)")
+        mode = "ChannelRouter" if router else "severity-based (legacy)"
+        logger.info(
+            "AlertManager inicializado (cooldown=%ss, rate_limit=%d/min, routing=%s)",
+            cooldown_seconds,
+            rate_limit_per_minute,
+            mode,
+        )
 
     def process_result(self, result: MonitorResult) -> Alert | None:
         """Procesa un MonitorResult y genera una Alert si corresponde.
@@ -106,7 +118,12 @@ class AlertManager:
 
         # Mapear severidad
         severity = self._map_severity(result.severity)
-        channel = self._route_channel(severity)
+
+        # Routing: usar ChannelRouter si disponible, o legacy si no
+        if self._router is not None:
+            channel = self._route_via_router(severity, result.monitor_name)
+        else:
+            channel = self._route_channel(severity)
 
         # Crear alerta
         alert = Alert(
@@ -198,6 +215,55 @@ class AlertManager:
         # Limpiar timestamps viejos (más de 60s)
         self._alert_times = [t for t in self._alert_times if now - t < 60]
         return len(self._alert_times) >= self.rate_limit_per_minute
+
+    def _route_via_router(
+        self,
+        severity: AlertSeverity,
+        monitor_name: str,
+    ) -> AlertChannel:
+        """Usa ChannelRouter para determinar el mejor canal según disponibilidad.
+
+        El router considera:
+          - Prioridad del mensaje (mapeada desde severity)
+          - Canales disponibles
+          - Preferencias del usuario
+
+        Si el router no encuentra canales, cae al mapeo legacy.
+
+        Args:
+            severity: Severidad de la alerta.
+            monitor_name: Nombre del monitor (para routing por tipo).
+
+        Returns:
+            AlertChannel determinado por el router o fallback legacy.
+        """
+        if self._router is None:
+            return self._route_channel(severity)
+
+        from src.core.channels._types import ChannelPriority
+
+        priority_map = {
+            AlertSeverity.OK: ChannelPriority.LOW,
+            AlertSeverity.INFO: ChannelPriority.NORMAL,
+            AlertSeverity.WARNING: ChannelPriority.HIGH,
+            AlertSeverity.CRITICAL: ChannelPriority.URGENT,
+        }
+        priority = priority_map.get(severity, ChannelPriority.NORMAL)
+
+        channels = self._router.route(priority=priority, alert_type=monitor_name)
+
+        if not channels:
+            return self._route_channel(severity)
+
+        # Mapear primer canal disponible a AlertChannel
+        channel_name = channels[0]
+        channel_map = {
+            "telegram": AlertChannel.TELEGRAM,
+            "whatsapp": AlertChannel.WHATSAPP,
+            "sms": AlertChannel.TELEGRAM,  # SMS → Telegram como representación
+            "log": AlertChannel.LOG,
+        }
+        return channel_map.get(channel_name, self._route_channel(severity))
 
     def cleanup(self):
         """Limpia estado expirado."""

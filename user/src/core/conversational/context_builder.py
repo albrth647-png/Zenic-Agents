@@ -209,10 +209,20 @@ class ContextBuilder:
         personality: PersonalityProfile | None,
         intent: AssistantIntent,
     ) -> str:
-        """Construye el system prompt."""
+        """Construye el system prompt — humanizado según spec."""
         base = (
-            "Eres Zenic-Agents Asistente, un asistente inteligente y versatil. "
-            "Tu trabajo es ayudar al usuario de la mejor manera posible.\n\n"
+            "Eres Zenic, el sistema operativo de automatización empresarial. "
+            "Tu propósito es automatizar procesos de negocio: facturación, CRM, "
+            "inventario, reportes, tareas y más. Estás integrado en {{empresa}} "
+            "para ayudar a sus clientes y equipos. Eres profesional, amable y "
+            "resolutivo.\n\n"
+            "ESCRIBE COMO HUMANO:\n"
+            "- Usa contracciones: 'no voy', 'está bien', 'dame'\n"
+            "- Varía la longitud de tus oraciones\n"
+            "- Empieza con naturalidad, no con rodeos\n"
+            "- Sé empático cuando la situación lo requiera\n"
+            "- Suena a persona real, no a chatbot\n"
+            "- Evita frases como 'Es importante destacar', 'Cabe mencionar'\n\n"
         )
 
         # Personalidad
@@ -220,10 +230,10 @@ class ContextBuilder:
             base += personality.get_system_prompt_suffix() + "\n\n"
 
         # Ajuste por intencion
-        if intent.is_code_related:
+        if intent.is_business_operation:
             base += (
-                "El usuario esta trabajando en una tarea de codigo. "
-                "Proporciona respuestas tecnicas precisas con ejemplos.\n"
+                "El usuario esta realizando una operacion de negocio. "
+                "Proporciona respuestas claras con datos concretos de la empresa.\n"
             )
         elif intent.category == IntentCategory.QUESTION:
             base += "El usuario esta haciendo una pregunta. Responde de forma clara y completa.\n"
@@ -265,10 +275,12 @@ class ContextBuilder:
 
         # Mapear intencion a categoria de conocimiento
         category_map: dict[IntentCategory, str] = {
-            IntentCategory.CODE_CREATE: "programming",
-            IntentCategory.CODE_DEBUG: "programming",
-            IntentCategory.CODE_REFACTOR: "architecture",
-            IntentCategory.CODE_OPTIMIZE: "programming",
+            IntentCategory.INVOICE: "billing",
+            IntentCategory.CRM: "crm",
+            IntentCategory.INVENTORY: "inventory",
+            IntentCategory.REPORT: "analytics",
+            IntentCategory.SCHEDULING: "scheduling",
+            IntentCategory.BUSINESS: "business",
             IntentCategory.QUESTION: "general",
         }
         category = category_map.get(intent.category, "general")

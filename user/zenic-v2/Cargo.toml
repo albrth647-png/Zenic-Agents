@@ -17,6 +17,7 @@ members = [
     "zenic-tests",
     "zenic-subscription",
     "zenic-memory",
+    "zenic-tece",
 ]
 
 [workspace.package]
@@ -59,3 +60,4 @@ rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
 zenic-proto = { path = "zenic-proto" }
 zenic-graph = { path = "zenic-graph" }
 zenic-memory = { path = "zenic-memory" }
+zenic-tece = { path = "zenic-tece" }

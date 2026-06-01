@@ -252,6 +252,7 @@ GOAL_KEYWORDS: dict[str, list[str]] = {
 #  SHARED UTILITY FUNCTIONS
 # ============================================================
 
+
 def extract_target_and_language(message: str) -> tuple[str, str]:
     """
     Extract the target name (file/module) and language from a message.
@@ -291,6 +292,7 @@ def extract_target_and_language(message: str) -> tuple[str, str]:
 
     return target, language
 
+
 def extract_code_block(message: str) -> tuple[str, str]:
     """
     Extract code from a fenced block (```lang ... ```).
@@ -314,6 +316,7 @@ def extract_code_block(message: str) -> tuple[str, str]:
             return "python", code
 
     return "", ""
+
 
 def extract_entities(message: str) -> dict[str, Any]:
     """Extract named entities from the message (file names, classes, etc.)."""
@@ -339,6 +342,7 @@ def extract_entities(message: str) -> dict[str, Any]:
         entities["numbers"] = numbers
 
     return entities
+
 
 def infer_criticality(operation: str, goal: str, target: str = "") -> str:
     """
@@ -379,6 +383,7 @@ def infer_criticality(operation: str, goal: str, target: str = "") -> str:
         return "moderate"
 
     return "standard"
+
 
 def infer_template_type(operation: str, description: str = "") -> str:
     """

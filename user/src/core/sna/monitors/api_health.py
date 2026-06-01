@@ -28,7 +28,7 @@ class APIHealthMonitor(BaseMonitor):
     interval_seconds = 600  # Cada 10 minutos
 
     # APIs comunes a verificar
-    DEFAULT_ENDPOINTS: list[dict[str, str]] = [  # noqa: RUF012
+    DEFAULT_ENDPOINTS: list[dict[str, str]] = [
         {"name": "whatsapp_api", "url": "https://api.whatsapp.com", "method": "HEAD"},
         {"name": "telegram_api", "url": "https://api.telegram.org", "method": "HEAD"},
     ]

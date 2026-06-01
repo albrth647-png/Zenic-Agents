@@ -35,6 +35,7 @@
 //! - `safety_gate_extended`: Domain-specific safety rules + compliance per NicheCategory (Phase D)
 //! - `e2e_pipeline`: Complete E2E niche onboarding pipeline (Phase D)
 
+mod tece;
 mod a2a;
 mod bus;
 mod catalog;
@@ -275,6 +276,9 @@ fn _zenic_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(a2a::discovery::a2a_discover_agents, m)?)?;
     m.add_function(wrap_pyfunction!(a2a::discovery::a2a_get_agent_card, m)?)?;
     m.add_function(wrap_pyfunction!(a2a::discovery::a2a_list_registered_agents, m)?)?;
+
+    // TECE — Thermodynamic Entropy Consensus Engine
+    tece::register(m)?;
 
     // Module metadata
     m.add("__version__", "2.5.0")?;

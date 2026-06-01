@@ -1,8 +1,18 @@
 """
 Gestor de personalidad del asistente.
 
-Maneja perfiles de personalidad, permite cambiar entre
-presets y crear perfiles personalizados.
+Maneja perfiles de personalidad empresariales, permite cambiar entre
+presets de negocio y crear perfiles personalizados.
+
+Fase 4 + Fase 5: Los presets son perfiles empresariales:
+  - business_default: Profesional-cálido, "usted"
+  - retail: Cercano, rápido, "tú"
+  - corporate: Formal, preciso
+  - healthcare: Empático, pausado
+  - logistics: Directo, técnico-preciso
+
+Fase 5: El BlueprintAdapter puede configurar automaticamente
+la personalidad segun el dominio del tenant.
 """
 
 from __future__ import annotations
@@ -21,25 +31,26 @@ logger = logging.getLogger("zenic_agents.conversational.personality")
 
 class PersonalityManager:
     """
-    Gestiona los perfiles de personalidad del asistente.
+    Gestiona los perfiles de personalidad empresariales.
 
     Permite:
-      - Obtener perfiles predefinidos (zenic, logic, nova)
+      - Obtener perfiles predefinidos (business_default, retail, corporate, etc.)
       - Crear perfiles personalizados
       - Cambiar tono e idioma en runtime
       - Generar system prompts basados en personalidad
+      - Ser configurado por BlueprintAdapter segun el dominio del tenant
     """
 
     def __init__(self) -> None:
         self._profiles: dict[str, PersonalityProfile] = {}
-        self._default_name: str = "zenic"
+        self._default_name: str = "business_default"
         self._load_presets()
 
     def _load_presets(self) -> None:
-        """Carga los presets predefinidos."""
+        """Carga los presets empresariales predefinidos."""
         for name in PERSONALITY_PRESETS:
             self._profiles[name] = PersonalityProfile.from_preset(name)
-        logger.info(f"Personalidades cargadas: {list(self._profiles.keys())}")
+        logger.info(f"Perfiles de personalidad cargados: {list(self._profiles.keys())}")
 
     # ─── Lectura ──────────────────────────────────────────────
 
@@ -129,14 +140,23 @@ class PersonalityManager:
         profile = self._profiles.get(
             personality_name or self._default_name,
             PersonalityProfile(),
-        )
-
-        # Base prompt
+        )            # Base prompt — identidad empresarial (Fase 1)
+        # {{empresa}} es un placeholder para reemplazo externo por el nombre real
         base = (
-            "Eres Zenic-Agents Asistente, un asistente inteligente construido "
-            "sobre un motor de IA quirurgico con 48 agentes especializados. "
-            "Tu arquitectura garantiza respuestas deterministas con fallbacks, "
-            "y la IA solo se usa como arbitro binario (SI/NO) cuando es necesario.\n\n"
+            "Eres Zenic, el sistema operativo de automatización empresarial. "
+            "Tu propósito es automatizar procesos de negocio: facturación, CRM, "
+            "inventario, reportes, tareas y más. Estás integrado en {{empresa}} "
+            "para ayudar a sus clientes y equipos. Eres profesional, amable y "
+            "resolutivo.\n\n"
+            "ESCRIBE COMO HUMANO, NO COMO ASISTENTE VIRTUAL:\n"
+            "- Usa contracciones SIEMPRE: 'no voy', 'está bien', 'dame un segundo'\n"
+            "- Varía la longitud de tus oraciones: mezcla cortas, medias y largas\n"
+            "- Empieza con naturalidad: 'Bueno...', 'A ver...', 'Mira...'\n"
+            "- Sé empático cuando la situación lo requiera\n"
+            "- Usa el tono que corresponda según el perfil (casual, profesional, etc.)\n"
+            "- NUNCA uses frases hechas de IA como 'Es importante destacar', "
+            "'Cabe mencionar', 'En el mundo actual'\n"
+            "- Suena a persona real, no a chatbot\n\n"
         )
 
         # Personality suffix

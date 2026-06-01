@@ -21,6 +21,30 @@ INVARIANTS:
 
 # Schemas & types (single source of truth for all data types)
 # Layer 6: Automation
+# A2A Protocol — Agent-to-Agent interoperability
+from .a2a import (
+    A2AAgentCard,
+    A2AClient,
+    A2ADelegationPolicy,
+    A2ADelegationResult,
+    A2ADiscoveryResult,
+    A2AResponseMessage,
+    A2ATaskMessage,
+    A2ATaskPriority,
+)
+
+# AG-UI Protocol — Agent-Generated UI
+from .ag_ui import (
+    AGUIApprovalProps,
+    AGUIChartData,
+    AGUIComponentSpec,
+    AGUIComponentType,
+    AGUIEmitter,
+    AGUIEventPayload,
+    AGUIFormField,
+    AGUIMetricCard,
+    AGUITableColumn,
+)
 from .automation import (
     ActionInferrer,
     AutomationNamer,
@@ -144,31 +168,6 @@ from .transport import (
     VoiceChannelAgent,
 )
 
-# A2A Protocol — Agent-to-Agent interoperability
-from .a2a import (
-    A2AClient,
-    A2ADelegationPolicy,
-    A2ADelegationResult,
-    A2ADiscoveryResult,
-    A2AAgentCard,
-    A2AResponseMessage,
-    A2ATaskMessage,
-    A2ATaskPriority,
-)
-
-# AG-UI Protocol — Agent-Generated UI
-from .ag_ui import (
-    AGUIEmitter,
-    AGUIComponentSpec,
-    AGUIComponentType,
-    AGUIEventPayload,
-    AGUIFormField,
-    AGUIChartData,
-    AGUITableColumn,
-    AGUIMetricCard,
-    AGUIApprovalProps,
-)
-
 # Layer 1: Understanding
 from .understanding import (
     BilingualRouter,
@@ -217,6 +216,25 @@ __all__ = [
     "OP_KEYWORDS",
     "VALID_GOALS",
     "VALID_OPERATIONS",
+    "A2AAgentCard",
+    # A2A Protocol
+    "A2AClient",
+    "A2ADelegationPolicy",
+    "A2ADelegationResult",
+    "A2ADiscoveryResult",
+    "A2AResponseMessage",
+    "A2ATaskMessage",
+    "A2ATaskPriority",
+    # AG-UI Protocol
+    "AGUIApprovalProps",
+    "AGUIChartData",
+    "AGUIComponentSpec",
+    "AGUIComponentType",
+    "AGUIEmitter",
+    "AGUIEventPayload",
+    "AGUIFormField",
+    "AGUIMetricCard",
+    "AGUITableColumn",
     "ActionInferrer",
     "ActionSpec",
     "AgentBulkhead",
@@ -339,15 +357,6 @@ __all__ = [
     "VerdictOutput",
     "VoiceChannelAgent",
     "WorkflowSerializer",
-    # A2A Protocol
-    "A2AClient",
-    "A2ADelegationPolicy",
-    "A2ADelegationResult",
-    "A2ADiscoveryResult",
-    "A2AAgentCard",
-    "A2AResponseMessage",
-    "A2ATaskMessage",
-    "A2ATaskPriority",
     "WorkflowSpec",
     # Shared intent utilities
     "extract_code_block",
@@ -355,15 +364,5 @@ __all__ = [
     "extract_target_and_language",
     "infer_criticality",
     "infer_template_type",
-    # AG-UI Protocol
-    "AGUIApprovalProps",
-    "AGUIChartData",
-    "AGUIComponentSpec",
-    "AGUIComponentType",
-    "AGUIEmitter",
-    "AGUIEventPayload",
-    "AGUIFormField",
-    "AGUIMetricCard",
-    "AGUITableColumn",
     "with_agent_retry",
 ]

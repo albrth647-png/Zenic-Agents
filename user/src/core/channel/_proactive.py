@@ -11,6 +11,13 @@ Con este bridge:
 
 El bridge NO genera contenido. Solo transporta alertas ya formateadas.
 La IA NUNCA escribe el mensaje — el AlertManager lo construye determinísticamente.
+
+
+ESTRATEGIA DE MIGRACIÓN (Fase 3):
+  1. Si se proporciona un CompatibilityBridge, se usa el nuevo AdapterRegistry
+     con providers REALES (Telegram, WhatsApp) en vez de TextChannelAgent.
+  2. Si no, cae al legacy TextChannelAgent (backward compatible).
+  3. Una vez migrado todo, se elimina el path legacy.
 """
 
 from __future__ import annotations
@@ -20,6 +27,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from src.core.channel._compat_bridge import CompatibilityBridge
 from src.core.channel.a53_text import ChannelType, TextChannelAgent, TextMessage
 from src.core.sna.alert_manager import Alert, AlertChannel, AlertSeverity
 
@@ -34,6 +42,14 @@ ALERT_TO_CHANNEL: dict[AlertChannel, ChannelType] = {
     AlertChannel.WHATSAPP: ChannelType.WHATSAPP,
     AlertChannel.TELEGRAM: ChannelType.TELEGRAM,
     AlertChannel.LOG: ChannelType.WEB,  # LOG no es un canal real, usar WEB como fallback
+}
+
+
+# Mapeo de canal de alerta → nombre de provider nuevo
+ALERT_TO_NEW_CHANNEL: dict[AlertChannel, str] = {
+    AlertChannel.WHATSAPP: "whatsapp",
+    AlertChannel.TELEGRAM: "telegram",
+    AlertChannel.LOG: "log",
 }
 
 
@@ -68,6 +84,9 @@ class ProactiveChannelBridge:
 
     Recibe alertas del SNA y las envía al canal configurado del usuario.
     NO genera contenido — solo transporta lo que el AlertManager construyó.
+
+    Usa el AdapterRegistry (nuevo sistema) si hay CompatibilityBridge,
+    o cae al legacy TextChannelAgent para backward compatibility.
     """
 
     def __init__(
@@ -75,8 +94,10 @@ class ProactiveChannelBridge:
         text_agent: TextChannelAgent | None = None,
         default_channel: ChannelType = ChannelType.TELEGRAM,
         default_recipient: str = "",
+        compat_bridge: CompatibilityBridge | None = None,
     ):
         self.text_agent = text_agent or TextChannelAgent()
+        self.compat_bridge = compat_bridge
         self.default_channel = default_channel
         self.default_recipient = default_recipient
 
@@ -85,10 +106,15 @@ class ProactiveChannelBridge:
         self._failed_count = 0
         self._last_sent: datetime | None = None
 
-        logger.info(f"ProactiveChannelBridge inicializado (canal default={default_channel.value})")
+        mode = "AdapterRegistry (nuevo sistema)" if compat_bridge else "TextChannelAgent (legacy)"
+        logger.info(f"ProactiveChannelBridge inicializado (canal default={default_channel.value}, modo={mode})")
 
     def send_alert(self, alert: Alert) -> ProactiveResult:
-        """Envía una alerta del SNA al canal del usuario."""
+        """Envía una alerta del SNA al canal del usuario.
+
+        Usa el CompatibilityBridge (nuevo AdapterRegistry) si está disponible,
+        o cae al legacy TextChannelAgent.
+        """
         # Determinar canal
         channel = ALERT_TO_CHANNEL.get(alert.channel, self.default_channel)
 
@@ -111,7 +137,25 @@ class ProactiveChannelBridge:
             source="sna",
         )
 
-        # Enviar via A53
+        # ── Nuevo path: AdapterRegistry ────────────────────────────
+        if self.compat_bridge:
+            alert_channel_name = ALERT_TO_NEW_CHANNEL.get(alert.channel, "telegram")
+            result = self.compat_bridge.send_alert(alert, alert_channel_name)
+
+            if result.success:
+                self._sent_count += 1
+                self._last_sent = datetime.now()
+                logger.info(
+                    f"Alerta proactiva enviada (nuevo sistema): [{alert.severity.value}] "
+                    f"{alert.monitor_name} → {alert_channel_name}"
+                )
+                return ProactiveResult(success=True, message=proactive_msg, delivered=True)
+
+            self._failed_count += 1
+            logger.error(f"Error enviando alerta proactiva (nuevo sistema): {result.error}")
+            return ProactiveResult(success=False, error=result.error, message=proactive_msg)
+
+        # ── Legacy path: TextChannelAgent ──────────────────────────
         text_msg = TextMessage(
             channel=channel,
             recipient=recipient,
@@ -134,7 +178,10 @@ class ProactiveChannelBridge:
     def send_notification(
         self, text: str, severity: AlertSeverity = AlertSeverity.INFO, source: str = "autopilot"
     ) -> ProactiveResult:
-        """Envía una notificación del Autopilot al canal del usuario."""
+        """Envía una notificación del Autopilot al canal del usuario.
+
+        Usa el CompatibilityBridge (nuevo AdapterRegistry) si está disponible.
+        """
         channel = self.default_channel
         if severity == AlertSeverity.CRITICAL:
             channel = ChannelType.WHATSAPP
@@ -151,6 +198,34 @@ class ProactiveChannelBridge:
             source=source,
         )
 
+        # ── Nuevo path: AdapterRegistry ────────────────────────────
+        if self.compat_bridge:
+            channel_map = {
+                ChannelType.WHATSAPP: "whatsapp",
+                ChannelType.TELEGRAM: "telegram",
+                ChannelType.WEB: "log",
+                ChannelType.SMS: "sms",
+            }
+            target = channel_map.get(channel, "telegram")
+
+            from src.core.channels._types import ChannelMessage
+
+            msg = ChannelMessage(
+                text=text,
+                recipient=recipient,
+                metadata={"source": source, "severity": severity.value, "is_proactive": True},
+            )
+            response = self.compat_bridge.send_to_channel(target, msg)
+
+            if response.success:
+                self._sent_count += 1
+                self._last_sent = datetime.now()
+                return ProactiveResult(success=True, message=proactive_msg, delivered=True)
+
+            self._failed_count += 1
+            return ProactiveResult(success=False, error=response.error, message=proactive_msg)
+
+        # ── Legacy path: TextChannelAgent ──────────────────────────
         text_msg = TextMessage(
             channel=channel,
             recipient=recipient,
