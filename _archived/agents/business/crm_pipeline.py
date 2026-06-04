@@ -3,6 +3,8 @@ A11 CRMPipeline — SINGLE RESPONSIBILITY: Manage CRM pipeline stages and conver
 
 Deterministic CRM logic: lead progression through 7 stages with conversion probabilities.
 No AI. Lookup-table based stage management.
+
+Multi-tenant: All CRUD methods accept tenant_id for data isolation.
 """
 
 from __future__ import annotations
@@ -59,6 +61,9 @@ class CRMPipeline(BaseAgent[CRMResult]):
     Single Responsibility: Lead stage progression ONLY.
     Method: Deterministic stage machine with probability lookup.
     Fallback: Empty CRMResult with no stages.
+
+    Multi-tenant: Each client record has a tenant_id. All CRUD methods
+    accept an optional tenant_id to scope operations to a specific tenant.
     """
 
     def __init__(self, **kwargs) -> None:
@@ -157,31 +162,42 @@ class CRMPipeline(BaseAgent[CRMResult]):
             self._clients: list[dict[str, Any]] = []
             self._next_id = 1
 
-    def list_clients(self, search: str = "") -> list[dict[str, Any]]:
-        """Return all clients, optionally filtered by search term."""
+    def _filter_by_tenant(self, tenant_id: str) -> list[dict[str, Any]]:
+        """Return all clients scoped to a specific tenant."""
         self.__init_store()
+        return [c for c in self._clients if c.get("tenant_id") == tenant_id]
+
+    def list_clients(self, search: str = "", tenant_id: str = "") -> list[dict[str, Any]]:
+        """Return all clients for a tenant, optionally filtered by search term."""
+        self.__init_store()
+        clients = self._filter_by_tenant(tenant_id) if tenant_id else list(self._clients)
         if not search:
-            return list(self._clients)
+            return clients
         q = search.lower()
         return [
             c
-            for c in self._clients
-            if q in c.get("name", "").lower() or q in c.get("email", "").lower() or q in c.get("company", "").lower()
+            for c in clients
+            if q in c.get("name", "").lower()
+            or q in c.get("email", "").lower()
+            or q in c.get("company", "").lower()
         ]
 
-    def get_client(self, client_id: str) -> dict[str, Any] | None:
-        """Return a single client by ID, or None."""
+    def get_client(self, client_id: str, tenant_id: str = "") -> dict[str, Any] | None:
+        """Return a single client by ID, optionally scoped to tenant."""
         self.__init_store()
         for c in self._clients:
             if str(c.get("id")) == str(client_id):
+                if tenant_id and c.get("tenant_id") != tenant_id:
+                    continue
                 return c
         return None
 
-    def add_client(self, data: dict[str, Any]) -> dict[str, Any]:
+    def add_client(self, data: dict[str, Any], tenant_id: str = "") -> dict[str, Any]:
         """Add a new client and return it with an assigned ID."""
         self.__init_store()
         client = {
             "id": self._next_id,
+            "tenant_id": data.get("tenant_id", tenant_id),
             "name": data.get("name", ""),
             "email": data.get("email", ""),
             "company": data.get("company", ""),
@@ -193,40 +209,49 @@ class CRMPipeline(BaseAgent[CRMResult]):
         self._clients.append(client)
         return client
 
-    def update_client(self, client_id: str, data: dict[str, Any]) -> dict[str, Any] | None:
-        """Update an existing client. Returns updated client or None."""
+    def update_client(self, client_id: str, data: dict[str, Any], tenant_id: str = "") -> dict[str, Any] | None:
+        """Update an existing client (tenant-scoped). Returns updated client or None."""
         self.__init_store()
         for i, c in enumerate(self._clients):
             if str(c.get("id")) == str(client_id):
+                if tenant_id and c.get("tenant_id") != tenant_id:
+                    continue
                 self._clients[i].update(data)
                 self._clients[i]["id"] = c["id"]  # preserve ID
+                self._clients[i]["tenant_id"] = c.get("tenant_id", tenant_id)  # preserve tenant
                 return self._clients[i]
         return None
 
-    def delete_client(self, client_id: str) -> bool:
-        """Delete a client by ID. Returns True if deleted."""
+    def delete_client(self, client_id: str, tenant_id: str = "") -> bool:
+        """Delete a client by ID (tenant-scoped). Returns True if deleted."""
         self.__init_store()
         before = len(self._clients)
-        self._clients = [c for c in self._clients if str(c.get("id")) != str(client_id)]
+        self._clients = [
+            c for c in self._clients
+            if str(c.get("id")) != str(client_id)
+            or (tenant_id and c.get("tenant_id") != tenant_id)
+        ]
         return len(self._clients) < before
 
-    def get_stats(self) -> dict[str, Any]:
-        """Return CRM statistics."""
+    def get_stats(self, tenant_id: str = "") -> dict[str, Any]:
+        """Return CRM statistics for a tenant."""
         self.__init_store()
+        clients = self._filter_by_tenant(tenant_id) if tenant_id else self._clients
         by_stage: dict[str, int] = {}
-        for c in self._clients:
+        for c in clients:
             stage = c.get("stage", "new")
             by_stage[stage] = by_stage.get(stage, 0) + 1
         return {
-            "total_clients": len(self._clients),
+            "total_clients": len(clients),
             "by_stage": by_stage,
         }
 
-    def get_pipeline_view(self) -> dict[str, Any]:
-        """Return clients grouped by pipeline stage."""
+    def get_pipeline_view(self, tenant_id: str = "") -> dict[str, Any]:
+        """Return clients grouped by pipeline stage for a tenant."""
         self.__init_store()
+        clients = self._filter_by_tenant(tenant_id) if tenant_id else self._clients
         by_stage: dict[str, list] = {s: [] for s in PIPELINE_STAGES}
-        for c in self._clients:
+        for c in clients:
             stage = c.get("stage", "new")
             if stage in by_stage:
                 by_stage[stage].append(c)
@@ -234,19 +259,20 @@ class CRMPipeline(BaseAgent[CRMResult]):
                 by_stage["new"].append(c)
         return by_stage
 
-    def get_conversion_metrics(self) -> dict[str, Any]:
-        """Return conversion metrics across pipeline stages."""
+    def get_conversion_metrics(self, tenant_id: str = "") -> dict[str, Any]:
+        """Return conversion metrics across pipeline stages for a tenant."""
         self.__init_store()
+        clients = self._filter_by_tenant(tenant_id) if tenant_id else self._clients
         return {
             "stages": [
                 {
                     "name": s,
                     "probability": STAGE_PROBABILITIES.get(s, 0.0),
-                    "client_count": sum(1 for c in self._clients if c.get("stage") == s),
+                    "client_count": sum(1 for c in clients if c.get("stage") == s),
                 }
                 for s in PIPELINE_STAGES
             ],
-            "total_clients": len(self._clients),
+            "total_clients": len(clients),
         }
 
 

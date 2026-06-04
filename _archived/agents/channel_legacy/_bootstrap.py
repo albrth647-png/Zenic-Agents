@@ -23,32 +23,49 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.core.channel._compat_bridge import CompatibilityBridge
-from src.core.channel._proactive import (
+from ._compat_bridge import CompatibilityBridge
+from ._proactive import (
     AutopilotChannelInterceptor,
     ProactiveChannelBridge,
     create_sna_callback,
 )
-from src.core.channel.a52_voice import VoiceChannelAgent
-from src.core.channel.a53_text import ChannelType, TextChannelAgent
-from src.core.channel.message_bridge import MessageBridge
-from src.core.channels._registry import (
-    AdapterRegistry,
-    get_default_registry,
-)
-from src.core.channels._registry._discovery import ChannelRouter
-from src.core.safety.safety_gate import SafetyGate
-from src.core.sna.alert_manager import AlertManager
-from src.core.sna.sna_engine import SNAEngine
-from src.data.local_scanner import LocalDataScanner
+from .a52_voice import VoiceChannelAgent
+from .a53_text import ChannelType, TextChannelAgent
+from .message_bridge import MessageBridge
 
-# ── Providers reales del nuevo sistema core/channels/ ──────────
-from src.core.channels.providers.telegram import TelegramChannelProvider
-from src.core.channels.providers.whatsapp import WhatsAppChannelProvider
-from src.core.channels.providers.twilio_sms import TwilioSMSChannelProvider
-from src.core.channels.providers.email import EmailChannelProvider
-from src.core.channels._sna_bridge import SNAChannelBridge
-from src.core.channels._webhook_receiver import get_webhook_receiver as _get_webhook_receiver
+# ── External imports (wrapped: may not be available in standalone mode) ───
+try:
+    from src.core.channels._registry import (
+        AdapterRegistry,
+        get_default_registry,
+    )
+    from src.core.channels._registry._discovery import ChannelRouter
+    from src.core.safety.safety_gate import SafetyGate
+    from src.core.sna.alert_manager import AlertManager
+    from src.core.sna.sna_engine import SNAEngine
+    from src.data.local_scanner import LocalDataScanner
+    from src.core.channels.providers.telegram import TelegramChannelProvider
+    from src.core.channels.providers.whatsapp import WhatsAppChannelProvider
+    from src.core.channels.providers.twilio_sms import TwilioSMSChannelProvider
+    from src.core.channels.providers.email import EmailChannelProvider
+    from src.core.channels._sna_bridge import SNAChannelBridge
+    from src.core.channels._webhook_receiver import get_webhook_receiver as _get_webhook_receiver
+    _EXTERNAL_AVAILABLE = True
+except ImportError:
+    AdapterRegistry = None  # type: ignore[assignment,misc]
+    get_default_registry = None  # type: ignore[assignment]
+    ChannelRouter = None  # type: ignore[assignment,misc]
+    SafetyGate = None  # type: ignore[assignment,misc]
+    AlertManager = None  # type: ignore[assignment,misc]
+    SNAEngine = None  # type: ignore[assignment,misc]
+    LocalDataScanner = None  # type: ignore[assignment,misc]
+    TelegramChannelProvider = None  # type: ignore[assignment,misc]
+    WhatsAppChannelProvider = None  # type: ignore[assignment,misc]
+    TwilioSMSChannelProvider = None  # type: ignore[assignment,misc]
+    EmailChannelProvider = None  # type: ignore[assignment,misc]
+    SNAChannelBridge = None  # type: ignore[assignment,misc]
+    _get_webhook_receiver = None  # type: ignore[assignment]
+    _EXTERNAL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 

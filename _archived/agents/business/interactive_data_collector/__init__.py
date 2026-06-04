@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from ...resilience.base_agent import BaseAgent
+from ...resilience import BaseAgent
 from ._constants import FIELD_SUGGESTIONS, MAX_ANSWER_LENGTH, MAX_QUESTIONS_PER_ROUND
 from ._helpers import (
     apply_answer_to_template,

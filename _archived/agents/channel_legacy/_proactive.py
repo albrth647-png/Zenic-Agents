@@ -7,17 +7,20 @@ Sin este bridge:
     SNA detecta stock bajo → Nobody knows → El usuario se entrena cuando se acaba
 
 Con este bridge:
-    SNA detecta stock bajo → AlertManager → ProactiveChannelBridge → WhatsApp → "Oye, stock bajo en X"
+    SNA detecta stock bajo → AlertManager → ProactiveChannelBridge → Canal preferido del tenant → "Oye, stock bajo en X"
 
 El bridge NO genera contenido. Solo transporta alertas ya formateadas.
 La IA NUNCA escribe el mensaje — el AlertManager lo construye determinísticamente.
 
 
-ESTRATEGIA DE MIGRACIÓN (Fase 3):
-  1. Si se proporciona un CompatibilityBridge, se usa el nuevo AdapterRegistry
-     con providers REALES (Telegram, WhatsApp) en vez de TextChannelAgent.
-  2. Si no, cae al legacy TextChannelAgent (backward compatible).
-  3. Una vez migrado todo, se elimina el path legacy.
+NOTA DE MIGRACIÓN (Fase 5):
+  Ya NO se hardcodea Telegram. El canal default se obtiene de las
+  preferencias del tenant (tenant.channel_prefs). Si no hay preferencias,
+  se usa el canal según el plan: Enterprise→WhatsApp, Pro→Telegram, Free→Web.
+  
+  El ChannelManager (api/channels.py) unifica 11 canales (whatsapp, telegram,
+  web, sms, email, push, webhook, slack, teams, log) y reemplaza el sistema
+  antiguo de ChannelType + NotificationDispatcher.
 """
 
 from __future__ import annotations
@@ -27,9 +30,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from src.core.channel._compat_bridge import CompatibilityBridge
-from src.core.channel.a53_text import ChannelType, TextChannelAgent, TextMessage
-from src.core.sna.alert_manager import Alert, AlertChannel, AlertSeverity
+from ._compat_bridge import CompatibilityBridge
+from .a53_text import ChannelType, TextChannelAgent, TextMessage
+
+try:
+    from src.core.sna.alert_manager import Alert, AlertChannel, AlertSeverity
+except ImportError:
+    Alert = None  # type: ignore[assignment,misc]
+    AlertChannel = None  # type: ignore[assignment,misc]
+    AlertSeverity = None  # type: ignore[assignment,misc]
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -38,18 +47,18 @@ logger = logging.getLogger(__name__)
 
 
 # Mapeo de canal de alerta → canal de entrega
-ALERT_TO_CHANNEL: dict[AlertChannel, ChannelType] = {
-    AlertChannel.WHATSAPP: ChannelType.WHATSAPP,
-    AlertChannel.TELEGRAM: ChannelType.TELEGRAM,
-    AlertChannel.LOG: ChannelType.WEB,  # LOG no es un canal real, usar WEB como fallback
+ALERT_TO_CHANNEL: dict[str, str] = {
+    ChannelType.WHATSAPP.value: ChannelType.WHATSAPP.value,
+    ChannelType.TELEGRAM.value: ChannelType.TELEGRAM.value,
+    "LOG": ChannelType.WEB.value,  # LOG no es un canal real, usar WEB como fallback
 }
 
 
-# Mapeo de canal de alerta → nombre de provider nuevo
-ALERT_TO_NEW_CHANNEL: dict[AlertChannel, str] = {
-    AlertChannel.WHATSAPP: "whatsapp",
-    AlertChannel.TELEGRAM: "telegram",
-    AlertChannel.LOG: "log",
+# Mapeo de canal de alerta → nombre de provider nuevo (string-based)
+ALERT_TO_NEW_CHANNEL: dict[str, str] = {
+    ChannelType.WHATSAPP.value: "whatsapp",
+    ChannelType.TELEGRAM.value: "telegram",
+    "LOG": "log",
 }
 
 
@@ -92,13 +101,15 @@ class ProactiveChannelBridge:
     def __init__(
         self,
         text_agent: TextChannelAgent | None = None,
-        default_channel: ChannelType = ChannelType.TELEGRAM,
+        default_channel: ChannelType | None = None,
         default_recipient: str = "",
         compat_bridge: CompatibilityBridge | None = None,
     ):
         self.text_agent = text_agent or TextChannelAgent()
         self.compat_bridge = compat_bridge
-        self.default_channel = default_channel
+        # NO hardcodeamos Telegram — se obtiene de las preferencias del tenant
+        # via ChannelManager (api/channels.py). El default aquí es WEB.
+        self.default_channel = default_channel or ChannelType.WEB
         self.default_recipient = default_recipient
 
         # Estadísticas
@@ -115,11 +126,13 @@ class ProactiveChannelBridge:
         Usa el CompatibilityBridge (nuevo AdapterRegistry) si está disponible,
         o cae al legacy TextChannelAgent.
         """
-        # Determinar canal
-        channel = ALERT_TO_CHANNEL.get(alert.channel, self.default_channel)
+        # Determinar canal (use .value for enum compatibility)
+        alert_channel_val = getattr(alert.channel, "value", str(alert.channel))
+        channel_val = ALERT_TO_CHANNEL.get(alert_channel_val)
+        channel = ChannelType(channel_val) if channel_val and ChannelType else self.default_channel
 
         # Si es LOG-only, no enviar a usuario
-        if alert.channel == AlertChannel.LOG:
+        if alert_channel_val == "LOG" or (AlertChannel and alert.channel == AlertChannel.LOG):
             logger.info(f"[LOG-ONLY] {alert.severity.value}: {alert.message}")
             return ProactiveResult(success=True, delivered=False)
 

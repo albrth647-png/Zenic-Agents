@@ -199,7 +199,7 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
         to ensure strictly binary YES/NO responses.
         """
         try:
-            from src.core.verdict_engine_module import _validate_ai_verdict
+            from src.core.verdict_engine_module import _validate_ai_verdict  # noqa: F401
 
             raw = self._mini_ai._call_llm(
                 system_prompt=VERDICT_SYSTEM_PROMPT,
@@ -210,6 +210,27 @@ class VerdictEngineV18(BaseAgent[VerdictOutput]):
                 return None
             # H-88: Validate AI output is strictly binary before passing to parser
             return _validate_ai_verdict(raw)
+        except ImportError:
+            # Fallback: validate locally without external module
+            try:
+                raw = self._mini_ai._call_llm(
+                    system_prompt=VERDICT_SYSTEM_PROMPT,
+                    user_prompt=user_prompt,
+                    max_tokens=VERDICT_MAX_TOKENS,
+                )
+                if raw is None:
+                    return None
+                # Local binary validation: strip think blocks, take first word
+                import re
+
+                cleaned = re.sub(r"<think[^>]*>.*?</think\s*>", "", raw, flags=re.DOTALL).strip()
+                if cleaned:
+                    first_word = cleaned.split()[0].upper().rstrip(".,;:!?")
+                    if first_word in ("YES", "NO"):
+                        return first_word
+                return None
+            except Exception:
+                return None
         except Exception:
             return None
 

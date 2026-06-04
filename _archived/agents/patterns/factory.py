@@ -16,7 +16,7 @@ import threading
 from collections.abc import Callable
 from typing import Any
 
-from src.core.agents.resilience import BaseAgent
+from ..resilience import BaseAgent
 
 logger = logging.getLogger(__name__)
 

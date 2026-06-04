@@ -85,3 +85,58 @@ class BusMessage:
     tenant_id: str = "default"
     ttl_seconds: float = 300.0
     correlation_id: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Knowledge Graph Types (for cross_agent.py)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class KnowledgeNode:
+    """A node in the cross-agent knowledge graph.
+
+    Attributes:
+        id: Unique node identifier.
+        domain: Knowledge domain (e.g., "business", "validation").
+        concept: Concept name.
+        content: Text content of the node.
+        tags: Set of tags for categorization.
+        confidence: Confidence score (0.0–1.0).
+        source: Source agent or system.
+        created_at: ISO timestamp of creation.
+        updated_at: ISO timestamp of last update.
+        access_count: Number of times this node was accessed.
+    """
+
+    id: str
+    domain: str
+    concept: str
+    content: str
+    tags: set[str] = field(default_factory=set)
+    confidence: float = 0.5
+    source: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+    access_count: int = 0
+
+
+@dataclass
+class KnowledgeEdge:
+    """An edge connecting two nodes in the knowledge graph.
+
+    Attributes:
+        id: Unique edge identifier.
+        source_id: ID of the source node.
+        target_id: ID of the target node.
+        relation_type: Type of relationship (e.g., "propagated_to").
+        weight: Edge weight (0.0–1.0).
+        created_at: ISO timestamp of creation.
+    """
+
+    id: str
+    source_id: str
+    target_id: str
+    relation_type: str = "related_to"
+    weight: float = 1.0
+    created_at: str = ""

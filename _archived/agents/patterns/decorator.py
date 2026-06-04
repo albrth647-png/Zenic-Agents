@@ -16,7 +16,37 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from src.core.shared.deterministic import DeterministicRNG
+# ---------------------------------------------------------------------------
+# Local DeterministicRNG (stdlib-only) — replaces external src.core import
+# ---------------------------------------------------------------------------
+
+import random
+
+
+class _DeterministicRNG:
+    """Deterministic pseudo-RNG using hashlib + seeded random.
+
+    Replaces external `src.core.shared.deterministic.DeterministicRNG`
+    with a stdlib-only implementation for jitter in retry backoff.
+    """
+
+    def __init__(self, seed_str: str = "agent_decorator") -> None:
+        import hashlib
+
+        seed_hash = hashlib.sha256(seed_str.encode()).digest()
+        seed_int = int.from_bytes(seed_hash[:8], "big")
+        self._rng = random.Random(seed_int)
+        self._call_count = 0
+
+    def random(self) -> float:
+        """Return a pseudo-random float in [0.0, 1.0)."""
+        self._call_count += 1
+        return self._rng.random()
+
+    def next(self) -> int:
+        """Return a pseudo-random integer (for token/fencing use)."""
+        return self._rng.randint(0, 2**31 - 1)
+
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +198,7 @@ def _get_rl(key: str, config: dict) -> _RateLimiter:
 
 
 # Deterministic RNG for decorator jitter (Phase 5 fix)
-_decorator_rng = DeterministicRNG("agent_decorator")
+_decorator_rng = _DeterministicRNG("agent_decorator")
 
 
 def _get_metrics(key: str) -> _MetricsTracker:

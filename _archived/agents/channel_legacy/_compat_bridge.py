@@ -22,44 +22,63 @@ import logging
 import time
 from typing import Any
 
-from src.core.channel.a53_text import ChannelType as LegacyChannelType, TextMessage, TextResult
-from src.core.channels._registry import AdapterRegistry, get_default_registry
-from src.core.channels._types import (
-    ChannelCapability,
-    ChannelMessage,
-    ChannelPriority,
-    ChannelResponse,
-    DeliveryStatus,
-)
-from src.core.sna.alert_manager import Alert, AlertSeverity
+from .a53_text import ChannelType as LegacyChannelType, TextMessage, TextResult
+# ─── External imports (wrapped: may not be available in standalone mode) ───
+try:
+    from src.core.channels._registry import AdapterRegistry, get_default_registry
+except ImportError:
+    AdapterRegistry = None  # type: ignore[assignment,misc]
+    get_default_registry = None  # type: ignore[assignment]
+
+try:
+    from src.core.channels._types import (
+        ChannelCapability,
+        ChannelMessage,
+        ChannelPriority,
+        ChannelResponse,
+        DeliveryStatus,
+    )
+except ImportError:
+    ChannelCapability = None  # type: ignore[assignment,misc]
+    ChannelMessage = None  # type: ignore[assignment,misc]
+    ChannelPriority = None  # type: ignore[assignment,misc]
+    ChannelResponse = None  # type: ignore[assignment,misc]
+    DeliveryStatus = None  # type: ignore[assignment,misc]
+
+try:
+    from src.core.sna.alert_manager import Alert, AlertSeverity
+except ImportError:
+    Alert = None  # type: ignore[assignment,misc]
+    AlertSeverity = None  # type: ignore[assignment,misc]
 
 logger = logging.getLogger(__name__)
 
 # ─── Mapeo de tipos legacy → nuevo sistema ─────────────────────
 
-LEGACY_TO_NEW_CHANNEL: dict[LegacyChannelType, str] = {
-    LegacyChannelType.WHATSAPP: "whatsapp",
-    LegacyChannelType.TELEGRAM: "telegram",
-    LegacyChannelType.WEB: "log",
-    LegacyChannelType.SMS: "sms",
+LEGACY_TO_NEW_CHANNEL: dict[str, str] = {
+    LegacyChannelType.WHATSAPP.value: "whatsapp",
+    LegacyChannelType.TELEGRAM.value: "telegram",
+    LegacyChannelType.WEB.value: "log",
+    LegacyChannelType.SMS.value: "sms",
 }
 
-NEW_CHANNEL_TO_LEGACY: dict[str, LegacyChannelType] = {
+NEW_CHANNEL_TO_LEGACY: dict[str, str] = {
     v: k for k, v in LEGACY_TO_NEW_CHANNEL.items()
 }
 
-ALERT_SEVERITY_TO_PRIORITY: dict[AlertSeverity, ChannelPriority] = {
-    AlertSeverity.OK: ChannelPriority.LOW,
-    AlertSeverity.INFO: ChannelPriority.NORMAL,
-    AlertSeverity.WARNING: ChannelPriority.HIGH,
-    AlertSeverity.CRITICAL: ChannelPriority.URGENT,
+# String-based fallback dicts (external enum types may be unavailable)
+ALERT_SEVERITY_TO_PRIORITY: dict[str, str] = {
+    "OK": "LOW",
+    "INFO": "NORMAL",
+    "WARNING": "HIGH",
+    "CRITICAL": "URGENT",
 }
 
-LEGACY_SEVERITY_TO_PRIORITY: dict[str, ChannelPriority] = {
-    "ok": ChannelPriority.LOW,
-    "info": ChannelPriority.NORMAL,
-    "warning": ChannelPriority.HIGH,
-    "critical": ChannelPriority.URGENT,
+LEGACY_SEVERITY_TO_PRIORITY: dict[str, str] = {
+    "ok": "LOW",
+    "info": "NORMAL",
+    "warning": "HIGH",
+    "critical": "URGENT",
 }
 
 
@@ -77,7 +96,7 @@ def text_message_to_channel_msg(
     Returns:
         ChannelMessage compatible con el nuevo ChannelProvider protocol.
     """
-    channel_name = LEGACY_TO_NEW_CHANNEL.get(text_msg.channel, "log")
+    channel_name = LEGACY_TO_NEW_CHANNEL.get(getattr(text_msg.channel, "value", str(text_msg.channel)), "log")
 
     return ChannelMessage(
         text=text_msg.text,
@@ -105,8 +124,13 @@ def alert_to_channel_msg(
     Returns:
         ChannelMessage listo para enviar via AdapterRegistry.
     """
-    target = channel_name or alert.channel.value
-    priority = ALERT_SEVERITY_TO_PRIORITY.get(alert.severity, ChannelPriority.NORMAL)
+    target = channel_name or getattr(alert.channel, "value", str(alert.channel))
+    priority = ChannelPriority.NORMAL
+    if ChannelPriority is not None:
+        priority = ALERT_SEVERITY_TO_PRIORITY.get(
+            getattr(alert.severity, "value", str(alert.severity)),
+            ChannelPriority.NORMAL,
+        )
 
     return ChannelMessage(
         text=alert.message,
@@ -226,7 +250,7 @@ class CompatibilityBridge:
         Returns:
             TextResult con resultado del envío.
         """
-        channel_name = LEGACY_TO_NEW_CHANNEL.get(text_msg.channel, "log")
+        channel_name = LEGACY_TO_NEW_CHANNEL.get(getattr(text_msg.channel, "value", str(text_msg.channel)), "log")
         msg = text_message_to_channel_msg(text_msg)
 
         logger.info(
