@@ -1,19 +1,15 @@
-"""Layer 9: Infrastructure & Resilience — A44 AgentRunner, A45 HealthMonitorAgent, A46 AuditLoggerAgent, A47 CircuitBreakerManagerAgent.
+"""Layer 9: Infrastructure — AgentRunner is used by the orchestrator.
 
-Note: A48 BilingualRouter lives in understanding/ (Layer 1) since it is the first
-agent in the pipeline, before intent classification. Import it from there.
+Archived (unused, zero external references):
+  - AuditLoggerAgent -> _archived/agents/infrastructure/
+  - CircuitBreakerManagerAgent -> _archived/agents/infrastructure/
+  - HealthMonitorAgent -> _archived/agents/infrastructure/
 """
 
 from .agent_runner import AgentRunner
-from .audit_logger_agent import AuditLoggerAgent
 from .cache import AgentCache
-from .circuit_breaker_agent import CircuitBreakerManagerAgent
-from .health_monitor_agent import HealthMonitorAgent
 
 __all__ = [
     "AgentCache",
     "AgentRunner",
-    "AuditLoggerAgent",
-    "CircuitBreakerManagerAgent",
-    "HealthMonitorAgent",
 ]

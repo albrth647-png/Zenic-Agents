@@ -129,6 +129,12 @@ impl TemplateFieldSchema {
         self.file_accept.clone()
     }
 
+    /// Set the display order (used by catalog builders).
+    #[allow(dead_code)]
+    pub(crate) fn set_order(&mut self, value: usize) {
+        self.order = value;
+    }
+
     /// Get the display order.
     pub fn order(&self) -> usize {
         self.order

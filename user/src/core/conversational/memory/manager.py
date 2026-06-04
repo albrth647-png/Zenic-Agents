@@ -15,6 +15,7 @@ Caracteristicas:
 
 from __future__ import annotations
 
+import copy
 import logging
 import threading
 import time
@@ -97,6 +98,22 @@ class UnifiedMemoryResult:
 class MemoryManager:
     """
     Orquestador unificado del sistema de memoria.
+
+    NATURALEZA ONTOLÓGICA:
+      SOY: El sistema de memoria unificado. Orquesto tres niveles (working,
+           short-term, long-term) con retrieval, promoción automática y decay.
+           Proporciono contexto relevante al pipeline sin intervención de IA.
+      NO SOY: Base de datos SQL. Vector store. Sistema de archivos.
+              No almaceno datos brutos sin procesar.
+      INVARIANTE: Mi retrieval nunca falla — siempre devuelvo un resultado válido
+                  (posiblemente vacío). No puedo bloquear el pipeline.
+      FRONTERA: No evalúo la relevancia semántica del contenido (eso lo hace el
+                MemoryScorer). No persisto datos críticos del sistema.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - Mi contexto histórico es completado por DeterministicPipeline, que
+        lo integra en el flujo de decisión (memory_lookup, dag_node_adapt).
+      - Yo produzco CONTEXTO HISTÓRICO; el pipeline produce ACCIÓN CONTEXTUALIZADA.
 
     Provee una API limpia para:
       - Almacenar informacion en el nivel correcto
@@ -271,7 +288,8 @@ class MemoryManager:
                 sources["long_term"] = sources.get("long_term", 0) + 1
 
         # Re-rankear con score combinado
-        entries = list(all_entries.values())
+        # Usamos copias superficiales para no mutar los originales (T1.3 VORTEX)
+        entries = [copy.copy(e) for e in all_entries.values()]
         for entry in entries:
             # Boost por nivel: working es mas reciente/relevante
             level_boost = {
@@ -348,6 +366,75 @@ class MemoryManager:
             "working": self._working.stats.total_active,
             "short_term": self._short_term.stats.short_term_count,
             "long_term": self._long_term.stats.long_term_count,
+        }
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el MemoryManager es determinista (VORTEX 2.7).
+
+        Prueba que:
+        1. retrieve() produce el mismo resultado para el mismo input
+        2. retrieve() no muta los entries originales (VORTEX 1.3)
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        tests = []
+        all_ok = True
+
+        # Store a test entry
+        store_result = self.store(
+            content="test verification content",
+            category=MemoryCategory.FACT,
+            source="verification",
+        )
+
+        if store_result.is_ok():
+            entry = store_result.unwrap()
+
+            # Test 1: Determinismo — mismo input → mismo output
+            r1 = self.retrieve("test verification", max_results=5)
+            r2 = self.retrieve("test verification", max_results=5)
+            deterministic = (
+                len(r1.entries) == len(r2.entries)
+                and all(
+                    e1.relevance_score == e2.relevance_score
+                    for e1, e2 in zip(r1.entries, r2.entries)
+                )
+            )
+            if not deterministic:
+                all_ok = False
+            tests.append({
+                "test": "determinism",
+                "passed": deterministic,
+                "detail": f"Retrieval produces {'same' if deterministic else 'different'} results",
+            })
+
+            # Test 2: No mutación (VORTEX 1.3)
+            # Verificar que los scores no se acumulan entre llamadas
+            scores = []
+            for _ in range(3):
+                r = self.retrieve("test verification", max_results=5)
+                if r.entries:
+                    scores.append(r.entries[0].relevance_score)
+            no_mutation = len(set(scores)) <= 1 if scores else True
+            if not no_mutation:
+                all_ok = False
+            tests.append({
+                "test": "no_mutation",
+                "passed": no_mutation,
+                "detail": f"Scores across calls: {scores}",
+            })
+
+        return {
+            "component": "MemoryManager",
+            "all_ok": all_ok,
+            "tests": tests,
+            "status": "VERIFIED" if all_ok else "DEGRADED",
         }
 
     # ─── Privados ──────────────────────────────────────────────

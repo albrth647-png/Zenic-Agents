@@ -119,43 +119,6 @@ class BusinessOutput:
 
 
 # ============================================================
-#  CODE AGENT SCHEMAS
-# ============================================================
-
-
-@dataclass
-class CodeInput:
-    """Input for CodeAgent."""
-
-    task: str = "generate"  # generate|transform|scaffold|optimize|fix
-    requirements: str = ""
-    language: str = "python"
-    existing_code: str = ""
-    constraints: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class FileSpec:
-    """Specification of a generated file."""
-
-    path: str = ""
-    content: str = ""
-    language: str = ""
-
-
-@dataclass
-class CodeOutput:
-    """Output of CodeAgent."""
-
-    code: str = ""
-    language: str = "python"
-    files: list[FileSpec] = field(default_factory=list)
-    test_code: str = ""
-    explanation: str = ""
-    source: str = "fallback"
-
-
-# ============================================================
 #  AUTOMATION AGENT SCHEMAS
 # ============================================================
 

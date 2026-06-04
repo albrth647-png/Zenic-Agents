@@ -71,6 +71,23 @@ class ConsensusResolver:
     """
     Resolver de consenso basado en evidencia ponderada.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: El sistema que RESUELVE el significado de la evidencia. Aplico pesos
+           por tipo de señal, calculo score normalizado, verifico vetos automáticos
+           y determino si hay consenso o se necesita arbitraje humano/de IA.
+      NO SOY: Recolector de evidencia. No emito veredictos finales (solo
+              recomendaciones). No puedo anular un veto de seguridad.
+      INVARIANTE: En caso de duda absoluta (score=0), el resultado es NO.
+                  Principio de precaución innegociable.
+      FRONTERA: No decido si el sistema debe ejecutar una acción. Solo determino
+                si la evidencia disponible es suficiente para decidir.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - EvidenceCollector produce SEÑALES (Evidence sin jerarquía)
+      - Yo produzco JUICIO EVALUATIVO (score normalizado + categoría de consenso)
+      - Mi indeterminación ("no sé") es completada por VerdictEngine, que
+        produce RESOLUCIÓN FINAL (SÍ/NO con arbitraje de IA).
+
     Flujo:
       1. Recibe lista de Evidence
       2. Aplica pesos por tipo de evidencia

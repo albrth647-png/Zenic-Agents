@@ -7,16 +7,18 @@ con un sistema de clasificacion en capas:
   Layer 1: Keyword scoring (rapido, determinista)
   Layer 2: Pattern matching (regex + estructura)
   Layer 3: Context-aware (historial + memoria)
-  Layer 4: Confidence calibration (ajuste final)
+  Layer 4: LLM refinement (opcional, solo si confianza baja)
 
 Cada capa refina el resultado de la anterior.
+Layer 4 usa Qwen para clasificar cuando los keywords no alcanzan
+el umbral de confianza. VORTEX valida la respuesta del LLM.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..types.base import Ok, Result
 from ..types.intent import AssistantIntent, ConversationMode, IntentCategory
@@ -304,6 +306,65 @@ def _layer3_context(
     return adjustments
 
 
+# ─── Layer 4: LLM Refinement ─────────────────────────────────
+
+_LLM_CONFIDENCE_THRESHOLD: float = 6.0  # Si max score < 6.0, LLM ayuda
+_LLM_BOOST_SCORE: float = 8.0  # Peso de la sugerencia del LLM
+
+# Mapa string → IntentCategory (para validación VORTEX de respuesta LLM)
+_CATEGORY_FROM_STR: dict[str, IntentCategory] = {
+    c.value.upper(): c for c in IntentCategory
+}
+
+
+def _layer4_llm(
+    text: str,
+    merged: dict[IntentCategory, float],
+    llm_engine: Any | None,  # MiniAIEngine, pero evitamos import circular
+) -> list[IntentScore]:
+    """
+    Layer 4: LLM refinement — solo cuando keywords no alcanzan.
+
+    Si el score máximo con keywords es bajo (< threshold), pregunta
+    a Qwen para clasificar. VORTEX valida la respuesta: solo acepta
+    categorías reales. Si Qwen alucina o no responde, se ignora.
+
+    Args:
+        text: Texto original del mensaje.
+        merged: Scores acumulados de L1-L3.
+        llm_engine: Instancia de MiniAIEngine (o None si no disponible).
+
+    Returns:
+        Lista con 0 o 1 IntentScore (el sugerido por Qwen).
+    """
+    if llm_engine is None:
+        return []
+
+    # Solo activar si la confianza de keywords es baja
+    max_score = max(merged.values()) if merged else 0.0
+    if max_score >= _LLM_CONFIDENCE_THRESHOLD:
+        return []  # Keywords ya tienen suficiente confianza
+
+    # Preguntar a Qwen
+    llm_category = llm_engine.classify_intent_llm(text)
+    if llm_category is None:
+        return []  # Qwen no respondió o respuesta inválida
+
+    # VORTEX validation: solo categorías reales
+    cat = _CATEGORY_FROM_STR.get(llm_category)
+    if cat is None:
+        return []  # Categoría no existe — Qwen alucinó, se ignora
+
+    return [
+        IntentScore(
+            category=cat,
+            score=_LLM_BOOST_SCORE,
+            layer=4,
+            evidence=[f"llm_classified:{llm_category}"],
+        )
+    ]
+
+
 # ─── Intent Engine ────────────────────────────────────────────
 
 
@@ -311,9 +372,20 @@ class IntentEngine:
     """
     Motor de intencion multi-capa.
 
-    Combina 3 capas de clasificacion para producir
+    Combina 3 (o 4) capas de clasificacion para producir
     una intencion con confianza calibrada.
+
+    Layer 4 (LLM): Opcional. Se activa solo cuando keywords no
+    alcanzan el umbral de confianza. VORTEX valida la respuesta.
     """
+
+    def __init__(self, llm_engine: Any | None = None):
+        """
+        Args:
+            llm_engine: Instancia de MiniAIEngine para Layer 4.
+                        Si es None, Layer 4 se omite.
+        """
+        self._llm_engine = llm_engine
 
     def classify(
         self,
@@ -347,6 +419,14 @@ class IntentEngine:
         # Layer 3: Context adjustments
         l3_scores = _layer3_context(enriched, merged)
         for s in l3_scores:
+            merged[s.category] = merged.get(s.category, 0.0) + s.score
+            if s.category not in evidence_map:
+                evidence_map[s.category] = []
+            evidence_map[s.category].extend(s.evidence)
+
+        # Layer 4: LLM refinement (solo si confianza baja)
+        l4_scores = _layer4_llm(text, merged, self._llm_engine)
+        for s in l4_scores:
             merged[s.category] = merged.get(s.category, 0.0) + s.score
             if s.category not in evidence_map:
                 evidence_map[s.category] = []

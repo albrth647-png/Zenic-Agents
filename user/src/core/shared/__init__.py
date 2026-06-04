@@ -59,11 +59,7 @@ from .sandbox_isolation import (
     shutdown_isolation,
 )
 from .shared_memory_bus import (
-    AgentMailbox,
-    BusMessage,
     BusMetrics,
-    MessageType,
-    Priority,
     RingBuffer,
     SharedMemoryBus,
     SharedState,
@@ -71,8 +67,6 @@ from .shared_memory_bus import (
 
 __all__ = [
     "HAS_Z3",
-    "AgentMailbox",
-    "BusMessage",
     "BusMetrics",
     "ChatMessage",
     "ChatRequest",
@@ -94,11 +88,9 @@ __all__ = [
     "MCTSNode",
     "MCTSPlanner",
     "MerkleNode",
-    "MessageType",
     # From contracts
     "OperationType",
     "PlanStep",
-    "Priority",
     "RingBuffer",
     "RoutePath",
     "RoutingPayload",

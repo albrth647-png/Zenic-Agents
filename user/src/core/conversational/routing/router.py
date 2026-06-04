@@ -30,7 +30,8 @@ class Pipeline(str, Enum):
     """Pipelines de procesamiento disponibles."""
 
     CONVERSATIONAL = "conversational"  # Chat general, sin motor
-    BUSINESS_ENGINE = "business_engine"  # Via motor de negocio
+    BUSINESS_ENGINE = "business_engine"  # Operaciones de negocio (local)
+    ADVANCED_AUTOMATION = "advanced_automation"  # Automatizaciones avanzadas via ZenicOrchestrator
     QUESTION_ANSWER = "question_answer"  # Preguntas factuales
     COMMAND_HANDLER = "command_handler"  # Comandos directos
     CONFIG_HANDLER = "config_handler"  # Cambios de config
@@ -68,36 +69,41 @@ DEFAULT_RULES: list[RouteRule] = [
         priority=90,
         condition="siempre se maneja localmente",
     ),
-    # Operaciones de negocio (necesitan engine)
+    # Operaciones de negocio (LOCAL — no requieren ZenicOrchestrator)
     RouteRule(
         category=IntentCategory.INVOICE,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=80,
+        condition="manejado localmente con ToolManager",
     ),
     RouteRule(
         category=IntentCategory.CRM,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=80,
+        condition="manejado localmente con ToolManager",
     ),
     RouteRule(
         category=IntentCategory.INVENTORY,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=80,
+        condition="manejado localmente con ToolManager",
     ),
     RouteRule(
         category=IntentCategory.REPORT,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=80,
+        condition="manejado localmente con ToolManager",
     ),
     RouteRule(
         category=IntentCategory.SCHEDULING,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=80,
+        condition="manejado localmente con ToolManager",
     ),
     # Preguntas
     RouteRule(
@@ -105,18 +111,28 @@ DEFAULT_RULES: list[RouteRule] = [
         pipeline=Pipeline.QUESTION_ANSWER,
         priority=50,
     ),
-    # Automatizacion y otras operaciones
+    # Automatizaciones avanzadas (via ZenicOrchestrator)
     RouteRule(
         category=IntentCategory.AUTOMATION,
-        pipeline=Pipeline.BUSINESS_ENGINE,
+        pipeline=Pipeline.ADVANCED_AUTOMATION,
         requires_engine=True,
-        priority=60,
+        priority=70,
+        condition="via ZenicBridge → ZenicOrchestrator",
     ),
+    RouteRule(
+        category=IntentCategory.CODE,
+        pipeline=Pipeline.ADVANCED_AUTOMATION,
+        requires_engine=True,
+        priority=70,
+        condition="via ZenicBridge → ZenicOrchestrator",
+    ),
+    # Otras operaciones de negocio (local)
     RouteRule(
         category=IntentCategory.BUSINESS,
         pipeline=Pipeline.BUSINESS_ENGINE,
-        requires_engine=True,
+        requires_engine=False,
         priority=50,
+        condition="manejado localmente",
     ),
     # Chat y feedback
     RouteRule(
@@ -217,6 +233,9 @@ class AssistantRouter:
             # Actualizar stat del pipeline seleccionado
             if pipeline == Pipeline.BUSINESS_ENGINE:
                 self._stats["business_engine"] += 1
+            elif pipeline == Pipeline.ADVANCED_AUTOMATION:
+                self._stats.setdefault("advanced_automation", 0)
+                self._stats["advanced_automation"] += 1
             else:
                 self._stats["conversational"] += 1
 

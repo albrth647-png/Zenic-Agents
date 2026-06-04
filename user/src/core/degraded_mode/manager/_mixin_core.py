@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..persistence import DegradationPersistence
 from ._types import _FEATURE_RESTRICTIONS, ModeTransition, SystemMode
-from .types import DegradationLevel, DegradationReason, DegradationState
+from ..types import DegradationLevel, DegradationReason, DegradationState
 
 if TYPE_CHECKING:
     from collections.abc import Callable

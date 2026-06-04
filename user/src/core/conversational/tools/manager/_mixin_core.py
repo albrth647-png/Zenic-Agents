@@ -8,12 +8,12 @@ import math
 import threading
 from typing import Any
 
-from ..types.base import Err, Ok, Result
-from ..types.intent import IntentCategory
-from ..types.tool_use import ToolPermission, ToolResult, ToolSpec
-from .executor import ExecutorConfig, ToolExecutor
-from .permissions import PermissionManager
-from .registry import ToolHandler, ToolRegistry
+from ...types.base import Err, Ok, Result
+from ...types.intent import IntentCategory
+from ...types.tool_use import ToolPermission, ToolResult, ToolSpec
+from ..executor import ExecutorConfig, ToolExecutor
+from ..permissions import PermissionManager
+from ..registry import ToolHandler, ToolRegistry
 
 logger = logging.getLogger("zenic_agents.conversational.tools.manager")
 

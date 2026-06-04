@@ -68,6 +68,7 @@ class ConversationEngine:
         personality_manager: PersonalityManager | None = None,
         zenic_bridge: ZenicBridge | None = None,
         blueprint_adapter: BlueprintAdapter | None = None,
+        mini_ai_engine: Any | None = None,
     ) -> None:
         # Core
         self._sessions = session_manager or SessionManager()
@@ -91,7 +92,8 @@ class ConversationEngine:
         self._sanitizer = InputSanitizer()
         self._parser = InputParser()
         self._enricher = InputEnricher()
-        self._intent_engine = IntentEngine()
+        # Layer 4: LLM refinement (opcional, via MiniAIEngine)
+        self._intent_engine = IntentEngine(llm_engine=mini_ai_engine)
         self._router = AssistantRouter(
             engine_available=self._bridge is not None and self._bridge.is_available,
         )
@@ -312,8 +314,13 @@ class ConversationEngine:
         personality: PersonalityProfile | None,
     ) -> AssistantResponse:
         """Despacha al handler del pipeline."""
-        if pipeline == Pipeline.BUSINESS_ENGINE:
+        if pipeline == Pipeline.ADVANCED_AUTOMATION:
             self._increment_stat("total_engine_calls")
+            return await self._handlers.handle_advanced_automation(
+                enriched.text, intent, session, personality
+            )
+        elif pipeline == Pipeline.BUSINESS_ENGINE:
+            # Business operations se manejan LOCALMENTE con ToolManager
             return await self._handlers.handle_engine(enriched.text, intent, session, personality)
         elif pipeline == Pipeline.QUESTION_ANSWER:
             self._increment_stat("total_conversational")

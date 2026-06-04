@@ -36,33 +36,28 @@ except ImportError as exc:
     get_roi_dashboard_data = None  # type: ignore[misc,assignment]
 
 # ── Phase E1: Knowledge Graph ─────────────────────────────
+# CrossAgentKnowledgeBus archived (unused, zero external references)
 try:
     from src.core.knowledge import (
-        CrossAgentKnowledgeBus,
         GraphDomain,
         KnowledgeEdge,
         KnowledgeGraphEngine,
         KnowledgeNode,
         KnowledgeQuery,
         KnowledgeSearchResult,
-        get_cross_agent_bus,
         get_knowledge_graph,
-        reset_cross_agent_bus,
         reset_knowledge_graph,
     )
 except ImportError as exc:
-    logger.warning("core: Knowledge import failed: %s", exc)  # TODO: verify import
-    KnowledgeNode = None  # type: ignore[misc,assignment]
-    KnowledgeEdge = None  # type: ignore[misc,assignment]
-    KnowledgeQuery = None  # type: ignore[misc,assignment]
-    KnowledgeSearchResult = None  # type: ignore[misc,assignment]
-    GraphDomain = None  # type: ignore[misc,assignment]
-    KnowledgeGraphEngine = None  # type: ignore[misc,assignment]
-    get_knowledge_graph = None  # type: ignore[misc,assignment]
-    reset_knowledge_graph = None  # type: ignore[misc,assignment]
-    CrossAgentKnowledgeBus = None  # type: ignore[misc,assignment]
-    get_cross_agent_bus = None  # type: ignore[misc,assignment]
-    reset_cross_agent_bus = None  # type: ignore[misc,assignment]
+    logger.warning("core: Knowledge import failed: %s", exc)
+    KnowledgeNode = None
+    KnowledgeEdge = None
+    KnowledgeQuery = None
+    KnowledgeSearchResult = None
+    GraphDomain = None
+    KnowledgeGraphEngine = None
+    get_knowledge_graph = None
+    reset_knowledge_graph = None
 
 # ── Phase E2: Conversational Memory v2 ────────────────────
 try:
@@ -311,7 +306,6 @@ __all__ = [
     "get_chaos_runner",
     "get_context_manager",
     "get_cost_accumulator",
-    "get_cross_agent_bus",
     "get_impact_scorer",
     "get_knowledge_graph",
     "get_learning_engine",
@@ -328,7 +322,6 @@ __all__ = [
     "install_builtin_policies",
     "reset_chaos_runner",
     "reset_context_manager",
-    "reset_cross_agent_bus",
     "reset_knowledge_graph",
     "reset_learning_engine",
     "reset_memory_engine_v2",

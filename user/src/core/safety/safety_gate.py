@@ -68,6 +68,23 @@ LOW_RISK_ACTIONS = {"scan", "read", "notify", "suggest", "log"}
 class SafetyGate:
     """SafetyGate inbypassable.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: La barrera inbypassable del sistema. Evalúo cada acción contra 3 capas:
+           reglas determinísticas (DENY es final), policy engine, y evaluación de
+           IA (solo SÍ/NO). Ninguna acción puede eludir esta evaluación.
+      NO SOY: Log de auditoría. Configurable por el usuario. No tengo modo
+              degradado — DENY es DENY siempre.
+      INVARIANTE: Es imposible saltarse una regla DENY. El código nunca contiene
+                  caminos que puedan evitar mi evaluación.
+      FRONTERA: No ejecuto acciones. No decido qué acciones son válidas desde el
+                punto de vista funcional. Solo evalúo seguridad.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - Mi permiso/denegación es completado por ZenicOrchestrator, que lo integra
+        en la decisión final de commit/rollback.
+      - Yo produzco PERMISO O DENEGACIÓN; el orchestrator produce
+        EJECUCIÓN COORDINADA.
+
     Evaluación en 3 capas:
     1. Reglas determinísticas (siempre se evalúan, DENY es final)
     2. Policy check (requiere aprobación humana para alto riesgo)
@@ -206,4 +223,66 @@ class SafetyGate:
             "approved": self._approved_count,
             "denied": self._denied_count,
             "review": self._review_count,
+        }
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el SafetyGate es determinista (VORTEX 2.7).
+
+        Prueba que el mismo input produce el mismo resultado y que
+        DENY es siempre DENY.
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        tests = []
+        all_deterministic = True
+
+        # Test 1: Acción peligrosa siempre produce DENY
+        for action, ctx in [
+            ("rm -rf /", {}),
+            ("execute_system_command", {"step": type("obj", (object,), {"action_type": "delete"})()}),
+        ]:
+            result1 = self.evaluate(action, ctx)
+            result2 = self.evaluate(action, ctx)
+            consistent = (
+                result1.verdict == result2.verdict
+                and result1.approved == result2.approved
+                and result1.verdict == SafetyVerdict.DENY
+            )
+            if not consistent:
+                all_deterministic = False
+            tests.append({
+                "action": action[:50],
+                "deterministic": consistent,
+                "verdict": result1.verdict.value,
+            })
+
+        # Test 2: Acción segura siempre produce APPROVE
+        safe_result1 = self.evaluate("read", {})
+        safe_result2 = self.evaluate("read", {})
+        safe_consistent = (
+            safe_result1.verdict == safe_result2.verdict
+            and safe_result1.approved == safe_result2.approved
+        )
+        if not safe_consistent:
+            all_deterministic = False
+        tests.append({
+            "action": "read",
+            "deterministic": safe_consistent,
+            "verdict": safe_result1.verdict.value,
+        })
+
+        return {
+            "component": "SafetyGate",
+            "all_deterministic": all_deterministic,
+            "deny_inbypassable": all(
+                t["verdict"] == "deny" for t in tests if "rm" in t["action"] or "execute" in t["action"]
+            ),
+            "tests": tests,
+            "status": "VERIFIED" if all_deterministic else "DEGRADED",
         }

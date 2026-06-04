@@ -60,6 +60,7 @@ mod simulation;
 mod template;
 
 use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
 
 /// Register the `_zenic_native` Python module.
 ///

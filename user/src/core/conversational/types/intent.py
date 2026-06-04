@@ -29,14 +29,17 @@ class IntentCategory(str, Enum):
     FEEDBACK = "feedback"  # Feedback del usuario sobre respuesta
     CONFIG = "config"  # Cambio de configuracion
 
-    # Operaciones de negocio
+    # Operaciones de negocio (locales, no requieren ZenicOrchestrator)
     INVOICE = "invoice"  # Facturacion, pagos, estados de cuenta
     CRM = "crm"  # Clientes, contactos, relaciones
     INVENTORY = "inventory"  # Inventario, productos, stock
     REPORT = "report"  # Reportes, metricas, dashboards
     SCHEDULING = "scheduling"  # Citas, agendas, recordatorios
     BUSINESS = "business"  # Otras operaciones de negocio no categorizadas
-    AUTOMATION = "automation"  # Automatizaciones, workflows
+
+    # Automatizaciones avanzadas (requieren ZenicOrchestrator)
+    AUTOMATION = "automation"  # Automatizaciones, workflows avanzados
+    CODE = "code"  # Generacion de codigo, scripts, automatizaciones tecnicas
 
     # Especiales
     UNKNOWN = "unknown"  # No se pudo clasificar
@@ -84,7 +87,11 @@ class AssistantIntent:
 
     @property
     def is_business_operation(self) -> bool:
-        """True si la intencion involucra una operacion de negocio."""
+        """True si la intencion involucra una operacion de negocio LOCAL.
+
+        Estas operaciones se manejan directamente por ConversationEngine
+        con ToolManager, NO requieren ZenicOrchestrator.
+        """
         return self.category in (
             IntentCategory.INVOICE,
             IntentCategory.CRM,
@@ -92,13 +99,28 @@ class AssistantIntent:
             IntentCategory.REPORT,
             IntentCategory.SCHEDULING,
             IntentCategory.BUSINESS,
+        )
+
+    @property
+    def is_advanced_operation(self) -> bool:
+        """True si la intencion necesita el motor avanzado (ZenicOrchestrator).
+
+        Automatizaciones complejas y generacion de codigo requieren
+        el pipeline completo de ZenicOrchestrator via ZenicBridge.
+        """
+        return self.category in (
             IntentCategory.AUTOMATION,
+            IntentCategory.CODE,
         )
 
     @property
     def needs_engine(self) -> bool:
-        """True si necesita pasar por el motor de negocio."""
-        return self.is_business_operation
+        """True si necesita pasar por un motor externo.
+
+        - Business operations → NO, se manejan localmente
+        - Advanced operations (CODE, AUTOMATION) → SÍ, via ZenicBridge
+        """
+        return self.is_advanced_operation
 
     def to_business_action(self) -> str:
         """Mapea la categoria a una accion de negocio."""

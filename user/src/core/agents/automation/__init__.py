@@ -1,17 +1,6 @@
-"""Layer 6: Automation agents (A29-A34)."""
+"""Layer 6: Automation agents (A29-A34) — ARCHIVED.
+All automation agents were unused (zero external references).
+Files preserved in _archived/agents/automation/.
+"""
 
-from .action_inferrer import ActionInferrer
-from .automation_namer import AutomationNamer
-from .condition_extractor import ConditionExtractor
-from .schedule_parser import ScheduleParser
-from .trigger_inferrer import TriggerInferrer
-from .workflow_serializer import WorkflowSerializer
-
-__all__ = [
-    "ActionInferrer",
-    "AutomationNamer",
-    "ConditionExtractor",
-    "ScheduleParser",
-    "TriggerInferrer",
-    "WorkflowSerializer",
-]
+__all__: list[str] = []

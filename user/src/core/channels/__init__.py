@@ -52,6 +52,21 @@ from ._formatter import (
 # Log Provider (always available)
 from ._log_provider import LogChannelProvider
 
+# Gateway (bridge webhook → ConversationEngine)
+from ._gateway import ChannelGateway
+from ._webhook_receiver import (
+    GatewayWebhookPayload,
+    InboundMessageHandler,
+    WebhookReceiver,
+    get_webhook_receiver,
+    payload_to_channel_message,
+    reset_webhook_receiver,
+)
+
+# Transport agents (moved from agents/transport/)
+from ._text_delivery import TextChannelAgent
+from ._voice_transcriber import VoiceChannelAgent
+
 # Protocol
 from ._protocol import (
     ChannelProvider,
@@ -125,7 +140,10 @@ __all__ = [
     "SlackChannelProvider",
     "TeamsChannelProvider",
     "TelegramChannelProvider",
+    "TelegramChannelProvider",
+    "TextChannelAgent",
     "TwilioSMSChannelProvider",
+    "VoiceChannelAgent",
     "WhatsAppChannelProvider",
     "build_discord_confirmation_components",
     "build_discord_embed",

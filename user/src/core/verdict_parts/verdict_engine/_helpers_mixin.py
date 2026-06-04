@@ -6,8 +6,6 @@ import time
 from typing import Any
 
 from src.core.shared.deterministic import ControllableJitter
-from src.core.verdict_engine_module import _validate_ai_verdict  # H-88: AI output validation
-
 try:
     from ..resilience import VerdictAuditEntry
 
@@ -107,6 +105,8 @@ class VerdictHelpersMixin:
             if raw is None:
                 return None
             # H-88: Validate AI output is strictly binary before passing to parser
+            # Local import to avoid circular dependency with verdict_engine_module
+            from src.core.verdict_engine_module import _validate_ai_verdict
             return _validate_ai_verdict(raw)
         except Exception as e:
             logger.warning(f"VerdictEngine: Safe LLM call failed: {e}")

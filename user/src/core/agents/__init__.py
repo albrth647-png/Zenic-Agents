@@ -20,7 +20,6 @@ INVARIANTS:
 """
 
 # Schemas & types (single source of truth for all data types)
-# Layer 6: Automation
 # A2A Protocol — Agent-to-Agent interoperability
 from .a2a import (
     A2AAgentCard,
@@ -45,51 +44,55 @@ from .ag_ui import (
     AGUIMetricCard,
     AGUITableColumn,
 )
-from .automation import (
-    ActionInferrer,
-    AutomationNamer,
-    ConditionExtractor,
-    ScheduleParser,
-    TriggerInferrer,
-    WorkflowSerializer,
-)
 
-# Layer 3: Business
-from .business import (
-    CRMPipeline,
-    DataAnalyzer,
-    InventoryManager,
-    InvoiceProcessor,
-    NotificationDispatcher,
-    OperationRouter,
-    ReportGenerator,
-    TaskScheduler,
-)
-
-# Layer 9: Infrastructure
+# Layer 9: Infrastructure — AgentRunner is used by orchestrator
 from .infrastructure import (
     AgentCache,
     AgentRunner,
-    AuditLoggerAgent,
-    CircuitBreakerManagerAgent,
-    HealthMonitorAgent,
 )
 
-# Layer 2: Memory & Context
-from .memory import (
-    ContextCompressor,
-    ContextPrefetcher,
-    MemoryCollector,
-    RelevanceScorer,
+# Commerce agents — Phase 1: Commerce
+from .commerce import (
+    CatalogManager,
+    OrderManager,
+    PaymentProcessor,
 )
 
-# Layer 7: Reasoning
-from .reasoning import (
-    ConclusionExtractor,
-    ConfidenceEstimator,
-    ProblemDetector,
-    StepDecomposer,
-    TemplateReasoner,
+# Finance agents — Phase 2: Finance
+from .finance import (
+    BudgetManager,
+    ExpenseTracker,
+    TaxCalculator,
+)
+
+# Enterprise agents — Phase 3: Enterprise Operations
+from .enterprise import (
+    ComplianceChecker,
+    ContractManager,
+    ProjectTracker,
+)
+
+# Intelligence agents — Phase 4: Business Intelligence
+from .intelligence import (
+    AnomalyDetector,
+    CustomerInsights,
+    MarketAnalyzer,
+    RiskAssessor,
+    SalesForecaster,
+)
+
+# Documents agents — Phase 5: Documents & Reports
+from .documents import (
+    DocumentGenerator,
+    ReportEngine,
+    TemplateFiller,
+)
+
+# Procurement agents — Phase 6: Procurement & Vendors
+from .procurement import (
+    PurchaseOrderManager,
+    SupplierEvaluator,
+    VendorManager,
 )
 
 # Resilience patterns
@@ -115,8 +118,6 @@ from .schemas import (
     BusinessData,
     ChainResult,
     CircuitState,
-    CodeRequest,
-    CodeResult,
     CompressedContext,
     Conclusion,
     ConditionResult,
@@ -146,7 +147,6 @@ from .schemas import (
     ReportResult,
     RiskResult,
     RoutedOperation,
-    ScaffoldResult,
     ScheduleSpec,
     ScoredEntries,
     ScoredEntry,
@@ -162,21 +162,11 @@ from .schemas import (
     WorkflowSpec,
 )
 
-# Layer 10: Transport
-from .transport import (
-    TextChannelAgent,
-    VoiceChannelAgent,
-)
+# Layer 10: Transport — MOVED to src.core.channels
+# Lazy re-export via __getattr__ for backward compatibility
+# (direct import would cause circular import: agents → channels → agents)
 
 # Layer 1: Understanding
-from .understanding import (
-    BilingualRouter,
-    CriticalityScorer,
-    EntityExtractor,
-    IntentClassifier,
-    TargetResolver,
-)
-
 # Shared intent utilities (migrated from legacy agents/intent_shared.py)
 from .understanding.intent_utils import (
     GOAL_KEYWORDS,
@@ -190,34 +180,17 @@ from .understanding.intent_utils import (
     infer_template_type,
 )
 
-# Layer 4: Code — REMOVED (code_ops module deleted; code generation is not part of assistant-agent)
-# CodeGenerator, CodeRefactorer, CodeOptimizer, CodeFixer,
-# ProjectScaffolder, DefensiveInjector no longer available
-# Layer 5: Validation & Security
-from .validation import (
-    ChainValidator,
-    ConfigValidator,
-    FixSuggester,
-    RiskCalculator,
-    SecurityScanner,
-    SyntaxValidator,
-)
-
-# Layer 8: Verdict
-from .verdict import (
-    ConsensusResolverV18,
-    DeterministicPipeline,
-    EvidenceCollectorV18,
-    VerdictEngineV18,
-)
+# Layer 8: Verdict — DeterministicPipeline is defined in verdict_parts/
+# (agents/verdict/ was archived; the real implementation is in verdict_parts/)
+from src.core.verdict_parts import DeterministicPipeline
 
 __all__ = [
     "GOAL_KEYWORDS",
     "OP_KEYWORDS",
     "VALID_GOALS",
     "VALID_OPERATIONS",
-    "A2AAgentCard",
     # A2A Protocol
+    "A2AAgentCard",
     "A2AClient",
     "A2ADelegationPolicy",
     "A2ADelegationResult",
@@ -235,129 +208,53 @@ __all__ = [
     "AGUIFormField",
     "AGUIMetricCard",
     "AGUITableColumn",
-    "ActionInferrer",
-    "ActionSpec",
+    # Enterprise
+    "ComplianceChecker",
+    "ContractManager",
+    "ProjectTracker",
+    # Finance
+    "BudgetManager",
+    "ExpenseTracker",
+    "TaxCalculator",
+    # Documents
+    "DocumentGenerator",
+    "ReportEngine",
+    "TemplateFiller",
+    # Procurement
+    "PurchaseOrderManager",
+    "SupplierEvaluator",
+    "VendorManager",
+    # Intelligence
+    "AnomalyDetector",
+    "CustomerInsights",
+    "MarketAnalyzer",
+    "RiskAssessor",
+    "SalesForecaster",
+    # Commerce
+    "CatalogManager",
+    "OrderManager",
+    "PaymentProcessor",
+    # Schemas & types
+    "AgentResult",
+    "AgentMessage",
     "AgentBulkhead",
     "AgentCache",
     "AgentCircuitBreaker",
     "AgentHealthSnapshot",
-    "AgentMessage",
-    # Schemas & types
-    "AgentResult",
     "AgentRetryConfig",
     # Layer 9: Infrastructure
     "AgentRunner",
-    "AnalyticsResult",
-    "AuditEntry",
-    "AuditLogger",
-    "AuditLoggerAgent",
-    "AutoDescription",
-    "AutomationNamer",
     # Resilience
     "BaseAgent",
-    "BilingualRouter",
     "BulkheadManager",
-    "BusinessData",
-    "CRMPipeline",
-    "CRMResult",
-    "ChainResult",
-    "ChainValidator",
     "CircuitBreakerManager",
-    "CircuitBreakerManagerAgent",
     "CircuitState",
-    # CodeResult types retained in schemas for backward compatibility
-    "CodeRequest",
-    "CodeResult",
-    "CompressedContext",
-    "Conclusion",
-    "ConclusionExtractor",
-    "ConditionExtractor",
-    "ConditionResult",
-    "ConfidenceEstimator",
-    "ConfidenceResult",
-    "ConfigResult",
-    "ConfigValidator",
-    "ConsensusResolverV18",
-    "ConsensusResult",
-    "ContextCompressor",
-    "ContextPrefetcher",
-    "CriticalityResult",
-    "CriticalityScorer",
-    "DataAnalyzer",
-    "DecomposedSteps",
+    "GlobalHealthMonitor",
     # Layer 8: Verdict
     "DeterministicPipeline",
-    "EntityExtractor",
-    "EntityResult",
-    "Evidence",
-    "EvidenceCollectorV18",
-    "EvidenceType",
-    "FixSuggester",
-    "FixSuggestions",
-    "GlobalHealthMonitor",
-    "HealthMonitorAgent",
-    "HealthSnapshot",
-    # Layer 1: Understanding
-    "IntentClassifier",
-    "IntentResult",
-    "InventoryManager",
-    "InventoryResult",
-    # Layer 3: Business
-    "InvoiceProcessor",
-    "InvoiceResult",
-    "LanguageResult",
-    # Layer 2: Memory & Context
-    "MemoryCollector",
-    "MemoryEntries",
-    "NameResult",
-    "NotificationDispatcher",
-    "NotificationResult",
-    "OperationRouter",
-    "PipelineResult",
-    "PrefetchResult",
-    # Layer 7: Reasoning
-    "ProblemDetector",
-    "ProblemType",
-    "ReasoningResult",
-    "ReasoningStep",
-    "RelevanceScorer",
-    "ReportGenerator",
-    "ReportResult",
-    "RiskCalculator",
-    "RiskResult",
-    "RoutedOperation",
-    "ScaffoldResult",
-    "ScheduleParser",
-    "ScheduleSpec",
-    "ScoredEntries",
-    "ScoredEntry",
-    "SecurityResult",
-    # Layer 4: Code — REMOVED (code_ops deleted)
-    # "CodeGenerator", "CodeRefactorer", "CodeOptimizer", "CodeFixer",
-    # "ProjectScaffolder", "DefensiveInjector",
-    # Layer 5: Validation & Security
-    "SecurityScanner",
-    "StepDecomposer",
-    "SyntaxResult",
-    "SyntaxValidator",
-    "TargetResolver",
-    "TargetResult",
-    "TaskResult",
-    "TaskScheduler",
-    "TemplateReasoner",
     # Layer 10: Transport
     "TextChannelAgent",
-    # Layer 6: Automation
-    "TriggerInferrer",
-    "TriggerSpec",
-    "ValidationIssue",
-    "Verdict",
-    "VerdictEngineV18",
-    "VerdictInput",
-    "VerdictOutput",
     "VoiceChannelAgent",
-    "WorkflowSerializer",
-    "WorkflowSpec",
     # Shared intent utilities
     "extract_code_block",
     "extract_entities",
@@ -365,4 +262,25 @@ __all__ = [
     "infer_criticality",
     "infer_template_type",
     "with_agent_retry",
+    # Audit
+    "AuditEntry",
+    "AuditLogger",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import of backward-compatible names to avoid circular imports.
+
+    ``TextChannelAgent`` and ``VoiceChannelAgent`` moved to
+    ``src.core.channels``. We re-export them here for backward
+    compatibility without triggering the circular import chain
+    (agents → channels → agents) at module load time.
+    """
+    if name == "TextChannelAgent":
+        from src.core.channels._text_delivery import TextChannelAgent
+        return TextChannelAgent
+    if name == "VoiceChannelAgent":
+        from src.core.channels._voice_transcriber import VoiceChannelAgent
+        return VoiceChannelAgent
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)

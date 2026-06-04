@@ -19,7 +19,8 @@ from .constants import (
     SESSION_TIMEOUT_SECONDS,
     STREAMING_CHUNK_SIZE,
 )
-from .env import AgentsConfig, get_config, load_agents_config
+# AgentsConfig, get_config, load_agents_config were in env.py — archived (unused).
+# Files preserved in _archived/agents/shared/env.py
 
 __all__ = [
     "APP_NAME",
@@ -34,7 +35,4 @@ __all__ = [
     "RATE_LIMIT_RPM",
     "SESSION_TIMEOUT_SECONDS",
     "STREAMING_CHUNK_SIZE",
-    "AgentsConfig",
-    "get_config",
-    "load_agents_config",
 ]

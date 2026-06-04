@@ -30,6 +30,24 @@ class BaseAgent(Generic[T]):
     """
     Abstract base class for all v18 agents.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: La plantilla ontológica para todos los agentes del sistema. Cada agente
+           tiene EXACTAMENTE UNA responsabilidad, implementada en execute(). Todos
+           los agentes son determinísticos por defecto. El patrón de resiliencia
+           (circuit breaker, bulkhead, retry, auditoría) se aplica automáticamente.
+      NO SOY: Framework de agentes genérico. No permito que los agentes llamen al
+              LLM directamente. No soporto herencia múltiple de responsabilidades.
+      INVARIANTE: El sistema funciona 100% sin IA. Cada agente tiene un fallback()
+                  determinístico que nunca falla.
+      FRONTERA: Un agente no puede llamar a otro agente. Solo el orquestador
+                coordina agentes.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - CircuitBreaker produce PROTECCIÓN (puerta abierta/cerrada)
+      - Mi run() completa esa protección con RECUPERACIÓN: si el breaker está
+        abierto, ejecuto fallback() en lugar de execute().
+      - Yo produzco EJECUCIÓN RESILIENTE; el orquestador produce COORDINACIÓN.
+
     Each agent has EXACTLY ONE responsibility, implemented in execute().
     All resilience patterns are applied automatically.
     """
@@ -235,3 +253,60 @@ class BaseAgent(Generic[T]):
                 "avg_duration_ms": avg_duration,
                 "last_error": self._last_error,
             }
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el agente concreto (subclase) es determinista (VORTEX 2.7).
+
+        NOTA: BaseAgent es abstracta. Esta verificación solo es significativa
+        cuando se llama desde una SUBCLASE concreta que implementa execute().
+        Si se llama desde la clase base, reportará "ABSTRACT" en el status.
+
+        Prueba que execute() produce el mismo output para el mismo input
+        y que fallback() nunca falla.
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        test_input = {"test": "verify_determinism"}
+        is_abstract = False
+
+        try:
+            # Verificar que fallback() nunca falla
+            fallback_result = self.fallback(test_input)
+            fallback_ok = fallback_result is not None
+        except NotImplementedError:
+            is_abstract = True
+            fallback_ok = False
+        except Exception:
+            fallback_ok = False
+
+        try:
+            # Verificar determinismo: mismo input → mismo output
+            result1 = self.execute(test_input)
+            result2 = self.execute(test_input)
+            deterministic = result1 == result2
+        except NotImplementedError:
+            is_abstract = True
+            deterministic = False
+        except Exception:
+            deterministic = False
+
+        if is_abstract:
+            status = "ABSTRACT"
+        elif deterministic and fallback_ok:
+            status = "VERIFIED"
+        else:
+            status = "DEGRADED"
+
+        return {
+            "component": f"BaseAgent.{self.name}",
+            "deterministic": deterministic,
+            "fallback_available": fallback_ok,
+            "is_abstract": is_abstract,
+            "status": status,
+        }

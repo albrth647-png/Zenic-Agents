@@ -16,23 +16,16 @@ except ImportError:
     get_knowledge_graph = None  # type: ignore[misc,assignment]
     reset_knowledge_graph = None  # type: ignore[misc,assignment]
 
-try:
-    from .cross_agent import CrossAgentKnowledgeBus, get_cross_agent_bus, reset_cross_agent_bus
-except ImportError:
-    CrossAgentKnowledgeBus = None  # type: ignore[misc,assignment]
-    get_cross_agent_bus = None  # type: ignore[misc,assignment]
-    reset_cross_agent_bus = None  # type: ignore[misc,assignment]
+# CrossAgentKnowledgeBus archived — unused (zero external references).
+# Files preserved in _archived/agents/shared/cross_agent.py
 
 __all__ = [
-    "CrossAgentKnowledgeBus",
     "GraphDomain",
     "KnowledgeEdge",
     "KnowledgeGraphEngine",
     "KnowledgeNode",
     "KnowledgeQuery",
     "KnowledgeSearchResult",
-    "get_cross_agent_bus",
     "get_knowledge_graph",
-    "reset_cross_agent_bus",
     "reset_knowledge_graph",
 ]

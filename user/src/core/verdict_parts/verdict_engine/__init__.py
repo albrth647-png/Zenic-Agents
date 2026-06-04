@@ -1,4 +1,23 @@
-"""VerdictEngine - AI only says YES or NO."""
+"""
+VerdictEngine — Motor de Veredicto.
+
+NATURALEZA ONTOLÓGICA:
+  SOY: El árbitro final del sistema. Recibo una pregunta binaria y evidencia
+       estructurada, y emito un veredicto SÍ/NO como árbitro de último recurso.
+  NO SOY: Generador de contenido, clasificador, chatbot. Nunca decido sin
+          evidencia.
+  INVARIANTE: Toda decisión tiene un rastro de evidencia. Nunca emito un
+              veredicto sin al menos un intento de consenso determinístico.
+  FRONTERA: No ejecuto código. No clasifico intenciones. No extraigo
+            entidades. No genero texto. Solo arbitro entre opciones binarias.
+
+COMPLETACIÓN SEMÁNTICA:
+  - ConsensusResolver produce INDETERMINACIÓN ("no sé")
+  - Yo produzco RESOLUCIÓN FINAL (SÍ/NO)
+
+  - Mi veredicto es completado por ZenicOrchestrator, que toma el SÍ/NO
+    y lo convierte en ACCIÓN (commit, rollback, NO_OP).
+"""
 
 import concurrent.futures
 import logging
@@ -47,6 +66,7 @@ from ._config import (
 )
 from ._helpers_mixin import VerdictHelpersMixin
 from ._llm_mixin import VerdictLLMMixin
+from ..geodesic import GeodesicPath, GeodesicTracker, VerdictState
 
 logger = logging.getLogger("zenic_agents.verdict_parts.verdict_engine")
 
@@ -121,6 +141,11 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         else:
             self._resilience = None
 
+        # VORTEX 2.4: TopologicalRouter (inyectable externamente)
+        self._topology_router = None
+        # VORTEX 2.5: GeodesicTracker (inyectable externamente)
+        self._geodesic_tracker = None
+
     def set_memory_chip(self, chip) -> None:
         """Inject the Memory Chip reference (via PyO3 bridge)."""
         self._memory_chip = chip
@@ -168,7 +193,14 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
           4. Si hay empate → Circuit Breaker check → LLM arbitraje
           5. Multi-attempt consensus para mayor confiabilidad
           6. Audit del resultado
+
+        VORTEX 2.5: La ejecución sigue una geodésica documentada.
+        VORTEX 2.4: Los fallos se redistribuyen topológicamente.
         """
+        _tracker = getattr(self, "_geodesic_tracker", None)
+        if _tracker is not None:
+            _tracker.start({"question": question[:100]})
+
         start_time = time.time()
         with self._stats_lock:
             self._total_verdicts += 1
@@ -203,13 +235,10 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                     else:
                         mapping = chip_result.get("mapping", {})
                         confidence = 0.9  # Memory chip mappings are pre-approved
-                        # NOTE: A4 fix — removed duplicate self._total_verdicts increment;
-                        # the counter was already bumped at the top of verdict()
                         with self._stats_lock:
                             self._consensus_verdicts += 1
                             self._yes_count += 1
                         elapsed_cache = time.time() - start_time
-                        # Audit the cache-hit result (was missing — every other path audits)
                         self._audit_result(
                             text[:200],
                             "YES",
@@ -222,6 +251,14 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                             0,
                             0.0,
                         )
+                        # VORTEX 2.5: Geodésica CACHE (0 → 4)
+                        if _tracker is not None:
+                            _tracker.visit(VerdictState.PIPELINE_COMPLETED)
+                            _tracker.visit(VerdictState.EVIDENCE_COLLECTED)
+                            _tracker.visit(VerdictState.CONSENSUS_RESOLVED)
+                            _tracker.visit(VerdictState.VERDICT_CACHE_HIT)
+                            _tracker.resolve_geodesic(GeodesicPath.CACHE)
+                            _tracker.complete()
                         return VerdictOutput(
                             verdict=Verdict.YES,
                             confidence=confidence,
@@ -237,6 +274,8 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
 
         # === PASO 1: Ejecutar pipeline determinístico ===
         pipeline_results = self._pipeline.execute_all(text, code, language, ctx)
+        if _tracker is not None:
+            _tracker.visit(VerdictState.PIPELINE_COMPLETED)
 
         # === PASO 2: Recolectar evidencia ===
         evidence = self._evidence_collector.collect_all_evidence(
@@ -246,6 +285,8 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
             memory_chip=self._memory_chip,
             tenant_id=ctx.get("tenant_id", "__anonymous__"),
         )
+        if _tracker is not None:
+            _tracker.visit(VerdictState.EVIDENCE_COLLECTED)
 
         # Agregar evidencia de los resultados del pipeline
         for task_name, result in pipeline_results.items():
@@ -262,6 +303,16 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
 
         # === PASO 3: Resolver consenso ===
         consensus = self._consensus_resolver.resolve(evidence, question)
+        if _tracker is not None:
+            _tracker.visit(VerdictState.CONSENSUS_RESOLVED)
+
+        # Check for veto (security veto is always DENY)
+        has_veto = any(
+            e.favors == Verdict.NO
+            and e.evidence_type in (EvidenceType.SECURITY_CHECK, EvidenceType.SANDBOX_PASS)
+            and e.weight >= 0.9
+            for e in evidence
+        )
 
         # === PASO 4: Decidir si necesita IA ===
         if not consensus.needs_llm:
@@ -280,10 +331,8 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                 else:
                     self._no_count += 1
 
-            # Build evidence summary
             evidence_summary = self._build_evidence_summary(consensus)
 
-            # Audit consensus verdict
             self._audit_result(
                 question,
                 consensus.verdict.value,
@@ -296,6 +345,16 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
                 len(consensus.evidence_against),
                 consensus.score,
             )
+
+            # VORTEX 2.5: Geodésica CONSENSUS (0 → 1 → 2 → 3 → 5) o VETO (0 → 1 → 2 → 8)
+            if _tracker is not None:
+                if has_veto:
+                    _tracker.visit(VerdictState.VERDICT_VETO)
+                    _tracker.resolve_geodesic(GeodesicPath.VETO)
+                else:
+                    _tracker.visit(VerdictState.VERDICT_CONSENSUS)
+                    _tracker.resolve_geodesic(GeodesicPath.CONSENSUS)
+                _tracker.complete()
 
             return VerdictOutput(
                 verdict=consensus.verdict,
@@ -317,6 +376,13 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
             consensus_score=consensus.score,
             context=self._build_context_summary(text, code, pipeline_results),
         )
+
+        # VORTEX 2.5: Geodésica LLM (0 → 1 → 2 → 3 → 6) o FALLBACK (0 → 1 → 2 → 3 → 7)
+        # Se resolverá según el resultado de _request_llm_verdict
+        if _tracker is not None:
+            _tracker.resolve_geodesic(GeodesicPath.LLM)
+            _tracker.visit(VerdictState.VERDICT_LLM)
+            _tracker.complete()
 
         return self._request_llm_verdict(verdict_input, start_time)
 
@@ -460,3 +526,78 @@ class VerdictEngine(VerdictLLMMixin, VerdictHelpersMixin):
         if self._resilience:
             return self._resilience.auditor.get_failure_pattern()
         return {"pattern": "no_data", "risk": "unknown"}
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el VerdictEngine es determinista (VORTEX 2.7).
+
+        Ejecuta el pipeline con el mismo input dos veces y verifica
+        que el output es idéntico. Preserva y restaura las stats
+        para no tener efectos secundarios.
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        test_input = {
+            "text": "def hello(): print('hello world')",
+            "code": "",
+            "language": "python",
+            "question": "Is this code safe?",
+        }
+
+        # Preservar stats para restaurarlas después (verify_determinism no debe mutar estado)
+        saved_stats = {}
+        with self._stats_lock:
+            for attr in ("_total_verdicts", "_llm_verdicts", "_consensus_verdicts",
+                         "_low_confidence_verdicts", "_fallback_verdicts",
+                         "_yes_count", "_no_count", "_total_time"):
+                saved_stats[attr] = getattr(self, attr, 0)
+
+        try:
+            # Ejecutar dos veces con el mismo input
+            result1 = self.verdict(**test_input)
+            result2 = self.verdict(**test_input)
+
+            # Restaurar stats
+            with self._stats_lock:
+                for attr, val in saved_stats.items():
+                    setattr(self, attr, val)
+
+            # Comparar outputs relevantes (no timestamps ni métricas variables)
+            deterministic = (
+                result1.verdict == result2.verdict
+                and result1.source == result2.source
+                and result1.confidence == result2.confidence
+            )
+
+            return {
+                "component": "VerdictEngine",
+                "deterministic": deterministic,
+                "verdicts_match": result1.verdict.value == result2.verdict.value,
+                "sources_match": result1.source == result2.source,
+                "confidence_match": result1.confidence == result2.confidence,
+                "status": "VERIFIED" if deterministic else "DEGRADED",
+            }
+        except Exception as exc:
+            # Restaurar stats incluso en error
+            with self._stats_lock:
+                for attr, val in saved_stats.items():
+                    setattr(self, attr, val)
+            return {
+                "component": "VerdictEngine",
+                "deterministic": False,
+                "error": str(exc),
+                "status": "ERROR",
+            }
+
+    def set_geodesic_tracker(self, tracker) -> None:
+        """Inyecta un GeodesicTracker para rastrear la geodésica actual (VORTEX 2.5)."""
+        self._geodesic_tracker = tracker
+
+    def set_topological_router(self, router) -> None:
+        """Inyecta un TopologicalRouter para redistribución topológica (VORTEX 2.4)."""
+        self._topology_router = router

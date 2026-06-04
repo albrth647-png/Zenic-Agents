@@ -47,9 +47,9 @@ pub fn e2e_start(
         return Ok((state, None));
     }
 
-    let niche = match catalog_get_by_id(py, niche_id_trimmed) {
-        Ok(Some(n)) => n,
-        Ok(None) => {
+    let niche = match catalog_get_by_id(niche_id_trimmed) {
+        Some(n) => n,
+        None => {
             let mut state = E2EPipelineState::new(
                 generate_pipeline_id(niche_id_trimmed),
                 niche_id_trimmed.to_string(),
@@ -63,7 +63,6 @@ pub fn e2e_start(
             state.set_step(E2EPipelineStep::Error);
             return Ok((state, None));
         }
-        Err(e) => return Err(e),
     };
 
     let pipeline_id = generate_pipeline_id(niche_id_trimmed);

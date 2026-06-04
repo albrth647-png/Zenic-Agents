@@ -12,10 +12,8 @@ Organization:
 
   Creational Patterns
   -------------------
-    AgentFactory        — Thread-safe factory for BaseAgent instances
-    FactoryRegistry     — Generic named-creator registry
     OrchestratorBuilder — Fluent builder for orchestrator config dicts
-    AgentPrototype      — Deep-copy prototype for agent cloning
+    (AgentFactory, AgentPrototype archived — unused)
 
   Structural Patterns
   -------------------
@@ -23,14 +21,9 @@ Organization:
     LocalLLMAdapter     — Wraps MiniAIEngine._call_llm
     FallbackLLMAdapter  — Primary → fallback chain
     AdapterRegistry     — Named LLMAdapter registry
-    LLMProvider         — ABC for LLM providers (complete + embed)
-    LocalProvider       — Local llama-cpp-python provider
-    AgentLLMBridge      — Bridge with hot-swappable provider
     LazyProxy           — Deferred object creation proxy
     CacheProxy          — TTL-based method result cache proxy
-    agent_decorator     — Capability-based method decorator factory
-    AgentCapability     — Enum of decorator capabilities
-    AgentDecorator      — Composable multi-capability decorator
+    (AgentLLMBridge, AgentCapability, AgentDecorator, LLMProvider, LocalProvider archived)
 
   Behavioral Patterns
   -------------------
@@ -140,9 +133,6 @@ from src.core.patterns.concurrency import (
     WorkerPoolConfig,
 )
 from src.core.patterns.creational import (
-    AgentFactory,
-    AgentPrototype,
-    FactoryRegistry,
     OrchestratorBuilder,
 )
 from src.core.patterns.orchestration import (
@@ -195,29 +185,17 @@ from src.core.patterns.resilience import (
 # ---------------------------------------------------------------------------
 from src.core.patterns.structural import (
     AdapterRegistry,
-    AgentCapability,
-    AgentDecorator,
-    AgentLLMBridge,
     CacheProxy,
     FallbackLLMAdapter,
     LazyProxy,
     LLMAdapter,
-    LLMProvider,
     LocalLLMAdapter,
-    LocalProvider,
-    agent_decorator,
 )
 
 __all__ = [
     "ASTNode",
     "ASTVisitor",
     "AdapterRegistry",
-    "AgentCapability",
-    "AgentDecorator",
-    # Creational
-    "AgentFactory",
-    "AgentLLMBridge",
-    "AgentPrototype",
     "Bulkhead",
     "BulkheadFullError",
     # Architectural
@@ -236,14 +214,11 @@ __all__ = [
     # Orchestration
     "EventBus",
     "EventHandler",
-    "FactoryRegistry",
     "FallbackLLMAdapter",
     # Structural
     "LLMAdapter",
-    "LLMProvider",
     "LazyProxy",
     "LocalLLMAdapter",
-    "LocalProvider",
     "Mediator",
     "OrchCommand",
     "OrchCommandHandler",
@@ -273,7 +248,6 @@ __all__ = [
     # Concurrency
     "WorkerPool",
     "WorkerPoolConfig",
-    "agent_decorator",
     "retry",
     "retry_async",
     "sidecar_decorator",

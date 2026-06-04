@@ -17,8 +17,6 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.core.channel._proactive import ProactiveChannelBridge
-from src.core.channel.a53_text import ChannelType
 from src.core.sna.alert_manager import AlertManager, AlertSeverity
 from src.core.sna.monitors.base import MonitorWeight
 from src.core.sna.monitors.data_integrity import DataIntegrityMonitor
@@ -369,13 +367,14 @@ class TestSNAScheduler(unittest.TestCase):
         scanner.close()
 
 
-class TestSNAEngineWithProactiveBridge(unittest.TestCase):
-    """Test: SNAEngine + ProactiveChannelBridge integrado.
+class TestEndToEndPipeline(unittest.TestCase):
+    """Test end-to-end: BD real → Scanner → Monitores → Alertas.
 
-    Verifica que:
-    1. SNA detecta problemas en datos LOCALES
-    2. Alertas van al ProactiveChannelBridge
-    3. El bridge prepara los mensajes para enviar
+    Verifica el pipeline completo con datos reales SIN mocks:
+    1. LocalDataScanner consulta BD SQLite real
+    2. Monitores detectan problemas reales
+    3. SNAScheduler orquesta los monitores
+    4. AlertManager genera alertas
     """
 
     @classmethod
@@ -384,38 +383,114 @@ class TestSNAEngineWithProactiveBridge(unittest.TestCase):
         cls.db_path = os.path.join(cls.db_dir, "test.db")
         create_test_db(cls.db_path)
 
-    def test_end_to_end(self):
-        """Test end-to-end: BD local → SNA → Alert → Bridge."""
-        received_alerts = []
-
-        def on_alert(alert):
-            received_alerts.append(alert)
-
+    def test_scanner_detects_real_data(self):
+        """LocalDataScanner escanea BD real y encuentra datos."""
         scanner = LocalDataScanner(db_path=self.db_path)
-        ProactiveChannelBridge(
-            default_channel=ChannelType.TELEGRAM,
-            default_recipient="test_user",
-        )
-        engine = SNAEngine(
-            db_path=self.db_path,
-            on_alert=on_alert,
-        )
+        result = scanner.full_scan()
+        # El resultado anida tablas bajo database.tables
+        self.assertIn("database", result)
+        self.assertIn("tables", result["database"])
+        self.assertIn("productos", result["database"]["tables"])
+        self.assertEqual(result["database"]["tables"]["productos"]["row_count"], 3,
+            "Debe encontrar 3 productos en BD real")
+        scanner.close()
 
-        # Ejecutar escaneo completo
-        alerts = engine.full_scan()
+    def test_monitors_run_on_real_db(self):
+        """Monitores se ejecutan contra BD real y encuentran problemas."""
+        scanner = LocalDataScanner(db_path=self.db_path)
 
-        # Debe haber alertas (stock bajo, facturas vencidas, etc.)
-        self.assertGreater(len(alerts), 0)
+        monitors = [
+            LowStockMonitor(scanner, threshold=5),
+            OverdueInvoiceMonitor(scanner),
+            StaleInventoryMonitor(scanner, stale_days=90),
+            UnpaidBalanceMonitor(scanner),
+            TomorrowAppointmentMonitor(scanner),
+        ]
 
-        # Las alertas deben haber llegado al callback
-        self.assertGreater(len(received_alerts), 0)
+        results = []
+        for monitor in monitors:
+            result = monitor.run()
+            results.append(result)
 
-        # Health summary
-        health = engine.health_summary()
-        self.assertIsNotNone(health)
+        # Al menos un monitor debe detectar problemas (datos reales)
+        unhealthy = [r for r in results if not r.healthy]
+        self.assertGreater(len(unhealthy), 0,
+            "Ningún monitor detectó problemas en datos reales (stock bajo, facturas vencidas, etc.)")
 
         scanner.close()
-        engine.close()
+
+    def test_scheduler_runs_pipeline(self):
+        """SNAScheduler orquesta monitores y genera alertas reales."""
+        scanner = LocalDataScanner(db_path=self.db_path)
+        scheduler = SNAScheduler(scanner)
+
+        alerts = scheduler.run_all()
+
+        # Debe generar alertas con datos reales
+        self.assertGreater(len(alerts), 0,
+            "Scheduler no generó alertas: stock=0, facturas vencidas, saldos pendientes existen en DB")
+
+        for alert in alerts:
+            self.assertIsNotNone(alert.severity)
+            self.assertIsNotNone(alert.monitor_name)
+
+        scanner.close()
+
+    def test_alert_manager_processes_real_results(self):
+        """AlertManager procesa resultados reales de monitores."""
+        scanner = LocalDataScanner(db_path=self.db_path)
+        manager = AlertManager()
+
+        # Ejecutar monitores reales y procesar resultados
+        monitor = LowStockMonitor(scanner, threshold=5)
+        result = monitor.run()
+
+        alert = manager.process_result(result)
+        self.assertIsNotNone(alert,
+            "AlertManager no generó alerta para stock bajo real (Lápiz=2, Cuaderno=0)")
+
+        scanner.close()
+
+    def test_edge_case_empty_db(self):
+        """Monitores manejan BD vacía sin errores (caso extremo)."""
+        empty_dir = tempfile.mkdtemp()
+        empty_db = os.path.join(empty_dir, "empty.db")
+        conn = sqlite3.connect(empty_db)
+        conn.execute("CREATE TABLE productos (id INTEGER PRIMARY KEY, nombre TEXT, stock INTEGER)")
+        conn.close()
+
+        scanner = LocalDataScanner(db_path=empty_db)
+        monitor = LowStockMonitor(scanner, threshold=5)
+        try:
+            result = monitor.run()
+            # Sin datos, debería estar healthy (vacío = sin problemas)
+            self.assertIsNotNone(result)
+        except Exception as e:
+            self.fail(f"Monitor falló con BD vacía: {e}")
+        scanner.close()
+
+    def test_edge_case_nonexistent_db(self):
+        """Scanner maneja BD inexistente sin crash (error de sistema)."""
+        scanner = LocalDataScanner(db_path="/tmp/nonexistent_12345.db")
+        result = scanner.full_scan()
+        self.assertIsNotNone(result)
+        scanner.close()
+
+    def test_none_db_path_uses_default(self):
+        """Scanner usa ruta por defecto cuando db_path=None (nulo)."""
+        scanner = LocalDataScanner(db_path=None)
+        # El scanner no expone db_path directamente, pero db si
+        self.assertIsNotNone(scanner.db)
+        self.assertIsNotNone(scanner.db.db_path)
+        scanner.close()
+
+    def test_scanner_runs_on_real_db(self):
+        """Scanner funciona con BD real y encuentra productos."""
+        scanner = LocalDataScanner(db_path=self.db_path)
+        result = scanner.full_scan()
+        self.assertIn("database", result)
+        self.assertIn("productos", result["database"]["tables"])
+        scanner.close()
 
 
 if __name__ == "__main__":

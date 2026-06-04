@@ -207,10 +207,10 @@ class RedisCircuitBreakerManager(CircuitBreakerManager):
     All methods are async (using redis[hiredis]).
     """
 
-    # Default circuit breaker config values
+    # Default circuit breaker config values (unificado VORTEX F1.4)
     DEFAULT_CB_CONFIG: ClassVar[dict] = {
-        "failure_threshold": 5,
-        "recovery_timeout": 30.0,  # seconds (stored as ms in Redis)
+        "failure_threshold": 3,
+        "recovery_timeout": 60.0,  # seconds (stored as ms in Redis)
         "success_threshold": 2,
     }
 

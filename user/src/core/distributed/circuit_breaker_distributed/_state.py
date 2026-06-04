@@ -63,10 +63,10 @@ class SharedCircuitState:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], version: int = 0) -> "SharedCircuitState":
-        """Deserialize from backend dict."""
+        """Deserialize from backend dict (normaliza state a UPPERCASE)."""
         return cls(
             name=data.get("name", ""),
-            state=data.get("state", "closed"),
+            state=data.get("state", "closed").upper(),
             failure_count=data.get("failure_count", 0),
             success_count=data.get("success_count", 0),
             half_open_call_count=data.get("half_open_call_count", 0),

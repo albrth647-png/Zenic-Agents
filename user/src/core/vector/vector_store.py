@@ -112,8 +112,8 @@ class VectorStore:
         """Current backend: 'pgvector' or 'memory' or 'none'."""
         if self._pgvector_available:
             return "pgvector"
-        if self._memory_store:
-            return "memory"
+        if self._initialized:
+            return self._stats.get("backend", "memory")
         return "none"
 
     async def initialize(self) -> bool:

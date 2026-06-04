@@ -1,9 +1,7 @@
-"""Layer 1: Understanding agents — A01 IntentClassifier, A02 EntityExtractor, A03 TargetResolver, A04 CriticalityScorer, A48 BilingualRouter."""
-
-from .bilingual_router import BilingualRouter
-from .criticality_scorer import CriticalityScorer
-from .entity_extractor import EntityExtractor
-from .intent_classifier import IntentClassifier
+"""Layer 1: Understanding agents — ARCHIVED.
+All understanding agents were unused (zero external references).
+Shared intent utilities preserved for backward compatibility.
+"""
 
 # Shared intent utilities — migrated from agents/intent_shared.py
 from .intent_utils import (
@@ -17,18 +15,12 @@ from .intent_utils import (
     infer_criticality,
     infer_template_type,
 )
-from .target_resolver import TargetResolver
 
 __all__ = [
     "GOAL_KEYWORDS",
     "OP_KEYWORDS",
     "VALID_GOALS",
     "VALID_OPERATIONS",
-    "BilingualRouter",
-    "CriticalityScorer",
-    "EntityExtractor",
-    "IntentClassifier",
-    "TargetResolver",
     # Shared intent utilities
     "extract_code_block",
     "extract_entities",

@@ -41,7 +41,7 @@ class BreakerOpsMixin:
     """
 
     # ----------------------------------------------------------
-    #  RECORD OPERATIONS
+    #  RECORD OPERATIONS (VORTEX F1.4 — lowercase→UPPERCASE)
     # ----------------------------------------------------------
 
     def record_success(self) -> None:
@@ -52,11 +52,11 @@ class BreakerOpsMixin:
         """
         with self._lock:
             state = self._local_state
-            if state.state == "half_open":
+            if state.state == "HALF_OPEN":
                 state.success_count += 1
                 state.half_open_call_count += 1
                 if state.success_count >= self._success_threshold:
-                    state.state = "closed"
+                    state.state = "CLOSED"
                     state.failure_count = 0
                     state.success_count = 0
                     state.half_open_call_count = 0
@@ -66,7 +66,7 @@ class BreakerOpsMixin:
                         self._name,
                         state.success_count,
                     )
-            elif state.state == "closed":
+            elif state.state == "CLOSED":
                 state.failure_count = 0
                 state.success_count += 1
 
@@ -87,17 +87,17 @@ class BreakerOpsMixin:
             state.failure_count += 1
             state.success_count = 0
 
-            if state.state == "half_open":
+            if state.state == "HALF_OPEN":
                 state.half_open_call_count += 1
-                state.state = "open"
+                state.state = "OPEN"
                 state.opened_at = time.monotonic()
                 logger.warning(
                     "DistCircuit '%s': HALF_OPEN -> OPEN (failure in half-open)",
                     self._name,
                 )
-            elif state.state == "closed":
+            elif state.state == "CLOSED":
                 if state.failure_count >= self._failure_threshold:
-                    state.state = "open"
+                    state.state = "OPEN"
                     state.opened_at = time.monotonic()
                     logger.warning(
                         "DistCircuit '%s': CLOSED -> OPEN (%d consecutive failures)",
@@ -190,13 +190,13 @@ class BreakerOpsMixin:
             return result
 
     # ----------------------------------------------------------
-    #  MANUAL CONTROL
+    #  MANUAL CONTROL (VORTEX F1.4 — lowercase→UPPERCASE)
     # ----------------------------------------------------------
 
     def reset(self) -> None:
         """Reset the circuit breaker to CLOSED state."""
         with self._lock:
-            self._local_state.state = "closed"
+            self._local_state.state = "CLOSED"
             self._local_state.failure_count = 0
             self._local_state.success_count = 0
             self._local_state.half_open_call_count = 0
@@ -208,7 +208,7 @@ class BreakerOpsMixin:
     def force_open(self) -> None:
         """Force the circuit into OPEN state."""
         with self._lock:
-            self._local_state.state = "open"
+            self._local_state.state = "OPEN"
             self._local_state.opened_at = time.monotonic()
         self._local_breaker.force_open()
         self._persist_state()
@@ -217,7 +217,7 @@ class BreakerOpsMixin:
     def force_close(self) -> None:
         """Force the circuit into CLOSED state."""
         with self._lock:
-            self._local_state.state = "closed"
+            self._local_state.state = "CLOSED"
             self._local_state.failure_count = 0
             self._local_state.success_count = 0
             self._local_state.half_open_call_count = 0
@@ -265,12 +265,14 @@ class BreakerOpsMixin:
                             remote_state,
                             version=version,
                         )
+                        # Normalize state to UPPERCASE (backward compat con backend legacy)
+                        self._local_state.state = self._local_state.state.upper()
 
                         # Check OPEN -> HALF_OPEN transition
-                        if self._local_state.state == "open" and self._local_state.opened_at is not None:
+                        if self._local_state.state == "OPEN" and self._local_state.opened_at is not None:
                             elapsed = time.monotonic() - self._local_state.opened_at
                             if elapsed >= self._recovery_timeout:
-                                self._local_state.state = "half_open"
+                                self._local_state.state = "HALF_OPEN"
                                 self._local_state.failure_count = 0
                                 self._local_state.success_count = 0
                                 self._local_state.half_open_call_count = 0

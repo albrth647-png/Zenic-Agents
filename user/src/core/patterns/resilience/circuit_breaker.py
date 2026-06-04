@@ -29,11 +29,11 @@ __all__ = ["CircuitBreaker", "CircuitOpenError", "CircuitState"]
 
 
 class CircuitState(Enum):
-    """Circuit breaker states."""
+    """Circuit breaker states (UPPERCASE unificado VORTEX F1.4)."""
 
-    CLOSED = "closed"
-    OPEN = "open"
-    HALF_OPEN = "half_open"
+    CLOSED = "CLOSED"
+    OPEN = "OPEN"
+    HALF_OPEN = "HALF_OPEN"
 
 
 # ============================================================
@@ -59,6 +59,24 @@ class CircuitBreaker:
     """
     Thread-safe Circuit Breaker with CLOSED → OPEN → HALF_OPEN state machine.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: Una máquina de estados CLOSED → OPEN → HALF_OPEN que protege al sistema
+           de fallos en cascada. Thread-safe, stdlib-only, diseñado para entornos
+           con recursos limitados (Android/Termux, 500MB RAM).
+      NO SOY: Timeout. Rate limiter. Retry mechanism. Health check.
+      INVARIANTE: Una vez OPEN, todas las llamadas fallan inmediatamente sin
+                  ejecutar la operación subyacente. Solo el tiempo de recovery
+                  puede transicionar a HALF_OPEN.
+      FRONTERA: No decido si una operación es correcta o no. Solo decido si
+                permitir que se ejecute basado en el historial de fallos recientes.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - Mi PROTECCIÓN (puerta abierta/cerrada) es completada por BaseAgent,
+        cuyo run() ejecuta fallback() cuando estoy abierto, produciendo
+        RECUPERACIÓN en lugar de fallo.
+      - Yo produzco DECISIÓN DE AISLAMIENTO; BaseAgent produce
+        RECUPERACIÓN GRACIOSA.
+
     Parameters:
         name: Human-readable identifier for this breaker.
         failure_threshold: Consecutive failures before tripping to OPEN.
@@ -70,8 +88,8 @@ class CircuitBreaker:
     def __init__(
         self,
         name: str,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 30.0,
+        failure_threshold: int = 3,
+        recovery_timeout: float = 60.0,
         half_open_max_calls: int = 3,
         success_threshold: int = 3,
     ) -> None:
@@ -333,3 +351,74 @@ class CircuitBreaker:
 
     def __repr__(self) -> str:
         return f"CircuitBreaker(name={self._name!r}, state={self._state.value!r})"
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el CircuitBreaker es determinista (VORTEX 2.7).
+
+        Prueba que:
+        1. La máquina de estados transiciona correctamente CLOSED → OPEN → HALF_OPEN
+        2. Same input → same state transitions
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        tests = []
+        all_ok = True
+
+        # Reiniciar para el test
+        self.reset()
+
+        # Test 1: Estado inicial CLOSED
+        initial_ok = self._state == CircuitState.CLOSED
+        if not initial_ok:
+            all_ok = False
+        tests.append({
+            "test": "initial_state",
+            "passed": initial_ok,
+            "detail": f"State after reset: {self._state.value}",
+        })
+
+        # Test 2: failure_threshold fallos → OPEN
+        for i in range(self._failure_threshold):
+            self.record_failure()
+        opened_ok = self._state == CircuitState.OPEN
+        if not opened_ok:
+            all_ok = False
+        tests.append({
+            "test": "transitions_to_open",
+            "passed": opened_ok,
+            "detail": f"State after {self._failure_threshold} failures: {self._state.value}",
+        })
+
+        # Test 3: Llamada en OPEN → CircuitOpenError
+        class _helper:
+            @staticmethod
+            def fn():
+                return "ok"
+        try:
+            self.call(_helper.fn)
+            call_blocked = False
+        except CircuitOpenError:
+            call_blocked = True
+        if not call_blocked:
+            all_ok = False
+        tests.append({
+            "test": "call_blocked_when_open",
+            "passed": call_blocked,
+            "detail": "Call blocked when OPEN" if call_blocked else "Call was NOT blocked",
+        })
+
+        # Reset for next test
+        self.reset()
+
+        return {
+            "component": f"CircuitBreaker.{self._name}",
+            "all_ok": all_ok,
+            "tests": tests,
+            "status": "VERIFIED" if all_ok else "DEGRADED",
+        }

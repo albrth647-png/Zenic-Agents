@@ -25,45 +25,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 
-# ────────────────────────────── Layer 4: Code ──────────────────────────────
-
-
-@dataclass
-class CodeRequest:
-    """Input for code operation agents."""
-
-    task: str = "generate"  # generate|refactor|optimize|fix|scaffold
-    requirements: str = ""
-    language: str = "python"
-    existing_code: str = ""
-    constraints: Mapping[str, str | int | float | bool] = field(default_factory=dict)
-
-
-@dataclass
-class CodeResult:
-    """A17-A22 code agents output."""
-
-    code: str = ""
-    language: str = "python"
-    files: list[dict[str, str]] = field(default_factory=list)  # [{path, content}]
-    changes: list[str] = field(default_factory=list)
-    improvements: list[str] = field(default_factory=list)
-    fixes: list[str] = field(default_factory=list)
-    injected_patterns: list[str] = field(default_factory=list)
-    audit_entries: list[str] = field(default_factory=list)
-    source: str = "deterministic"
-
-
-@dataclass
-class ScaffoldResult:
-    """A21 ProjectScaffolder output."""
-
-    files: list[dict[str, str]] = field(default_factory=list)
-    structure: Mapping[str, str | list | Mapping] = field(default_factory=dict)
-    config: Mapping[str, str | int | float | bool] = field(default_factory=dict)
-    source: str = "deterministic"
-
-
 # ────────────────────────────── Layer 5: Validation ──────────────────────────────
 
 

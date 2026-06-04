@@ -103,6 +103,23 @@ class EvidenceCollector:
     """
     Recolector de evidencia puramente determinístico.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: Un sistema de recolección de señales. Examino texto, código y contexto
+           usando análisis estático, regex, reglas y patrones para producir objetos
+           Evidence que representan HECHOS OBJETIVOS.
+      NO SOY: Motor de inferencia. No evalúo la evidencia que recolecto.
+              No tengo opiniones sobre lo que significa.
+      INVARIANTE: Mi evidencia es reproducible. Otro EvidenceCollector con los
+                  mismos inputs produce la misma evidencia.
+      FRONTERA: No resuelvo consenso. No decido qué evidencia es más importante.
+                Solo recolecto hechos observables.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - DeterministicPipeline produce HECHOS (resultados estructurados)
+      - Yo produzco SEÑALES EVALUATIVAS (Evidence con dirección a favor/en contra)
+      - Mis señales son completadas por ConsensusResolver, que las SI PESA
+        y produce un JUICIO EVALUATIVO.
+
     NO usa IA. Solo usa análisis estático, regex, reglas y patrones.
     Cada método devuelve una lista de Evidence objects que luego
     el ConsensusResolver evalúa.

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sqlite3
 from typing import Any
 
@@ -124,16 +125,47 @@ class DBAccess:
         """Ejecuta una query SELECT y devuelve resultados como dicts.
 
         SOLO para SELECT. No permite INSERT/UPDATE/DELETE.
+        Stripea comentarios inline -- y # antes de validar.
         """
-        sql_stripped = sql.strip().upper()
-        if not sql_stripped.startswith("SELECT") and not sql_stripped.startswith("PRAGMA"):
-            raise ValueError(f"DBAccess.execute_query solo permite SELECT/PRAGMA, no: {sql_stripped[:20]}")
+        # Stripear comentarios inline antes de validar el tipo de query
+        cleaned = self._strip_sql_comments(sql)
+
+        sql_upper = cleaned.upper().strip()
+        if not sql_upper.startswith("SELECT") and not sql_upper.startswith("PRAGMA"):
+            raise ValueError(f"DBAccess.execute_query solo permite SELECT/PRAGMA, no: {sql[:50]}")
 
         conn = self._get_conn()
-        cursor = conn.execute(sql, params)
+        cursor = conn.execute(cleaned, params)
         columns = [desc[0] for desc in cursor.description] if cursor.description else []
         rows = cursor.fetchall()
         return [dict(zip(columns, row, strict=False)) for row in rows]
+
+    @staticmethod
+    def _strip_sql_comments(sql: str) -> str:
+        """Elimina comentarios SQL inline de una query.
+
+        Solo strippea:
+        - `--` (SQL estándar) al final de línea
+        - `# noqa` (marcadores de linter) — NO strippea `#` genérico
+          para no corromper string literales tipo WHERE name = '#test'
+
+        Ejemplos:
+        - "SELECT 1  -- comment" → "SELECT 1"
+        - "SELECT 1  # noqa: S608" → "SELECT 1"
+        - "--comment\nSELECT 1" → "SELECT 1"
+        - "SELECT * FROM t WHERE name = '#test'" → SIN CAMBIOS
+        """
+        lines = sql.split('\n')
+        cleaned = []
+        for line in lines:
+            # Strippear -- (SQL estándar)
+            line = re.sub(r'\s*--.*$', '', line)
+            # Strippear # noqa (solo con noqa, no # genérico)
+            line = re.sub(r'\s*#\s*noqa.*$', '', line, flags=re.IGNORECASE)
+            trimmed = line.strip()
+            if trimmed:
+                cleaned.append(trimmed)
+        return '\n'.join(cleaned)
 
     def execute_write(self, sql: str, params: tuple = ()) -> int:
         """Ejecuta una query INSERT/UPDATE/DELETE. Devuelve rows affected.

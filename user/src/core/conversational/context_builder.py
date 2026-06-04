@@ -20,11 +20,11 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from ..config.constants import (  # type: ignore[import-unresolved]
-    CONTEXT_RESERVE_RESPONSE,
-    CONTEXT_RESERVE_SYSTEM,
-    MAX_CONTEXT_TOKENS,
-)
+# Constantes inline — reemplazan la dependencia eliminada de src.core.config.constants
+# Valores por defecto para Qwen-0.6B local (~4096 tokens de contexto)
+MAX_CONTEXT_TOKENS = 4096
+CONTEXT_RESERVE_SYSTEM = 500
+CONTEXT_RESERVE_RESPONSE = 1000
 from .conversation import ConversationManager
 from .knowledge import KnowledgeBase
 from .memory import MemoryManager

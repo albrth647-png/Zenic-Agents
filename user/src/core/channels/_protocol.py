@@ -39,6 +39,22 @@ from ._types import (
 class ChannelProvider(Protocol):
     """Protocol for outbound-only channel providers.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: Un protocolo estructural que define el contrato para todos los canales
+           de comunicación. Los providers implementan send(), send_confirmation(),
+           y opcionalmente set_message_handler() para canales bidireccionales.
+           No hay herencia — solo implementación de protocolo.
+      NO SOY: Adaptador de API específica. Router de mensajes. Sistema de colas.
+      INVARIANTE: send() nunca lanza excepción. Siempre devuelve un ChannelResponse
+                  con estado éxito/fallo. start() y stop() son idempotentes.
+      FRONTERA: No proceso el contenido del mensaje. No decido a dónde enrutar
+                un mensaje. Solo entrego.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - DeterministicPipeline produce CONTENIDO DIRECCIONADO (pasos 7 y 8)
+      - Mi transporte completa ese contenido: yo produzco ENTREGA; el pipeline
+        produce QUÉ y A QUIÉN.
+
     Every channel must implement at least these methods.
     Use InboundChannelProvider for bidirectional channels.
     """

@@ -36,10 +36,9 @@ use super::types::{NicheDefinition, TemplateFieldType};
 ///     }
 #[pyfunction]
 pub fn template_generate(niche_id: &str, py: Python<'_>) -> PyResult<Option<Py<PyDict>>> {
-    let niche = match catalog_get_by_id(py, niche_id) {
-        Ok(Some(n)) => n,
-        Ok(None) => return Ok(None),
-        Err(e) => return Err(e),
+    let niche = match catalog_get_by_id(niche_id) {
+        Some(n) => n,
+        None => return Ok(None),
     };
     generate_template_dict(&niche, py).map(Some)
 }

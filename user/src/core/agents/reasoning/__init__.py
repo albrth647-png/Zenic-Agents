@@ -1,15 +1,6 @@
-"""Layer 7: Reasoning agents (A35-A39)."""
+"""Layer 7: Reasoning agents (A35-A39) — ARCHIVED.
+All reasoning agents were unused (zero external references).
+Files preserved in _archived/agents/reasoning/.
+"""
 
-from .conclusion_extractor import ConclusionExtractor
-from .confidence_estimator import ConfidenceEstimator
-from .problem_detector import ProblemDetector
-from .step_decomposer import StepDecomposer
-from .template_reasoner import TemplateReasoner
-
-__all__ = [
-    "ConclusionExtractor",
-    "ConfidenceEstimator",
-    "ProblemDetector",
-    "StepDecomposer",
-    "TemplateReasoner",
-]
+__all__: list[str] = []

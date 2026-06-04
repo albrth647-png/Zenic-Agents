@@ -13,11 +13,19 @@ GRIETA 2 CERRADA: Pipeline ahora tiene 9 pasos estrictos (SIN IA):
   Paso 8: route_mcp_tool  — Selección determinista de ejecutor MCP
   Paso 9: simulate_dry_run — Prueba sandbox antes de ejecutar
 
+FASE 2 (VORTEX 2.3): Tiempo Coherente
+  Los pasos se ejecutan en 3 fases:
+    FASE A (paralela): Pasos 1, 2, 3, 4, 6, 7, 9 — sin dependencias entre sí
+    FASE B (condicional): Paso 5 — solo si hay fricción en pasos 1-4
+    FASE C (secuencial): Paso 8 — depende del resultado del paso 3 (extract)
+
 Si las 9 tareas determinísticas fallan → Capas 2, 3, 4 (VerdictEngine)
 """
 
+import concurrent.futures
 import logging
-from typing import Any
+import os
+from typing import Any, Callable
 
 from ..evidence_collector import EvidenceCollector
 from ..types import DeterministicResult, Evidence, EvidenceType, Verdict
@@ -30,6 +38,22 @@ logger = logging.getLogger(__name__)
 class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7Mixin):
     """
     Pipeline determinístico expandido: 9 pasos estrictos sin IA.
+
+    NATURALEZA ONTOLÓGICA:
+      SOY: El sistema que HACE todo el trabajo productivo. Ejecuto 9 tareas
+           determinísticas sin IA: lookup de memoria, clasificación, extracción,
+           validación, adaptación, permisos, contexto, ruteo y simulación.
+      NO SOY: LLM. No tomo decisiones. No evalúo calidad. No tengo opiniones.
+      INVARIANTE: Dado el mismo input + estado, produzco exactamente el mismo
+                  output. Cero no-determinismo.
+      FRONTERA: No decido si algo es seguro o no. No emito veredictos.
+                Solamente produzco resultados estructurados.
+
+    COMPLETACIÓN SEMÁNTICA:
+      - MemoryManager produce CONTEXTO HISTÓRICO (memorias)
+      - Yo produzco ACCIÓN CONTEXTUALIZADA (resultados de pipeline)
+      - Mis outputs son completados por EvidenceCollector, que envuelve mis
+        resultados en objetos Evidence con dirección semántica (a favor/en contra).
 
     Pasos nuevos del Chip de Memoria Adaptativa:
       1. memory_lookup  — Búsqueda ultrarrápida en caché de memoria
@@ -157,8 +181,118 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         )
 
     # ================================================================
-    #  9-STEP EXPANDED EXECUTION
+    #  9-STEP EXPANDED EXECUTION (FASE 2: Tiempo Coherente)
     # ================================================================
+
+    def _run_fase_a(
+        self,
+        text: str,
+        code: str,
+        language: str,
+        ctx: dict[str, Any],
+        tenant_id: str,
+    ) -> dict[str, DeterministicResult]:
+        """
+        FASE A: Ejecución paralela de pasos independientes.
+
+        Todos estos pasos son estadísticamente independientes:
+        - Paso 1: memory_lookup
+        - Paso 2: classify_intent
+        - Paso 3: extract_entities
+        - Paso 4: validate_schema
+        - Paso 6: check_rbac_policies
+        - Paso 7: gather_context
+        - Paso 9: simulate_dry_run
+        """
+        fase_a_results: dict[str, DeterministicResult] = {}
+
+        def _step_memory() -> DeterministicResult:
+            return self.memory_lookup(text, tenant_id)
+
+        def _step_classify() -> DeterministicResult:
+            return self.classify_intent(text)
+
+        def _step_extract() -> DeterministicResult:
+            return self.extract_entities(text)
+
+        def _step_validate() -> DeterministicResult:
+            template = ctx.get("template", "")
+            if template:
+                return self.fill_template_gaps(template, ctx)
+            return DeterministicResult(
+                task_name="validate_schema",
+                success=True,
+                result="",
+                confidence=1.0,
+                source="deterministic",
+            )
+
+        def _step_rbac() -> DeterministicResult:
+            # (integrado con zenic-policy via _zenic_native)
+            return DeterministicResult(
+                task_name="check_rbac_policies",
+                success=True,
+                result={"allowed": True, "role": ctx.get("user_role", "operador")},
+                confidence=0.9,
+                source="deterministic",
+            )
+
+        def _step_context() -> DeterministicResult:
+            return DeterministicResult(
+                task_name="gather_context",
+                success=True,
+                result={
+                    "session_id": ctx.get("session_id", ""),
+                    "tenant_id": tenant_id,
+                    "environment": ctx.get("environment", "production"),
+                },
+                confidence=1.0,
+                source="deterministic",
+            )
+
+        def _step_dry_run() -> DeterministicResult:
+            if code:
+                violations = ctx.get("violations", [])
+                return self.explain_violation(code, violations)
+            return DeterministicResult(
+                task_name="simulate_dry_run",
+                success=True,
+                result="No code to validate.",
+                confidence=1.0,
+                source="deterministic",
+            )
+
+        # Mapa de tareas: nombre → función
+        fase_a_tasks: dict[str, Callable[[], DeterministicResult]] = {
+            "memory_lookup": _step_memory,
+            "classify": _step_classify,
+            "extract": _step_extract,
+            "validate_schema": _step_validate,
+            "rbac": _step_rbac,
+            "context": _step_context,
+            "dry_run": _step_dry_run,
+        }
+
+        # Ejecutar Fase A en paralelo (VORTEX 2.3: Tiempo Coherente)
+        # Adaptamos workers al entorno: máx 7 o núcleos disponibles
+        n_workers = min(len(fase_a_tasks), os.cpu_count() or 4)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as executor:
+            future_map = {executor.submit(fn): name for name, fn in fase_a_tasks.items()}
+            for future in concurrent.futures.as_completed(future_map):
+                task_name = future_map[future]
+                try:
+                    fase_a_results[task_name] = future.result()
+                except Exception as exc:
+                    logger.warning("Fase A task '%s' failed: %s", task_name, exc)
+                    fase_a_results[task_name] = DeterministicResult(
+                        task_name=task_name,
+                        success=False,
+                        result={},
+                        confidence=0.0,
+                        source="error",
+                    )
+
+        return fase_a_results
 
     def execute_all_expanded(
         self,
@@ -169,47 +303,58 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
         tenant_id: str = "__anonymous__",
     ) -> dict[str, DeterministicResult]:
         """
-        Ejecuta las 9 tareas determinísticas en secuencia estricta.
+        Ejecuta las 9 tareas determinísticas en 3 fases (VORTEX 2.3).
 
-        Si cualquier paso tiene fricción, el paso 5 (dag_node_adapt)
-        intenta corregirlo con mapeos aprendidos.
+        FASE A (paralela): memory_lookup, classify, extract, validate_schema,
+                           rbac, context, dry_run — sin dependencias entre sí.
+        FASE B (condicional): dag_node_adapt — solo si hay fricción en 1-4.
+        FASE C (secuencial): route_mcp_tool — depende de extract (paso 3).
 
         GRIETA 2: Pipeline expandido de 7→9 pasos.
+        GRIETA 2.3: Pipeline paralelizado (Fase A con ThreadPoolExecutor).
         """
         ctx = context or {}
         results: dict[str, DeterministicResult] = {}
 
-        # ── PASO 1: memory_lookup (NUEVO) ──
-        results["memory_lookup"] = self.memory_lookup(text, tenant_id)
+        # ╔══════════════════════════════════════════════════════════════╗
+        # ║  FASE A: Pasos independientes (paralelo)                   ║
+        # ╠══════════════════════════════════════════════════════════════╣
+        # ║  1. memory_lookup    (sin dependencias)                     ║
+        # ║  2. classify_intent  (sin dependencias)                     ║
+        # ║  3. extract_entities (sin dependencias)                     ║
+        # ║  4. validate_schema  (sin dependencias)                     ║
+        # ║  6. check_rbac       (sin dependencias — stub)              ║
+        # ║  7. gather_context   (sin dependencias — stub)              ║
+        # ║  9. simulate_dry_run (sin dependencias, si hay code)       ║
+        # ╚══════════════════════════════════════════════════════════════╝
+        fase_a = self._run_fase_a(text, code, language, ctx, tenant_id)
+        results.update(fase_a)
 
-        # If cache hit with high confidence, we can potentially skip ahead
-        cache_hit = results["memory_lookup"].confidence > 0.8 and results["memory_lookup"].result.get("cache_hit")
+        # Cache hit check para Fase B
+        cache_hit = (
+            results.get("memory_lookup", DeterministicResult(
+                task_name="memory_lookup", success=True, result={}, confidence=0.0, source="deterministic"
+            )).confidence > 0.8
+            and results.get("memory_lookup", DeterministicResult(
+                task_name="memory_lookup", success=True, result={}, confidence=0.0, source="deterministic"
+            )).result.get("cache_hit")
+        )
 
-        # ── PASO 2: classify_intent ──
-        results["classify"] = self.classify_intent(text)
-
-        # ── PASO 3: extract_entities ──
-        results["extract"] = self.extract_entities(text)
-
-        # ── PASO 4: validate_schema (fill_template_gaps adaptado) ──
-        template = ctx.get("template", "")
-        if template:
-            results["validate_schema"] = self.fill_template_gaps(template, ctx)
-        else:
-            results["validate_schema"] = DeterministicResult(
-                task_name="validate_schema",
-                success=True,
-                result="",
-                confidence=1.0,
-                source="deterministic",
-            )
-
-        # ── PASO 5: dag_node_adapt (NUEVO) ──
-        # Si hubo fricción en pasos 2, 3 o 4, intentar adaptación
+        # ╔══════════════════════════════════════════════════════════════╗
+        # ║  FASE B: Condicional (depende de resultados de Fase A)     ║
+        # ╠══════════════════════════════════════════════════════════════╣
+        # ║  5. dag_node_adapt — solo si hay fricción en steps 1-4     ║
+        # ╚══════════════════════════════════════════════════════════════╝
         friction_detected = (
-            results["classify"].confidence < 0.5
-            or results["extract"].confidence < 0.5
-            or results["validate_schema"].confidence < 0.5
+            results.get("classify", DeterministicResult(
+                task_name="classify", success=True, result={}, confidence=0.0, source="deterministic"
+            )).confidence < 0.5
+            or results.get("extract", DeterministicResult(
+                task_name="extract", success=True, result={}, confidence=0.0, source="deterministic"
+            )).confidence < 0.5
+            or results.get("validate_schema", DeterministicResult(
+                task_name="validate_schema", success=True, result={}, confidence=0.0, source="deterministic"
+            )).confidence < 0.5
         )
         if friction_detected and not cache_hit:
             failed_field = ctx.get("failed_field", text)
@@ -223,47 +368,89 @@ class DeterministicPipeline(DeterministicTasks1To4Mixin, DeterministicTasks5To7M
                 source="deterministic",
             )
 
-        # ── PASO 6: check_rbac_policies ──
-        # (integrado con zenic-policy via _zenic_native)
-        results["rbac"] = DeterministicResult(
-            task_name="check_rbac_policies",
-            success=True,
-            result={"allowed": True, "role": ctx.get("user_role", "operador")},
-            confidence=0.9,
-            source="deterministic",
-        )
-
-        # ── PASO 7: gather_context ──
-        results["context"] = DeterministicResult(
-            task_name="gather_context",
-            success=True,
-            result={
-                "session_id": ctx.get("session_id", ""),
-                "tenant_id": tenant_id,
-                "environment": ctx.get("environment", "production"),
-            },
-            confidence=1.0,
-            source="deterministic",
-        )
-
-        # ── PASO 8: route_mcp_tool ──
-        target = results["extract"].result.get("file", "target")
+        # ╔══════════════════════════════════════════════════════════════╗
+        # ║  FASE C: Secuencial (depende del resultado de Fase A)      ║
+        # ╠══════════════════════════════════════════════════════════════╣
+        # ║  8. route_mcp_tool — depende de extract (paso 3)           ║
+        # ╚══════════════════════════════════════════════════════════════╝
+        extract_result = results.get("extract", DeterministicResult(
+            task_name="extract", success=True, result={"file": "target"}, confidence=0.0, source="deterministic"
+        ))
+        target = extract_result.result.get("file", "target")
         results["route_mcp"] = self.describe_subtask(target, "process")
 
-        # ── PASO 9: simulate_dry_run ──
-        if code:
-            violations = ctx.get("violations", [])
-            results["dry_run"] = self.explain_violation(code, violations)
-        else:
-            results["dry_run"] = DeterministicResult(
-                task_name="simulate_dry_run",
-                success=True,
-                result="No code to validate.",
-                confidence=1.0,
-                source="deterministic",
-            )
-
         return results
+
+    # ================================================================
+    #  VORTEX 2.7: Auto-verificación de determinismo
+    # ================================================================
+
+    def verify_determinism(self) -> dict[str, Any]:
+        """
+        Verifica que el DeterministicPipeline es determinista (VORTEX 2.7).
+
+        Prueba que el mismo input produce exactamente el mismo output
+        en ejecuciones repetidas.
+
+        Returns:
+            Dict con resultado de verificación.
+        """
+        test_input = {
+            "text": "create a new python function to process data",
+            "code": "def process(): pass",
+            "language": "python",
+        }
+
+        tests = []
+        all_deterministic = True
+
+        try:
+            # Ejecutar dos veces con el mismo input
+            result1 = self.execute_all_expanded(**test_input)
+            result2 = self.execute_all_expanded(**test_input)
+
+            # Comparar todos los resultados
+            keys = list(result1.keys())
+            for key in keys:
+                r1 = result1[key]
+                r2 = result2.get(key)
+                if r2 is None:
+                    all_deterministic = False
+                    tests.append({
+                        "task": key,
+                        "deterministic": False,
+                        "detail": "Missing in second execution",
+                    })
+                    continue
+
+                task_ok = (
+                    r1.success == r2.success
+                    and r1.confidence == r2.confidence
+                    and r1.source == r2.source
+                    and r1.task_name == r2.task_name
+                )
+                if not task_ok:
+                    all_deterministic = False
+                tests.append({
+                    "task": key,
+                    "deterministic": task_ok,
+                    "detail": f"success={r1.success==r2.success}, confidence={r1.confidence==r2.confidence}",
+                })
+
+        except Exception as exc:
+            all_deterministic = False
+            tests.append({
+                "task": "all",
+                "deterministic": False,
+                "detail": f"Error: {exc}",
+            })
+
+        return {
+            "component": "DeterministicPipeline",
+            "all_deterministic": all_deterministic,
+            "tests": tests,
+            "status": "VERIFIED" if all_deterministic else "DEGRADED",
+        }
 
     # Keep backward compatibility
     def execute_all(

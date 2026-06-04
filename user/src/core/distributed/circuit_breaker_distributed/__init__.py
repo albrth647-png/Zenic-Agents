@@ -59,8 +59,8 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         breaker = DistributedCircuitBreaker(
             name="orchestrator",
             backend=backend,
-            failure_threshold=5,
-            recovery_timeout=30.0,
+            failure_threshold=3,
+            recovery_timeout=60.0,
         )
 
         # Same API as single-process CircuitBreaker
@@ -74,8 +74,8 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         self,
         name: str,
         backend: CoordinationBackend,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 30.0,
+        failure_threshold: int = 3,
+        recovery_timeout: float = 60.0,
         half_open_max_calls: int = 3,
         success_threshold: int = 3,
         sync_interval: float = DEFAULT_SYNC_INTERVAL,
@@ -110,7 +110,7 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         )
 
         # Local cache of shared state
-        self._local_state = SharedCircuitState(name=name, state="closed")
+        self._local_state = SharedCircuitState(name=name, state="CLOSED")
         self._last_sync: float = 0.0
         self._lock = threading.Lock()
 
@@ -140,7 +140,11 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         try:
             return CircuitState(state_str)
         except ValueError:
-            return CircuitState.CLOSED
+            # Backward compat: try uppercase (might be lowercase from old state)
+            try:
+                return CircuitState(state_str.upper())
+            except ValueError:
+                return CircuitState.CLOSED
 
     @property
     def stats(self) -> dict[str, Any]:
@@ -148,7 +152,7 @@ class DistributedCircuitBreaker(BreakerOpsMixin):
         self._maybe_sync()
         with self._lock:
             remaining = 0.0
-            if self._local_state.state == "open" and self._local_state.opened_at is not None:
+            if self._local_state.state in ("OPEN", "open") and self._local_state.opened_at is not None:
                 elapsed = time.monotonic() - self._local_state.opened_at
                 remaining = max(0.0, self._recovery_timeout - elapsed)
 

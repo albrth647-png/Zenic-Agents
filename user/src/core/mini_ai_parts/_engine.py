@@ -23,6 +23,7 @@ Con resiliencia:
   - Health Monitor en tiempo real
   - Auditoría de todas las decisiones
 """
+import re
 
 from ._fallbacks import FallbackMethodsMixin
 from ._lifecycle import ModelLifecycleMixin
@@ -53,6 +54,61 @@ class MiniAIEngine(ModelLifecycleMixin, BoundedTasksMixin, FallbackMethodsMixin,
     - Los agentes que usaban _call_llm() siguen funcionando
     """
 
+    # Intent categories for LLM classification validation
+    _VALID_INTENT_CATEGORIES: frozenset[str] = frozenset({
+        "CHAT", "QUESTION", "COMMAND", "CONFIG", "FEEDBACK",
+        "INVOICE", "CRM", "INVENTORY", "REPORT", "SCHEDULING",
+        "BUSINESS", "AUTOMATION", "UNKNOWN",
+    })
+
+    _CLASSIFY_SYSTEM_PROMPT: str = (
+        "Classify this message into ONE of these categories: CHAT, QUESTION, COMMAND, "
+        "CONFIG, FEEDBACK, INVOICE, CRM, INVENTORY, REPORT, SCHEDULING, BUSINESS, "
+        "AUTOMATION, UNKNOWN. Reply with ONLY the category name. Never explain."
+    )
+
     def __init__(self, model_path: str | None = None, auto_load: bool = True):
         self._init_lifecycle(model_path=model_path, auto_load=auto_load)
         self._init_verdict()
+
+    def classify_intent_llm(self, message: str, max_tokens: int = 10) -> str | None:
+        """
+        Classify message intent using Qwen.
+
+        Qwen responde UNA palabra con la categoría de intención.
+        VORTEX valida después que la respuesta sea una categoría real.
+
+        Args:
+            message: The user message to classify.
+            max_tokens: Max tokens for LLM response (default 10, only needs 1).
+
+        Returns:
+            str con la categoría (ej. "CHAT", "INVOICE") o None si falla/ambiguo.
+        """
+        if not self.is_loaded:
+            return None
+
+        raw = self._call_llm(
+            system_prompt=self._CLASSIFY_SYSTEM_PROMPT,
+            user_prompt=message,
+            max_tokens=max_tokens,
+        )
+
+        if raw is None:
+            return None
+
+        # Limpiar respuesta Qwen3 (thinking blocks)
+        clean = raw.strip()
+        think_match = re.search(r"</think\s*>(.*)", clean, re.DOTALL)
+        if think_match:
+            clean = think_match.group(1).strip()
+
+        # Tomar solo la primera palabra
+        first_word = clean.split()[0].upper() if clean.split() else ""
+
+        # VORTEX validation: solo categorías válidas
+        if first_word in self._VALID_INTENT_CATEGORIES:
+            return first_word
+
+        # Respuesta inválida = None (VORTEX ignora)
+        return None

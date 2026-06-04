@@ -15,7 +15,7 @@ zenic-safety = { path = "../zenic-safety" }
 zenic-proto = { path = "../zenic-proto" }
 zenic-memory = { path = "../zenic-memory" }
 zenic-tece = { path = "../zenic-tece" }
-pyo3 = { version = "0.22", features = ["extension-module"] }
+pyo3 = { version = "0.22", features = ["extension-module", "macros"], default-features = true }
 blake3 = "1.5"
 xxhash-rust = { version = "0.8", features = ["xxh64"] }
 argon2 = "0.5"

@@ -131,7 +131,7 @@ class PipelineHandlers:
             metadata=ResponseMetadata(source="config"),
         )
 
-    # ─── Business Engine ─────────────────────────────────────────
+    # ─── Business Engine (LOCAL — ToolManager) ──────────────────
 
     async def handle_engine(
         self,
@@ -140,14 +140,44 @@ class PipelineHandlers:
         session: Session,
         personality: PersonalityProfile | None = None,
     ) -> AssistantResponse:
-        """Maneja mensajes que requieren el motor de negocio (Business Engine).
+        """Maneja operaciones de negocio LOCALMENTE con ToolManager.
 
-        Fase 5: Si hay blueprint_capabilities en la sesion, las pasa
-        al motor para adaptar la respuesta al perfil del tenant.
+        Business operations (INVOICE, CRM, INVENTORY, etc.) se manejan
+        directamente por ConversationEngine con sus tools, NO requieren
+        ZenicOrchestrator. Esto ahorra RAM y CPU en el telefono.
+
+        Fase 5: Usa blueprint_capabilities de la sesion para adaptar
+        las respuestas segun el perfil del tenant.
+        """
+        profile = personality or self._get_personality()
+        content = self._generator.generate_business(message, intent, profile)
+
+        return AssistantResponse(
+            content=content,
+            format=ResponseFormat.MARKDOWN,
+            metadata=ResponseMetadata(source="business_local"),
+        )
+
+    # ─── Advanced Automation (via ZenicBridge → ZenicOrchestrator) ─
+
+    async def handle_advanced_automation(
+        self,
+        message: str,
+        intent: AssistantIntent,
+        session: Session,
+        personality: PersonalityProfile | None = None,
+    ) -> AssistantResponse:
+        """Maneja automatizaciones avanzadas via ZenicBridge.
+
+        AUTOMATION y CODE tasks se envian a ZenicOrchestrator
+        para procesamiento con su pipeline completo (MCTS, Z3,
+        sandbox, etc.). Si el bridge no esta disponible, fallback
+        a conversacional.
         """
         if self._bridge is None or not self._bridge.is_available:
             return AssistantResponse.from_error(
-                "Motor de negocio no disponible. Funcionando en modo conversacional.",
+                "Motor de automatizaciones avanzadas no disponible. "
+                "Funcionando en modo conversacional.",
                 source="fallback",
             )
 
@@ -158,7 +188,7 @@ class PipelineHandlers:
         return AssistantResponse(
             content=content,
             format=ResponseFormat.MIXED,
-            metadata=ResponseMetadata(source="engine", engine_used=True),
+            metadata=ResponseMetadata(source="advanced_automation", engine_used=True),
         )
 
     # ─── Fallback ─────────────────────────────────────────────

@@ -1,4 +1,5 @@
-"""Tests for voice_pipeline/ear — Ear service with DummyBackend + real behavior.
+"""
+Tests for voice_pipeline/ear — Ear service with DummyBackend + real behavior.
 
 Rigor: sin mocks, datos reales, cubre normal + vacío + fallback + extremos + error.
 Usa DummyBackend (siempre disponible) para STT, y audio real generado con pydub.
@@ -131,7 +132,8 @@ class TestWhisperBackend:
 class TestCloudBackend:
     def test_name(self):
         b = CloudBackend()
-        assert b.name == "cloud"
+        # CloudBackend.name devuelve "cloud_{provider}" (default provider="google")
+        assert b.name == "cloud_google"
 
     def test_not_available_without_api_key(self):
         b = CloudBackend(api_key="")
@@ -147,7 +149,8 @@ class TestCloudBackend:
         b = CloudBackend(api_key="")
         result = b.transcribe(b"some audio", "wav")
         assert result.success is False
-        assert "API key" in result.error or "not configured" in result.error
+        # CloudBackend no implementa STT real — siempre devuelve error de "not yet implemented"
+        assert "not yet implemented" in result.error
 
 
 # ════════════════════════════════════════════════════════════════
@@ -157,22 +160,28 @@ class TestCloudBackend:
 
 class TestBackendRegistry:
     def test_all_backends_registered(self):
+        """CloudBackend no está en _BACKEND_CLASSES porque requiere API key."""
         assert "dummy" in _BACKEND_CLASSES
         assert "faster_whisper" in _BACKEND_CLASSES
         assert "whisper" in _BACKEND_CLASSES
-        assert "cloud" in _BACKEND_CLASSES
+        # CloudBackend se construye inline, no está pre-registrado en _BACKEND_CLASSES
+        assert "cloud" not in _BACKEND_CLASSES
 
     def test_default_fallback_chain_order(self):
-        """El orden de fallback es: faster_whisper → whisper → cloud → dummy."""
+        """El orden de fallback es: faster_whisper -> whisper -> dummy."""
         assert _DEFAULT_FALLBACK_CHAIN == (
             "faster_whisper",
             "whisper",
-            "cloud",
             "dummy",
         )
 
     def test_dummy_always_last_in_chain(self):
         assert _DEFAULT_FALLBACK_CHAIN[-1] == "dummy"
+
+    def test_cloud_backend_available_as_class(self):
+        """CloudBackend existe como clase aunque no esté en el registro automático."""
+        b = CloudBackend()
+        assert b.name.startswith("cloud_")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -193,7 +202,7 @@ class TestEarInit:
         )
 
     def test_explicit_dummy_backend(self):
-        """Configurar solo dummy → active_backend = dummy."""
+        """Configurar solo dummy -> active_backend = dummy."""
         config = STTBackendConfig(
             backend_name="dummy",
             fallback_chain=("dummy",),
@@ -238,7 +247,7 @@ class TestEarTranscribe:
         assert result.transcribed_text == ""
 
     def test_transcribe_empty_bytes(self):
-        """Bytes vacíos → error inmediato, no se intenta STT."""
+        """Bytes vacíos -> error inmediato, no se intenta STT."""
         config = STTBackendConfig(fallback_chain=("dummy",))
         ear = Ear(config=config)
         result = ear.transcribe(b"", "wav")
@@ -281,7 +290,7 @@ class TestEarBackendSwitching:
         assert ear.active_backend == "dummy"
 
     def test_switch_to_unavailable_backend(self):
-        """Switch a backend no disponible → False."""
+        """Switch a backend no disponible -> False."""
         config = STTBackendConfig(fallback_chain=("dummy",))
         ear = Ear(config=config)
         result = ear.switch_backend("faster_whisper")

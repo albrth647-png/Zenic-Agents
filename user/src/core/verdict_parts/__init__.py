@@ -1,24 +1,15 @@
 """
-ZENIC-AGENTS v1.1 - Verdict Architecture with Resilience
+Verdict Parts — Componentes del pipeline de veredicto.
 
-La IA ya NO hace tareas. Solo emite el veredicto final.
+Incluye:
+  - DeterministicPipeline: 9 tareas determinísticas sin IA
+  - EvidenceCollector: Recolección de evidencia
+  - ConsensusResolver: Resolución de consenso
+  - VerdictEngine: Motor de veredicto (solo SÍ/NO)
 
-Arquitectura de 4 capas:
-  Capa 1: DeterministicPipeline → HACE (clasifica, extrae, genera, valida)
-  Capa 2: EvidenceCollector → PRUEBA (recolecta evidencia a favor y en contra)
-  Capa 3: ConsensusResolver → DECIDE (consenso multi-señal sin IA)
-  Capa 4: VerdictEngine → ARBITRA (Qwen solo si hay empate: SÍ o NO)
-
-v17.1 Resilience Patterns:
-  - VerdictCircuitBreaker: Protege contra fallos en cascada del LLM
-  - VerdictRetryConfig: Reintento con exponential backoff + jitter
-  - VerdictHealthMonitor: Seguimiento de salud del LLM
-  - VerdictAuditor: Registro de auditoría de todas las decisiones
-  - VerdictResilienceOrchestrator: Orquestador de todos los patrones
-  - Multi-attempt consensus: Pregunta N veces, mayoría gana
-
-Principio: La IA nunca genera, nunca clasifica, nunca valida.
-La IA solo responde una pregunta binaria cuando el sistema determinístico no puede.
+VORTEX 2.4: TopologicalRouter para redistribución causal
+VORTEX 2.5: GeodesicTracker para mapeo de estados y rutas
+VORTEX 2.7: verify_determinism() en cada componente
 """
 
 from .consensus_resolver import ConsensusResolver
@@ -34,33 +25,6 @@ from .types import (
     VerdictInput,
     VerdictOutput,
 )
-from .verdict_engine import VerdictEngine
-
-# v17.1: Resilience patterns
-try:
-    from .resilience import (
-        VerdictAuditEntry,
-        VerdictAuditor,
-        VerdictCircuitBreaker,
-        VerdictCircuitState,
-        VerdictHealthMonitor,
-        VerdictHealthSnapshot,
-        VerdictResilienceOrchestrator,
-        VerdictRetryConfig,
-    )
-
-    _RESILIENCE_EXPORTS = [
-        "VerdictCircuitBreaker",
-        "VerdictCircuitState",
-        "VerdictRetryConfig",
-        "VerdictHealthMonitor",
-        "VerdictHealthSnapshot",
-        "VerdictAuditor",
-        "VerdictAuditEntry",
-        "VerdictResilienceOrchestrator",
-    ]
-except ImportError:
-    _RESILIENCE_EXPORTS = []
 
 __all__ = [
     "ConsensusResolver",
@@ -71,17 +35,16 @@ __all__ = [
     "EvidenceCollector",
     "EvidenceType",
     "Verdict",
-    "VerdictAuditEntry",
-    "VerdictAuditor",
-    "VerdictCircuitBreaker",
-    "VerdictCircuitState",
     "VerdictConfidence",
-    "VerdictEngine",
-    "VerdictHealthMonitor",
-    "VerdictHealthSnapshot",
     "VerdictInput",
     "VerdictOutput",
-    "VerdictResilienceOrchestrator",
-    "VerdictRetryConfig",
+    "VerdictEngine",
 ]
-__all__.extend(_RESILIENCE_EXPORTS)  # type: ignore[misc]
+
+
+def __getattr__(name):
+    """Lazy import of VerdictEngine to avoid circular import with verdict_engine_module."""
+    if name == "VerdictEngine":
+        from .verdict_engine import VerdictEngine
+        return VerdictEngine
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

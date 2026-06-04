@@ -63,6 +63,29 @@ class ZenicOrchestrator(BaseOrchestrator):
     """
     Orquestador v17 con Arquitectura de Veredicto.
 
+    NATURALEZA ONTOLÓGICA:
+      SOY: El orquestador central que coordina el pipeline completo de 8 niveles.
+           Inicializo todos los subsistemas en 9 fases y ejecuto el flujo de
+           decisión completo: clasificación → routing → planning → ejecución →
+           veredicto → sandbox → commit/rollback.
+      NO SOY: Agente. Framework. No tomo decisiones autónomas — solo coordino
+              el flujo entre componentes.
+      INVARIANTE: Toda ejecución sigue el mismo flujo. No hay atajos que salten
+                  el SafetyGate o el VerdictEngine.
+      FRONTERA: No ejecuto código de usuario. No almaceno estado persistente.
+                La IA solo puede decir SÍ o NO a través del VerdictEngine.
+
+    COMPLETACIÓN SEMÁNTICA (completo a otros):
+      - SafetyGate produce PERMISO O DENEGACIÓN → Yo produzco EJECUCIÓN COORDINADA
+      - VerdictEngine produce VEREDICTO (SÍ/NO) → Yo produzco ACCIÓN
+        (commit, rollback, NO_OP)
+
+    COMPLETACIÓN SEMÁNTICA (soy completado por):
+      - ConsensusResolver produce INDETERMINACIÓN → VerdictEngine produce
+        RESOLUCIÓN FINAL que yo uso para decidir la acción
+      - ChannelProvider produce TRANSPORTE → Pipeline produce CONTENIDO
+        DIRECCIONADO que determina qué enviar y a quién
+
     CAMBIO PRINCIPAL: La IA ya NO hace tareas. Solo arbitra.
 
     Flujo de decisión:
